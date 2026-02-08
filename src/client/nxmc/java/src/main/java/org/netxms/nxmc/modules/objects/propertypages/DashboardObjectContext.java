@@ -101,11 +101,14 @@ public class DashboardObjectContext extends ObjectPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      checkboxShowContextSelector = new Button(dialogArea, SWT.CHECK);
-      checkboxShowContextSelector.setText(i18n.tr("Show &context selector in dashboard perspective"));
-      checkboxShowContextSelector.setSelection((dashboard.getFlags() & Dashboard.SHOW_CONTEXT_SELECTOR) != 0);
-      checkboxShowContextSelector.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-
+      if (!dashboard.isTemplateInstance())
+      {
+         checkboxShowContextSelector = new Button(dialogArea, SWT.CHECK);
+         checkboxShowContextSelector.setText(i18n.tr("Show &context selector in dashboard perspective"));
+         checkboxShowContextSelector.setSelection((dashboard.getFlags() & Dashboard.SHOW_CONTEXT_SELECTOR) != 0);
+         checkboxShowContextSelector.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+      }
+         
       checkboxShowAsObjectView = new Button(dialogArea, SWT.CHECK);
       checkboxShowAsObjectView.setText(i18n.tr("&Automatically show this dashboard in object context"));
       checkboxShowAsObjectView.setSelection((dashboard.getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) != 0);
@@ -130,7 +133,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
 			setValid(false);
 
       int flags = 0;
-      if (checkboxShowContextSelector.getSelection())
+      if (!dashboard.isTemplateInstance() && checkboxShowContextSelector.getSelection())
          flags |= Dashboard.SHOW_CONTEXT_SELECTOR;
       if (checkboxShowAsObjectView.getSelection())
          flags |= Dashboard.SHOW_AS_OBJECT_VIEW;

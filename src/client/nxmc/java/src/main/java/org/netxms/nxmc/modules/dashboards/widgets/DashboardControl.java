@@ -34,7 +34,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
@@ -63,7 +63,7 @@ public class DashboardControl extends Composite
 
    private final I18n i18n = LocalizationHelper.getI18n(DashboardControl.class);
 
-	private Dashboard dashboard;
+	private DashboardBase dashboard;
    private AbstractObject context;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
@@ -85,7 +85,7 @@ public class DashboardControl extends Composite
     * @param view owning view
     * @param embedded true if dashboard control is embedded into another dashboard
     */
-   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, AbstractDashboardView view, boolean embedded, boolean narrowScreenMode)
+   public DashboardControl(Composite parent, int style, DashboardBase dashboard, AbstractObject context, AbstractDashboardView view, boolean embedded, boolean narrowScreenMode)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
@@ -195,9 +195,6 @@ public class DashboardControl extends Composite
          case DashboardElement.BAR_CHART:
          case DashboardElement.TUBE_CHART:
             w = new BarChartElement(this, e, view);
-         	break;
-         case DashboardElement.CUSTOM:
-            w = new CustomWidgetElement(this, e, view);
          	break;
          case DashboardElement.DASHBOARD:
             w = new EmbeddedDashboardElement(this, e, view);
@@ -755,7 +752,7 @@ public class DashboardControl extends Composite
    /**
     * @return the dashboard
     */
-   public Dashboard getDashboardObject()
+   public DashboardBase getDashboardObject()
    {
       return dashboard;
    }

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -51,7 +51,7 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int nRet = -1;
-   BYTE *encodedPDU;
+   SNMP_PDUBuffer encodedPDU;
    size_t size = pdu->encode(&encodedPDU, m_securityContext);
    if (size != 0)
    {
@@ -59,9 +59,8 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 		msg.setField(VID_IP_ADDRESS, m_ipAddr);
 		msg.setField(VID_PORT, m_port);
 		msg.setField(VID_PDU_SIZE, static_cast<uint32_t>(size));
-		msg.setField(VID_PDU, encodedPDU, size);
+		msg.setField(VID_PDU, encodedPDU.buffer(), size);
 		msg.setField(VID_TIMEOUT, timeout);
-      MemFree(encodedPDU);
 
       if (m_waitForResponse)
       {

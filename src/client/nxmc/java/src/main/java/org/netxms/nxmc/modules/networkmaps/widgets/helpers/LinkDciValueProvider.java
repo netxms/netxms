@@ -256,7 +256,7 @@ public class LinkDciValueProvider implements DisposableSingleton
          
          DciValue v = getDciLastValue(dciList[i].getDciId());
          if (v != null)
-            sb.append(v.format(dciList[i].getFormatString(), timeFormatter));
+            sb.append(v.getFormattedValue(dciList[i].getFormatString(), timeFormatter));
       }
       return sb.toString();
    }
@@ -273,7 +273,7 @@ public class LinkDciValueProvider implements DisposableSingleton
       {
          DciValue v = getDciLastValue(dciList.get(i).getDciId()); 
          if (v != null)
-            sb.append(v.format(dciList.get(i).getFormatString(), timeFormatter));
+            sb.append(v.getFormattedValue(dciList.get(i).getFormatString(), timeFormatter));
          if (++i != dciList.size())
             sb.append('\n');
       }

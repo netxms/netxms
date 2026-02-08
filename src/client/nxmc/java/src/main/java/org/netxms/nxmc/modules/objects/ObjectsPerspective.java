@@ -55,7 +55,6 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
-import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
@@ -143,6 +142,7 @@ import org.netxms.nxmc.modules.objects.views.WirelessStations;
 import org.netxms.nxmc.modules.objects.views.elements.Comments;
 import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -178,6 +178,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Image imageEditConfig;
    private Image imageExecuteScript;
    private Image imageOpenMibExplorer;
+   private Image imageOpenAgentExplorer;
    private Image imageTakeScreenshot;
    private Image imageRemoteControl;
    private Image imageManageViews;
@@ -205,6 +206,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       imageRemoteControl = ResourceManager.getImage("icons/object-views/remote-desktop.png");
       imageManageViews = ResourceManager.getImage("icons/perspective-config.png");
       imageOpenMibExplorer = ResourceManager.getImage("icons/object-views/mibexplorer.gif");
+      imageOpenAgentExplorer = ResourceManager.getImage("icons/object-views/agent-explorer.png");
    }
 
    /**
@@ -305,17 +307,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       }
 
       // Add session listener
-      session.addListener(new SessionListener() {
-         @Override
-         public void notificationHandler(SessionNotification n)
+      session.addListener((n) -> {
+         if (n.getCode() != SessionNotification.OBJECT_CHANGED)
+            return;
+         AbstractObject context = (AbstractObject)getContext();
+         if ((context != null) && (n.getSubCode() == context.getObjectId()))
          {
-            if (n.getCode() != SessionNotification.OBJECT_CHANGED)
-               return;
-            AbstractObject context = (AbstractObject)getContext();
-            if ((context != null) && (n.getSubCode() == context.getObjectId()))
-            {
-               getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
-            }
+            getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
          }
       });
    }
@@ -657,6 +655,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, () -> addMainView(new MibExplorer(object.getObjectId(), object.getObjectId(), false), true, false));
       }
 
+      if ((object instanceof Node) && ((Node)object).hasAgent())
+      {
+         addObjectToolBarItem(i18n.tr("&Agent Explorer"), imageOpenAgentExplorer, () -> addMainView(new AgentExplorer(object.getObjectId(), object.getObjectId(), false), true, false));
+      }
+
       for(ObjectAction<?> a : actionContributions)
       {
          if (a.isValidForSelection(selection))
@@ -877,9 +880,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       if (!objectBrowser.selectObject(object))
          return false;
 
-      if ((dciId != 0) && showMainView("DataCollection"))
+      if ((dciId != 0) && showMainView(DataCollectionView.VIEW_ID))
       {
-         View dataCollectionView = findMainView("DataCollection");
+         View dataCollectionView = findMainView(DataCollectionView.VIEW_ID);
          ((DataCollectionView)dataCollectionView).selectDci(dciId);
       }
       return true;

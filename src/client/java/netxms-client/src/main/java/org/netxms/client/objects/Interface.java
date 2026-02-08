@@ -415,6 +415,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 	private int ifType;
 	private int mtu;
 	private long speed;
+   private long maxSpeed;
    private int inboundUtilization;
    private int outboundUtilization;
    private int chassis;
@@ -457,6 +458,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
       mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
       speed = msg.getFieldAsInt64(NXCPCodes.VID_SPEED);
+      maxSpeed = msg.getFieldAsInt64(NXCPCodes.VID_MAX_SPEED);
       inboundUtilization = msg.getFieldAsInt32(NXCPCodes.VID_INBOUND_UTILIZATION);
       outboundUtilization = msg.getFieldAsInt32(NXCPCodes.VID_OUTBOUND_UTILIZATION);
       chassis = msg.getFieldAsInt32(NXCPCodes.VID_PHY_CHASSIS);
@@ -929,11 +931,23 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
    }
 
    /**
-    * @return the speed
+    * Get interface speed in bps.
+    *
+    * @return interface speed in bps or 0 if not known
     */
    public long getSpeed()
    {
       return speed;
+   }
+
+   /**
+    * Get interface maximum speed in bps.
+    *
+    * @return interface maximum speed in bps or 0 if not known
+    */
+   public long getMaxSpeed()
+   {
+      return maxSpeed;
    }
 
    /**

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -193,8 +193,8 @@ static bool H_UpgradeFromV10()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   TCHAR scriptName[MAX_CONFIG_VALUE];
-   DBMgrConfigReadStr(_T("NetworkDiscovery.Filter.Script"), scriptName, MAX_CONFIG_VALUE, _T("none"));
+   TCHAR scriptName[MAX_CONFIG_VALUE_LENGTH];
+   DBMgrConfigReadStr(_T("NetworkDiscovery.Filter.Script"), scriptName, MAX_CONFIG_VALUE_LENGTH, _T("none"));
    if (!_tcsicmp(scriptName, _T("auto")))
    {
       uint32_t newFilterFlags = 0;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ASN;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
@@ -147,11 +148,11 @@ public class CreateSnmpDci extends Action
       dci.setRetentionTime(Integer.toString(retentionTime));
       dci.setOrigin(DataOrigin.SNMP);
 		dci.setDataType(dciTypeFromAsnType(value.getType()));
-		dci.setStatus(DataCollectionItem.ACTIVE);
+      dci.setStatus(DataCollectionObjectStatus.ACTIVE);
 		dci.setDescription(description);
 		dci.setDeltaCalculation(deltaCalculation);
 		dci.setName(value.getName());
-		
+
 		dcc.modifyObject(dci);
 		dcc.close();
 	}

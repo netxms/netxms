@@ -88,7 +88,7 @@ public class TestHelper
                data.setAgentPort(TestConstants.AGENT_PORT);
                session.modifyObject(data);
 
-               session.pollObject(object.getObjectId(), ObjectPollType.CONFIGURATION_NORMAL, null);
+               session.pollObject(object.getObjectId(), ObjectPollType.CONFIGURATION, null);
                Thread.sleep(5000);               
             }
             return (Node)object;

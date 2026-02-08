@@ -329,6 +329,18 @@ public:
 };
 
 /**
+ * NXSL "DataPoint" class
+ */
+class NXSL_DataPointClass : public NXSL_Class
+{
+public:
+   NXSL_DataPointClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "DCI" class
  */
 class NXSL_DciClass : public NXSL_Class
@@ -543,6 +555,18 @@ public:
 };
 
 /**
+ * Deployment package information for NXSL
+ */
+class NXSL_DeploymentPackageClass : public NXSL_Class
+{
+public:
+   NXSL_DeploymentPackageClass();
+
+   virtual NXSL_Value* getAttr(NXSL_Object* object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object* object) override;
+};
+
+/**
  * Maintenance journal record
  */
 class NXSL_MaintenanceJournalRecordClass : public NXSL_Class
@@ -626,6 +650,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "SSHSession" class
+ */
+class NXSL_SSHSessionClass : public NXSL_Class
+{
+public:
+   NXSL_SSHSessionClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -677,10 +713,11 @@ void ReloadScript(uint32_t scriptId);
 bool IsValidScriptId(uint32_t id);
 uint32_t ResolveScriptName(const TCHAR *name);
 bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size);
-void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateScriptExportRecord(uint32_t id);
 void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
-NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
-bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets);
+void ImportScript(json_t *script, bool overwrite, ImportContext *context);
+ScriptVMHandle NXCORE_EXPORTABLE FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
+bool NXCORE_EXPORTABLE ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets);
 
 /**
  * Global variables
@@ -698,7 +735,9 @@ extern NXSL_ClientSessionClass g_nxslClientSessionClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
+extern NXSL_DataPointClass g_nxslDataPointClass;
 extern NXSL_DciClass g_nxslDciClass;
+extern NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 extern NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;
@@ -721,6 +760,7 @@ extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SoftwarePackage g_nxslSoftwarePackage;
+extern NXSL_SSHSessionClass g_nxslSSHSessionClass;
 extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_TemplateClass g_nxslTemplateClass;
 extern NXSL_TunnelClass g_nxslTunnelClass;

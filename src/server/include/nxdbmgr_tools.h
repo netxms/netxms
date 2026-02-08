@@ -35,6 +35,12 @@
 #include <nxdbapi.h>
 #include <nxsrvapi.h>
 
+// Non-standard SQL type codes
+#define SQL_TYPE_TEXT      0
+#define SQL_TYPE_TEXT4K    1
+#define SQL_TYPE_INT64     2
+#define SQL_TYPE_BLOB      3
+
 /**
  * Pre-defined GUID mapping for GenerateGUID
  */
@@ -58,9 +64,10 @@ DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelect(const TCHAR *query);
 DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectEx(DB_HANDLE hdb, const TCHAR *query);
 DB_UNBUFFERED_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectUnbuffered(const TCHAR *query);
 bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt);
-bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const TCHAR *query, ...);
-bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput = false);
-bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batch);
+bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const wchar_t *query, ...);
+bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput = false);
+bool LIBNXDBMGR_EXPORTABLE SQLBatch(const wchar_t *batch);
+const wchar_t LIBNXDBMGR_EXPORTABLE *GetSQLTypeName(int type);
 
 // Confirmations
 bool LIBNXDBMGR_EXPORTABLE GetYesNo(const TCHAR *format, ...);
@@ -73,8 +80,8 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStr(const TCHAR *variable, TCHAR *bu
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
 int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, int32_t defaultValue);
 int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue);
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, int32_t value);
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const wchar_t *variable, const wchar_t *value);
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const wchar_t *variable, int32_t value);
 bool LIBNXDBMGR_EXPORTABLE DBMgrConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
 int32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadInt32(const TCHAR *variable, int32_t defaultValue);
 uint32_t LIBNXDBMGR_EXPORTABLE DBMgrConfigReadUInt32(const TCHAR *variable, uint32_t defaultValue);
@@ -90,6 +97,8 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t 
 
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId);
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column);
+
+bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column);
 
 bool LIBNXDBMGR_EXPORTABLE CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description);
 bool LIBNXDBMGR_EXPORTABLE IsEventPairInUse(UINT32 code1, UINT32 code2);

@@ -30,27 +30,27 @@ ItemValue::ItemValue()
    m_int64 = 0;
    m_uint64 = 0;
    m_double = 0;
-   m_timestamp = time(nullptr);
+   m_timestamp = Timestamp::now();
 }
 
 /**
  * Construct value object from string value
  */
-ItemValue::ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix)
+ItemValue::ItemValue(const wchar_t *value, Timestamp timestamp, bool parseSuffix)
 {
    wcslcpy(m_string, value, MAX_DB_STRING);
    parseStringValue(parseSuffix);
-   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
+   m_timestamp = timestamp.isNull() ? Timestamp::now() : timestamp;
 }
 
 /**
  * Construct value object from database field
  */
-ItemValue::ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix)
+ItemValue::ItemValue(DB_RESULT hResult, int row, int column, Timestamp timestamp, bool parseSuffix)
 {
    DBGetField(hResult, row, column, m_string, MAX_DB_STRING);
    parseStringValue(parseSuffix);
-   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
+   m_timestamp = timestamp.isNull() ? Timestamp::now() : timestamp;
 }
 
 /**
@@ -241,7 +241,7 @@ template<typename T> static T CalculateAverage(const ItemValue * const *valueLis
    int count = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
       {
          sum += static_cast<T>(*valueList[i]);
          count++;
@@ -290,7 +290,7 @@ template<typename T> static T CalculateSum(const ItemValue * const *valueList, s
    T sum = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
          sum += static_cast<T>(*valueList[i]);
    }
    return sum;
@@ -337,7 +337,7 @@ template<typename T, T (*ABS)(T)> static T CalculateMeanDeviation(const ItemValu
    int count = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
       {
          mean += static_cast<T>(*valueList[i]);
          count++;
@@ -347,7 +347,7 @@ template<typename T, T (*ABS)(T)> static T CalculateMeanDeviation(const ItemValu
    T dev = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
          dev += ABS(static_cast<T>(*valueList[i]) - mean);
    }
    return dev / static_cast<T>(count);
@@ -426,7 +426,7 @@ template<typename T> static T CalculateMin(const ItemValue * const *valueList, s
    T value = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
       {
          T curr = static_cast<T>(*valueList[i]);
          if (first || (curr < value))
@@ -480,7 +480,7 @@ template<typename T> static T CalculateMax(const ItemValue * const *valueList, s
    T value = 0;
    for(size_t i = 0; i < sampleCount; i++)
    {
-      if (valueList[i]->getTimeStamp() != 1)
+      if (valueList[i]->getTimeStamp().asMilliseconds() != 1)
       {
          T curr = static_cast<T>(*valueList[i]);
          if (first || (curr > value))

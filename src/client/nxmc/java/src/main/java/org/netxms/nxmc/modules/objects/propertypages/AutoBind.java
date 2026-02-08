@@ -37,6 +37,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.interfaces.AutoBindObject;
@@ -104,6 +105,8 @@ public class AutoBind extends ObjectPropertyPage
          checkboxEnableBind.setText(i18n.tr("Automatically bind objects selected by filter to this container"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableBind.setText(i18n.tr("Automatically add this dashboard to objects selected by filter"));
+      else if (autoBindObject instanceof DashboardTemplate)
+         checkboxEnableBind.setText(i18n.tr("Automatically create instance dashboard for objects selected by filter"));
       else if (autoBindObject instanceof NetworkMap)
          checkboxEnableBind.setText(i18n.tr("Automatically add this network map to objects selected by filter"));
       checkboxEnableBind.setSelection(autoBindObject.isAutoBindEnabled());
@@ -134,6 +137,8 @@ public class AutoBind extends ObjectPropertyPage
          checkboxEnableUnbind.setText(i18n.tr("Automatically unbind objects from this container when they no longer passes filter"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove this dashboard from objects when they no longer passes filter"));
+      else if (autoBindObject instanceof DashboardTemplate)
+         checkboxEnableUnbind.setText(i18n.tr("Automatically delete instance dashboard when object no longer passes filter"));
       else if (autoBindObject instanceof NetworkMap)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove this network map from objects when they no longer passes filter"));
       checkboxEnableUnbind.setSelection(autoBindObject.isAutoUnbindEnabled());
@@ -156,6 +161,8 @@ public class AutoBind extends ObjectPropertyPage
          hints = i18n.tr("Variables:\n\t$object\tinterface being tested.\n\t$container\tthis container object.\n\nReturn value: true to bind interface to this container, false to unbind, null to make no changes.");
       else if (autoBindObject instanceof Dashboard)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$dashboard\tthis dashboard object.\n\nReturn value: true to add this dashboard to an object, false to remove, null to make no changes.");
+      else if (autoBindObject instanceof DashboardTemplate)
+         hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$template\tthis dashboard template object.\n\nReturn value: true to create dashboard instance for this object, false to delete, null to make no changes."); 
       else if (autoBindObject instanceof NetworkMap)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$map\tthis network map object.\n\nReturn value: true to add this network map to an object, false to remove, null to make no changes.");
       else
@@ -243,6 +250,7 @@ public class AutoBind extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof AutoBindObject) && !(object instanceof BaseBusinessService);
+      return (object instanceof AutoBindObject) && !(object instanceof BaseBusinessService) &&
+            !(object instanceof Dashboard && ((Dashboard)object).isTemplateInstance());
    }
 }

@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -611,6 +612,51 @@ public class LogParserEditor extends Composite
          return;
       }
       parser.setSyslogParser(type);
+      
+
+      if (type != LogParserType.POLICY)
+      {
+         Set<UUID> guids = new HashSet<UUID>();
+         boolean unique = true;
+         for (LogParserRule rule : parser.getRules())
+         {
+            if (rule.getGuid() == null)
+            {
+               rule.setGuid(UUID.randomUUID());
+               guids.add(rule.getGuid());
+               fireModifyListeners();
+               continue;
+            }
+            else if (guids.contains(rule.getGuid()))
+            {
+               unique = false;          
+               break;
+            }
+            guids.add(rule.getGuid()); 
+         }
+         
+         if (!unique)
+         {
+            if (!MessageDialogHelper.openConfirm(getShell(), "Duplicate GUIDs", "Do you want to regenerate GUIDs for duplicate rules?"))
+            {
+               parser = null;
+               selectXmlEditor();
+               return;
+            }
+            
+           guids.clear();
+           for (LogParserRule rule : parser.getRules())
+           {
+              if (guids.contains(rule.getGuid()))
+              {
+                 rule.setGuid(UUID.randomUUID());
+              }
+              guids.add(rule.getGuid()); 
+           }
+           fireModifyListeners();
+         }
+      }
+      
 
       /* general */
       if (type == LogParserType.POLICY)
@@ -652,6 +698,10 @@ public class LogParserEditor extends Composite
    private void addRule()
    {
       LogParserRule rule = new LogParserRule();
+      if (type != LogParserType.POLICY)
+      {
+         rule.setGuid(UUID.randomUUID());
+      }
       LogParserRuleEditor editor = createRuleEditor(rule);
       editor.moveAbove(addRuleLink);
       parser.getRules().add(rule);

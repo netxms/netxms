@@ -433,6 +433,30 @@ void Array::swap(Array& other)
 }
 
 /**
+ * Swap two elements in array
+ */
+void Array::swap(int index1, int index2)
+{
+   if ((index1 < 0) || (index1 >= m_size) || (index2 < 0) || (index2 >= m_size) || (index1 == index2))
+      return;
+
+   if (m_storePointers)
+   {
+      void *temp = m_data[index1];
+      m_data[index1] = m_data[index2];
+      m_data[index2] = temp;
+   }
+   else
+   {
+      void *temp = MemAlloc(m_elementSize);
+      memcpy(temp, ADDR(index1), m_elementSize);
+      memcpy(ADDR(index1), ADDR(index2), m_elementSize);
+      memcpy(ADDR(index2), temp, m_elementSize);
+      MemFree(temp);
+   }
+}
+
+/**
  * ********************************************************
  * 
  * Array iterator

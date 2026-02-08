@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -42,7 +42,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -132,6 +131,7 @@ public class BusinessServiceChecksView extends ObjectView
       viewer.setComparator(new BusinessServiceComparator(labelProvider));
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
+      viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {         
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -167,7 +167,7 @@ public class BusinessServiceChecksView extends ObjectView
       });
 
       createActions();
-      createPopupMenu();
+      createContextMenu();
 
       refreshTimer = new RefreshTimer(300, viewer.getControl(), new Runnable() {
          @Override
@@ -260,17 +260,13 @@ public class BusinessServiceChecksView extends ObjectView
             {
                deletedChecks.clear();
             }
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  if (viewer.getControl().isDisposed())
-                     return;
-                  BusinessServiceChecksView.this.checks = checks;
-                  viewer.setInput(checks.values());
-                  syncMissingObjects(checks.values());
-                  updateDciLabels(checks.values());
-               }
+            runInUIThread(() -> {
+               if (viewer.getControl().isDisposed())
+                  return;
+               BusinessServiceChecksView.this.checks = checks;
+               viewer.setInput(checks.values());
+               syncMissingObjects(checks.values());
+               updateDciLabels(checks.values());
             });
          }
 
@@ -283,29 +279,20 @@ public class BusinessServiceChecksView extends ObjectView
    }
 
    /**
-    * Create pop-up menu
+    * Create context menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
-      // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            fillContextMenu(manager);
-         }
-      });
-
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);
+      menuMgr.addMenuListener((manager) -> fillContextMenu(manager));
+      viewer.getControl().setMenu(menuMgr.createContextMenu(viewer.getControl()));
    }
 
    /**
     * Fill context menu
     * 
-    * @param mgr Menu manager
+    * @param manager Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
    {
@@ -319,12 +306,31 @@ public class BusinessServiceChecksView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionCreate);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionCreate);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * Create actions
     */
    private void createActions()
    {
-      actionCreate = new Action(i18n.tr("&Create new"), SharedIcons.ADD_OBJECT) 
-      {
+      actionCreate = new Action(i18n.tr("&Create new"), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -332,8 +338,7 @@ public class BusinessServiceChecksView extends ObjectView
          }
       };
 
-      actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) 
-      {
+      actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -341,8 +346,7 @@ public class BusinessServiceChecksView extends ObjectView
          }
       };
 
-      actionDuplicate = new Action(i18n.tr("&Duplicate")) 
-      {
+      actionDuplicate = new Action(i18n.tr("&Duplicate")) {
          @Override
          public void run()
          {
@@ -350,8 +354,7 @@ public class BusinessServiceChecksView extends ObjectView
          }
       };
 
-      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) 
-      {
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {

@@ -40,7 +40,7 @@ bool g_queryTrace = false;
 /**
  * Table suffix
  */
-const TCHAR *g_tableSuffix = _T("");
+const wchar_t *g_tableSuffix = L"";
 
 /**
  * Set query trace mode

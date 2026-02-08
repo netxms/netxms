@@ -27,7 +27,8 @@
  */
 int H_ObjectTools(Context *context)
 {
-   json_t *tools = GetObjectToolsIntoJSON(context->getUserId(), context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS));
+   const char *typesFilter = context->getQueryParameter("types");
+   json_t *tools = GetObjectToolsIntoJSON(context->getUserId(), context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS), typesFilter);
    if (tools == nullptr)
    {
       context->setErrorResponse("Database failure");
@@ -35,5 +36,32 @@ int H_ObjectTools(Context *context)
    }
    context->setResponseData(tools);
    json_decref(tools);
+   return 200;
+}
+
+/**
+ * Handler for /v1/object-tools/:tool-id
+ */
+int H_ObjectToolDetails(Context *context)
+{
+   uint32_t toolId = context->getPlaceholderValueAsUInt32(_T("tool-id"));
+   if (toolId == 0)
+      return 400;
+
+   json_t *tool = GetObjectToolIntoJSON(toolId, context->getUserId(), context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS));
+   if (tool == nullptr)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   if (json_is_null(tool))
+   {
+      json_decref(tool);
+      return 403;
+   }
+
+   context->setResponseData(tool);
+   json_decref(tool);
    return 200;
 }

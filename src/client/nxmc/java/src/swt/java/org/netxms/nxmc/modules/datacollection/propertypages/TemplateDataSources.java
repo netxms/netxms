@@ -95,7 +95,7 @@ public class TemplateDataSources extends PreferencePage
    public TemplateDataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Template Data Source");
-      config = settings; 
+      config = settings;
       this.saveToDatabase = saveToDatabase;
    }
 
@@ -170,7 +170,7 @@ public class TemplateDataSources extends PreferencePage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(i18n.tr("Dow&n"));
       rd = new RowData();
@@ -236,7 +236,7 @@ public class TemplateDataSources extends PreferencePage
 			}
       });
       editButton.setEnabled(false);
-		
+
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
       rd = new RowData();
@@ -258,7 +258,7 @@ public class TemplateDataSources extends PreferencePage
 				editButton.notifyListeners(SWT.Selection, new Event());
 			}
       });
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -270,7 +270,7 @@ public class TemplateDataSources extends PreferencePage
 				downButton.setEnabled(selection.size() == 1);
 			}
 		});
-		
+
 		return dialogArea;
 	}
 
@@ -283,7 +283,7 @@ public class TemplateDataSources extends PreferencePage
 		ChartDciConfig dci = (ChartDciConfig)item.getData();
 		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
 			return;
-		
+
 		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
 		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
 		event.gc.setForeground(colorCache.create(0, 0, 0));
@@ -307,7 +307,7 @@ public class TemplateDataSources extends PreferencePage
 			{
    			ChartDciConfig dci = new ChartDciConfig(item);
    			newSelection.add(dci);
-   			dciList.add(dci);           
+   			dciList.add(dci);
 			}
          viewer.setInput(dciList.toArray());
          viewer.setSelection(new StructuredSelection(newSelection));
@@ -320,7 +320,7 @@ public class TemplateDataSources extends PreferencePage
    private void addItem()
    {
       ChartDciConfig dci = new ChartDciConfig();
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true, true);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
       if (dlg.open() == Window.OK)
       {
          dciList.add(dci);
@@ -336,10 +336,10 @@ public class TemplateDataSources extends PreferencePage
 	{
       IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, true);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
 		if (dlg.open() == Window.OK)
 		{
-		      viewer.update(dci, null);		      
+		      viewer.update(dci, null);
 		}
 	}
 
@@ -355,7 +355,7 @@ public class TemplateDataSources extends PreferencePage
 	}
 
 	/**
-	 * Move selected item up 
+	 * Move selected item up
 	 */
 	private void moveUp()
 	{
@@ -372,7 +372,7 @@ public class TemplateDataSources extends PreferencePage
 			}
 		}
 	}
-	
+
 	/**
 	 * Move selected item down
 	 */
@@ -394,7 +394,7 @@ public class TemplateDataSources extends PreferencePage
 
 	/**
 	 * Apply changes
-	 * 
+	 *
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	protected void applyChanges(final boolean isApply)
@@ -413,7 +413,7 @@ public class TemplateDataSources extends PreferencePage
 				{
                session.saveGraph(config, false);
 				}
-	
+
 				@Override
 				protected void jobFinalize()
 				{

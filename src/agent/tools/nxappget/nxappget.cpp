@@ -51,7 +51,7 @@ static void usage(char *argv0)
 {
 	_tprintf(
 _T("NetXMS Application Agent Connector  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2025 Raden Solutions\n\n")
+_T("Copyright (c) 2006-2026 Raden Solutions\n\n")
 _T("Usage: %hs agent_name metric_name\n")
 _T("  \n")
 _T("Options:\n")

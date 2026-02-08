@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -249,11 +249,11 @@ static int F_FindDCIByTagPattern(int argc, NXSL_Value **argv, NXSL_Value **resul
 }
 
 /**
- * NXSL function: Find all DCIs with matching name, description, or tag
+ * NXSL function: Find all DCIs with matching name, description, tag, or related object
  */
 static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc < 1) || (argc > 4))
+   if ((argc < 1) || (argc > 5))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
 	if (!argv[0]->isObject())
@@ -263,7 +263,8 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   const WCHAR *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
+   const wchar_t *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
+   uint32_t relatedObjectId = 0;
    if (argc > 1)
    {
       if (!argv[1]->isNull())
@@ -290,12 +291,33 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
                   return NXSL_ERR_NOT_STRING;
                tagFilter = argv[3]->getValueAsCString();
             }
+
+            if (argc > 4)
+            {
+               if (!argv[4]->isNull())
+               {
+                  if (argv[4]->isObject(L"NetObj"))
+                  {
+                     NXSL_Object *o = argv[4]->getValueAsObject();
+                     shared_ptr<NetObj> relatedObject = *static_cast<shared_ptr<NetObj>*>(o->getData());
+                     relatedObjectId = relatedObject->getId();
+                  }
+                  else if (argv[4]->isInteger())
+                  {
+                     relatedObjectId = argv[4]->getValueAsUInt32();
+                  }
+                  else
+                  {
+                     return NXSL_ERR_NOT_INTEGER;
+                  }
+               }
+            }
          }
       }
    }
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, 0);
+	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
 	return 0;
 }
 
@@ -417,13 +439,10 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
- * Get all DCI values for period
- * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
- * Raw value indicator is optional (default is false)
- * End time is optional (default is current time)
- * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ * Get all DCI values for period (common implementation for GetDCIValues and GetDCIValuesEx).
+ * If asDataPoints is true, return array of data points (timestamp + value).
  */
-static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, bool asDataPoints)
 {
    if ((argc < 3) || (argc > 5))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -442,7 +461,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-      StringBuffer query(_T("SELECT "));
+      StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
       query.append(((argc > 4) && argv[4]->isTrue()) ? _T("raw_value") : _T("idata_value"));
       if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
       {
@@ -456,6 +475,17 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
          {
             query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
          }
+      }
+      else if (node->hasV5IdataTable())
+      {
+         query.append(_T(" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_"));
+         query.append(node->getId());
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+         query.append(_T(" UNION ALL SELECT "));
+         query.append(V5TimestampToMs(false));
+         query.append(_T(",idata_value,raw_value FROM idata_v5_"));
+         query.append(node->getId());
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
       }
       else
       {
@@ -471,18 +501,33 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt32() : static_cast<int32_t>(time(nullptr)));
+			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64() * 1000L);
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() * 1000L : static_cast<int64_t>(time(nullptr)) * 1000L);
+			if (node->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+			{
+			   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64());
+			   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() : static_cast<int64_t>(time(nullptr)));
+			}
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{
+            wchar_t buffer[MAX_RESULT_LENGTH];
             NXSL_Array *result = new NXSL_Array(vm);
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
-               TCHAR buffer[MAX_RESULT_LENGTH];
-               DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
-               result->set(i, vm->createValue(buffer));
+               if (asDataPoints)
+               {
+                  time_t t = DBGetFieldInt64(hResult, i, 0);
+                  auto data = new std::pair<time_t, String>(t, DBGetFieldAsString(hResult, i, 1));
+                  result->set(i, vm->createValue(vm->createObject(&g_nxslDataPointClass, data)));
+               }
+               else
+               {
+                  DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
+                  result->set(i, vm->createValue(buffer));
+               }
             }
 				*ppResult = vm->createValue(result);
 				DBFreeResult(hResult);
@@ -506,6 +551,30 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	}
 
 	return 0;
+}
+
+/**
+ * Get all DCI values for period.
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
+ * Raw value indicator is optional (default is false)
+ * End time is optional (default is current time)
+ * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ */
+static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   return GetDCIValuesImpl(argc, argv, ppResult, vm, false);
+}
+
+/**
+ * Get all DCI values for period as data points (timestamp + values).
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
+ * Raw value indicator is optional (default is false)
+ * End time is optional (default is current time)
+ * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
+ */
+static int F_GetDCIValuesEx(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   return GetDCIValuesImpl(argc, argv, ppResult, vm, true);
 }
 
 /**
@@ -602,6 +671,9 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
  */
 static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 3) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -610,6 +682,9 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 
    if (!argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 3) && !argv[3]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
    NXSL_Object *object = argv[0]->getValueAsObject();
 	if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
@@ -620,9 +695,15 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
    if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      time_t t = time(nullptr);
-      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>());
-      if (success)
+      Timestamp t = (argc == 3) ? Timestamp::now() : Timestamp::fromMilliseconds(argv[3]->getValueAsInt64());
+      if (dci->getLastValueTimestamp() == t)
+      {
+         // Ensure 1 ms difference between two consecutive values
+         ThreadSleepMs(1);
+         t = Timestamp::now();
+      }
+      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>(), argc > 3);
+      if (success && (dci->getLastPollTime() < t))
          dci->setLastPollTime(t);
    }
 
@@ -689,6 +770,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "GetDCIRawValue", F_GetDCIRawValue, 2 },
    { "GetDCIValue", F_GetDCIValue, 2 },
    { "GetDCIValues", F_GetDCIValues, -1 },
+   { "GetDCIValuesEx", F_GetDCIValuesEx, -1 },
    { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
    { "GetDCIValueByName", F_GetDCIValueByName, 2 },
    { "GetDCIValueByTag", F_GetDCIValueByTag, 2 },
@@ -697,7 +779,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
    { "Instance", F_Instance, -1 , true },
-   { "PushDCIData", F_PushDCIData, 3 }
+   { "PushDCIData", F_PushDCIData, -1 }
 };
 
 /**

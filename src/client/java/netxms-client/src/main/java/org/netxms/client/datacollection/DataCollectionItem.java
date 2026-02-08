@@ -30,15 +30,16 @@ import org.netxms.client.constants.DataType;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
-   public static final int DCF_DETECT_ANOMALIES        = 0x00001;
-	public static final int DCF_ALL_THRESHOLDS          = 0x00002;
-	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x00004;
-	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x00008;
-	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x00070;
-   public static final int DCF_CALCULATE_NODE_STATUS   = 0x00400;
-   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x00800;
-   public static final int DCF_MULTIPLIERS_MASK        = 0x30000;
-   public static final int DCF_STORE_CHANGES_ONLY      = 0x40000;
+   public static final int DCF_DETECT_ANOMALIES_IFOREST = 0x00001;
+   public static final int DCF_ALL_THRESHOLDS           = 0x00002;
+   public static final int DCF_RAW_VALUE_OCTET_STRING   = 0x00004;
+   public static final int DCF_SHOW_ON_OBJECT_TOOLTIP   = 0x00008;
+   public static final int DCF_AGGREGATE_FUNCTION_MASK  = 0x00070;
+   public static final int DCF_DETECT_ANOMALIES_AI      = 0x00200;
+   public static final int DCF_CALCULATE_NODE_STATUS    = 0x00400;
+   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW  = 0x00800;
+   public static final int DCF_MULTIPLIERS_MASK         = 0x30000;
+   public static final int DCF_STORE_CHANGES_ONLY       = 0x40000;
 
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -67,11 +68,11 @@ public class DataCollectionItem extends DataCollectionObject
    private DataType transformedDataType;
 	private int deltaCalculation;
 	private int sampleCount;
+	private int sampleSaveInterval;
 	private int multiplier;
 	private String unitName;
 	private int snmpRawValueType;
    private List<Threshold> thresholds;
-	private String predictionEngine;
    private int allThresholdsRearmEvent;
 
 	/**
@@ -88,11 +89,11 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
+		sampleSaveInterval = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL);
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
       allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
-		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -117,11 +118,11 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = DataType.NULL;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
+		sampleSaveInterval = 1;
 		multiplier = 0;
 		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
       allThresholdsRearmEvent = 0;
-		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
 
@@ -168,12 +169,12 @@ public class DataCollectionItem extends DataCollectionObject
       transformedDataType = src.transformedDataType;
       deltaCalculation = src.deltaCalculation;
       sampleCount = src.sampleCount;
+      sampleSaveInterval = src.sampleSaveInterval;
       multiplier = src.multiplier;
       unitName = src.unitName;
       snmpRawValueType = src.snmpRawValueType;
       allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       thresholds = new ArrayList<Threshold>(src.thresholds);
-      predictionEngine = src.predictionEngine;
    }
 
    /**
@@ -190,9 +191,9 @@ public class DataCollectionItem extends DataCollectionObject
       msg.setFieldInt16(NXCPCodes.VID_TRANSFORMED_DATA_TYPE, transformedDataType.getValue());
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
+		msg.setFieldInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL, sampleSaveInterval);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
       msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, allThresholdsRearmEvent);
-		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (unitName != null)
 			msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
@@ -457,40 +458,42 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
-    * @return State of DCF_DETECT_ANOMALIES flag
+    * Check if anomaly detection using isolation forest is enabled for this DCI
+    *
+    * @return true if enabled
     */
-   public boolean isAnomalyDetectionEnabled()
+   public boolean isAnomalyDetectionEnabledIF()
    {
-      return (flags & DCF_DETECT_ANOMALIES) != 0;
+      return (flags & DCF_DETECT_ANOMALIES_IFOREST) != 0;
+   }
+
+   /**
+    * Check if anomaly detection using AI is enabled for this DCI
+    *
+    * @return true if enabled
+    */
+   public boolean isAnomalyDetectionEnabledAI()
+   {
+      return (flags & DCF_DETECT_ANOMALIES_AI) != 0;
    }
 
    /**
     * Enable or disable anomaly detection for this DCI
     * 
-    * @param enable true to enable
+    * @param enableIF true to enable isolation forest based anomaly detection
+    * @param enableAI true to enable AI based anomaly detection
     */
-   public void setAnomalyDetectionEnabled(boolean enable)
+   public void setAnomalyDetectionEnabled(boolean enableIF, boolean enableAI)
    {
-      if (enable)
-         flags |= DCF_DETECT_ANOMALIES;
+      if (enableAI)
+         flags |= DCF_DETECT_ANOMALIES_AI;
       else
-         flags &= ~DCF_DETECT_ANOMALIES;
-   }
+         flags &= ~DCF_DETECT_ANOMALIES_AI;
 
-   /**
-    * @return the predictionEngine
-    */
-   public String getPredictionEngine()
-   {
-      return predictionEngine;
-   }
-
-   /**
-    * @param predictionEngine the predictionEngine to set
-    */
-   public void setPredictionEngine(String predictionEngine)
-   {
-      this.predictionEngine = predictionEngine;
+      if (enableIF)
+         flags |= DCF_DETECT_ANOMALIES_IFOREST;
+      else
+         flags &= ~DCF_DETECT_ANOMALIES_IFOREST;
    }
 
    /**
@@ -530,5 +533,25 @@ public class DataCollectionItem extends DataCollectionObject
          flags |= DCF_STORE_CHANGES_ONLY;
       else
          flags &= ~DCF_STORE_CHANGES_ONLY;
+   }
+
+   /**
+    * Get sample save interval (save every N-th sample).
+    *
+    * @return sample save interval (1 = save all samples)
+    */
+   public int getSampleSaveInterval()
+   {
+      return sampleSaveInterval;
+   }
+
+   /**
+    * Set sample save interval (save every N-th sample).
+    *
+    * @param sampleSaveInterval sample save interval (1 = save all samples)
+    */
+   public void setSampleSaveInterval(int sampleSaveInterval)
+   {
+      this.sampleSaveInterval = sampleSaveInterval;
    }
 }

@@ -40,7 +40,7 @@ VPNConnector::VPNConnector(bool hidden) : super()
    m_dwPeerGateway = 0;
    m_localNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
    m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
-   m_isHidden = hidden;
+   m_isUnpublished = hidden;
    setCreationTime();
 }
 

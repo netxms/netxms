@@ -25,6 +25,9 @@
 #define DEBUG_TAG_BASE        _T("scripts")
 #define DEBUG_TAG_SCHEDULED   DEBUG_TAG_BASE _T(".scheduled")
 
+void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runtimeChange);
+void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script);
+
 /**
  * Script error counter
  */
@@ -291,8 +294,17 @@ void ReloadScript(uint32_t id)
    }
 
    s_scriptLibrary.lock();
+   NXSL_LibraryScript *s = s_scriptLibrary.findScript(id);
+   if ((s != nullptr) && s->getMetadataEntryAsBoolean(L"ai_tool"))
+   {
+      UnregisterAIFunctionScriptHandler(s);
+   }
    s_scriptLibrary.deleteScript(id);
    s_scriptLibrary.addScript(script);
+   if (script->getMetadataEntryAsBoolean(L"ai_tool"))
+   {
+      RegisterAIFunctionScriptHandler(script, true);
+   }
    s_scriptLibrary.unlock();
 }
 
@@ -522,6 +534,11 @@ uint32_t DeleteScript(uint32_t scriptId)
       if (ExecuteQueryOnObject(hdb, scriptId, _T("DELETE FROM script_library WHERE script_id=?")))
       {
          s_scriptLibrary.lock();
+         NXSL_LibraryScript *s = s_scriptLibrary.findScript(scriptId);
+         if ((s != nullptr) && s->getMetadataEntryAsBoolean(L"ai_tool"))
+         {
+            UnregisterAIFunctionScriptHandler(s);
+         }
          s_scriptLibrary.deleteScript(scriptId);
          s_scriptLibrary.unlock();
          rcc = RCC_SUCCESS;
@@ -539,29 +556,28 @@ uint32_t DeleteScript(uint32_t scriptId)
    return rcc;
 }
 
+
+
 /**
- * Create export record for library script
+ * Create export record for library script as JSON object
  */
-void CreateScriptExportRecord(TextFileWriter& xml, uint32_t id)
+json_t *CreateScriptExportRecord(uint32_t id)
 {
    NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
    if (script == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_BASE, 3, _T("CreateScriptExportRecord: failed to load script with ID %u from database"), id);
-      return;
+      return nullptr;
    }
 
-   xml.appendUtf8String("\t\t<script id=\"");
-   xml.append(id);
-   xml.appendUtf8String("\">\n\t\t\t<guid>");
-   xml.append(script->getGuid());
-   xml.appendUtf8String("</guid>\n\t\t\t<name>");
-   xml.append(EscapeStringForXML2(script->getName()));
-   xml.appendUtf8String("</name>\n\t\t\t<code>");
-   xml.append(EscapeStringForXML2(script->getSourceCode()));
-   xml.appendUtf8String("</code>\n\t\t</script>\n");
+   json_t *scriptObj = json_object();
+   json_object_set_new(scriptObj, "id", json_integer(id));
+   json_object_set_new(scriptObj, "guid", json_string_t(script->getGuid().toString()));
+   json_object_set_new(scriptObj, "name", json_string_t(script->getName()));
+   json_object_set_new(scriptObj, "code", json_string_t(script->getSourceCode()));
 
    delete script;
+   return scriptObj;
 }
 
 /**
@@ -640,6 +656,81 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, b
    else
    {
       context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name \"%s\" is invalid"), name);
+   }
+}
+/**
+ * Import single script from JSON
+ */
+void ImportScript(json_t *script, bool overwrite, ImportContext *context)
+{
+   // Get script name
+   String name = json_object_get_string(script, "name", _T("<unnamed>"));
+   if (!json_is_string(json_object_get(script, "name")) || name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name missing"));
+      return;
+   }
+
+   // Get GUID
+   uuid guid = json_object_get_uuid(script, "guid");
+   
+   if (guid.isNull())
+   {
+      guid = uuid::generate();
+      context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID script \"%s\" not found in configuration file, generated new GUID %s"), name.cstr(), guid.toString().cstr());
+   }
+
+   if (json_object_get(script, "code") == nullptr)
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Missing source code for script \"%s\""), name.cstr());
+      return;
+   }
+
+   String code = json_object_get_string(script, "code", _T(""));
+
+   if (IsValidScriptName(name))
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt;
+
+      bool newScript = false;
+      uint32_t id = ResolveScriptGuid(guid);
+      if (id == 0) // Create new script
+      {
+         id = CreateUniqueId(IDG_SCRIPT);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
+         newScript = true;
+      }
+      else // Update existing script
+      {
+         if (!overwrite)
+         {
+            DBConnectionPoolReleaseConnection(hdb);
+            return;
+         }
+         hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+      }
+
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
+         if (newScript)
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+
+         if (DBExecute(hStmt))
+         {
+            context->log(NXLOG_INFO, _T("ImportScript()"), _T("Script \"%s\" successfully imported"), name.cstr());
+            ReloadScript(id);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name \"%s\" is invalid"), name.cstr());
    }
 }
 
@@ -728,7 +819,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Parse value list. This function may modify data pointed by "start".
  */
-bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
+bool NXCORE_EXPORTABLE ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets)
 {
    TCHAR *p = *start;
 

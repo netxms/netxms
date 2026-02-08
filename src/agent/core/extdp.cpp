@@ -402,7 +402,7 @@ protected:
 
 public:
    StructuredMetricProvider(const TCHAR *name, const TCHAR *command,
-      StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
+      StringObjectMap<StructuredExtractorParameterDefinition> *metricDefinitions,
       StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions,
       bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description);
    virtual ~StructuredMetricProvider();
@@ -420,13 +420,13 @@ public:
  * Constructor
  */
 StructuredMetricProvider::StructuredMetricProvider(const TCHAR *name, const TCHAR *command,
-                                             StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,
+                                             StringObjectMap<StructuredExtractorParameterDefinition> *metricDefinitions,
                                              StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions,
                                              bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description) :
          ExternalDataProvider(command, pollingInterval, timeout), m_name(name), m_description(description), m_dataExtractor(name)
 {
    m_forcePlainTextParser = forcePlainTextParser;
-   m_parameters = metricDefenitions;
+   m_parameters = metricDefinitions;
    m_lists = listDefinitions;
    _tcslcpy(m_genericParamName, name, MAX_PARAM_NAME);
    _tcslcat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
@@ -469,11 +469,20 @@ LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
    LONG rc = SYSINFO_RC_UNKNOWN;
 
    lock();
-
-   StructuredExtractorParameterDefinition *defenition = m_parameters->get(name);
-   if (defenition != nullptr)
+   const TCHAR *bracketPos = _tcschr(name, _T('('));
+   String cleanName = (bracketPos != nullptr) ? String(name, bracketPos - name) : String(name);
+   StructuredExtractorParameterDefinition *definition = m_parameters->get(cleanName);
+   if (definition != nullptr)
    {
-      rc = m_dataExtractor.getMetric(defenition->query, buffer, MAX_RESULT_LENGTH);
+      if (bracketPos != nullptr && definition->isParametrized)
+      {
+         StringBuffer cmdLine = SubstituteCommandArguments(definition->query, name);
+         rc = m_dataExtractor.getMetric(cmdLine, buffer, MAX_RESULT_LENGTH);
+      }
+      else
+      {
+         rc = m_dataExtractor.getMetric(definition->query, buffer, MAX_RESULT_LENGTH);
+      }
    }
    else if (MatchString(m_genericParamName, name, false))
    {
@@ -494,10 +503,10 @@ LONG StructuredMetricProvider::getList(const TCHAR *name, StringList *value)
    lock();
 
    LONG rc = SYSINFO_RC_UNKNOWN;
-   StructuredExtractorParameterDefinition *defenition = m_lists->get(name);
-   if (defenition != nullptr)
+   StructuredExtractorParameterDefinition *definition = m_lists->get(name);
+   if (definition != nullptr)
    {
-      rc = m_dataExtractor.getList(defenition->query, value);
+      rc = m_dataExtractor.getList(definition->query, value);
    }
    else if (MatchString(m_genericParamName, name, false))
    {
@@ -519,7 +528,16 @@ void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId
    m_parameters->forEach(
       [msg, baseId, count] (const TCHAR *key, StructuredExtractorParameterDefinition *value)
       {
-         msg->setField((*baseId)++, key);
+         if(value->isParametrized)
+         {
+            StringBuffer paramName(key);
+            paramName.append(_T("(*)"));
+            msg->setField((*baseId)++, paramName);
+         }
+         else
+         {
+            msg->setField((*baseId)++, key);
+         }
          msg->setField((*baseId)++, value->description);
          msg->setField((*baseId)++, static_cast<uint16_t>(value->dataType));
          (*count)++;
@@ -540,7 +558,22 @@ void StructuredMetricProvider::listParameters(NXCPMessage *msg, uint32_t *baseId
 void StructuredMetricProvider::listParameters(StringList *list)
 {
    lock();
-   list->addAll(m_parameters->keys());
+   m_parameters->forEach(
+      [list] (const TCHAR *key, StructuredExtractorParameterDefinition *value)
+      {
+         if(value->isParametrized)
+         {
+            StringBuffer paramName(key);
+            paramName.append(_T("(*)"));
+            list->add(paramName);
+         }
+         else
+         {
+            list->add(key);
+         }
+         return _CONTINUE;
+
+      });
    list->add(m_genericParamName);
    unlock();
 }
@@ -554,7 +587,9 @@ void StructuredMetricProvider::listLists(NXCPMessage *msg, uint32_t *baseId, uin
    m_lists->forEach(
       [msg, baseId, count](const TCHAR *key, void *value)
       {
+         StructuredExtractorParameterDefinition *def = static_cast<StructuredExtractorParameterDefinition*>(value);
          msg->setField((*baseId)++, key);
+         msg->setField((*baseId)++, def->description);
          (*count)++;
          return _CONTINUE;
 
@@ -562,6 +597,7 @@ void StructuredMetricProvider::listLists(NXCPMessage *msg, uint32_t *baseId, uin
    unlock();
 
    msg->setField((*baseId)++, m_genericParamName);
+   msg->setField((*baseId)++, _T(""));  // Generic parameter has no description
    (*count)++;
 }
 
@@ -660,9 +696,9 @@ void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, ui
 /**
  * Add new external table provider
  */
-void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions, StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
+void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefinitions, StringObjectMap<StructuredExtractorParameterDefinition> *listDefinitions, bool forcePlainTextParser, uint32_t pollingInterval, uint32_t timeout, const TCHAR *description)
 {
-   s_providers.add(new StructuredMetricProvider(name, command, metricDefenitions, listDefinitions, forcePlainTextParser, pollingInterval, timeout, description));
+   s_providers.add(new StructuredMetricProvider(name, command, metricDefinitions, listDefinitions, forcePlainTextParser, pollingInterval, timeout, description));
 }
 
 /**

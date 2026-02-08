@@ -2,6 +2,21 @@ openapi: 3.0.2
 info:
   title: NetXMS API
   version: 1.0.0
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Alarms
+    description: Alarm management operations
+  - name: Objects
+    description: Object management and queries
+  - name: Data Collection
+    description: Data collection items and historical data
+  - name: TCP Proxy
+    description: TCP proxy for remote access (VNC, SSH, etc.)
+  - name: Grafana
+    description: Grafana integration endpoints
+  - name: Server
+    description: Server information and status
 paths:
   /:
     get:
@@ -15,14 +30,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  name:
+                  description:
                     type: string
-                    description: API name
+                    description: API description
                   version:
                     type: string
-                    description: API version
+                    description: NetXMS version
+                  build:
+                    type: string
+                    description: Build tag
+                  apiVersion:
+                    type: integer
+                    description: API version number
       security: []
-  /server-info:
+  /v1/server-info:
     get:
       summary: Get server information
       description: Retrieve detailed server information including version, build, and configuration details.
@@ -39,38 +60,237 @@ paths:
                     description: Server version
                   build:
                     type: string
-                    description: Build information
-                  serverTime:
+                    description: Build tag
+                  id:
+                    type: integer
+                    description: Server ID
+                  name:
                     type: string
-                    format: date-time
-                    description: Current server time
+                    description: Server name
+                  color:
+                    type: string
+                    description: Server color (for UI theming)
+                  messageOfTheDay:
+                    type: string
+                    description: Message of the day
+                  tz:
+                    type: string
+                    description: Server timezone
+                  options:
+                    type: object
+                    properties:
+                      zoningEnabled:
+                        type: boolean
+                      strictAlarmStatusFlow:
+                        type: boolean
+                      timedAlarmAckEnabled:
+                        type: boolean
+                      helpdeskLinkActive:
+                        type: boolean
+                      tileServerURL:
+                        type: string
+                  dateTimeFormat:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        description: Date format string
+                      timeLong:
+                        type: string
+                        description: Long time format string
+                      timeShort:
+                        type: string
+                        description: Short time format string
+                  components:
+                    type: array
+                    items:
+                      type: object
+                    description: Registered server components
         '401':
           description: Unauthorized
       security:
         - BearerAuth: []
-  /status:
+  /v1/status:
     get:
-      summary: Get server status
-      description: Retrieve current server status and health information.
+      summary: Get session status
+      description: Retrieve current session status including user information.
       responses:
         '200':
-          description: Server status retrieved successfully
+          description: Session status retrieved successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
-                    type: string
-                    description: Server status
-                  uptime:
+                  userId:
                     type: integer
-                    description: Server uptime in seconds
+                    description: Current user ID
+                  userName:
+                    type: string
+                    description: Current user login name
+                  systemAccessRights:
+                    type: integer
+                    description: User's system access rights bitmask
         '401':
           description: Unauthorized
       security:
         - BearerAuth: []
-  /alarms:
+  /v1/tcp-proxy:
+    post:
+      summary: Create TCP Proxy Session
+      description: |
+        Create a TCP proxy session and return a short-lived token for WebSocket connection.
+        This is the first step in establishing a TCP proxy connection. The returned token
+        should be used to connect to the WebSocket endpoint `/v1/tcp-proxy/{token}`.
+
+        **Two-Phase Authorization Flow:**
+        1. Call this endpoint with Bearer token authentication to create a TCP tunnel
+        2. Server establishes connection to target via agent and returns a session token
+        3. Connect to `/v1/tcp-proxy/{token}` WebSocket endpoint (no auth header needed)
+
+        This flow is designed to work with browser WebSocket API which cannot send
+        custom Authorization headers.
+
+        **Required Permissions:**
+        - System access right: SYSTEM_ACCESS_SETUP_TCP_PROXY
+        - Object access right: OBJECT_ACCESS_CONTROL on the target or proxy object
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - port
+              properties:
+                allowControlMessages:
+                  type: boolean
+                  description: If true, server will send JSON control messages in text frames (default is false)
+                proxyId:
+                  type: integer
+                  description: |
+                    Proxy node ID or zone object ID. If specified, the connection will be established
+                    through this proxy node. Either proxyId or nodeId must be specified.
+                nodeId:
+                  type: integer
+                  description: |
+                    Target node ID. If proxyId is not specified, the server will automatically select
+                    the appropriate proxy for this node. Either proxyId or nodeId must be specified.
+                address:
+                  type: string
+                  format: ip-address
+                  description: |
+                    Target IP address. Required when proxyId is specified. When using nodeId,
+                    the node's primary IP address is used automatically.
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                  description: Target TCP port number (required).
+            example:
+              nodeId: 123
+              port: 5900
+      responses:
+        '201':
+          description: TCP proxy session created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/tcp-proxy/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: |
+            Bad Request - Invalid parameters.
+            Possible reasons:
+            - Port parameter missing
+            - Invalid IP address format
+            - Invalid proxy object type
+        '401':
+          description: Unauthorized - Authentication token missing or invalid
+        '403':
+          description: |
+            Forbidden - User does not have required permissions.
+            Either SYSTEM_ACCESS_SETUP_TCP_PROXY or OBJECT_ACCESS_CONTROL is missing.
+        '404':
+          description: Object not found - Invalid nodeId or proxyId
+        '502':
+          description: |
+            Bad Gateway - Cannot establish connection to agent.
+            Agent may be unreachable or TCP proxy setup failed.
+        '503':
+          description: Service Unavailable - No proxy node available in zone
+      security:
+        - BearerAuth: []
+      tags:
+        - TCP Proxy
+  /v1/tcp-proxy/{token}:
+    get:
+      summary: TCP Proxy WebSocket Connection
+      description: |
+        Establish a WebSocket connection for TCP proxy data transfer. This endpoint
+        requires a valid session token obtained from `POST /v1/tcp-proxy`.
+
+        **Token Properties:**
+        - Single-use: token is invalidated upon WebSocket connection
+        - Short-lived: expires after 30 seconds if not used
+        - No authentication header needed: token in path serves as authorization
+
+        **WebSocket Protocol:**
+        - Binary frames (opcode 0x02) are used for data transfer in both directions
+        - Text frames (opcode 0x01) are used for control messages (JSON format)
+        - Close frame (opcode 0x08) terminates the connection
+
+        **Control Messages (JSON):**
+        - Connection ready: `{"type": "connected", "channelId": 12345}`
+        - Close notification: `{"type": "close", "reason": "normal|error|agent_disconnect"}`
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session token obtained from POST /v1/tcp-proxy
+      responses:
+        '101':
+          description: |
+            Switching Protocols - WebSocket connection established successfully.
+            After upgrade, the connection enters WebSocket mode for bidirectional data transfer.
+            A JSON message `{"type": "connected", "channelId": N}` is sent after successful upgrade.
+          headers:
+            Upgrade:
+              schema:
+                type: string
+                example: websocket
+            Connection:
+              schema:
+                type: string
+                example: Upgrade
+            Sec-WebSocket-Accept:
+              schema:
+                type: string
+        '401':
+          description: |
+            Unauthorized - Token is invalid, expired, or already used.
+            WebSocket close frame with code 1008 (Policy Violation) is sent.
+      security: []
+      tags:
+        - TCP Proxy
+  /v1/alarms:
     get:
       summary: List Alarms
       description: Retrieve a list of alarms.
@@ -80,6 +300,11 @@ paths:
           schema:
             type: integer
             description: ID of root object for alarm retrieval (0 to retrieve all alarms)
+        - name: includeObjectDetails
+          in: query
+          schema:
+            type: boolean
+            description: If true, include full source object details in response
       responses:
         '200':
           description: Successful retrieval of alarms.
@@ -105,7 +330,7 @@ paths:
                       format: date-time
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}:
+  /v1/alarms/{alarm-id}:
     get:
       summary: Get details of specific alarm
       parameters:
@@ -125,7 +350,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/acknowledge:
+  /v1/alarms/{alarm-id}/acknowledge:
     post:
       summary: Acknowledge Alarm
       description: Acknowledge an alarm.
@@ -146,7 +371,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/resolve:
+  /v1/alarms/{alarm-id}/resolve:
     post:
       summary: Resolve Alarm
       description: Resolve an alarm.
@@ -167,7 +392,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /alarms/{alarm-id}/terminate:
+  /v1/alarms/{alarm-id}/terminate:
     post:
       summary: Terminate Alarm
       description: Terminate an alarm.
@@ -188,7 +413,7 @@ paths:
           description: Alarm with given ID does not exist
       security:
         - BearerAuth: []
-  /find/mac-address:
+  /v1/find/mac-address:
     get:
       summary: Find MAC address
       parameters:
@@ -257,7 +482,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/alarms:
+  /v1/grafana/infinity/alarms:
     post:
       summary: Retrieve alarms in format sutable Grafana Infinity
       description: Retrieve alarms in format sutable Grafana Infinity.
@@ -284,10 +509,10 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/object-query:
+  /v1/grafana/infinity/object-query:
     post:
-      summary: Execute object query and return result in format sutable Grafana Infinity
-      description: Execute object query and return result in  format sutable Grafana Infinity.
+      summary: Execute object query and return result in format suitable for Grafana Infinity
+      description: Execute object query and return result in format suitable for Grafana Infinity.
       requestBody:
         required: true
         content:
@@ -297,36 +522,35 @@ paths:
               properties:
                 rootObjectId:
                   type: integer
-                  description: ID of root object for alarm retrieval (0 to retrieve all alarms)
-                query:
+                  description: ID of root object for query execution
+                queryId:
                   type: integer
                   description: ID of object query to be executed
                 limit:
                   type: integer
                   description: Optional limit on number of retrieved objects. Limit is applied after ordering.
                 inputFields:
-                  type: array
-                  description: List of user input fields (will be available in query script via global variable $INPUT).
-                  items:
-                    type: object
-                    additionalProperties:
-                      type: string
-                      description: Set of key-value pairs where key is input field name and value is actual value provided by user.
+                  type: object
+                  description: User input fields (will be available in query script via global variable $INPUT).
+                  additionalProperties:
+                    type: string
       responses:
         '200':
-          description: Successful retrieval of alarms.
+          description: Successful retrieval of query results.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: object
-                  description: One row of result set with single object query result, fileds depend on query definition
+                  description: One row of result set with single object query result, fields depend on query definition
+        '400':
+          description: Query error
         '401':
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /grafana/infinity/summary-table:
+  /v1/grafana/infinity/summary-table:
     post:
       summary: Retrieve summary table in format sutable Grafana Infinity
       description: Retrieve summary table in format sutable Grafana Infinity.
@@ -357,7 +581,180 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /login:
+  /v1/grafana/objects/{object-id}/dci-list:
+    get:
+      summary: Get DCI list for Grafana
+      description: Retrieve data collection items (DCIs) for a specific object formatted for Grafana.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: DCI list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: DCI ID
+                        name:
+                          type: string
+                          description: DCI description
+        '400':
+          description: Object is not data collection target
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/grafana/objects-status:
+    post:
+      summary: Get objects status for Grafana
+      description: Retrieve status information for child objects of a root object formatted for Grafana.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rootObjectId:
+                  type: integer
+                  description: Root object ID to retrieve children status for
+              required:
+                - rootObjectId
+      responses:
+        '200':
+          description: Objects status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    Name:
+                      type: string
+                      description: Object name (may include alias in parentheses)
+                    Status:
+                      type: integer
+                      description: Object status
+        '400':
+          description: Invalid root object ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to root object
+        '404':
+          description: Root object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/grafana/object-list:
+    get:
+      summary: Get object list for Grafana
+      description: Retrieve a list of objects formatted for Grafana with optional filtering.
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            description: Filter type for objects (e.g., DataCollectionTarget, Summary, Alarm)
+      responses:
+        '200':
+          description: Object list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Object ID
+                        name:
+                          type: string
+                          description: Object name (may include alias)
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+  /v1/grafana/summary-table-list:
+    get:
+      summary: Get summary table list for Grafana
+      description: Retrieve a list of available DCI summary tables formatted for Grafana.
+      responses:
+        '200':
+          description: Summary table list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Summary table ID
+                        name:
+                          type: string
+                          description: Summary table name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have required system access rights
+      security:
+        - BearerAuth: []
+  /v1/grafana/query-list:
+    get:
+      summary: Get object query list for Grafana
+      description: Retrieve a list of available object queries formatted for Grafana.
+      responses:
+        '200':
+          description: Object query list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Query ID
+                        name:
+                          type: string
+                          description: Query name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have required system access rights
+      security:
+        - BearerAuth: []
+  /v1/login:
     post:
       summary: User Login
       description: Authenticate a user and respond with a token.
@@ -408,6 +805,8 @@ paths:
                   graceLogins:
                     type: integer
                     description: Number of grace logins left if password change is required.
+        '400':
+          description: Bad Request - Invalid request body
         '401':
           description: Unauthorized.
           headers:
@@ -427,7 +826,7 @@ paths:
                     type: integer
                     description: Error code that can provide additional information on login failure reasons.
       security: []
-  /logout:
+  /v1/logout:
     post:
       summary: User Logout
       description: Logout a user and invalidate their token.
@@ -436,7 +835,7 @@ paths:
           description: Successful logout.
       security:
         - BearerAuth: []
-  /objects:
+  /v1/objects:
     get:
       summary: List objects
       description: Retrieve a list of objects (with optional filter).
@@ -464,7 +863,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /objects/{object-id}:
+  /v1/objects/{object-id}:
     get:
       summary: Get object details
       description: Retrieve specific object details. Contains data for object overview, alarms, and last values.
@@ -489,7 +888,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/execute-agent-command:
+  /v1/objects/{object-id}/execute-agent-command:
     post:
       summary: Execute command on agent
       parameters:
@@ -527,7 +926,7 @@ paths:
                       description: Textual description of agent error code (if applicable)
       security:
         - BearerAuth: []
-  /objects/{object-id}/execute-script:
+  /v1/objects/{object-id}/execute-script:
     post:
       summary: Execute script within context of given object
       parameters:
@@ -581,7 +980,7 @@ paths:
                     description: Failure reason
       security:
         - BearerAuth: []
-  /objects/{object-id}/data-collection/current-values:
+  /v1/objects/{object-id}/data-collection/current-values:
     get:
       summary: Get current DCI values
       description: Retrieve current values for all data collection items (DCIs) of a given object.
@@ -620,7 +1019,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/data-collection/{dci-id}/history:
+  /v1/objects/{object-id}/data-collection/{dci-id}/history:
     get:
       summary: Get data collection history
       description: Retrieve historical data for a specific DCI (Data Collection Item).
@@ -637,23 +1036,26 @@ paths:
           schema:
             type: integer
             description: DCI (Data Collection Item) ID
-        - name: from
+        - name: timeFrom
           in: query
           schema:
-            type: string
-            format: date-time
-            description: Start time for data retrieval
-        - name: to
+            type: integer
+            description: Start time for data retrieval (Unix timestamp)
+        - name: timeTo
           in: query
           schema:
-            type: string
-            format: date-time
-            description: End time for data retrieval
-        - name: maxDataPoints
+            type: integer
+            description: End time for data retrieval (Unix timestamp)
+        - name: maxRows
           in: query
           schema:
             type: integer
             description: Maximum number of data points to return
+        - name: historicalDataType
+          in: query
+          schema:
+            type: integer
+            description: Type of historical data (0=raw, 1=processed, 2=full table, 3=raw and processed)
       responses:
         '200':
           description: Data collection history retrieved successfully
@@ -662,10 +1064,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  dciId:
-                    type: integer
-                    description: DCI ID
-                  data:
+                  description:
+                    type: string
+                    description: DCI description
+                  unitName:
+                    type: string
+                    description: Unit name for the value
+                  values:
                     type: array
                     items:
                       type: object
@@ -676,15 +1081,19 @@ paths:
                         value:
                           type: string
                           description: Data value
+        '400':
+          description: Object is not data collection target or DCI type not supported
         '401':
           description: Unauthorized
         '403':
           description: User does not have read access to given object
         '404':
           description: Object or DCI with given ID does not exist
+        '500':
+          description: Database failure
       security:
         - BearerAuth: []
-  /objects/{object-id}/expand-text:
+  /v1/objects/{object-id}/expand-text:
     post:
       summary: Expand text macros
       description: Expand text containing NetXMS macros in the context of a given object.
@@ -736,8 +1145,89 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/remote-control:
+    post:
+      summary: Create Remote Control Session
+      description: |
+        Create a remote control (VNC) session for a node and return a short-lived token
+        for WebSocket connection. This is a convenience endpoint that automatically
+        determines VNC connection parameters based on the node's configuration.
 
-  /objects/{object-id}/set-maintenance:
+        The endpoint uses the node's configured VNC port and proxy settings to establish
+        a TCP tunnel. The returned token should be used to connect to the WebSocket
+        endpoint `/v1/tcp-proxy/{token}`.
+
+        **Two-Phase Authorization Flow:**
+        1. Call this endpoint with Bearer token authentication
+        2. Server establishes VNC tunnel via agent and returns a session token
+        3. Connect to `/v1/tcp-proxy/{token}` WebSocket endpoint (no auth header needed)
+
+        **Required Permissions:**
+        - System access right: SYSTEM_ACCESS_SETUP_TCP_PROXY
+        - Object access rights: OBJECT_ACCESS_READ and OBJECT_ACCESS_CONTROL on the node
+      tags:
+        - Objects
+        - TCP Proxy
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allowControlMessages:
+                  type: boolean
+                  description: If true, server will send JSON control messages in text frames (default is false)
+      responses:
+        '201':
+          description: Remote control session created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/tcp-proxy/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: |
+            Bad Request - Object is not a node or VNC port not configured.
+        '401':
+          description: Unauthorized - Authentication token missing or invalid
+        '403':
+          description: |
+            Forbidden - User does not have required permissions.
+            Either SYSTEM_ACCESS_SETUP_TCP_PROXY, OBJECT_ACCESS_READ, or OBJECT_ACCESS_CONTROL is missing.
+        '404':
+          description: Object not found - Invalid object ID
+        '502':
+          description: |
+            Bad Gateway - Cannot establish connection to agent.
+            Agent may be unreachable or TCP proxy setup failed.
+        '503':
+          description: Service Unavailable - No proxy node available
+      security:
+        - BearerAuth: []
+
+  /v1/objects/{object-id}/set-maintenance:
     post:
       summary: Make object enter or leave maintenance mode
       parameters:
@@ -772,7 +1262,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/set-managed:
+  /v1/objects/{object-id}/set-managed:
     post:
       summary: Manage or unmanage object
       parameters:
@@ -804,7 +1294,7 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
-  /objects/{object-id}/take-screenshot:
+  /v1/objects/{object-id}/take-screenshot:
     get:
       summary: Take screenshot from remote system via NetXMS agent
       parameters:
@@ -836,7 +1326,40 @@ paths:
           description: Server side error (common reason is failed communication to agent). Response document may contain detailed failure reason.
       security:
         - BearerAuth: []
-  /objects/query:
+  /v1/objects/{object-id}/sub-tree:
+    get:
+      summary: Get object sub-tree
+      description: Retrieve a sub-tree of objects starting from the specified parent object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Parent object ID
+        - name: filter
+          in: query
+          schema:
+            type: string
+            description: Optional filter string. If provided, only objects with name or alias containing given string will be returned.
+      responses:
+        '200':
+          description: Object sub-tree retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectSummary'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/query:
     post:
       summary: Execute object query
       description: Execute object query (specialized NXSL script) and return all matching objects along with additional data fields.
@@ -885,7 +1408,7 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /objects/search:
+  /v1/objects/search:
     post:
       summary: Search objects
       description: Search for objects matching certain criteria. Multiple criterias will be combined with logical AND.
@@ -926,10 +1449,17 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
-  /object-tools:
+  /v1/object-tools:
     get:
       summary: List available object tools
-      description: Retrieve a list of object tools.
+      description: Retrieve a list of object tools with basic information.
+      parameters:
+        - name: types
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of tool types to filter by. Uses kebab-case format (e.g., "action,command,server-script,agent-list,file-download")
       responses:
         '200':
           description: Successful retrieval of object tools.
@@ -938,19 +1468,40 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    name:
-                      type: string
-                    kind:
-                      type: string
-                    filter:
-                      type: string
+                  $ref: '#/components/schemas/ObjectToolSummary'
+        '500':
+          description: Database failure.
       security:
         - BearerAuth: []
-  /dci-summary-tables:
+  /v1/object-tools/{tool-id}:
+    get:
+      summary: Get object tool details
+      description: Retrieve full details of a specific object tool.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      responses:
+        '200':
+          description: Successful retrieval of object tool details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectToolDetails'
+        '400':
+          description: Invalid tool ID.
+        '403':
+          description: Access denied.
+        '404':
+          description: Tool not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+  /v1/dci-summary-tables:
     get:
       summary: List DCI summary tables
       description: Retrieve a list of available DCI summary tables.
@@ -977,7 +1528,7 @@ paths:
           description: Unauthorized
       security:
         - BearerAuth: []
-  /dci-summary-tables/{table-id}/query:
+  /v1/dci-summary-tables/{table-id}/query:
     post:
       summary: Query specific DCI summary table
       description: Execute a query on a specific DCI summary table.
@@ -1017,7 +1568,7 @@ paths:
           description: Summary table with given ID does not exist
       security:
         - BearerAuth: []
-  /dci-summary-tables/adhoc-query:
+  /v1/dci-summary-tables/adhoc-query:
     post:
       summary: Execute ad-hoc DCI summary table query
       description: Execute an ad-hoc query on DCI summary tables.
@@ -1064,6 +1615,107 @@ components:
           type: string
         severity:
           type: string
+    ObjectToolType:
+      type: string
+      enum:
+        - internal
+        - action
+        - snmp-table
+        - agent-list
+        - url
+        - command
+        - server-command
+        - file-download
+        - server-script
+        - agent-table
+      description: Type of object tool
+    ObjectToolInputField:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Field name
+        type:
+          type: integer
+          description: Field type
+        displayName:
+          type: string
+          description: Display name for the field
+        flags:
+          type: integer
+          description: Field flags
+        sequence:
+          type: integer
+          description: Field sequence order
+    ObjectToolSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Tool ID
+        name:
+          type: string
+          description: Tool name
+        type:
+          $ref: '#/components/schemas/ObjectToolType'
+        askConfirmation:
+          type: boolean
+          description: Whether to ask for user confirmation before execution
+        generatesOutput:
+          type: boolean
+          description: Whether the tool generates output
+        disabled:
+          type: boolean
+          description: Whether the tool is disabled
+        showInCommands:
+          type: boolean
+          description: Whether to show in commands menu
+        snmpIndexedByValue:
+          type: boolean
+          description: Whether SNMP is indexed by value
+        runInContainerContext:
+          type: boolean
+          description: Whether to run in container context
+        suppressSuccessMessage:
+          type: boolean
+          description: Whether to suppress success message
+        setupTcpTunnel:
+          type: boolean
+          description: Whether to setup TCP tunnel
+        confirmationMessage:
+          type: string
+          description: Confirmation message shown to user
+        commandName:
+          type: string
+          description: Full command name
+        commandShortName:
+          type: string
+          description: Short command name
+        inputFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectToolInputField'
+          description: Input field definitions
+    ObjectToolDetails:
+      allOf:
+        - $ref: '#/components/schemas/ObjectToolSummary'
+        - type: object
+          properties:
+            data:
+              type: string
+              description: Tool-specific data
+            description:
+              type: string
+              description: Tool description
+            filter:
+              type: string
+              description: Tool filter (matching OID for SNMP tools)
+            icon:
+              type: string
+              description: Icon as hex-encoded image data
+            remotePort:
+              type: integer
+              description: Remote port for TCP tunnel
     ObjectClass:
       type: string
       enum:
@@ -1112,28 +1764,28 @@ components:
           type: integer
           description: Alarm ID
         Severity:
-          type: integer
-          description: Alarm severity
+          type: string
+          description: Alarm severity name (Normal, Warning, Minor, Major, Critical, etc.)
         State:
-          type: integer
-          description: Alarm state
+          type: string
+          description: Alarm state name (Outstanding, Acknowledged, Resolved, Terminated)
         Source:
-          type: integer
-          description: Source object ID
+          type: string
+          description: Source object name (may include alias in parentheses)
         Message:
           type: string
           description: Alarm message
         Count:
           type: integer
           description: Alarm repeat count
-        Ack/Resolve by: 
+        Ack/Resolve by:
           type: string
           description: User who acknowledged/resolved the alarm
         Created:
           type: string
           format: date-time
           description: Alarm creation time
-        lastChangeTime:
+        Last Change:
           type: string
           format: date-time
           description: Last change time of the alarm
@@ -1280,6 +1932,53 @@ components:
         threshold:
           type: object
           description: Active threshold information (present only if hasActiveThreshold is true)
+    TcpProxyConnectedMessage:
+      type: object
+      description: WebSocket text message sent when TCP proxy connection is established
+      properties:
+        type:
+          type: string
+          enum: [connected]
+        channelId:
+          type: integer
+          description: Channel ID for the established TCP proxy connection
+    TcpProxyErrorMessage:
+      type: object
+      description: WebSocket text message sent when an error occurs
+      properties:
+        type:
+          type: string
+          enum: [error]
+        code:
+          type: integer
+          description: |
+            Error code (RCC - Request Completion Code):
+            - 0: Success
+            - 1: Component locked
+            - 2: Access denied
+            - 3: Invalid request
+            - 4: Request timeout
+            - 5: Access denied
+            - 7: Communication failure
+            - 8: Invalid object ID
+        message:
+          type: string
+          description: Human-readable error message
+    TcpProxyCloseMessage:
+      type: object
+      description: WebSocket text message sent when the TCP proxy connection is closed
+      properties:
+        type:
+          type: string
+          enum: [close]
+        reason:
+          type: string
+          enum: [normal, error, agent_disconnect]
+          description: |
+            Reason for connection closure:
+            - normal: Connection closed normally by remote end
+            - error: Connection closed due to an error
+            - agent_disconnect: Agent connection was lost
   securitySchemes:
     BearerAuth:
       type: http

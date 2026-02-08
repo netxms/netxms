@@ -29,22 +29,30 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR query[256];
+   wchar_t query[512];
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("SELECT date_part('epoch',idata_timestamp)::int,raw_value FROM idata_sc_%s WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"),
-                  DCObject::getStorageClassName(dci->getStorageClass()), object->getId(), dci->getId());
+         _sntprintf(query, 512, L"SELECT timestamptz_to_ms(idata_timestamp),raw_value FROM idata_sc_%s WHERE item_id=%u ORDER BY idata_timestamp",
+                  DCObject::getStorageClassName(dci->getStorageClass()), dci->getId());
       }
       else
       {
-         _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"), object->getId(), dci->getId());
+         _sntprintf(query, 512, L"SELECT idata_timestamp,raw_value FROM idata WHERE item_id=%u ORDER BY idata_timestamp", dci->getId());
       }
+   }
+   else if (object->hasV5IdataTable())
+   {
+      _sntprintf(query, 512, L"SELECT idata_timestamp,raw_value FROM "
+               L"(SELECT idata_timestamp,raw_value FROM idata_%u WHERE item_id=%u "
+               L"UNION ALL SELECT %s,raw_value FROM idata_v5_%u WHERE item_id=%u) d "
+               L"ORDER BY idata_timestamp",
+               object->getId(), dci->getId(), V5TimestampToMs(false), object->getId(), dci->getId());
    }
    else
    {
-      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_%d WHERE item_id=%d ORDER BY idata_timestamp"), object->getId(), dci->getId());
+      _sntprintf(query, 512, L"SELECT idata_timestamp,raw_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp", object->getId(), dci->getId());
    }
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
@@ -62,19 +70,18 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
       {
          if (g_dbSyntax == DB_SYNTAX_TSDB)
          {
-            TCHAR query[256];
-            _sntprintf(query, 256, _T("UPDATE idata_sc_%s SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=to_timestamp(?)"),
+            _sntprintf(query, 512, L"UPDATE idata_sc_%s SET idata_value=? WHERE item_id=? AND idata_timestamp=ms_to_timestamptz(?)",
                      DCObject::getStorageClassName(dci->getStorageClass()));
             hStmt = DBPrepare(hdb, query);
          }
          else
          {
-            hStmt = DBPrepare(hdb, _T("UPDATE idata SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"));
+            hStmt = DBPrepare(hdb, L"UPDATE idata SET idata_value=? WHERE item_id=? AND idata_timestamp=?");
          }
       }
       else
       {
-         _sntprintf(query, 256, _T("UPDATE idata_%d SET idata_value=? WHERE item_id=? AND idata_timestamp=?"), object->getId());
+         _sntprintf(query, 512, L"UPDATE idata_%u SET idata_value=? WHERE item_id=? AND idata_timestamp=?", object->getId());
          hStmt = DBPrepare(hdb, query);
       }
       if (hStmt != nullptr)
@@ -83,16 +90,13 @@ bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundT
          DBBegin(hdb);
          for(int i = 0; i < count; i++)
          {
-            time_t timestamp = static_cast<time_t>(DBGetFieldInt64(hResult, i, 0));
+            Timestamp timestamp = DBGetFieldTimestamp(hResult, i, 0);
             ItemValue value(hResult, i, 1, timestamp, false);
             dci->recalculateValue(value);
 
-            int index = 1;
-            DBBind(hStmt, index++, DB_SQLTYPE_VARCHAR, value.getString(), DB_BIND_STATIC);
-            if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-               DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, object->getId());
-            DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, dci->getId());
-            DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(value.getTimeStamp()));
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value.getString(), DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dci->getId());
+            DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, value.getTimeStamp());
             DBExecute(hStmt);
 
             if (i % 10 == 0)

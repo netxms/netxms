@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ Threshold::Threshold(DCItem *relatedItem)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -76,6 +77,7 @@ Threshold::Threshold()
 	m_lastEventTimestamp = 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -105,6 +107,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
 	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = shadowCopy ? src.m_numMatches : 0;
+   m_activationSequence = shadowCopy ? src.m_activationSequence : 0;
 }
 
 /**
@@ -115,7 +118,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
  *        state_before_maint,last_checked_value,last_event_message,is_disabled FROM thresholds
  */
-Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, 0, true)
+Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, Timestamp::fromMilliseconds(0), true)
 {
    wchar_t textBuffer[MAX_EVENT_MSG_LENGTH];
 
@@ -148,6 +151,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
 
 	if ((m_function == F_LAST) && (m_sampleCount < 1))
 		m_sampleCount = 1;
+   m_activationSequence = 0;
 }
 
 /**
@@ -187,6 +191,55 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+   m_activationSequence = 0;
+}
+
+/**
+ * Create threshold from JSON
+ */
+Threshold::Threshold(json_t *json, DCItem *parentItem)
+{
+   createId();
+   m_itemId = parentItem->getId();
+   m_targetId = parentItem->getOwnerId();
+
+   String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_THRESHOLD_REACHED"));
+   m_eventCode = EventCodeFromName(activationEvent, EVENT_THRESHOLD_REACHED);
+
+   String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_THRESHOLD_REARMED"));
+   m_rearmEventCode = EventCodeFromName(deactivationEvent, EVENT_THRESHOLD_REARMED);
+
+   m_function = static_cast<BYTE>(json_object_get_int32(json, "function", F_LAST));
+   m_operation = static_cast<BYTE>(json_object_get_int32(json, "condition", OP_EQ));
+   m_dataType = parentItem->getTransformedDataType();
+
+   String value = json_object_get_string(json, "value", _T(""));
+   m_value.set(value, true);
+   m_expandValue = (NumChars(m_value, '%') > 0);
+
+   // Handle both sampleCount and param1 for compatibility
+   json_t *sampleCountObj = json_object_get(json, "sampleCount");
+   if (sampleCountObj != nullptr)
+      m_sampleCount = json_integer_value(sampleCountObj);
+   else
+      m_sampleCount = json_object_get_int32(json, "param1", 1);
+
+   m_scriptSource = nullptr;
+   m_script = nullptr;
+   m_lastScriptErrorReport = 0;
+
+   String script = json_object_get_string(json, "script", _T(""));
+   setScript(MemCopyString(script));
+
+   m_isReached = false;
+   m_wasReachedBeforeMaint = false;
+   m_disabled = false;
+   m_currentSeverity = SEVERITY_NORMAL;
+   m_repeatInterval = json_object_get_int32(json, "repeatInterval", -1);
+   m_lastEventTimestamp = 0;
+   m_lastEventMessage = nullptr;
+   m_numMatches = 0;
+   m_activationSequence = 0;
 }
 
 /**
@@ -274,14 +327,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    switch(m_function)
    {
       case F_DIFF:
-         if (ppPrevValues[0]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+         if (ppPrevValues[0]->getTimeStamp().asMilliseconds() == 1) // Timestamp 1 means placeholder value inserted by cache loader
             return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       case F_AVERAGE:
       case F_SUM:
       case F_MEAN_DEVIATION:
          for(int i = 0; i < m_sampleCount - 1; i++)
-            if (ppPrevValues[i]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+            if (ppPrevValues[i]->getTimeStamp().asMilliseconds() == 1) // Timestamp 1 means placeholder value inserted by cache loader
                return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       default:
@@ -974,34 +1027,42 @@ bool Threshold::equals(const Threshold& t) const
 }
 
 /**
- * Create management pack record
+ * Create configuration export record (simplified structure matching XML export)
  */
-void Threshold::createExportRecord(TextFileWriter& xml, int index) const
+json_t *Threshold::createExportRecord() const
 {
-   TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "function", json_integer(m_function));
+   json_object_set_new(root, "condition", json_integer(m_operation));
+   json_object_set_new(root, "value", json_string_t(m_value));
 
-   EventNameFromCode(m_eventCode, activationEvent);
-   EventNameFromCode(m_rearmEventCode, deactivationEvent);
-   xml.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
-                          _T("\t\t\t\t\t\t\t<function>%d</function>\n")
-                          _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
-                          _T("\t\t\t\t\t\t\t<value>%s</value>\n")
-                          _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
-                          _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n"),
-								  index, m_function, m_operation,
-								  EscapeStringForXML2(m_value.getString()).cstr(),
-                          EscapeStringForXML2(activationEvent).cstr(),
-								  EscapeStringForXML2(deactivationEvent).cstr(),
-								  m_sampleCount, m_repeatInterval);
-   if (m_scriptSource != nullptr)
+   // Convert event codes to event names
+   TCHAR activationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_eventCode, activationEventName))
    {
-      xml.appendUtf8String("\t\t\t\t\t\t\t<script>");
-      xml.append(EscapeStringForXML2(m_scriptSource));
-      xml.appendUtf8String("</script>\n");
+      json_object_set_new(root, "activationEvent", json_string_t(activationEventName));
    }
-   xml.appendUtf8String("\t\t\t\t\t\t</threshold>\n");
+   else
+   {
+      json_object_set_new(root, "activationEvent", json_string("UNKNOWN_EVENT"));
+   }
+
+   TCHAR deactivationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_rearmEventCode, deactivationEventName))
+   {
+      json_object_set_new(root, "deactivationEvent", json_string_t(deactivationEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "deactivationEvent", json_string("UNKNOWN_EVENT"));
+   }
+
+   json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
+   json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
+
+   return root;
 }
 
 /**
@@ -1088,6 +1149,7 @@ void Threshold::reconcile(const Threshold& src)
    m_currentSeverity = src.m_currentSeverity;
    m_lastScriptErrorReport = src.m_lastScriptErrorReport;
    m_lastCheckValue = src.m_lastCheckValue;
+   m_activationSequence = src.m_activationSequence;
 }
 
 /**
@@ -1108,4 +1170,15 @@ String Threshold::getTextualDefinition() const
       text.append(m_value.getString());
    }
    return text;
+}
+
+/**
+ * Get script dependencies
+ */
+void Threshold::getScriptDependencies(StringSet *dependencies) const
+{
+   if (m_expandValue)
+   {
+      FindScriptMacrosInText(m_value.getString(), dependencies);
+   }
 }

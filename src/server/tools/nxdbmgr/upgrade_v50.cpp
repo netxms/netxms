@@ -22,7 +22,7 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
-#include <pugixml.h>
+#include <netxms-xml.h>
 #include <nxsl.h>
 
 /**
@@ -502,20 +502,6 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
    DBFreeResult(result);
    return success;
 }
-
-/**
- * Write XML to string
- */
-class xml_string_writer : public pugi::xml_writer
-{
-public:
-   StringBuffer result;
-
-   virtual void write(const void* data, size_t size) override
-   {
-      result.appendUtf8String(static_cast<const char*>(data), size);
-   }
-};
 
 /**
  * Upgrade from 50.32 to 50.33

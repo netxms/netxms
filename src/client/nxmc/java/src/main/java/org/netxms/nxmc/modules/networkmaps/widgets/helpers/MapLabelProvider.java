@@ -306,7 +306,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             case STATUS:
                return new ObjectStatusIcon((NetworkMapObject)element, this);
             case FLOOR_PLAN:
-               return new ObjectFloorPlan((NetworkMapObject)element, this);
+               return new ObjectFloorPlan((NetworkMapObject)element, this, viewer);
             default:
                return null;
          }
@@ -332,7 +332,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
    /**
     * Get status image for given NetXMS object
-    * 
+    *
     * @param object
     * @return
     */
@@ -479,7 +479,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
    /**
     * Check if given element selected in the viewer
-    * 
+    *
     * @param object Object to test
     * @return true if given object is selected
     */
@@ -498,7 +498,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
       connection.setVisible(connectionsVisible);
 
-		NetworkMapLink link = (NetworkMapLink)connection.getData();      
+		NetworkMapLink link = (NetworkMapLink)connection.getData();
 
       switch(link.getRouting())
       {
@@ -520,14 +520,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             break;
       }
 
-		if (link.getConfig().getStyle() == 0 || link.getConfig().getStyle() > 5) 
+		if (link.getConfig().getStyle() == 0 || link.getConfig().getStyle() > 5)
 		{
-		   connection.setLineStyle(defaultLinkStyle); 
+		   connection.setLineStyle(defaultLinkStyle);
 		}
 		else
 		{
          connection.setLineStyle(link.getConfig().getStyle());
-		}		
+		}
 
       if (connectionLabelsVisible)
 		{
@@ -551,15 +551,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             connection.getConnectionFigure().add(label, targetEndpointLocator);
          }
 		}
-      
-      if (link.getConfig().getWidth() == 0) 
+
+      if (link.getConfig().getWidth() == 0)
       {
-         connection.setLineWidth(defaultLinkWidth); 
+         connection.setLineWidth(defaultLinkWidth);
       }
       else
       {
          connection.setLineWidth(link.getConfig().getWidth());
-      }  
+      }
 
 		if (showLinkDirection)
 		{
@@ -570,8 +570,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		}
 
 		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
-      ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
-      owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();     
+      ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link));
+      owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setSourceAnchor(new MultiConnectionAnchor(owner, link));
 
 		boolean hasDciData = link.hasDciData();
@@ -723,36 +723,36 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             nameLocatorObject1 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT1);
             nameLocatorObject2 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT2);
          }
-         
+
 
          String labelString = "";
          String labelObj1String = "";
          String labelObj2String = "";
          if (hasName)
             labelString += link.getName();
-         
+
          if (hasDciData)
          {
             String label = dciValueProvider.getDciDataAsString(link, LinkDataLocation.CENTER);
             if (hasName && !label.isEmpty())
                labelString += "\n";
             labelString += label;
-            
+
             labelObj1String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT1);
             labelObj2String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT2);
          }
-         
+
          final Label label;
-         if (link.getType() == NetworkMapLink.AGENT_TUNEL || 
+         if (link.getType() == NetworkMapLink.AGENT_TUNEL ||
              link.getType() == NetworkMapLink.AGENT_PROXY ||
              link.getType() == NetworkMapLink.ICMP_PROXY ||
              link.getType() == NetworkMapLink.SNMP_PROXY ||
              link.getType() == NetworkMapLink.SSH_PROXY ||
              link.getType() == NetworkMapLink.ZONE_PROXY)
             label = new ConnectorLabel(labelString, this, connection.getLineColor());
-         else            
+         else
             label = new ConnectorLabel(labelString, this);
-         
+
          if (!labelString.isEmpty())
             connection.getConnectionFigure().add(label, nameLocatorCenter);
          if (!labelObj1String.isEmpty())
@@ -764,7 +764,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
    /**
     * Get connector name for map link
-    * 
+    *
     * @param link map link
     * @param second true if name for second connector is requested
     * @return name for connector or null
@@ -846,7 +846,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    /**
     * Set default link width (to be used when not redefined on link level). Setting this value to 0 will revert to client default
     * width.
-    * 
+    *
     * @param defaultLinkWidth new default link width (0 to revert to client default)
     */
    public void setDefaultLinkWidth(int defaultLinkWidth)
@@ -915,7 +915,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
    /**
     * Get cached last DCI values for given node
-    * 
+    *
     * @param nodeId
     * @return cached last values or null
     */

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -54,6 +54,7 @@
 #include <functional>
 #include <array>
 #include <vector>
+#include <string>
 
 /*** Byte swapping ***/
 #if WORDS_BIGENDIAN
@@ -209,6 +210,7 @@ static inline WCHAR towupper(WCHAR c)
 #define CT_STRING_SET      11  /* Each value added to StringSet object */
 #define CT_STRING_LIST     12  /* Each value added to StringList object */
 #define CT_BOOLEAN         13  /* Data is pointer to bool variable which will be set to true or false */
+#define CT_DOUBLE          14  /* Data is pointer to souble variable */
 
 /**
  * Uninitialized value for override indicator
@@ -451,6 +453,173 @@ static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, siz
 
 /******* end of UNICODE related conversion and helper functions *******/
 
+
+/******* Timestamp formatting functions *******/
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
+
+/**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ */
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts);
+
+/**
+ * Get current time in milliseconds
+ */
+static inline int64_t GetCurrentTimeMs()
+{
+#ifdef _WIN32
+   FILETIME ft;
+   GetSystemTimeAsFileTime(&ft);
+   LARGE_INTEGER li;
+   li.LowPart  = ft.dwLowDateTime;
+   li.HighPart = ft.dwHighDateTime;
+   return (li.QuadPart - EPOCHFILETIME) / 10000;  // Offset to the Epoch time and convert to milliseconds
+#else
+   struct timeval tv;
+   gettimeofday(&tv, nullptr);
+   return (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
+#endif
+}
+
+/**
+ * Get number of milliseconds counted by monotonic clock since some
+ * unspecified point in the past (system boot time on most systems)
+ */
+static inline int64_t GetMonotonicClockTime()
+{
+#if defined(_WIN32)
+   return static_cast<int64_t>(GetTickCount64());
+#elif defined(__sun)
+   return static_cast<int64_t>(gethrtime() / _LL(1000000));
+#else
+   struct timespec ts;
+   clock_gettime(CLOCK_MONOTONIC, &ts);
+   return static_cast<int64_t>(ts.tv_sec) * _LL(1000) + static_cast<int64_t>(ts.tv_nsec) / _LL(1000000);
+#endif
+}
+
+/**
+ * Timestamp class - holds timestamp in milliseconds
+ */
+class LIBNETXMS_EXPORTABLE Timestamp
+{
+private:
+   int64_t v;
+
+   Timestamp(int64_t t)
+   {
+      v = t;
+   }
+
+public:
+   Timestamp() = default;
+
+   static Timestamp now()
+   {
+      return Timestamp(GetCurrentTimeMs());
+   }
+
+   static Timestamp fromMilliseconds(int64_t ms)
+   {
+      return Timestamp(ms);
+   }
+
+   static Timestamp fromTime(time_t t)
+   {
+      return Timestamp(static_cast<int64_t>(t) * 1000);
+   }
+
+   bool isNull() const
+   {
+      return v == 0;
+   }
+
+   int64_t asMilliseconds() const
+   {
+      return v;
+   }
+
+   int64_t asMicroseconds() const
+   {
+      return v * _LL(1000);
+   }
+
+   int64_t asNanoseconds() const
+   {
+      return v * _LL(1000000);
+   }
+
+   time_t asTime() const
+   {
+      return static_cast<time_t>(v / 1000);
+   }
+
+   json_t *asJson() const
+   {
+      return (v == 0) ? json_null() : json_string(FormatISO8601TimestampMs(v).c_str());
+   }
+
+   bool operator==(const Timestamp& other) const
+   {
+      return v == other.v;
+   }
+
+   bool operator!=(const Timestamp& other) const
+   {
+      return v != other.v;
+   }
+
+   bool operator<(const Timestamp& other) const
+   {
+      return v < other.v;
+   }
+
+   bool operator<=(const Timestamp& other) const
+   {
+      return v <= other.v;
+   }
+
+   bool operator>(const Timestamp& other) const
+   {
+      return v > other.v;
+   }
+
+   bool operator>=(const Timestamp& other) const
+   {
+      return v >= other.v;
+   }
+
+   int64_t operator-(const Timestamp& other) const
+   {
+      return v - other.v;
+   }
+
+   Timestamp operator-(int64_t milliseconds) const
+   {
+      return Timestamp(v - milliseconds);
+   }
+
+   Timestamp& operator-=(int64_t milliseconds)
+   {
+      v -= milliseconds;
+      return *this;
+   }
+
+   Timestamp operator+(int64_t milliseconds) const
+   {
+      return Timestamp(v + milliseconds);
+   }
+
+   Timestamp& operator+=(int64_t milliseconds)
+   {
+      v += milliseconds;
+      return *this;
+   }
+};
 
 /**
  * Class for serial communications
@@ -917,7 +1086,7 @@ public:
     * Create new memory pool
     */
    MemoryPool(size_t regionSize = 8192);
-   
+
    /**
     * Forbid copy construction
     */
@@ -1252,14 +1421,17 @@ protected:
 
    bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
+   bool fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase) const;
+
 public:
    static const ssize_t npos;
    static const String empty;
 
    String();
    String(const TCHAR *init);
-   String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
+   String(const TCHAR *init, ssize_t length, Ownership takeOwnership = Ownership::False);
    String(const char *init, const char *codepage);
+   String(const char *init, ssize_t length, const char *codepage);
    String(const String& src);
    String(String&& src);
    virtual ~String();
@@ -1276,6 +1448,7 @@ public:
    String operator +(const TCHAR *right) const;
 
 	char *getUTF8String() const;
+	std::string getUTF8StdString() const;
 
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
@@ -1288,6 +1461,22 @@ public:
 	bool equals(const TCHAR *s) const;
    bool equalsIgnoreCase(const String& s) const;
    bool equalsIgnoreCase(const TCHAR *s) const;
+   bool fuzzyEquals(const String& s, double threshold) const
+   {
+      return fuzzyEqualsImpl(s, threshold, false);
+   }
+   bool fuzzyEquals(const TCHAR *s, double threshold) const
+   {
+      return (s != nullptr) ? fuzzyEqualsImpl(String(s), threshold, false) : false;
+   }
+   bool fuzzyEqualsIgnoreCase(const String& s, double threshold) const
+   {
+      return fuzzyEqualsImpl(s, threshold, true);
+   }
+   bool fuzzyEqualsIgnoreCase(const TCHAR *s, double threshold) const
+   {
+      return (s != nullptr) ? fuzzyEqualsImpl(String(s), threshold, true) : false;
+   }
    bool startsWith(const String& s) const;
    bool startsWith(const TCHAR *s) const;
    bool endsWith(const String& s) const;
@@ -1333,8 +1522,9 @@ class LIBNETXMS_EXPORTABLE MutableString : public String
 public:
    MutableString() : String() { }
    MutableString(const TCHAR *init) : String(init) { }
-   MutableString(const TCHAR *init, size_t len) : String(init, len) { }
+   MutableString(const TCHAR *init, size_t length) : String(init, length) { }
    MutableString(const char *init, const char *codepage) : String(init, codepage) { }
+   MutableString(const char *init, ssize_t length, const char *codepage) : String(init, length, codepage) { }
    MutableString(const String& src) : String(src) { }
    MutableString(const MutableString& src) : String(src) { }
    MutableString(MutableString&& src) : String(src) { }
@@ -1363,6 +1553,7 @@ public:
    SharedString(const TCHAR *str) { if (str != nullptr) m_string = make_shared<String>(str); }
    SharedString(TCHAR *str, Ownership takeOwnership) { if (str != nullptr) m_string = make_shared<String>(str, -1, takeOwnership); }
    SharedString(const char *str, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, codepage); }
+   SharedString(const char *str, ssize_t length, const char *codepage) { if (str != nullptr) m_string = make_shared<String>(str, length, codepage); }
 
    SharedString& operator=(const SharedString &str)
    {
@@ -1430,6 +1621,7 @@ public:
    StringBuffer(const TCHAR *init);
    StringBuffer(const TCHAR *init, size_t length);
    StringBuffer(const char *init, const char *codepage);
+   StringBuffer(const char *init, ssize_t length, const char *codepage);
    StringBuffer(const StringBuffer& src);
    StringBuffer(StringBuffer&& src);
    StringBuffer(const String& src);
@@ -1471,6 +1663,7 @@ public:
    StringBuffer& append(uint64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
    StringBuffer& append(double d, const TCHAR *format = nullptr) { insert(m_length, d, format); return *this; }
    StringBuffer& append(const uuid& guid) { insert(m_length, guid); return *this; }
+   StringBuffer& append(Timestamp t) { insert(m_length, t); return *this; }
 
    StringBuffer& appendPreallocated(TCHAR *str)
    {
@@ -1501,6 +1694,7 @@ public:
    void insert(size_t index, uint64_t n, const TCHAR *format = nullptr);
    void insert(size_t index, double d, const TCHAR *format = nullptr);
    void insert(size_t index, const uuid& guid);
+   void insert(size_t index, Timestamp t) { insert(index, t.asMilliseconds()); }
 
    void insertPreallocated(size_t index, TCHAR *str) { if (str != nullptr) { insert(index, str); MemFree(str); } }
 
@@ -1864,10 +2058,10 @@ public:
 
    ConstIterator& operator=(const ConstIterator& other)
    {
-      m_worker->decRefCount(); 
+      m_worker->decRefCount();
       m_worker = other.m_worker;
       m_worker->incRefCount();
-      return *this; 
+      return *this;
    }
 
    bool operator==(const ConstIterator& other) { return m_worker->equals(other.m_worker); }
@@ -1878,7 +2072,7 @@ public:
       return *this;
    }
    ConstIterator operator++(int) // Postfix increment operator.
-   {  
+   {
       ConstIterator temp = *this;
       m_worker->next();
       return temp;
@@ -1953,7 +2147,7 @@ private:
 	void *m_context;
 
 	bool internalRemove(int index, bool allowDestruction);
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+	void destroyObject(void *object) { if (object != nullptr) m_objectDestructor(object, this); }
 
 protected:
    bool m_storePointers;
@@ -1991,6 +2185,7 @@ public:
 	void shrinkBy(int count) { if (count >= m_size) clear(); else shrinkTo(m_size - count); }
    void sort(int (*cb)(const void *, const void *));
    void sort(int (*cb)(void *, const void *, const void *), void *context);
+   void swap(int index1, int index2);
 
    void swap(Array& other);
 
@@ -2155,7 +2350,7 @@ private:
    }
 
 public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	IntegerArray(int initial = 0, int grow = 1024 / sizeof(T)) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
    IntegerArray(const IntegerArray<T>& src) : Array(src) { }
    IntegerArray(IntegerArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~IntegerArray() { }
@@ -2315,14 +2510,6 @@ public:
          add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
    }
 
-   int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
-   int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
-   void addAll(const SharedObjectArray& src)
-   {
-      for(int i = 0; i < src.m_data.size(); i++)
-         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
-   }
-
    T *get(int index) const
    {
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
@@ -2333,6 +2520,18 @@ public:
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
       return (p != nullptr) ? *p : m_null;
    }
+
+   int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   void addAll(const SharedObjectArray& src)
+   {
+      for(int i = 0; i < src.m_data.size(); i++)
+         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
+   }
+
+   void insert(int index, shared_ptr<T> element) { m_data.insert(index, new(m_pool.allocate()) shared_ptr<T>(element)); }
+   void insert(int index, T *element) { m_data.insert(index, new(m_pool.allocate()) shared_ptr<T>(element)); }
+
    void replace(int index, shared_ptr<T> element)
    {
       auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
@@ -2345,6 +2544,7 @@ public:
       if (p != nullptr)
          *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
+
    void remove(int index) { m_data.remove(index); }
    void clear() { m_data.clear(); }
 
@@ -2840,7 +3040,12 @@ private:
 
 public:
    StringSet(bool counting = false);
+   StringSet(const StringSet& src);
+   StringSet(StringSet&& src);
    ~StringSet();
+
+   StringSet& operator=(const StringSet& src);
+   StringSet& operator=(StringSet&& src);
 
    int add(const TCHAR *str);
    int addPreallocated(TCHAR *str);
@@ -2951,6 +3156,7 @@ protected:
    void _put(const void *key);
    void _remove(const void *key);
    bool _contains(const void *key) const;
+   uint32_t _count(const void *key) const;
 
 public:
    virtual ~HashSetBase();
@@ -2960,7 +3166,9 @@ public:
 
    void clear();
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *context) const;
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void*, void*), void *context) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*)> cb) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const void*, uint32_t)> cb) const;
 };
 
 /**
@@ -3008,6 +3216,11 @@ public:
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, void*)>(cb), context);
    }
 
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&)> cb) const
+   {
+      return HashSetBase::forEach([cb] (const void *k) { return cb(*static_cast<const K*>(k)); });
+   }
+
    Iterator<const K> begin()
    {
       return Iterator<const K>(new HashSetIterator(this));
@@ -3036,7 +3249,7 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint64_t>;
 #endif
 
 /**
- * Hash set template
+ * Counting hash set - allows multiple addition of same key and counts number of additions / removals
  */
 template<class K> class CountingHashSet : public HashSetBase
 {
@@ -3061,10 +3274,16 @@ public:
    void remove(const K& key) { _remove(&key); }
    void removeAll(std::vector<K> keys) { for (K& key : keys) _remove(&key); }
    bool contains(const K& key) const { return _contains(&key); }
+   uint32_t count(const K& key) const { return _count(&key); }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
    {
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&, uint32_t)> cb) const
+   {
+      return HashSetBase::forEach([cb] (const void *k, uint32_t c) { return cb(*static_cast<const K*>(k), c); });
    }
 
    Iterator<const K> begin()
@@ -3186,6 +3405,14 @@ public:
       m_mutex.unlock();
       return result;
    }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult(const K&, uint32_t)> cb) const
+   {
+      m_mutex.lock();
+      auto result = m_set.forEach(cb);
+      m_mutex.unlock();
+      return result;
+   }
 };
 
 #ifdef _WIN32
@@ -3264,7 +3491,7 @@ protected:
 
 public:
    HashMapIterator(HashMapBase *hashMap = nullptr);
-   HashMapIterator(const HashMapIterator& other);  
+   HashMapIterator(const HashMapIterator& other);
 
    virtual bool hasNext() override;
    virtual void *next() override;
@@ -3941,11 +4168,16 @@ public:
    BYTE *takeBuffer();
 
    void clear() { m_size = 0; m_pos = 0; }
+   void truncate(size_t newSize) { if (newSize < m_size) { m_size = newSize; if (m_pos > m_size) m_pos = m_size; } }
+
+   void removeTerminalControlCharacters();
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
+#if CAN_OVERLOAD_INT8_T
    void write(int8_t c) { write(&c, 1); }
+#endif
 
    void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
    void writeB(int16_t n) { writeB(static_cast<uint16_t>(n)); }
@@ -3999,6 +4231,7 @@ private:
    bool m_instanceColumn;
    TCHAR m_unitName[63];
    int m_multiplier;
+   int m_useMultiplier;
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, int32_t dataType, bool isInstance);
@@ -4015,12 +4248,14 @@ public:
    bool isInstanceColumn() const { return m_instanceColumn; }
    const TCHAR *getUnitName() const { return m_unitName; }
    int getMultiplier() const { return m_multiplier; }
+   int getUseMultiplier() const { return m_useMultiplier; }
 
    void setDataType(int32_t type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
    void setDisplayName(const TCHAR *name);
    void setUnitName(const TCHAR *name);
    void setMultiplier(int multiplier) { m_multiplier = multiplier; }
+   void setUseMultiplier(int useMultiplier) { m_useMultiplier = useMultiplier; }
 };
 
 /**
@@ -4117,7 +4352,9 @@ public:
    ~TableRow() = default;
 
    void addColumn() { m_cells.add(new TableCell); }
+   void insertColumn(int index) { m_cells.insert(index, new TableCell); }
    void deleteColumn(int index) { m_cells.remove(index); }
+   void swapColumns(int column1, int column2) { m_cells.swap(column1, column2); }
 
    void set(int index, const TCHAR *value, int status, uint32_t objectId)
    {
@@ -4236,6 +4473,8 @@ public:
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, int32_t dataType = 0, const TCHAR *displayName = nullptr, bool isInstance = false);
    int addColumn(const TableColumnDefinition& d);
+   void insertColumn(int index, const TCHAR *name, int32_t dataType, const TCHAR *displayName, bool isInstance);
+   void swapColumns(int column1, int column2);
    void setColumnDataType(int col, int32_t dataType)
    {
       if ((col >= 0) && (col < m_columns.size()))
@@ -4337,7 +4576,18 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE shared_ptr<Table>;
 /**
  * Convert UNIX timestamp to JSON string in ISO 8601 format
  */
-json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t);
+static inline json_t *json_time_string(time_t t)
+{
+   return (t == 0) ? json_null() : json_string(FormatISO8601Timestamp(t).c_str());
+}
+
+/**
+ * Convert UNIX timestamp expressed in milliseconds to JSON string in ISO 8601 format
+ */
+static inline json_t *json_time_string_ms(int64_t t)
+{
+   return (t == 0) ? json_null() : json_string(FormatISO8601TimestampMs(t).c_str());
+}
 
 /**
  * Create JSON string with null check
@@ -4365,6 +4615,18 @@ static inline json_t *json_string_w(const WCHAR *s)
 #else
 #define json_string_t json_string_a
 #endif
+
+/**
+ * Create JSON string with base64-encoded content
+ */
+static inline json_t *json_base64_string(const void *data, size_t len)
+{
+   char *out;
+   base64_encode_alloc(reinterpret_cast<const char*>(data), len, &out);
+   json_t *js = json_string(out);
+   MemFree(out);
+   return js;
+}
 
 /**
  * Create JSON array from integer array
@@ -4507,6 +4769,15 @@ static inline char *json_object_get_string_a(json_t *object, const char *tag, co
 /**
  * Get string value from object
  */
+static inline String json_object_get_string(json_t *object, const char *tag, const TCHAR *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? String(json_string_value(value), "utf8") : String(defval);
+}
+
+/**
+ * Get string value from object
+ */
 static inline const char *json_object_get_string_utf8(json_t *object, const char *tag, const char *defval)
 {
    json_t *value = json_object_get(object, tag);
@@ -4514,12 +4785,25 @@ static inline const char *json_object_get_string_utf8(json_t *object, const char
 }
 
 /**
+ * Get integer value with type conversion when necessary
+ */
+static inline json_int_t json_integer_value_ex(json_t *v, json_int_t defval)
+{
+   if (json_is_integer(v))
+      return json_integer_value(v);
+   if (json_is_string(v))
+      return strtoll(json_string_value(v), nullptr, 0);
+   if (json_is_boolean(v))
+      return json_boolean_value(v) ? 1 : 0;
+   return defval;
+}
+
+/**
  * Get integer value from object
  */
 static inline int64_t json_object_get_int64(json_t *object, const char *tag, int64_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? json_integer_value(value) : defval;
+   return json_integer_value_ex(json_object_get(object, tag), defval);
 }
 
 /**
@@ -4527,8 +4811,7 @@ static inline int64_t json_object_get_int64(json_t *object, const char *tag, int
  */
 static inline uint64_t json_object_get_uint64(json_t *object, const char *tag, uint64_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<uint64_t>(json_integer_value(value)) : defval;
+   return static_cast<uint64_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**
@@ -4536,8 +4819,7 @@ static inline uint64_t json_object_get_uint64(json_t *object, const char *tag, u
  */
 static inline int32_t json_object_get_int32(json_t *object, const char *tag, int32_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<int32_t>(json_integer_value(value)) : defval;
+   return static_cast<int32_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**
@@ -4545,8 +4827,7 @@ static inline int32_t json_object_get_int32(json_t *object, const char *tag, int
  */
 static inline uint32_t json_object_get_uint32(json_t *object, const char *tag, uint32_t defval = 0)
 {
-   json_t *value = json_object_get(object, tag);
-   return json_is_integer(value) ? static_cast<uint32_t>(json_integer_value(value)) : defval;
+   return static_cast<uint32_t>(json_integer_value_ex(json_object_get(object, tag), defval));
 }
 
 /**
@@ -4694,16 +4975,6 @@ public:
       m_length = std::min(static_cast<uint16_t>(length), MaxLen);
       memcpy(m_value, value, m_length);
    }
-   GenericId(const GenericId& src)
-   {
-      memcpy(this, &src, sizeof(GenericId<MaxLen>));
-   }
-
-   GenericId& operator=(const GenericId& src)
-   {
-      memcpy(this, &src, sizeof(GenericId<MaxLen>));
-      return *this;
-   }
 
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
@@ -4732,9 +5003,12 @@ public:
 class LIBNETXMS_EXPORTABLE MacAddress : public GenericId<8>
 {
 private:
-   TCHAR *toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair = false) const;
-   TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
-   TCHAR *toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const;
+   wchar_t *toStringInternalW(wchar_t *buffer, wchar_t separator, bool bytePair = false) const;
+   wchar_t *toStringInternal3W(wchar_t *buffer, wchar_t separator) const;
+   wchar_t *toStringInternalDecimalW(wchar_t *buffer, wchar_t separator) const;
+   char *toStringInternalA(char *buffer, char separator, bool bytePair = false) const;
+   char *toStringInternal3A(char *buffer, char separator) const;
+   char *toStringInternalDecimalA(char *buffer, char separator) const;
 
 public:
    MacAddress(size_t length = 0) : GenericId<8>(length) { }
@@ -4748,7 +5022,7 @@ public:
    }
 
    static MacAddress parse(const char *str, bool partialMac = false);
-   static MacAddress parse(const WCHAR *str, bool partialMac = false);
+   static MacAddress parse(const wchar_t *str, bool partialMac = false);
 
    bool isValid() const { return !isNull(); }
    bool isBroadcast() const;
@@ -4756,8 +5030,23 @@ public:
    bool equals(const MacAddress &a) const { return GenericId<8>::equals(a); }
    bool equals(const BYTE *value, size_t length = 6) const { return GenericId<8>::equals(value, length); }
 
-   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
    String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   char *toStringA(char *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   wchar_t *toStringW(wchar_t *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const
+   {
+#ifdef UNICODE
+      return toStringW(buffer, notation);
+#else
+      return toStringA(buffer, notation);
+#endif
+   }
+
+   json_t *toJson(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const
+   {
+      char buffer[32];
+      return json_string(toStringA(buffer, notation));
+   }
 
    static const MacAddress NONE;
    static const MacAddress ZERO;
@@ -4933,7 +5222,7 @@ private:
 
 public:
    InetAddressList() : m_list(0, 8, Ownership::True) { }
-   InetAddressList(const InetAddressList& src) = delete;
+   InetAddressList(const InetAddressList& src);
 
    void add(const InetAddress& addr);
    void add(const InetAddressList& addrList);
@@ -5262,6 +5551,16 @@ struct CodeLookupElement
 };
 
 /**
+ * Code translation structure - wchar_t/char pair
+ */
+struct CodeLookupElementEx
+{
+   int32_t code;
+   const wchar_t *wtext;
+   const char *mbtext;
+};
+
+/**
  * Store for shared_ptr with synchronized access
  */
 template<typename T> class shared_ptr_store
@@ -5471,42 +5770,6 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
 #endif
 
-/**
- * Get current time in milliseconds
- */
-static inline int64_t GetCurrentTimeMs()
-{
-#ifdef _WIN32
-   FILETIME ft;
-   GetSystemTimeAsFileTime(&ft);
-   LARGE_INTEGER li;
-   li.LowPart  = ft.dwLowDateTime;
-   li.HighPart = ft.dwHighDateTime;
-   return (li.QuadPart - EPOCHFILETIME) / 10000;  // Offset to the Epoch time and convert to milliseconds
-#else
-   struct timeval tv;
-   gettimeofday(&tv, nullptr);
-   return (int64_t)tv.tv_sec * 1000 + (int64_t)(tv.tv_usec / 1000);
-#endif
-}
-
-/**
- * Get number of milliseconds counted by monotonic clock since some
- * unspecified point in the past (system boot time on most systems)
- */
-static inline int64_t GetMonotonicClockTime()
-{
-#if defined(_WIN32)
-   return static_cast<int64_t>(GetTickCount64());
-#elif defined(__sun)
-   return static_cast<int64_t>(gethrtime() / _LL(1000000));
-#else
-   struct timespec ts;
-   clock_gettime(CLOCK_MONOTONIC, &ts);
-   return static_cast<int64_t>(ts.tv_sec) * _LL(1000) + static_cast<int64_t>(ts.tv_nsec) / _LL(1000000);
-#endif
-}
-
 uint64_t LIBNETXMS_EXPORTABLE FileSizeW(const wchar_t *pszFileName);
 uint64_t LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
@@ -5601,6 +5864,17 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #define RegexpMatch RegexpMatchA
 #endif
 
+size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t len1, const TCHAR *s2, size_t len2, bool ignoreCase);
+static inline size_t CalculateLevenshteinDistance(const TCHAR *s1, const TCHAR *s2, bool ignoreCase = false)
+{
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   return CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
+}
+double LIBNETXMS_EXPORTABLE CalculateStringSimilarity(const TCHAR *s1, const TCHAR *s2, bool ignoreCase);
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold = 0.8);
+
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands);
 String LIBNETXMS_EXPORTABLE ShortenFilePathForDisplay(const TCHAR *path, size_t maxLen);
 
@@ -5629,7 +5903,7 @@ WCHAR LIBNETXMS_EXPORTABLE *TrimW(WCHAR *str);
 #define Trim TrimA
 #endif
 
-TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
+TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings, bool mergeSeparators = false);
 int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds);
 bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now);
@@ -5711,7 +5985,16 @@ int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
 #define daemon __daemon
 #endif
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+#define nx_wprintf wprintf
+#define nx_fwprintf fwprintf
+#define nx_swprintf swprintf
+#define nx_vwprintf vwprintf
+#define nx_vfwprintf vfwprintf
+#define nx_vswprintf vswprintf
+
+#else
 
 bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
 
@@ -5719,19 +6002,19 @@ DWORD LIBNETXMS_EXPORTABLE GetEnvironmentVariable(const TCHAR *var, TCHAR *buffe
 BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *value);
 
 #ifdef UNICODE
-int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wprintf(const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swprintf(wchar_t *buffer, size_t size, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwprintf(const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswprintf(wchar_t *buffer, size_t size, const wchar_t *format, va_list args);
 
-int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...);
-int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
-int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wscanf(const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swscanf(const wchar_t *str, const wchar_t *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwscanf(const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const wchar_t *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswscanf(const wchar_t *str, const wchar_t *format, va_list args);
 #endif
 
 #endif	/* _WIN32 */
@@ -5962,8 +6245,8 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 #endif
 
 int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue);
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue, bool utc = false);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue, bool utc = false);
 
 #ifdef UNICODE
 #define ParseDateTime ParseDateTimeW
@@ -6148,7 +6431,6 @@ bool LIBNETXMS_EXPORTABLE InflateFile(const TCHAR *inputFile, ByteStream *output
 int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, bool gzipFormat);
 
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
-TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS
@@ -6157,6 +6439,15 @@ static inline String FormatTimestamp(time_t t)
 {
    TCHAR buffer[32];
    return String(FormatTimestamp(t, buffer));
+}
+
+/**
+ * Format timestamp in milliseconds as yyyy-mm-dd HH:MM:SS.nnn
+ */
+static inline String FormatTimestampMs(int64_t t)
+{
+   TCHAR buffer[32];
+   return String(FormatTimestampMs(t, buffer));
 }
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
@@ -6180,6 +6471,7 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds);
 String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision, const TCHAR *unit = nullptr);
 String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value);
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW

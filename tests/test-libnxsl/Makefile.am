@@ -14,6 +14,7 @@ nxsltest_DATA = \
 	addr.nxsl \
 	arrays.nxsl \
 	base64.nxsl \
+	bitops.nxsl \
 	boolean.nxsl \
 	bytestream.nxsl \
 	control.nxsl \

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Common defines for client library and server
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -94,11 +94,11 @@
 /**
  * Forced poll types
  */
-#define POLL_STATUS                 1
-#define POLL_CONFIGURATION_FULL     2
-#define POLL_INTERFACE_NAMES        3
-#define POLL_TOPOLOGY               4
-#define POLL_CONFIGURATION_NORMAL   5
+#define POLL_STATUS                       1
+#define POLL_CONFIGURATION_WITH_RESET     2
+#define POLL_INTERFACE_NAMES              3
+#define POLL_TOPOLOGY                     4
+#define POLL_CONFIGURATION                5
 #define POLL_INSTANCE_DISCOVERY     6
 #define POLL_ROUTING_TABLE          7
 #define POLL_DISCOVERY              8
@@ -132,6 +132,7 @@
 #define OBJECT_NETWORKMAP            21
 #define OBJECT_DASHBOARDROOT         22
 #define OBJECT_DASHBOARD             23
+#define OBJECT_DASHBOARDTEMPLATE     24
 #define OBJECT_BUSINESSSERVICEROOT   27
 #define OBJECT_BUSINESSSERVICE       28
 #define OBJECT_COLLECTOR             29
@@ -190,42 +191,65 @@
 #define ALARM_HELPDESK_CLOSED    2
 
 /**
+ * Incident states
+ */
+#define INCIDENT_STATE_OPEN          0
+#define INCIDENT_STATE_IN_PROGRESS   1
+#define INCIDENT_STATE_BLOCKED       2
+#define INCIDENT_STATE_RESOLVED      3
+#define INCIDENT_STATE_CLOSED        4
+
+/**
+ * Incident activity types (for activity log)
+ */
+#define INCIDENT_ACTIVITY_CREATED        0
+#define INCIDENT_ACTIVITY_STATE_CHANGE   1
+#define INCIDENT_ACTIVITY_ASSIGNED       2
+#define INCIDENT_ACTIVITY_ALARM_LINKED   3
+#define INCIDENT_ACTIVITY_ALARM_UNLINKED 4
+#define INCIDENT_ACTIVITY_COMMENT_ADDED  5
+#define INCIDENT_ACTIVITY_UPDATED        6
+
+/**
  * Node capabilities
  */
-#define NC_IS_SNMP                _ULL(0x0000000001)
-#define NC_IS_NATIVE_AGENT        _ULL(0x0000000002)
-#define NC_IS_BRIDGE              _ULL(0x0000000004)
-#define NC_IS_ROUTER              _ULL(0x0000000008)
-#define NC_IS_LOCAL_MGMT          _ULL(0x0000000010)
-#define NC_IS_PRINTER             _ULL(0x0000000020)
-#define NC_IS_OSPF                _ULL(0x0000000040)
-#define NC_IS_SSH                 _ULL(0x0000000080)
-#define NC_IS_CDP                 _ULL(0x0000000100)
-#define NC_IS_NDP                 _ULL(0x0000000200)  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
-#define NC_IS_LLDP                _ULL(0x0000000400)  /* Supports Link Layer Discovery Protocol */
-#define NC_IS_VRRP                _ULL(0x0000000800)  /* VRRP support */
-#define NC_HAS_VLANS              _ULL(0x0000001000)  /* VLAN information available */
-#define NC_IS_8021X               _ULL(0x0000002000)  /* 802.1x support enabled on node */
-#define NC_IS_STP                 _ULL(0x0000004000)  /* Spanning Tree (IEEE 802.1d) enabled on node */
-#define NC_HAS_ENTITY_MIB         _ULL(0x0000008000)  /* Supports ENTITY-MIB */
-#define NC_HAS_IFXTABLE           _ULL(0x0000010000)  /* Supports ifXTable */
-#define NC_HAS_AGENT_IFXCOUNTERS  _ULL(0x0000020000)  /* Agent supports 64-bit interface counters */
-#define NC_HAS_WINPDH             _ULL(0x0000040000)  /* Node supports Windows PDH parameters */
-#define NC_IS_WIFI_CONTROLLER     _ULL(0x0000080000)  /* Node is wireless network controller */
-#define NC_IS_SMCLP               _ULL(0x0000100000)  /* Node supports SMCLP protocol */
-#define NC_IS_NEW_POLICY_TYPES    _ULL(0x0000200000)  /* Defines if agent is already upgraded to new policy type */
-#define NC_HAS_USER_AGENT         _ULL(0x0000400000)  /* User agent (desktop support app) is installed */
-#define NC_IS_ETHERNET_IP         _ULL(0x0000800000)
-#define NC_IS_MODBUS_TCP          _ULL(0x0001000000)
-#define NC_IS_PROFINET            _ULL(0x0002000000)
-#define NC_HAS_FILE_MANAGER       _ULL(0x0004000000)
-#define NC_LLDP_V2_MIB            _ULL(0x0008000000)
-#define NC_EMULATED_ENTITY_MIB    _ULL(0x0010000000)  /* ENTITY MIB support emulated by driver */
-#define NC_DEVICE_VIEW            _ULL(0x0020000000)  /* Device view is supported */
-#define NC_IS_WIFI_AP             _ULL(0x0040000000)  /* Node is wireless access point */
-#define NC_IS_VNC                 _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
-#define NC_IS_LOCAL_VNC           _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
-#define NC_REGISTERED_FOR_BACKUP  _ULL(0x0200000000)  /* Node is registered for device configuration backup */
+#define NC_IS_SNMP                 _ULL(0x0000000001)
+#define NC_IS_NATIVE_AGENT         _ULL(0x0000000002)
+#define NC_IS_BRIDGE               _ULL(0x0000000004)
+#define NC_IS_ROUTER               _ULL(0x0000000008)
+#define NC_IS_LOCAL_MGMT           _ULL(0x0000000010)
+#define NC_IS_PRINTER              _ULL(0x0000000020)
+#define NC_IS_OSPF                 _ULL(0x0000000040)
+#define NC_IS_SSH                  _ULL(0x0000000080)
+#define NC_IS_CDP                  _ULL(0x0000000100)
+#define NC_IS_NDP                  _ULL(0x0000000200)  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
+#define NC_IS_LLDP                 _ULL(0x0000000400)  /* Supports Link Layer Discovery Protocol */
+#define NC_IS_VRRP                 _ULL(0x0000000800)  /* VRRP support */
+#define NC_HAS_VLANS               _ULL(0x0000001000)  /* VLAN information available */
+#define NC_IS_8021X                _ULL(0x0000002000)  /* 802.1x support enabled on node */
+#define NC_IS_STP                  _ULL(0x0000004000)  /* Spanning Tree (IEEE 802.1d) enabled on node */
+#define NC_HAS_ENTITY_MIB          _ULL(0x0000008000)  /* Supports ENTITY-MIB */
+#define NC_HAS_IFXTABLE            _ULL(0x0000010000)  /* Supports ifXTable */
+#define NC_HAS_AGENT_IFXCOUNTERS   _ULL(0x0000020000)  /* Agent supports 64-bit interface counters */
+#define NC_HAS_WINPDH              _ULL(0x0000040000)  /* Node supports Windows PDH parameters */
+#define NC_IS_WIFI_CONTROLLER      _ULL(0x0000080000)  /* Node is wireless network controller */
+#define NC_IS_SMCLP                _ULL(0x0000100000)  /* Node supports SMCLP protocol */
+#define NC_IS_NEW_POLICY_TYPES     _ULL(0x0000200000)  /* Defines if agent is already upgraded to new policy type */
+#define NC_HAS_USER_AGENT          _ULL(0x0000400000)  /* User agent (desktop support app) is installed */
+#define NC_IS_ETHERNET_IP          _ULL(0x0000800000)
+#define NC_IS_MODBUS_TCP           _ULL(0x0001000000)
+#define NC_IS_PROFINET             _ULL(0x0002000000)
+#define NC_HAS_FILE_MANAGER        _ULL(0x0004000000)
+#define NC_LLDP_V2_MIB             _ULL(0x0008000000)
+#define NC_EMULATED_ENTITY_MIB     _ULL(0x0010000000)  /* ENTITY MIB support emulated by driver */
+#define NC_DEVICE_VIEW             _ULL(0x0020000000)  /* Device view is supported */
+#define NC_IS_WIFI_AP              _ULL(0x0040000000)  /* Node is wireless access point */
+#define NC_IS_VNC                  _ULL(0x0080000000)  /* Node supports VNC connection from server or zone proxy */
+#define NC_IS_LOCAL_VNC            _ULL(0x0100000000)  /* Node supports VNC connection via local agent */
+#define NC_REGISTERED_FOR_BACKUP   _ULL(0x0200000000)  /* Node is registered for device configuration backup */
+#define NC_HAS_SERVICE_MANAGER     _ULL(0x0400000000)  /* Node has service manager accessible via NetXMS agent */
+#define NC_SSH_INTERACTIVE_CHANNEL _ULL(0x0800000000)  /* Set if interactive (shell) SSH channel can be established */
+#define NC_SSH_COMMAND_CHANNEL     _ULL(0x1000000000)  /* Set if SSH command channel can be established */
 
 /**
  * Node flags
@@ -281,6 +305,8 @@
 #define ODF_FORCE_CONFIGURATION_POLL       0x0002
 #define ODF_CONFIGURATION_POLL_PASSED      0x0004
 #define ODF_CONFIGURATION_POLL_PENDING     0x0008
+#define ODF_HAS_IDATA_V5_TABLE             0x0010
+#define ODF_HAS_TDATA_V5_TABLE             0x0020
 
 /**
  * Node runtime (dynamic) flags
@@ -310,6 +336,7 @@
 #define NSF_ICMP_UNREACHABLE           0x00200000
 #define NSF_SSH_UNREACHABLE            0x00400000
 #define NSF_MODBUS_UNREACHABLE         0x00800000
+#define NSF_DECOMMISSIONED             0x01000000
 
 /**
  * Sensor capabilities
@@ -755,9 +782,18 @@ enum SessionState
 #define RCC_REMOTE_CONNECT_FAILED         ((uint32_t)172)
 #define RCC_DOMAIN_MEMBER_ALREADY         ((uint32_t)173)
 #define RCC_CONTROLLER_UNAVAILABLE        ((uint32_t)174)
-#define RCC_PARTIAL_FAIL                  ((uint32_t)175)
+#define RCC_PARTIAL_FAILURE               ((uint32_t)175)
 #define RCC_AGENT_ACCESS_DENIED           ((uint32_t)176)
 #define RCC_TCP_PROXY_DISABLED            ((uint32_t)177)
+#define RCC_INVALID_TASK_ID               ((uint32_t)178)
+#define RCC_INVALID_CHAT_ID               ((uint32_t)179)
+#define RCC_INVALID_INCIDENT_ID           ((uint32_t)180)
+#define RCC_INCIDENT_CLOSED               ((uint32_t)181)
+#define RCC_ALARM_ALREADY_IN_INCIDENT     ((uint32_t)182)
+#define RCC_INVALID_INCIDENT_STATE        ((uint32_t)183)
+#define RCC_COMMENT_REQUIRED              ((uint32_t)184)
+#define RCC_INVALID_MESSAGE_ID            ((uint32_t)185)
+#define RCC_EPP_CONFLICT                  ((uint32_t)186)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -835,14 +871,14 @@ enum SessionState
 #define SYSTEM_ACCESS_PERSISTENT_STORAGE      MASK_BIT64(16)
 #define SYSTEM_ACCESS_SEND_NOTIFICATION       MASK_BIT64(17)
 #define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     MASK_BIT64(18)
-#define SYSTEM_ACCESS_REGISTER_AGENTS         MASK_BIT64(19)
+#define SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS    MASK_BIT64(19)
 #define SYSTEM_ACCESS_READ_SERVER_FILES       MASK_BIT64(20)
 #define SYSTEM_ACCESS_SERVER_CONSOLE          MASK_BIT64(21)
 #define SYSTEM_ACCESS_MANAGE_SERVER_FILES     MASK_BIT64(22)
 #define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS     MASK_BIT64(23)
 #define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS     MASK_BIT64(24)
 #define SYSTEM_ACCESS_REPORTING_SERVER        MASK_BIT64(25)
-//#define RESERVED_FOR_FUTURE_USE             MASK_BIT64(26)
+#define SYSTEM_ACCESS_MANAGE_AI_TASKS         MASK_BIT64(26)
 #define SYSTEM_ACCESS_MANAGE_IMAGE_LIB        MASK_BIT64(27)
 #define SYSTEM_ACCESS_UNLINK_ISSUES           MASK_BIT64(28)
 #define SYSTEM_ACCESS_VIEW_SYSLOG             MASK_BIT64(29)
@@ -867,8 +903,10 @@ enum SessionState
 #define SYSTEM_ACCESS_MANAGE_2FA_METHODS      MASK_BIT64(48)
 #define SYSTEM_ACCESS_MANAGE_AM_SCHEMA        MASK_BIT64(49)
 #define SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG   MASK_BIT64(50)
+#define SYSTEM_ACCESS_VIEW_WELCOME_PAGE       MASK_BIT64(51)
+#define SYSTEM_ACCESS_SEARCH_NETWORK          MASK_BIT64(52)
 
-#define SYSTEM_ACCESS_FULL                    _ULL(0x7FFFFFFFFFFFF)
+#define SYSTEM_ACCESS_FULL                    _ULL(0x001FFFFFFFFFFFFF)
 
 #endif	/* NETXMS_CUSTOM_USER_RIGHTS */
 
@@ -899,6 +937,8 @@ enum SessionState
 #define OBJECT_ACCESS_EDIT_COMMENTS    0x00200000
 #define OBJECT_ACCESS_EDIT_RESP_USERS  0x00400000
 #define OBJECT_ACCESS_DELEGATED_READ   0x00800000
+#define OBJECT_ACCESS_MANAGE_POLICIES  0x01000000
+#define OBJECT_ACCESS_MANAGE_INCIDENTS 0x02000000
 
 /**
  * Object sync flags
@@ -981,20 +1021,22 @@ enum HistoricalDataType
 /**
  * DCI flags
  */
-#define DCF_DETECT_ANOMALIES         ((uint32_t)0x00001)
-#define DCF_ALL_THRESHOLDS           ((uint32_t)0x00002)
-#define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x00004)
-#define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x00008)
-#define DCF_AGGREGATE_FUNCTION_MASK  ((uint32_t)0x00070)
-#define DCF_AGGREGATE_ON_CLUSTER     ((uint32_t)0x00080)
-#define DCF_TRANSFORM_AGGREGATED     ((uint32_t)0x00100)
-#define DCF_CALCULATE_NODE_STATUS    ((uint32_t)0x00400)
-#define DCF_SHOW_IN_OBJECT_OVERVIEW  ((uint32_t)0x00800)
-#define DCF_CACHE_MODE_MASK          ((uint32_t)0x03000)
-#define DCF_AGGREGATE_WITH_ERRORS    ((uint32_t)0x04000)
-#define DCF_HIDE_ON_LAST_VALUES_PAGE ((uint32_t)0x08000)
-#define DCF_MULTIPLIERS_MASK         ((uint32_t)0x30000)
-#define DCF_STORE_CHANGES_ONLY       ((uint32_t)0x40000)
+#define DCF_DETECT_ANOMALIES_IFOREST ((uint32_t)0x000001)
+#define DCF_ALL_THRESHOLDS           ((uint32_t)0x000002)
+#define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x000004)
+#define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x000008)
+#define DCF_AGGREGATE_FUNCTION_MASK  ((uint32_t)0x000070)
+#define DCF_AGGREGATE_ON_CLUSTER     ((uint32_t)0x000080)
+#define DCF_TRANSFORM_AGGREGATED     ((uint32_t)0x000100)
+#define DCF_DETECT_ANOMALIES_AI      ((uint32_t)0x000200)
+#define DCF_CALCULATE_NODE_STATUS    ((uint32_t)0x000400)
+#define DCF_SHOW_IN_OBJECT_OVERVIEW  ((uint32_t)0x000800)
+#define DCF_CACHE_MODE_MASK          ((uint32_t)0x003000)
+#define DCF_AGGREGATE_WITH_ERRORS    ((uint32_t)0x004000)
+#define DCF_HIDE_ON_LAST_VALUES_PAGE ((uint32_t)0x008000)
+#define DCF_MULTIPLIERS_MASK         ((uint32_t)0x030000)
+#define DCF_STORE_CHANGES_ONLY       ((uint32_t)0x040000)
+#define DCF_UNSUPPORTED_AS_ERROR     ((uint32_t)0x080000)
 
 /**
  * DCI state flags
@@ -1163,6 +1205,7 @@ enum AggregationFunction
 #define IDM_INTERNAL_TABLE              8
 #define IDM_SMCLP_TARGETS               9
 #define IDM_SMCLP_PROPERTIES           10
+#define IDM_PUSH                       11
 
 /**
  * Event policy rule flags
@@ -1183,6 +1226,10 @@ enum AggregationFunction
 #define RF_NEGATED_TIME_FRAMES   0x008000
 #define RF_START_DOWNTIME        0x010000
 #define RF_END_DOWNTIME          0x020000
+#define RF_REQUEST_AI_COMMENT    0x040000
+#define RF_CREATE_INCIDENT       0x080000
+#define RF_AI_ANALYZE_INCIDENT   0x100000
+#define RF_AI_AUTO_ASSIGN        0x200000
 
 /**
  * Network map types
@@ -1278,7 +1325,10 @@ enum AggregationFunction
 #define CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS       0x0200
 #define CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS  0x0400
 #define CFG_IMPORT_REPLACE_AM_DEFINITIONS             0x0800
-#define CFG_IMPORT_REPLACE_EVERYTHING                 0x0FFF
+#define CFG_IMPORT_REPLACE_LOGPARSER_MACROS           0x1000
+#define CFG_IMPORT_REPLACE_SYSLOG_PARSERS             0x2000
+#define CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS        0x4000
+#define CFG_IMPORT_REPLACE_EVERYTHING                 0x7FFF
 
 /**
 * Alarm category flags

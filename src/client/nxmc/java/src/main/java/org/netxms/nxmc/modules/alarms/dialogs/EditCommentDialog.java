@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ public class EditCommentDialog extends Dialog
 	private LabeledText textControl;
 	private String text;
 	private long noteID;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -54,18 +54,18 @@ public class EditCommentDialog extends Dialog
 		this.text = text;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#isResizable()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#isResizable()
+    */
 	@Override
 	protected boolean isResizable()
 	{
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -76,21 +76,21 @@ public class EditCommentDialog extends Dialog
 		newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", 400), settings.getAsInteger(CONFIG_PREFIX + ".cy", 350));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		textControl.setLabel(i18n.tr("Comment"));
-		if(noteID != 0)
+      if (noteID != 0)
 		   textControl.setText(text);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -98,13 +98,13 @@ public class EditCommentDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
 		textControl.setLayoutData(gd);
-		
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -112,9 +112,9 @@ public class EditCommentDialog extends Dialog
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{

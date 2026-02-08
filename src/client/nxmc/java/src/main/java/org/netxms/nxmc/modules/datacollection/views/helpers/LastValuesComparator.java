@@ -124,6 +124,32 @@ public class LastValuesComparator extends ViewerComparator
       return (threshold != null) ? threshold.getLastEventMessage() : "";
    }
 
+   /**
+    * Helper to check if value is a valid number for the given data type
+    */
+   private boolean isValidNumber(String value, DataType type) {
+      try {
+         switch(type) {
+            case INT32:
+            case UINT32:
+            case INT64:
+            case UINT64:
+            case COUNTER32:
+            case COUNTER64:
+               Long.parseLong(value);
+               break;
+            case FLOAT:
+               Double.parseDouble(value);
+               break;
+            default:
+               return false;
+         }
+         return true;
+      } catch(Exception e) {
+         return false;
+      }
+   }
+
 	/**
 	 * Compare DCI values taking data type into consideration
 	 * 
@@ -167,30 +193,36 @@ public class LastValuesComparator extends ViewerComparator
          dt2 = dci2.getDataType();
          v2 = dci2.getValue();
       }
-      
-	   DataType dataType = DataType.getTypeForCompare(dt1, dt2);
-	   try
-	   {
-   	   switch(dataType)
-   	   {
-   	      case INT32:
-   	         return Integer.signum(Integer.parseInt(v1) - Integer.parseInt(v2));
+
+      boolean v1IsNumber = isValidNumber(v1, dt1);
+      boolean v2IsNumber = isValidNumber(v2, dt2);
+
+      // If both are valid numbers, compare numerically
+      if (v1IsNumber && v2IsNumber)
+      {
+         DataType dataType = DataType.getTypeForCompare(dt1, dt2);
+         switch(dataType)
+         {
+            case INT32:
             case UINT32:
             case INT64:
             case UINT64:
             case COUNTER32:
             case COUNTER64:
-               return Long.signum(Long.parseLong(v1) - Long.parseLong(v2));
+               return Long.compare(Long.parseLong(v1), Long.parseLong(v2));
             case FLOAT:
-               return (int)Math.signum(Double.parseDouble(v1) - Double.parseDouble(v2));
-   	      default:
-   	         return v1.compareToIgnoreCase(v2);
-   	   }
-	   }
-	   catch(NumberFormatException e)
-	   {
-	      return v1.compareToIgnoreCase(v2);
-	   }
+               return Double.compare(Double.parseDouble(v1), Double.parseDouble(v2));
+            default:
+               return v1.compareToIgnoreCase(v2);
+         }
+      }
+      // If only one is a valid number, always sort numbers before strings
+      if (v1IsNumber && !v2IsNumber)
+         return -1;
+      if (!v1IsNumber && v2IsNumber)
+         return 1;
+      // If neither is a valid number, compare as strings
+      return v1.compareToIgnoreCase(v2);
 	}
 
    /**

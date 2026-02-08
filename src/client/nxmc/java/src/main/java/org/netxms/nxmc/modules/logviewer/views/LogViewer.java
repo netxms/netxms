@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.logviewer.LogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.LogRecordDetailsViewerRegistry;
+import org.netxms.nxmc.modules.logviewer.dialogs.ShowQueryDialog;
 import org.netxms.nxmc.modules.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.nxmc.modules.logviewer.widgets.FilterBuilder;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -99,6 +100,7 @@ public class LogViewer extends ViewWithContext
    private Action actionShowFilter;
    private Action actionGetMoreData;
    private Action actionCopyToClipboard;
+   private Action actionShowSql;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
    private Action actionShowDetails;
@@ -129,9 +131,9 @@ public class LogViewer extends ViewWithContext
     * @param viewName view name
     * @param logName log name
     */
-   public LogViewer(String viewName, String logName)
+   public LogViewer(String viewName, String logName, String additionalId)
    {
-      super(viewName, ResourceManager.getImageDescriptor("icons/log-viewer/" + logName + ".png"), "LogViewer." + logName, false);
+      super(viewName, ResourceManager.getImageDescriptor("icons/log-viewer/" + logName + ".png"), "LogViewer." + logName + additionalId, false);
       this.logName = logName;
       recordDetailsViewer = LogRecordDetailsViewerRegistry.get(logName);
    }
@@ -346,6 +348,7 @@ public class LogViewer extends ViewWithContext
       manager.add(actionGetMoreData);
       manager.add(new Separator());
       manager.add(actionExportAllToCsv);
+      manager.add(actionShowSql);
       manager.add(new Separator());
 		manager.add(actionClearFilter);
 		manager.add(actionShowFilter);
@@ -361,6 +364,7 @@ public class LogViewer extends ViewWithContext
       manager.add(actionGetMoreData);
       manager.add(new Separator());
       manager.add(actionExportAllToCsv);
+      manager.add(actionShowSql);
       manager.add(new Separator());
       manager.add(actionShowFilter);
 		manager.add(actionClearFilter);
@@ -458,7 +462,15 @@ public class LogViewer extends ViewWithContext
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 
-      actionShowDetails = new Action("Show &details") {
+      actionShowSql = new Action(i18n.tr("Show S&QL query..."), ResourceManager.getImageDescriptor("icons/sql.png")) {
+         @Override
+         public void run()
+         {
+            showQuerySql();
+         }
+      };
+
+      actionShowDetails = new Action("Show &details...") {
          @Override
          public void run()
          {
@@ -699,6 +711,31 @@ public class LogViewer extends ViewWithContext
 			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
+
+   /**
+    * Show SQL query
+    */
+   private void showQuerySql()
+   {
+      final LogFilter filter = filterBuilder.createFilter();
+      new Job(i18n.tr("Getting SQL query"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final String sql = logHandle.getQuerySql(filter);
+            runInUIThread(() -> {
+               ShowQueryDialog dlg = new ShowQueryDialog(getWindow().getShell(), sql);
+               dlg.open();
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot get SQL query");
+         }
+      }.start();
+   }
 
 	/**
 	 * @return

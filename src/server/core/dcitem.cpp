@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,112 @@
 **/
 
 #include "nxcore.h"
-#include <npe.h>
+#include <cmath>
+
+/**
+ * Thread pool for threshold repeat events
+ */
+extern ThreadPool *g_thresholdRepeatPool;
+
+/**
+ * Context for threshold repeat callback
+ */
+struct ThresholdRepeatContext
+{
+   uint32_t targetId;
+   uint32_t dciId;
+   uint32_t thresholdId;
+   uint64_t activationSequence;
+};
+
+/**
+ * Callback for processing threshold repeat events
+ */
+static void ProcessThresholdRepeatEvent(ThresholdRepeatContext *ctx)
+{
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Processing repeat for target=%u dci=%u threshold=%u seq=") UINT64_FMT,
+      ctx->targetId, ctx->dciId, ctx->thresholdId, ctx->activationSequence);
+
+   shared_ptr<NetObj> target = FindObjectById(ctx->targetId);
+   if (target == nullptr || !target->isDataCollectionTarget())
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Target %u not found or not a data collection target"), ctx->targetId);
+      delete ctx;
+      return;
+   }
+
+   shared_ptr<DCObject> dco = static_cast<DataCollectionTarget&>(*target).getDCObjectById(ctx->dciId, 0, true);
+   if (dco == nullptr || dco->getType() != DCO_TYPE_ITEM)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("DCI %u not found on target %u"), ctx->dciId, ctx->targetId);
+      delete ctx;
+      return;
+   }
+
+   uint32_t repeatInterval = static_cast<DCItem&>(*dco).postThresholdRepeatEvent(ctx->thresholdId, ctx->activationSequence);
+   if (repeatInterval > 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Posted repeat for target=%u dci=%u threshold=%u, next in %us"),
+         ctx->targetId, ctx->dciId, ctx->thresholdId, repeatInterval);
+      ThreadPoolScheduleRelative(g_thresholdRepeatPool, repeatInterval * 1000, ProcessThresholdRepeatEvent, ctx);  // Reuse context
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, L"Not rescheduling repeat for target=%u dci=%u threshold=%u",
+         ctx->targetId, ctx->dciId, ctx->thresholdId);
+      delete ctx;
+   }
+}
+
+/**
+ * Schedule threshold repeat event
+ */
+static void ScheduleThresholdRepeatEvent(uint32_t targetId, uint32_t dciId, uint32_t thresholdId, uint64_t activationSequence, uint32_t delay)
+{
+   auto ctx = new ThresholdRepeatContext{targetId, dciId, thresholdId, activationSequence};
+
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Scheduling repeat for target=%u dci=%u threshold=%u seq=") UINT64_FMT _T(" in %us"),
+      targetId, dciId, thresholdId, activationSequence, delay);
+
+   ThreadPoolScheduleRelative(g_thresholdRepeatPool, delay * 1000, ProcessThresholdRepeatEvent, ctx);
+}
+
+/**
+ * Callback for scheduling threshold repeat on startup
+ */
+static EnumerationCallbackResult ScheduleThresholdRepeatEvents(NetObj *object, void *data)
+{
+   if (!object->isDataCollectionTarget())
+      return _CONTINUE;
+
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object);
+   unique_ptr<SharedObjectArray<DCObject>> dcObjects = target->getAllDCObjects();
+
+   uint32_t scheduledCount = 0;
+   for (int i = 0; i < dcObjects->size(); i++)
+   {
+      DCObject *dco = dcObjects->get(i);
+      if (dco->getType() == DCO_TYPE_ITEM)
+         scheduledCount += static_cast<DCItem*>(dco)->scheduleThresholdRepeatEvents();
+   }
+
+   if (scheduledCount > 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 5, _T("Scheduled %u threshold repeat events for %s [%u]"),
+         scheduledCount, object->getName(), object->getId());
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Schedule threshold repeat events for all active thresholds (called on server startup)
+ */
+void ScheduleThresholdRepeatEventsOnStartup()
+{
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 4, _T("Scanning for active thresholds with repeat interval"));
+   g_idxObjectById.forEach(ScheduleThresholdRepeatEvents, nullptr);
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 4, _T("Active threshold scan completed"));
+}
 
 /**
  * Create DCItem from another DCItem
@@ -44,15 +149,24 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    {
       m_ppValueCache = nullptr;
    }
-   m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : 0;
+   m_prevValueTimeStamp = shadowCopy ? src->m_prevValueTimeStamp : Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = shadowCopy ? src->m_prevDeltaValue : 0;
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
+   m_anomalyDetectedAI = shadowCopy ? src->m_anomalyDetectedAI : false;
+   m_anomalyProfile = (src->m_anomalyProfile != nullptr) ? json_deep_copy(src->m_anomalyProfile) : nullptr;
+   m_anomalyProfileTimestamp = src->m_anomalyProfileTimestamp;
+   m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
+   m_recentAverage = std::nan("");
+   m_aiHint = src->m_aiHint;
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
 	m_snmpRawValueType = src->m_snmpRawValueType;
    wcscpy(m_predictionEngine, src->m_predictionEngine);
    m_allThresholdsRearmEvent = src->m_allThresholdsRearmEvent;
+   m_sampleSaveInterval = src->m_sampleSaveInterval;
+   m_sampleSaveCounter = shadowCopy ? src->m_sampleSaveCounter : 0;
 
    // Copy thresholds
 	if (copyThresholds && (src->getThresholdCount() > 0))
@@ -77,10 +191,11 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,multiplier,
  *    units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
- *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
+ *    instd_method,instd_data,instd_filter,samples,sample_save_interval,comments,guid,npe_name,
  *    instance_retention_time,grace_period_start,related_object,polling_schedule_type,
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
- *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time
+ *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,
+ *    anomaly_profile,anomaly_profile_timestamp,ai_hint
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -92,7 +207,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_retentionTime = DBGetFieldInt32(hResult, row, 5);
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
-   setTransformationScript(DBGetFieldAsString(hResult, row, 8));
+   setTransformationScriptInternal(DBGetFieldAsString(hResult, row, 8));
    m_templateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetFieldAsSharedString(hResult, row, 10);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
@@ -101,7 +216,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
@@ -118,29 +233,39 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
 	m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 23);
 	setInstanceFilter(DBGetFieldAsString(hResult, row, 24));
 	m_sampleCount = DBGetFieldLong(hResult, row, 25);
-   m_comments = DBGetFieldAsSharedString(hResult, row, 26);
-   m_guid = DBGetFieldGUID(hResult, row, 27);
-   DBGetField(hResult, row, 28, m_predictionEngine, MAX_NPE_NAME_LEN);
-   m_instanceRetentionTime = DBGetFieldInt32(hResult, row, 29);
-   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 30);
-   m_relatedObject = DBGetFieldUInt32(hResult, row, 31);
-   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 32));
-   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
-   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetFieldAsString(hResult, row, 34) : nullptr;
-   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetFieldAsString(hResult, row, 35) : nullptr;
-   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 36));
-   m_stateFlags = DBGetFieldUInt32(hResult, row, 37);
-   m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 38);
-   m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 39);
-   m_userTag = DBGetFieldAsSharedString(hResult, row, 40);
-   m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 41);
+   m_sampleSaveInterval = DBGetFieldInt32(hResult, row, 26);
+   m_sampleSaveCounter = 0;
+   m_comments = DBGetFieldAsSharedString(hResult, row, 27);
+   m_guid = DBGetFieldGUID(hResult, row, 28);
+   DBGetField(hResult, row, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
+   m_instanceRetentionTime = DBGetFieldInt32(hResult, row, 30);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, row, 31);
+   m_relatedObject = DBGetFieldUInt32(hResult, row, 32);
+   m_pollingScheduleType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 33));
+   m_retentionType = static_cast<BYTE>(DBGetFieldULong(hResult, row, 34));
+   m_pollingIntervalSrc = (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? DBGetFieldAsString(hResult, row, 35) : nullptr;
+   m_retentionTimeSrc = (m_retentionType == DC_RETENTION_CUSTOM) ? DBGetFieldAsString(hResult, row, 36) : nullptr;
+   m_snmpVersion = static_cast<SNMP_Version>(DBGetFieldInt32(hResult, row, 37));
+   m_stateFlags = DBGetFieldUInt32(hResult, row, 38);
+   m_allThresholdsRearmEvent = DBGetFieldUInt32(hResult, row, 39);
+   m_transformedDataType = (BYTE)DBGetFieldLong(hResult, row, 40);
+   m_userTag = DBGetFieldAsSharedString(hResult, row, 41);
+   m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 42);
+   m_snmpContext = DBGetFieldAsSharedString(hResult, row, 43);
+   m_anomalyProfile = DBGetFieldJson(hResult, row, 44);
+   m_anomalyProfileTimestamp = static_cast<time_t>(DBGetFieldInt64(hResult, row, 45));
+   m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
+   m_recentAverage = std::nan("");
+   m_aiHint = DBGetFieldAsSharedString(hResult, row, 46);
+   m_anomalyDetectedAI = false;
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
    DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_RAW_VALUE,
-      _T("SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=?"));
+         L"SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -149,11 +274,11 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
       {
          if (DBGetNumRows(hTempResult) > 0)
          {
-            TCHAR szBuffer[MAX_DB_STRING];
-            m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
-            m_prevValueTimeStamp = DBGetFieldUInt32(hTempResult, 0, 1);
+            wchar_t buffer[MAX_DB_STRING];
+            m_prevRawValue = DBGetField(hTempResult, 0, 0, buffer, MAX_DB_STRING);
+            m_prevValueTimeStamp = DBGetFieldTimestamp(hTempResult, 0, 1);
             m_anomalyDetected = (DBGetFieldInt32(hTempResult, 0, 2) != 0);
-            m_lastPoll = m_lastValueTimestamp = m_prevValueTimeStamp;
+            m_lastPollTime = m_lastValueTimestamp = m_prevValueTimeStamp;
          }
          DBFreeResult(hTempResult);
       }
@@ -182,14 +307,22 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyDetectedAI = false;
+   m_anomalyProfile = nullptr;
+   m_anomalyProfileTimestamp = 0;
+   m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
+   m_recentAverage = std::nan("");
 	m_multiplier = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 	m_allThresholdsRearmEvent = 0;
+	m_sampleSaveInterval = 1;
+	m_sampleSaveCounter = 0;
 
    updateCacheSizeInternal(false);
 }
@@ -206,13 +339,21 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = nullptr;
-   m_prevValueTimeStamp = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyDetectedAI = false;
+   m_anomalyProfile = nullptr;
+   m_anomalyProfileTimestamp = 0;
+   m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
+   m_recentAverage = std::nan("");
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
+   m_sampleSaveInterval = config->getSubEntryValueAsInt(_T("sampleSaveInterval"), 0, 1);
+   m_sampleSaveCounter = 0;
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
@@ -240,12 +381,69 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 }
 
 /**
+ * Create DCItem from imported JSON configuration
+ */
+DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCObject(json, owner)
+{
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_cacheSize = 0;
+   m_requiredCacheSize = 0;
+   m_ppValueCache = nullptr;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
+   m_prevDeltaValue = 0;
+   m_cacheLoaded = false;
+   m_anomalyDetected = false;
+   m_anomalyDetectedAI = false;
+   m_anomalyProfile = nullptr;
+   m_anomalyProfileTimestamp = 0;
+   m_sustainedHighStart = 0;
+   m_sustainedLowStart = 0;
+   m_recentAverage = std::nan("");
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+   m_sampleSaveInterval = json_object_get_int32(json, "sampleSaveInterval", 1);
+   m_sampleSaveCounter = 0;
+
+   String predictionEngine = json_object_get_string(json, "predictionEngine", _T(""));
+   _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
+   
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t count = json_array_size(thresholdsArray);
+      m_thresholds = new ObjectArray<Threshold>(count, 8, Ownership::True);
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this));
+         }
+      }
+   }
+   else
+   {
+      m_thresholds = nullptr;
+   }
+
+   updateCacheSizeInternal(false);
+}
+
+/**
  * Destructor
  */
 DCItem::~DCItem()
 {
 	delete m_thresholds;
    clearCache();
+   json_decref(m_anomalyProfile);
 }
 
 /**
@@ -256,6 +454,29 @@ void DCItem::deleteAllThresholds()
 	lock();
    delete_and_null(m_thresholds);
 	unlock();
+}
+
+/**
+ * Delete threshold by ID
+ */
+bool DCItem::deleteThresholdById(uint32_t thresholdId)
+{
+   bool success = false;
+   lock();
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         if (m_thresholds->get(i)->getId() == thresholdId)
+         {
+            m_thresholds->remove(i);
+            success = true;
+            break;
+         }
+      }
+   }
+   unlock();
+   return success;
 }
 
 /**
@@ -314,10 +535,11 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"status", L"delta_calculation", L"transformation", L"description", L"instance", L"template_item_id",
       L"flags", L"resource_id", L"proxy_node", L"multiplier", L"units_name",
       L"perftab_settings", L"system_tag", L"snmp_port", L"snmp_raw_value_type", L"instd_method", L"instd_data",
-      L"instd_filter", L"samples", L"comments", L"guid", L"npe_name", L"instance_retention_time",
+      L"instd_filter", L"samples", L"sample_save_interval", L"comments", L"guid", L"npe_name", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
-      L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", nullptr
+      L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", L"snmp_context",
+      L"anomaly_profile", L"anomaly_profile_timestamp", L"ai_hint", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
@@ -352,28 +574,33 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
 	DBBind(hStmt, 25, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
-   DBBind(hStmt, 27, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
-   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_guid);
-   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
-   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_instanceGracePeriodStart));
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_relatedObject);
-   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_sampleSaveInterval);
+   DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
+   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
+   DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_instanceGracePeriodStart));
+   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_relatedObject);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_pollingIntervalSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_retentionTimeSrc, DB_BIND_STATIC, MAX_DB_STRING - 1);
    TCHAR pt[2], rt[2];
    pt[0] = m_pollingScheduleType + '0';
    pt[1] = 0;
    rt[0] = m_retentionType + '0';
    rt[1] = 0;
-   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
-   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
-   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_snmpVersion);
-   DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_stateFlags);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
-   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
-   DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
-   DBBind(hStmt, 42, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
-   DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, pt, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, rt, DB_BIND_STATIC);
+   DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_snmpVersion);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_stateFlags);
+   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_allThresholdsRearmEvent);
+   DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_transformedDataType));
+   DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
+   DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
+   DBBind(hStmt, 44, DB_SQLTYPE_VARCHAR, m_snmpContext, DB_BIND_STATIC);
+   DBBind(hStmt, 45, DB_SQLTYPE_TEXT, m_anomalyProfile, DB_BIND_STATIC);
+   DBBind(hStmt, 46, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_anomalyProfileTimestamp));
+   DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
+   DBBind(hStmt, 48, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -416,8 +643,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_prevValueTimeStamp));
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_prevValueTimeStamp);
+         DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, (m_cacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : Timestamp::fromMilliseconds(0));
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_anomalyDetected ? L"1" : L"0", DB_BIND_STATIC);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -472,7 +699,19 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+
+               // Schedule repeat event if interval is configured
+               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
+                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               if (repeatInterval > 0)
+               {
+                  t->incrementActivationSequence();
+                  ScheduleThresholdRepeatEvent(m_ownerId, m_id, thresholdId, t->getActivationSequence(), repeatInterval);
+               }
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
@@ -495,6 +734,9 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -506,35 +748,35 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
             thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
+            // Handle resendActivationEvent (DCF_ALL_THRESHOLDS mode - re-send event when another threshold deactivates)
+            if (resendActivationEvent)
             {
-   				// Check if we need to re-sent threshold violation event
-	            time_t now = time(nullptr);
-	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if (resendActivationEvent || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
-				   {
-	               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
-		            EventBuilder(t->getEventCode(), m_ownerId)
-		               .dci(m_id)
-		               .param(_T("dciName"), m_name)
-		               .param(_T("dciDescription"), m_description)
-		               .param(_T("thresholdValue"), thresholdValue.getString())
-		               .param(_T("currentValue"), checkValue.getString())
-		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-		               .param(_T("instance"), m_instanceName)
-		               .param(_T("isRepeatedEvent"), _T("1"))
-		               .param(_T("dciValue"), value.getString())
-		               .param(_T("operation"), t->getOperation())
-		               .param(_T("function"), t->getFunction())
-		               .param(_T("pollCount"), t->getSampleCount())
-		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
-				   }
+               shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
+               EventBuilder(t->getEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("thresholdValue"), thresholdValue.getString())
+                  .param(_T("currentValue"), checkValue.getString())
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("isRepeatedEvent"), _T("1"))
+                  .param(_T("dciValue"), value.getString())
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
+                  .param(_T("thresholdId"), thresholdId)
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
-				if (!(m_flags & DCF_ALL_THRESHOLDS))
-				{
-					i = m_thresholds->size();  // Threshold condition still true, stop processing
-				}
-				resendActivationEvent = false;
+            // Note: Repeat events are now handled by dedicated timer, not tied to polling
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+            {
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
+            }
+            resendActivationEvent = false;
             hasActiveThresholds = true;
             break;
          default:
@@ -551,6 +793,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("instance"), m_instanceName)
          .param(_T("dciValue"), value.getString())
+         .param(_T("instanceValue"), m_instanceDiscoveryData)
+         .param(_T("instanceName"), m_instanceName)
          .post();
    }
 }
@@ -567,9 +811,9 @@ void DCItem::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_TRANSFORMED_DATA_TYPE, static_cast<uint16_t>(m_transformedDataType));
    pMsg->setField(VID_DCI_DELTA_CALCULATION, static_cast<uint16_t>(m_deltaCalculation));
    pMsg->setField(VID_SAMPLE_COUNT, static_cast<uint16_t>(m_sampleCount));
+   pMsg->setField(VID_SAMPLE_SAVE_INTERVAL, m_sampleSaveInterval);
 	pMsg->setField(VID_MULTIPLIER, static_cast<uint32_t>(m_multiplier));
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
-	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
    pMsg->setField(VID_UNITS_NAME, m_unitName);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
 	if (m_thresholds != nullptr)
@@ -618,11 +862,11 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    m_transformedDataType = (BYTE)msg.getFieldAsUInt16(VID_TRANSFORMED_DATA_TYPE);
    m_deltaCalculation = (BYTE)msg.getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = msg.getFieldAsInt16(VID_SAMPLE_COUNT);
+	m_sampleSaveInterval = msg.getFieldAsInt32(VID_SAMPLE_SAVE_INTERVAL);
 	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
 	m_unitName = msg.getFieldAsSharedString(VID_UNITS_NAME);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
 	m_allThresholdsRearmEvent = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
-   msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Update thresholds
    uint32_t numThresholds = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
@@ -709,10 +953,12 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 /**
  * Process new collected value. Should return true on success.
  * If returns false, current poll result will be converted into data collection error.
+ * If allowPastDataPoints is false, data points with timestamp older than last stored one
+ * will be rejected.
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
 {
    ItemValue rawValue, *pValue;
 
@@ -729,9 +975,16 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       return false;
    }
 
+   if (!allowPastDataPoints && (timestamp < m_lastValueTimestamp))
+   {
+      // Old value, ignore
+      unlock();
+      return false;
+   }
+
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(originalValue, tmTimeStamp, false);
-   if (m_prevValueTimeStamp == 0)
+   pValue = new ItemValue(originalValue, timestamp, false);
+   if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
 
@@ -739,7 +992,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(*pValue, (tmTimeStamp > m_prevValueTimeStamp) ? (tmTimeStamp - m_prevValueTimeStamp) : 0))
+      if (!transform(*pValue, (timestamp > m_prevValueTimeStamp) ? (timestamp - m_prevValueTimeStamp) : 0))
       {
          unlock();
          delete pValue;
@@ -749,58 +1002,78 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
    m_errorCount = 0;
 
-   if (isStatusDCO() && (tmTimeStamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
+   if (isStatusDCO() && (timestamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
       *updateStatus = true;
    }
 
-   if (tmTimeStamp > m_prevValueTimeStamp)
+   if (timestamp > m_prevValueTimeStamp)
    {
-      if (m_flags & DCF_DETECT_ANOMALIES)
+      if (m_flags & DCF_DETECT_ANOMALIES_IFOREST)
       {
          m_anomalyDetected =
                   IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 1, 30, 60) &&
                   IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 7, 10, 60);
-         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s"), pValue->getDouble(), m_anomalyDetected ? _T("an anomaly") : _T("not an anomaly"));
+         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s (isolation forest detector)"), pValue->getDouble(), m_anomalyDetected ? _T("an anomaly") : _T("not an anomaly"));
+      }
+      else
+      {
+         m_anomalyDetected = false;
+      }
+
+      if (m_flags & DCF_DETECT_ANOMALIES_AI)
+      {
+         m_anomalyDetectedAI = checkAnomalyAIProfile(*pValue);
+         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s (AI detector)"), pValue->getDouble(), m_anomalyDetectedAI ? _T("an anomaly") : _T("not an anomaly"));
+         if (m_anomalyDetectedAI)
+            m_anomalyDetected = true;
+      }
+      else
+      {
+         m_anomalyDetectedAI = false;
       }
 
       m_prevRawValue = rawValue;
-      m_prevValueTimeStamp = tmTimeStamp;
+      m_prevValueTimeStamp = timestamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0, m_anomalyDetected);
+      QueueRawDciDataUpdate(timestamp, m_id, originalValue, pValue->getString(),
+         (m_cacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : Timestamp::fromMilliseconds(0), m_anomalyDetected);
    }
 
-	// Check if user wants to collect all values or only changed values.
-   if (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && _tcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
+	// Check if this is the N-th sample that should be saved
+   bool shouldSave = true;
+   if (m_sampleSaveInterval > 1)
    {
-      //Save transformed value to database
+      m_sampleSaveCounter++;
+      if (m_sampleSaveCounter < m_sampleSaveInterval)
+         shouldSave = false;
+      else
+         m_sampleSaveCounter = 0;
+   }
+
+   // Then check if user wants to collect all values or only changed values
+   if (shouldSave && (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && wcscmp(pValue->getString(), m_ppValueCache[0]->getString()))))
+   {
+      // Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
-           QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+           QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
 
       if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       {
          // Operate on copy with this DCI unlocked to prevent deadlock if fan-out driver access owning object
          DCItem copy(this, false, false);
          unlock();
-         PerfDataStorageRequest(&copy, tmTimeStamp, pValue->getString());
+         PerfDataStorageRequest(&copy, timestamp, pValue->getString());
          lock();
       }
    }
 
-   // Update prediction engine
-   if (m_predictionEngine[0] != 0)
-   {
-      PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
-      if (engine != nullptr)
-         engine->update(owner->getId(), m_id, getStorageClass(), tmTimeStamp, pValue->getDouble());
-   }
-
    // Check thresholds
-   time_t now = time(nullptr);
-   if (m_cacheLoaded && (tmTimeStamp >= m_prevValueTimeStamp) &&
-       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < tmTimeStamp)) &&
-       ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (now - g_offlineDataRelevanceTime))))
+   Timestamp now = Timestamp::now();
+   if (m_cacheLoaded && (timestamp >= m_prevValueTimeStamp) &&
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp.asTime())) &&
+       ((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))))
    {
       if (hasScriptThresholds())
       {
@@ -829,7 +1102,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
          checkThresholds(*pValue, nullptr);
       }
 
-      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now.asTime()))
       {
          // Thresholds were disabled, reset disable end time
          m_thresholdDisableEndTime = 0;
@@ -879,12 +1152,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
    }
 
    // Update cache
-   if ((m_cacheSize > 0) && (tmTimeStamp >= m_prevValueTimeStamp))
+   if ((m_cacheSize > 0) && (timestamp >= m_prevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
-      m_lastValueTimestamp = tmTimeStamp;
+      m_lastValueTimestamp = timestamp;
    }
    else if (!m_cacheLoaded && (m_requiredCacheSize == 1))
    {
@@ -901,7 +1174,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 
       m_ppValueCache[0] = pValue;
       m_cacheLoaded = true;
-      m_lastValueTimestamp = tmTimeStamp;
+      m_lastValueTimestamp = timestamp;
    }
    else
    {
@@ -916,7 +1189,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
 /**
  * Process new data collection error
  */
-void DCItem::processNewError(bool noInstance, time_t now)
+void DCItem::processNewError(bool noInstance, Timestamp timestamp)
 {
    lock();
 
@@ -948,7 +1221,18 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+
+               // Schedule repeat event if interval is configured
+               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
+                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               if (repeatInterval > 0)
+               {
+                  t->incrementActivationSequence();
+                  ScheduleThresholdRepeatEvent(m_ownerId, m_id, thresholdId, t->getActivationSequence(), repeatInterval);
+               }
             }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
@@ -973,39 +1257,19 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   .param(_T("function"), t->getFunction())
                   .param(_T("pollCount"), t->getSampleCount())
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .param(_T("instanceValue"), m_instanceDiscoveryData)
+                  .param(_T("instanceName"), m_instanceName)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
             thresholdDeactivated = true;
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
+            // Note: Repeat events are now handled by dedicated timer, not tied to polling
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
-   				// Check if we need to re-sent threshold violation event
-               time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < now))
-				   {
-	               shared_ptr<DCObject> sharedThis(shared_from_this());
-		            EventBuilder(t->getEventCode(), m_ownerId)
-		               .dci(m_id)
-		               .param(_T("dciName"), m_name)
-		               .param(_T("dciDescription"), m_description)
-		               .param(_T("thresholdValue"), _T(""))
-		               .param(_T("currentValue"), _T(""))
-		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-		               .param(_T("instance"), m_instanceName)
-		               .param(_T("isRepeatedEvent"), _T("1"))
-		               .param(_T("dciValue"), _T(""))
-		               .param(_T("operation"), t->getOperation())
-		               .param(_T("function"), t->getFunction())
-		               .param(_T("pollCount"), t->getSampleCount())
-		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
-				   }
+               i = m_thresholds->size();  // Threshold condition still true, stop processing
             }
-				if (!(m_flags & DCF_ALL_THRESHOLDS))
-				{
-					i = m_thresholds->size();  // Threshold condition still true, stop processing
-				}
             hasActiveThresholds = true;
             break;
          default:
@@ -1022,6 +1286,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("instance"), m_instanceName)
          .param(_T("dciValue"), _T(""))
+         .param(_T("instanceValue"), m_instanceDiscoveryData)
+         .param(_T("instanceName"), m_instanceName)
          .post();
    }
 
@@ -1072,6 +1338,8 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .param(_T("instanceValue"), m_instanceDiscoveryData)
+               .param(_T("instanceName"), m_instanceName)
                .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
          }
          else
@@ -1089,6 +1357,8 @@ void DCItem::generateEventsAfterMaintenance()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .param(_T("instanceValue"), m_instanceDiscoveryData)
+               .param(_T("instanceName"), m_instanceName)
                .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
          }
       }
@@ -1130,7 +1400,7 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
 /**
  * Transform received value. Assuming that DCI object is locked.
  */
-bool DCItem::transform(ItemValue &value, time_t elapsedTime)
+bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
 {
    if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
       return false;  // Transformation script present but cannot be compiled
@@ -1220,6 +1490,7 @@ bool DCItem::transform(ItemValue &value, time_t elapsedTime)
          elapsedTime /= 60;  // Convert to minutes
          /* no break */
       case DCM_AVERAGE_PER_SECOND:
+         elapsedTime /= 1000;  // Convert to seconds
          // Check elapsed time to prevent divide-by-zero exception
          if (elapsedTime == 0)
             elapsedTime++;
@@ -1522,7 +1793,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
          // will not read data from database, fill cache with empty values
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(uint32_t i = m_cacheSize; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(_T(""), 1, false);
+            m_ppValueCache[i] = new ItemValue(_T(""), Timestamp::fromMilliseconds(1), false);
          nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache load skipped for parameter %s [%u]"), m_name.cstr(), m_id);
          m_cacheSize = m_requiredCacheSize;
          m_cacheLoaded = true;
@@ -1551,19 +1822,30 @@ void DCItem::reloadCache(bool forceReload)
    }
    unlock();
 
-   TCHAR szBuffer[MAX_DB_STRING];
+   shared_ptr<DataCollectionOwner> owner = getOwner();
+   bool hasV5Table = (owner != nullptr) && (owner->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE);
+
+   TCHAR szBuffer[1024];
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                     m_requiredCacheSize, m_id);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%d ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%d) d ")
+                              _T("ORDER BY idata_timestamp DESC"),
+                    m_requiredCacheSize, m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                     m_requiredCacheSize, m_ownerId, m_id);
          }
@@ -1571,13 +1853,21 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_ORACLE:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
                     m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%d ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%d) ")
+                              _T("ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1587,13 +1877,21 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_SQLITE:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC LIMIT %u"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1601,26 +1899,42 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,date_part('epoch',idata_timestamp)::int FROM idata_sc_%s ")
-                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT to_timestamp(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,timestamptz_to_ms(idata_timestamp) FROM idata_sc_%s ")
+                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT ms_to_timestamptz(cache_timestamp) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
                     getStorageClassName(getStorageClass()), m_id, m_id, m_requiredCacheSize);
+         }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC LIMIT %u"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
          }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
       case DB_SYNTAX_DB2:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_id, m_requiredCacheSize);
          }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+               _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+               _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+               _T("ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
+               m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id, m_requiredCacheSize);
+         }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                _T("WHERE item_id=%u ORDER BY idata_timestamp DESC FETCH FIRST %u ROWS ONLY"),
                m_ownerId, m_id, m_requiredCacheSize);
          }
@@ -1628,12 +1942,20 @@ void DCItem::reloadCache(bool forceReload)
       default:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"), m_id);
+         }
+         else if (hasV5Table)
+         {
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM ")
+                              _T("(SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ")
+                              _T("UNION ALL SELECT idata_value,%s FROM idata_v5_%d WHERE item_id=%u) d ")
+                              _T("ORDER BY idata_timestamp DESC"),
+                    m_ownerId, m_id, V5TimestampToMs(false), m_ownerId, m_id);
          }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _sntprintf(szBuffer, 1024, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
                               _T("WHERE item_id=%u ORDER BY idata_timestamp DESC"),
                     m_ownerId, m_id);
          }
@@ -1668,21 +1990,21 @@ void DCItem::reloadCache(bool forceReload)
             if (moreData)
             {
                DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
-               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1), false);
+               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldTimestamp(hResult, 1), false);
             }
             else
             {
-               m_ppValueCache[i] = new ItemValue(L"", 1, false);   // Empty value
+               m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);   // Empty value
             }
          }
 
          // Fill up cache with empty values if we don't have enough values in database
          if (i < m_requiredCacheSize)
          {
-            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
+            nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%u]): %d values missing in DB"),
                      m_name.cstr(), getOwnerName(), m_ownerId, m_requiredCacheSize - i);
             for(; i < m_requiredCacheSize; i++)
-               m_ppValueCache[i] = new ItemValue(L"", 1, false);
+               m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);
          }
          DBFreeResult(hResult);
       }
@@ -1690,7 +2012,7 @@ void DCItem::reloadCache(bool forceReload)
       {
          // Error reading data from database, fill cache with empty values
          for(uint32_t i = 0; i < m_requiredCacheSize; i++)
-            m_ppValueCache[i] = new ItemValue(L"", 1, false);
+            m_ppValueCache[i] = new ItemValue(L"", Timestamp::fromMilliseconds(1), false);
       }
 
       m_cacheSize = m_requiredCacheSize;
@@ -1728,14 +2050,14 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
       msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(VID_VALUE, m_ppValueCache[0]->getString());
       msg->setField(VID_RAW_VALUE, m_prevRawValue.getString());
-      msg->setFieldFromTime(VID_TIMESTAMP, m_ppValueCache[0]->getTimeStamp());
+      msg->setField(VID_TIMESTAMP_MS, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
       msg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(DCI_DT_NULL));
-      msg->setField(VID_VALUE, _T(""));
-      msg->setField(VID_RAW_VALUE, _T(""));
-      msg->setField(VID_TIMESTAMP, static_cast<uint32_t>(0));
+      msg->setField(VID_VALUE, L"");
+      msg->setField(VID_RAW_VALUE, L"");
+      msg->setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));
    }
    unlock();
 }
@@ -1756,13 +2078,13 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    {
       msg->setField(baseId++, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(baseId++, m_ppValueCache[0]->getString());
-      msg->setFieldFromTime(baseId++, m_ppValueCache[0]->getTimeStamp());
+      msg->setField(baseId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
       msg->setField(baseId++, static_cast<uint16_t>(DCI_DT_NULL));
-      msg->setField(baseId++, _T(""));
-      msg->setField(baseId++, static_cast<uint32_t>(0));
+      msg->setField(baseId++, L"");
+      msg->setField(baseId++, static_cast<int64_t>(0));
    }
    msg->setField(baseId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	msg->setField(baseId++, static_cast<uint16_t>(getType()));
@@ -1837,13 +2159,13 @@ json_t *DCItem::lastValueToJSON()
    {
       json_object_set_new(data, "dataType", json_integer(getTransformedDataType()));
       json_object_set_new(data, "value", json_string_t(m_ppValueCache[0]->getString()));
-      json_object_set_new(data, "timestamp", json_integer(m_ppValueCache[0]->getTimeStamp()));
+      json_object_set_new(data, "timestamp", m_ppValueCache[0]->getTimeStamp().asJson());
    }
    else
    {
       json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
       json_object_set_new(data, "value", json_string(""));
-      json_object_set_new(data, "timestamp", json_integer(0));
+      json_object_set_new(data, "timestamp", json_null());
    }
 
    // Show resource-bound DCIs as inactive if cluster resource is not on this node
@@ -1957,7 +2279,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
+         value = (m_cacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
          CastNXSLValue(value, getTransformedDataType());
          break;
       case F_DIFF:
@@ -2040,6 +2362,7 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	TCHAR query[1024];
    TCHAR *result = nullptr;
+   bool hasV5Table = false;
 
    static const TCHAR *functions[] = { _T(""), _T("min"), _T("max"), _T("avg"), _T("sum") };
 
@@ -2064,7 +2387,7 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
             break;
          case DB_SYNTAX_TSDB:
             _sntprintf(query, 1024,
-                  _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                  _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?) AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
                   functions[func], getStorageClassName(getStorageClass()));
             break;
          case DB_SYNTAX_MYSQL:
@@ -2085,39 +2408,95 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
    }
    else
    {
-      switch(g_dbSyntax)
       {
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(idata_value::double precision) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_MYSQL:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         case DB_SYNTAX_SQLITE:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
-         default:
-            _sntprintf(query, 1024,
-                  _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
-                  functions[func], m_ownerId);
-            break;
+         shared_ptr<DataCollectionOwner> owner = getOwner();
+         hasV5Table = (owner != nullptr) && (owner->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE);
+      }
+      if (hasV5Table)
+      {
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1 ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(idata_value::double precision) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$' ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$') d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_MYSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            case DB_SYNTAX_SQLITE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+            default:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(idata_value,0)) FROM ")
+                     _T("(SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ")
+                     _T("UNION ALL SELECT idata_value FROM idata_v5_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"),
+                     functions[func], m_ownerId, m_ownerId);
+               break;
+         }
+      }
+      else
+      {
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(idata_value::double precision) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_MYSQL:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as decimal(30,10)),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            case DB_SYNTAX_SQLITE:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(cast(idata_value as double),0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+            default:
+               _sntprintf(query, 1024,
+                     _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+                     functions[func], m_ownerId);
+               break;
+         }
       }
    }
 
@@ -2125,8 +2504,14 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodStart));
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodEnd));
+		DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodStart) * 1000L);
+		DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodEnd) * 1000L);
+		if (hasV5Table && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+		{
+		   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+		   DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodStart));
+		   DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, static_cast<int64_t>(periodEnd));
+		}
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != nullptr)
 		{
@@ -2175,7 +2560,7 @@ bool DCItem::deleteAllData()
 /**
  * Delete single collected data entry
  */
-bool DCItem::deleteEntry(time_t timestamp)
+bool DCItem::deleteEntry(Timestamp timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    lock();
@@ -2185,18 +2570,17 @@ bool DCItem::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=to_timestamp(") UINT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%u AND idata_timestamp=ms_to_timestamptz(") INT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, timestamp.asMilliseconds());
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_id, timestamp.asMilliseconds());
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") UINT64_FMT,
-               m_ownerId, m_id, static_cast<uint64_t>(timestamp));
+      _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp.asMilliseconds());
    }
    unlock();
 
@@ -2243,6 +2627,7 @@ void DCItem::updateFromTemplate(DCObject *src)
    m_transformedDataType = item->m_transformedDataType;
    m_deltaCalculation = item->m_deltaCalculation;
    m_sampleCount = item->m_sampleCount;
+   m_sampleSaveInterval = item->m_sampleSaveInterval;
    m_snmpRawValueType = item->m_snmpRawValueType;
 
 	m_multiplier = item->m_multiplier;
@@ -2311,125 +2696,87 @@ bool DCItem::isUsingEvent(uint32_t eventCode) const
 }
 
 /**
- * Create management pack record
+ * Create JSON configuration export record
  */
-void DCItem::createExportRecord(TextFileWriter& xml) const
+json_t *DCItem::createExportRecord() const
 {
-   lock();
+   json_t *root = json_object();
+   
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "transformedDataType", json_integer(m_transformedDataType));
+   json_object_set_new(root, "samples", json_integer(m_sampleCount));
+   json_object_set_new(root, "sampleSaveInterval", json_integer(m_sampleSaveInterval));
+   json_object_set_new(root, "origin", json_integer(m_source));
+   json_object_set_new(root, "scheduleType", json_integer(m_pollingScheduleType));
+   json_object_set_new(root, "interval", json_string_t(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionType", json_integer(m_retentionType));
+   json_object_set_new(root, "retention", json_string_t(m_retentionTimeSrc));
+   json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
+   json_object_set_new(root, "userTag", json_string_t(m_userTag));
+   json_object_set_new(root, "delta", json_integer(m_deltaCalculation));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
+   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
+   json_object_set_new(root, "snmpContext", json_string_t(m_snmpContext));
+   json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
+   json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "isDisabled", json_boolean(m_status == ITEM_STATUS_DISABLED));
+   json_object_set_new(root, "unitName", json_string_t(m_unitName));
+   json_object_set_new(root, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
 
-   xml.append(_T("\t\t\t\t<dci id=\""));
-   xml.append(m_id);
-   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
-   xml.append(m_guid);
-   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
-   xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<description>"));
-   xml.append(EscapeStringForXML2(m_description));
-   xml.append(_T("</description>\n\t\t\t\t\t<dataType>"));
-   xml.append(static_cast<int32_t>(m_dataType));
-   xml.append(_T("</dataType>\n\t\t\t\t\t<transformedDataType>"));
-   xml.append(static_cast<int32_t>(m_transformedDataType));
-   xml.append(_T("</transformedDataType>\n\t\t\t\t\t<samples>"));
-   xml.append(m_sampleCount);
-   xml.append(_T("</samples>\n\t\t\t\t\t<origin>"));
-   xml.append(static_cast<int32_t>(m_source));
-   xml.append(_T("</origin>\n\t\t\t\t\t<scheduleType>"));
-   xml.append(static_cast<int32_t>(m_pollingScheduleType));
-   xml.append(_T("</scheduleType>\n\t\t\t\t\t<interval>"));
-   xml.append(EscapeStringForXML2(m_pollingIntervalSrc));
-   xml.append(_T("</interval>\n\t\t\t\t\t<retentionType>"));
-   xml.append(static_cast<int32_t>(m_retentionType));
-   xml.append(_T("</retentionType>\n\t\t\t\t\t<retention>"));
-   xml.append(EscapeStringForXML2(m_retentionTimeSrc));
-   xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
-   xml.append(EscapeStringForXML2(m_systemTag));
-   xml.append(_T("</systemTag>\n\t\t\t\t\t<userTag>"));
-   xml.append(EscapeStringForXML2(m_userTag));
-   xml.append(_T("</userTag>\n\t\t\t\t\t<delta>"));
-   xml.append(static_cast<int32_t>(m_deltaCalculation));
-   xml.append(_T("</delta>\n\t\t\t\t\t<flags>"));
-   xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<snmpRawValueType>"));
-   xml.append(m_snmpRawValueType);
-   xml.append(_T("</snmpRawValueType>\n\t\t\t\t\t<snmpPort>"));
-   xml.append(m_snmpPort);
-   xml.append(_T("</snmpPort>\n\t\t\t\t\t<snmpVersion>"));
-   xml.append(static_cast<int32_t>(m_snmpVersion));
-   xml.append(_T("</snmpVersion>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
-   xml.append(m_instanceDiscoveryMethod);
-   xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instanceRetentionTime>"));
-   xml.append(m_instanceRetentionTime);
-   xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.append(_T("</comments>\n\t\t\t\t\t<isDisabled>"));
-   xml.append(BooleanToString(m_status == ITEM_STATUS_DISABLED));
-   xml.append(_T("</isDisabled>\n\t\t\t\t\t<unitName>"));
-   xml.append(EscapeStringForXML2(m_unitName));
-   xml.append(_T("</unitName>\n\t\t\t\t\t<multiplier>"));
-   xml.append(m_multiplier);
-   xml.append(_T("</multiplier>\n\t\t\t\t\t<allThresholdsRearmEvent>"));
-   xml.append(m_allThresholdsRearmEvent);
-   xml.append(_T("</allThresholdsRearmEvent>\n"));
-
-	if (!m_transformationScriptSource.isBlank())
-	{
-		xml.append(_T("\t\t\t\t\t<transformation>"));
-		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
-		xml.append(_T("</transformation>\n"));
-	}
-
-	if ((m_schedules != nullptr) && !m_schedules->isEmpty())
+   if (!m_transformationScriptSource.isBlank())
    {
-      xml.append(_T("\t\t\t\t\t<schedules>\n"));
+      json_object_set_new(root, "transformation", json_string_t(m_transformationScriptSource));
+   }
+
+   if ((m_schedules != nullptr) && !m_schedules->isEmpty())
+   {
+      json_t *schedules = json_array();
       for(int i = 0; i < m_schedules->size(); i++)
       {
-         xml.append(_T("\t\t\t\t\t\t<schedule>"));
-         xml.appendPreallocated(EscapeStringForXML(m_schedules->get(i), -1));
-         xml.append(_T("</schedule>\n"));
+         json_array_append_new(schedules, json_string_t(m_schedules->get(i)));
       }
-      xml.append(_T("\t\t\t\t\t</schedules>\n"));
+      json_object_set_new(root, "schedules", schedules);
    }
 
-	if (m_thresholds != nullptr)
-	{
-	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
-		for(int i = 0; i < m_thresholds->size(); i++)
-		{
-			m_thresholds->get(i)->createExportRecord(xml, i + 1);
-		}
-	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
-	}
-
-	if (!m_perfTabSettings.isEmpty())
-	{
-		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		xml.appendPreallocated(EscapeStringForXML(m_perfTabSettings, -1));
-		xml.append(_T("</perfTabSettings>\n"));
-	}
-
-   if (m_instanceName != nullptr)
+   if (m_thresholds != nullptr)
    {
-      xml.append(_T("\t\t\t\t\t<instance>"));
-      xml.appendPreallocated(EscapeStringForXML(m_instanceName, -1));
-      xml.append(_T("</instance>\n"));
+      json_t *thresholds = json_array();
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         json_array_append_new(thresholds, m_thresholds->get(i)->createExportRecord());
+      }
+      json_object_set_new(root, "thresholds", thresholds);
    }
 
-   if (m_instanceDiscoveryData != nullptr)
-	{
-		xml.append(_T("\t\t\t\t\t<instanceDiscoveryData>"));
-		xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
-		xml.append(_T("</instanceDiscoveryData>\n"));
-	}
+   if (!m_perfTabSettings.isEmpty())
+   {
+      json_object_set_new(root, "perfTabSettings", json_string_t(m_perfTabSettings));
+   }
+
+   if (!m_instanceName.isBlank())
+   {
+      json_object_set_new(root, "instance", json_string_t(m_instanceName));
+   }
+
+   if (!m_instanceDiscoveryData.isBlank())
+   {
+      json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
+   }
 
    if (!m_instanceFilterSource.isBlank())
-	{
-		xml.append(_T("\t\t\t\t\t<instanceFilter>"));
-		xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
-		xml.append(_T("</instanceFilter>\n"));
-	}
-
-   unlock();
-   xml.append(_T("\t\t\t\t</dci>\n"));
+   {
+      json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
+   }
+   
+   return root;
 }
 
 /**
@@ -2582,6 +2929,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"), 0, DCI_DT_NULL);
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
+   m_sampleSaveInterval = config->getSubEntryValueAsInt(_T("sampleSaveInterval"), 0, 1);
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_unitName = config->getSubEntryValue(_T("unitName"));
    m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
@@ -2609,6 +2957,52 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
    unlock();
 }
 
+/**
+ * Update DCItem from imported JSON configuration
+ */
+void DCItem::updateFromImport(json_t *json)
+{
+   DCObject::updateFromImport(json);
+
+   lock();
+   m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
+   m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
+   m_deltaCalculation = static_cast<BYTE>(json_object_get_int32(json, "delta"));
+   m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
+   m_sampleSaveInterval = json_object_get_int32(json, "sampleSaveInterval", 1);
+   m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
+   m_unitName = json_object_get_string(json, "unitName", _T(""));
+   m_multiplier = json_object_get_int32(json, "multiplier");
+   m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      if (m_thresholds != nullptr)
+         m_thresholds->clear();
+      else
+         m_thresholds = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
+         
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new Threshold(thresholdJson, this));
+         }
+      }
+   }
+   else
+   {
+      delete_and_null(m_thresholds);
+   }
+
+   updateCacheSizeInternal(true);
+   unlock();
+}
+
+
 /*
  * Clone DCI
  */
@@ -2628,9 +3022,10 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "dataType", json_integer(m_dataType));
    json_object_set_new(root, "transformedDataType", json_integer(m_transformedDataType));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "sampleSaveInterval", json_integer(m_sampleSaveInterval));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));
-   json_object_set_new(root, "prevValueTimeStamp", json_integer(m_prevValueTimeStamp));
+   json_object_set_new(root, "prevValueTimeStamp", m_prevValueTimeStamp.asJson());
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
@@ -2645,8 +3040,8 @@ json_t *DCItem::toJson()
  */
 void DCItem::prepareForRecalc()
 {
-   m_prevValueTimeStamp = 0;
-   m_lastPoll = 0;
+   m_prevValueTimeStamp = Timestamp::fromMilliseconds(0);
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
    updateCacheSizeInternal(false);
 }
 
@@ -2655,7 +3050,7 @@ void DCItem::prepareForRecalc()
  */
 void DCItem::recalculateValue(ItemValue &value)
 {
-   if (m_prevValueTimeStamp == 0)
+   if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = value;  // Delta should be zero for first poll
    ItemValue rawValue = value;
 
@@ -2683,7 +3078,7 @@ void DCItem::recalculateValue(ItemValue &value)
       m_ppValueCache[0] = new ItemValue(value);
    }
 
-   m_lastPoll = value.getTimeStamp();
+   m_lastPollTime = value.getTimeStamp();
 }
 
 /**
@@ -2738,4 +3133,301 @@ shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const
    }
 
    return info;
+}
+
+/**
+ * Get all script dependencies for this object
+ */
+void DCItem::getScriptDependencies(StringSet *dependencies) const
+{
+   DCObject::getScriptDependencies(dependencies);
+
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         m_thresholds->get(i)->getScriptDependencies(dependencies);
+      }
+   }
+}
+
+/**
+ * Post threshold repeat event. Called from threshold repeat callback.
+ * Returns repeat interval if should reschedule, 0 otherwise.
+ */
+uint32_t DCItem::postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activationSequence)
+{
+   lock();
+
+   Threshold *t = getThresholdById(thresholdId);
+   if (t == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Threshold %u not found on DCI %u"), thresholdId, m_id);
+      unlock();
+      return 0;
+   }
+
+   if (!t->isReached() || t->getActivationSequence() != activationSequence)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Threshold %u on DCI %u: state changed (reached=%s, seq=") UINT64_FMT _T(" vs ") UINT64_FMT _T(")"),
+         thresholdId, m_id,
+         t->isReached() ? _T("yes") : _T("no"),
+         t->getActivationSequence(), activationSequence);
+      unlock();
+      return 0;
+   }
+
+   uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : t->getRepeatInterval();
+   if (repeatInterval == 0)
+   {
+      unlock();
+      return 0;
+   }
+
+   if (t->isDisabled() || (m_status == ITEM_STATUS_DISABLED))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 7, _T("Threshold %u on DCI %u is disabled"), thresholdId, m_id);
+      unlock();
+      return repeatInterval;
+   }
+
+   // Gather values for event
+   const wchar_t *dciValue = (m_cacheSize > 0) ? m_ppValueCache[0]->getString() : L"";
+   String currentValue = t->getLastCheckValue().getString();
+   String thresholdValue = t->getStringValue();
+
+   shared_ptr<DCObject> sharedThis = shared_from_this();
+
+   EventBuilder(t->getEventCode(), m_ownerId)
+      .dci(m_id)
+      .param(_T("dciName"), m_name)
+      .param(_T("dciDescription"), m_description)
+      .param(_T("thresholdValue"), thresholdValue)
+      .param(_T("currentValue"), currentValue)
+      .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("instance"), m_instanceName)
+      .param(_T("isRepeatedEvent"), _T("1"))
+      .param(_T("dciValue"), dciValue)
+      .param(_T("operation"), t->getOperation())
+      .param(_T("function"), t->getFunction())
+      .param(_T("pollCount"), t->getSampleCount())
+      .param(_T("thresholdDefinition"), t->getTextualDefinition())
+      .param(_T("instanceValue"), m_instanceDiscoveryData)
+      .param(_T("instanceName"), m_instanceName)
+      .param(_T("thresholdId"), thresholdId)
+      .post(
+         [sharedThis, thresholdId] (Event *e) -> void
+         {
+            static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage());
+         });
+
+   unlock();
+   return repeatInterval;
+}
+
+/**
+ * Schedule repeat events for all reached thresholds
+ */
+uint32_t DCItem::scheduleThresholdRepeatEvents()
+{
+   LockGuard lockGuard(m_mutex);
+   if (m_thresholds == nullptr)
+      return 0;
+
+   uint32_t scheduledCount = 0;
+   time_t now = time(nullptr);
+   for (int j = 0; j < m_thresholds->size(); j++)
+   {
+      Threshold *t = m_thresholds->get(j);
+      if (!t->isReached())
+         continue;
+
+      uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : t->getRepeatInterval();
+      if (repeatInterval <= 0)
+         continue;
+
+      // Calculate delay based on time since last event
+      time_t elapsed = now - t->getLastEventTimestamp();
+      uint32_t delay = (elapsed >= repeatInterval) ? 1 : static_cast<uint32_t>(repeatInterval - elapsed);
+
+      t->incrementActivationSequence();
+      ScheduleThresholdRepeatEvent(m_ownerId, m_id, t->getId(), t->getActivationSequence(), delay);
+      scheduledCount++;
+   }
+
+   return scheduledCount;
+}
+
+/**
+ * Set anomaly detection profile (JSON string)
+ */
+void DCItem::setAnomalyProfile(json_t *profile)
+{
+   lock();
+   json_decref(m_anomalyProfile);
+   if (profile != nullptr)
+   {
+      m_anomalyProfile = json_incref(profile);
+      m_anomalyProfileTimestamp = time(nullptr);
+   }
+   else
+   {
+      m_anomalyProfile = nullptr;
+      m_anomalyProfileTimestamp = 0;
+   }
+   unlock();
+}
+
+/**
+ * Check if current value is anomalous using AI profile
+ * Returns true if anomaly detected
+ */
+bool DCItem::checkAnomalyAIProfile(const ItemValue& value)
+{
+   if (m_anomalyProfile == nullptr)
+      return false;
+
+   double numValue = value.getDouble();
+   time_t now = time(nullptr);
+   struct tm timeInfo;
+#ifdef _WIN32
+   localtime_s(&timeInfo, &now);
+#else
+   localtime_r(&now, &timeInfo);
+#endif
+
+   // 1. Hard bounds check
+   json_t *hardBounds = json_object_get(m_anomalyProfile, "hardBounds");
+   if (hardBounds != nullptr && json_is_true(json_object_get(hardBounds, "enabled")))
+   {
+      double minVal = json_number_value(json_object_get(hardBounds, "min"));
+      double maxVal = json_number_value(json_object_get(hardBounds, "max"));
+      if (numValue < minVal || numValue > maxVal)
+         return true;
+   }
+
+   // 2. Seasonal deviation check
+   json_t *seasonal = json_object_get(m_anomalyProfile, "seasonalDetection");
+   if (seasonal != nullptr && json_is_true(json_object_get(seasonal, "enabled")))
+   {
+      json_t *hourlyBaselines = json_object_get(m_anomalyProfile, "hourlyBaselines");
+      if (json_is_array(hourlyBaselines))
+      {
+         int hour = timeInfo.tm_hour;
+         json_t *baseline = json_array_get(hourlyBaselines, hour);
+         if (baseline != nullptr)
+         {
+            double mean = json_number_value(json_object_get(baseline, "mean"));
+            double stddev = json_number_value(json_object_get(baseline, "stddev"));
+            double sensitivity = json_number_value(json_object_get(seasonal, "sensitivity"));
+            if (sensitivity <= 0)
+               sensitivity = 2.5;
+
+            // Apply weekday factor if enabled
+            double weekdayFactor = 1.0;
+            if (json_is_true(json_object_get(seasonal, "useWeekdayFactors")))
+            {
+               static const char *dayNames[] = { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+               json_t *weekdayFactors = json_object_get(m_anomalyProfile, "weekdayFactors");
+               if (weekdayFactors != nullptr)
+               {
+                  json_t *factor = json_object_get(weekdayFactors, dayNames[timeInfo.tm_wday]);
+                  if (factor != nullptr)
+                     weekdayFactor = json_number_value(factor);
+               }
+            }
+
+            double threshold = sensitivity * stddev * weekdayFactor;
+            if (fabs(numValue - mean) > threshold)
+               return true;
+         }
+      }
+   }
+
+   // 3. Rate of change check
+   json_t *changeDetection = json_object_get(m_anomalyProfile, "changeDetection");
+   if (changeDetection != nullptr && json_is_true(json_object_get(changeDetection, "enabled")))
+   {
+      if (m_cacheSize > 0 && m_ppValueCache != nullptr && m_ppValueCache[0] != nullptr)
+      {
+         double prevValue = m_ppValueCache[0]->getDouble();
+         time_t prevTime = m_ppValueCache[0]->getTimeStamp().asTime();
+         double elapsedMinutes = difftime(now, prevTime) / 60.0;
+         if (elapsedMinutes > 0)
+         {
+            double delta = fabs(numValue - prevValue);
+            double maxRate = json_number_value(json_object_get(changeDetection, "maxRatePerMinute"));
+            if (maxRate > 0 && delta > maxRate * elapsedMinutes)
+               return true;
+         }
+      }
+   }
+
+   // 4. Sustained high check
+   json_t *sustainedHigh = json_object_get(m_anomalyProfile, "sustainedHighDetection");
+   if (sustainedHigh != nullptr && json_is_true(json_object_get(sustainedHigh, "enabled")))
+   {
+      double threshold = json_number_value(json_object_get(sustainedHigh, "threshold"));
+      double durationMinutes = json_number_value(json_object_get(sustainedHigh, "durationMinutes"));
+      if (numValue > threshold)
+      {
+         if (m_sustainedHighStart == 0)
+            m_sustainedHighStart = now;  // Start tracking
+         else if (durationMinutes > 0 && difftime(now, m_sustainedHighStart) / 60.0 >= durationMinutes)
+            return true;  // Sustained high anomaly
+      }
+      else
+      {
+         m_sustainedHighStart = 0;  // Reset on value below threshold
+      }
+   }
+
+   // 5. Sustained low check
+   json_t *sustainedLow = json_object_get(m_anomalyProfile, "sustainedLowDetection");
+   if (sustainedLow != nullptr && json_is_true(json_object_get(sustainedLow, "enabled")))
+   {
+      double threshold = json_number_value(json_object_get(sustainedLow, "threshold"));
+      double durationMinutes = json_number_value(json_object_get(sustainedLow, "durationMinutes"));
+      if (numValue < threshold)
+      {
+         if (m_sustainedLowStart == 0)
+            m_sustainedLowStart = now;  // Start tracking
+         else if (durationMinutes > 0 && difftime(now, m_sustainedLowStart) / 60.0 >= durationMinutes)
+            return true;  // Sustained low anomaly
+      }
+      else
+      {
+         m_sustainedLowStart = 0;  // Reset on value above threshold
+      }
+   }
+
+   // 6. Sudden drop check (using exponential moving average)
+   json_t *dropDetection = json_object_get(m_anomalyProfile, "suddenDropDetection");
+   if (dropDetection != nullptr && json_is_true(json_object_get(dropDetection, "enabled")))
+   {
+      double dropPercent = json_number_value(json_object_get(dropDetection, "dropPercent"));
+      if (dropPercent > 0)
+      {
+         if (std::isnan(m_recentAverage))
+         {
+            // Initialize EMA with first value
+            m_recentAverage = numValue;
+         }
+         else
+         {
+            // Check for sudden drop before updating average
+            if (m_recentAverage > 0)
+            {
+               double dropThreshold = m_recentAverage * (1.0 - dropPercent / 100.0);
+               if (numValue < dropThreshold)
+                  return true;
+            }
+            // Update EMA: alpha=0.3 gives ~5-sample equivalent smoothing
+            constexpr double alpha = 0.3;
+            m_recentAverage = alpha * numValue + (1.0 - alpha) * m_recentAverage;
+         }
+      }
+   }
+
+   return false;
 }

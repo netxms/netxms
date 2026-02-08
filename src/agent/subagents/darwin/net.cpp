@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for Darwin
 ** Copyright (C) 2012 Alex Kirhenshtein
 **
@@ -360,8 +360,6 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 		{
 			if (pName != pNext->ifa_name)
 			{
-				IFLIST *pTmp;
-
 				nIfCount++;
 				auto tmp = MemReallocArrayNoFree(pList, nIfCount);
 				if (tmp == NULL)
@@ -395,7 +393,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 					pList[nIfCount-1].addr = pTmp;
 					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
 						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
+					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask =
 						BitsInMask(htonl(((struct sockaddr_in *)
 										(pNext->ifa_netmask))->sin_addr.s_addr));
 				}
@@ -491,4 +489,103 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 		perror("getifaddrs()");
 	}
 	return nRet;
+}
+
+/**
+ * Handler for interface statistics parameters
+ */
+LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char ifName[IF_NAMESIZE];
+   if (!AgentGetParameterArgA(param, 1, ifName, sizeof(ifName)))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (ifName[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Determine if parameter is index or name
+   if (ifName[0] >= '0' && ifName[0] <= '9')
+   {
+      int ifIndex = atoi(ifName);
+      if (if_indextoname(ifIndex, ifName) == nullptr)
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   struct ifaddrs *ifaddr;
+   if (getifaddrs(&ifaddr) != 0)
+      return SYSINFO_RC_ERROR;
+
+   LONG result = SYSINFO_RC_UNSUPPORTED;
+
+   for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next)
+   {
+      if ((ifa->ifa_addr == nullptr) || (ifa->ifa_addr->sa_family != AF_LINK))
+         continue;
+
+      if (strcmp(ifa->ifa_name, ifName) != 0)
+         continue;
+
+      struct if_data *ifData = static_cast<struct if_data*>(ifa->ifa_data);
+      if (ifData == nullptr)
+         break;
+
+      result = SYSINFO_RC_SUCCESS;
+      switch(CAST_FROM_POINTER(arg, int))
+      {
+         case IF_INFO_BYTES_IN:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_ibytes));
+            break;
+         case IF_INFO_BYTES_IN_64:
+            ret_uint64(value, ifData->ifi_ibytes);
+            break;
+         case IF_INFO_BYTES_OUT:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_obytes));
+            break;
+         case IF_INFO_BYTES_OUT_64:
+            ret_uint64(value, ifData->ifi_obytes);
+            break;
+         case IF_INFO_PACKETS_IN:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_ipackets));
+            break;
+         case IF_INFO_PACKETS_IN_64:
+            ret_uint64(value, ifData->ifi_ipackets);
+            break;
+         case IF_INFO_PACKETS_OUT:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_opackets));
+            break;
+         case IF_INFO_PACKETS_OUT_64:
+            ret_uint64(value, ifData->ifi_opackets);
+            break;
+         case IF_INFO_IN_ERRORS:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_ierrors));
+            break;
+         case IF_INFO_IN_ERRORS_64:
+            ret_uint64(value, ifData->ifi_ierrors);
+            break;
+         case IF_INFO_OUT_ERRORS:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_oerrors));
+            break;
+         case IF_INFO_OUT_ERRORS_64:
+            ret_uint64(value, ifData->ifi_oerrors);
+            break;
+         case IF_INFO_IN_DROPS:
+            ret_uint(value, static_cast<uint32_t>(ifData->ifi_iqdrops));
+            break;
+         case IF_INFO_IN_DROPS_64:
+            ret_uint64(value, ifData->ifi_iqdrops);
+            break;
+         case IF_INFO_OUT_DROPS:
+         case IF_INFO_OUT_DROPS_64:
+            // Output drops not available on Darwin
+            result = SYSINFO_RC_UNSUPPORTED;
+            break;
+         default:
+            result = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+      break;
+   }
+
+   freeifaddrs(ifaddr);
+   return result;
 }

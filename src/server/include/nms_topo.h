@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,13 +84,17 @@ struct NetworkPathElement
    InetAddress nextHop;          // Next hop address
    InetAddress route;            // Route used (UNSPEC for VPN connectors and direct access)
    uint32_t ifIndex;             // Interface index or object ID
-   TCHAR name[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<NetworkPathElement>;
+#endif
 
 /**
  * Network path trace
  */
-class NetworkPath
+class NXCORE_EXPORTABLE NetworkPath
 {
 private:
    InetAddress m_sourceAddress;
@@ -111,6 +115,7 @@ public:
    NetworkPathElement *getHopInfo(int index) const { return m_path.get(index); }
 
    void fillMessage(NXCPMessage *msg) const;
+   json_t *toJson() const;
    void print(ServerConsole *console, int padding) const;
 };
 
@@ -433,6 +438,10 @@ public:
       m_type = type;
    }
 
+   shared_ptr<NetObj> getOwner() const { return m_owner; }
+   shared_ptr<NetObj> getConnectionPoint() const { return m_connectionPoint; }
+   int getType() const { return m_type; }
+
    void fillMessage(NXCPMessage* msg, uint32_t base) const;
    void fillJson(json_t *json, uint32_t userId, bool includeObject, std::function<json_t* (const NetObj& object)> createObjectSummary) const;
 };
@@ -445,10 +454,10 @@ class NetworkMapObjectList;
 class NetworkMapElement;
 class NetworkMapLink;
 
-shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
+shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
-shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 void NXCORE_EXPORTABLE FindMacAddresses(const BYTE* macPattern, size_t macPatternSize, ObjectArray<MacAddressInfo>* out, int searchLimit);
 
@@ -461,18 +470,18 @@ void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 String BuildLldpId(uint32_t type, const BYTE *data, size_t length);
 
-const TCHAR *STPPortStateToText(SpanningTreePortState state);
+const wchar_t NXCORE_EXPORTABLE *STPPortStateToText(SpanningTreePortState state);
 
 VrrpInfo *GetVRRPInfo(Node *node);
 
-const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
+const TCHAR NXCORE_EXPORTABLE *GetLinkLayerProtocolName(LinkLayerProtocol p);
 
 unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius, bool includeEndNodes);
 
 bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors);
-const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state);
-const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state);
-const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type);
+const TCHAR NXCORE_EXPORTABLE *OSPFNeighborStateToText(OSPFNeighborState state);
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceStateToText(OSPFInterfaceState state);
+const TCHAR NXCORE_EXPORTABLE *OSPFInterfaceTypeToText(OSPFInterfaceType type);
 unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius);
 
 #endif   /* _nms_topo_h_ */

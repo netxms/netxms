@@ -77,6 +77,16 @@ public:
       return String(toString(buffer));
    }
 
+   String toMaskedString() const
+   {
+      String full = toString();
+      if (full.length() <= 8)
+         return String(_T("********"));
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%.4s****%.4s"), full.cstr(), full.cstr() + full.length() - 4);
+      return String(buffer);
+   }
+
    static UserAuthenticationToken parseW(const wchar_t *s);
    static UserAuthenticationToken parseA(const char *s);
    static UserAuthenticationToken parse(const wchar_t *s)
@@ -101,6 +111,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    uint32_t userId;
    time_t issuingTime;
    time_t expirationTime;
+   time_t maxExpirationTime;  // Absolute maximum expiration time (cannot be extended beyond this)
    bool persistent;
    bool service;
    bool validClearText;
@@ -108,8 +119,14 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
 
    /**
     * Create new token
+    *
+    * @param uid User ID for this token
+    * @param validFor Initial validity period in seconds
+    * @param type Token type (ephemeral, persistent, or service)
+    * @param _description Optional description
+    * @param maxLifetime Maximum absolute lifetime in seconds (0 = no limit, only for ephemeral/service tokens)
     */
-   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, AuthenticationTokenType type, const TCHAR *_description) : description(_description)
+   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, AuthenticationTokenType type, const TCHAR *_description, uint32_t maxLifetime = 0) : description(_description)
    {
       BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
       GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
@@ -119,6 +136,14 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       userId = uid;
       issuingTime = time(nullptr);
       expirationTime = issuingTime + validFor;
+      // For persistent tokens, max expiration is the original expiration (no refresh extension allowed)
+      // For ephemeral/service tokens, max expiration is configurable (0 = no limit)
+      if (type == AuthenticationTokenType::PERSISTENT)
+         maxExpirationTime = expirationTime;
+      else if (maxLifetime > 0)
+         maxExpirationTime = issuingTime + ((validFor < maxLifetime) ? validFor : maxLifetime);
+      else
+         maxExpirationTime = 0;  // No absolute limit
       persistent = (type == AuthenticationTokenType::PERSISTENT);
       service = (type == AuthenticationTokenType::SERVICE);
       validClearText = true;
@@ -133,6 +158,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       userId = DBGetFieldUInt32(hResult, row, 1);
       issuingTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 2));
       expirationTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 3));
+      maxExpirationTime = expirationTime;  // Persistent tokens cannot be extended beyond original expiration
 
       TCHAR text[128];
       DBGetField(hResult, row, 5, text, 128);

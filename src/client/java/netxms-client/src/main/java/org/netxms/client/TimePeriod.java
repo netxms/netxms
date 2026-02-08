@@ -77,6 +77,20 @@ public class TimePeriod
    }
 
    /**
+    * Copy constructor.
+    * 
+    * @param src time period to copy
+    */
+   public TimePeriod(TimePeriod src)
+   {
+      this.timeFrameType = src.timeFrameType;
+      this.timeRange = src.timeRange;
+      this.timeUnit = src.timeUnit;
+      this.timeFrom = (src.timeFrom != null) ? new Date(src.timeFrom.getTime()) : null;
+      this.timeTo = (src.timeTo != null) ? new Date(src.timeTo.getTime()) : null;
+   }
+
+   /**
     * Check if period time frame type is "back from now".
     *
     * @return true if period time frame type is "back from now"

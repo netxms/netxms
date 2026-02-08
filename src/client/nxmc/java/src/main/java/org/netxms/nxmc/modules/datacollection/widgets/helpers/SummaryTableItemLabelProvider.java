@@ -63,7 +63,12 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
 
 		if (columnIndex >= row.size())
 			return null;
-		return new DataFormatter(useMultipliers ? "%{m,u}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), DateFormatFactory.getTimeFormatter());
+		return new DataFormatter().setDataType(columns[columnIndex].getDataType())
+		      .setMeasurementUnit(columns[columnIndex].getMeasurementUnit())
+		      .setMultiplierPower(columns[columnIndex].getMultiplierPower())
+		      .setUseMultipliers(columns[columnIndex].getUseMultiplier())
+            .setDefaultForMultipliers(useMultipliers)
+		      .format(row.get(columnIndex).getValue(), DateFormatFactory.getTimeFormatter());
 	}
 
    /**

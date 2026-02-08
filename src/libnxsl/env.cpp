@@ -72,10 +72,12 @@ int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_LevenshteinDistance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_MacAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetMonotonicClockTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_SimilarityScore(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -211,8 +213,10 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "GetMonotonicClockTime", F_GetMonotonicClockTime, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
    { "JsonParse", F_JsonParse, -1 },
+   { "LevenshteinDistance", F_LevenshteinDistance, -1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
+   { "SimilarityScore", F_SimilarityScore, -1 },
    { "SplitString", F_SplitString, 2, true },
    { "WritePersistentStorage", F_WritePersistentStorage, 2 }
 };

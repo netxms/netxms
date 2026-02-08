@@ -189,9 +189,72 @@ static void TestVariableClass()
    EndTest();
 
    StartTest(_T("SNMP_Variable copy constructor"));
-   SNMP_Variable v5(&v4);
+   SNMP_Variable v5(v4);
    AssertEquals(v5.getName().compare(s_oidSysLocation), OID_EQUAL);
    AssertEquals(v5.getValueAsInt(), 42);
+   AssertEquals(v4.getName().compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(v4.getValueAsInt(), 42);
+
+   SNMP_Variable v7(s_oidSysDescription);
+   v7.setValueFromString(ASN_OCTET_STRING, _T("Some long string that exceeds internal value buffer in variable class"));
+   SNMP_Variable v8(v7);
+   AssertEquals(v8.getName().compare(s_oidSysDescription), OID_EQUAL);
+   TCHAR buffer[256];
+   v8.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+   AssertEquals(v7.getName().compare(s_oidSysDescription), OID_EQUAL);
+   v7.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+   EndTest();
+
+   StartTest(_T("SNMP_Variable move constructor"));
+   SNMP_Variable v9(std::move(v4));
+   AssertEquals(v9.getName().compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(v9.getValueAsInt(), 42);
+
+   SNMP_Variable v10(std::move(v7));
+   AssertEquals(v10.getName().compare(s_oidSysDescription), OID_EQUAL);
+   v10.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+
+   v7.getValueAsString(buffer, 256);
+   AssertEquals(static_cast<int32_t>(buffer[0]), 0);  // v7 should be in "empty" state after move
+   EndTest();
+
+   StartTest(_T("SNMP_Variable assignment operator"));
+   v10 = v9;
+   AssertEquals(v10.getName().compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(v10.getValueAsInt(), 42);
+
+   SNMP_Variable v11(s_oidSysDescription);
+   v11.setValueFromString(ASN_OCTET_STRING, _T("Some long string that exceeds internal value buffer in variable class"));
+   v10 = v11;
+   AssertEquals(v10.getName().compare(s_oidSysDescription), OID_EQUAL);
+   v10.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+   AssertEquals(v11.getName().compare(s_oidSysDescription), OID_EQUAL);
+   v11.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+   EndTest();
+
+   StartTest(_T("SNMP_Variable assignment operator (move semantics)"));
+   v11 = SNMP_Variable(s_oidSysLocation);
+   v11.setValueFromString(ASN_COUNTER32, _T("84"));
+   AssertEquals(v11.getName().compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(v11.getValueAsInt(), 84);
+
+   v10 = std::move(v9);
+   AssertEquals(v10.getName().compare(s_oidSysLocation), OID_EQUAL);
+   AssertEquals(v10.getValueAsInt(), 42);
+
+   SNMP_Variable v12(s_oidSysDescription);
+   v12.setValueFromString(ASN_OCTET_STRING, _T("Some long string that exceeds internal value buffer in variable class"));
+   v10 = std::move(v12);
+   AssertEquals(v10.getName().compare(s_oidSysDescription), OID_EQUAL);
+   v10.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("Some long string that exceeds internal value buffer in variable class"));
+   v12.getValueAsString(buffer, 256);
+   AssertEquals(static_cast<int32_t>(buffer[0]), 0);  // v12 should be in "empty" state after move
    EndTest();
 }
 
@@ -223,14 +286,12 @@ static void TestPDUEncoding()
    pdu.bindVariable(new SNMP_Variable(oid));
 
    SNMP_SecurityContext securityContext("public");
-   BYTE *encodedPDU = nullptr;
+   SNMP_PDUBuffer encodedPDU;
    size_t size = pdu.encode(&encodedPDU, &securityContext);
-   AssertNotNull(encodedPDU);
    AssertTrue(size > 0);
 
    SNMP_PDU pdu2;
    AssertTrue(pdu2.parse(encodedPDU, size, &securityContext, false));
-   MemFree(encodedPDU);
 
    AssertEquals(pdu.getCommand(), pdu2.getCommand());
    AssertEquals(pdu2.getCommunity(), "public");

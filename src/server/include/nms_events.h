@@ -24,7 +24,6 @@
 #define _nms_events_h_
 
 #include <nxevent.h>
-
 #include <nxcore_schedule.h>
 
 /**
@@ -70,7 +69,7 @@ enum class EventOrigin
 /**
  * Event template
  */
-class EventTemplate
+class NXCORE_EXPORTABLE EventTemplate
 {
 private:
    uuid m_guid;
@@ -85,6 +84,7 @@ private:
 public:
    EventTemplate(DB_RESULT hResult, int row);
    EventTemplate(const NXCPMessage& msg);
+   EventTemplate(const json_t *json);
    ~EventTemplate();
 
    const uuid& getGuid() const { return m_guid; }
@@ -97,6 +97,7 @@ public:
    const TCHAR *getTags() const { return m_tags; }
 
    void modifyFromMessage(const NXCPMessage& msg);
+   void modifyFromJson(const json_t *json);
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
    bool saveToDatabase() const;
 
@@ -155,6 +156,7 @@ private:
 	StringList m_parameterNames;
 	MutableString m_lastAlarmKey;
 	MutableString m_lastAlarmMessage;
+	uint32_t m_lastAlarmId;
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
 	std::function<void (Event*)> m_callback;
@@ -181,15 +183,17 @@ public:
    void getTagsAsList(StringBuffer *sb) const;
    time_t getTimestamp() const { return m_timestamp; }
    time_t getOriginTimestamp() const { return m_originTimestamp; }
-   const TCHAR *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
-   const TCHAR *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
+   const wchar_t *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
+   const wchar_t *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
+   uint32_t getLastAlarmId() const { return m_lastAlarmId; }
    const StringList *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setLogWriteFlag(bool flag) { if (flag) m_flags |= EF_LOG; else m_flags &= ~EF_LOG; }
    void setSeverity(int severity) { m_severity = severity; }
-   void setLastAlarmKey(const TCHAR *key) { m_lastAlarmKey = key; }
-   void setLastAlarmMessage(const TCHAR *message) { m_lastAlarmMessage = message; }
+   void setLastAlarmKey(const wchar_t *key) { m_lastAlarmKey = key; }
+   void setLastAlarmMessage(const wchar_t *message) { m_lastAlarmMessage = message; }
+   void setLastAlarmId(uint32_t id) { m_lastAlarmId = id; }
 
    int64_t getQueueTime() const { return m_queueTime; }
    void setQueueTime(int64_t t) { m_queueTime = t; }
@@ -607,14 +611,24 @@ public:
    uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TimeFrame>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ActionExecutionConfiguration>;
+#endif
+
 /**
  * Event policy rule
  */
-class EPRule
+class NXCORE_EXPORTABLE EPRule
 {
 private:
    uint32_t m_id;
    uuid m_guid;
+   uint32_t m_version;              // In-memory version for optimistic concurrency (not persisted)
+   bool m_modified;                 // Flag indicating rule was modified by client (for merge)
+   uuid m_modifiedByGuid;           // GUID of user who last modified (from DB)
+   MutableString m_modifiedByName;  // Name of user who last modified (from DB)
+   time_t m_modificationTime;       // Timestamp of last modification (from DB)
    uint32_t m_flags;
    IntegerArray<uint32_t> m_sources;
    IntegerArray<uint32_t> m_sourceExclusions;
@@ -622,27 +636,38 @@ private:
    ObjectArray<TimeFrame> m_timeFrames;
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
-   TCHAR *m_comments;
-   TCHAR *m_filterScriptSource;
+   wchar_t *m_comments;
+   wchar_t *m_filterScriptSource;
    NXSL_Program *m_filterScript;
-   TCHAR *m_actionScriptSource;
+   wchar_t *m_actionScriptSource;
    NXSL_Program *m_actionScript;
 
-   TCHAR *m_alarmMessage;
-   TCHAR *m_alarmImpact;
+   wchar_t *m_alarmMessage;
+   wchar_t *m_alarmImpact;
    int m_alarmSeverity;
-   TCHAR *m_alarmKey;
+   wchar_t *m_alarmKey;
    uint32_t m_alarmTimeout;
    uint32_t m_alarmTimeoutEvent;
 	IntegerArray<uint32_t> m_alarmCategoryList;
-	TCHAR *m_rcaScriptName;    // Name of library script used for root cause analysis
+	wchar_t *m_rcaScriptName;    // Name of library script used for root cause analysis
 
-	TCHAR m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
+   // Incident creation settings (used when RF_CREATE_INCIDENT flag is set)
+   uint32_t m_incidentDelay;        // Delay in seconds (0 = immediate)
+   wchar_t *m_incidentTitle;        // Title template (nullptr = use alarm message)
+   wchar_t *m_incidentDescription;  // Description template
+
+   // AI incident analysis settings (used when RF_AI_ANALYZE_INCIDENT flag is set)
+   int m_incidentAIAnalysisDepth;   // 0=quick, 1=standard, 2=thorough
+   wchar_t *m_incidentAIPrompt;     // Custom AI analysis instructions (optional)
+
+	wchar_t m_downtimeTag[MAX_DOWNTIME_TAG_LENGTH];
 
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
    StringMap m_customAttributeSetActions;
    StringList m_customAttributeDeleteActions;
+
+   wchar_t *m_aiAgentInstructions;
 
    bool matchSource(const shared_ptr<NetObj>& object) const;
    bool matchEvent(uint32_t eventCode) const;
@@ -651,6 +676,7 @@ private:
    bool matchTime(struct tm *localTime) const;
 
    uint32_t generateAlarm(Event *event) const;
+   void createIncidentFromAlarm(Event *event, uint32_t alarmId) const;
    void executeActionScript(Event *event) const;
 
    bool isFilterEmpty() const
@@ -663,26 +689,39 @@ public:
    EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row);
    EPRule(const NXCPMessage& msg);
-   EPRule(const ConfigEntry& config, bool nxslV5);
+   EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5);
+   EPRule(json_t *json, ImportContext *context);
    ~EPRule();
 
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    void setId(uint32_t newId) { m_id = newId; }
+
+   // Version tracking for optimistic concurrency
+   uint32_t getVersion() const { return m_version; }
+   void setVersion(uint32_t version) { m_version = version; }
+   void incrementVersion() { m_version++; }
+   bool isModified() const { return m_modified; }
+   void clearModified() { m_modified = false; }
+   const uuid& getModifiedByGuid() const { return m_modifiedByGuid; }
+   const String& getModifiedByName() const { return m_modifiedByName; }
+   time_t getModificationTime() const { return m_modificationTime; }
+   void setModificationInfo(const uuid& userGuid, const TCHAR* userName, time_t timestamp);
+
    bool loadFromDB(DB_HANDLE hdb);
-	bool saveToDB(DB_HANDLE hdb) const;
+   bool saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* modifiedByName, time_t modificationTime) const;
    bool processEvent(Event *event) const;
    void fillMessage(NXCPMessage *msg) const;
-   void createExportRecord(TextFileWriter& xml) const;
-   void createOrderingExportRecord(TextFileWriter& xml) const;
-   json_t *toJson() const;
+   
+   json_t *createExportRecord() const;
+   json_t *toJson(bool assistantMode = false) const;
 
    void validateConfig() const;
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
-   const TCHAR *getComments() const { return m_comments; }
+   const wchar_t *getComments() const { return m_comments; }
 };
 
 /**
@@ -778,14 +817,49 @@ public:
    }
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<EPRule>;
+template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<EPRule>>;
+template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<EPRule>;
+#endif
+
 /**
- * Event policy
+ * Information about a rule deleted by client (for optimistic concurrency)
  */
-class EventPolicy
+struct DeletedRuleInfo
+{
+   uuid guid;
+   uint32_t version;
+};
+
+/**
+ * EPP conflict information for merge results (optimistic concurrency)
+ */
+class NXCORE_EXPORTABLE EPPConflict
+{
+public:
+   enum Type { EPP_CT_MODIFY = 1, EPP_CT_DELETE = 2 };
+
+   Type m_type;
+   uuid m_ruleGuid;
+   shared_ptr<EPRule> m_clientRule;    // nullptr for delete conflicts where server deleted
+   shared_ptr<EPRule> m_serverRule;    // nullptr for delete conflicts where client deleted
+
+   EPPConflict(Type type, const uuid& guid, const shared_ptr<EPRule>& clientRule, const shared_ptr<EPRule>& serverRule)
+      : m_type(type), m_ruleGuid(guid), m_clientRule(clientRule), m_serverRule(serverRule) {}
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
+/**
+ * Event procesisng policy
+ */
+class NXCORE_EXPORTABLE EventProcessingPolicy
 {
 private:
-   ObjectArray<EPRule> m_rules;
+   SharedObjectArray<EPRule> m_rules;
    RWLock m_rwlock;
+   uint32_t m_version;   // Policy version for optimistic concurrency (in-memory only)
 
    void readLock() const { m_rwlock.readLock(); }
    void writeLock() { m_rwlock.writeLock(); }
@@ -793,17 +867,30 @@ private:
    int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
 
 public:
-   EventPolicy() : m_rules(128, 128, Ownership::True) { }
+   EventProcessingPolicy() : m_version(0) { }
 
-   uint32_t getNumRules() const { return m_rules.size(); }
+   uint32_t getNumRules() const { return static_cast<uint32_t>(m_rules.size()); }
+   uint32_t getVersion() const { return m_version; }
+   void incrementVersion() { m_version++; }
+
    bool loadFromDB();
-   bool saveToDB() const;
+   bool saveToDB(const uuid& modifiedByGuid, const TCHAR* modifiedByName) const;
+   bool saveToDB() const { return saveToDB(uuid::NULL_UUID, _T("System")); }  // Convenience for imports
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *session, uint32_t requestId) const;
    void replacePolicy(uint32_t numRules, EPRule **ruleList);
-   void exportRule(TextFileWriter& xml, const uuid& guid) const;
-   void exportRuleOrgering(TextFileWriter& xml) const;
+
+   // Optimistic concurrency support
+   uint32_t saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
+                          uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
+                          const uuid& userGuid, const TCHAR* userName,
+                          ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);
+   void fillRuleVersions(NXCPMessage *msg) const;
+
+   json_t *exportRule(const uuid& guid) const;
+   json_t *exportRuleOrdering() const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
+   json_t *getRuleDetails(const uuid& ruleId) const;
    json_t *toJson() const;
 
    void validateConfig() const;
@@ -811,6 +898,8 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const;
 
    void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
+
+   void showRules(ServerConsole *console) const;
 };
 
 /**
@@ -820,30 +909,33 @@ bool InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
 uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
-uint32_t DeleteEventTemplate(uint32_t eventCode);
+uint32_t NXCORE_EXPORTABLE CreateEventTemplateFromJson(const json_t *json, json_t **newValue);
+uint32_t NXCORE_EXPORTABLE ModifyEventTemplateFromJson(uint32_t eventCode, const json_t *json, json_t **oldValue, json_t **newValue);
+uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
-void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode);
+void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode);
 
 void CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);
 Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
-bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
+bool NXCORE_EXPORTABLE EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
 uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
-shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
-shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name);
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByCode(uint32_t code);
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByName(const wchar_t *name);
 
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
+EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy();
+
 /**
  * Global variables
  */
 extern ObjectQueue<Event> g_eventQueue;
-extern EventPolicy *g_pEventPolicy;
 extern VolatileCounter64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

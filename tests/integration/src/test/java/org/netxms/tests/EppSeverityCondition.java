@@ -50,38 +50,37 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.SEVERITY_NORMAL);
       session.saveEventProcessingPolicy(policy);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);   
-            
+
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
+
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -93,35 +92,34 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.getFlags() & ~testRule.SEVERITY_NORMAL);
       session.saveEventProcessingPolicy(policy);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
-      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);   
-            
+
+      session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -133,36 +131,35 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.SEVERITY_CRITICAL);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -174,34 +171,33 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.getFlags() & ~testRule.SEVERITY_CRITICAL);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -213,36 +209,35 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.SEVERITY_WARNING);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +---------------------+
    //|severity of rule |      |severity of condition|
    //|-----------------|      |---------------------|
@@ -254,34 +249,33 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.getFlags() & ~testRule.SEVERITY_WARNING);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -293,36 +287,35 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.SEVERITY_MINOR);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +---------------------+
    //|severity of rule |      |severity of condition|
    //|-----------------|      |---------------------|
@@ -334,34 +327,33 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.getFlags() & ~testRule.SEVERITY_MINOR);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +----------------------+
    //|severity of rule |      | severity of condition|
    //|-----------------|      |----------------------|
@@ -373,36 +365,35 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.SEVERITY_MAJOR);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNotNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       session.deletePersistentStorageValue(PS_KEY);
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
-   
+
    //+-----------------+      +---------------------+
    //|severity of rule |      |severity of condition|
    //|-----------------|      |---------------------|
@@ -414,32 +405,31 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
-      
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
-      eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity 
+      eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity
       session.modifyEventObject(eventTestTemplate);
-      
+
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, COMMENT_FOR_SEARCHING_RULE, eventTestTemplate, node);
       Map<String, String> rulePsSetList = new HashMap<>();
       rulePsSetList.put(PS_KEY, PS_VALUE);// creating a key-value set to pass into the rule
       testRule.setPStorageSet(rulePsSetList);
-      
+
       testRule.setFlags(testRule.getFlags() & ~testRule.SEVERITY_MAJOR);
-      
+
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       session.sendEvent(0, TEMPLATE_NAME, node.getObjectId(), new String[] {}, null, null, null);
-      
+
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
-      
+
       //to run next test
       testRule.setFlags(testRule.SEVERITY_ANY);
       session.saveEventProcessingPolicy(policy);
-      
-      session.closeEventProcessingPolicy();
+
    }
 
 }

@@ -151,6 +151,9 @@
     <ClCompile Include="pe_cert.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="aitools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="messages.h">

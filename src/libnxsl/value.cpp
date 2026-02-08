@@ -294,6 +294,23 @@ NXSL_Value::NXSL_Value(bool bValue)
 }
 
 /**
+ * Create "int64" value from timestamp
+ */
+NXSL_Value::NXSL_Value(Timestamp value)
+{
+   m_dataType = NXSL_DT_INT64;
+   m_stringPtr = nullptr;
+   m_length = 0;
+#ifdef UNICODE
+   m_mbString = nullptr;
+#endif
+   m_stringIsValid = FALSE;
+   m_value.int64 = value.asMilliseconds();
+   m_name = nullptr;
+   m_refCount = 1;
+}
+
+/**
  * Create "string" value
  */
 NXSL_Value::NXSL_Value(const TCHAR *value)

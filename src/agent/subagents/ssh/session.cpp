@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ SSHSession::SSHSession(const InetAddress& addr, uint16_t port, int32_t id)
    m_session = nullptr;
    m_lastAccess = 0;
    m_busy = false;
+   m_nonReusable = false;
    m_name.append(_T("nobody@"));
    m_name.append(m_addr.toString());
    m_name.append(_T(':'));
@@ -222,30 +223,9 @@ static inline bool CheckForChannelReadBug(ssh_session session)
 }
 
 /**
- * Execute command and capture output
- */
-StringList* SSHSession::execute(const TCHAR *command)
-{
-   auto output = new StringList();
-   if (!execute(command, output, nullptr))
-   {
-      delete_and_null(output);
-   }
-   return output;
-}
-
-/**
- * Execute command and feed output to provided action context
- */
-bool SSHSession::execute(const TCHAR *command, const shared_ptr<ActionExecutionContext>& context)
-{
-   return execute(command, nullptr, context.get());
-}
-
-/**
  * Execute command process output as requested
  */
-bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecutionContext *context)
+bool SSHSession::execute(const char *command, StringList *output, ActionExecutionContext *context, ByteStream *rawOutput)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
@@ -263,12 +243,7 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
    bool result = false;
    if (ssh_channel_open_session(channel) == SSH_OK)
    {
-#ifdef UNICODE
-      char *mbcmd = UTF8StringFromWideString(command);
-      if (ssh_channel_request_exec(channel, mbcmd) == SSH_OK)
-#else
       if (ssh_channel_request_exec(channel, command) == SSH_OK)
-#endif
       {
          if (context != nullptr)
             context->markAsCompleted(ERR_SUCCESS);
@@ -283,6 +258,10 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
             if (context != nullptr)
             {
                context->sendOutputUtf8(buffer);
+            }
+            else if (rawOutput != nullptr)
+            {
+               rawOutput->write(buffer, nbytes);
             }
             else
             {
@@ -341,12 +320,9 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, m_addr.toString().cstr(), m_port);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%hs\" execution on %s:%d failed: %hs"), command, m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
       }
       ssh_channel_close(channel);
-#ifdef UNICODE
-      MemFree(mbcmd);
-#endif
    }
    else
    {
@@ -355,4 +331,130 @@ bool SSHSession::execute(const TCHAR *command, StringList *output, ActionExecuti
    ssh_channel_free(channel);
    m_lastAccess = time(nullptr);
    return result;
+}
+
+/**
+ * Open interactive channel with PTY and shell for network device CLI access
+ * The caller is responsible for closing the channel when done
+ *
+ * @param terminalType Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
+ */
+ssh_channel SSHSession::openInteractiveChannel(const char *terminalType)
+{
+   if (!isConnected())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: session not connected"));
+      return nullptr;
+   }
+
+   ssh_channel channel = ssh_channel_new(m_session);
+   if (channel == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: cannot create channel"));
+      return nullptr;
+   }
+
+   if (ssh_channel_open_session(channel) != SSH_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: cannot open session on %s:%d (%hs)"),
+                      m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+      ssh_channel_free(channel);
+      return nullptr;
+   }
+
+   // Request PTY (pseudo-terminal) with terminal type and size
+   // 200 columns for long output lines, 24 rows
+   const char *term = (terminalType != nullptr && terminalType[0] != '\0') ? terminalType : "vt100";
+   if (ssh_channel_request_pty_size(channel, term, 200, 24) != SSH_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: PTY request failed on %s:%d (%hs)"),
+                      m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+      ssh_channel_close(channel);
+      ssh_channel_free(channel);
+      return nullptr;
+   }
+
+   // Start shell
+   if (ssh_channel_request_shell(channel) != SSH_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: shell request failed on %s:%d (%hs)"),
+                      m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+      ssh_channel_close(channel);
+      ssh_channel_free(channel);
+      return nullptr;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::openInteractiveChannel: interactive channel opened on %s:%d (term=%hs)"),
+                   m_addr.toString().cstr(), m_port, term);
+   m_lastAccess = time(nullptr);
+   return channel;
+}
+
+/**
+ * Test if command execution channel is available and functional
+ * Opens a channel, executes provided command ("true" if null), verifies it completes with exit code 0
+ */
+bool SSHSession::testCommandChannel(const char *command)
+{
+   if (!isConnected())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::testCommandChannel: session not connected"));
+      return false;
+   }
+
+   ssh_channel channel = ssh_channel_new(m_session);
+   if (channel == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::testCommandChannel: cannot create channel"));
+      return false;
+   }
+
+   bool success = false;
+   if (ssh_channel_open_session(channel) == SSH_OK)
+   {
+      // Use "true" command - exists on most Unix systems, does nothing, exits 0
+      if (ssh_channel_request_exec(channel, (command != nullptr) ? command : "true") == SSH_OK)
+      {
+         // Wait for command to complete and verify exit status
+         char buffer[256];
+         while (!ssh_channel_is_eof(channel))
+         {
+            int nbytes = ssh_channel_read_timeout(channel, buffer, sizeof(buffer), 0, 1000);
+            if (nbytes <= 0)
+               break;
+         }
+
+         // Check if channel closed cleanly and get exit status
+         if (ssh_channel_is_eof(channel))
+         {
+            int exitStatus = ssh_channel_get_exit_status(channel);
+            if (exitStatus == 0)
+            {
+               success = true;
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::testCommandChannel: command completed with exit code 0"));
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::testCommandChannel: command failed with exit code %d"), exitStatus);
+            }
+         }
+         ssh_channel_send_eof(channel);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::testCommandChannel: command execution failed on %s:%d (%hs)"),
+                         m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+      }
+      ssh_channel_close(channel);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::testCommandChannel: cannot open channel on %s:%d"), m_addr.toString().cstr(), m_port);
+   }
+   ssh_channel_free(channel);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::testCommandChannel: %s on %s:%d"),
+                   success ? _T("success") : _T("failed"), m_addr.toString().cstr(), m_port);
+   m_lastAccess = time(nullptr);
+   return success;
 }

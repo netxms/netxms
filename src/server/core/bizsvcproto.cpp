@@ -511,7 +511,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
          shared_ptr<NetObj> parent = getParents()->getShared(0);
          linkObjects(parent, service);
          parent->calculateCompoundStatus();
-         service->unhide();
+         service->publish();
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] created by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);
          sendPollerMsg(_T("   Business service \"%s\" created\r\n"), service->getName());
       }

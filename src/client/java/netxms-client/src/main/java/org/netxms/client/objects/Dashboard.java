@@ -18,32 +18,18 @@
  */
 package org.netxms.client.objects;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.PollState;
-import org.netxms.client.constants.AgentCacheMode;
-import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.objects.interfaces.AutoBindObject;
-import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Dashboard object
  */
-public class Dashboard extends GenericObject implements AutoBindObject, PollingTarget
+public class Dashboard extends DashboardBase
 {
-   public final static int SHOW_AS_OBJECT_VIEW   = 0x00010000;
-   public final static int SCROLLABLE            = 0x00020000;
-   public final static int SHOW_CONTEXT_SELECTOR = 0x00040000;
 
-	private int numColumns;
    private int displayPriority;
-	private List<DashboardElement> elements;
-   private int autoBindFlags;
-   private String autoBindFilter;
+   private long forcedContextObjectId;
 
 	/**
 	 * Create from NXCP message.
@@ -54,48 +40,9 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 	public Dashboard(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		numColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
       displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
-      autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
-
-		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-		elements = new ArrayList<DashboardElement>(count);
-		long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < count; i++)
-		{
-			elements.add(new DashboardElement(msg, fieldId, i));
-			fieldId += 10;
-		}
+      forcedContextObjectId = msg.getFieldAsInt32(NXCPCodes.VID_FORCED_CONTEXT_OBJECT);
 	}
-
-	/**
-	 * @return the numColumns
-	 */
-	public int getNumColumns()
-	{
-		return numColumns;
-	}
-
-   /**
-    * Check if "scrollable" flag is set for this dashboard.
-    *
-    * @return true if "scrollable" flag is set for this dashboard
-    */
-   public boolean isScrollable()
-   {
-      return (flags & SCROLLABLE) != 0;
-   }
-
-   /**
-    * Check if "show content selector" flag is set for this dashboard.
-    *
-    * @return true if "show content selector" flag is set for this dashboard
-    */
-   public boolean isShowContentSelector()
-   {
-      return (flags & SHOW_CONTEXT_SELECTOR) != 0;
-   }
 
 	/**
     * Get dashboard's display priority if it should be shown as object view.
@@ -108,12 +55,14 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
    }
 
    /**
-    * @return the elements
+    * Get forced context object ID.
+    *
+    * @return forced context object ID or 0 if none
     */
-	public List<DashboardElement> getElements()
-	{
-		return elements;
-	}
+   public long getForcedContextObjectId()
+   {
+      return forcedContextObjectId;
+   }
 
    /**
     * @see org.netxms.client.objects.GenericObject#getObjectClassName()
@@ -125,128 +74,12 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 	}
 
    /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoBindEnabled()
+    * Check if this dashboard is instance of template (has forced context object).
+    * 
+    * @return true if this dashboard is instance of template
     */
-   @Override
-   public boolean isAutoBindEnabled()
+   public boolean isTemplateInstance()
    {
-      return (autoBindFlags & OBJECT_BIND_FLAG) != 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoUnbindEnabled()
-    */
-   @Override
-   public boolean isAutoUnbindEnabled()
-   {
-      return (autoBindFlags & OBJECT_UNBIND_FLAG) != 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFilter()
-    */
-   @Override
-   public String getAutoBindFilter()
-   {
-      return autoBindFilter;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
-    */
-   @Override
-   public int getAutoBindFlags()
-   {
-      return autoBindFlags;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
-    */
-   @Override
-   public int getFlags()
-   {
-      return flags;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
-    */
-   @Override
-   public int getIfXTablePolicy()
-   {
-      return 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
-    */
-   @Override
-   public AgentCacheMode getAgentCacheMode()
-   {
-      return null;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
-    */
-   @Override
-   public long getPollerNodeId()
-   {
-      return 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
-    */
-   @Override
-   public boolean canHaveAgent()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
-    */
-   @Override
-   public boolean canHaveInterfaces()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
-    */
-   @Override
-   public boolean canHavePollerNode()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
-    */
-   @Override
-   public boolean canUseEtherNetIP()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
-    */
-   @Override
-   public boolean canUseModbus()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
-    */
-   @Override
-   public PollState[] getPollStates()
-   {
-      return pollStates;
+      return forcedContextObjectId != 0;
    }
 }

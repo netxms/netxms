@@ -102,7 +102,6 @@ int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 	u_long one = 1;
 #else
 	struct sockaddr_un addrLocal;
-   int f;
 #endif
 
    if (s_socket != -1)

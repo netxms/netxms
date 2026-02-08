@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -172,7 +172,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
                }
                else if (flags & SG_STRING_RESULT)
                {
-                  pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
+                  pVar->getValueAsString(static_cast<TCHAR*>(value), bufferSize / sizeof(TCHAR), codepage);
                }
                else if (flags & SG_PSTRING_RESULT)
                {
@@ -315,15 +315,13 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
       return SNMP_ERR_COMM;
 
    // First OID to request
-   uint32_t pdwName[MAX_OID_LEN];
-   memcpy(pdwName, rootOid, rootOidLen * sizeof(UINT32));
+   uint32_t objectName[MAX_OID_LEN];
+   memcpy(objectName, rootOid, rootOidLen * sizeof(uint32_t));
    size_t nameLength = rootOidLen;
 
    // Walk the MIB
    uint32_t result;
    bool running = true;
-   uint32_t firstObjectName[MAX_OID_LEN];
-   size_t firstObjectNameLen = 0;
    while(running)
    {
       if (failOnShutdown && IsShutdownInProgress())
@@ -333,7 +331,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
       }
 
       SNMP_PDU requestPDU(SNMP_GET_NEXT_REQUEST, static_cast<uint32_t>(InterlockedIncrement(&s_requestId)) & 0x7FFFFFFF, transport->getSnmpVersion());
-      requestPDU.bindVariable(new SNMP_Variable(pdwName, nameLength));
+      requestPDU.bindVariable(new SNMP_Variable(objectName, nameLength));
       SNMP_PDU *responsePDU;
       result = transport->doRequest(&requestPDU, &responsePDU);
 
@@ -350,23 +348,17 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
                 (var->getType() != ASN_END_OF_MIBVIEW))
             {
                // Should we stop walking?
-               // Some buggy SNMP agents may return first value after last one
-               // (Toshiba Strata CTX do that for example), so last check is here
+               // Some buggy SNMP agents may return first row of the table being walked
+               // after the last one, (Toshiba Strata CTX does this for example), so last check is here
                if ((var->getName().length() < rootOidLen) ||
-                   (memcmp(rootOid, var->getName().value(), rootOidLen * sizeof(UINT32))) ||
-                   (var->getName().compare(pdwName, nameLength) == OID_EQUAL) ||
-                   (var->getName().compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
+                   memcmp(rootOid, var->getName().value(), rootOidLen * sizeof(uint32_t)) ||
+                   !var->getName().follows(objectName, nameLength))
                {
                   delete responsePDU;
                   break;
                }
                nameLength = var->getName().length();
-               memcpy(pdwName, var->getName().value(), nameLength * sizeof(UINT32));
-               if (firstObjectNameLen == 0)
-               {
-                  firstObjectNameLen = nameLength;
-                  memcpy(firstObjectName, pdwName, nameLength * sizeof(UINT32));
-               }
+               memcpy(objectName, var->getName().value(), nameLength * sizeof(uint32_t));
 
                // Call user's callback function for processing
                result = handler(var);

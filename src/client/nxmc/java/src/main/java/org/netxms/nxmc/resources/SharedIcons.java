@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,9 @@ import org.eclipse.swt.graphics.Image;
 public class SharedIcons
 {
    public static ImageDescriptor ADD_OBJECT;
+   public static ImageDescriptor AI_ASSISTANT;
 	public static ImageDescriptor ALARM;
+   public static ImageDescriptor APPROVE;
    public static ImageDescriptor BROWSER;
    public static ImageDescriptor CALENDAR;
 	public static ImageDescriptor CHECKBOX_OFF;
@@ -71,12 +73,14 @@ public class SharedIcons
    public static ImageDescriptor PREVIEW;
    public static ImageDescriptor PROPERTIES;
 	public static ImageDescriptor REFRESH;
+   public static ImageDescriptor REJECT;
    public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
-   public static ImageDescriptor SHOW;
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
+   public static ImageDescriptor SEND;
+   public static ImageDescriptor SHOW;
    public static ImageDescriptor SOUND;
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
@@ -92,7 +96,9 @@ public class SharedIcons
 	public static ImageDescriptor ZOOM_OUT;
 
 	public static Image IMG_ADD_OBJECT;
-	public static Image IMG_ALARM;
+   public static Image IMG_AI_ASSISTANT;
+   public static Image IMG_ALARM;
+   public static Image IMG_APPROVE;
    public static Image IMG_BROWSER;
    public static Image IMG_CALENDAR;
 	public static Image IMG_CHECKBOX_OFF;
@@ -136,12 +142,14 @@ public class SharedIcons
    public static Image IMG_PREVIEW;
    public static Image IMG_PROPERTIES;
 	public static Image IMG_REFRESH;
+   public static Image IMG_REJECT;
    public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
-   public static Image IMG_SHOW;
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
+   public static Image IMG_SEND;
+   public static Image IMG_SHOW;
    public static Image IMG_SOUND;
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
@@ -162,7 +170,9 @@ public class SharedIcons
 	public static void init()
 	{
       ADD_OBJECT = ResourceManager.getImageDescriptor("icons/add_obj.png");
+      AI_ASSISTANT = ResourceManager.getImageDescriptor("icons/ai-assistant.png");
       ALARM = ResourceManager.getImageDescriptor("icons/alarm.png");
+      APPROVE = ResourceManager.getImageDescriptor("icons/approve.png");
       BROWSER = ResourceManager.getImageDescriptor("icons/browser.png");
       CALENDAR = ResourceManager.getImageDescriptor("icons/calendar.png");
       CHECKBOX_OFF = ResourceManager.getImageDescriptor("icons/checkbox_off.png");
@@ -206,11 +216,13 @@ public class SharedIcons
       PREVIEW = ResourceManager.getImageDescriptor("icons/preview.png");
       PROPERTIES = ResourceManager.getImageDescriptor("icons/properties.png");
       REFRESH = ResourceManager.getImageDescriptor("icons/refresh.png");
+      REJECT = ResourceManager.getImageDescriptor("icons/reject.png");
       RENAME = ResourceManager.getImageDescriptor("icons/rename.png");
       RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
       SAVE = ResourceManager.getImageDescriptor("icons/save.png");
       SAVE_AS = ResourceManager.getImageDescriptor("icons/save-as.png");
       SAVE_AS_IMAGE = ResourceManager.getImageDescriptor("icons/image_obj.png");
+      SEND = ResourceManager.getImageDescriptor("icons/send.png");
       SHOW = ResourceManager.getImageDescriptor("icons/show.png");
       SOUND = ResourceManager.getImageDescriptor("icons/sound.png");
       TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.png");
@@ -227,7 +239,9 @@ public class SharedIcons
       ZOOM_OUT = ResourceManager.getImageDescriptor("icons/zoom-out.png");
 
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
-		IMG_ALARM = ALARM.createImage();
+      IMG_AI_ASSISTANT = AI_ASSISTANT.createImage();
+      IMG_ALARM = ALARM.createImage();
+      IMG_APPROVE = APPROVE.createImage();
       IMG_BROWSER = BROWSER.createImage();
       IMG_CALENDAR = CALENDAR.createImage();
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
@@ -271,11 +285,13 @@ public class SharedIcons
       IMG_PREVIEW = PREVIEW.createImage();
       IMG_PROPERTIES = PROPERTIES.createImage();
 		IMG_REFRESH = REFRESH.createImage();
+      IMG_REJECT = REJECT.createImage();
       IMG_RENAME = RENAME.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
       IMG_SAVE_AS = SAVE_AS.createImage();
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
+      IMG_SEND = SEND.createImage();
       IMG_SHOW = SHOW.createImage();
       IMG_SOUND = SOUND.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();

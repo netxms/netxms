@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nms_users.h>
+#include <netxms-webapi.h>
 
 #define DEBUG_TAG _T("auth")
 
@@ -117,8 +118,14 @@ void LoadAuthenticationTokens()
 
 /**
  * Issue authentication token
+ *
+ * @param userId User ID for this token
+ * @param validFor Initial validity period in seconds
+ * @param type Token type (ephemeral, persistent, or service)
+ * @param description Optional description
+ * @param maxLifetime Maximum absolute lifetime in seconds (0 = use configured default for ephemeral, no limit for persistent)
  */
-shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, AuthenticationTokenType type, const wchar_t *description)
+shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, AuthenticationTokenType type, const wchar_t *description, uint32_t maxLifetime)
 {
    wchar_t userName[MAX_USER_NAME];
    if ((userId & GROUP_FLAG) || ResolveUserId(userId, userName) == nullptr)
@@ -127,7 +134,14 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
       return shared_ptr<AuthenticationTokenDescriptor>();
    }
 
-   auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, type, description);
+   // Use configured default max lifetime for ephemeral tokens if not specified
+   uint32_t effectiveMaxLifetime = maxLifetime;
+   if ((effectiveMaxLifetime == 0) && (type != AuthenticationTokenType::PERSISTENT))
+   {
+      effectiveMaxLifetime = GetAuthTokenMaxLifetime();
+   }
+
+   auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, type, description, effectiveMaxLifetime);
    s_tokens.set(descriptor->hash, descriptor);
 
    if (type == AuthenticationTokenType::PERSISTENT)
@@ -180,7 +194,7 @@ void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& 
    if (descriptor != nullptr)
    {
       s_tokens.remove(hash);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toMaskedString().cstr());
       if (descriptor->persistent)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
    }
@@ -210,34 +224,86 @@ uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t 
 }
 
 /**
- * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value.
+ * Revoke all authentication tokens for a user
  */
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken, uint32_t validFor)
+void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId)
+{
+   SharedObjectArray<AuthenticationTokenDescriptor> tokensToRevoke;
+   s_tokens.forEach(
+      [userId, &tokensToRevoke] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
+      {
+         if (descriptor->userId == userId)
+            tokensToRevoke.add(descriptor);
+         return _CONTINUE;
+      });
+
+   for (int i = 0; i < tokensToRevoke.size(); i++)
+   {
+      AuthenticationTokenDescriptor *d = tokensToRevoke.get(i);
+      s_tokens.remove(d->hash);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Revoked authentication token [%u] for deleted user [%u]"), d->tokenId, userId);
+      if (d->persistent)
+         DeleteAuthenticationTokenFromDB(d->tokenId);
+   }
+}
+
+/**
+ * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value,
+ * but not exceeding the maximum expiration time (absolute token lifetime cap).
+ *
+ * @param token Authentication token to validate
+ * @param userId Output: user ID associated with the token
+ * @param serviceToken Output: true if this is a service token
+ * @param validFor If non-zero, extend token expiration by this many seconds
+ * @param expiresAt Output: token expiration time (for warning header calculation)
+ * @param maxExpiresAt Output: maximum token expiration time (0 if no limit)
+ * @return true if token is valid
+ */
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken, uint32_t validFor, time_t *expiresAt, time_t *maxExpiresAt)
 {
    UserAuthenticationTokenHash hash;
    CalculateSHA256Hash(token.value(), USER_AUTHENTICATION_TOKEN_LENGTH, hash);
    shared_ptr<AuthenticationTokenDescriptor> descriptor = s_tokens.getShared(hash);
    if (descriptor == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" does not exist"), token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" does not exist"), token.toMaskedString().cstr());
       return false;
    }
    time_t now = time(nullptr);
+
+   // Check against absolute maximum expiration time first (if set)
+   if ((descriptor->maxExpirationTime > 0) && (descriptor->maxExpirationTime <= now))
+   {
+      s_tokens.remove(hash);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has reached maximum lifetime"), descriptor->tokenId, token.toMaskedString().cstr());
+      if (descriptor->persistent)
+         DeleteAuthenticationTokenFromDB(descriptor->tokenId);
+      return false;
+   }
+
    if (descriptor->expirationTime <= now)
    {
       s_tokens.remove(hash);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has expired"), descriptor->tokenId, token.toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has expired"), descriptor->tokenId, token.toMaskedString().cstr());
       if (descriptor->persistent)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
       return false;
    }
    if (validFor > 0)
    {
-      descriptor->expirationTime = now + validFor;
+      // Extend expiration time but do not exceed maximum expiration time (if set)
+      time_t newExpiration = now + validFor;
+      if ((descriptor->maxExpirationTime > 0) && (newExpiration > descriptor->maxExpirationTime))
+         newExpiration = descriptor->maxExpirationTime;
+      descriptor->expirationTime = newExpiration;
    }
    *userId = descriptor->userId;
    if (serviceToken != nullptr)
       *serviceToken = descriptor->service;
+   if (expiresAt != nullptr)
+      *expiresAt = descriptor->expirationTime;
+   if (maxExpiresAt != nullptr)
+      *maxExpiresAt = descriptor->maxExpirationTime;
    return true;
 }
 
@@ -247,12 +313,17 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
    SharedObjectArray<AuthenticationTokenDescriptor> expiredTokens;
+   time_t now = time(nullptr);
    s_tokens.forEach(
-      [&expiredTokens] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
+      [&expiredTokens, now] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
       {
-         if (descriptor->expirationTime <= time(nullptr))
+         // Check both regular expiration and maximum absolute expiration (if max is set)
+         bool maxExpired = (descriptor->maxExpirationTime > 0) && (descriptor->maxExpirationTime <= now);
+         if ((descriptor->expirationTime <= now) || maxExpired)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired"), descriptor->token.toString().cstr());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired%s"),
+               descriptor->token.toMaskedString().cstr(),
+               maxExpired ? _T(" (max lifetime reached)") : _T(""));
             expiredTokens.add(descriptor);
          }
          return _CONTINUE;

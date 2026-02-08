@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -207,6 +207,18 @@ public final class RCC
    public static final int REMOTE_CONNECT_FAILED = 172;
    public static final int DOMAIN_MEMBER_ALREADY = 173;
    public static final int CONTROLLER_UNAVAILABLE = 174;
+   public static final int PARTIAL_FAILURE = 175;
+   public static final int AGENT_ACCESS_DENIED = 176;
+   public static final int TCP_PROXY_DISABLED = 177;
+   public static final int INVALID_TASK_ID = 178;
+   public static final int INVALID_CHAT_ID = 179;
+   public static final int INVALID_INCIDENT_ID = 180;
+   public static final int INCIDENT_CLOSED = 181;
+   public static final int ALARM_ALREADY_IN_INCIDENT = 182;
+   public static final int INVALID_INCIDENT_STATE = 183;
+   public static final int COMMENT_REQUIRED = 184;
+   public static final int INVALID_MESSAGE_ID = 185;
+   public static final int EPP_CONFLICT = 186;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

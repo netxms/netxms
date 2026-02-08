@@ -64,7 +64,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 	private ColorCache cCache;
 	private Map<Long, ObjectData> objects;
    private List<Integer> fontSize;
-   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
    private Font[] valueFonts;
    private static final int FONT_BASE_SIZE = 7;
    private static final int PADDING_HORIZONTAL = 6;

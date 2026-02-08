@@ -8,7 +8,6 @@
 
 // Common constants
 #include <nxevent.h>
-#include <nms_locks.h>
 #include <netxmsdb.h>
 #include <nxtools.h>
 
@@ -24,6 +23,7 @@ BEGIN TRANSACTION;
 #endif
 
 // Actual SQL queries
+#include "functions.in"
 #include "schema.in"
 #include "metadata.in"
 

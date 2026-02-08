@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -63,14 +63,14 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_CONFIG_VARIABLE"),
       _T("CMD_NOTIFY"),
       _T("CMD_TRAP"),
-      _T("CMD_OPEN_EPP"),
-      _T("CMD_CLOSE_EPP"),
+      _T("CMD_GET_EPP"),
       _T("CMD_SAVE_EPP"),
       _T("CMD_EPP_RECORD"),
+      _T("CMD_EXPLAIN_EPP_RULE"),
       _T("CMD_EVENT_DB_UPDATE"),
       _T("CMD_TRAP_CFG_UPDATE"),
       _T("CMD_SET_EVENT_INFO"),
-      _T("CMD_GET_DCI_MEASUREMENT_UNITS"),
+      _T("CMD_REQUEST_AI_ASSISTANT_COMMENT"),
       _T("CMD_LOAD_EVENT_DB"),
       _T("CMD_REQUEST_COMPLETED"),
       _T("CMD_LOAD_USER_DB"),
@@ -129,8 +129,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_ACTION_DATA"),
       _T("CMD_SETUP_AGENT_TUNNEL"),
       _T("CMD_EXECUTE_LIBRARY_SCRIPT"),
-      _T("CMD_GET_PREDICTION_ENGINES"),
-      _T("CMD_GET_PREDICTED_DATA"),
+      _T("CMD_0x0056"), // was CMD_GET_PREDICTION_ENGINES
+      _T("CMD_0x0057"), // was CMD_GET_PREDICTED_DATA
       _T("CMD_STOP_SERVER_COMMAND"),
       _T("CMD_POLL_OBJECT"),
       _T("CMD_POLLING_INFO"),
@@ -517,7 +517,41 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_INTERFACE_TRAFFIC_DCIS"),
       _T("CMD_SET_COMPONENT_TOKEN"),
       _T("CMD_CLEAR_AI_ASSISTANT_CHAT"),
-      _T("CMD_LINK_NETWORK_MAP_NODES")
+      _T("CMD_LINK_NETWORK_MAP_NODES"),
+      _T("CMD_GET_DC_OBJECT"),
+      _T("CMD_GET_AI_ASSISTANT_FUNCTIONS"),
+      _T("CMD_CALL_AI_ASSISTANT_FUNCTION"),
+      _T("CMD_GET_AI_AGENT_TASKS"),
+      _T("CMD_DELETE_AI_AGENT_TASK"),
+      _T("CMD_ADD_AI_AGENT_TASK"),
+      _T("CMD_CREATE_AI_ASSISTANT_CHAT"),
+      _T("CMD_DELETE_AI_ASSISTANT_CHAT"),
+      _T("CMD_AI_FUNCTION_CALL"),
+      _T("CMD_CLEAR_NOTIFICATION_QUEUE"),
+      _T("CMD_DECOMMISSION_NODE"),
+      _T("CMD_GET_INCIDENTS"),
+      _T("CMD_GET_INCIDENT_DETAILS"),
+      _T("CMD_CREATE_INCIDENT"),
+      _T("CMD_UPDATE_INCIDENT"),
+      _T("CMD_CHANGE_INCIDENT_STATE"),
+      _T("CMD_ASSIGN_INCIDENT"),
+      _T("CMD_LINK_ALARM_TO_INCIDENT"),
+      _T("CMD_UNLINK_ALARM_FROM_INCIDENT"),
+      _T("CMD_ADD_INCIDENT_COMMENT"),
+      _T("CMD_GET_INCIDENT_ACTIVITY"),
+      _T("CMD_INCIDENT_UPDATE"),
+      _T("CMD_AI_AGENT_QUESTION"),
+      _T("CMD_AI_AGENT_RESPONSE"),
+      _T("CMD_SETUP_SSH_CHANNEL"),
+      _T("CMD_SSH_CHANNEL_DATA"),
+      _T("CMD_CLOSE_SSH_CHANNEL"),
+      _T("CMD_GET_AI_MESSAGES"),
+      _T("CMD_AI_MESSAGE_UPDATE"),
+      _T("CMD_SET_AI_MESSAGE_STATUS"),
+      _T("CMD_DELETE_AI_MESSAGE"),
+      _T("CMD_GET_LOG_QUERY_SQL"),
+      _T("CMD_GET_LIST_LIST"),
+      _T("CMD_QUERY_LIST")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -530,7 +564,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_LINK_NETWORK_MAP_NODES))
+   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_LIST))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

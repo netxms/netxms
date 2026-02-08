@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ bool MajorSchemaUpgrade_V50();
 bool MajorSchemaUpgrade_V51();
 bool MajorSchemaUpgrade_V52();
 bool MajorSchemaUpgrade_V53();
+bool MajorSchemaUpgrade_V60();
 
 /**
  * Move to next major version of DB schema
@@ -60,9 +61,9 @@ bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor)
    if (!DBGetSchemaVersion(g_dbHandle, &currMajor, &currMinor))
       return false;
 
-   TCHAR var[64], query[256];
+   wchar_t var[64], query[256];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), currMajor);
-   if (IsDatabaseRecordExist(g_dbHandle, _T("metadata"), _T("var_name"), var))
+   if (IsDatabaseRecordExist(g_dbHandle, L"metadata", L"var_name", var))
       _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='%s'"), currMinor, var);
    else
       _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('%s','%d')"), var, currMinor);
@@ -85,9 +86,7 @@ bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor)
  */
 bool SetMinorSchemaVersion(int32_t nextMinor)
 {
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersionMinor'"), nextMinor);
-   return SQLQuery(query);
+   return SQLQueryFormatted(L"UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersionMinor'", nextMinor);
 }
 
 /**
@@ -95,7 +94,7 @@ bool SetMinorSchemaVersion(int32_t nextMinor)
  */
 int32_t GetSchemaLevelForMajorVersion(int32_t major)
 {
-   TCHAR var[64];
+   wchar_t var[64];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);
    int32_t minor = DBMgrMetaDataReadInt32(var, -1);
    if (minor != -1)
@@ -131,7 +130,7 @@ int32_t GetSchemaLevelForMajorVersion(int32_t major)
  */
 bool SetSchemaLevelForMajorVersion(int32_t major, int32_t level)
 {
-   TCHAR var[64], query[256];
+   wchar_t var[64], query[256];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);
    if (IsDatabaseRecordExist(g_dbHandle, _T("metadata"), _T("var_name"), var))
       _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='%s'"), level, var);
@@ -173,6 +172,7 @@ static struct
    { 51, MajorSchemaUpgrade_V51 },
    { 52, MajorSchemaUpgrade_V52 },
    { 53, MajorSchemaUpgrade_V53 },
+   { 60, MajorSchemaUpgrade_V60 },
    { 0, nullptr }
 };
 
@@ -181,21 +181,21 @@ static struct
  */
 void UpgradeDatabase()
 {
-   _tprintf(_T("Upgrading database...\n"));
+   WriteToTerminal(L"Upgrading database...\n");
 
    // Get database format version
    int32_t major, minor;
 	if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
 	{
-      _tprintf(_T("Unable to determine database schema version\n"));
+	   WriteToTerminal(L"Unable to determine database schema version\n");
 	   return;
 	}
 
    if ((major == DB_SCHEMA_VERSION_MAJOR) && (minor == DB_SCHEMA_VERSION_MINOR))
    {
-      _tprintf(_T("Core database schema is up to date\n"));
+      WriteToTerminal(L"Core database schema is up to date\n");
       bool modSuccess = UpgradeModuleSchemas();
-      _tprintf(_T("Database upgrade %s\n"), modSuccess ? _T("succeeded") : _T("failed"));
+      WriteToTerminalEx(L"Database upgrade %s\n", modSuccess ? L"succeeded" : L"failed");
       return;
    }
 
@@ -209,7 +209,7 @@ void UpgradeDatabase()
 
    // Check if database is locked
    bool locked = false;
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, L"SELECT var_value FROM config WHERE var_name='DBLockStatus'");
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -221,7 +221,7 @@ void UpgradeDatabase()
    }
    if (locked)
    {
-      _tprintf(_T("Database is locked\n"));
+      WriteToTerminal(L"Database is locked\n");
       return;
    }
 
@@ -234,14 +234,14 @@ void UpgradeDatabase()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         _tprintf(_T("Unable to find upgrade procedure for major version %d\n"), major);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for major version %d\n", major);
          break;
       }
       if (!s_dbUpgradeMap[i].upgradeProc())
          break;
       if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       {
-         _tprintf(_T("Internal error\n"));
+         WriteToTerminal(L"Internal error\n");
          break;
       }
    }

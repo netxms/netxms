@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,19 +92,19 @@ private:
    double m_double;
    int64_t m_int64;
    uint64_t m_uint64;
-   time_t m_timestamp;
+   Timestamp m_timestamp;
    wchar_t m_string[MAX_DB_STRING];
 
    void parseStringValue(bool parseSuffix);
 
 public:
    ItemValue();
-   ItemValue(const wchar_t *value, time_t timestamp, bool parseSuffix);
-   ItemValue(DB_RESULT hResult, int row, int column, time_t timestamp, bool parseSuffix);
+   ItemValue(const wchar_t *value, Timestamp timestamp, bool parseSuffix);
+   ItemValue(DB_RESULT hResult, int row, int column, Timestamp timestamp, bool parseSuffix);
    ItemValue(const ItemValue& src) = default;
 
-   void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
-   time_t getTimeStamp() const { return m_timestamp; }
+   void setTimeStamp(Timestamp timestamp) { m_timestamp = timestamp; }
+   Timestamp getTimeStamp() const { return m_timestamp; }
 
    int32_t getInt32() const { return static_cast<int32_t>(m_int64); }
    uint32_t getUInt32() const { return static_cast<uint32_t>(m_uint64); }
@@ -168,6 +168,7 @@ private:
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
 	wchar_t *m_lastEventMessage;
+   uint64_t m_activationSequence;  // Incremented on each activation, used for repeat event scheduling
 
    const ItemValue& value() const { return m_value; }
    void calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -182,6 +183,7 @@ public:
    Threshold(const Threshold& src, bool shadowCopy);
    Threshold(DB_RESULT hResult, int row, DCItem *relatedItem);
 	Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5);
+   Threshold(json_t *json, DCItem *parentItem);
    ~Threshold();
 
    void bindToItem(uint32_t itemId, uint32_t targetId) { m_itemId = itemId; m_targetId = targetId; }
@@ -202,10 +204,13 @@ public:
 	int getCurrentSeverity() const { return m_currentSeverity; }
 	bool needValueExpansion() const { return m_expandValue; }
 	String getTextualDefinition() const;
+	void getScriptDependencies(StringSet *dependencies) const;
 
 	void markLastEvent(int severity, const wchar_t *message);
    void saveStateBeforeMaintenance() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
+   uint64_t getActivationSequence() const { return m_activationSequence; }
+   void incrementActivationSequence() { m_activationSequence++; }
 
    bool saveToDB(DB_HANDLE hdb, uint32_t index);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
@@ -220,7 +225,7 @@ public:
 
    bool equals(const Threshold& t) const;
 
-   void createExportRecord(TextFileWriter& xml, int index) const;
+   json_t *createExportRecord() const;
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
@@ -290,8 +295,8 @@ protected:
    SharedString m_description;
    SharedString m_systemTag;
    SharedString m_userTag;
-   time_t m_lastPoll;           // Last poll time
-   time_t m_lastValueTimestamp; // Timestamp of last obtained value
+   Timestamp m_lastValueTimestamp; // Timestamp of last obtained value, in milliseconds
+   Timestamp m_lastPollTime;       // Last poll time, in milliseconds
    time_t m_nextPollTime;       // If set, do not poll earlier than given time
    int32_t m_pollingInterval;   // Polling interval in seconds
    int32_t m_retentionTime;     // Retention time in days
@@ -315,13 +320,14 @@ protected:
    uint32_t m_sourceNode;        // Source node ID or 0 to disable
 	uint16_t m_snmpPort;          // Custom SNMP port or 0 for node default
 	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
+	SharedString m_snmpContext;   // Custom SNMP context or empty for node default
 	SharedString m_perfTabSettings;
 	SharedString m_transformationScriptSource;   // Transformation script (source code)
    shared_ptr<NXSL_Program> m_transformationScript;  // Compiled transformation script
    time_t m_lastScriptErrorReport;
    SharedString m_comments;
 	bool m_doForcePoll;                    // Force poll indicator
-	ClientSession *m_pollingSession;       // Force poll requestor session
+	session_id_t m_pollingSessionId;       // Force poll requestor session ID
    uint16_t m_instanceDiscoveryMethod;
    SharedString m_instanceDiscoveryData;  // Instance discovery data (instance value for discovered DCIs and method specific data for prototype)
    SharedString m_instanceFilterSource;
@@ -346,7 +352,7 @@ protected:
 
 	StringBuffer expandMacros(const TCHAR *src, size_t dstLen);
 
-   void setTransformationScript(const TCHAR *source);
+   void setTransformationScriptInternal(const wchar_t *source);
 
 	virtual bool isCacheLoaded();
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
@@ -357,6 +363,7 @@ protected:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+	DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -374,8 +381,12 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    virtual void loadCache() = 0;
 
-   void processNewError(bool noInstance);
-   virtual void processNewError(bool noInstance, time_t now);
+   virtual void processNewError(bool noInstance, Timestamp timestamp);
+   void processNewError(bool noInstance)
+   {
+      processNewError(noInstance, Timestamp::now());
+   }
+
    virtual void saveStateBeforeMaintenance() = 0;
    virtual void generateEventsAfterMaintenance() = 0;
 
@@ -404,11 +415,12 @@ public:
    uint32_t getTemplateItemId() const { return m_templateItemId; }
    uint32_t getResourceId() const { return m_resourceId; }
    uint32_t getSourceNode() const { return m_sourceNode; }
-	time_t getLastPollTime() const { return m_lastPoll; }
-   time_t getLastValueTimestamp() const { return m_lastValueTimestamp; }
+   Timestamp getLastPollTime() const { return m_lastPollTime; }
+   Timestamp getLastValueTimestamp() const { return m_lastValueTimestamp; }
    uint32_t getErrorCount() const { return m_errorCount; }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
+   SharedString getSnmpContext() const { return GetAttributeWithLock(m_snmpContext, m_mutex); }
    SharedString getSystemTag() const { return m_systemTag; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
@@ -416,6 +428,7 @@ public:
 	bool isStatusDCO() const { return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
    bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
    bool isStoreChangesOnly() const { return (m_flags & DCF_STORE_CHANGES_ONLY) ? true : false; }
+   bool isUnsupportedAsError() const { return (m_flags & DCF_UNSUPPORTED_AS_ERROR) ? true : false; }
    bool isAdvancedSchedule() const { return m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
@@ -432,7 +445,7 @@ public:
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() const { return m_scheduledForDeletion ? true : false; }
-   void setLastPollTime(time_t lastPoll) { m_lastPoll = lastPoll; }
+   void setLastPollTime(Timestamp lastPollTime) { m_lastPollTime = lastPollTime; }
    void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
@@ -447,18 +460,18 @@ public:
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
 
 	virtual bool deleteAllData();
-	virtual bool deleteEntry(time_t timestamp);
+	virtual bool deleteEntry(Timestamp timestamp);
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const = 0;
    virtual bool isUsingEvent(uint32_t eventCode) const = 0;
-   virtual void createExportRecord(TextFileWriter& xml) const = 0;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
+   virtual void updateFromImport(json_t *json);
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
-   ClientSession *processForcePoll();
-   void requestForcePoll(ClientSession *session);
+   session_id_t processForcePoll();
+   void requestForcePoll(session_id_t sessionId);
    bool isForcePollRequested() { return m_doForcePoll; }
 	bool prepareForDeletion();
 
@@ -480,16 +493,21 @@ public:
    void setRetentionType(BYTE retentionType);
    void setRetention(const TCHAR *retention);
    void setThresholdDisableEndTime(time_t thresholdDisableEndTime);
+   void setFlag(uint32_t flag) { lock(); m_flags |= flag; unlock(); }
+   void clearFlag(uint32_t flag) { lock(); m_flags &= ~flag; unlock(); }
+   void setTransformationScript(const wchar_t *source) { lock(); setTransformationScriptInternal(source); unlock(); }
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
 
    static DCObjectStorageClass storageClassFromRetentionTime(int retentionTime);
-   static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
-   static const TCHAR *getDataProviderName(int dataProvider);
+   static const wchar_t *getStorageClassName(DCObjectStorageClass storageClass);
+   static const wchar_t *getDataProviderName(int dataProvider);
 
    virtual SharedString getText() const override;
    virtual SharedString getAttribute(const TCHAR *attribute) const override;
+
+   virtual json_t *createExportRecord() const = 0;
 };
 
 /**
@@ -510,16 +528,25 @@ protected:
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    uint64_t m_prevDeltaValue;    // Previous delta value for counter types
-   time_t m_prevValueTimeStamp;
+   Timestamp m_prevValueTimeStamp;
    bool m_cacheLoaded;
    bool m_anomalyDetected;
+   bool m_anomalyDetectedAI;           // Anomaly detected by AI profile
+   json_t *m_anomalyProfile;           // Parsed profile (cached for runtime)
+   time_t m_anomalyProfileTimestamp;
+   time_t m_sustainedHighStart;        // Start time of sustained high period (0 if not in high state)
+   time_t m_sustainedLowStart;         // Start time of sustained low period (0 if not in low state)
+   double m_recentAverage;             // EMA for sudden drop detection (NaN if not initialized)
+   SharedString m_aiHint;              // Hint for AI anomaly profile generation
 	int m_multiplier;
 	SharedString m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
    uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
+   int32_t m_sampleSaveInterval;       // Save every N-th sample (1 = save all)
+   int32_t m_sampleSaveCounter;        // Runtime counter for nth sample logic (not persisted)
 
-   bool transform(ItemValue &value, time_t nElapsedTime);
+   bool transform(ItemValue &value, int64_t elapsedTime);
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
    void updateCacheSizeInternal(bool allowLoad);
    void clearCache();
@@ -548,6 +575,7 @@ public:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -556,6 +584,7 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -579,16 +608,26 @@ public:
 	bool hasActiveThreshold() const;
    int getThresholdSeverity() const;
 	int getSampleCount() const { return m_sampleCount; }
+	int32_t getSampleSaveInterval() const { return m_sampleSaveInterval; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 	int getMultiplier() const { return m_multiplier; }
+	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
+	bool inAnomalyDetectionByAIEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
+	bool isAnomalyDetectedAI() const { return m_anomalyDetectedAI; }
+	bool hasAnomalyProfile() const { return m_anomalyProfile != nullptr; }
+	time_t getAnomalyProfileTimestamp() const { return m_anomalyProfileTimestamp; }
+	SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutex); }
+
+	void setAnomalyProfile(json_t *profile);
+	bool checkAnomalyAIProfile(const ItemValue& value);
 
 	uint64_t getCacheMemoryUsage() const;
 
-   bool processNewValue(time_t nTimeStamp, const TCHAR *value, bool *updateStatus);
+   bool processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
 
-   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void processNewError(bool noInstance, Timestamp timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -609,20 +648,29 @@ public:
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
 
 	virtual bool deleteAllData() override;
-   virtual bool deleteEntry(time_t timestamp) override;
+   virtual bool deleteEntry(Timestamp timestamp) override;
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(TextFileWriter& xml) const override;
+   virtual void getScriptDependencies(StringSet *dependencies) const override;
    virtual json_t *toJson() override;
+   virtual json_t *createExportRecord() const override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
+   Threshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }
    uint32_t getAllThresholdRearmEvent() const { return m_allThresholdsRearmEvent; }
+   uint32_t postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activationSequence);
+   uint32_t scheduleThresholdRepeatEvents();
+   void addThreshold(Threshold *pThreshold);
+   bool deleteThresholdById(uint32_t thresholdId);
+   void deleteAllThresholds();
 
 	void setUnitName(const SharedString &unitName) { SetAttributeWithLock(m_unitName, unitName, m_mutex); }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
-	void addThreshold(Threshold *pThreshold);
-	void deleteAllThresholds();
+	void setDeltaCalculation(BYTE method) { m_deltaCalculation = method; }
+	void setSampleCount(int count) { m_sampleCount = count; }
+	void setMultiplier(int multiplier) { m_multiplier = multiplier; }
+	void setDataType(BYTE dataType) { m_dataType = dataType; }
 
 	void prepareForRecalc();
 	void recalculateValue(ItemValue &value);
@@ -647,6 +695,7 @@ public:
 	DCTableColumn(const NXCPMessage& msg, uint32_t baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
+   DCTableColumn(json_t *json);
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
@@ -659,8 +708,8 @@ public:
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
-   void createExportRecord(TextFileWriter& xml, int id) const;
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 };
 
 /**
@@ -685,6 +734,7 @@ public:
    const TCHAR *getValue() const { return m_value.getString(); }
 
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 
    bool equals(DCTableCondition *c) const;
 };
@@ -702,6 +752,7 @@ public:
    DCTableConditionGroup(const NXCPMessage& msg, uint32_t *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
+   DCTableConditionGroup(json_t *json);
    ~DCTableConditionGroup();
 
    void addCondition(DCTableCondition *c) { m_conditions->add(c); }
@@ -710,6 +761,7 @@ public:
 
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;
+   json_t *createExportRecord() const;
 
    bool equals(DCTableConditionGroup *g) const;
 
@@ -779,6 +831,7 @@ public:
    DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId);
    DCTableThreshold(const DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
+   DCTableThreshold(json_t *json);
 
    void copyState(DCTableThreshold *src);
 
@@ -790,7 +843,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   void createExportRecord(TextFileWriter& xml, int id) const;
+   json_t *createExportRecord() const;
    json_t *toJson() const;
 
    bool equals(const DCTableThreshold *t) const;
@@ -834,6 +887,7 @@ public:
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
    DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
+   DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -842,12 +896,13 @@ public:
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
    virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
+   virtual void updateFromImport(json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
    virtual void loadCache() override;
 
-   virtual void processNewError(bool noInstance, time_t now) override;
+   virtual void processNewError(bool noInstance, Timestamp timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -855,14 +910,14 @@ public:
    virtual void updateFromMessage(const NXCPMessage& msg) override;
 
 	virtual bool deleteAllData() override;
-   virtual bool deleteEntry(time_t timestamp) override;
+   virtual bool deleteEntry(Timestamp timestamp) override;
 
    virtual void getEventList(HashSet<uint32_t> *eventList) const override;
    virtual bool isUsingEvent(uint32_t eventCode) const override;
-   virtual void createExportRecord(TextFileWriter &xml) const override;
    virtual json_t *toJson() override;
+   virtual json_t *createExportRecord() const override;
 
-   bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
+   bool processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
@@ -911,8 +966,8 @@ private:
    int32_t m_pollingInterval;
    int32_t m_pollingScheduleType;
    StringList m_pollingSchedules;
-   time_t m_lastPollTime;
-   time_t m_lastCollectionTime;
+   Timestamp m_lastPollTime;
+   Timestamp m_lastCollectionTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
    uint32_t m_relatedObject;
@@ -943,8 +998,8 @@ public:
    int32_t getPollingInterval() const { return m_pollingInterval; }
    int32_t getPollingScheduleType() const { return m_pollingScheduleType; }
    const StringList& getPollingSchedules() const { return m_pollingSchedules; }
-   time_t getLastPollTime() const { return m_lastPollTime; }
-   time_t getLastCollectionTime() const { return m_lastCollectionTime; }
+   Timestamp getLastPollTime() const { return m_lastPollTime; }
+   Timestamp getLastCollectionTime() const { return m_lastCollectionTime; }
    uint32_t getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
@@ -959,7 +1014,7 @@ public:
  */
 struct ScoredDciValue
 {
-   time_t timestamp;
+   Timestamp timestamp;
    double value;
    double score;
 };
@@ -1028,9 +1083,36 @@ void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *con
 unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold = 0.75);
 bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width);
 
-DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
+DataCollectionError GetQueueStatistics(const wchar_t *parameter, StatisticType type, wchar_t *value);
+void GetAllQueueStatistics(Table *table);
 
 uint64_t GetDCICacheMemoryUsage();
+void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies);
+
+/**
+ * V5 collected data migration
+ */
+void MigrateRecentV5Data();
+void StartV5DataMigration();
+void StopV5DataMigration();
+
+/**
+ * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.
+ * The v5 tables store timestamps as 32-bit integers; multiplying directly by 1000 overflows on
+ * databases with strict 32-bit integer arithmetic (PostgreSQL, MS SQL, DB2).
+ */
+static inline const wchar_t *V5TimestampToMs(bool tdata)
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         return tdata ? L"CAST(tdata_timestamp AS SIGNED)*1000" : L"CAST(idata_timestamp AS SIGNED)*1000";
+      case DB_SYNTAX_ORACLE:
+         return tdata ? L"tdata_timestamp*1000" : L"idata_timestamp*1000";
+      default:
+         return tdata ? L"CAST(tdata_timestamp AS bigint)*1000" : L"CAST(idata_timestamp AS bigint)*1000";
+   }
+}
 
 /**
  * DCI cache loader queue

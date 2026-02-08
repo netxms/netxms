@@ -801,11 +801,15 @@ NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
+   if ((to - from) <= 0)  // prevent division by zero (or negative value)
+      return 100.0;
+
    double uptimePercentage = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
-            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp>=?)))"));
+            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp>=?))) ")
+            _T("ORDER BY from_timestamp"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
@@ -818,17 +822,50 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
-         int64_t totalUptime = to - from;
+         int64_t totalDowntime = 0;
          int count = DBGetNumRows(hResult);
+         time_t mergedStart = 0;
+         time_t mergedEnd = 0;
+
          for (int i = 0; i < count; i++)
          {
             time_t fromTimestamp = DBGetFieldUInt64(hResult, i, 0);
             time_t toTimestamp = DBGetFieldUInt64(hResult, i, 1);
+
+            // Clamp to query window
             if (toTimestamp == 0)
                toTimestamp = to;
-            time_t downtime = (toTimestamp > to ? to : toTimestamp) - (fromTimestamp < from ? from : fromTimestamp);
-            totalUptime -= downtime;
+            if (fromTimestamp < from)
+               fromTimestamp = from;
+            if (toTimestamp > to)
+               toTimestamp = to;
+
+            if (i == 0)
+            {
+               // First interval
+               mergedStart = fromTimestamp;
+               mergedEnd = toTimestamp;
+            }
+            else if (fromTimestamp <= mergedEnd)
+            {
+               // Overlapping or adjacent interval - extend the merged period
+               if (toTimestamp > mergedEnd)
+                  mergedEnd = toTimestamp;
+            }
+            else
+            {
+               // Non-overlapping interval - add previous merged period and start new one
+               totalDowntime += mergedEnd - mergedStart;
+               mergedStart = fromTimestamp;
+               mergedEnd = toTimestamp;
+            }
          }
+
+         // Add the last merged period
+         if (count > 0)
+            totalDowntime += mergedEnd - mergedStart;
+
+         int64_t totalUptime = (to - from) - totalDowntime;
          uptimePercentage = static_cast<double>(totalUptime * 10000 / static_cast<int64_t>(to - from)) / 100;
          DBFreeResult(hResult);
       }

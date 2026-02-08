@@ -1,0 +1,35 @@
+/*
+** NetXMS Database Functions
+**
+** ex: syntax=sql ts=2 sw=2 expandtab
+*/
+
+#if defined(DB_ORACLE)
+
+CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
+RETURN NUMBER
+DETERMINISTIC
+AS BEGIN
+   IF id > 0 THEN
+      RETURN id;
+   ELSE
+      RETURN NULL;
+   END IF;
+END;
+/ 
+
+#endif
+
+#if defined(DB_POSTGRESQL) || defined(DB_TSDB)
+
+CREATE OR REPLACE FUNCTION ms_to_timestamptz(ms_timestamp BIGINT)
+RETURNS TIMESTAMPTZ AS $$
+    SELECT timestamptz 'epoch' + ms_timestamp * interval '1 millisecond';
+$$ LANGUAGE sql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION timestamptz_to_ms(t timestamptz)
+RETURNS BIGINT AS $$
+    SELECT (EXTRACT(epoch FROM t) * 1000)::bigint;
+$$ LANGUAGE sql IMMUTABLE;
+
+#endif

@@ -53,7 +53,7 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
 bool ConvertDatabase();
 bool ConvertDataTables();
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
+void MigrateDatabase(const wchar_t *sourceConfig, wchar_t *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
 void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();

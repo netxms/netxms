@@ -34,7 +34,7 @@ import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
-import org.netxms.nxmc.modules.datacollection.widgets.TemplateDciSelector;
+import org.netxms.nxmc.modules.datacollection.widgets.DciTemplateSelectionWidget;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -50,30 +50,25 @@ public class DataSourceEditDlg extends Dialog
 	private DciSelector dciSelector;
 	private LabeledText name;
    private LabeledText displayFormat;
-   private TemplateDciSelector dciName;
-   private TemplateDciSelector dciDescription;
-   private TemplateDciSelector dciTag;
+   private DciTemplateSelectionWidget templateDciWidget;
    private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
    private Button checkRawValues;
-   private Button checkMultipeMatch;
-   private Button checkRegexpMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	private boolean isTemplate;
-   private boolean isNew;
 
 	/**
 	 * @param parentShell
 	 * @param dci
+	 * @param isTemplate
 	 */
-	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isNew, boolean isTemplate)
+	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isTemplate)
 	{
 		super(parentShell);
 		this.dci = dci;
-      this.isNew = isNew;
 		this.isTemplate = isTemplate;
 	}
 
@@ -105,37 +100,13 @@ public class DataSourceEditDlg extends Dialog
 
       if (isTemplate)
       {
-         dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciName.setLabel(i18n.tr("Metric"));
-         dciName.setText(dci.dciName);
+         templateDciWidget = new DciTemplateSelectionWidget(dialogArea, SWT.NONE);
+         templateDciWidget.setConfig(dci.getTemplateConfig());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalSpan = 2;
-         dciName.setLayoutData(gd);       
-         addTemplateSelectorListener(dciName);
-
-         dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciDescription.setLabel(i18n.tr("DCI display name"));
-         dciDescription.setText(dci.dciDescription);
-         dciDescription.setField(TemplateDciSelector.Field.DESCRIPTION);
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalSpan = 2;
-         dciDescription.setLayoutData(gd);
-         addTemplateSelectorListener(dciDescription);
-         
-         dciTag = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciTag.setLabel(i18n.tr("DCI tag"));
-         dciTag.setText(dci.dciTag);
-         dciTag.setField(TemplateDciSelector.Field.TAG);
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalSpan = 2;
-         dciTag.setLayoutData(gd);
-         addTemplateSelectorListener(dciTag);
+         templateDciWidget.setLayoutData(gd);
       }
       else
       {
@@ -177,10 +148,10 @@ public class DataSourceEditDlg extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			gd.horizontalSpan = 2;
 			tableGroup.setLayoutData(gd);
-			
+
 			layout = new GridLayout();
 			tableGroup.setLayout(layout);
-			
+
 			dataColumn = new LabeledText(tableGroup, SWT.NONE);
          dataColumn.setLabel(i18n.tr("Data column"));
 			dataColumn.setText(dci.column);
@@ -188,7 +159,7 @@ public class DataSourceEditDlg extends Dialog
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			dataColumn.setLayoutData(gd);
-			
+
 			instance = new LabeledText(tableGroup, SWT.NONE);
          instance.setLabel(i18n.tr("Instance"));
 			instance.setText(dci.instance);
@@ -217,7 +188,7 @@ public class DataSourceEditDlg extends Dialog
       gd.verticalAlignment = SWT.TOP;
       gd.verticalSpan = 2;
       optionsGroup.setLayoutData(gd);
-      
+
       layout = new GridLayout();
       optionsGroup.setLayout(layout);
 
@@ -233,17 +204,6 @@ public class DataSourceEditDlg extends Dialog
       checkRawValues.setText(i18n.tr("&Raw values"));
       checkRawValues.setSelection(dci.useRawValues);
 
-      if (isTemplate)
-      {
-         checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
-         checkMultipeMatch.setText(i18n.tr("&Multiple match"));
-         checkMultipeMatch.setSelection(dci.multiMatch);
-         
-         checkRegexpMatch = new Button(optionsGroup, SWT.CHECK);
-         checkRegexpMatch.setText(i18n.tr("Use regular &expressions for DCI matching"));
-         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);
-      }
-
       /*** Color ***/
       colorSelector = new ExtendedColorSelector(dialogArea);
       colorSelector.setLabels(i18n.tr("Color"), i18n.tr("&Automatic color"), i18n.tr("&Custom color:"));
@@ -258,24 +218,6 @@ public class DataSourceEditDlg extends Dialog
 	}
 
    /**
-    * Add modification listener to template selector.
-    *
-    * @param selector template selector
-    */
-   private void addTemplateSelectorListener(final TemplateDciSelector selector)
-   {
-      selector.addModifyListener((e) -> {
-         if (selector.isNoValueObject())
-         {
-            checkMultipeMatch.setSelection(true);
-            checkRegexpMatch.setSelection(true);
-            if (name.getText().isEmpty())
-               name.setText("\\1");
-         }
-      });
-   }
-
-   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
 	@Override
@@ -283,11 +225,7 @@ public class DataSourceEditDlg extends Dialog
 	{
       if (isTemplate)
       {
-         dci.dciName = dciName.getText();
-         dci.dciDescription = dciDescription.getText();
-         dci.dciTag = dciTag.getText();
-         dci.multiMatch = checkMultipeMatch.getSelection();
-         dci.regexMatch = checkRegexpMatch.getSelection();
+         dci.applyTemplateConfig(templateDciWidget.getConfig());
       }
       else
       {

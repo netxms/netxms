@@ -144,10 +144,10 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
          Interface *iface = static_cast<Interface*>(object);
          if (!iface->isLoopback())
          {
-            const InetAddressList *ipAddrList = iface->getIpAddressList();
-            for(int j = 0; j < ipAddrList->size(); j++)
+            InetAddressList ipAddrList = iface->getIpAddressList();
+            for(int j = 0; j < ipAddrList.size(); j++)
             {
-               InetAddress a = ipAddrList->get(j);
+               InetAddress a = ipAddrList.get(j);
                if (a.getHostBits() == 1)
                {
                   InetAddress peerAddr = a.isSubnetBroadcast() ? a.getSubnetAddress() : a.getSubnetBroadcast();

@@ -26,6 +26,7 @@ import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
@@ -74,8 +75,11 @@ public class ObjectLabelDecorator implements ILabelDecorator
    @Override
    public String decorateText(String text, Object element)
    {
-      if (((AbstractObject)element).isInMaintenanceMode())
+      AbstractObject object = (AbstractObject)element;
+      if (object.isInMaintenanceMode())
          return text + " [Maintenance]";
+      if ((object instanceof AbstractNode) && ((AbstractNode)object).isDecommissioned())
+         return text + " [Decommissioned]";
       return null;
    }
 

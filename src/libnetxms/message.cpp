@@ -709,7 +709,7 @@ int64_t NXCPMessage::getFieldAsInt64(uint32_t fieldId) const
 {
    BYTE type;
    void *value = get(fieldId, 0xFF, &type);
-   if (value == NULL)
+   if (value == nullptr)
       return 0;
 
    switch(type)
@@ -763,18 +763,39 @@ double NXCPMessage::getFieldAsDouble(uint32_t fieldId) const
 time_t NXCPMessage::getFieldAsTime(uint32_t fieldId) const
 {
    BYTE type;
-   void *value = (void *)get(fieldId, 0xFF, &type);
-   if (value == NULL)
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == nullptr)
       return 0;
 
    switch(type)
    {
       case NXCP_DT_INT32:
-         return (time_t)(*((UINT32 *)value));
+         return static_cast<time_t>(*static_cast<uint32_t*>(value));
       case NXCP_DT_INT64:
-         return (time_t)(*((UINT64 *)value));
+         return static_cast<time_t>(*static_cast<uint64_t*>(value));
       default:
-         return false;
+         return 0;
+   }
+}
+
+/**
+ * get integer field as timestamp object
+ */
+Timestamp NXCPMessage::getFieldAsTimestamp(uint32_t fieldId) const
+{
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == nullptr)
+      return Timestamp::fromMilliseconds(0);
+
+   switch(type)
+   {
+      case NXCP_DT_INT32:
+         return Timestamp::fromMilliseconds(*static_cast<uint32_t*>(value));
+      case NXCP_DT_INT64:
+         return Timestamp::fromMilliseconds(*static_cast<uint64_t*>(value));
+      default:
+         return Timestamp::fromMilliseconds(0);
    }
 }
 
@@ -828,6 +849,16 @@ SharedString NXCPMessage::getFieldAsSharedString(uint32_t fieldId, size_t maxSiz
       return SharedString(buffer);
    }
    return SharedString(getFieldAsString(fieldId, nullptr, nullptr, 0), Ownership::True);
+}
+
+/**
+ * Get string field
+ */
+String NXCPMessage::getFieldAsString(uint32_t fieldId, size_t maxSize) const
+{
+   Buffer<TCHAR, 1024> buffer(maxSize);
+   getFieldAsString(fieldId, buffer, maxSize);
+   return String(buffer);
 }
 
 /**

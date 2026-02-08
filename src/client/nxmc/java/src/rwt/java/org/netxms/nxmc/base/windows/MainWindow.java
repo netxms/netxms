@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -64,6 +65,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.Memento;
@@ -91,12 +93,15 @@ import org.netxms.nxmc.base.widgets.Spacer;
 import org.netxms.nxmc.base.widgets.WelcomePage;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.actions.ExportConversationAction;
+import org.netxms.nxmc.modules.ai.widgets.AiAssistantChatWidget;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
 import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.preferencepages.ObjectsPreferences;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -130,6 +135,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ViewFolder rightPinArea;
    private ViewFolder bottomPinArea;
    private boolean verticalLayout;
+   private AiAssistantChatWidget aiChatWidget;
    private boolean showServerClock;
    private Composite serverClockArea;
    private ServerClock serverClock;
@@ -266,38 +272,120 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void showWelcomePage()
    {
-      PreferenceStore ps = PreferenceStore.getInstance();
-      if (ps.getAsBoolean("WelcomePage.Disabled", false))
+      final NXCSession session = Registry.getSession();
+
+      if (!BrandingManager.isWelcomePageEnabled())
          return;
 
-      String serverVersion = Registry.getSession().getServerVersion();
-      int dotCount = 0;
-      for(int i = 0; i < serverVersion.length(); i++)
+      // Check master switch (server config)
+      if (!session.getClientConfigurationHintAsBoolean("EnableWelcomePage", true))
+         return;
+
+      // Check user permission (opt-in: must have right to see welcome page)
+      if ((session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_VIEW_WELCOME_PAGE) == 0)
+         return;
+
+      PreferenceStore ps = PreferenceStore.getInstance();
+
+      // Migration: convert old single-version key to new multi-version format
+      String oldVersion = ps.getAsString("WelcomePage.LastDisplayedVersion");
+      if ((oldVersion != null) && !oldVersion.isEmpty())
       {
-         char ch = serverVersion.charAt(i);
+         String existingSeen = ps.getAsString("WelcomePage.SeenVersions", "");
+         ps.set("WelcomePage.SeenVersions", addVersion(existingSeen, oldVersion));
+         ps.set("WelcomePage.LastDisplayedVersion", "");
+      }
+
+      String serverVersion = extractMajorMinorPatch(session.getServerVersion());
+
+      // Check local storage
+      String localSeen = ps.getAsString("WelcomePage.SeenVersions", "");
+      if (containsVersion(localSeen, serverVersion))
+         return;
+
+      // Check server-side storage
+      String serverSeen = "";
+      try
+      {
+         serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
+      }
+      catch(Exception e)
+      {
+         logger.debug("Failed to get welcome page seen versions from server", e);
+      }
+      if (containsVersion(serverSeen, serverVersion))
+      {
+         // Update local storage to match server (optimization for future checks)
+         ps.set("WelcomePage.SeenVersions", addVersion(localSeen, serverVersion));
+         return;
+      }
+
+      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE, serverVersion);
+      welcomePage.setSize(mainArea.getSize());
+      welcomePage.moveAbove(null);
+   }
+
+   /**
+    * Extract major.minor.patch version from full version string.
+    *
+    * @param version full version string
+    * @return major.minor.patch version
+    */
+   private static String extractMajorMinorPatch(String version)
+   {
+      int dotCount = 0;
+      for(int i = 0; i < version.length(); i++)
+      {
+         char ch = version.charAt(i);
          if (ch == '-')
          {
-            serverVersion = serverVersion.substring(0, i);
-            break;
+            return version.substring(0, i);
          }
          if (ch == '.')
          {
             dotCount++;
             if (dotCount == 3)
             {
-               serverVersion = serverVersion.substring(0, i);
-               break;
+               return version.substring(0, i);
             }
          }
       }
+      return version;
+   }
 
-      String v = ps.getAsString("WelcomePage.LastDisplayedVersion");
-      if (serverVersion.equals(v))
-         return;
+   /**
+    * Check if comma-separated list contains given version.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to check
+    * @return true if list contains version
+    */
+   private static boolean containsVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return false;
+      for(String v : list.split(","))
+      {
+         if (v.trim().equals(version))
+            return true;
+      }
+      return false;
+   }
 
-      WelcomePage welcomePage = new WelcomePage(mainArea, SWT.NONE, serverVersion);
-      welcomePage.setSize(mainArea.getSize());
-      welcomePage.moveAbove(null);
+   /**
+    * Add version to comma-separated list if not already present.
+    *
+    * @param list comma-separated list of versions
+    * @param version version to add
+    * @return updated list
+    */
+   private static String addVersion(String list, String version)
+   {
+      if ((list == null) || list.isEmpty())
+         return version;
+      if (containsVersion(list, version))
+         return list;
+      return list + "," + version;
    }
 
    /**
@@ -316,6 +404,8 @@ public class MainWindow extends Window implements MessageAreaHolder
    protected Control createContents(Composite parent)
    {
       NXCSession session = Registry.getSession();
+
+      boolean withAiAssistant = session.isServerComponentRegistered("AI-ASSISTANT");
 
       Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
 
@@ -341,7 +431,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       layout.marginWidth = 5;
       layout.marginHeight = 5;
       layout.horizontalSpacing = 5;
-      layout.numColumns = 15;
+      layout.numColumns = withAiAssistant ? 17 : 15;
       headerArea.setLayout(layout);
 
       Label appLogo = new Label(headerArea, SWT.CENTER);
@@ -355,7 +445,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       title.setBackground(headerBackgroundColor);
       title.setForeground(headerForegroundColor);
       title.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderBold");
-      title.setText(BrandingManager.getProductName());
+      title.setText(BrandingManager.getProductName().toUpperCase());
 
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
@@ -390,6 +480,12 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
 
       new Spacer(headerArea, 32);
+
+      if (withAiAssistant)
+      {
+         new HeaderButton(headerArea, "icons/main-window/ai.png", i18n.tr("AI assistant chat"), () -> showAiAssistantChat());
+         new Spacer(headerArea, 32);
+      }
 
       userMenuButton = new HeaderButton(headerArea, "icons/main-window/user.png", i18n.tr("User properties"), new Runnable() {
          @Override
@@ -785,6 +881,98 @@ public class MainWindow extends Window implements MessageAreaHolder
    }
 
    /**
+    * Show AI assistant chat control
+    */
+   private void showAiAssistantChat()
+   {
+      if (aiChatWidget != null)
+      {
+         aiChatWidget.setFocus();
+         return;
+      }
+
+      int[] weights = horizontalSplitArea.getWeights();
+
+      final Composite chatArea = new Composite(horizontalSplitArea, SWT.BORDER);
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      layout.numColumns = 2;
+      chatArea.setLayout(layout);
+
+      CLabel label = new CLabel(chatArea, SWT.NONE);
+      label.setImage(SharedIcons.IMG_AI_ASSISTANT);
+      label.setText(i18n.tr("AI Assistant Chat"));
+
+      ToolBar toolbar = new ToolBar(chatArea, SWT.FLAT | SWT.RIGHT);
+      toolbar.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+
+      Label separator = new Label(chatArea, SWT.SEPARATOR | SWT.HORIZONTAL);
+      separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+      ToolItem exportItem = new ToolItem(toolbar, SWT.PUSH);
+      exportItem.setImage(SharedIcons.IMG_EXPORT);
+      exportItem.setToolTipText(i18n.tr("Export chat history"));
+      exportItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            new ExportConversationAction(null, aiChatWidget).run();
+         }
+      });
+
+      ToolItem clearItem = new ToolItem(toolbar, SWT.PUSH);
+      clearItem.setImage(SharedIcons.IMG_CLEAR_LOG);
+      clearItem.setToolTipText(i18n.tr("Clear chat history"));
+      clearItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            aiChatWidget.clearChatSession();
+         }
+      });
+
+      ToolItem closeItem = new ToolItem(toolbar, SWT.PUSH);
+      closeItem.setImage(SharedIcons.IMG_CLOSE);
+      closeItem.setToolTipText(i18n.tr("Close"));
+      closeItem.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            aiChatWidget.dispose();
+            aiChatWidget = null;
+            chatArea.dispose();
+            horizontalSplitArea.layout(true, true);
+         }
+      });
+
+      aiChatWidget = new AiAssistantChatWidget(chatArea, SWT.NONE, null, 0, true);
+      aiChatWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+      aiChatWidget.createChatSession(true);
+
+      weights = Arrays.copyOf(weights, weights.length + 1);
+      int total = 0;
+      for(int w : weights)
+         total += w;
+      weights[weights.length - 1] = 3 * total / 7; // 30% of new full weight
+      horizontalSplitArea.setWeights(weights);
+
+      setAiAssistantContext(currentPerspective.getContext());
+   }
+
+   /**
+    * Set AI assistant context
+    * 
+    * @param context context object
+    */
+   public void setAiAssistantContext(Object context)
+   {
+      if (aiChatWidget != null)
+         aiChatWidget.setContext(context);
+   }
+
+   /**
     * Show console preferences
     */
    private void showPreferences()
@@ -831,7 +1019,7 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void createServerClockWidget()
    {
-      new Spacer(serverClockArea, 27); // 32 - layout horizontal spacing
+      new Spacer(serverClockArea, 27, null);
 
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());

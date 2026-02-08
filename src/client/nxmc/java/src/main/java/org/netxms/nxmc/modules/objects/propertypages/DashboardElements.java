@@ -49,6 +49,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
@@ -84,7 +85,7 @@ public class DashboardElements extends ObjectPropertyPage
    public static final int COLUMN_NARROW_SCREEN = 3;
    public static final int COLUMN_TITLE = 4;
 
-	private Dashboard dashboard;
+	private DashboardBase dashboard;
 	private LabeledSpinner columnCount;
    private Button checkScrollable;
 	private SortableTableViewer viewer;
@@ -122,7 +123,7 @@ public class DashboardElements extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return object instanceof Dashboard;
+      return object instanceof DashboardBase;
    }
 
    /**
@@ -142,7 +143,7 @@ public class DashboardElements extends ObjectPropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 
-      dashboard = (Dashboard)object;
+      dashboard = (DashboardBase)object;
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -317,7 +318,7 @@ public class DashboardElements extends ObjectPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
 	{
-		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(columnCount.getSelection());
       md.setObjectFlags(checkScrollable.getSelection() ? Dashboard.SCROLLABLE : 0, Dashboard.SCROLLABLE);

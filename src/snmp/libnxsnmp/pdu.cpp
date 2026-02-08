@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -178,7 +178,7 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_signatureOffset = src.m_signatureOffset;
 
    for(int i = 0; i < src.m_variables.size(); i++)
-      m_variables.add(new SNMP_Variable(src.m_variables.get(i)));
+      m_variables.add(new SNMP_Variable(*src.m_variables.get(i)));
 }
 
 /**
@@ -212,31 +212,31 @@ bool SNMP_PDU::parseVariable(const BYTE *data, size_t varLength)
 /**
  * Parse variable bindings
  */
-bool SNMP_PDU::parseVarBinds(const BYTE *pData, size_t pduLength)
+bool SNMP_PDU::parseVarBinds(const BYTE *pduData, size_t pduLength)
 {
-   const BYTE *pbCurrPos;
-   UINT32 dwType;
-   size_t dwLength, dwBindingLength, idLength;
+   const BYTE *currPos;
+   uint32_t dataType;
+   size_t length, bindingLength, idLength;
 
    // Varbind section should be a SEQUENCE
-   if (!BER_DecodeIdentifier(pData, pduLength, &dwType, &dwBindingLength, &pbCurrPos, &idLength))
+   if (!BER_DecodeIdentifier(pduData, pduLength, &dataType, &bindingLength, &currPos, &idLength))
       return false;
-   if (dwType != ASN_SEQUENCE)
+   if (dataType != ASN_SEQUENCE)
       return false;
 
-   while(dwBindingLength > 0)
+   while(bindingLength > 0)
    {
-      if (!BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+      if (!BER_DecodeIdentifier(currPos, pduLength, &dataType, &length, &currPos, &idLength))
          return false;
-      if (dwType != ASN_SEQUENCE)
+      if (dataType != ASN_SEQUENCE)
          return false;  // Every binding is a sequence
-      if (dwLength > dwBindingLength)
+      if (length > bindingLength)
          return false;     // Invalid length
 
-      if (!parseVariable(pbCurrPos, dwLength))
+      if (!parseVariable(currPos, length))
          return false;
-      dwBindingLength -= dwLength + idLength;
-      pbCurrPos += dwLength;
+      bindingLength -= length + idLength;
+      currPos += length;
    }
 
    return true;
@@ -319,16 +319,17 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
       if (dwType == ASN_OBJECT_ID)
       {
          SNMP_OID oid;
-         memset(&oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&oid))
          {
             m_trapId.setValue(oid.value, oid.length);
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-
             bResult = true;
+            if (oid.value != oid.internalBuffer)
+            {
+               MemFree(oid.value);
+            }
          }
-         MemFree(oid.value);
       }
    }
 
@@ -902,9 +903,9 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 /**
  * Create packet from PDU
  */
-size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
+size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securityContext)
 {
-   size_t dwBytes, dwVarBindsSize, dwPDUSize, dwPacketSize;
+   size_t bytes, varBindsSize, pduSize, packetSize;
 
 	// Replace context name if defined in security context
 	if (securityContext->getContextName() != nullptr)
@@ -917,19 +918,19 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       SNMP_Variable *var = m_variables.get(i);
       bufferSize += var->getValueLength() + var->getName().length() * 4 + 16;
    }
-   BYTE *pBlock = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
-   BYTE *pVarBinds = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
-   BYTE *pPacket = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
+   BYTE *block = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
+   BYTE *varBinds = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
+   BYTE *packet = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
 
    // Encode variables
-   dwVarBindsSize = 0;
-   BYTE *pbCurrPos = pVarBinds;
+   varBindsSize = 0;
+   BYTE *currPos = varBinds;
    for(int i = 0; i < m_variables.size(); i++)
    {
       SNMP_Variable *var = m_variables.get(i);
-      dwBytes = var->encode(pbCurrPos, bufferSize - dwVarBindsSize);
-      pbCurrPos += dwBytes;
-      dwVarBindsSize += dwBytes;
+      bytes = var->encode(currPos, bufferSize - varBindsSize);
+      currPos += bytes;
+      varBindsSize += bytes;
    }
 
    // Determine PDU type
@@ -946,78 +947,78 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
    // Encode PDU header
    if (pduType != 0)
    {
-      pbCurrPos = pBlock;
-      dwPDUSize = 0;
+      currPos = block;
+      pduSize = 0;
       uint32_t intValue;
       switch(pduType)
       {
          case ASN_TRAP_V1_PDU:
-            dwBytes = BER_Encode(ASN_OBJECT_ID, reinterpret_cast<const BYTE*>(m_trapId.value()),
+            bytes = BER_Encode(ASN_OBJECT_ID, reinterpret_cast<const BYTE*>(m_trapId.value()),
                                  m_trapId.length() * sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
-            dwBytes = BER_Encode(ASN_IP_ADDR, (BYTE *)&m_dwAgentAddr, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_IP_ADDR, (BYTE *)&m_dwAgentAddr, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
             intValue = static_cast<uint32_t>(m_trapType);
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&intValue, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&intValue, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
             intValue = static_cast<uint32_t>(m_specificTrap);
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&intValue, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&intValue, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_timestamp, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_timestamp, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
             break;
          default:
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_requestId, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_requestId, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorCode, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorCode, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
 
-            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorIndex, sizeof(uint32_t),
-                                 pbCurrPos, bufferSize - dwPDUSize);
-            dwPDUSize += dwBytes;
-            pbCurrPos += dwBytes;
+            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_errorIndex, sizeof(uint32_t),
+                                 currPos, bufferSize - pduSize);
+            pduSize += bytes;
+            currPos += bytes;
             break;
       }
 
       // Encode varbinds into PDU
 		if ((m_version != SNMP_VERSION_3) || ((securityContext != nullptr) && (securityContext->getAuthoritativeEngine().getIdLen() != 0)))
 		{
-			dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, pbCurrPos, bufferSize - dwPDUSize);
+			bytes = BER_Encode(ASN_SEQUENCE, varBinds, varBindsSize, currPos, bufferSize - pduSize);
 		}
 		else
 		{
 			// Do not encode varbinds into engine id discovery message
-			dwBytes = BER_Encode(ASN_SEQUENCE, nullptr, 0, pbCurrPos, bufferSize - dwPDUSize);
+			bytes = BER_Encode(ASN_SEQUENCE, nullptr, 0, currPos, bufferSize - pduSize);
 		}
-      dwPDUSize += dwBytes;
+      pduSize += bytes;
 
       // Encode packet header
-      pbCurrPos = pPacket;
-      dwPacketSize = 0;
+      currPos = packet;
+      packetSize = 0;
 
       uint32_t version = static_cast<uint32_t>(m_version);
-      dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&version, sizeof(uint32_t), pbCurrPos, bufferSize);
-      dwPacketSize += dwBytes;
-      pbCurrPos += dwBytes;
+      bytes = BER_Encode(ASN_INTEGER, (BYTE *)&version, sizeof(uint32_t), currPos, bufferSize);
+      packetSize += bytes;
+      currPos += bytes;
 
 		if (m_version == SNMP_VERSION_3)
 		{
@@ -1028,22 +1029,22 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 				memcpy(m_salt, &temp, 8);
 			}
 
-			dwBytes = encodeV3Header(pbCurrPos, bufferSize - dwPacketSize, securityContext);
-			dwPacketSize += dwBytes;
-			pbCurrPos += dwBytes;
+			bytes = encodeV3Header(currPos, bufferSize - packetSize, securityContext);
+			packetSize += bytes;
+			currPos += bytes;
 
-			dwBytes = encodeV3SecurityParameters(pbCurrPos, bufferSize - dwPacketSize, securityContext);
-			dwPacketSize += dwBytes;
-			pbCurrPos += dwBytes;
+			bytes = encodeV3SecurityParameters(currPos, bufferSize - packetSize, securityContext);
+			packetSize += bytes;
+			currPos += bytes;
 
-			dwBytes = encodeV3ScopedPDU(pduType, pBlock, dwPDUSize, pbCurrPos, bufferSize - dwPacketSize);
+			bytes = encodeV3ScopedPDU(pduType, block, pduSize, currPos, bufferSize - packetSize);
 			if (securityContext->needEncryption())
 			{
 #ifdef _WITH_ENCRYPTION
 				if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 				{
 #ifndef OPENSSL_NO_DES
-					size_t encSize = (dwBytes % 8 == 0) ? dwBytes : (dwBytes + (8 - (dwBytes % 8)));
+					size_t encSize = (bytes % 8 == 0) ? bytes : (bytes + (8 - (bytes % 8)));
 					BYTE *encryptedPdu = static_cast<BYTE*>(SNMP_MemAlloc(encSize));
 
 					DES_cblock key;
@@ -1056,11 +1057,11 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 					for(int i = 0; i < 8; i++)
 						iv[i] ^= m_salt[i];
 
-					DES_ncbc_encrypt(pbCurrPos, encryptedPdu, (long)dwBytes, &schedule, &iv, DES_ENCRYPT);
-					dwBytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, encSize, pbCurrPos, bufferSize - dwPacketSize);
+					DES_ncbc_encrypt(currPos, encryptedPdu, (long)bytes, &schedule, &iv, DES_ENCRYPT);
+					bytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, encSize, currPos, bufferSize - packetSize);
 					SNMP_MemFree(encryptedPdu, encSize);
 #else
-					dwBytes = 0;	// Error - no DES support
+					bytes = 0;	// Error - no DES support
 					goto cleanup;
 #endif
 				}
@@ -1078,61 +1079,60 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 					memcpy(&iv[4], &engineTime, 4);
 					memcpy(&iv[8], m_salt, 8);
 
-					BYTE *encryptedPdu = static_cast<BYTE*>(SNMP_MemAlloc(dwBytes));
+					BYTE *encryptedPdu = static_cast<BYTE*>(SNMP_MemAlloc(bytes));
 					int num = 0;
-					AES_cfb128_encrypt(pbCurrPos, encryptedPdu, dwBytes, &key, iv, &num, AES_ENCRYPT);
-					dwBytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, dwBytes, pbCurrPos, bufferSize - dwPacketSize);
-					SNMP_MemFree(encryptedPdu, dwBytes);
+					AES_cfb128_encrypt(currPos, encryptedPdu, bytes, &key, iv, &num, AES_ENCRYPT);
+					bytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, bytes, currPos, bufferSize - packetSize);
+					SNMP_MemFree(encryptedPdu, bytes);
 #else
-					dwBytes = 0;	// Error - no AES support
+					bytes = 0;	// Error - no AES support
 					goto cleanup;
 #endif
 				}
 				else
 				{
-					dwBytes = 0;	// Error - unsupported method
+					bytes = 0;	// Error - unsupported method
 					goto cleanup;
 				}
 #else
-				dwBytes = 0;	// Error
+				bytes = 0;	// Error
 				goto cleanup;
 #endif
 			}
-			dwPacketSize += dwBytes;
+			packetSize += bytes;
 		}
 		else
 		{
-			dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getCommunity(),
-			         strlen(securityContext->getCommunity()), pbCurrPos, bufferSize - dwPacketSize);
-			dwPacketSize += dwBytes;
-			pbCurrPos += dwBytes;
+			bytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getCommunity(),
+			         strlen(securityContext->getCommunity()), currPos, bufferSize - packetSize);
+			packetSize += bytes;
+			currPos += bytes;
 
 			// Encode PDU into packet
-			dwBytes = BER_Encode(pduType, pBlock, dwPDUSize, pbCurrPos, bufferSize - dwPacketSize);
-			dwPacketSize += dwBytes;
+			bytes = BER_Encode(pduType, block, pduSize, currPos, bufferSize - packetSize);
+			packetSize += bytes;
 		}
 
-      // And final step: allocate buffer for entire datagramm and wrap packet
-      // into SEQUENCE
-      *ppBuffer = MemAllocArrayNoInit<BYTE>(dwPacketSize + 6);
-      dwBytes = BER_Encode(ASN_SEQUENCE, pPacket, dwPacketSize, *ppBuffer, dwPacketSize + 6);
+      // And final step: allocate buffer for entire datagramm and wrap packet into SEQUENCE
+		outBuffer->realloc(packetSize + 6);
+      bytes = BER_Encode(ASN_SEQUENCE, packet, packetSize, outBuffer->buffer(), packetSize + 6);
 
 		// Sign message
 		if ((m_version == SNMP_VERSION_3) && securityContext->needAuthentication())
 		{
-			signMessage(*ppBuffer, dwBytes, securityContext);
+			signMessage(outBuffer->buffer(), bytes, securityContext);
 		}
    }
    else
    {
-      dwBytes = 0;   // Error
+      bytes = 0;   // Error
    }
 
 cleanup:
-   SNMP_MemFree(pPacket, bufferSize);
-   SNMP_MemFree(pBlock, bufferSize);
-   SNMP_MemFree(pVarBinds, bufferSize);
-   return dwBytes;
+   SNMP_MemFree(packet, bufferSize);
+   SNMP_MemFree(block, bufferSize);
+   SNMP_MemFree(varBinds, bufferSize);
+   return bytes;
 }
 
 /**

@@ -43,13 +43,13 @@ public class Polls extends AbstractObjectHandler
       {
          pollType = ObjectPollType.AUTOBIND;
       }
-      else if (type.equalsIgnoreCase("configuration full"))
+      else if (type.equalsIgnoreCase("configuration full") || type.equalsIgnoreCase("configuration with reset"))
       {
-         pollType = ObjectPollType.CONFIGURATION_FULL;
+         pollType = ObjectPollType.CONFIGURATION_WITH_RESET;
       }
       else if (type.equals("configuration"))
       {
-         pollType = ObjectPollType.CONFIGURATION_NORMAL;
+         pollType = ObjectPollType.CONFIGURATION;
       }
       else if (type.equals("discovery"))
       {

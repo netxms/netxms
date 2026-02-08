@@ -37,13 +37,14 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 public class ObjectFloorPlan extends ObjectFigure
 {
    private static final int MARGIN_X = 3;
-   private static final int MARGIN_Y = 3;      
+   private static final int MARGIN_Y = 3;
    private static final int TOP_LEFT = 0;
    private static final int TOP_RIGHT = 1;
    private static final int BOTTOM_LEFT = 2;
    private static final int BOTTOM_RIGHT = 3;
-   
+
    private NetworkMapObject element;
+   private ExtendedGraphViewer viewer;
    private boolean resize = true;
    private Label label;
    private int lastX;
@@ -51,30 +52,32 @@ public class ObjectFloorPlan extends ObjectFigure
 
    /**
     * Constructor
-    * 
+    *
     * @param element Network map object
     * @param labelProvider map label provider
+    * @param viewer owning viewer
     */
-   public ObjectFloorPlan(NetworkMapObject element, MapLabelProvider labelProvider)
+   public ObjectFloorPlan(NetworkMapObject element, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
    {
       super(element, labelProvider);
       this.element = element;
-      setLayoutManager(new BorderLayout());      
+      this.viewer = viewer;
+      setLayoutManager(new BorderLayout());
       setSize(element.getWidth(), element.getHeight());
-      
+
       label = new Label(object.getNameOnMap());
       label.setFont(labelProvider.getTitleFont());
       label.setLabelAlignment(PositionConstants.CENTER);
       add(label);
-      
+
       Dimension d = label.getPreferredSize();
       label.setSize(d);
       label.setLocation(new Point(element.getWidth() / 2 - d.width / 2, element.getHeight() / 2 - d.height / 2));
       setBackgroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
-      
+
       createResizeHandle(BOTTOM_RIGHT);
    }
-  
+
    /**
     * Create resize handle
     */
@@ -84,7 +87,7 @@ public class ObjectFloorPlan extends ObjectFigure
       add(handle);
       Dimension size = getSize();
       handle.setSize(8, 8);
-      
+
       switch(pos)
       {
          case TOP_LEFT:
@@ -104,7 +107,7 @@ public class ObjectFloorPlan extends ObjectFigure
             handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENWSE));
             break;
       }
-      
+
       handle.addMouseListener(new MouseListener() {
          @Override
          public void mouseReleased(MouseEvent me)
@@ -114,9 +117,10 @@ public class ObjectFloorPlan extends ObjectFigure
                resize = false;
                Dimension size = getSize();
                element.setSize(size.width, size.height);
+               viewer.onDecorationMove(element);
             }
          }
-         
+
          @Override
          public void mousePressed(MouseEvent me)
          {
@@ -128,7 +132,7 @@ public class ObjectFloorPlan extends ObjectFigure
                me.consume();
             }
          }
-         
+
          @Override
          public void mouseDoubleClicked(MouseEvent me)
          {
@@ -139,45 +143,45 @@ public class ObjectFloorPlan extends ObjectFigure
          public void mouseMoved(MouseEvent me)
          {
          }
-         
+
          @Override
          public void mouseHover(MouseEvent me)
          {
          }
-         
+
          @Override
          public void mouseExited(MouseEvent me)
          {
          }
-         
+
          @Override
          public void mouseEntered(MouseEvent me)
          {
          }
-         
+
          @Override
          public void mouseDragged(MouseEvent me)
          {
             if (resize)
             {
                Dimension size = getSize();
-               
+
                int dx = me.x - lastX;
                int dy = me.y - lastY;
-               
+
                if ((dx < 0) && (size.width <= 40))
                   dx = 0;
                if ((dy < 0) && (size.height <= 20))
                   dy = 0;
-               
+
                size.width += dx;
                size.height += dy;
                setSize(size);
-               
+
                Point p = handle.getLocation();
                p.performTranslate(dx, dy);
                handle.setLocation(p);
-               
+
                lastX = me.x;
                lastY = me.y;
                me.consume();
@@ -197,16 +201,16 @@ public class ObjectFloorPlan extends ObjectFigure
    protected void paintFigure(Graphics gc)
    {
       gc.setAntialias(SWT.ON);
-      
+
       Rectangle rect = new Rectangle(getBounds());
-      
+
       // Adjust border to fit inside the rectangle
       rect.x++;
       rect.y++;
       rect.width -= MARGIN_X;
       rect.height -= MARGIN_Y;
-      
-      gc.setAlpha(255);      
+
+      gc.setAlpha(255);
       gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setLineWidth(3);
       gc.setLineStyle(isElementSelected() ? SWT.LINE_DOT : SWT.LINE_SOLID);
@@ -222,5 +226,5 @@ public class ObjectFloorPlan extends ObjectFigure
       gc.fillRoundRectangle(getBounds(), 8, 8);
    }
 
-   
+
 }

@@ -33,6 +33,66 @@ const TCHAR *CiscoDeviceDriver::getVersion()
 }
 
 /**
+ * Determine maximum speed based on interface name
+ */
+static uint64_t MaxSpeedFromInterfaceName(const TCHAR *ifName)
+{
+   StringBuffer name(ifName);
+   name.toUppercase();
+
+   // Ethernet interfaces
+   if (name.startsWith(_T("FA")))
+      return _ULL(100000000); // 100 Mbps
+
+   if (name.startsWith(_T("GI")))
+      return _ULL(1000000000); // 1 Gbps
+
+   if (name.startsWith(_T("TE")))
+      return _ULL(10000000000); // 10 Gbps
+
+   if (name.startsWith(_T("TWE")))
+      return _ULL(25000000000); // 25 Gbps
+
+   if (name.startsWith(_T("FO")))
+      return _ULL(40000000000); // 40 Gbps
+
+   if (name.startsWith(_T("HU")))
+      return _ULL(100000000000); // 100 Gbps
+
+   // Serial interfaces (various speeds)
+   if (name.startsWith(_T("SE")))
+      return _ULL(2048000); // Default T1 speed
+
+   // ATM interfaces
+   if (name.startsWith(_T("ATM")))
+      return _ULL(155000000); // Default OC-3 speed
+
+   return 0; // Unknown interface type
+}
+
+/**
+ * Get list of interfaces for given node
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
+ */
+InterfaceList *CiscoDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+{
+   // Get interface list from standard MIB
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   if (ifList == nullptr)
+      return nullptr;
+
+   // Set maximum speed based on interface name
+   for(int i = 0; i < ifList->size(); i++)
+      ifList->get(i)->maxSpeed = MaxSpeedFromInterfaceName(ifList->get(i)->name);
+
+   return ifList;
+}
+
+/**
  * Parse VLAN membership bit map
  *
  * @param vlanList VLAN list
@@ -311,6 +371,40 @@ StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(S
    }
 
    return fdb;
+}
+
+/**
+ * Get SSH driver hints for Cisco IOS/IOS-XE devices
+ */
+void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Cisco IOS prompt patterns:
+   // - User mode: hostname>
+   // - Privileged mode: hostname#
+   // - Config mode: hostname(config)#, hostname(config-if)#, etc.
+   // Prompt may include domain name: hostname.domain.com>
+   hints->promptPattern = "^[\\w.-]+(\\([\\w-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w-]+\\))?#\\s*$";
+
+   // Enable command and password prompt
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "terminal length 0";
+   hints->paginationPrompt = " --[Mm]ore-- |<--- More --->|--More--";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = "show version | include Cisco";
+   hints->testCommandPattern = "Cisco";
+
+   // Timeouts (Cisco devices are generally responsive)
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
 }
 
 /**

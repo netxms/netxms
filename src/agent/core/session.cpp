@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxagentd.h"
 #include <nxstat.h>
+#include <unordered_map>
 
 /**
  * Externals
@@ -300,6 +301,11 @@ void CommSession::readThread()
                   }
                }
                m_tcpProxyLock.unlock();
+            }
+            else
+            {
+               // Attempt to process unknown binary message by subagents
+               ProcessBinaryMessageBySubAgent(msg, this);
             }
             delete msg;
          }
@@ -650,14 +656,6 @@ void CommSession::processCommand(NXCPMessage *request)
             response.setField(VID_RCC, ERR_SUCCESS);
             GetParameterList(&response);
             break;
-         case CMD_GET_ENUM_LIST:
-            response.setField(VID_RCC, ERR_SUCCESS);
-            GetEnumList(&response);
-            break;
-         case CMD_GET_TABLE_LIST:
-            response.setField(VID_RCC, ERR_SUCCESS);
-            GetTableList(&response);
-            break;
          case CMD_READ_AGENT_CONFIG_FILE:
             getConfig(&response);
             break;
@@ -832,6 +830,23 @@ void CommSession::processCommand(NXCPMessage *request)
             {
                response.setField(VID_RCC, ERR_ACCESS_DENIED);
             }
+            break;
+         case CMD_UPDATE_ENVIRONMENT:
+            if (m_controlServer || m_masterServer)
+            {
+               updateEnvironment(request);
+               response.setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
+         case CMD_AI_GET_TOOLS:
+            getAITools(request, &response);
+            break;
+         case CMD_AI_EXECUTE_TOOL:
+            executeAITool(request, &response);
             break;
          default:
             // Attempt to process unknown command by subagents
@@ -1235,6 +1250,113 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
       writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): access denied"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+/**
+ * Get available AI tools
+ */
+void CommSession::getAITools(NXCPMessage *request, NXCPMessage *response)
+{
+   char *schema = GenerateAIToolsSchema();
+   if (schema != nullptr)
+   {
+      response->setFieldFromUtf8String(VID_AI_TOOL_SCHEMA, schema);
+      response->setField(VID_RCC, ERR_SUCCESS);
+      MemFree(schema);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+   }
+}
+
+/**
+ * Execute an AI tool
+ */
+void CommSession::executeAITool(NXCPMessage *request, NXCPMessage *response)
+{
+   char *toolName = request->getFieldAsUtf8String(VID_AI_TOOL_NAME);
+   char *jsonParams = request->getFieldAsUtf8String(VID_AI_TOOL_INPUT);
+
+   int64_t startTime = GetCurrentTimeMs();
+   char *jsonResult = nullptr;
+   uint32_t rcc = ExecuteAITool(toolName, jsonParams, &jsonResult, this);
+   int64_t execTime = GetCurrentTimeMs() - startTime;
+
+   response->setField(VID_RCC, rcc);
+   response->setField(VID_AI_TOOL_EXEC_TIME, static_cast<uint32_t>(execTime));
+   if (jsonResult != nullptr)
+   {
+      response->setFieldFromUtf8String(VID_AI_TOOL_OUTPUT, jsonResult);
+      MemFree(jsonResult);
+   }
+
+   MemFree(toolName);
+   MemFree(jsonParams);
+}
+
+/**
+ * Mutex and set for tracking server-pushed environment variables
+ */
+static Mutex s_serverEnvVarsMutex(MutexType::FAST);
+static std::unordered_map<uint64_t, StringSet> s_serverEnvVars;
+
+/**
+ * Update process environment variables from server request
+ */
+void CommSession::updateEnvironment(NXCPMessage *request)
+{
+   int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+
+   StringSet newVars;
+   for (int i = 0; i < count; i++)
+   {
+      TCHAR *name = request->getFieldAsString(fieldId++);
+      TCHAR *value = request->getFieldAsString(fieldId++);
+      if (name != nullptr && name[0] != 0)
+      {
+         bool accepted = false;
+         for (int j = 0; j < g_acceptedEnvVars.size(); j++)
+         {
+            if (MatchString(g_acceptedEnvVars.get(j), name, false))
+            {
+               accepted = true;
+               break;
+            }
+         }
+         if (accepted)
+         {
+            SetEnvironmentVariable(name, value);
+            newVars.add(name);
+            debugPrintf(5, _T("Environment variable set: %s = %s"), name, CHECK_NULL(value));
+         }
+         else
+         {
+            debugPrintf(5, _T("Environment variable rejected (no matching pattern): %s"), name);
+         }
+      }
+      MemFree(name);
+      MemFree(value);
+   }
+
+   s_serverEnvVarsMutex.lock();
+   if (s_serverEnvVars.find(m_serverId) != s_serverEnvVars.end())
+   {
+      StringSet& oldVars = s_serverEnvVars[m_serverId];
+      oldVars.forEach(
+         [&newVars, this] (const TCHAR *name) -> bool
+         {
+            if (!newVars.contains(name))
+            {
+               SetEnvironmentVariable(name, nullptr);
+               debugPrintf(5, _T("Environment variable removed: %s"), name);
+            }
+            return true;
+         });
+   }
+   s_serverEnvVars[m_serverId] = std::move(newVars);
+   s_serverEnvVarsMutex.unlock();
 }
 
 /**

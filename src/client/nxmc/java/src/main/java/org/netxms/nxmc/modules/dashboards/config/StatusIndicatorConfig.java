@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.dashboards.config;
 
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.datacollection.DciTemplateConfig;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
@@ -236,7 +237,13 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       private String dciDescription;
 
       @Element(required = false)
+      private DciTemplateConfig templateConfig;
+
+      @Element(required = false)
       private String tag;
+
+      @Element(required = false)
+      private long drillDownObjectId;
 
       /**
        * Default constructor
@@ -249,7 +256,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciId = 0;
          dciName = null;
          dciDescription = null;
+         templateConfig = null;
          tag = null;
+         drillDownObjectId = 0;
       }
 
       /**
@@ -265,7 +274,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciId = src.dciId;
          dciName = src.dciName;
          dciDescription = src.dciDescription;
+         templateConfig = (src.templateConfig != null) ? new DciTemplateConfig(src.templateConfig) : null;
          tag = src.tag;
+         drillDownObjectId = src.drillDownObjectId;
       }
 
       /**
@@ -295,10 +306,13 @@ public class StatusIndicatorConfig extends DashboardElementConfig
             return tag;
          if (type == ELEMENT_TYPE_DCI_TEMPLATE)
          {
-            if ((dciDescription != null) && !dciDescription.isEmpty())
-               return dciDescription;
-            if ((dciName != null) && !dciName.isEmpty())
-               return dciName;
+            DciTemplateConfig tc = getTemplateConfig();
+            if (!tc.getDciDescription().isEmpty())
+               return tc.getDciDescription();
+            if (!tc.getDciName().isEmpty())
+               return tc.getDciName();
+            if (!tc.getDciTag().isEmpty())
+               return tc.getDciTag();
          }
          return "";
       }
@@ -377,6 +391,36 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       }
 
       /**
+       * Get DCI template configuration. If not set, creates one populated from legacy fields.
+       *
+       * @return DCI template configuration
+       */
+      public DciTemplateConfig getTemplateConfig()
+      {
+         if (templateConfig == null)
+         {
+            templateConfig = new DciTemplateConfig();
+            templateConfig.setDciName(getDciName());
+            templateConfig.setDciDescription(getDciDescription());
+            templateConfig.setRegexMatch(getDciName().isEmpty() ? false : true);
+         }
+         return templateConfig;
+      }
+
+      /**
+       * Apply DciTemplateConfig values.
+       *
+       * @param config DCI template configuration to apply
+       */
+      public void applyTemplateConfig(DciTemplateConfig config)
+      {
+         templateConfig = config;
+         // Sync to legacy fields for serialization compatibility
+         dciName = config.getDciName();
+         dciDescription = config.getDciDescription();
+      }
+
+      /**
        * Get element's tag.
        *
        * @return element's tag
@@ -394,6 +438,22 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       public void setTag(String tag)
       {
          this.tag = tag;
+      }
+
+      /**
+       * @return the drillDownObjectId
+       */
+      public long getDrillDownObjectId()
+      {
+         return drillDownObjectId;
+      }
+
+      /**
+       * @param drillDownObjectId the drillDownObjectId to set
+       */
+      public void setDrillDownObjectId(long drillDownObjectId)
+      {
+         this.drillDownObjectId = drillDownObjectId;
       }
 
       /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,10 +132,10 @@ class LDAPConnection
 private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
-   LDAP_CHAR m_connList[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_searchBase[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE];
-   LDAP_CHAR m_userDN[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_connList[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_searchBase[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE_LENGTH];
+   LDAP_CHAR m_userDN[MAX_CONFIG_VALUE_LENGTH];
    LDAP_CHAR m_userPassword[MAX_PASSWORD];
    char *m_ldapFullNameAttr;
    char *m_ldapUserLoginNameAttr;
@@ -423,6 +423,76 @@ public:
 };
 
 /**
+ * Group search path, used by Group::isMember
+ */
+class GroupSearchPath
+{
+private:
+   size_t m_size;
+   uint32_t m_buffer[256];
+   std::vector<uint32_t> *m_extendedBuffer;
+
+public:
+   GroupSearchPath()
+   {
+      m_size = 0;
+      m_extendedBuffer = nullptr;
+   }
+   ~GroupSearchPath()
+   {
+      delete m_extendedBuffer;
+   }
+
+   /**
+    * Add group ID to the search path
+    */
+   void add(uint32_t id)
+   {
+      if (m_size < sizeof(m_buffer) / sizeof(uint32_t))
+      {
+         m_buffer[m_size++] = id;
+      }
+      else
+      {
+         if (m_extendedBuffer == nullptr)
+            m_extendedBuffer = new std::vector<uint32_t>(m_buffer, m_buffer + m_size);
+         m_extendedBuffer->push_back(id);
+         m_size++;
+      }
+   }
+
+   /**
+    * Clear search path
+    */
+   void clear()
+   {
+      m_size = 0;
+      if (m_extendedBuffer != nullptr)
+         m_extendedBuffer->clear();
+   }
+
+   /**
+    * Check if given element is part of search path
+    */
+   bool contains(uint32_t id)
+   {
+      if (m_extendedBuffer != nullptr)
+      {
+         for(size_t i = 0; i < m_size; i++)
+            if (m_extendedBuffer->at(i) == id)
+               return true;
+      }
+      else
+      {
+         for(size_t i = 0; i < m_size; i++)
+            if (m_buffer[i] == id)
+               return true;
+      }
+      return false;
+   }
+};
+
+/**
  * Group object
  */
 class NXCORE_EXPORTABLE Group : public UserDatabaseObject
@@ -447,7 +517,7 @@ public:
 
    void addUser(uint32_t userId);
    void deleteUser(uint32_t userId);
-   bool isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath = nullptr) const;
+   bool isMember(uint32_t userId, GroupSearchPath *searchPath = nullptr) const;
    const IntegerArray<uint32_t>& getMembers() const { return m_members; }
    int getMemberCount() const { return m_members.size(); }
 
@@ -483,6 +553,7 @@ void NXCORE_EXPORTABLE EnumerateUserDbObjectAttributes(uint32_t id, EnumerationC
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
 uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
+uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id);
 bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
@@ -496,10 +567,12 @@ unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
 shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor,
-   AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr);
+   AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr, uint32_t maxLifetime = 0);
 void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
 uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId = 0);
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr, uint32_t validFor = 0);
+void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId);
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr,
+   uint32_t validFor = 0, time_t *expiresAt = nullptr, time_t *maxExpiresAt = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
 
 unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId);

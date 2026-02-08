@@ -44,7 +44,7 @@ static StringMap *s_data = new StringMap;
  */
 static int s_optVerbose = 1;
 static uint32_t s_optObjectId = 0;
-static time_t s_timestamp = 0;
+static Timestamp s_timestamp = Timestamp::fromMilliseconds(0);
 static bool s_localCache = false;
 static bool s_statsiteFormat = false;
 
@@ -156,11 +156,10 @@ static bool Startup()
  */
 static bool Send()
 {
-	NXCPMessage msg;
-	msg.setCode(CMD_PUSH_DCI_DATA);
+	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0);
    msg.setField(VID_OBJECT_ID, s_optObjectId);
    msg.setField(VID_LOCAL_CACHE, s_localCache);
-   msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);
+   msg.setField(VID_TIMESTAMP_MS, s_timestamp);
    s_data->fillMessage(&msg, VID_PUSH_DCI_DATA_BASE, VID_NUM_ITEMS);
 
 	// Send message to pipe
@@ -211,7 +210,7 @@ static void usage(char *argv0)
 {
 	_tprintf(
 _T("NetXMS Agent PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2025 Raden Solutions\n\n")
+_T("Copyright (c) 2006-2026 Raden Solutions\n\n")
 _T("Usage: %hs [OPTIONS] [@batch_file] [values]\n")
 _T("       %hs [OPTIONS] -\n")
 _T("  \n")
@@ -300,10 +299,10 @@ int main(int argc, char *argv[])
             s_statsiteFormat = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = (time_t)strtoull(optarg, nullptr, 0);
+			   s_timestamp = Timestamp::fromTime((time_t)strtoull(optarg, nullptr, 0));
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
-			   s_timestamp = ParseDateTimeA(optarg, 0);
+			   s_timestamp = Timestamp::fromTime(ParseDateTimeA(optarg, 0));
 			   break;
 		   case 'v': // verbose
 			   s_optVerbose++;

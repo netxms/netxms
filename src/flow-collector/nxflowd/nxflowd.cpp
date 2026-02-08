@@ -228,7 +228,7 @@ void Main()
 
 static TCHAR s_helpText[] =
    _T("NetXMS NetFlow/IPFIX Collector  Version ") NETXMS_VERSION_STRING _T("\n")
-   _T("Copyright (c) 2009-2025 Raden Solutions\n\n")
+   _T("Copyright (c) 2009-2026 Raden Solutions\n\n")
    _T("Usage:\n")
    _T("   nxflowd [options]\n\n")
    _T("Where valid options are:\n")

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,46 +27,26 @@
  */
 void UnlockDatabase()
 {
-   TCHAR lockStatus[MAX_DB_STRING], lockInfo[MAX_DB_STRING];
-   bool locked = false;
-
    // Check if database is locked
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != nullptr)
+   wchar_t lockStatus[MAX_DB_STRING];
+   DBMgrConfigReadStr(L"DBLockStatus", lockStatus, MAX_DB_STRING, L"ERROR");
+   int32_t lockFlag = DBMgrConfigReadInt32(L"DBLockFlag", 0);
+   if ((wcscmp(lockStatus, L"UNLOCKED") != 0) || (lockFlag != 0))
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, lockStatus, MAX_DB_STRING);
-         locked = (_tcscmp(lockStatus, _T("UNLOCKED")) != 0);
-      }
-      DBFreeResult(hResult);
-
-      if (locked)
-      {
-         hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-         if (hResult != nullptr)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               DBGetField(hResult, 0, 0, lockInfo, MAX_DB_STRING);
-            }
-            DBFreeResult(hResult);
-         }
-      }
-   }
-
-   if (locked)
-   {
+      wchar_t lockInfo[MAX_DB_STRING];
+      DBMgrConfigReadStr(_T("DBLockInfo"), lockInfo, MAX_DB_STRING, L"<error>");
       if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), lockStatus, lockInfo))
       {
-         if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
+         if (SQLQuery(L"UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'") &&
+             SQLQuery(L"UPDATE config SET var_value='' where var_name='DBLockInfo'") &&
+             SQLQuery(L"UPDATE config SET var_value='0' where var_name='DBLockFlag'"))
          {
-            _tprintf(_T("Database lock removed\n"));
+            WriteToTerminal(L"Database lock removed\n");
          }
       }
    }
    else
    {
-      _tprintf(_T("Database is not locked\n"));
+      WriteToTerminal(L"Database is not locked\n");
    }
 }

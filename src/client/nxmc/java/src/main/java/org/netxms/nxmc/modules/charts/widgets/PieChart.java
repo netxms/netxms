@@ -30,8 +30,9 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -221,8 +222,8 @@ public class PieChart extends GenericComparisonChart
 
       if (chart.getConfiguration().isShowTotal())
       {
-         String v = new DataFormatter(items.get(0).getDisplayFormat(), series.get(0).getDataType(), items.get(0).measurementUnit).format(Double.toString(total),
-               DateFormatFactory.getTimeFormatter());
+         String v = series.get(0).getDataFormatter().setFormatString(items.get(0).getDisplayFormat()).format(Double.toString(total),
+               DateFormatFactory.getTimeFormatter()); 
          int innerBoxSize = boxSize - boxSize / 6;
          gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, "00000000", innerBoxSize, innerBoxSize));
          Point ext = gc.textExtent(v);
@@ -278,9 +279,13 @@ public class PieChart extends GenericComparisonChart
                StringBuilder sb = new StringBuilder();
                sb.append(item.getLabel());
                sb.append("\n");
-               String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.measurementUnit).format(s.getCurrentValueAsString(),
-                     DateFormatFactory.getTimeFormatter());
+               DataFormatter df = s.getDataFormatter().setFormatString(chart.getItem(i).getDisplayFormat());
+               String v = df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
                sb.append(v);
+               sb.append(" (");
+               df.setUseMultipliers(DciValue.MULTIPLIERS_NO);
+               sb.append(df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter()));
+               sb.append(")");
                sb.append(", ");
                int pct = (int)(s.getCurrentValue() / total * 100.0);
                sb.append(Integer.toString(pct));

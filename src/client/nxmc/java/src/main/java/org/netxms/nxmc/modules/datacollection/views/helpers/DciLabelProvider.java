@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -53,9 +54,9 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 
 	private NXCSession session;
 	private Image statusImages[];
-   private HashMap<DataOrigin, String> originTexts = new HashMap<DataOrigin, String>();
-	private HashMap<Integer, String> statusTexts = new HashMap<Integer, String>();
-	
+   private HashMap<DataOrigin, String> originTexts = new HashMap<>();
+   private HashMap<DataCollectionObjectStatus, String> statusTexts = new HashMap<>();
+
 	/**
 	 * Default constructor
 	 */
@@ -64,9 +65,9 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 		session = Registry.getSession();
 
 		statusImages = new Image[3];
-		statusImages[DataCollectionItem.ACTIVE] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage(); //$NON-NLS-1$
-		statusImages[DataCollectionItem.DISABLED] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage(); //$NON-NLS-1$
-		statusImages[DataCollectionItem.NOT_SUPPORTED] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
+      statusImages[DataCollectionObjectStatus.ACTIVE.getValue()] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage(); //$NON-NLS-1$
+      statusImages[DataCollectionObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage(); //$NON-NLS-1$
+      statusImages[DataCollectionObjectStatus.UNSUPPORTED.getValue()] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
 
       originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
       originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
@@ -81,11 +82,11 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
       originTexts.put(DataOrigin.WEB_SERVICE, i18n.tr("Web Service"));
       originTexts.put(DataOrigin.WINPERF, i18n.tr("Windows Performance Counters"));
 
-		statusTexts.put(DataCollectionItem.ACTIVE, i18n.tr("Active"));
-		statusTexts.put(DataCollectionItem.DISABLED, i18n.tr("Disabled"));
-		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, i18n.tr("Not supported"));
+      statusTexts.put(DataCollectionObjectStatus.ACTIVE, i18n.tr("Active"));
+      statusTexts.put(DataCollectionObjectStatus.DISABLED, i18n.tr("Disabled"));
+      statusTexts.put(DataCollectionObjectStatus.UNSUPPORTED, i18n.tr("Not supported"));
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -94,8 +95,8 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 	{
 		if (columnIndex != 0)
 			return null;
-		int status = ((DataCollectionObject)element).getStatus();
-		return ((status >= 0) && (status < statusImages.length)) ? statusImages[status] : null;
+      DataCollectionObjectStatus status = ((DataCollectionObject)element).getStatus();
+      return statusImages[status.getValue()];
 	}
 
    /**

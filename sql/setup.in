@@ -60,6 +60,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.DefaultConsoleShortTimeFormat','HH:mm','HH:mm',1,0,'S','Default short time display format for GUI.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.DefaultConsoleTimeFormat','HH:mm:ss','HH:mm:ss',1,0,'S','Default long time display format for GUI.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.DefaultLineChartPeriod','60','60',1,0,'I','Default period (in minutes) to display collected data for when opening ad-hoc line chart.','minutes');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.EnableWelcomePage','1','1',1,0,'B','Enable or disable welcome page in client application (shown when server is upgraded to new version and contains release notes).','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.FirstPacketTimeout','2000','2000',1,0,'I','Timeout for receiving first packet from client after establishing TCP connection.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.InactivityTimeout','0','0',1,0,'I','User inactivity timeout in seconds. Client will disconnect if no user activity detected within given time interval. Value of 0 disables inactivity timeout.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.KeepAliveInterval','60','60',1,1,'I','Interval in seconds between sending keep alive packets to connected clients.','seconds');
@@ -179,6 +180,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.UseFQDNForNodeNames','1','1',1,1,'B','Enable/disable the use of fully qualified domain names as primary names for newly discovered nodes.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.UseSNMPTraps','0','0',1,1,'B','Use SNMP trap information for new node discovery.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.UseSyslog','0','0',1,1,'B','Use syslog messages for new node discovery.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NotificationChannels.MaxQueueSize','500','500',1,0,'I','Maximum size of notification channel queue. When exceeded, new messages are dropped and event is generated. Set to 0 for unlimited.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NotificationChannels.MaxRetryCount','30','30',1,0,'I','Maximum count of retries to send a message for all notification channels.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NotificationLog.RetentionTime','90','90',1,0,'I','Retention time in days for the records in notification log. All records older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.EnableContainerFunctions','1','1',1,0,'B','Enable/disable server-side NXSL functions for containers (such as CreateContainer, BindObject, etc.).','');
@@ -257,6 +259,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.JDBC.Properties','','',1,0,'S','Additional properties for JDBC connector on reporting server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.Hostname','127.0.0.1','127.0.0.1',1,1,'S','The hostname of the reporting server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.Port','4710','4710',1,1,'I','The port of the reporting server.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ReportingServer.ResultsRetentionTime','90','90',1,1,'I','The retention time for report execution results.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Scheduler.TaskRetentionTime','86400','86400',1,0,'I','Retention time for completed non-recurrent scheduled tasks. Such tasks will be deleted automatically after given number of seconds since completion time.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.AllowedCiphers','63','63',1,1,'I','A bitmask for encryption algorithms allowed in the server (sum the values to allow multiple algorithms at once): 1 = AES256, 2 = Blowfish-256, 4 = IDEA, 8 = 3DES, 16 = AES128, 32 = Blowfish-128)','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Color','','',1,0,'H','Identification color for this server','');
@@ -312,6 +315,8 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.RetentionTime','90','90',1,0,'I','Retention time in days for stored syslog messages. All messages older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.BaseSize','32','32',1,1,'I','Base size for agent connector thread pool','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.MaxSize','256','256',1,1,'I','Maximum size for agent connector thread pool','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AITasks.BaseSize','4','4',1,1,'I','Base size for AI tasks thread pool.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AITasks.MaxSize','16','16',1,1,'I','Maximum size for AI tasks thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.DataCollector.BaseSize','10','10',1,1,'I','Base size for data collector thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.DataCollector.MaxSize','250','250',1,1,'I','Maximum size for data collector thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Discovery.BaseSize','8','8',1,1,'I','Base size for network discovery thread pool.','');
@@ -330,11 +335,14 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description,units) VALUES ('Topology.AdHocRequest.IncludePhysicalLinks','0','0',1,0,'Y','B','If set to true, physical links will be added to ad-hoc L2 maps.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Topology.DefaultDiscoveryRadius','5','5',1,0,'I','Default number of hops from seed node to be added to topology map.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Topology.PollingInterval','1800','1800',1,0,'I','Interval in seconds between topology polls.','seconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Topology.RoutingTableUpdateInterval','300','300',1,0,'I','Interval in seconds between reading routing table from node.','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Topology.RoutingTable.MaxSize','4000','4000',1,0,'I','Maximum retrievable routing table size. Larger routing tables will not be retrieved from devices.','records');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Topology.RoutingTable.UpdateInterval','300','300',1,0,'I','Interval in seconds between reading routing table from node.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description,units) VALUES ('UserAgent.DefaultMessageRetentionTime','10080','10080',1,0,'Y','I','Default user agent message retention time (in minutes).','minutes');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('UserAgent.RetentionTime','30','30',1,0,'I','User agent message historical data retention time (in days).','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('WindowsEvents.EnableStorage','1','1',1,0,'B','Enable/disable local storage of received Windows events in NetXMS database.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('WindowsEvents.LogRetentionTime','90','90',1,0,'I','Retention time in days for records in Windows event log. All records older than specified will be deleted by housekeeping process.','days');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('WebAPI.AuthTokenMaxLifetime','86400','86400',1,0,'I','Maximum absolute lifetime for WebAPI authentication tokens in seconds. Tokens cannot be refreshed beyond this time from initial issuance. Set to 0 to disable (allow unlimited refresh).','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('WebAPI.AuthTokenWarningThreshold','3600','3600',1,0,'I','Time in seconds before token maximum expiration when warning headers (X-Token-Expires-In, X-Token-Refresh-Recommended) are sent to clients. Set to 0 to disable warning headers.','seconds');
 
 /*
 ** Config possible values
@@ -488,13 +496,13 @@ INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description
 
 INSERT INTO user_group_members (group_id,user_id) VALUES (1073741825,1);
 
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,2097151);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,2097151);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,67108863);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,67108863);
 
 /*
 ** Default community string
@@ -504,7 +512,7 @@ INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
 /*
 **Notification channels
 */
-INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES
    (
       'SMTP-Text','SMTP','Default SMTP text channel',
       '#Server=localhost' CONCAT CRLF CONCAT
@@ -517,7 +525,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#FromName=NetXMS Server' CONCAT CRLF CONCAT
       '#IsHTML=no' CONCAT CRLF
    );
-INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
+INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES
    (
       'SMTP-HTML','SMTP','Default SMTP HTML channel',
       '#Server=localhost' CONCAT CRLF CONCAT
@@ -530,4 +538,3 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#FromName=NetXMS Server' CONCAT CRLF CONCAT
       '#IsHTML=yes' CONCAT CRLF
    );
-

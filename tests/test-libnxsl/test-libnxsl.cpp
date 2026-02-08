@@ -164,6 +164,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("addr.nxsl"));
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));
+   RunTestScript(_T("bitops.nxsl"));
    RunTestScript(_T("boolean.nxsl"));
    RunTestScript(_T("bytestream.nxsl"));
    RunTestScript(_T("control.nxsl"));

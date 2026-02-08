@@ -401,7 +401,7 @@ json_t *Table::toGrafanaJson() const
 #endif
          if (tableColumn->getDataType() != DCI_DT_STRING)
          {
-            String formattedValue = FormatDCIValue(tableColumn->getUnitName(), m_data.get(i)->getValue(j));
+            String formattedValue = FormatDCIValue(tableColumn->getUnitName(), m_data.get(i)->getValue(j), tableColumn->getUseMultiplier());
             json_object_set_new(row, name, json_string_t(formattedValue));
          }
          else
@@ -421,15 +421,25 @@ json_t *Table::toGrafanaJson() const
 TCHAR *Table::toXML() const
 {
    StringBuffer xml;
-   xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
-                              (const TCHAR *)EscapeStringForXML2(m_title, -1));
-   xml.append(_T("<columns>\r\n"));
+   xml.append(_T("<table extendedFormat=\""));
+   xml.append(m_extendedFormat ? _T("true") : _T("false"));
+   xml.append(_T("\" source=\""));
+   xml.append(m_source);
+   xml.append(_T("\" name=\""));
+   xml.append(EscapeStringForXML2(m_title));
+   xml.append(_T("\">\r\n<columns>\r\n"));
    for(int i = 0; i < m_columns.size(); i++)
    {
-      xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
-                  (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getName(), -1),
-                  (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getDisplayName(), -1),
-                  m_columns.get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns.get(i)->getDataType());
+      TableColumnDefinition *column = m_columns.get(i);
+      xml.append(_T("<column name=\""));
+      xml.append(EscapeStringForXML2(column->getName()));
+      xml.append(_T("\" displayName=\""));
+      xml.append(EscapeStringForXML2(column->getDisplayName()));
+      xml.append(_T("\" isInstance=\""));
+      xml.append(column->isInstanceColumn() ? _T("true") : _T("false"));
+      xml.append(_T("\" dataType=\""));
+      xml.append(column->getDataType());
+      xml.append(_T("\"/>\r\n"));
    }
    xml.append(_T("</columns>\r\n"));
    xml.append(_T("<data>\r\n"));
@@ -439,17 +449,27 @@ TCHAR *Table::toXML() const
       int baseRow = m_data.get(i)->getBaseRow();
       if (objectId != DEFAULT_OBJECT_ID)
       {
+         xml.append(_T("<tr objectId=\""));
+         xml.append(objectId);
          if (baseRow != -1)
-            xml.appendFormattedString(_T("<tr objectId=\"%u\" baseRow=\"%d\">\r\n"), objectId, baseRow);
-         else
-            xml.appendFormattedString(_T("<tr objectId=\"%u\">\r\n"), objectId);
+         {
+            xml.append(_T("\" baseRow=\""));
+            xml.append(baseRow);
+         }
+         xml.append(_T("\">\r\n"));
       }
       else
       {
          if (baseRow != -1)
-            xml.appendFormattedString(_T("<tr baseRow=\"%d\">\r\n"), baseRow);
+         {
+            xml.append(_T("<tr baseRow=\""));
+            xml.append(baseRow);
+            xml.append(_T("\">\r\n"));
+         }
          else
+         {
             xml.append(_T("<tr>\r\n"));
+         }
       }
       for(int j = 0; j < m_columns.size(); j++)
       {
@@ -464,7 +484,7 @@ TCHAR *Table::toXML() const
          {
             xml.append(_T("<td>"));
          }
-         xml.append((const TCHAR *)EscapeStringForXML2(m_data.get(i)->getValue(j), -1));
+         xml.append(EscapeStringForXML2(m_data.get(i)->getValue(j)));
          xml.append(_T("</td>\r\n"));
       }
       xml.append(_T("</tr>\r\n"));
@@ -763,6 +783,28 @@ int Table::addColumn(const TableColumnDefinition& d)
    for(int i = 0; i < m_data.size(); i++)
       m_data.get(i)->addColumn();
    return m_columns.size() - 1;
+}
+
+/**
+ * Add new column
+ */
+void Table::insertColumn(int index, const TCHAR *name, int32_t dataType, const TCHAR *displayName, bool isInstance)
+{
+   m_columns.insert(index, new TableColumnDefinition(name, displayName, dataType, isInstance));
+   for(int i = 0; i < m_data.size(); i++)
+      m_data.get(i)->insertColumn(index);
+}
+
+/**
+ * Swap two columns
+ */
+void Table::swapColumns(int column1, int column2)
+{
+   m_columns.swap(column1, column2);
+   for(int i = 0; i < m_data.size(); i++)
+   {
+      m_data.get(i)->swapColumns(column1, column2);
+   }
 }
 
 /**
@@ -1291,6 +1333,7 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
    m_instanceColumn = isInstance;
    m_unitName[0] = 0;
    m_multiplier = 0;
+   m_useMultiplier = 0;
 }
 
 /**
@@ -1306,6 +1349,7 @@ TableColumnDefinition::TableColumnDefinition(const NXCPMessage& msg, uint32_t ba
    m_instanceColumn = msg.getFieldAsBoolean(baseId + 3);
    m_unitName[0] = 0;
    m_multiplier = 0;
+   m_useMultiplier = 0;
 }
 
 /**
@@ -1319,6 +1363,7 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 3, m_instanceColumn);
    msg->setField(baseId + 4, m_unitName);
    msg->setField(baseId + 5, m_multiplier);
+   msg->setField(baseId + 6, m_useMultiplier);
 }
 
 /**
@@ -1333,6 +1378,7 @@ json_t *TableColumnDefinition::toJson() const
    json_object_set_new(json, "instanceColumn", json_boolean(m_instanceColumn));
    json_object_set_new(json, "unitName", json_string_t(m_unitName));
    json_object_set_new(json, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(json, "useMultiplier", json_integer(m_useMultiplier));
    return json;
 }
 

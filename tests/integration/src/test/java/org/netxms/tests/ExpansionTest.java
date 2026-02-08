@@ -130,7 +130,7 @@ public class ExpansionTest extends AbstractSessionTest
       stringsToExpand.add("%%%a%A");// 0
       stringsToExpand.add("%g%I"); // 1
       stringsToExpand.add("%K%n%U");// 2
-      stringsToExpand.add("%(Key1)%(Key2)");// 3
+      stringsToExpand.add("%(in:Key1)%(in:Key2)");// 3
       stringsToExpand.add("%c%i");// 4
       stringsToExpand.add("%N%v");// 5
       stringsToExpand.add("%z%Z");// 6

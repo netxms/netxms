@@ -27,7 +27,7 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <sys/var.h>
-#include "libperfstat_compat.h"
+#include <libperfstat.h>
 #include <pwd.h>
 #include <sys/procfs.h>
 
@@ -193,7 +193,9 @@ enum
 	IF_INFO_PACKETS_IN,
 	IF_INFO_PACKETS_OUT,
 	IF_INFO_SPEED,
-	IF_INFO_MTU
+	IF_INFO_MTU,
+	IF_INFO_IN_DROPS,
+	IF_INFO_OUT_DROPS
 };
 
 /**

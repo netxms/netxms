@@ -25,7 +25,7 @@
 
 #define DEBUG_TAG _T("userdb")
 
-bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, IntegerArray<uint32_t> *searchPath);
+bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, GroupSearchPath *searchPath);
 
 /**
  * Compare user IDs (for qsort)
@@ -736,6 +736,9 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
 
    if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM auth_tokens WHERE user_id=?"));
+
+   if (success)
       DBCommit(hdb);
    else
       DBRollback(hdb);
@@ -1261,7 +1264,7 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Check if given user is a member
  */
-bool Group::isMember(uint32_t userId, IntegerArray<uint32_t> *searchPath) const
+bool Group::isMember(uint32_t userId, GroupSearchPath *searchPath) const
 {
    if (m_id == GROUP_EVERYONE)
       return true;

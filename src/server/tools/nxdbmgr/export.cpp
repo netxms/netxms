@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -278,34 +278,34 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
 /**
  * Process performance data read from idata or tdata table
  */
-static bool ProcessPerfData(DB_UNBUFFERED_RESULT hResult, sqlite3 *db, const TCHAR *name, bool tdata)
+static bool ProcessPerfData(DB_UNBUFFERED_RESULT hResult, sqlite3 *db, const wchar_t *name, bool tdata)
 {
    bool success = true;
    StringBuffer query;
-   TCHAR id[64], ts[64];
+   wchar_t id[64], ts[64];
    while(DBFetch(hResult))
    {
-      query = _T("INSERT INTO ");
+      query = L"INSERT INTO ";
       query.append(name);
-      query.append(tdata ? _T(" (item_id,tdata_timestamp,tdata_value) VALUES (") : _T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
+      query.append(tdata ? L" (item_id,tdata_timestamp,tdata_value) VALUES (" : L" (item_id,idata_timestamp,idata_value,raw_value) VALUES (");
       query.append(DBGetField(hResult, 0, id, 64));
-      query.append(_T(","));
+      query.append(L",");
       query.append(DBGetField(hResult, 1, ts, 64));
-      query.append(_T(",'"));
+      query.append(L",'");
       query.appendPreallocated(EscapeString(DBGetField(hResult, 2, nullptr, 0)));
       if (!tdata)
       {
-         query.append(_T("','"));
+         query.append(L"','");
          query.appendPreallocated(EscapeString(DBGetField(hResult, 3, nullptr, 0)));
       }
-      query.append(_T("')"));
+      query.append(L"')");
 
       char *utf8query = query.getUTF8String();
       char *errmsg;
       if (sqlite3_exec(db, utf8query, nullptr, nullptr, &errmsg) != SQLITE_OK)
       {
          MemFree(utf8query);
-         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
+         WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m SQLite query failed: %hs\n   Query: %s\n", errmsg, query.cstr());
          sqlite3_free(errmsg);
          success = false;
          break;
@@ -318,14 +318,14 @@ static bool ProcessPerfData(DB_UNBUFFERED_RESULT hResult, sqlite3 *db, const TCH
 /**
  * Export performance data from single table to per-node tables
  */
-static bool ExportPerfDataTable(sqlite3 *db, const TCHAR *name, bool tdata, uint32_t objectId)
+static bool ExportPerfDataTable(sqlite3 *db, const wchar_t *name, bool tdata, uint32_t objectId)
 {
-   _tprintf(_T("Exporting table %s\n"), name);
+   WriteToTerminalEx(L"Exporting table %s\n", name);
 
    char *errmsg;
    if (sqlite3_exec(db, "BEGIN", nullptr, nullptr, &errmsg) != SQLITE_OK)
    {
-      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot start transaction: %hs"), errmsg);
+      WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Cannot start transaction: %hs", errmsg);
       sqlite3_free(errmsg);
       return false;
    }
@@ -333,17 +333,17 @@ static bool ExportPerfDataTable(sqlite3 *db, const TCHAR *name, bool tdata, uint
    bool success = true;
    if (g_dbSyntax == DB_SYNTAX_TSDB)
    {
-      static const TCHAR *storageClass[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+      static const wchar_t *storageClass[] = { L"default", L"7", L"30", L"90", L"180", L"other" };
       for(int i = 0; i < 6; i++)
       {
-         TCHAR query[256];
+         wchar_t query[256];
          if (tdata)
          {
-            _sntprintf(query, 256, _T("SELECT item_id,date_part('epoch',tdata_timestamp)::int,tdata_value FROM tdata_sc_%s WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)"), storageClass[i], objectId);
+            nx_swprintf(query, 256, L"SELECT item_id,timestamptz_to_ms(tdata_timestamp),tdata_value FROM tdata_sc_%s WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)", storageClass[i], objectId);
          }
          else
          {
-            _sntprintf(query, 256, _T("SELECT item_id,date_part('epoch',idata_timestamp)::int,idata_value,raw_value FROM idata_sc_%s WHERE item_id IN (SELECT item_id FROM items WHERE node_id=%u)"), storageClass[i], objectId);
+            nx_swprintf(query, 256, L"SELECT item_id,timestamptz_to_ms(idata_timestamp),idata_value,raw_value FROM idata_sc_%s WHERE item_id IN (SELECT item_id FROM items WHERE node_id=%u)", storageClass[i], objectId);
          }
 
          DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
@@ -467,8 +467,8 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 
       if (!g_skipDataMigration)
       {
-         TCHAR idataTable[128];
-         _sntprintf(idataTable, 128, _T("idata_%d"), id);
+         wchar_t idataTable[128];
+         nx_swprintf(idataTable, 128, L"idata_%d", id);
          if (!excludedTables.contains(idataTable))
          {
             if (singleTable)
@@ -484,10 +484,10 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
          }
          else
          {
-            _tprintf(_T("Skipping table %s\n"), idataTable);
+            WriteToTerminalEx(L"Skipping table %s\n", idataTable);
          }
 
-         _sntprintf(idataTable, 128, _T("tdata_%d"), id);
+         nx_swprintf(idataTable, 128, L"tdata_%d", id);
          if (!excludedTables.contains(idataTable))
          {
             if (singleTable)
@@ -503,7 +503,7 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
          }
          else
          {
-            _tprintf(_T("Skipping table %s\n"), idataTable);
+            WriteToTerminalEx(L"Skipping table %s\n", idataTable);
          }
       }
    }

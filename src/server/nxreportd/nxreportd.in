@@ -1,32 +1,32 @@
 #!/bin/sh
 #
 # NetXMS reporting server startup script
-# Copyright (c) 2021-2024 Raden Solutions
+# Copyright (c) 2021-2026 Raden Solutions
 #
 
 ###############################################################################
 # Defaults
-JAVA_OPTIONS="-Djava.awt.headless=true -Xms512m -Xmx1024m"
+JAVA_OPTIONS="$JAVA_OPTIONS -Djava.awt.headless=true -Xms512m -Xmx1024m"
 
 if [ -z $NETXMS_HOME ]; then
-	NETXMS_HOME="~PREFIX~"
-	WORKSPACE="~STATEDIR~/nxreportd"
-	BINDIR="~BINDIR~"
+  NETXMS_HOME="~PREFIX~"
+  WORKSPACE="~STATEDIR~/nxreportd"
+  BINDIR="~BINDIR~"
 else
-	WORKSPACE="$NETXMS_HOME/var/lib/nxreportd"
-	BINDIR="$NETXMS_HOME/bin"
+  WORKSPACE="$NETXMS_HOME/var/lib/nxreportd"
+  BINDIR="$NETXMS_HOME/bin"
 fi
 
 ###############################################################################
 NXREPORTD_JAR_FILE=~PKGLIBDIR~/java/nxreportd-~NETXMS_JAR_VERSION~.jar
 if [ ! -r $NXREPORTD_JAR_FILE ]; then
-	NXREPORTD_JAR_FILE=$NETXMS_HOME/lib/netxms/java/nxreportd-~NETXMS_JAR_VERSION~.jar
+  NXREPORTD_JAR_FILE=$NETXMS_HOME/lib/netxms/java/nxreportd-~NETXMS_JAR_VERSION~.jar
 fi
 
 show_usage_and_exit() {
-	cat <<END
+  cat <<END
 NetXMS Reporting Server
-Copyright (c) 2021-2024 Raden Solutions
+Copyright (c) 2021-2025 Raden Solutions
 
 SYNOPSIS
 
@@ -52,61 +52,61 @@ DESCRIPTION
 
 END
 
-	exit 1
+  exit 1
 }
 
 while getopts 'dD:hl:w:' c; do
-	case $c in
-		h)
-			show_usage_and_exit
-			;;
-		d)
-			DAEMON="yes"
-			;;
-		D)
-			JAVA_OPTIONS="$JAVA_OPTIONS -D$OPTARG"
-			;;
-		l)
-			JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$OPTARG"
-			;;
-		w)
-			WORKSPACE="$OPTARG"
-			;;
-		*)
-			echo "Invalid option: $OPTARG" 1>&2
-			show_usage_and_exit
-			;;
-		:)
-			echo "Invalid option: $OPTARG requires an argument" 1>&2
-			show_usage_and_exit
-			;;
-	esac
+  case $c in
+  h)
+    show_usage_and_exit
+    ;;
+  d)
+    DAEMON="yes"
+    ;;
+  D)
+    JAVA_OPTIONS="$JAVA_OPTIONS -D$OPTARG"
+    ;;
+  l)
+    JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$OPTARG"
+    ;;
+  w)
+    WORKSPACE="$OPTARG"
+    ;;
+  *)
+    echo "Invalid option: $OPTARG" 1>&2
+    show_usage_and_exit
+    ;;
+  :)
+    echo "Invalid option: $OPTARG requires an argument" 1>&2
+    show_usage_and_exit
+    ;;
+  esac
 done
 
 JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.workspace=$WORKSPACE -Dnxreportd.bindir=$BINDIR"
 
 # Required for Oracle TNS names resolution
 if [ ! -z $TNS_ADMIN ]; then
-	JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$TNS_ADMIN"
+  JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$TNS_ADMIN"
 else
-	if [ ! -z $ORACLE_HOME ]; then
-		JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$ORACLE_HOME/network/admin"
-	fi
+  if [ ! -z $ORACLE_HOME ]; then
+    JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$ORACLE_HOME/network/admin"
+  fi
 fi
 
 if [ -x "$JAVA_HOME/bin/java" ]; then
-	JAVA="$JAVA_HOME/bin/java"
+  JAVA="$JAVA_HOME/bin/java"
 else
-	JAVA=`which java`
+  JAVA=$(which java)
 fi
 
 if [ -z $JAVA ]; then
-	echo Java executable not found. Set JAVA_HOME or PATH.
-	exit 1
+  echo Java executable not found. Set JAVA_HOME or PATH.
+  exit 1
 fi
 
 if [ "x$DAEMON" = "xyes" ]; then
-	nohup $JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE >/dev/null 2>/dev/null &
+  nohup $JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE >/dev/null 2>/dev/null &
 else
-	$JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE
+  $JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE
 fi

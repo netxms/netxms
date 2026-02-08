@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -192,14 +192,25 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
    if (node == nullptr)
       return RCC_INVALID_OBJECT_ID;
 
+   wchar_t userName[MAX_USER_NAME];
+   nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel: processing unbind request for node %s [%u] by user %s",
+            node->getName(), nodeId, ResolveUserId(userId, userName, true));
+
    if (static_cast<Node&>(*node).getTunnelId().isNull())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel: node %s [%u] does not have assigned tunnel ID", node->getName(), nodeId);
+
+      // Node still can have active tunnel if it was attached by IP address
+      shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(nodeId);
+      if (tunnel != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel(%s): shutting down existing tunnel", node->getName());
+         tunnel->shutdown();
+      }
       return RCC_SUCCESS;  // tunnel is not set
+   }
 
-   TCHAR userName[MAX_USER_NAME];
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel: processing unbind request for node %u by user %s"),
-            nodeId, ResolveUserId(userId, userName, true));
-
-   TCHAR subject[256];
+   wchar_t subject[256];
    _sntprintf(subject, 256, _T("OU=%s,CN=%s"), node->getGuid().toString().cstr(), static_cast<Node&>(*node).getTunnelId().toString().cstr());
    LogCertificateAction(REVOKE_CERTIFICATE, userId, nodeId, node->getGuid(), CERT_TYPE_AGENT,
             (static_cast<Node&>(*node).getAgentCertificateSubject() != nullptr) ? static_cast<Node&>(*node).getAgentCertificateSubject() : subject, 0);
@@ -209,7 +220,7 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(nodeId);
    if (tunnel != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel(%s): shutting down existing tunnel", node->getName());
       tunnel->shutdown();
    }
 
@@ -859,12 +870,10 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
          X509_REQ *certRequest = d2i_X509_REQ(nullptr, &certRequestData, (long)certRequestLen);
          if (certRequest != nullptr)
          {
-            char *ou = m_bindGuid.toString().getUTF8String();
-            char *cn = m_guid.toString().getUTF8String();
+            std::string ou = m_bindGuid.toString().getUTF8StdString();
+            std::string cn = m_guid.toString().getUTF8StdString();
             int32_t days = ConfigReadInt(_T("AgentTunnels.Certificates.ValidityPeriod"), 90);
-            X509 *cert = IssueCertificate(certRequest, ou, cn, days);
-            MemFree(ou);
-            MemFree(cn);
+            X509 *cert = IssueCertificate(certRequest, ou.c_str(), cn.c_str(), days);
             if (cert != nullptr)
             {
                LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);
@@ -1539,9 +1548,7 @@ retry:
       if (!dp.isEmpty())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate CRL DP: %s"), request->addr.toString().cstr(), dp.cstr());
-         char *url = dp.getUTF8String();
-         AddRemoteCRL(url, true);
-         MemFree(url);
+         AddRemoteCRL(dp.getUTF8StdString().c_str(), true);
       }
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
@@ -1678,13 +1685,13 @@ retry:
       X509_free(cert);
    }
 
-   if ((nodeId == 0) && ConfigReadBoolean(_T("AgentTunnels.BindByIPAddress"), false))
+   if ((nodeId == 0) && ConfigReadBoolean(L"AgentTunnels.BindByIPAddress", false))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Attempt to find node by IP address"), debugPrefix);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"SetupTunnel(%s): Attempt to find node by IP address", debugPrefix);
       shared_ptr<Node> node = FindNodeByIP(0, request->addr);
       if (node != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u] using IP address"),
+         nxlog_debug_tag(DEBUG_TAG, 4, L"SetupTunnel(%s): Tunnel attached to node %s [%u] using IP address",
                debugPrefix, node->getName(), node->getId());
          nodeId = node->getId();
          zoneUIN = node->getZoneUIN();

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -283,6 +283,10 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
       {
          connection->processTcpProxyData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize(), false);
       }
+      else if (msg->getCode() == CMD_SSH_CHANNEL_DATA)
+      {
+         connection->processSSHChannelData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize(), false);
+      }
       delete msg;
    }
    else if (msg->isControl())
@@ -407,6 +411,10 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             break;
          case CMD_CLOSE_TCP_PROXY:
             connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0, msg->getFieldAsBoolean(VID_ERROR_INDICATOR));
+            delete msg;
+            break;
+         case CMD_CLOSE_SSH_CHANNEL:
+            connection->processSSHChannelData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0, msg->getFieldAsBoolean(VID_ERROR_INDICATOR));
             delete msg;
             break;
          case CMD_NOTIFY:
@@ -922,6 +930,8 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
    int cMTU = data->getColumnIndex(_T("MTU"));
    int cMAC = data->getColumnIndex(_T("MAC_ADDRESS"));
    int cIPList = data->getColumnIndex(_T("IP_ADDRESSES"));
+   int cSpeed = data->getColumnIndex(_T("SPEED"));
+   int cMaxSpeed = data->getColumnIndex(_T("MAX_SPEED"));
 
    if ((cIndex == -1) || (cName == -1) || (cMAC == -1) || (cIPList == -1))
       return nullptr;
@@ -935,12 +945,16 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
          continue;
 
       auto iface = new InterfaceInfo(ifIndex);
-      _tcslcpy(iface->name, data->getAsString(i, cName, _T("")), MAX_DB_STRING);
-      _tcslcpy(iface->alias, data->getAsString(i, cAlias, _T("")), MAX_DB_STRING);
+      wcslcpy(iface->name, data->getAsString(i, cName, L""), MAX_DB_STRING);
+      wcslcpy(iface->alias, data->getAsString(i, cAlias, L""), MAX_DB_STRING);
       iface->type = data->getAsUInt(i, cType);
       if (iface->type == 0)
          iface->type = IFTYPE_OTHER;
       iface->mtu = data->getAsUInt(i, cMTU);
+      if (cSpeed != -1)
+         iface->speed = data->getAsUInt64(i, cSpeed);
+      if (cMaxSpeed != -1)
+         iface->maxSpeed = data->getAsUInt64(i, cMaxSpeed);
       StrToBin(data->getAsString(i, cMAC, _T("000000000000")), iface->macAddr, MAC_ADDR_LENGTH);
 
       StringBuffer::split(data->getAsString(i, cIPList, _T("")), _T(","), true,
@@ -1786,8 +1800,8 @@ uint32_t AgentConnection::synchronizeTime()
 /**
  * Execute command on agent
  */
-uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList &args,
-      bool withOutput, void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*), void *cbData)
+uint32_t AgentConnection::executeCommand(const wchar_t *command, const StringList &args,
+      bool withOutput, void (*outputCallback)(ActionCallbackEvent, const void*, void*), void *context, bool utf8Output)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1797,51 +1811,45 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
    request.setField(VID_RECEIVE_OUTPUT, withOutput);
    args.fillMessage(&request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
 
-   if (sendMessage(&request))
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+
+   uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
+   if (!withOutput || (rcc != ERR_SUCCESS))
+      return rcc;
+
+   outputCallback(ACE_CONNECTED, nullptr, context);    // Indicate successful start
+   bool eos = false;
+   while(!eos)
    {
-      if (withOutput)
+      NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, request.getId(), m_commandTimeout * 10);
+      if (response != nullptr)
       {
-         uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
-         if (rcc == ERR_SUCCESS)
+         eos = response->isEndOfSequence();
+         if (response->isFieldExist(VID_MESSAGE))
          {
-            outputCallback(ACE_CONNECTED, nullptr, cbData);    // Indicate successful start
-            bool eos = false;
-            while(!eos)
+            if (utf8Output)
             {
-               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, request.getId(), m_commandTimeout * 10);
-               if (response != nullptr)
-               {
-                  eos = response->isEndOfSequence();
-                  if (response->isFieldExist(VID_MESSAGE))
-                  {
-                     TCHAR line[4096];
-                     response->getFieldAsString(VID_MESSAGE, line, 4096);
-                     outputCallback(ACE_DATA, line, cbData);
-                  }
-                  delete response;
-               }
-               else
-               {
-                  return ERR_REQUEST_TIMEOUT;
-               }
+               char data[4096];
+               response->getFieldAsUtf8String(VID_MESSAGE, data, 4096);
+               outputCallback(ACE_DATA, data, context);
             }
-            outputCallback(ACE_DISCONNECTED, nullptr, cbData);
-            return ERR_SUCCESS;
+            else
+            {
+               wchar_t data[4096];
+               response->getFieldAsString(VID_MESSAGE, data, 4096);
+               outputCallback(ACE_DATA, data, context);
+            }
          }
-         else
-         {
-            return rcc;
-         }
+         delete response;
       }
       else
       {
-         return waitForRCC(request.getId(), m_commandTimeout);
+         return ERR_REQUEST_TIMEOUT;
       }
    }
-   else
-   {
-      return ERR_CONNECTION_BROKEN;
-   }
+   outputCallback(ACE_DISCONNECTED, nullptr, context);
+   return ERR_SUCCESS;
 }
 
 /**
@@ -2287,7 +2295,7 @@ uint32_t AgentConnection::checkNetworkService(uint32_t *status, const InetAddres
 /**
  * Get list of supported parameters from agent
  */
-uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
+uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList)
 {
    *paramList = nullptr;
 	*tableList = nullptr;
@@ -2317,6 +2325,16 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
             }
 				*paramList = plist;
 				debugPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
+
+		      count = response->getFieldAsUInt32(VID_NUM_ENUMS);
+		      ObjectArray<AgentListDefinition> *llist = new ObjectArray<AgentListDefinition>(count, 16, Ownership::True);
+	         for(uint32_t i = 0, fieldId = VID_ENUM_LIST_BASE; i < count; i++)
+	         {
+	            llist->add(new AgentListDefinition(*response, fieldId));
+	            fieldId += 2;
+	         }
+	         *listList = llist;
+	         debugPrintf(6, _T("AgentConnection::getSupportedLists(): %d lists received from agent"), count);
 
             count = response->getFieldAsUInt32(VID_NUM_TABLES);
             ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, Ownership::True);
@@ -2488,11 +2506,17 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
 /**
  * Get routing table from agent
  */
-shared_ptr<RoutingTable> AgentConnection::getRoutingTable()
+shared_ptr<RoutingTable> AgentConnection::getRoutingTable(size_t limit)
 {
    StringList *data;
    if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
       return nullptr;
+
+   if ((limit != 0) && (data->size() > limit))
+   {
+      delete data;
+      return nullptr;  // Routing table is too big
+   }
 
    auto routingTable = make_shared<RoutingTable>(data->size());
    for(int i = 0; i < data->size(); i++)
@@ -2636,15 +2660,29 @@ uint32_t AgentConnection::enableFileUpdates()
 }
 
 /**
+ * Set environment variables on agent
+ */
+uint32_t AgentConnection::setEnvironmentVariables(const StringMap& variables)
+{
+   NXCPMessage request(CMD_UPDATE_ENVIRONMENT, generateRequestId(), m_nProtocolVersion);
+   variables.fillMessage(&request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+   return waitForRCC(request.getId(), m_commandTimeout);
+}
+
+/**
  * Set activation token for agent component
  */
 uint32_t AgentConnection::setComponentToken(const char *component, uint32_t expirationTime, const char *secret)
 {
+   debugPrintf(5, _T("Issuing component token (component=%hs, expiration=%u)"), component, expirationTime);
+
    AgentComponentToken token;
    memset(&token, 0, sizeof(token));
    strlcpy(token.component, component, sizeof(token.component));
    time_t now = time(nullptr);
-   token.expirationTime = htonq(now + 86400); // 24 hours
+   token.expirationTime = htonq(now + expirationTime);
    token.issuingTime = htonq(now);
    SignMessage(&token, sizeof(token) - sizeof(token.hmac), reinterpret_cast<const BYTE*>(secret), strlen(secret), token.hmac);
 
@@ -3130,6 +3168,296 @@ uint32_t AgentConnection::closeTcpProxy(uint32_t channelId)
  */
 void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
+}
+
+/**
+ * Open SSH channel
+ */
+uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId)
+{
+   uint32_t requestId = generateRequestId();
+   *channelId = requestId;
+
+   NXCPMessage msg(CMD_SETUP_SSH_CHANNEL, requestId, m_nProtocolVersion);
+   msg.setField(VID_IP_ADDRESS, target);
+   msg.setField(VID_PORT, port);
+   msg.setField(VID_USER_NAME, user);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_SSH_KEY_ID, keyId);
+   msg.setField(VID_CHANNEL_ID, requestId);
+   if (terminalType != nullptr && terminalType[0] != '\0')
+      msg.setFieldFromUtf8String(VID_TERMINAL_TYPE, terminalType);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            *channelId = response->getFieldAsUInt32(VID_CHANNEL_ID);
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Send data to SSH channel
+ */
+uint32_t AgentConnection::sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size)
+{
+   // Build raw NXCP message with binary payload
+   size_t msgSize = NXCP_HEADER_SIZE + size;
+   if ((msgSize % 8) != 0)
+      msgSize += 8 - msgSize % 8;
+
+   NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
+   msg->code = htons(CMD_SSH_CHANNEL_DATA);
+   msg->id = htonl(channelId);
+   msg->flags = htons(MF_BINARY);
+   msg->numFields = htonl(static_cast<uint32_t>(size));
+   msg->size = htonl(static_cast<uint32_t>(msgSize));
+   memcpy(reinterpret_cast<BYTE*>(msg) + NXCP_HEADER_SIZE, data, size);
+
+   bool success = sendRawMessage(msg);
+   MemFree(msg);
+
+   return success ? ERR_SUCCESS : ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Close SSH channel
+ */
+uint32_t AgentConnection::closeSSHChannel(uint32_t channelId)
+{
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, requestId, m_nProtocolVersion);
+   msg.setField(VID_CHANNEL_ID, channelId);
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+
+   // Remove handler regardless of result
+   removeSSHChannelDataHandler(channelId);
+
+   return rcc;
+}
+
+/**
+ * Set SSH channel data handler
+ */
+void AgentConnection::setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler)
+{
+   m_sshChannelLock.lock();
+   m_sshChannelHandlers.add(channelId, handler);
+   m_sshChannelLock.unlock();
+}
+
+/**
+ * Remove SSH channel data handler
+ */
+void AgentConnection::removeSSHChannelDataHandler(uint32_t channelId)
+{
+   m_sshChannelLock.lock();
+   m_sshChannelHandlers.remove(channelId);
+   m_sshChannelLock.unlock();
+}
+
+/**
+ * Process data received from SSH channel
+ */
+void AgentConnection::processSSHChannelData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
+{
+   m_sshChannelLock.lock();
+   SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
+   if (handler != nullptr)
+   {
+      m_sshChannelLock.unlock();
+      handler(static_cast<const BYTE*>(data), size, errorIndicator);
+   }
+   else
+   {
+      m_sshChannelLock.unlock();
+      debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
+   }
+}
+
+/**
+ * Execute SSH command via agent's SSH subagent
+ *
+ * @param addr Target IP address
+ * @param port Target SSH port
+ * @param login SSH login
+ * @param password SSH password
+ * @param keyId SSH key ID (0 for password authentication)
+ * @param command Command to execute (UTF-8)
+ * @param output Output data stream
+ * @return agent error code
+ */
+uint32_t AgentConnection::executeSSHCommand(const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, const char *command, ByteStream *output)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_SSH_COMMAND, requestId, m_nProtocolVersion);
+   msg.setField(VID_IP_ADDRESS, addr);
+   msg.setField(VID_PORT, port);
+   msg.setField(VID_USER_NAME, login);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_SSH_KEY_ID, keyId);
+   msg.setFieldFromUtf8String(VID_COMMAND, command);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("executeSSHCommand: request timeout"));
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      size_t size;
+      const BYTE *bytes = response->getBinaryFieldPtr(VID_OUTPUT, &size);
+      output->write(bytes, size);
+   }
+   else if (rcc == ERR_UNKNOWN_COMMAND)
+   {
+      // Try fallback to action
+      StringList args;
+      wchar_t ipAddr[64];
+      args.add(addr.toString(ipAddr));
+      args.add(port);
+      args.add(login);
+      args.add(password);
+      args.addUTF8String(command);
+      args.add(keyId);
+
+      rcc = executeCommand(L"SSH.Command", args, true,
+         [] (ActionCallbackEvent e, const void *data, void *context) -> void
+         {
+            auto output = static_cast<ByteStream*>(context);
+            output->write(data, strlen(static_cast<const char*>(data)));
+         }, output, true);
+   }
+   else
+   {
+      debugPrintf(5, _T("executeSSHCommand: agent returned error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
+}
+
+/**
+ * Get AI tools schema from agent
+ */
+uint32_t AgentConnection::getAITools(char **schema)
+{
+   *schema = nullptr;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_AI_GET_TOOLS, requestId, m_nProtocolVersion);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("getAITools: request timeout"));
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      *schema = response->getFieldAsUtf8String(VID_AI_TOOL_SCHEMA);
+      if (*schema == nullptr)
+      {
+         debugPrintf(5, _T("getAITools: schema field missing in response"));
+         rcc = ERR_MALFORMED_RESPONSE;
+      }
+   }
+   else
+   {
+      debugPrintf(5, _T("getAITools: agent returned error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
+}
+
+/**
+ * Execute AI tool on agent
+ */
+uint32_t AgentConnection::executeAITool(const char *toolName, const char *jsonParams, char **jsonResult, uint32_t *executionTime)
+{
+   *jsonResult = nullptr;
+   if (executionTime != nullptr)
+      *executionTime = 0;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_AI_EXECUTE_TOOL, requestId, m_nProtocolVersion);
+   msg.setFieldFromUtf8String(VID_AI_TOOL_NAME, toolName);
+   msg.setFieldFromUtf8String(VID_AI_TOOL_INPUT, jsonParams);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+   {
+      debugPrintf(5, _T("executeAITool(%hs): request timeout"), toolName);
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (executionTime != nullptr)
+      *executionTime = response->getFieldAsUInt32(VID_AI_TOOL_EXEC_TIME);
+
+   *jsonResult = response->getFieldAsUtf8String(VID_AI_TOOL_OUTPUT);
+   if (rcc != ERR_SUCCESS)
+   {
+      debugPrintf(5, _T("executeAITool(%hs): agent returned error %u (%s)"), toolName, rcc, AgentErrorCodeToText(rcc));
+   }
+   delete response;
+   return rcc;
 }
 
 /**

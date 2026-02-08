@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,8 +199,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
               if (hResult != nullptr)
               {
                  int count = DBGetNumRows(hResult);
+                 wchar_t secret[128];
                  for(int i = 0; i < count; i++)
-                    secrets.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
+                    secrets.add(DBGetField(hResult, i, 0, secret, 128));
                  DBFreeResult(hResult);
               }
               DBFreeStatement(hStmt);
@@ -423,7 +424,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
                   ipAddrText, address->macAddr.toString(macAddrText), oldNode->getIpAddress().toString(oldIpAddrText), oldNode->getName());
 
             // we should change node's primary IP only if old IP for this MAC was also node's primary IP
-            if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
+            if (iface->hasIpAddress(oldNode->getIpAddress()))
             {
                // Try to re-read interface list using old IP address and check if node has botl old and new IPs
                bool bothAddressesFound = false;
@@ -463,7 +464,7 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
    {
       if (!CURRENT_MODULE.pfAcceptNewNode(address->ipAddr, address->zoneUIN, address->macAddr))
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.szName);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNodeStage1(%s): rejected by module %s"), ipAddrText, CURRENT_MODULE.name);
          return false;  // filtered out by module
       }
    }
@@ -725,8 +726,8 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
    // Execute filter script
    if (result && (filterFlags & DFF_EXECUTE_SCRIPT))
    {
-      TCHAR filterScript[MAX_CONFIG_VALUE];
-      ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE, _T(""));
+      TCHAR filterScript[MAX_CONFIG_VALUE_LENGTH];
+      ConfigReadStr(_T("NetworkDiscovery.Filter.Script"), filterScript, MAX_CONFIG_VALUE_LENGTH, _T(""));
       Trim(filterScript);
 
       NXSL_VM *vm = CreateServerScriptVM(filterScript, shared_ptr<NetObj>());
@@ -898,9 +899,12 @@ void CheckPotentialNode(const InetAddress& ipAddr, int32_t zoneUIN, DiscoveredAd
       return;
    }
 
-   if (IsClusterIP(zoneUIN, ipAddr))
+   uint32_t clusterId;
+   bool isResource;
+   if (IsClusterIP(zoneUIN, ipAddr, &clusterId, &isResource))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s in zone %d rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer), zoneUIN);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, L"Potential node %s in zone %d rejected (IP address is known as %s address in cluster \"%s\" [%u])",
+         ipAddr.toString(buffer), zoneUIN, isResource ? _T("resource") : _T("synchronization"), GetObjectName(clusterId, L"unknown"), clusterId);
       return;
    }
 
@@ -950,9 +954,12 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
       return;
    }
 
-   if (IsClusterIP(node->getZoneUIN(), ipAddr))
+   uint32_t clusterId;
+   bool isResource;
+   if (IsClusterIP(node->getZoneUIN(), ipAddr, &clusterId, &isResource))
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, L"Potential node %s rejected (IP address is known as %s address in cluster \"%s\" [%u])",
+         ipAddr.toString(buffer), isResource ? _T("resource") : _T("synchronization"), GetObjectName(clusterId, L"unknown"), clusterId);
       return;
    }
 
@@ -1010,9 +1017,9 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
    {
       // Check if given IP address is not configured on source interface itself
       // Some Juniper devices can report addresses from internal interfaces in ARP cache
-      if (!iface->getIpAddressList()->hasAddress(ipAddr))
+      if (!iface->hasIpAddress(ipAddr))
       {
-         const InetAddress& interfaceAddress = iface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+         InetAddress interfaceAddress = iface->findSameSubnetAddress(ipAddr);
          if (interfaceAddress.isValidUnicast())
          {
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%u] addr=%s/%d ifIndex=%u"),
@@ -1055,7 +1062,7 @@ static void CheckHostRoute(Node *node, const ROUTE *route)
    TCHAR buffer[MAX_IP_ADDR_TEXT_LEN];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), route->destination.toString(buffer), route->ifIndex);
    shared_ptr<Interface> iface = node->findInterfaceByIndex(route->ifIndex);
-   if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->destination).isValidUnicast())
+   if ((iface != nullptr) && iface->findSameSubnetAddress(route->destination).isValidUnicast())
    {
       CheckPotentialNode(node, route->destination, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
    }
@@ -1331,6 +1338,18 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId(), BooleanToString(snmpScanEnabled),
                   BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
+
+            // Filter blocked UDP ports
+            IntegerArray<uint16_t> blockedUdpPorts;
+            shared_ptr<Zone> stopListZone = FindZoneByUIN(range.getZoneUIN());
+            if (stopListZone != nullptr)
+               stopListZone->getEffectivePortStopList(nullptr, &blockedUdpPorts);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedUdpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
@@ -1351,9 +1370,23 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                   IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            ports.add(ETHERNET_IP_DEFAULT_PORT);
+
+            // Filter blocked TCP ports
+            shared_ptr<Zone> zone = FindZoneByUIN(range.getZoneUIN());
+            if (zone != nullptr)
+            {
+               IntegerArray<uint16_t> blockedTcpPorts;
+               zone->getEffectivePortStopList(&blockedTcpPorts, nullptr);
+               for (int i = ports.size() - 1; i >= 0; i--)
+               {
+                  if (blockedTcpPorts.contains(ports.get(i)))
+                     ports.remove(i);
+               }
+            }
+
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console);
-            ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, range.getZoneUIN(), proxy.get(), console);
          }
 
          from += blockSize;
@@ -1362,9 +1395,9 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
    }
    else
    {
-      TCHAR ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
-      _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)"),
+      wchar_t ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
+      nx_swprintf(rangeText, 128, L"%s - %s", IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, L"Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)",
             rangeText, BooleanToString(snmpScanEnabled), BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
       while((from <= to) && !IsShutdownInProgress())
       {
@@ -1379,6 +1412,18 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
+
+            // Filter blocked UDP ports
+            IntegerArray<uint16_t> blockedUdpPorts;
+            shared_ptr<Zone> stopListZone = FindZoneByUIN(range.getZoneUIN());
+            if (stopListZone != nullptr)
+               stopListZone->getEffectivePortStopList(nullptr, &blockedUdpPorts);
+            for (int i = ports.size() - 1; i >= 0; i--)
+            {
+               if (blockedUdpPorts.contains(ports.get(i)))
+                  ports.remove(i);
+            }
+
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
             {
@@ -1399,9 +1444,26 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting TCP check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("agent"), 0);
             ports.addAll(GetWellKnownPorts(_T("ssh"), 0));
+            ports.add(ETHERNET_IP_DEFAULT_PORT);
+
+            // Filter blocked TCP ports using default zone settings
+            if (IsZoningEnabled())
+            {
+               shared_ptr<Zone> zone = FindZoneByUIN(0); // Default zone
+               if (zone != nullptr)
+               {
+                  IntegerArray<uint16_t> blockedTcpPorts;
+                  zone->getEffectivePortStopList(&blockedTcpPorts, nullptr);
+                  for (int i = ports.size() - 1; i >= 0; i--)
+                  {
+                     if (blockedTcpPorts.contains(ports.get(i)))
+                        ports.remove(i);
+                  }
+               }
+            }
+
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
                ScanAddressRangeTCP(from, blockEndAddr, ports.get(i), callback, console, nullptr);
-            ScanAddressRangeTCP(from, blockEndAddr, ETHERNET_IP_DEFAULT_PORT, callback, console, nullptr);
          }
 
          from += blockSize;

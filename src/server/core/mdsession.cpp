@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -602,11 +602,11 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
          // If all items was checked OK, push data
          if (ok)
          {
-            time_t t = 0;
+            Timestamp t = Timestamp::fromMilliseconds(0);
             int ft = request->getFieldType(VID_TIMESTAMP);
             if (ft == NXCP_DT_INT32)
             {
-               t = (time_t)request->getFieldAsUInt32(VID_TIMESTAMP);
+               t = Timestamp::fromTime(request->getFieldAsTime(VID_TIMESTAMP));
             }
             else if ((ft == NXCP_DT_STRING) || (ft == NXCP_DT_UTF8_STRING))
             {
@@ -617,12 +617,12 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != nullptr)
                {
                   timeBuff.tm_isdst = -1;
-                  t = timegm(&timeBuff);
+                  t = Timestamp::fromTime(timegm(&timeBuff));
                }
             }
-            if (t == 0)
+            if (t.isNull())
             {
-               time(&t);
+               t = Timestamp::now();
             }
 
             for(i = 0; i < values.size(); i++)
@@ -630,7 +630,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                MobileDataPushElement *v = values.get(i);
 			      if (_tcslen(v->value) >= MAX_DCI_STRING_VALUE)
 				      v->value[MAX_DCI_STRING_VALUE - 1] = 0;
-			      device->processNewDCValue(v->dci, t, v->value, shared_ptr<Table>());
+			      device->processNewDCValue(v->dci, t, v->value, shared_ptr<Table>(), false);
 			      v->dci->setLastPollTime(t);
             }
             msg.setField(VID_RCC, RCC_SUCCESS);

@@ -155,6 +155,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.Link(*)"), H_NetIfOperStatus, nullptr, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Net.Interface.OperStatus(*)"), H_NetIfOperStatus, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.Interface.OutErrors(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_OUT_ERRORS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_IN_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_OUT_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, nullptr, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
@@ -166,7 +168,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.OutErrors64(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_OUT_ERRORS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTERRORS },
    { _T("Net.Interface.PacketsIn64(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_PACKETS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut64(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_PACKETS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
-#endif	
+   { _T("Net.Interface.InDrops64(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_IN_DROPS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops64(*)"), H_NetIfInfo, (const TCHAR *)IF_INFO_OUT_DROPS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTDROPS },
+#endif
 
    { _T("Net.IP.Forwarding"), H_NetIpForwarding, (const TCHAR *)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
    { _T("Net.IP6.Forwarding"), H_NetIpForwarding, (const TCHAR *)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },

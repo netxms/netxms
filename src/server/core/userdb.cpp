@@ -109,7 +109,7 @@ static inline void RemoveDatabaseObject(UserDatabaseObject *object)
 static uint64_t GetEffectiveSystemRights(User *user)
 {
    uint64_t systemRights = user->getSystemRights();
-   IntegerArray<uint32_t> searchPath(32, 32);
+   GroupSearchPath searchPath;
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -164,7 +164,7 @@ static String GetEffectiveUIAccessRules(User *user)
    if ((r != nullptr) && (*r != 0))
       uiAccessRules.append(r);
 
-   IntegerArray<uint32_t> searchPath(32, 32);
+   GroupSearchPath searchPath;
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -654,7 +654,7 @@ bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *s
 /**
  * Check if user is a member of specific child group
  */
-bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, IntegerArray<uint32_t> *searchPath)
+bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, GroupSearchPath *searchPath)
 {
    Group *group = static_cast<Group*>(s_userDatabase.get(groupId));
    return (group != nullptr) ? group->isMember(userId, searchPath) : false;
@@ -672,7 +672,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId)
 		return true;
 
    bool result = false;
-   IntegerArray<uint32_t> searchPath(0, 32);
+   GroupSearchPath searchPath;
 
    s_userDatabaseLock.readLock();
 
@@ -766,6 +766,20 @@ uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName)
 }
 
 /**
+ * Get user GUID by user ID. Returns null UUID if user not found.
+ */
+uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id)
+{
+   uuid result;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != nullptr)
+      result = object->getGuid();
+   s_userDatabaseLock.unlock();
+   return result;
+}
+
+/**
  * Update system-wide access rights in given session
  */
 static void UpdateGlobalAccessRightsCallback(ClientSession *session)
@@ -798,6 +812,9 @@ static void DeleteUserFromAllObjectsWrapper(void *uid)
  */
 static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked)
 {
+   if (!(id & GROUP_FLAG))
+      RevokeAuthenticationTokensForUser(id);
+
    if (alreadyLocked)
    {
       // Running DeleteUserFromAllObjects with write lock set on user database

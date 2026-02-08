@@ -18,19 +18,25 @@
  */
 package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.Route;
 import org.netxms.utilities.TestHelper;
@@ -40,7 +46,7 @@ import org.netxms.utilities.TestHelper;
  * Tests for network topology functions
  */
 public class TopologyTest extends AbstractSessionTest
-{   
+{
    public static AbstractObject findSubnet(NXCSession session) throws IOException, NXCException, InterruptedException
    {
       Node node = TestHelper.findManagementServer(session);
@@ -48,7 +54,7 @@ public class TopologyTest extends AbstractSessionTest
       session.syncObjects();
       for(AbstractObject parent : node.getParentsAsArray())
       {
-         if (parent instanceof Subnet) 
+         if ((parent instanceof Subnet) && (((Subnet)parent).getSubnetAddress() instanceof Inet4Address))
          {
             return parent;
          }
@@ -63,18 +69,18 @@ public class TopologyTest extends AbstractSessionTest
 
       AbstractNode node = (AbstractNode)TestHelper.getTopologyNode(session);
       assertNotNull(node);
-      System.out.println("parent " + TopologyTest.findSubnet(session));
+      System.out.println("parent " + TopologyTest.findSubnet(session).getObjectId());
       long[] map = session.getSubnetAddressMap(TopologyTest.findSubnet(session).getObjectId());
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
-      
+
       session.disconnect();
    }
-   
+
    @Test
    public void testLinkLayerTopology() throws Exception
    {
-      final NXCSession session = connectAndLogin();     
+      final NXCSession session = connectAndLogin();
       Node node = TestHelper.getTopologyNode(session);
       assertNotNull(node);
 
@@ -83,7 +89,7 @@ public class TopologyTest extends AbstractSessionTest
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
          System.out.println(l.toString());
-      
+
       session.disconnect();
    }
 
@@ -97,10 +103,10 @@ public class TopologyTest extends AbstractSessionTest
       List<Route> rt = session.getRoutingTable(node.getObjectId());
       for(Route r : rt)
          System.out.println(r.toString());
-      
+
       session.disconnect();
    }
-     
+
    @Test
    public void testSwitchForwardingTable() throws Exception
    {
@@ -111,7 +117,44 @@ public class TopologyTest extends AbstractSessionTest
       List<FdbEntry> fdb = session.getSwitchForwardingDatabase(node.getObjectId());
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
-      
+
       session.disconnect();
+   }
+
+   @Test
+   public void testNoDuplicateSubnets() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      AbstractObject entireNetwork = session.findObjectById(AbstractObject.NETWORK);
+      assertNotNull(entireNetwork);
+
+      boolean duplicatesFound = false;
+      for(AbstractObject child : entireNetwork.getChildrenAsArray())
+      {
+         if (child instanceof Zone)
+         {
+            Set<InetAddressEx> seenSubnets = new HashSet<>();
+            Set<AbstractObject> subnets = child.getAllChildren(AbstractObject.OBJECT_SUBNET);
+            for(AbstractObject obj : subnets)
+            {
+               Subnet subnet = (Subnet)obj;
+               InetAddressEx networkAddress = subnet.getNetworkAddress();
+               if (seenSubnets.contains(networkAddress))
+               {
+                  System.out.println("Duplicate subnet " + networkAddress + " in zone " + child.getObjectName());
+                  duplicatesFound = true;
+               }
+               else
+               {
+                  seenSubnets.add(networkAddress);
+               }
+            }
+         }
+      }
+
+      session.disconnect();
+      assertFalse(duplicatesFound, "Duplicate subnets found");
    }
 }

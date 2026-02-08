@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,14 @@ public final class UserAccessRights
 	public static final long SYSTEM_ACCESS_PERSISTENT_STORAGE      = 0x00000000010000L;
 	public static final long SYSTEM_ACCESS_SEND_NOTIFICATION       = 0x00000000020000L;
 	public static final long SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     = 0x00000000040000L;
-	public static final long SYSTEM_ACCESS_REGISTER_AGENTS         = 0x00000000080000L;
+	public static final long SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS    = 0x00000000080000L;
 	public static final long SYSTEM_ACCESS_READ_SERVER_FILES       = 0x00000000100000L;
 	public static final long SYSTEM_ACCESS_SERVER_CONSOLE          = 0x00000000200000L;
 	public static final long SYSTEM_ACCESS_MANAGE_SERVER_FILES     = 0x00000000400000L;
 	public static final long SYSTEM_ACCESS_MANAGE_MAPPING_TBLS     = 0x00000000800000L;
    public static final long SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS     = 0x00000001000000L;
    public static final long SYSTEM_ACCESS_REPORTING_SERVER        = 0x00000002000000L;
-   //public static final long SYSTEM_ACCESS_XMPP_COMMANDS         = 0x00000004000000L; reserved for future reuse
+   public static final long SYSTEM_ACCESS_MANAGE_AI_TASKS         = 0x00000004000000L;
    public static final long SYSTEM_ACCESS_MANAGE_IMAGE_LIB        = 0x00000008000000L;
    public static final long SYSTEM_ACCESS_UNLINK_ISSUES           = 0x00000010000000L;
    public static final long SYSTEM_ACCESS_VIEW_SYSLOG             = 0x00000020000000L;
@@ -75,6 +75,8 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_MANAGE_2FA_METHODS      = 0x01000000000000L;
    public static final long SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE     = 0x02000000000000L;
    public static final long SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG   = 0x04000000000000L;
+   public static final long SYSTEM_ACCESS_VIEW_WELCOME_PAGE       = 0x08000000000000L;
+   public static final long SYSTEM_ACCESS_SEARCH_NETWORK          = 0x10000000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ             = 0x00000001;
@@ -100,5 +102,7 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_CONFIGURE_AGENT  = 0x00100000; 
    public static final int OBJECT_ACCESS_EDIT_COMMENTS    = 0x00200000; 
    public static final int OBJECT_ACCESS_EDIT_RESP_USERS  = 0x00400000; 
-   public static final int OBJECT_ACCESS_DELEGATED_READ   = 0x00800000; 
+   public static final int OBJECT_ACCESS_DELEGATED_READ   = 0x00800000;
+   public static final int OBJECT_ACCESS_MANAGE_POLICIES  = 0x01000000;
+   public static final int OBJECT_ACCESS_MANAGE_INCIDENTS = 0x02000000;
 }

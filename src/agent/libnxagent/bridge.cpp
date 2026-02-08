@@ -29,7 +29,7 @@ static void (*s_fpPostEvent1)(uint32_t, const TCHAR*, time_t) = nullptr;
 static void (*s_fpPostEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&) = nullptr;
 static shared_ptr<AbstractCommSession> (*s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (*s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
-static bool (*s_fpPushData)(const TCHAR *, const TCHAR *, uint32_t, time_t) = nullptr;
+static bool (*s_fpPushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
 static void (*s_fpExecuteAction)(const TCHAR*, const StringList&) = nullptr;
@@ -47,7 +47,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, time_t),
+      bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
@@ -108,7 +108,7 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const 
 {
 	if (s_fpPushData == nullptr)
 		return FALSE;
-	return s_fpPushData(parameter, value, 0, 0);
+	return s_fpPushData(parameter, value, 0, Timestamp::fromMilliseconds(0));
 }
 
 /**
@@ -240,6 +240,6 @@ void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key)
  */
 void LIBNXAGENT_EXPORTABLE AgentSetTimer(uint32_t delay, std::function<void()> callback)
 {
-   if (s_timerThreadPool != nullptr)
+   if (s_timerThreadPool != nullptr && !IsShutdownInProgress())
       ThreadPoolScheduleRelative(s_timerThreadPool, delay, callback);
 }

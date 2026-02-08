@@ -103,6 +103,32 @@ public:
    static const uuid NULL_UUID;
 };
 
+/**
+ * Hash function for uuid to use with std::unordered_map/set
+ */
+struct uuid_hash
+{
+   size_t operator()(const uuid& u) const
+   {
+      const unsigned char *data = u.getValue();
+      size_t hash = 0;
+      for (int i = 0; i < UUID_LENGTH; i++)
+         hash = hash * 31 + data[i];
+      return hash;
+   }
+};
+
+/**
+ * Equality function for uuid to use with std::unordered_map/set
+ */
+struct uuid_equal
+{
+   bool operator()(const uuid& a, const uuid& b) const
+   {
+      return a.equals(b);
+   }
+};
+
 #endif
 
 #endif

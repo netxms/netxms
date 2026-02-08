@@ -40,7 +40,7 @@ public class LabelElement extends ElementWidget
 {
    private static final Logger logger = LoggerFactory.getLogger(LabelElement.class);
 
-	private LabelConfig config; 
+	private LabelConfig config;
 	private Label label;
 	private Font font;
 
@@ -73,7 +73,18 @@ public class LabelElement extends ElementWidget
       label.setForeground(colors.create(ColorConverter.parseColorDefinition(config.getTitleForeground())));
       getContentArea().setBackground(label.getBackground());
 
-      font = FontTools.createAdjustedFont(JFaceResources.getBannerFont(), config.getTitleFontSize());
+      String fontName = config.getTitleFontName();
+      if ((fontName != null) && !fontName.isEmpty())
+      {
+         Font systemFont = JFaceResources.getBannerFont();
+         font = FontTools.createFont(new String[] { fontName }, systemFont, config.getTitleFontSize(), systemFont.getFontData()[0].getStyle());
+         if (font == null)
+            font = FontTools.createAdjustedFont(systemFont, config.getTitleFontSize());
+      }
+      else
+      {
+         font = FontTools.createAdjustedFont(JFaceResources.getBannerFont(), config.getTitleFontSize());
+      }
       label.setFont(font);
 
 		addDisposeListener(new DisposeListener() {

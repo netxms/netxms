@@ -92,7 +92,7 @@ void PerfDataStorageDriver::shutdown()
 /**
  * Save DCI value
  */
-bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, const wchar_t *value)
+bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, Timestamp timestamp, const wchar_t *value)
 {
    return false;
 }
@@ -100,7 +100,7 @@ bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, time_t timestamp, 
 /**
  * Save table value
  */
-bool PerfDataStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value)
+bool PerfDataStorageDriver::saveDCTableValue(DCTable *dcObject, Timestamp timestamp, Table *value)
 {
    return false;
 }
@@ -116,7 +116,7 @@ DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric
 /**
  * Storage request
  */
-void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const wchar_t *value)
+void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, const wchar_t *value)
 {
    for(int i = 0; i < s_numDrivers; i++)
       s_drivers[i]->saveDCItemValue(dci, timestamp, value);
@@ -125,7 +125,7 @@ void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const wchar_t *value)
 /**
  * Storage request
  */
-void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value)
+void PerfDataStorageRequest(DCTable *dci, Timestamp timestamp, Table *value)
 {
    for(int i = 0; i < s_numDrivers; i++)
       s_drivers[i]->saveDCTableValue(dci, timestamp, value);

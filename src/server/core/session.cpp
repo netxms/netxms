@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,10 @@
 #include <netxms_maps.h>
 #include <asset_management.h>
 #include <nms_users.h>
+#include <nms_incident.h>
 #include <netxms-version.h>
+#include <nxai.h>
+#include <ai_messages.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -94,9 +97,6 @@ bool UpdateAddressListFromMessage(const NXCPMessage& msg);
 void FillComponentsMessage(NXCPMessage *msg);
 void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId);
 
-void GetPredictionEngines(NXCPMessage *msg);
-bool GetPredictedData(ClientSession *session, const NXCPMessage& request, NXCPMessage *response, const DataCollectionTarget& dcTarget);
-
 bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundTask *task);
 
 void GetAgentTunnels(NXCPMessage *msg);
@@ -118,6 +118,11 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
 uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
+
+void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
+
+void ExportSyslogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
+void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 int GetMaxAllowedNodeCount();
@@ -222,9 +227,10 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
 	wcscpy(m_clientInfo, L"n/a");
    m_userId = INVALID_INDEX;
    m_systemAccessRights = 0;
-   m_ppEPPRuleList = nullptr;
-   m_dwNumRecordsToUpload = 0;
-   m_dwRecordsUploaded = 0;
+   m_eppExpectedRuleCount = 0;
+   m_eppDeletedRules = nullptr;
+   m_eppDeletedRuleCount = 0;
+   m_eppBaseVersion = 0;
    m_refCount = 0;
    m_encryptionRqId = 0;
    m_encryptionResult = 0;
@@ -265,15 +271,8 @@ ClientSession::~ClientSession()
       closesocket(m_socket);
       debugPrintf(6, _T("Socket closed"));
    }
-   if (m_ppEPPRuleList != nullptr)
-   {
-      if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
-      {
-         for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
-            delete m_ppEPPRuleList[i];
-      }
-      MemFree(m_ppEPPRuleList);
-   }
+   // m_eppRuleList uses shared_ptr, no manual cleanup needed
+   MemFree(m_eppDeletedRules);
 
 	delete m_console;
 
@@ -305,7 +304,7 @@ bool ClientSession::start()
 /**
  * Check if file transfer is stalled and should be cancelled
  */
-EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer, 
+EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context)
 {
    if (time(nullptr) - fileTransfer->getLastUpdateTime() > 60)
@@ -532,7 +531,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
          delete msg;
       }
       else if ((msg->getCode() == CMD_LOGIN) || (msg->getCode() == CMD_2FA_PREPARE_CHALLENGE) || (msg->getCode() == CMD_2FA_VALIDATE_RESPONSE) ||
-               (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
+               (msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_GET_EPP) || (msg->getCode() == CMD_SAVE_EPP))
       {
          incRefCount();
          wchar_t key[64] = L"CLSE-";
@@ -558,7 +557,6 @@ void ClientSession::finalize()
 
    RemovePendingFileTransferRequests(this);
    RemoveFileMonitorsBySessionId(m_id);
-   RemoveAllSessionLocks(m_id);
    m_openDataCollectionConfigurations.forEach(CloseDataCollectionConfiguration, nullptr);
 
    m_scriptExecutorsLock.lock();
@@ -1131,6 +1129,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNLOCK_NODE_DCI_LIST:
          closeNodeDCIList(*request);
          break;
+      case CMD_GET_DC_OBJECT:
+         getDCObject(*request);
+         break;
       case CMD_MODIFY_NODE_DCI:
       case CMD_DELETE_NODE_DCI:
          modifyNodeDCI(*request);
@@ -1231,6 +1232,36 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNLINK_HELPDESK_ISSUE:
          unlinkHelpdeskIssue(*request);
          break;
+      case CMD_GET_INCIDENTS:
+         getIncidents(*request);
+         break;
+      case CMD_GET_INCIDENT_DETAILS:
+         getIncidentDetails(*request);
+         break;
+      case CMD_CREATE_INCIDENT:
+         createIncident(*request);
+         break;
+      case CMD_UPDATE_INCIDENT:
+         updateIncident(*request);
+         break;
+      case CMD_CHANGE_INCIDENT_STATE:
+         changeIncidentState(*request);
+         break;
+      case CMD_ASSIGN_INCIDENT:
+         assignIncident(*request);
+         break;
+      case CMD_LINK_ALARM_TO_INCIDENT:
+         linkAlarmToIncident(*request);
+         break;
+      case CMD_UNLINK_ALARM_FROM_INCIDENT:
+         unlinkAlarmFromIncident(*request);
+         break;
+      case CMD_ADD_INCIDENT_COMMENT:
+         addIncidentComment(*request);
+         break;
+      case CMD_GET_INCIDENT_ACTIVITY:
+         getIncidentActivity(*request);
+         break;
       case CMD_CREATE_ACTION:
          createAction(*request);
          break;
@@ -1245,6 +1276,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_DELETE_OBJECT:
          deleteObject(*request);
+         break;
+      case CMD_DECOMMISSION_NODE:
+         decommissionNode(*request);
          break;
       case CMD_POLL_OBJECT:
          forcedObjectPoll(*request);
@@ -1273,6 +1307,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_PARAMETER:
          queryMetric(*request);
          break;
+      case CMD_QUERY_LIST:
+         queryList(*request);
+         break;
       case CMD_QUERY_TABLE:
          queryTable(*request);
          break;
@@ -1299,6 +1336,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_PARAMETER_LIST:
          getParametersList(*request);
+         break;
+      case CMD_GET_LIST_LIST:
+         getListsList(*request);
          break;
       case CMD_GET_DATA_COLLECTION_SUMMARY:
          getDataCollectionSummary(*request);
@@ -1407,9 +1447,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_DCI_INFO:
          getDCIInfo(*request);
-         break;
-      case CMD_GET_DCI_MEASUREMENT_UNITS:
-         getDciMeasurementUnits(*request);
          break;
       case CMD_GET_DCI_THRESHOLDS:
          sendDCIThresholds(*request);
@@ -1573,6 +1610,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_LOG_RECORD_DETAILS:
          getServerLogRecordDetails(*request);
+         break;
+      case CMD_GET_LOG_QUERY_SQL:
+         getServerLogQuerySql(*request);
          break;
       case CMD_FIND_NODE_CONNECTION:
          findNodeConnection(*request);
@@ -1767,12 +1807,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNBIND_AGENT_TUNNEL:
          unbindAgentTunnel(*request);
          break;
-      case CMD_GET_PREDICTION_ENGINES:
-         getPredictionEngines(*request);
-         break;
-      case CMD_GET_PREDICTED_DATA:
-         getPredictedData(*request);
-         break;
       case CMD_EXPAND_MACROS:
          expandMacros(*request);
          break;
@@ -1829,6 +1863,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_RENAME_NOTIFICATION_CHANNEL:
          renameNotificationChannel(*request);
+         break;
+      case CMD_CLEAR_NOTIFICATION_QUEUE:
+         clearNotificationChannelQueue(*request);
          break;
       case CMD_GET_NOTIFICATION_DRIVERS:
          getNotificationDrivers(*request);
@@ -2010,20 +2047,56 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_EPP_RECORD:
          processEventProcessingPolicyRecord(*request);
          break;
-      case CMD_OPEN_EPP:
-         openEventProcessingPolicy(*request);
+      case CMD_GET_EPP:
+         getEventProcessingPolicy(*request);
          break;
       case CMD_SAVE_EPP:
          saveEventProcessingPolicy(*request);
          break;
-      case CMD_CLOSE_EPP:
-         closeEventProcessingPolicy(*request);
+      case CMD_EXPLAIN_EPP_RULE:
+         explainEventProcessingPolicyRule(*request);
          break;
       case CMD_QUERY_AI_ASSISTANT:
          queryAiAssistant(*request);
          break;
+      case CMD_CREATE_AI_ASSISTANT_CHAT:
+         createAiAssistantChat(*request);
+         break;
       case CMD_CLEAR_AI_ASSISTANT_CHAT:
          clearAiAssistantChat(*request);
+         break;
+      case CMD_DELETE_AI_ASSISTANT_CHAT:
+         deleteAiAssistantChat(*request);
+         break;
+      case CMD_REQUEST_AI_ASSISTANT_COMMENT:
+         requestAiAssistantComment(*request);
+         break;
+      case CMD_GET_AI_ASSISTANT_FUNCTIONS:
+         getAiAssistantFunctions(*request);
+         break;
+      case CMD_CALL_AI_ASSISTANT_FUNCTION:
+         callAiAssistantFunction(*request);
+         break;
+      case CMD_GET_AI_AGENT_TASKS:
+         getAiAgentTasks(*request);
+         break;
+      case CMD_DELETE_AI_AGENT_TASK:
+         deleteAiAgentTask(*request);
+         break;
+      case CMD_ADD_AI_AGENT_TASK:
+         addAiAgentTask(*request);
+         break;
+      case CMD_AI_AGENT_RESPONSE:
+         handleAiQuestionResponse(*request);
+         break;
+      case CMD_GET_AI_MESSAGES:
+         getAIMessages(*request);
+         break;
+      case CMD_SET_AI_MESSAGE_STATUS:
+         setAIMessageStatus(*request);
+         break;
+      case CMD_DELETE_AI_MESSAGE:
+         deleteAIMessage(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -2203,7 +2276,7 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
       CLIENT_PROTOCOL_VERSION_TCPPROXY,
       CLIENT_PROTOCOL_VERSION_SCHEDULER
    };
-	TCHAR szBuffer[MAX_CONFIG_VALUE];
+	wchar_t szBuffer[MAX_CONFIG_VALUE_LENGTH];
 	String strURL;
 
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
@@ -2221,20 +2294,20 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
    msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
    msg.setField(VID_TIMESTAMP, (UINT32)time(nullptr));
 
-   GetSystemTimeZone(szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
+   GetSystemTimeZone(szBuffer, sizeof(szBuffer) / sizeof(wchar_t));
    msg.setField(VID_TIMEZONE, szBuffer);
    debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE, _T("http://tile.netxms.org/osm/"));
+   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("http://tile.netxms.org/osm/"));
    msg.setField(VID_TILE_SERVER_URL, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
+   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("dd.MM.yyyy"));
    msg.setField(VID_DATE_FORMAT, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
+   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("HH:mm:ss"));
    msg.setField(VID_TIME_FORMAT, szBuffer);
 
-   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
+   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("HH:mm"));
    msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
 
    FillComponentsMessage(&msg);
@@ -2578,7 +2651,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_userId, request);
       if (rcc != RCC_SUCCESS)
       {
-         debugPrintf(4, _T("Login blocked by module %s (rcc=%u)"), CURRENT_MODULE.szName, rcc);
+         debugPrintf(4, _T("Login blocked by module %s (rcc=%u)"), CURRENT_MODULE.name, rcc);
          break;
       }
    }
@@ -2625,9 +2698,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_ZONING_ENABLED, (g_flags & AF_ENABLE_ZONING) != 0);
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
       response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);
-      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("Alarms.StrictStatusFlow"), false));
-      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("Alarms.EnableTimedAck"), false));
-      response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
+      response->setField(VID_TEMPLATE_REMOVAL_GP, ConfigReadInt(L"DataCollection.TemplateRemovalGracePeriod", 0));
+      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(L"Alarms.StrictStatusFlow", false));
+      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(L"Alarms.EnableTimedAck", false));
+      response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(L"Client.MinViewRefreshInterval", 300));
       response->setField(VID_HELPDESK_LINK_ACTIVE, (g_flags & AF_HELPDESK_LINK_ACTIVE) != 0);
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
@@ -2668,13 +2742,7 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, 1024, _T(""));
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
-      bool aiAssistantAvailable = false;
-      ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-      {
-         aiAssistantAvailable = true;
-         break;
-      }
-      response->setField(VID_AI_ASSISTANT_AVAILABLE, aiAssistantAvailable);
+      response->setField(VID_AI_ASSISTANT_AVAILABLE, IsComponentRegistered(AI_ASSISTANT_COMPONENT));
 
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
@@ -2853,7 +2921,7 @@ void ClientSession::deleteAlarmCategory(const NXCPMessage& request)
    if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
    {
       uint32_t categoryId = request.getFieldAsInt32(VID_CATEGORY_ID);
-      if (!g_pEventPolicy->isCategoryInUse(categoryId))
+      if (!GetEventProcessingPolicy()->isCategoryInUse(categoryId))
       {
          msg.setField(VID_RCC, DeleteAlarmCategory(categoryId));
       }
@@ -2988,9 +3056,9 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
 	   [baseTimeStamp, this] (NetObj *object) -> bool
 	   {
-         return !object->isHidden() && !object->isDeleted() &&
+         return !object->isUnpublished() && !object->isDeleted() &&
                 (object->getTimeStamp() >= baseTimeStamp) &&
-                object->checkAccessRights(m_userId, OBJECT_ACCESS_READ);
+                (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE));
 	   });
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -3001,7 +3069,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
          continue;
 	   }
 
-      object->fillMessage(&response, m_userId);
+      object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
       if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
          // mask passwords
@@ -3066,7 +3134,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
    for(int i = 0; i < objects.size(); i++)
 	{
 		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
-      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isHidden())
+      if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isUnpublished())
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
          {
@@ -3156,14 +3224,15 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          sendMessage(msg);
       } : std::function<void(int)>();
 
-   TCHAR *query = request.getFieldAsString(VID_QUERY);
+   wchar_t *query = request.getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
    StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
-   TCHAR errorMessage[1024];
+   wchar_t errorMessage[1024];
+   StringMap metadata;
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId,
       errorMessage, 1024, progressCallback, request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
-      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT));
+      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT), &metadata);
    if (objects != nullptr)
    {
       Buffer<uint32_t, 1024> idList(objects->size());
@@ -3176,6 +3245,7 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          fieldId += curr->values->size() * 2 + 1;
       }
       response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
+      metadata.fillMessage(&response, VID_METADATA_BASE, VID_METADATA_SIZE);
    }
    else
    {
@@ -3264,16 +3334,16 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
          int count = DBGetNumRows(hResult);
          response.setField(VID_NUM_VARIABLES, static_cast<uint32_t>(count));
          uint32_t fieldId = VID_VARLIST_BASE;
-         TCHAR buffer[MAX_CONFIG_VALUE];
+         TCHAR buffer[MAX_CONFIG_VALUE_LENGTH];
          for(int i = 0; i < count; i++, fieldId += 10)
          {
             response.setField(fieldId, DBGetField(hResult, i, 0, buffer, MAX_DB_STRING));
-            response.setField(fieldId + 1, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
-            response.setField(fieldId + 3, DBGetField(hResult, i, 3, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 4, DBGetField(hResult, i, 4, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 5, DBGetField(hResult, i, 5, buffer, MAX_CONFIG_VALUE));
-            response.setField(fieldId + 6, DBGetField(hResult, i, 6, buffer, MAX_CONFIG_VALUE));
+            response.setField(fieldId + 1, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 2, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 2)));
+            response.setField(fieldId + 3, DBGetField(hResult, i, 3, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 4, DBGetField(hResult, i, 4, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 5, DBGetField(hResult, i, 5, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 6, DBGetField(hResult, i, 6, buffer, MAX_CONFIG_VALUE_LENGTH));
          }
          DBFreeResult(hResult);
 
@@ -3285,7 +3355,7 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
             for(int i = 0; i < count; i++)
             {
                response.setField(fieldId++, DBGetField(hResult, i, 0, buffer, MAX_DB_STRING));
-               response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE));
+               response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH));
                response.setField(fieldId++, DBGetField(hResult, i, 2, buffer, MAX_DB_STRING));
             }
             DBFreeResult(hResult);
@@ -3323,7 +3393,7 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=? AND is_public='Y'"));
    if (hStmt != nullptr)
    {
-      TCHAR name[64];
+      wchar_t name[64];
       request.getFieldAsString(VID_NAME, name, 64);
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
 
@@ -3332,8 +3402,8 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            TCHAR value[MAX_CONFIG_VALUE];
-            response.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE));
+            wchar_t value[MAX_CONFIG_VALUE_LENGTH];
+            response.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE_LENGTH));
             response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -3365,19 +3435,19 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR name[MAX_OBJECT_NAME];
+   wchar_t name[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
    if (checkSystemAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      TCHAR oldValue[MAX_CONFIG_VALUE], newValue[MAX_CONFIG_VALUE];
-      request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
-      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
+      wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH], newValue[MAX_CONFIG_VALUE_LENGTH];
+      request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE_LENGTH);
+      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
       if (ConfigWriteStr(name, newValue, true))
       {
          response.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
-                                 _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
+            L"Server configuration variable \"%s\" changed from \"%s\" to \"%s\"", name, oldValue, newValue);
       }
       else
       {
@@ -3386,7 +3456,7 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting server configuration variable \"%s\"", name);
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -3406,20 +3476,29 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
       if (stmt != nullptr)
       {
          int numVars = request.getFieldAsInt32(VID_NUM_VARIABLES);
-         UINT32 fieldId = VID_VARLIST_BASE;
-         TCHAR varName[64], defValue[MAX_CONFIG_VALUE];
+         uint32_t fieldId = VID_VARLIST_BASE;
+         wchar_t varName[64], defValue[MAX_CONFIG_VALUE_LENGTH];
          for(int i = 0; i < numVars; i++)
          {
             request.getFieldAsString(fieldId++, varName, 64);
             DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 
-            DB_RESULT result = DBSelectPrepared(stmt);
-            if (result != nullptr)
+            DB_RESULT hResult = DBSelectPrepared(stmt);
+            if (hResult != nullptr)
             {
-               DBGetField(result, 0, 0, defValue, MAX_CONFIG_VALUE);
-               ConfigWriteStr(varName, defValue, false);
-               response.setField(VID_RCC, RCC_SUCCESS);
-               DBFreeResult(result);
+               DBGetField(hResult, 0, 0, defValue, MAX_CONFIG_VALUE_LENGTH);
+               DBFreeResult(hResult);
+
+               if (ConfigWriteStr(varName, defValue, false))
+               {
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, L"Server configuration variable %s reset to default value", varName);
+               }
+               else
+               {
+                  response.setField(VID_RCC, RCC_DB_FAILURE);
+                  break;
+               }
             }
             else
             {
@@ -3437,7 +3516,7 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied for setting server configuration variables to default"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied for setting server configuration variables to default");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -3611,7 +3690,9 @@ void ClientSession::sendObjectUpdates()
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
       if ((object != nullptr) && !object->isDeleted())
       {
-         object->fillMessage(&response, m_userId);
+         // Zone objects might be scheduled for update without read access - in that case send essential info only
+         // Other objects will be queued only if read access is granted
+         object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords
@@ -3686,7 +3767,7 @@ void ClientSession::sendObjectUpdates()
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 {
    if (((m_flags & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
-       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
    {
       m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications.put(object->getId());
@@ -4098,9 +4179,17 @@ void ClientSession::changeObjectMgmtStatus(const NXCPMessage& request)
 				 (object->getObjectClass() != OBJECT_TEMPLATEROOT))
 			{
 				bool managed = request.getFieldAsBoolean(VID_MGMT_STATUS);
-				object->setMgmtStatus(managed);
-				msg.setField(VID_RCC, RCC_SUCCESS);
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
+				if (object->isManagementStatusChangeAllowed(managed))
+				{
+               object->setMgmtStatus(managed);
+               msg.setField(VID_RCC, RCC_SUCCESS);
+               writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
+				}
+				else
+            {
+				   debugPrintf(4, L"Attempted to change management status of object \"%s\" [%u] to %s state, but operation is not allowed", object->getName(), object->getId(), managed ? _T("managed") : _T("unmanaged"));
+               msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
 			}
 			else
 			{
@@ -4347,6 +4436,52 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
 }
 
 /**
+ * Get information about single data collection item (do not lock DCI list)
+ */
+void ClientSession::getDCObject(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+      {
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         {
+            uint32_t itemId = request.getFieldAsUInt32(VID_DCI_ID);
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, m_userId);
+            if (dcObject != nullptr)
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               dcObject->createMessage(&response);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+            }
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on getting data collection item for object %s"), object->getName());
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Create, modify, or delete data collection item for node
  */
 void ClientSession::modifyNodeDCI(const NXCPMessage& request)
@@ -4567,7 +4702,7 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
                }
                else
                {
-                  response.setField(VID_RCC, RCC_PARTIAL_FAIL);
+                  response.setField(VID_RCC, RCC_PARTIAL_FAILURE);
                }
                response.setFieldFromInt32Array(VID_ITEM_LIST, result.get());
             }
@@ -4740,7 +4875,7 @@ void ClientSession::deleteDCIEntry(const NXCPMessage& request)
             shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_userId);
             if (dci != nullptr)
             {
-               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+               msg.setField(VID_RCC, dci->deleteEntry(request.getFieldAsTimestamp(VID_TIMESTAMP_MS)) ? RCC_SUCCESS : RCC_DB_FAILURE);
                debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
                writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
                         dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
@@ -4793,7 +4928,7 @@ void ClientSession::forceDCIPoll(const NXCPMessage& request)
 				{
 				   if (dci->hasAccess(m_userId))
 				   {
-                  dci->requestForcePoll(this);
+                  dci->requestForcePoll(m_id);
                   response.setField(VID_RCC, RCC_SUCCESS);
                   debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dciId, object->getId());
                   writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Forced DCI poll initiated for DCI \"%s\" [%u]"), dci->getDescription().cstr(), dci->getId());
@@ -5053,7 +5188,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
                      tablePrefix, condition, tablePrefix, maxRows);
             break;
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT date_part('epoch',%s_timestamp)::int,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
+            _sntprintf(query, 512, _T("SELECT timestamptz_to_ms(%s_timestamp),%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, maxRows);
             break;
@@ -5129,11 +5264,11 @@ static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession
 
    // Fill memory block with records
    int32_t rows = 0;
-   TCHAR textBuffer[MAX_DCI_STRING_VALUE];
+   wchar_t textBuffer[MAX_DCI_STRING_VALUE];
    while(DBFetch(hResult))
    {
       rows++;
-      data.writeB(DBGetFieldULong(hResult, 0));
+      data.writeB(DBGetFieldInt64(hResult, 0));
       if (dci->getType() == DCO_TYPE_ITEM)
       {
          switch(dataType)
@@ -5229,7 +5364,7 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
          Table *table = Table::createFromPackedXML(encodedTable);
          if (table != nullptr)
          {
-            msg.setField(VID_TIMESTAMP, DBGetFieldULong(hResult, 0));
+            msg.setField(VID_TIMESTAMP_MS, DBGetFieldInt64(hResult, 0));
             table->fillMessage(&msg, 0, -1);
             delete table;
             session->sendMessage(msg);
@@ -5239,7 +5374,7 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
       }
    }
 
-   msg.setField(VID_TIMESTAMP, static_cast<uint32_t>(0));   // End of data indicator
+   msg.setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));   // End of data indicator
    session->sendMessage(msg);
 }
 
@@ -5281,8 +5416,8 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 
 	// Get request parameters
 	uint32_t maxRows = request.getFieldAsUInt32(VID_MAX_ROWS);
-	uint32_t timeFrom = request.getFieldAsUInt32(VID_TIME_FROM);
-	uint32_t timeTo = request.getFieldAsUInt32(VID_TIME_TO);
+	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
+	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5314,7 +5449,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
          if (column == -1)
             goto read_from_db;
 
-         TCHAR instance[256];
+         wchar_t instance[256];
          request.getFieldAsString(VID_INSTANCE, instance, 256);
          int row = t->findRowByInstance(instance);
 
@@ -5346,7 +5481,17 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       // Send CMD_REQUEST_COMPLETED message
       response->setField(VID_RCC, RCC_SUCCESS);
       if (dciType == DCO_TYPE_ITEM)
-         static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
+      {
+         DCItem* dciItem = static_cast<DCItem*>(dci.get());
+         dciItem->fillMessageWithThresholds(response, false);
+         response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
+         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
+         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
+         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+      }
+      response->setField(VID_DCI_NAME, dci->getName());
+      response->setField(VID_DESCRIPTION, dci->getDescription());
+      response->setField(VID_POLLING_INTERVAL, dci->getEffectivePollingInterval());
       sendMessage(response);
 
       int16_t dataType;
@@ -5368,7 +5513,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       data.writeB(dataType);
       data.writeB(static_cast<uint16_t>(0));   // Options
 
-      data.writeB(static_cast<uint32_t>(dci->getLastPollTime()));
+      data.writeB(dci->getLastPollTime().asMilliseconds());
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -5408,9 +5553,9 @@ read_from_db:
 	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)
-         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=to_timestamp(?)") : _T(" AND idata_timestamp>=to_timestamp(?)"));
+         _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=ms_to_timestamptz(?)") : _T(" AND idata_timestamp>=ms_to_timestamptz(?)"));
       if (timeTo != 0)
-         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=to_timestamp(?)") : _T(" AND idata_timestamp<=to_timestamp(?)"));
+         _tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=ms_to_timestamptz(?)") : _T(" AND idata_timestamp<=ms_to_timestamptz(?)"));
 	}
 	else
 	{
@@ -5436,18 +5581,28 @@ read_from_db:
          request.getFieldAsString(VID_INSTANCE, instance, 256);
 		}
 		if (timeFrom != 0)
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
+			DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeFrom);
 		if (timeTo != 0)
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeTo);
+			DBBind(hStmt, pos++, DB_SQLTYPE_BIGINT, timeTo);
 
 		DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
 		if (hResult != nullptr)
 		{
 			// Send CMD_REQUEST_COMPLETED message
 			response->setField(VID_RCC, RCC_SUCCESS);
-			if (dciType == DCO_TYPE_ITEM)
-			   static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
-			sendMessage(response);
+	      if (dciType == DCO_TYPE_ITEM)
+	      {
+	         DCItem* dciItem = static_cast<DCItem*>(dci.get());
+	         dciItem->fillMessageWithThresholds(response, false);
+	         response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
+	         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
+	         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
+	         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+	      }
+	      response->setField(VID_DCI_NAME, dci->getName());
+	      response->setField(VID_DESCRIPTION, dci->getDescription());
+	      response->setField(VID_POLLING_INTERVAL, dci->getEffectivePollingInterval());
+	      sendMessage(response);
 
 			if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());
@@ -5791,38 +5946,24 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
 }
 
 /**
- * Open event processing policy
+ * Get event processing policy
  */
-void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
+void ClientSession::getEventProcessingPolicy(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   bool readOnly = request.getFieldAsUInt16(VID_READ_ONLY) ? true : false;
 
    bool success = false;
    if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
    {
-      TCHAR buffer[256];
-      if (!readOnly && !LockEPP(m_id, m_sessionName, nullptr, buffer))
-      {
-         response.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-         response.setField(VID_LOCKED_BY, buffer);
-      }
-      else
-      {
-         if (!readOnly)
-         {
-            InterlockedOr(&m_flags, CSF_EPP_LOCKED);
-         }
-         response.setField(VID_RCC, RCC_SUCCESS);
-         response.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
-         success = true;
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
-      }
+      EventProcessingPolicy *epp = GetEventProcessingPolicy();
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_EPP_VERSION, epp->getVersion());
+      response.setField(VID_NUM_RULES, epp->getNumRules());
+      success = true;
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
    }
    else
    {
-      // Current user has no rights for event policy management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on opening event processing policy"));
    }
@@ -5832,45 +5973,12 @@ void ClientSession::openEventProcessingPolicy(const NXCPMessage& request)
    // Send policy to client
    if (success)
    {
-      g_pEventPolicy->sendToClient(this, request.getId());
+      GetEventProcessingPolicy()->sendToClient(this, request.getId());
    }
 }
 
 /**
- * Close event processing policy
- */
-void ClientSession::closeEventProcessingPolicy(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
-   {
-      if (m_flags & CSF_EPP_LOCKED)
-      {
-         if (m_ppEPPRuleList != nullptr)
-         {
-            if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
-            {
-               for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
-                  delete m_ppEPPRuleList[i];
-            }
-            MemFreeAndNull(m_ppEPPRuleList);
-         }
-         InterlockedAnd(&m_flags, ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD));
-         UnlockEPP();
-      }
-      response.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      // Current user has no rights for event policy management
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(response);
-}
-
-/**
- * Save event processing policy
+ * Save event processing policy (optimistic concurrency)
  */
 void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 {
@@ -5878,33 +5986,159 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
-      if (m_flags & CSF_EPP_LOCKED)
+      m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
+      m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
+      m_eppRuleList.clear();
+
+      // Read deleted rules list
+      m_eppDeletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
+      if (m_eppDeletedRuleCount > 0)
       {
-         response.setField(VID_RCC, RCC_SUCCESS);
-         m_dwNumRecordsToUpload = request.getFieldAsUInt32(VID_NUM_RULES);
-         m_dwRecordsUploaded = 0;
-         if (m_dwNumRecordsToUpload == 0)
+         m_eppDeletedRules = MemAllocArray<DeletedRuleInfo>(m_eppDeletedRuleCount);
+         for (uint32_t i = 0; i < m_eppDeletedRuleCount; i++)
          {
-            g_pEventPolicy->replacePolicy(0, nullptr);
-            if (g_pEventPolicy->saveToDB())
-            {
-               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event processing policy cleared"));
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_DB_FAILURE);
-            }
+            m_eppDeletedRules[i].guid = request.getFieldAsGUID(VID_DELETED_RULE_LIST_BASE + i * 2);
+            m_eppDeletedRules[i].version = request.getFieldAsUInt32(VID_DELETED_RULE_LIST_BASE + i * 2 + 1);
          }
-         else
-         {
-            InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
-            m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
-         }
-         debugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
       }
       else
       {
-         response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         m_eppDeletedRules = nullptr;
+      }
+
+      if (m_eppExpectedRuleCount == 0)
+      {
+         // Special case: clearing policy or just deleting rules
+         finishEPPSave(request.getId());
+      }
+      else
+      {
+         InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         debugPrintf(5, _T("Accepted EPP upload request for %u rules (base version %u)"), m_eppExpectedRuleCount, m_eppBaseVersion);
+         sendMessage(response);
+      }
+   }
+   else
+   {
+      // Current user has no rights for event policy management
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
+      sendMessage(response);
+   }
+}
+
+/**
+ * Process EPP rule received from client
+ */
+void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
+{
+   if (m_flags & CSF_EPP_UPLOAD)
+   {
+      if (m_eppRuleList.size() < m_eppExpectedRuleCount)
+      {
+         m_eppRuleList.add(make_shared<EPRule>(request));
+         if (m_eppRuleList.size() == m_eppExpectedRuleCount)
+         {
+            InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
+            finishEPPSave(request.getId());
+         }
+      }
+   }
+   else
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      sendMessage(response);
+   }
+}
+
+/**
+ * Finish EPP save with optimistic concurrency merge
+ */
+void ClientSession::finishEPPSave(uint32_t requestId)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+
+   uuid userGuid = GetUserGuidById(m_userId);
+   wchar_t userName[MAX_USER_NAME];
+   ResolveUserId(m_userId, userName, true);
+
+   ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);
+   uint32_t newVersion;
+
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   json_t *oldVersion = epp->toJson();
+
+   uint32_t rcc = epp->saveWithMerge(
+      m_eppBaseVersion, m_eppRuleList,
+      m_eppDeletedRuleCount, m_eppDeletedRules,
+      userGuid, userName, &conflicts, &newVersion);
+
+   response.setField(VID_RCC, rcc);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      response.setField(VID_EPP_VERSION, newVersion);
+      epp->fillRuleVersions(&response);  // Send updated rule versions for client sync
+      json_t *newVersionJson = epp->toJson();
+      writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersionJson, _T("Event processing policy updated"));
+      json_decref(newVersionJson);
+   }
+   else if (rcc == RCC_EPP_CONFLICT)
+   {
+      response.setField(VID_EPP_VERSION, newVersion);
+      response.setField(VID_CONFLICT_COUNT, static_cast<uint32_t>(conflicts.size()));
+      for (int i = 0; i < conflicts.size(); i++)
+      {
+         conflicts.get(i)->fillMessage(&response, VID_CONFLICT_LIST_BASE + i * 20);
+      }
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Event processing policy save conflict"));
+   }
+
+   json_decref(oldVersion);
+
+   // Cleanup - shared_ptr handles memory management automatically
+   m_eppRuleList.clear();
+   MemFreeAndNull(m_eppDeletedRules);
+   m_eppDeletedRuleCount = 0;
+
+   sendMessage(response);
+}
+
+/**
+ * Explain event processing policy rule
+ */
+void ClientSession::explainEventProcessingPolicyRule(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      uuid ruleId = request.getFieldAsGUID(VID_RULE_ID);
+      json_t *rule = GetEventProcessingPolicy()->getRuleDetails(ruleId);
+      if (rule != nullptr)
+      {
+         char *jsonString = json_dumps(rule, JSON_INDENT(3) | JSON_PRESERVE_ORDER);
+         std::string prompt =
+                  "Provide detailed explanation of the following event processing policy rule;"
+                  "provide plain language summary first, then detailed breakdown of all components;"
+                  "rule data is in JSON format; do not include raw JSON elements into your answer, use only terms understandable by non-programmer;"
+                  "only include relevant information from the rule into your explanation;"
+                  "always lookup details for objects, events, and actions referenced in the rule;"
+                  "you will need event processing skills to do that;"
+                  "use additional tools and skills to extract missing information. Rule data:\n";
+         prompt.append(jsonString);
+         MemFree(jsonString);
+         json_decref(rule);
+         char *explanation = QueryAIAssistant(prompt.c_str(), nullptr);
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setFieldFromUtf8String(VID_MESSAGE, explanation);
+         MemFree(explanation);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
       }
    }
    else
@@ -5918,56 +6152,13 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 }
 
 /**
- * Process EPP rule received from client
- */
-void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
-{
-   if ((m_flags & (CSF_EPP_LOCKED | CSF_EPP_UPLOAD)) == (CSF_EPP_LOCKED | CSF_EPP_UPLOAD))
-   {
-      if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
-      {
-         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(request);
-         m_dwRecordsUploaded++;
-         if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
-         {
-            // All records received, replace event policy...
-            debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
-                        m_ppEPPRuleList, m_dwNumRecordsToUpload);
-            json_t *oldVersion = g_pEventPolicy->toJson();
-            g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
-            bool success = g_pEventPolicy->saveToDB();
-            MemFreeAndNull(m_ppEPPRuleList);
-            json_t *newVersion = g_pEventPolicy->toJson();
-
-            // ... and send final confirmation
-            NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-            response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
-            sendMessage(response);
-
-            InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
-
-            writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersion, _T("Event processing policy updated"));
-            json_decref(oldVersion);
-            json_decref(newVersion);
-         }
-      }
-   }
-   else
-   {
-      NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      sendMessage(response);
-   }
-}
-
-/**
  * Get compiled MIB file
  */
 void ClientSession::getMIBFile(const NXCPMessage& request)
 {
-   TCHAR mibFile[MAX_PATH];
-   _tcscpy(mibFile, g_netxmsdDataDir);
-   _tcscat(mibFile, DFILE_COMPILED_MIB);
+   wchar_t mibFile[MAX_PATH];
+   wcscpy(mibFile, g_netxmsdDataDir);
+   wcslcat(mibFile, DFILE_COMPILED_MIB, MAX_PATH);
 	sendFile(mibFile, request.getId(), 0);
 }
 
@@ -5978,9 +6169,9 @@ void ClientSession::getMIBTimestamp(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR mibFileName[MAX_PATH];
-   _tcscpy(mibFileName, g_netxmsdDataDir);
-   _tcscat(mibFileName, DFILE_COMPILED_MIB);
+   wchar_t mibFileName[MAX_PATH];
+   wcscpy(mibFileName, g_netxmsdDataDir);
+   wcslcat(mibFileName, DFILE_COMPILED_MIB, MAX_PATH);
 
    uint32_t timestamp;
    uint32_t rc = SnmpGetMIBTreeTimestamp(mibFileName, &timestamp);
@@ -6135,7 +6326,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                rcc = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
                if (rcc != RCC_SUCCESS)
                {
-                  debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%u)"), objectName, objectClass, CURRENT_MODULE.szName, rcc);
+                  debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%u)"), objectName, objectClass, CURRENT_MODULE.name, rcc);
                   break;
                }
             }
@@ -6195,6 +6386,10 @@ void ClientSession::createObject(const NXCPMessage& request)
                   break;
                case OBJECT_DASHBOARD:
                   object = make_shared<Dashboard>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_DASHBOARDTEMPLATE:
+                  object = make_shared<DashboardTemplate>(objectName);
                   NetObjInsert(object, true, false);
                   break;
                case OBJECT_DASHBOARDGROUP:
@@ -6374,7 +6569,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   LinkAsset(asset.get(), object.get(), this);
                }
 
-               object->unhide();
+               object->publish();
                response.setField(VID_RCC, RCC_SUCCESS);
                response.setField(VID_OBJECT_ID, object->getId());
             }
@@ -6676,6 +6871,17 @@ void ClientSession::deleteObject(const NXCPMessage& request)
 				}
 				else
 				{
+               // For templates and clusters, set the DCI removal option before deletion
+               if (object->getObjectClass() == OBJECT_TEMPLATE)
+               {
+                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+                  static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
+               }
+               else if (object->getObjectClass() == OBJECT_CLUSTER)
+               {
+                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+                  static_cast<Cluster&>(*object).setRemoveDCIOnDelete(removeDCI);
+               }
                ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
                response.setField(VID_RCC, RCC_SUCCESS);
                WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
@@ -6691,6 +6897,57 @@ void ClientSession::deleteObject(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
          WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Decommission node - mark for deletion by housekeeper
+ */
+void ClientSession::decommissionNode(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->getId() >= 10)
+      {
+         // Use same access rights as delete
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_DELETE))
+         {
+            if (object->getObjectClass() == OBJECT_NODE)
+            {
+               time_t expirationTime = static_cast<time_t>(request.getFieldAsInt64(VID_DECOMMISSION_TIME));
+               bool clearIpAddresses = request.getFieldAsBoolean(VID_CLEAR_IP_ADDRESSES);
+
+               static_cast<Node*>(object.get())->decommission(expirationTime, clearIpAddresses);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(),
+                  _T("Node %s decommissioned, expiration time %u, clear IP addresses: %s"),
+                  object->getName(), static_cast<uint32_t>(expirationTime), clearIpAddresses ? _T("yes") : _T("no"));
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(),
+               _T("Access denied on decommission node %s"), object->getName());
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
@@ -7094,6 +7351,301 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
 }
 
 /**
+ * Get list of incidents
+ */
+void ClientSession::getIncidents(const NXCPMessage& request)
+{
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   SendIncidentsToClient(objectId, request.getId(), this);
+}
+
+/**
+ * Get incident details
+ */
+void ClientSession::getIncidentDetails(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         incident->fillMessage(&response);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Try to get from database (closed incident)
+      response.setField(VID_RCC, GetIncident(incidentId, &response));
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Create new incident
+ */
+void ClientSession::createIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+
+   if (object == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+   {
+      TCHAR title[256];
+      request.getFieldAsString(VID_INCIDENT_TITLE, title, 256);
+      TCHAR *initialComment = request.getFieldAsString(VID_COMMENTS);
+      uint32_t alarmId = request.getFieldAsUInt32(VID_SOURCE_ALARM_ID);
+
+      uint32_t incidentId;
+      uint32_t rcc = CreateIncident(objectId, title, initialComment, alarmId, m_userId, &incidentId);
+      MemFree(initialComment);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         response.setField(VID_INCIDENT_ID, incidentId);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Update incident title
+ */
+void ClientSession::updateIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         TCHAR title[256];
+         request.getFieldAsString(VID_INCIDENT_TITLE, title, 256);
+         response.setField(VID_RCC, UpdateIncident(incidentId, title, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Change incident state
+ */
+void ClientSession::changeIncidentState(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   int newState = request.getFieldAsInt16(VID_INCIDENT_STATE);
+   wchar_t *comment = request.getFieldAsString(VID_COMMENTS);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, incident->changeState(newState, m_userId, comment));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   MemFree(comment);
+   sendMessage(response);
+}
+
+/**
+ * Assign incident to user
+ */
+void ClientSession::assignIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, AssignIncident(incidentId, userId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Link alarm to incident
+ */
+void ClientSession::linkAlarmToIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, LinkAlarmToIncident(incidentId, alarmId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Unlink alarm from incident
+ */
+void ClientSession::unlinkAlarmFromIncident(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         response.setField(VID_RCC, UnlinkAlarmFromIncident(incidentId, alarmId, m_userId));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Add comment to incident
+ */
+void ClientSession::addIncidentComment(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      {
+         TCHAR *text = request.getFieldAsString(VID_COMMENTS);
+         uint32_t commentId;
+         uint32_t rcc = AddIncidentComment(incidentId, text, m_userId, &commentId);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            response.setField(VID_COMMENT_ID, commentId);
+         MemFree(text);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get incident activity log
+ */
+void ClientSession::getIncidentActivity(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   if (incident != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         response.setField(VID_RCC, GetIncidentActivity(incidentId, &response));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Try to get from database (closed incident)
+      response.setField(VID_RCC, GetIncidentActivity(incidentId, &response));
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Get comments for given alarm
  */
 void ClientSession::getAlarmComments(const NXCPMessage& request)
@@ -7277,7 +7829,7 @@ void ClientSession::deleteAction(const NXCPMessage& request)
    {
       // Get Id of action to be deleted
       uint32_t actionId = request.getFieldAsUInt32(VID_ACTION_ID);
-      if (!g_pEventPolicy->isActionInUse(actionId))
+      if (!GetEventProcessingPolicy()->isActionInUse(actionId))
       {
          response.setField(VID_RCC, DeleteAction(actionId));
       }
@@ -7366,10 +7918,10 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
             case POLL_AUTOBIND:
                isValidPoll = pollableObject->isAutobindPollAvailable();
                break;
-            case POLL_CONFIGURATION_FULL:
+            case POLL_CONFIGURATION_WITH_RESET:
                isValidPoll = (pollableObject->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
                break;
-            case POLL_CONFIGURATION_NORMAL:
+            case POLL_CONFIGURATION:
                isValidPoll = pollableObject->isConfigurationPollAvailable();
                break;
             case POLL_DISCOVERY:
@@ -7398,8 +7950,8 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
       if (isValidPoll)
       {
          // Check access rights
-         if (((pollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) ||
-               ((pollType != POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+         if (((pollType == POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) ||
+               ((pollType != POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
          {
             sendPollerMsg(request.getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -7429,11 +7981,11 @@ void ClientSession::forcedObjectPoll(const NXCPMessage& request)
          case POLL_STATUS:
             pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, request.getId());
             break;
-         case POLL_CONFIGURATION_FULL:
+         case POLL_CONFIGURATION_WITH_RESET:
             if (object->getObjectClass() == OBJECT_NODE)
                static_cast<Node&>(*object).setRecheckCapsFlag();
             // intentionally no break here
-         case POLL_CONFIGURATION_NORMAL:
+         case POLL_CONFIGURATION:
             pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, request.getId());
             break;
          case POLL_INSTANCE_DISCOVERY:
@@ -7620,6 +8172,40 @@ void ClientSession::queryMetric(const NXCPMessage& request)
 }
 
 /**
+ * Query specific list from data collection target
+ */
+void ClientSession::queryList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget())
+      {
+         wchar_t name[MAX_PARAM_NAME];
+         request.getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+         StringList *value = nullptr;
+         uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getListForClient(request.getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_userId, name, &value);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            value->fillMessage(&response, VID_STRING_LIST_BASE, VID_STRING_COUNT);
+         delete value;
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Query specific table from node
  */
 void ClientSession::queryTable(const NXCPMessage& request)
@@ -7673,14 +8259,19 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
             rcc = CreateNewTrapMapping(&trapMappingId);
             response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
+            {
                response.setField(VID_TRAP_ID, trapMappingId);   // Send id of new trap mapping to client
+               //TODO: witre audit log
+            }
             break;
          case TRAP_UPDATE:
             response.setField(VID_RCC, UpdateTrapMappingFromMsg(request));
+            //TODO: witre audit log
             break;
          case TRAP_DELETE:
             trapMappingId = request.getFieldAsUInt32(VID_TRAP_ID);
             response.setField(VID_RCC, DeleteTrapMapping(trapMappingId));
+            //TODO: witre audit log
             break;
          default:
 				response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
@@ -7691,6 +8282,7 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
    {
       // Current user has no rights for trap management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on trap configuration update"));
    }
 
    sendMessage(response);
@@ -8137,6 +8729,35 @@ void ClientSession::getParametersList(const NXCPMessage& request)
                if (controller != nullptr)
                   static_cast<Node&>(*controller).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
             }
+            break;
+         default:
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            break;
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of supported lists for given node
+ */
+void ClientSession::getListsList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      switch(object->getObjectClass())
+      {
+         case OBJECT_NODE:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            static_cast<Node&>(*object).writeListListToMessage(&response);
             break;
          default:
             response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
@@ -8747,7 +9368,7 @@ public:
 /**
  * Action execution callback
  */
-static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void *arg)
+static void ActionExecuteCallback(ActionCallbackEvent e, const void *text, void *arg)
 {
    ActionExecutionData *data = static_cast<ActionExecutionData*>(arg);
    switch(e)
@@ -8764,7 +9385,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
       case ACE_DATA:
          data->m_msg.deleteAllFields();
          data->m_msg.setCode(CMD_COMMAND_OUTPUT);
-         data->m_msg.setField(VID_MESSAGE, text);
+         data->m_msg.setFieldFromUtf8String(VID_MESSAGE, static_cast<const char*>(text));
          break;
    }
    data->m_session->sendMessage(data->m_msg);
@@ -8831,7 +9452,7 @@ void ClientSession::executeAction(const NXCPMessage& request)
                if (withOutput)
                {
                   ActionExecutionData data(this, request.getId());
-                  rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data);
+                  rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data, true);
                }
                else
                {
@@ -9024,9 +9645,10 @@ void ClientSession::execTableTool(const NXCPMessage& request)
          {
             if (object->getObjectClass() == OBJECT_NODE)
             {
-               response.setField(VID_RCC,
-                               ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object),
-                                                request.getId(), this));
+               uint32_t rcc = ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object), request.getId(), this);
+               if (rcc == RCC_SUCCESS)
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed table tool [%u] on node %s"), dwToolId, object->getName());
+               response.setField(VID_RCC, rcc);
             }
             else
             {
@@ -9040,6 +9662,7 @@ void ClientSession::execTableTool(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, request.getFieldAsUInt32(VID_OBJECT_ID), _T("Access denied on executing table tool [%u]"), dwToolId);
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -9990,7 +10613,7 @@ struct ClientDataPushElement
 {
    shared_ptr<DataCollectionTarget> dcTarget;
    shared_ptr<DCObject> dci;
-   TCHAR *value;
+   wchar_t *value;
 
    ClientDataPushElement(const shared_ptr<DataCollectionTarget>& _dcTarget, const shared_ptr<DCObject> &_dci, TCHAR *_value) : dcTarget(_dcTarget), dci(_dci)
    {
@@ -10031,9 +10654,9 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
          }
          else
          {
-            TCHAR name[256];
+            wchar_t name[256];
             request.getFieldAsString(fieldId++, name, 256);
-				if (name[0] == _T('@'))
+				if (name[0] == L'@')
 				{
                InetAddress ipAddr = InetAddress::resolveHostName(&name[1]);
 					object = FindNodeByIP(0, ipAddr);
@@ -10060,9 +10683,14 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
                   }
                   else
                   {
-                     TCHAR name[256];
+                     wchar_t name[256];
                      request.getFieldAsString(fieldId++, name, 256);
                      dci = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_userId);
+                     if (dci == nullptr)
+                     {
+                        debugPrintf(5, _T("data push: DCI not found for %s, trying to create one using instance discovery"), object->getName(), name);
+                        dci = static_cast<DataCollectionTarget&>(*object).createPushDciInstance(name);
+                     }
                   }
 
                   if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
@@ -10101,16 +10729,30 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
       // If all items was checked OK, push data
       if (bOK)
       {
-         time_t t = request.getFieldAsTime(VID_TIMESTAMP);
-         if (t == 0)
-            t = time(nullptr);
+         bool localTimestamp = false;
+         Timestamp t = request.getFieldAsTimestamp(VID_TIMESTAMP_MS);
+         if (t.isNull())
+         {
+            t = Timestamp::fromTime(request.getFieldAsTime(VID_TIMESTAMP));
+            if (t.isNull())
+            {
+               t = Timestamp::now();
+               localTimestamp = true;
+            }
+         }
          shared_ptr<Table> tableValue; // Empty pointer to pass to processNewDCValue()
          for(int i = 0; i < values.size(); i++)
          {
             ClientDataPushElement *e = values.get(i);
-				if (_tcslen(e->value) >= MAX_DCI_STRING_VALUE)
+				if (wcslen(e->value) >= MAX_DCI_STRING_VALUE)
 					e->value[MAX_DCI_STRING_VALUE - 1] = 0;
-				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue);
+				if (localTimestamp && e->dci->getLastValueTimestamp() == t)
+            {
+               // Prevent multiple values with the same timestamp
+				   ThreadSleepMs(1);
+               t = Timestamp::now();
+            }
+				e->dcTarget->processNewDCValue(e->dci, t, e->value, tableValue, true);
             if (t > e->dci->getLastPollTime())
 				   e->dci->setLastPollTime(t);
          }
@@ -10319,7 +10961,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
    wchar_t exportFileName[MAX_PATH];
    bool success = false;
 
-   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSystemAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EPP | SYSTEM_ACCESS_SERVER_CONFIG))
    {
       IntegerArray<uint32_t> templateList;
       request.getFieldAsInt32Array(VID_OBJECT_LIST, &templateList);
@@ -10356,136 +10998,211 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          GetNetXMSDirectory(nxDirData, exportFileName);
          wcslcat(exportFileName, FS_PATH_SEPARATOR L"export-", MAX_PATH);
          IntegerToString(GetCurrentTimeMs(), &exportFileName[wcslen(exportFileName)]);
-         wcslcat(exportFileName, L".xml", MAX_PATH);
+         wcslcat(exportFileName, L".json", MAX_PATH);
 
          FILE *out = _wfopen(exportFileName, L"w");
          if (out != nullptr)
          {
-            TextFileWriter writer(out);
+            json_t *root = json_object();
+
+            // Set format version to 6 (JSON format)
+            json_object_set_new(root, "formatVersion", json_integer(6));
+            json_object_set_new(root, "nxslVersionV5", json_boolean(true));
+
+            // Server information
+            json_t *server = json_object();
+            json_object_set_new(server, "version", json_string(NETXMS_VERSION_STRING_A));
+            json_object_set_new(server, "buildTag", json_string(NETXMS_BUILD_TAG_A));
 
             wchar_t osVersion[256];
             GetOSVersionString(osVersion, 256);
+#ifdef UNICODE
+            json_object_set_new(server, "operatingSystem", json_string_t(osVersion));
+#else
+            json_object_set_new(server, "operatingSystem", json_string(osVersion));
+#endif
+            json_object_set_new(root, "server", server);
 
-            writer.appendUtf8String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>5</formatVersion>\n\t<nxslVersionV5>true</nxslVersionV5>\n\t<server>\n\t\t<version>"
-                     NETXMS_VERSION_STRING_A "</version>\n\t\t<buildTag>" NETXMS_BUILD_TAG_A "</buildTag>\n\t\t<operatingSystem>");
-            writer.appendPreallocated(EscapeStringForXML(osVersion, -1));
-            writer.appendUtf8String("</operatingSystem>\n\t</server>\n\t<description>");
+            // Description
             wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
-            writer.appendPreallocated(EscapeStringForXML(description, -1));
+            json_object_set_new(root, "description", description ? json_string_t(description) : json_string(""));
             MemFree(description);
-            writer.appendUtf8String("</description>\n");
 
-            // Write events
-            writer.appendUtf8String("\t<events>\n");
+            // Export events
+            json_t *events = json_array();
             uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
             uint32_t *idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_EVENT_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateEventTemplateExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               CreateEventTemplateExportRecord(events, idList[i]);
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</events>\n");
+            json_object_set_new(root, "events", events);
 
-            // Write templates
-            writer.appendUtf8String("\t<templates>\n");
-            for(i = 0; i < templateList.size(); i++)
+            // Export templates
+            json_t *templates = json_array();
+            for(int i = 0; i < templateList.size(); i++)
             {
                shared_ptr<NetObj> object = FindObjectById(templateList.get(i));
-               if (object != nullptr)
+               if ((object != nullptr) && (object->getObjectClass() == OBJECT_TEMPLATE))
                {
-                  static_cast<Template&>(*object).createExportRecord(writer);
+                  static_cast<Template*>(object.get())->createExportRecord(templates);
                }
             }
-            writer.appendUtf8String("\t</templates>\n");
+            json_object_set_new(root, "templates", templates);
 
-            // Write traps
-            writer.appendUtf8String("\t<traps>\n");
+            // Export traps
+            json_t *traps = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TRAPS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_TRAP_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateTrapMappingExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *trap = CreateTrapMappingExportRecord(idList[i]);
+               if (trap != nullptr)
+               {
+                  json_array_append_new(traps, trap);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</traps>\n");
+            json_object_set_new(root, "traps", traps);
 
-            // Write rules
-            writer.appendUtf8String("\t<rules>\n");
+            // Export rules using request UUIDs
+            json_t *rules = json_array();
+            EventProcessingPolicy *epp = GetEventProcessingPolicy();
             count = request.getFieldAsUInt32(VID_NUM_RULES);
-            uint32_t fieldId = VID_RULE_LIST_BASE;
-            uuid_t guid;
-            for(i = 0; i < count; i++)
+            if (count > 0)
             {
-               request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
-               g_pEventPolicy->exportRule(writer, guid);
-            }
-            writer.appendUtf8String("\t</rules>\n");
+               uint32_t fieldId = VID_RULE_LIST_BASE;
+               for(uint32_t i = 0; i < count; i++)
+               {
+                  uuid_t guid;
+                  request.getFieldAsBinary(fieldId++, guid, UUID_LENGTH);
 
-            if (count > 0) //add rule order information if at least one rule is exported
+                  // Use new JSON export method
+                  json_t *ruleObj = epp->exportRule(uuid(guid));
+                  if (ruleObj != nullptr)
+                  {
+                     json_array_append_new(rules, ruleObj);
+                  }
+               }
+            }
+            json_object_set_new(root, "rules", rules);
+
+            // Export rule ordering only if there are rules to export
+            if (json_array_size(rules) > 0)
             {
-               writer.appendUtf8String("\t<ruleOrdering>\n");
-               g_pEventPolicy->exportRuleOrgering(writer);
-               writer.appendUtf8String("\t</ruleOrdering>\n");
+               json_t *ruleOrdering = epp->exportRuleOrdering();
+               if (ruleOrdering != nullptr)
+               {
+                  json_object_set_new(root, "ruleOrdering", ruleOrdering);
+               }
+               else
+               {
+                  json_object_set_new(root, "ruleOrdering", json_array());
+               }
             }
 
-            // Write scripts
-            writer.appendUtf8String("\t<scripts>\n");
+            // Export scripts
+            json_t *scripts = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateScriptExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *script = CreateScriptExportRecord(idList[i]);
+               if (script != nullptr)
+               {
+                  json_array_append_new(scripts, script);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</scripts>\n");
+            json_object_set_new(root, "scripts", scripts);
 
-            // Write object tools
-            writer.appendUtf8String("\t<objectTools>\n");
+            // Export object tools
+            json_t *objectTools = json_array();
             count = request.getFieldAsUInt32(VID_NUM_TOOLS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_TOOL_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateObjectToolExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *tool = CreateObjectToolExportRecord(idList[i]);
+               if (tool != nullptr)
+               {
+                  json_array_append_new(objectTools, tool);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</objectTools>\n");
+            json_object_set_new(root, "objectTools", objectTools);
 
-            // Write DCI summary tables
-            writer.appendUtf8String("\t<dciSummaryTables>\n");
+            // Export DCI summary tables
+            json_t *dciSummaryTables = json_array();
             count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
-            idList = MemAllocArray<UINT32>(count);
+            idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateSummaryTableExportRecord(idList[i], writer);
+            for(int i = 0; i < count; i++)
+            {
+               CreateSummaryTableExportRecord(idList[i], dciSummaryTables);
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</dciSummaryTables>\n");
+            json_object_set_new(root, "dciSummaryTables", dciSummaryTables);
 
-            // Write actions
-            writer.appendUtf8String("\t<actions>\n");
+            // Export actions
+            json_t *actions = json_array();
             count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_ACTION_LIST, count, idList);
-            for(i = 0; i < count; i++)
-               CreateActionExportRecord(writer, idList[i]);
+            for(int i = 0; i < count; i++)
+            {
+               json_t *action = CreateActionExportRecord(idList[i]);
+               if (action != nullptr)
+               {
+                  json_array_append_new(actions, action);
+               }
+            }
             MemFree(idList);
-            writer.appendUtf8String("\t</actions>\n");
+            json_object_set_new(root, "actions", actions);
 
-            // Write web service definition
-            writer.appendUtf8String("\t<webServiceDefinitions>\n");
+            // Export web service definitions
+            json_t *webServiceDefinitions = json_array();
             count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
             idList = MemAllocArray<uint32_t>(count);
             request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, idList);
-            CreateWebServiceDefinitionExportRecord(writer, count, idList);
+            CreateWebServiceDefinitionExportRecord(webServiceDefinitions, count, idList);
             MemFree(idList);
-            writer.appendUtf8String("\t</webServiceDefinitions>\n");
+            json_object_set_new(root, "webServiceDefinitions", webServiceDefinitions);
 
-            // Asset management schema
-            writer.appendUtf8String("\t<assetManagementSchema>\n");
-            StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
-            ExportAssetManagementSchema(writer, names);
-            writer.appendUtf8String("\t</assetManagementSchema>\n");
+            // Export asset management schema
+            json_t *assetManagementSchema = json_array();
+            StringList assetAttributeNames(request, VID_ASSET_ATTRIBUTE_NAMES);
+            ExportAssetManagementSchema(assetManagementSchema, assetAttributeNames);
+            json_object_set_new(root, "assetManagementSchema", assetManagementSchema);
 
-            // Close document
-            writer.appendUtf8String("</configuration>\n");
+            // Export log parser rules - separate sections like XML
+            json_t *syslog = json_object();
+            ExportSyslogParserRulesJSON(request, VID_SYSLOG_NUM_RECORDS, VID_SYSLOG_RULES_LIST_BASE, syslog);
+            json_object_set_new(root, "syslog", syslog);
 
-            response.setField(VID_RCC, RCC_SUCCESS);
-            success = true;
+            json_t *winlog = json_object();
+            ExportWinlogParserRulesJSON(request, VID_WIN_LOG_NUM_RECORDS, VID_WIN_EVENT_RULES_LIST_BASE, winlog);
+            json_object_set_new(root, "winlog", winlog);
+
+            // Write JSON to file
+            char *jsonString = json_dumps(root, JSON_INDENT(2) | JSON_PRESERVE_ORDER);
+            if (jsonString != nullptr)
+            {
+               fputs(jsonString, out);
+               MemFree(jsonString);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               success = true;
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            }
+            json_decref(root);
+            fclose(out);
          }
          else
          {
@@ -10520,15 +11237,10 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
       char *content = request.getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != nullptr)
       {
-         Config config(false);
-         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration", false))
-         {
-            finalizeConfigurationImport(config, request.getFieldAsUInt32(VID_FLAGS), &response);
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
-         }
+         uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
+
+         finalizeConfigurationImport(content, flags, &response);
+
          MemFree(content);
       }
       else
@@ -10566,14 +11278,33 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
 
             NXCPMessage response2(CMD_REQUEST_COMPLETED, requestId);
 
-            Config config(false);
-            if (config.loadXmlConfig(fileName, "configuration", false))
+            // Read file content
+            FILE *file = _tfopen(fileName, _T("r"));
+            if (file != nullptr)
             {
-               finalizeConfigurationImport(config, uploadData, &response2);
+               fseek(file, 0, SEEK_END);
+               long size = ftell(file);
+               fseek(file, 0, SEEK_SET);
+
+               char *content = (char*)malloc(size + 1);
+               if (content != nullptr)
+               {
+                  size_t bytesRead = fread(content, 1, size, file);
+                  content[bytesRead] = 0;
+
+                  finalizeConfigurationImport(content, uploadData, &response2);
+
+                  MemFree(content);
+               }
+               else
+               {
+                  response2.setField(VID_RCC, RCC_OUT_OF_MEMORY);
+               }
+               fclose(file);
             }
             else
             {
-               response2.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
+               response2.setField(VID_RCC, RCC_IO_ERROR);
             }
 
             sendMessage(response2);
@@ -10599,35 +11330,20 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
 }
 
 /**
- * Finalize configuration import after successful transfer
+ * Finalize configuration import after successful transfer - supports both JSON and XML formats
  */
-void ClientSession::finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response)
+void ClientSession::finalizeConfigurationImport(const char* content, uint32_t flags, NXCPMessage *response)
 {
-   // Lock all required components
-   TCHAR lockInfo[MAX_SESSION_NAME];
-   if (LockEPP(m_id, m_sessionName, nullptr, lockInfo))
-   {
-      InterlockedOr(&m_flags, CSF_EPP_LOCKED);
+   // Use ImportConfigFromContent which auto-detects format (JSON vs XML)
+   StringBuffer *log;
+   uint32_t result = ImportConfigFromContent(content, flags, &log);
 
-      // Validate and import configuration
-      StringBuffer *log;
-      uint32_t result = ImportConfig(config, flags, &log);
-      if (result == RCC_SUCCESS)
-         response->setField(VID_EXECUTION_RESULT, log->cstr());
-      else
-         response->setField(VID_ERROR_TEXT, log->cstr());
-      response->setField(VID_RCC, result);
-      delete log;
-
-      UnlockEPP();
-      InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
-   }
+   if (result == RCC_SUCCESS)
+      response->setField(VID_EXECUTION_RESULT, log->cstr());
    else
-   {
-      response->setField(VID_RCC, RCC_COMPONENT_LOCKED);
-      response->setField(VID_COMPONENT, static_cast<uint16_t>(NXMP_LC_EPP));
-      response->setField(VID_LOCKED_BY, lockInfo);
-   }
+      response->setField(VID_ERROR_TEXT, log->cstr());
+   response->setField(VID_RCC, result);
+   delete log;
 }
 
 /**
@@ -10676,67 +11392,6 @@ void ClientSession::getDCIInfo(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(response);
-}
-
-/**
- * Get DCI measurement units
- */
-void ClientSession::getDciMeasurementUnits(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   size_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
-   Buffer<uint32_t> nodeList(count);
-   Buffer<uint32_t> dciList(count);
-   request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
-   request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
-
-   uint32_t returnCount = 0;
-   uint32_t fieldId = VID_DCI_LIST_BASE;
-   for(size_t i = 0; i < count; i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(nodeList[i]);
-      if (object != nullptr && object->isDataCollectionTarget())
-      {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-         {
-            shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciList[i], m_userId);
-            if (dci != nullptr)
-            {
-               if (dci->getType() == DCO_TYPE_ITEM)
-               {
-                  response.setField(fieldId++, dciList[i]);
-                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getUnitName());
-                  response.setField(fieldId++, static_cast<DCItem&>(*dci).getMultiplier());
-                  returnCount++;
-               }
-               else
-               {
-                  debugPrintf(4, _T("getDciMeasurementUnits: invalid DCI %d type at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
-               }
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INVALID_DCI_ID);
-               debugPrintf(4, _T("getDciMeasurementUnits: DCI %d at target %s [%d] not found"), dciList[i], object->getName(), object->getId());
-            }
-         }
-         else
-         {
-            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on getting DCI info"));
-         }
-      }
-      else
-      {
-         if (object == nullptr)
-            debugPrintf(6, _T("getDciMeasurementUnits: invalid object id %u"), nodeList[i]);
-         else
-            debugPrintf(6, _T("getDciMeasurementUnits: object %s [%u] is not a data collection target"), object->getName(), object->getId());
-      }
-   }
-   response.setField(VID_NUM_ITEMS, returnCount);
-   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 
@@ -11105,7 +11760,7 @@ void ClientSession::setPstorageValue(const NXCPMessage& request)
 		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 		value = request.getFieldAsString(VID_PSTORAGE_VALUE);
 		SetPersistentStorageValue(key, value);
-		free(value);
+		MemFree(value);
       response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
@@ -11794,6 +12449,8 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
 
    shared_ptr<NetObj> contextObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARD);
+   if (dashboard == nullptr)
+      dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARDTEMPLATE);
    int elementIndex = request.getFieldAsUInt32(VID_ELEMENT_INDEX);
    if (dashboard != nullptr && contextObject != nullptr)
    {
@@ -12127,6 +12784,31 @@ void ClientSession::getServerLogRecordDetails(const NXCPMessage& request)
 }
 
 /**
+ * Get SQL query for server log
+ */
+void ClientSession::getServerLogQuerySql(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   int32_t handle = request.getFieldAsInt32(VID_LOG_HANDLE);
+   shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
+   if (log != nullptr)
+   {
+      LogFilter filter(request, log.get());
+      StringBuffer sql = log->buildQuerySql(&filter, -1, 0);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_QUERY_SQL, sql);
+      log->release();
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_LOG_HANDLE);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Find connection point for the node
  */
 void ClientSession::findNodeConnection(const NXCPMessage& request)
@@ -12216,6 +12898,15 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
  */
 void ClientSession::findMacAddress(const NXCPMessage& request)
 {
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
    BYTE macPattern[MAC_ADDR_LENGTH];
    size_t macPatternSize = request.getFieldAsBinary(VID_MAC_ADDR, macPattern, MAC_ADDR_LENGTH);
    int searchLimit = request.getFieldAsInt32(VID_MAX_RECORDS);
@@ -12223,7 +12914,6 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    ObjectArray<MacAddressInfo> icpl(0, 16, Ownership::True);
    FindMacAddresses(macPattern, macPatternSize, &icpl, searchLimit);
 
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
 
    if (icpl.isEmpty())
@@ -12234,8 +12924,11 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
    {
       response.setField(VID_NUM_ELEMENTS, icpl.size());
       uint32_t base = VID_ELEMENT_LIST_BASE;
-      for (int i = 0; i < icpl.size(); i++, base += 10)
+      for (int i = 0; i < icpl.size(); i++)
+      {
          icpl.get(i)->fillMessage(&response, base);
+         base += 10;
+      }
    }
 
    sendMessage(response);
@@ -12246,8 +12939,16 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
  */
 void ClientSession::findIpAddress(const NXCPMessage& request)
 {
-   TCHAR ipAddrText[64];
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!checkSystemAccessRights(SYSTEM_ACCESS_SEARCH_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
+   TCHAR ipAddrText[64];
 	response.setField(VID_RCC, RCC_SUCCESS);
 
 	MacAddress macAddr;
@@ -12350,6 +13051,7 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 void ClientSession::findHostname(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
    response.setField(VID_RCC, RCC_SUCCESS);
 
    int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
@@ -12358,13 +13060,17 @@ void ClientSession::findHostname(const NXCPMessage& request)
 
    unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(zoneUIN, hostname);
 
-   response.setField(VID_NUM_ELEMENTS, nodes->size());
-
+   int count = 0;
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < nodes->size(); i++)
    {
-      response.setField(fieldId++, nodes->get(i)->getId());
+      NetObj *node = nodes->get(i);
+      if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         continue;
+      response.setField(fieldId++, node->getId());
+      count++;
    }
+   response.setField(VID_NUM_ELEMENTS, count);
 
    sendMessage(response);
 }
@@ -13930,12 +14636,27 @@ void ClientSession::getEffectiveRights(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_userId));
-		response.setField(VID_RCC, RCC_SUCCESS);
+      uint32_t targetUserId = request.getFieldAsUInt32(VID_USER_ID);
+
+      // If user specified is same as current, return current user's rights
+      if (targetUserId == m_userId)
+      {
+         response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(m_userId));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      // Require OBJECT_ACCESS_ACL to query other users' rights
+      else if (object->checkAccessRights(m_userId, OBJECT_ACCESS_ACL))
+      {
+         response.setField(VID_EFFECTIVE_RIGHTS, object->getUserRights(targetUserId));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
    else  // No object with given ID
    {
@@ -14708,66 +15429,12 @@ void ClientSession::getScheduledReportingTasks(const NXCPMessage& request)
 }
 
 /**
- * Get list of registered prediction engines
- */
-void ClientSession::getPredictionEngines(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   GetPredictionEngines(&msg);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
-}
-
-/**
- * Get predicted data
- */
-void ClientSession::getPredictedData(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   bool success = false;
-
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         if (object->isDataCollectionTarget())
-         {
-            if (!(g_flags & AF_DB_CONNECTION_LOST))
-            {
-               success = GetPredictedData(this, request, &response, static_cast<DataCollectionTarget&>(*object));
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
-            }
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else  // No object with given ID
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   if (!success)
-      sendMessage(response);
-}
-
-/**
  * Get list of agent tunnels
  */
 void ClientSession::getAgentTunnels(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       GetAgentTunnels(&response);
       response.setField(VID_RCC, RCC_SUCCESS);
@@ -14787,7 +15454,7 @@ void ClientSession::getAgentTunnels(const NXCPMessage& request)
 void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       uint32_t tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
@@ -14812,7 +15479,7 @@ void ClientSession::bindAgentTunnel(const NXCPMessage& request)
 void ClientSession::unbindAgentTunnel(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_REGISTER_AGENTS)
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS)
    {
       uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       uint32_t rcc = UnbindAgentTunnel(nodeId, m_userId);
@@ -14890,7 +15557,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
                if (conn != nullptr)
                {
-                  conn->setTcpProxySession(this);
+                  conn->setTcpProxyCallback(this);
                   uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
                   if (clientChannelId == 0)  // Clients before 4.5.3 will not assign channel ID
                      clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
@@ -14994,7 +15661,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
 /**
  * Process TCP proxy data (in direction from from agent to client)
  */
-void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
+void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
 {
    uint32_t clientChannelId = 0;
    m_tcpProxyLock.lock();
@@ -15044,7 +15711,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
 /**
  * Process disconnect notification from agent session used for TCP proxy
  */
-void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
+void ClientSession::onTcpProxyAgentDisconnect(AgentConnectionEx *conn)
 {
    IntegerArray<uint32_t> clientChannelList;
    m_tcpProxyLock.lock();
@@ -15128,7 +15795,7 @@ void ClientSession::updatePolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          uuid guid = static_cast<Template&>(*templateObject).updatePolicyFromMessage(request);
          if(!guid.isNull())
@@ -15164,7 +15831,7 @@ void ClientSession::deletePolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          if (static_cast<Template&>(*templateObject).removePolicy(request.getFieldAsGUID(VID_GUID)))
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -15194,7 +15861,7 @@ void ClientSession::getPolicyList(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          static_cast<Template&>(*templateObject).fillPolicyListMessage(&msg);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -15222,7 +15889,7 @@ void ClientSession::getPolicy(const NXCPMessage& request)
    shared_ptr<NetObj> templateObject = FindObjectById(request.getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if (templateObject != nullptr)
    {
-      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+      if (templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
       {
          uuid guid = request.getFieldAsGUID(VID_GUID);
          if (static_cast<Template&>(*templateObject).fillPolicyDetailsMessage(&msg, guid))
@@ -15421,9 +16088,9 @@ void ClientSession::addUserAgentNotification(const NXCPMessage& request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
-      IntegerArray<UINT32> objectList(16, 16);
+      IntegerArray<uint32_t> objectList(64, 64);
       request.getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, &objectList);
-      UINT32 rcc = RCC_SUCCESS;
+      uint32_t rcc = RCC_SUCCESS;
       for (int i = 0; i < objectList.size(); i++)
       {
          shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
@@ -15716,6 +16383,34 @@ void ClientSession::renameNotificationChannel(const NXCPMessage& request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel rename"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Clear notification channel queue
+ */
+void ClientSession::clearNotificationChannelQueue(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (IsNotificationChannelExists(name))
+      {
+         response.setField(VID_RCC, ClearNotificationChannelQueue(name) ? RCC_SUCCESS : RCC_INVALID_CHANNEL_NAME);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Cleared notification channel \"%s\" queue"), name);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on clearing notification channel queue"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -16926,25 +17621,25 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
             shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
             if (conn != nullptr)
             {
-               StringList list;
-               TCHAR ipAddr[64];
-               list.add(node->getIpAddress().toString(ipAddr));
-               list.add(node->getSshPort());
-               list.add(node->getSshLogin());
-               list.add(node->getSshPassword());
-               list.add(command);
-               list.add(node->getSshKeyId());
+               StringList args;
+               wchar_t ipAddr[64];
+               args.add(node->getIpAddress().toString(ipAddr));
+               args.add(node->getSshPort());
+               args.add(node->getSshLogin());
+               args.add(node->getSshPassword());
+               args.add(command);
+               args.add(node->getSshKeyId());
 
                uint32_t rcc;
                bool withOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
                   ActionExecutionData data(this, request.getId());
-                  rcc = conn->executeCommand(_T("SSH.Command"), list, true, ActionExecuteCallback, &data);
+                  rcc = conn->executeCommand(_T("SSH.Command"), args, true, ActionExecuteCallback, &data, true);
                }
                else
                {
-                  rcc = conn->executeCommand(_T("SSH.Command"), list);
+                  rcc = conn->executeCommand(_T("SSH.Command"), args);
                }
                debugPrintf(4, _T("executeSshCommand: rcc=%d"), rcc);
 
@@ -17875,32 +18570,100 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
 void ClientSession::queryAiAssistant(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   char *prompt = nullptr, *answer = nullptr;
-   bool moduleFound = false;
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   char *userMessage = request.getFieldAsUtf8String(VID_MESSAGE);
+   uint32_t rcc;
+   shared_ptr<Chat> chat = GetAIAssistantChat(chatId, m_userId, &rcc);
+   if (chat != nullptr)
    {
-      moduleFound = true;
-      if (prompt == nullptr)
-      {
-         prompt = request.getFieldAsUtf8String(VID_MESSAGE);
-         if (prompt == nullptr)
-            break;
-      }
-      answer = CURRENT_MODULE.pfProcessRequestToAiAssistant(prompt, this);
+      char *context = request.getFieldAsUtf8String(VID_AI_QUESTION_CONTEXT);
+      char *answer = chat->sendRequest(userMessage, 16, context);
       if (answer != nullptr)
-         break;
-   }
-   if (answer != nullptr)
-   {
-      response.setField(VID_RCC, RCC_SUCCESS);
-      response.setFieldFromUtf8String(VID_MESSAGE, answer);
-      MemFree(answer);
+      {
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setFieldFromUtf8String(VID_MESSAGE, answer);
+         MemFree(answer);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_SYSTEM_FAILURE);
+      }
+      MemFree(context);
    }
    else
    {
-      response.setField(VID_RCC, moduleFound ? RCC_SYSTEM_FAILURE : RCC_NOT_IMPLEMENTED);
+      response.setField(VID_RCC, rcc);
    }
-   MemFree(prompt);
+   MemFree(userMessage);
+
+   sendMessage(response);
+}
+
+/**
+ * Create new AI assistant chat
+ *
+ * Called by:
+ * CMD_CREATE_AI_ASSISTANT_CHAT
+ *
+ * Expected input parameters:
+ * VID_INCIDENT_ID  (optional) Incident ID to bind chat to
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ * VID_CHAT_ID                      Created chat ID
+ * VID_INCIDENT_ID                  Bound incident ID (if specified)
+ */
+void ClientSession::createAiAssistantChat(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   // Get optional incident ID
+   uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
+
+   uint32_t rcc = RCC_SUCCESS;
+   shared_ptr<Chat> chat = nullptr;
+
+   // If incident specified, verify access rights
+   if (incidentId != 0)
+   {
+      shared_ptr<Incident> incident = FindIncidentById(incidentId);
+      if (incident != nullptr)
+      {
+         shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
+         if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
+         else
+         {
+            chat = CreateAIAssistantChat(m_userId, incidentId, &rcc);
+         }
+      }
+      else
+      {
+         rcc = RCC_INVALID_INCIDENT_ID;
+      }
+   }
+   else
+   {
+      chat = CreateAIAssistantChat(m_userId, 0, &rcc);
+   }
+
+   if (chat != nullptr)
+   {
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_CHAT_ID, chat->getId());
+      if (incidentId != 0)
+      {
+         response.setField(VID_INCIDENT_ID, incidentId);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, rcc);
+   }
+
    sendMessage(response);
 }
 
@@ -17910,19 +18673,304 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
  * Called by:
  * CMD_CLEAR_AI_ASSISTANT_CHAT
  *
+ * Expected input parameters:
+ * VID_CHAT_ID     Chat ID
+ *
  * Return values:
  * VID_RCC                          Request completion code
  */
 void ClientSession::clearAiAssistantChat(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t rcc = RCC_NOT_IMPLEMENTED;
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   response.setField(VID_RCC, ClearAIAssistantChat(chatId, m_userId));
+   sendMessage(response);
+}
+
+/**
+ * Delete AI assistant chat
+ *
+ * Called by:
+ * CMD_DELETE_AI_ASSISTANT_CHAT
+ *
+ * Expected input parameters:
+ * VID_CHAT_ID     Chat ID
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::deleteAiAssistantChat(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   response.setField(VID_RCC, DeleteAIAssistantChat(chatId, m_userId));
+   sendMessage(response);
+}
+
+/**
+ * Request AI assistant comment for given alarm
+ *
+ * Called by:
+ * CMD_REQUEST_AI_ASSISTANT_COMMENT
+ *
+ * Expected input parameters:
+ * VID_ALARM_ID     Alarm ID
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ * VID_MESSAGE                      Comment text if request completed successfully
+ */
+void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   Alarm *alarm = FindAlarmById(alarmId);
+   if (alarm != nullptr)
    {
-      rcc = CURRENT_MODULE.pfClearAiAssistantChat(this);
-      if (rcc != RCC_NOT_IMPLEMENTED)
+      shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
+      if (object != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS))
+      {
+         String text = alarm->requestAIAssistantComment(this);
+         if (!text.isEmpty())
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_MESSAGE, text);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+      delete alarm; // FindAlarmById() creates copy of alarm
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of AI assistant functions
+ */
+void ClientSession::getAiAssistantFunctions(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillAIAssistantFunctionListMessage(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Call AI assistant function
+ */
+void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   char functionName[128];
+   request.getFieldAsUtf8String(VID_AI_FUNCTION_NAME, functionName, 128);
+
+   char *args = request.getFieldAsUtf8String(VID_ARGUMENTS);
+   if (args != nullptr)
+   {
+      json_t *arguments = json_loads(args, 0, nullptr);
+      if (arguments != nullptr)
+      {
+         response.setFieldFromUtf8String(VID_MESSAGE, CallGlobalAIAssistantFunction(functionName, arguments, m_userId).c_str());
+         response.setField(VID_RCC, RCC_SUCCESS);
+         json_decref(arguments);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   MemFree(args);
+
+   sendMessage(response);
+}
+
+/**
+ * Get AI agent tasks
+ */
+void ClientSession::getAiAgentTasks(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillAIAgentTaskListMessage(&response, m_userId);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Delete AI agent task
+ */
+void ClientSession::deleteAiAgentTask(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t taskId = request.getFieldAsUInt32(VID_TASK_ID);
+   uint32_t rcc = DeleteAITask(taskId, m_userId);
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+   {
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI agent task %u deleted"), taskId);
+   }
+   else if (rcc == RCC_ACCESS_DENIED)
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting AI agent task %u"), taskId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Add AI agent task
+ */
+void ClientSession::addAiAgentTask(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
+   wchar_t *prompt = request.getFieldAsString(VID_PROMPT);
+   if ((description != nullptr) && (prompt != nullptr) && (description[0] != 0) && (prompt[0] != 0))
+   {
+      uint32_t taskId = RegisterAITask(description, m_userId, prompt);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_TASK_ID, taskId);
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI agent task %u added"), taskId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   MemFree(description);
+   MemFree(prompt);
+   sendMessage(response);
+}
+
+/**
+ * Handle AI agent question response from client
+ *
+ * Called by:
+ * CMD_AI_AGENT_RESPONSE
+ *
+ * Expected input parameters:
+ * VID_CHAT_ID              Chat ID
+ * VID_AI_QUESTION_ID       Question ID
+ * VID_AI_RESPONSE_POSITIVE Response for binary questions (true/false)
+ * VID_AI_RESPONSE_OPTION   Selected option index for multiple choice (-1 if not applicable)
+ *
+ * Return values:
+ * VID_RCC                  Request completion code
+ */
+void ClientSession::handleAiQuestionResponse(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t chatId = request.getFieldAsUInt32(VID_CHAT_ID);
+   uint32_t rcc;
+   shared_ptr<Chat> chat = GetAIAssistantChat(chatId, m_userId, &rcc);
+   if (chat != nullptr)
+   {
+      uint64_t questionId = request.getFieldAsUInt64(VID_AI_QUESTION_ID);
+      bool positive = request.getFieldAsBoolean(VID_AI_RESPONSE_POSITIVE);
+      int32_t selectedOption = request.getFieldAsInt32(VID_AI_RESPONSE_OPTION);
+      chat->handleQuestionResponse(questionId, positive, selectedOption);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, rcc);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get AI messages for current user
+ *
+ * Called by:
+ * CMD_GET_AI_MESSAGES
+ */
+void ClientSession::getAIMessages(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   unique_ptr<SharedObjectArray<AIMessage>> messages = GetAIMessagesForUser(m_userId);
+   response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(messages->size()));
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for (int i = 0; i < messages->size(); i++)
+   {
+      messages->get(i)->fillMessage(&response, fieldId, m_userId);
+      fieldId += 20;
+   }
+   response.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(response);
+}
+
+/**
+ * Set AI message status (read, approve, reject)
+ *
+ * Called by:
+ * CMD_SET_AI_MESSAGE_STATUS
+ *
+ * Expected input parameters:
+ * VID_AI_MESSAGE_ID    Message ID
+ * VID_AI_MESSAGE_STATUS New status (1=read, 2=approved, 3=rejected)
+ */
+void ClientSession::setAIMessageStatus(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t messageId = request.getFieldAsUInt32(VID_AI_MESSAGE_ID);
+   AIMessageStatus newStatus = AIMessageStatusFromInt(request.getFieldAsInt32(VID_AI_MESSAGE_STATUS));
+
+   uint32_t rcc;
+   switch (newStatus)
+   {
+      case AI_MSG_STATUS_READ:
+         rcc = MarkAIMessageAsRead(messageId, m_userId);
+         break;
+      case AI_MSG_STATUS_APPROVED:
+         rcc = ApproveAIMessage(messageId, m_userId);
+         break;
+      case AI_MSG_STATUS_REJECTED:
+         rcc = RejectAIMessage(messageId, m_userId);
+         break;
+      default:
+         rcc = RCC_INVALID_ARGUMENT;
          break;
    }
+
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Delete AI message
+ *
+ * Called by:
+ * CMD_DELETE_AI_MESSAGE
+ *
+ * Expected input parameters:
+ * VID_AI_MESSAGE_ID    Message ID
+ */
+void ClientSession::deleteAIMessage(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t messageId = request.getFieldAsUInt32(VID_AI_MESSAGE_ID);
+   uint32_t rcc = DeleteAIMessage(messageId, m_userId);
+
    response.setField(VID_RCC, rcc);
    sendMessage(response);
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1101,6 +1101,111 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer)
 }
 
 /**
+ * Format timestamp in milliseconds as yyyy-mm-dd HH:MM:SS.nnn.
+ * Provided buffer should be at least 25 characters long.
+ */
+TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer)
+{
+   if (timestamp != 0)
+   {
+      time_t t = static_cast<time_t>(timestamp / 1000);
+#if HAVE_LOCALTIME_R
+      struct tm ltmBuffer;
+      struct tm *loc = localtime_r(&t, &ltmBuffer);
+#else
+      struct tm *loc = localtime(&t);
+#endif
+      _tcsftime(buffer, 21, _T("%Y-%m-%d %H:%M:%S."), loc);
+      _sntprintf(&buffer[20], 5, _T("%03d"), static_cast<int>(timestamp % 1000));
+   }
+   else
+   {
+      _tcscpy(buffer, _T("never"));
+   }
+   return buffer;
+}
+
+/**
+ * Format timestamp in ISO 8601 format
+ */
+std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t)
+{
+   struct tm utcTime;
+#if HAVE_GMTIME_R
+   gmtime_r(&t, &utcTime);
+#else
+   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
+#endif
+   char text[64];
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%SZ", &utcTime);
+   return std::string(text);
+}
+
+/**
+ * Format milliseconds timestamp in ISO 8601 format
+ */
+std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
+{
+   time_t seconds = static_cast<time_t>(t / 1000);
+   struct tm utcTime;
+#if HAVE_GMTIME_R
+   gmtime_r(&seconds, &utcTime);
+#else
+   memcpy(&utcTime, gmtime(&seconds), sizeof(struct tm));
+#endif
+   char text[64];
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%S.", &utcTime);
+   snprintf(&text[20], 44, "%03dZ", static_cast<int>(t % 1000));
+   return std::string(text);
+}
+
+/**
+ * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now".
+ */
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
+{
+   char *eptr;
+   if ((ts[0] == '-') || (ts[0] == '+'))
+   {
+      // Offset from now
+      int64_t offset = strtoll(&ts[1], &eptr, 10);
+      if (*eptr != 0)
+      {
+         // check for suffix
+         if (stricmp(eptr, "m") == 0)
+            offset *= 60;
+         else if (stricmp(eptr, "h") == 0)
+            offset *= 3600;
+         else if (stricmp(eptr, "d") == 0)
+            offset *= 86400;
+         else if (stricmp(eptr, "s") != 0)
+            return 0;  // invalid format
+      }
+      else
+      {
+         // no suffix, assume minutes
+         offset *= 60;
+      }
+      time_t now = time(nullptr);
+      return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
+   }
+
+   if (!stricmp(ts, "now"))
+      return time(nullptr);
+
+   int64_t n = strtoll(ts, &eptr, 10);
+   if (*eptr == 0)
+      return static_cast<time_t>(n);   // Assume UNIX timestamp
+
+   struct tm t;
+   if (strptime(ts, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
+      return 0;
+
+   return timegm(&t);
+}
+
+/**
  * Get local system time zone. Returns pointer to buffer for convenience.
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)
@@ -2041,6 +2146,8 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
                      _tcscpy(buffer, _T("Server 2019"));
                   else if (ver->dwBuildNumber <= 20348)
                      _tcscpy(buffer, _T("Server 2022"));
+                  else if (ver->dwBuildNumber <= 26212)
+                     _tcscpy(buffer, _T("Server 2025"));
                   else
                      _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver->dwMajorVersion, ver->dwMinorVersion, ver->dwBuildNumber);
                }
@@ -2436,21 +2543,43 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 /**
  * Split string
  */
-TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings)
+TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings, bool mergeSeparators)
 {
 	TCHAR **strings;
-
-	*numStrings = NumChars(source, sep) + 1;
-	strings = (TCHAR **)MemAlloc(sizeof(TCHAR *) * (*numStrings));
+	if (mergeSeparators)
+   {
+	   // Count number of non-empty strings
+	   int count = 0;
+	   for(const TCHAR *p = source; *p != 0; p++)
+	   {
+	      if (*p == sep)
+         {
+            count++;
+            while(*(p + 1) == sep)
+               p++;
+         }
+	   }
+	   *numStrings = count + 1;
+   }
+	else
+	{
+	   *numStrings = NumChars(source, sep) + 1;
+	}
+	strings = MemAllocArray<TCHAR*>(*numStrings);
 	for(int n = 0, i = 0; n < *numStrings; n++, i++)
 	{
 		int start = i;
 		while((source[i] != sep) && (source[i] != 0))
 			i++;
 		int len = i - start;
-		strings[n] = (TCHAR *)MemAlloc(sizeof(TCHAR) * (len + 1));
+		strings[n] = MemAllocString(len + 1);
 		memcpy(strings[n], &source[start], len * sizeof(TCHAR));
 		strings[n][len] = 0;
+		if (mergeSeparators)
+      {
+         while(source[i + 1] == sep)
+            i++;
+      }
 	}
 	return strings;
 }
@@ -2528,7 +2657,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 
    for(curr = pszPattern; bRun; curr = ptr + 1)
    {
-      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
+      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ',') && (*ptr != _T('L')) && (*ptr != _T('#')); ptr++);
       switch(*ptr)
       {
          case '-':
@@ -2547,6 +2676,32 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
                return true;
             ptr++;
             if (*ptr != ',')
+               bRun = false;
+            break;
+         case '#':  // Nth occurrence of day of week in a month (like 5#3 - third Friday)
+            if (bRange || (localTime == nullptr))
+               return false;  // Range with # is not supported; n#m form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, nullptr, 10);
+            if (nValue == nCurr)
+            {
+               ptr++;
+               int occurrence = _tcstol(ptr, &ptr, 10);
+               if ((occurrence >= 1) && (occurrence <= 5))
+               {
+                  int currentOccurrence = (localTime->tm_mday - 1) / 7 + 1;
+                  if (currentOccurrence == occurrence)
+                     return true;
+               }
+            }
+            else
+            {
+               // Skip past the occurrence number
+               ptr++;
+               while ((*ptr >= _T('0')) && (*ptr <= _T('9')))
+                  ptr++;
+            }
+            if (*ptr != _T(','))
                bRun = false;
             break;
          case 0:
@@ -3488,10 +3643,10 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
 }
 
 /**
- * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local or UTC time
  * If timestamp string is invalid returns default value
  */
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue)
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue, bool utc)
 {
 	size_t len = strlen(text);
 	if ((len != 12) && (len != 14))
@@ -3504,7 +3659,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 	curr = &buffer[len - 2];
 
 	memset(&t, 0, sizeof(struct tm));
-	t.tm_isdst = -1;
+	t.tm_isdst = utc ? 0 : -1;
 
 	// Disable incorrect warning, probably caused by gcc bug 106757
 	// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106757
@@ -3547,7 +3702,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 #pragma GCC diagnostic pop
 #endif
 
-	return mktime(&t);
+	return utc ? timegm(&t) : mktime(&t);
 }
 
 /**
@@ -3555,12 +3710,12 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
  * If timestamp string is invalid returns default value
  * (UNICODE version)
  */
-time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue)
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue, bool utc)
 {
    char buffer[16];
    wchar_to_mb(text, -1, buffer, 16);
    buffer[15] = 0;
-   return ParseDateTimeA(buffer, defaultValue);
+   return ParseDateTimeA(buffer, defaultValue, utc);
 }
 
 /**
@@ -3885,25 +4040,6 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 }
 
 /**
- * Convert UNIX timestamp to JSON string in ISO 8601 format
- */
-json_t LIBNETXMS_EXPORTABLE *json_time_string(time_t t)
-{
-   if (t == 0)
-      return json_null();
-
-   struct tm utcTime;
-#if HAVE_GMTIME_R
-   gmtime_r(&t, &utcTime);
-#else
-   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
-#endif
-   char text[64];
-   strftime(text, 64, "%Y-%m-%dT%H:%M:%SZ", &utcTime);
-   return json_string(text);
-}
-
-/**
  * Convert JSON string in ISO 8601 format or integer to UNIX timestamp
  */
 time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval)
@@ -4067,7 +4203,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
 
    /* Turn echoing off and fail if we can’t. */
 #ifdef WIN32
-   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE); 
+   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
    DWORD mode;
    GetConsoleMode(hStdin, &mode);
 
@@ -4471,7 +4607,7 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
          {
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
                continue;
-            
+
             TCHAR nextNewName[MAX_PATH];
             _tcscpy(nextNewName, newName);
             _tcscat(nextNewName, FS_PATH_SEPARATOR);
@@ -5175,7 +5311,7 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dBm"), _T("rpm") };
 
 /**
  * Format DCI value based on Unit and value.
@@ -5241,4 +5377,128 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
    return result;
 }
 
+/**
+ * Format DCI value for display with control over multiplier usage
+ * @param unitName unit name (can be nullptr)
+ * @param value raw value string
+ * @param useMultiplier 0=default (apply multipliers), 1=always apply, 2=never apply (return raw value with unit)
+ */
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier)
+{
+   if (value == nullptr || *value == 0)
+      return String();
 
+   // When multipliers explicitly disabled (useMultiplier == 2), return raw value with unit
+   if (useMultiplier == 2)
+   {
+      StringBuffer result;
+      result.append(value);
+      if (unitName != nullptr && *unitName != 0)
+      {
+         StringBuffer units = unitName;
+         units.replace(_T(" (IEC)"), _T(""));
+         units.replace(_T(" (Metric)"), _T(""));
+         if (!units.isEmpty())
+         {
+            result.append(_T(" "));
+            result.append(units);
+         }
+      }
+      return result;
+   }
+
+   // For default (0) and yes (1), delegate to existing function
+   return FormatDCIValue(unitName, value);
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * @return Edit distance (number of single-character edits required to transform one string into another)
+ */
+size_t LIBNETXMS_EXPORTABLE CalculateLevenshteinDistance(const TCHAR *s1, size_t len1, const TCHAR *s2, size_t len2, bool ignoreCase)
+{
+   // If one string is empty, distance is the length of the other
+   if (len1 == 0)
+      return len2;
+   if (len2 == 0)
+      return len1;
+
+   // Create distance matrix
+   std::vector<std::vector<size_t>> matrix(len1 + 1, std::vector<size_t>(len2 + 1));
+
+   // Initialize first row and column
+   for (size_t i = 0; i <= len1; i++)
+      matrix[i][0] = i;
+   for (size_t j = 0; j <= len2; j++)
+      matrix[0][j] = j;
+
+   // Fill the matrix
+   for (size_t i = 1; i <= len1; i++)
+   {
+      for (size_t j = 1; j <= len2; j++)
+      {
+         size_t cost = ((s1[i - 1] == s2[j - 1]) || (ignoreCase && (_totupper(s1[i - 1]) == _totupper(s2[j - 1])))) ? 0 : 1;
+         matrix[i][j] = std::min({
+            matrix[i - 1][j] + 1,      // deletion
+            matrix[i][j - 1] + 1,      // insertion
+            matrix[i - 1][j - 1] + cost // substitution
+         });
+      }
+   }
+
+   return matrix[len1][len2];
+}
+
+/**
+ * Calculate string similarity (1.0 - exact match, 0.0 - completely different)
+ * @param s1 first string
+ * @param s2 second string
+ * @param ignoreCase true to ignore case during comparison
+ * @return similarity value
+ */
+double LIBNETXMS_EXPORTABLE CalculateStringSimilarity(const TCHAR *s1, const TCHAR *s2, bool ignoreCase)
+{
+   size_t len1 = _tcslen(s1);
+   size_t len2 = _tcslen(s2);
+   if (len1 == 0 && len2 == 0)
+      return 1.0;
+
+   size_t editDistance = CalculateLevenshteinDistance(s1, len1, s2, len2, ignoreCase);
+   return 1.0 - (static_cast<double>(editDistance) / std::max(len1, len2));
+}
+
+/**
+ * Fuzzy string comparison
+ * @param s1 first string
+ * @param s2 second string
+ * @param threshold matching threshold (0.0 - exact match, 1.0 - any strings match)
+ * @return true if strings match according to specified threshold
+ */
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStrings(const TCHAR *s1, const TCHAR *s2, double threshold)
+{
+   if (threshold >= 1.0)
+      return _tcscmp(s1, s2) == 0;
+
+   if (threshold <= 0.0)
+      return true;
+
+   return CalculateStringSimilarity(s1, s2, false) >= threshold;
+}
+
+/**
+ * Fuzzy string comparison ignoring case
+ * @param s1 first string
+ * @param s2 second string
+ * @param threshold matching threshold (0.0 - exact match, 1.0 - any strings match)
+ * @return true if strings match according to specified threshold
+ */
+bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCHAR *s2, double threshold)
+{
+   if (threshold >= 1.0)
+      return _tcsicmp(s1, s2) == 0;
+
+   if (threshold <= 0.0)
+      return true;
+
+   return CalculateStringSimilarity(s1, s2, true) >= threshold;
+}

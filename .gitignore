@@ -272,6 +272,7 @@ target
 /src/snmp/nxmibc/nxmibc
 /src/snmp/nxmibc/parser.output
 /src/snmp/nxmibc/parser.tab.*
+/src/snmp/nxmibdump/nxmibdump
 /src/snmp/nxsnmpget/nxsnmpget
 /src/snmp/nxsnmpset/nxsnmpset
 /src/snmp/nxsnmpwalk/nxsnmpwalk
@@ -333,3 +334,21 @@ cmake-build-debug/
 # Other
 .aider*
 .netxmsd_history
+.serena/
+
+# Python
+__pycache__/
+*.egg-info/
+venv/
+.nxadm_history
+
+# Windows MinGW Build System
+/config.mingw
+/out/
+*.dll
+*.dll.a
+*.exe
+*.ddr
+*.ncd
+*.ndd
+.depend

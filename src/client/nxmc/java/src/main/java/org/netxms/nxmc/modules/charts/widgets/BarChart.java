@@ -31,8 +31,9 @@ import org.eclipse.swt.graphics.Point;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -423,9 +424,13 @@ public class BarChart extends GenericComparisonChart
             StringBuilder sb = new StringBuilder();
             sb.append(item.getLabel());
             sb.append("\n");
-            String v = new DataFormatter(chart.getItem(i).getDisplayFormat(), s.getDataType(), item.measurementUnit).format(s.getCurrentValueAsString(),
-                  DateFormatFactory.getTimeFormatter());
+            DataFormatter df = s.getDataFormatter().setFormatString(chart.getItem(i).getDisplayFormat());
+            String v = df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
             sb.append(v);
+            sb.append(" (");
+            df.setUseMultipliers(DciValue.MULTIPLIERS_NO);
+            sb.append(df.format(s.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter()));
+            sb.append(")");
             sb.append(", ");
             int pct = (int)(s.getCurrentValue() / total * 100.0);
             sb.append(Integer.toString(pct));

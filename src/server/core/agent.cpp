@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
+#include <nxcore_websvc.h>
 
 /**
  * Externals
@@ -37,7 +38,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
          AgentConnection(ipAddr, port, secret, allowCompression)
 {
    m_nodeId = nodeId;
-   m_tcpProxySession = nullptr;
+   m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -52,7 +53,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunn
          AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel)
 {
    m_nodeId = nodeId;
-   m_tcpProxySession = nullptr;
+   m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -251,7 +252,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
    if (IsShutdownInProgress())
       return;
 
-	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
+	wchar_t name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
@@ -310,13 +311,29 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
          {
             debugPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
 		      shared_ptr<DCObject> dci = target->getDCObjectByName(name, 0);
+		      if (dci == nullptr)
+		      {
+		         debugPrintf(5, _T("%s: agent data push: DCI not found for %s, trying to create one using instance discovery"), target->getName(), name);
+		         dci = target->createPushDciInstance(name);
+		      }
 		      if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 		         debugPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
-               time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
-               if (t == 0)
-			         t = time(nullptr);
-			      target->processNewDCValue(dci, t, value, shared_ptr<Table>());
+               Timestamp t = msg->getFieldAsTimestamp(VID_TIMESTAMP_MS);
+               if (t.isNull())
+               {
+                  t = Timestamp::fromTime(msg->getFieldAsTime(VID_TIMESTAMP));
+                  if (t.isNull())
+                  {
+                     t = Timestamp::now();
+                     if (dci->getLastValueTimestamp() == t)
+                     {
+                        ThreadSleepMs(1);  // Ensure 1 ms difference between two consecutive values
+                        t = Timestamp::now();
+                     }
+                  }
+               }
+			      target->processNewDCValue(dci, t, value, shared_ptr<Table>(), true);
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);
 		      }
@@ -605,15 +622,9 @@ uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool n
 /**
  * Make web service custom request
  */
-WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+WebServiceCallResult AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
          const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data)
 {
-   // Cache only requests using cacheable methods per 4.2.1 of RFC 7231.
-   // Of those, netxms knows only GET.
-   if (cacheRetentionTime > 0) {
-      assert(requestMethod == HttpRequestMethod::_GET);
-   }
-   WebServiceCallResult *result = new WebServiceCallResult();
    NXCPMessage msg(getProtocolVersion());
    uint32_t requestId = generateRequestId();
    msg.setCode(CMD_WEB_SERVICE_CUSTOM_REQUEST);
@@ -633,6 +644,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_REQUEST_DATA, data);
 
    uint32_t rcc;
+   WebServiceCallResult result;
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, getCommandTimeout());
@@ -641,25 +653,28 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
          rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
-            result->httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
-            result->document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
-            result->success = true;
+            result.httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
+            result.document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
+            response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result.errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
+            result.success = true;
          }
-         response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result->errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
          delete response;
       }
       else
       {
          rcc = ERR_REQUEST_TIMEOUT;
-         _tcslcpy(result->errorMessage, _T("Agent request timeout"), WEBSVC_ERROR_TEXT_MAX_SIZE);
       }
    }
    else
    {
       rcc = ERR_CONNECTION_BROKEN;
-      _tcslcpy(result->errorMessage, _T("Agent connection broken"), WEBSVC_ERROR_TEXT_MAX_SIZE);
    }
-   result->agentErrorCode = rcc;
+
+   result.agentErrorCode = rcc;
+   if (rcc != ERR_SUCCESS)
+   {
+      wcslcpy(result.errorMessage, AgentErrorCodeToText(rcc), WEBSVC_ERROR_TEXT_MAX_SIZE);
+   }
    return result;
 }
 
@@ -669,7 +684,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
 uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
    if (IsShutdownInProgress())
-      return ERR_INTERNAL_ERROR;
+      return ERR_RESOURCE_BUSY;
 
    if (m_nodeId == 0)
    {
@@ -706,13 +721,13 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
       if (object == nullptr)
       {
-         TCHAR buffer[64];
+         wchar_t buffer[64];
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
       if (!object->isDataCollectionTarget())
       {
-         TCHAR buffer[64];
+         wchar_t buffer[64];
          debugPrintf(5, _T("AgentConnectionEx::processCollectedData: object with GUID %s is not a data collection target"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
@@ -727,7 +742,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
    if (dcObject == nullptr)
    {
-      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%u]"),
                   dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
@@ -735,12 +750,14 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    int type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
    if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
    {
-      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%u] on object %s [%u] configuration mismatch"),
                   dcObject->getName().cstr(), dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
 
-   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+   Timestamp t = msg->getFieldAsTimestamp(VID_TIMESTAMP_MS);
+   if (t.isNull())
+      t = Timestamp::fromTime(msg->getFieldAsTime(VID_TIMESTAMP));
    uint32_t status = msg->getFieldAsUInt32(VID_STATUS);
    bool success = true;
 
@@ -751,7 +768,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    {
       case ERR_SUCCESS:
       {
-         TCHAR itemValue[MAX_RESULT_LENGTH];
+         wchar_t itemValue[MAX_RESULT_LENGTH];
          shared_ptr<Table> tableValue;
          switch(type)
          {
@@ -763,14 +780,14 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                static_cast<DCTable*>(dcObject.get())->updateResultColumns(tableValue);
                break;
             default:
-               debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
+               debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%u] on object %s [%u]"),
                            type, dcObject->getName().cstr(), dciId, target->getName(), target->getId());
                return ERR_INTERNAL_ERROR;
          }
 
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-         success = target->processNewDCValue(dcObject, t, itemValue, tableValue);
+         success = target->processNewDCValue(dcObject, t, itemValue, tableValue, false);
          if (t > dcObject->getLastPollTime())
             dcObject->setLastPollTime(t);
          break;
@@ -838,7 +855,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
    int64_t startTime = GetCurrentTimeMs();
    for(int i = 0; i < count; i++, fieldId += 10)
    {
-      uint32_t elapsed = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+      uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
       if ((agentTimeout > 0) && (elapsed >= agentTimeout)) // agent timeout 0 means that agent will not understand processing notifications
       {
          NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId(), getProtocolVersion());
@@ -869,7 +886,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          shared_ptr<NetObj> object = FindObjectByGUID(targetId, -1);
          if (object == nullptr)
          {
-            TCHAR buffer[64];
+            wchar_t buffer[64];
             debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target object with GUID %s (element %d)"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
@@ -877,7 +894,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          }
          if (!object->isDataCollectionTarget())
          {
-            TCHAR buffer[64];
+            wchar_t buffer[64];
             debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: object with GUID %s (element %d) is not a data collection target"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
@@ -909,11 +926,13 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          continue;
       }
 
-      TCHAR *value = request->getFieldAsString(fieldId + 5);
+      wchar_t *value = request->getFieldAsString(fieldId + 5);
       uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%u] (type=%d) (status=%d) on object %s [%u] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
-      time_t t = request->getFieldAsTime(fieldId + 4);
+      Timestamp t = request->getFieldAsTimestamp(fieldId + 7);
+      if (t.isNull())
+         t = Timestamp::fromTime(request->getFieldAsTime(fieldId + 4));
       bool success = true;
 
       switch(statusCode)
@@ -921,7 +940,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          case ERR_SUCCESS:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-            success = target->processNewDCValue(dcObject, t, value, tableValue);
+            success = target->processNewDCValue(dcObject, t, value, tableValue, false);
             if (t > dcObject->getLastPollTime())
                dcObject->setLastPollTime(t);
             break;
@@ -950,11 +969,11 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
 }
 
 /**
- * Set client session for receiving TCP proxy packets
+ * Set callback for receiving TCP proxy packets
  */
-void AgentConnectionEx::setTcpProxySession(ClientSession *session)
+void AgentConnectionEx::setTcpProxyCallback(TcpProxyCallback *callback)
 {
-   m_tcpProxySession = session;
+   m_tcpProxyCallback = callback;
 }
 
 /**
@@ -962,8 +981,8 @@ void AgentConnectionEx::setTcpProxySession(ClientSession *session)
  */
 void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
-   if (m_tcpProxySession != nullptr)
-      m_tcpProxySession->processTcpProxyData(this, channelId, data, size, errorIndicator);
+   if (m_tcpProxyCallback != nullptr)
+      m_tcpProxyCallback->onTcpProxyData(this, channelId, data, size, errorIndicator);
 }
 
 /**
@@ -983,8 +1002,8 @@ void AgentConnectionEx::onDisconnect()
    if (isFileUpdateConnection())
       RemoveFileMonitorsByNodeId(m_nodeId);
 
-   if (m_tcpProxySession != nullptr)
-      m_tcpProxySession->processTcpProxyAgentDisconnect(this);
+   if (m_tcpProxyCallback != nullptr)
+      m_tcpProxyCallback->onTcpProxyAgentDisconnect(this);
 }
 
 #define DEBUG_TAG _T("agent")

@@ -26,6 +26,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciTemplateConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -44,7 +45,7 @@ import com.google.gson.Gson;
 public class TableValueElement extends ElementWidget
 {
    private static final Logger logger = LoggerFactory.getLogger(TableValueElement.class);
-   
+
 	private TableValueConfig config;
 	private TableValueViewer viewer;
 
@@ -70,6 +71,7 @@ public class TableValueElement extends ElementWidget
       processCommonSettings(config);
 
       viewer = new TableValueViewer(getContentArea(), SWT.NONE, view, parent.getDashboardObject().getGuid().toString(), false);
+      viewer.setSortColumn(config.getSortColumn(), config.getSortDirection());
       if (config.getObjectId() == AbstractObject.CONTEXT)
       {
          configureContext();
@@ -115,15 +117,18 @@ public class TableValueElement extends ElementWidget
          protected void run(IProgressMonitor monitor) throws Exception
          {
             DciValue[] dciList = session.getLastValues(contextObject.getObjectId());
-            Pattern namePattern = Pattern.compile(config.getDciName());
-            Pattern descriptionPattern = Pattern.compile(config.getDciDescription());
+            DciTemplateConfig tc = config.getTemplateConfig();
+            Pattern namePattern = compilePattern(tc.getDciName(), tc.isRegexMatch());
+            Pattern descriptionPattern = compilePattern(tc.getDciDescription(), tc.isRegexMatch());
+            Pattern tagPattern = compilePattern(tc.getDciTag(), tc.isRegexMatch());
             for(DciValue dciInfo : dciList)
             {
                if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_TABLE)
                   continue;
 
-               if ((!config.getDciName().isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
-                   (!config.getDciDescription().isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+               if (matchesPattern(namePattern, dciInfo.getName()) ||
+                   matchesPattern(descriptionPattern, dciInfo.getDescription()) ||
+                   matchesPattern(tagPattern, dciInfo.getUserTag()))
                {
                   runInUIThread(() -> {
                      if (!viewer.isDisposed())
@@ -143,5 +148,31 @@ public class TableValueElement extends ElementWidget
             return "Cannot read DCI data from server";
          }
       }.start();
+   }
+
+   /**
+    * Compile pattern for DCI matching.
+    *
+    * @param pattern pattern string
+    * @param isRegex true if pattern should be treated as regular expression
+    * @return compiled pattern or null if pattern is empty
+    */
+   private static Pattern compilePattern(String pattern, boolean isRegex)
+   {
+      if ((pattern == null) || pattern.isEmpty())
+         return null;
+      return isRegex ? Pattern.compile(pattern) : Pattern.compile(Pattern.quote(pattern));
+   }
+
+   /**
+    * Check if value matches pattern.
+    *
+    * @param pattern compiled pattern (can be null)
+    * @param value value to match
+    * @return true if pattern is not null and value matches
+    */
+   private static boolean matchesPattern(Pattern pattern, String value)
+   {
+      return (pattern != null) && (value != null) && pattern.matcher(value).find();
    }
 }

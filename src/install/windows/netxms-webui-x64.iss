@@ -43,8 +43,8 @@ Name: "{app}\logs"; Flags: uninsalwaysuninstall
 
 [InstallDelete]
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
-Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.3.5.jar"
-Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.3.5.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.5.21.jar"
+Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.5.21.jar"
 Type: filesandordirs; Name: "{app}\jetty-home\lib\*"
 Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
 
@@ -70,7 +70,6 @@ Source: "web\jetty-base\*"; DestDir: "{app}\jetty-base"; Flags: onlyifdoesntexis
 Source: "web\launcher.conf"; DestDir: "{app}\etc"; Flags: onlyifdoesntexist; Components: webui
 Source: "web\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\nxmc.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
-Source: "web\nxmc-legacy.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
 Source: "web\nxmc-{#VersionString}-standalone.jar"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion; Components: webui
 Source: "web\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: webui
 ; Java Runtime

@@ -63,6 +63,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
+import org.netxms.nxmc.base.login.LoginCredentials;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.login.LoginProgressDialog;
@@ -129,6 +130,9 @@ public class Startup implements EntryPoint, StartupParameters
       display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+E", "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
 
       File tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("javax.servlet.context.tempdir");
+      if (tempDir == null) {
+        tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("jakarta.servlet.context.tempdir");
+      }
       File stateDir = new File(tempDir + File.separator + "state");
       if (!stateDir.isDirectory())
       {
@@ -382,40 +386,27 @@ public class Startup implements EntryPoint, StartupParameters
     */
    private boolean doLogin()
    {
-      PreferenceStore settings = PreferenceStore.getInstance();
       boolean success = false;
-      boolean autoConnect = false;
-      boolean tokenAuth = false;
-      String password = "";
-
-      String s = getParameter("login");
-      if (s != null)
-      {
-         settings.set("Connect.Login", s);
-      }
-
-      s = getParameter("password");
-      if (s != null)
-      {
-         password = s;
-         settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
-      }
-
-      s = getParameter("token");
-      if (s != null)
-      {
-         settings.set("Connect.Login", s);
-         tokenAuth = true;
-      }
 
       AppPropertiesLoader appProperties = new AppPropertiesLoader();
 
-      s = getParameter("auto");
-      if (s != null)
-      {
-         autoConnect = true;
-      }
-      else if (appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
+      // Server always from app properties
+      String server = appProperties.getProperty("server", "127.0.0.1");
+
+      // Local variables for parsed credentials
+      String loginName = null;
+      String password = null;
+      String token = null;
+      boolean autoConnect = false;
+
+      // Parse URL parameters
+      loginName = getParameter("login");
+      password = getParameter("password");
+      token = getParameter("token");
+      autoConnect = getParameter("auto") != null;
+
+      // Check cookie for auto-login if no URL params
+      if (!autoConnect && appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
       {
          String storedCredentials = getCredentialsFromCookie();
          if (storedCredentials != null)
@@ -424,44 +415,41 @@ public class Startup implements EntryPoint, StartupParameters
             if (parts.length == 2)
             {
                logger.debug("Using stored credentials");
-               settings.set("Connect.Login", parts[0]);
+               loginName = parts[0];
                password = parts[1];
                autoConnect = true;
             }
          }
       }
 
-      settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
+      boolean ignoreProtocolVersion = appProperties.getPropertyAsBoolean("ignoreProtocolVersion", false);
+      boolean enableCompression = appProperties.getPropertyAsBoolean("enableCompression", true);
 
       LoginDialog loginDialog = new LoginDialog(appProperties);
+      LoginCredentials credentials = null;
+
       while(!success)
       {
-         if (!autoConnect)
+         if (autoConnect)
+         {
+            // Build credentials directly from parsed params
+            if (token != null)
+               credentials = LoginCredentials.forToken(server, token);
+            else
+               credentials = new LoginCredentials(server, loginName, password);
+            autoConnect = false; // only auto-connect once
+         }
+         else
          {
             if (loginDialog.open() != Window.OK)
             {
                logger.info("Login cancelled by user - exiting");
                return false;
             }
-            password = loginDialog.getPassword();
-         }
-         else
-         {
-            autoConnect = false; // only do auto connect first time
+            credentials = loginDialog.getCredentials(server);
          }
 
-         boolean ignoreProtocolVersion = appProperties.getPropertyAsBoolean("ignoreProtocolVersion", false);
-         boolean enableCompression = appProperties.getPropertyAsBoolean("enableCompression", true);
-         LoginJob job = new LoginJob(display, ignoreProtocolVersion, enableCompression);
-         if (tokenAuth)
-         {
-            tokenAuth = false;  // only do token auth for first time
-            job.setAuthByToken();
-         }
-         else
-         {
-            job.setPassword(password);
-         }
+         LoginJob job = new LoginJob(display, credentials, ignoreProtocolVersion, enableCompression);
 
          LoginProgressDialog monitorDialog = new LoginProgressDialog(appProperties);
          try
@@ -491,14 +479,14 @@ public class Startup implements EntryPoint, StartupParameters
       final NXCSession session = Registry.getSession();
       if ((session.getAuthenticationMethod() == AuthenticationType.PASSWORD) && session.isPasswordExpired())
       {
-         requestPasswordChange(loginDialog.getPassword(), session);
+         requestPasswordChange(credentials.getPassword(), session);
       }
 
       if (appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
       {
          try
          {
-            Cookie cookie = new Cookie(LOGIN_COOKIE_NAME, Base64.encodeBase64String((settings.getAsString("Connect.Login") + "`" + password).getBytes("UTF-8")));
+            Cookie cookie = new Cookie(LOGIN_COOKIE_NAME, Base64.encodeBase64String((credentials.getLoginName() + "`" + credentials.getPassword()).getBytes("UTF-8")));
             cookie.setSecure(ContextProvider.getRequest().isSecure());
             cookie.setMaxAge(-1);
             cookie.setHttpOnly(true);

@@ -232,6 +232,69 @@ NXSL_METHOD_DEFINITION(JsonObject, set)
 }
 
 /**
+ * JsonObject method setBoolean(key, value)
+ */
+NXSL_METHOD_DEFINITION(JsonObject, setBoolean)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   char attr[256];
+#ifdef UNICODE
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#else
+   mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#endif
+   attr[255] = 0;
+
+   json_object_set_new(static_cast<json_t*>(object->getData()), attr, json_boolean(argv[1]->isTrue()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonObject method setNull(key)
+ */
+NXSL_METHOD_DEFINITION(JsonObject, setNull)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   char attr[256];
+#ifdef UNICODE
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#else
+   mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#endif
+   attr[255] = 0;
+
+   json_object_set_new(static_cast<json_t*>(object->getData()), attr, json_null());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonObject method setString(key, value)
+ */
+NXSL_METHOD_DEFINITION(JsonObject, setString)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   char attr[256];
+#ifdef UNICODE
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#else
+   mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
+#endif
+   attr[255] = 0;
+
+   json_object_set_new(static_cast<json_t*>(object->getData()), attr, json_string_t(argv[1]->getValueAsCString()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Implementation of "JsonObject" class: constructor
  */
 NXSL_JsonObjectClass::NXSL_JsonObjectClass() : NXSL_Class()
@@ -242,6 +305,9 @@ NXSL_JsonObjectClass::NXSL_JsonObjectClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(JsonObject, keys, 0);
    NXSL_REGISTER_METHOD(JsonObject, serialize, 0);
    NXSL_REGISTER_METHOD(JsonObject, set, 2);
+   NXSL_REGISTER_METHOD(JsonObject, setBoolean, 2);
+   NXSL_REGISTER_METHOD(JsonObject, setNull, 1);
+   NXSL_REGISTER_METHOD(JsonObject, setString, 2);
 }
 
 /**
@@ -313,6 +379,36 @@ NXSL_METHOD_DEFINITION(JsonArray, append)
 }
 
 /**
+ * JsonArray method appendBoolean(value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, appendBoolean)
+{
+   json_array_append_new(static_cast<json_t*>(object->getData()), json_boolean(argv[0]->isTrue()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method appendNull()
+ */
+NXSL_METHOD_DEFINITION(JsonArray, appendNull)
+{
+   json_array_append_new(static_cast<json_t*>(object->getData()), json_null());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method appendString(value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, appendString)
+{
+   json_array_append_new(static_cast<json_t*>(object->getData()), json_string_t(argv[0]->getValueAsCString()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * JsonArray method get(index)
  */
 NXSL_METHOD_DEFINITION(JsonArray, get)
@@ -325,7 +421,7 @@ NXSL_METHOD_DEFINITION(JsonArray, get)
 }
 
 /**
- * JsonArray method get(index)
+ * JsonArray method insert(index, value)
  */
 NXSL_METHOD_DEFINITION(JsonArray, insert)
 {
@@ -347,7 +443,46 @@ NXSL_METHOD_DEFINITION(JsonArray, insert)
 }
 
 /**
- * JsonArray method get(index)
+ * JsonArray method insertBoolean(index, value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, insertBoolean)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_boolean(argv[1]->isTrue()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method insertNull(index)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, insertNull)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_null());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method insertString(index, value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, insertString)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_string_t(argv[1]->getValueAsCString()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method set(index, value)
  */
 NXSL_METHOD_DEFINITION(JsonArray, set)
 {
@@ -369,6 +504,46 @@ NXSL_METHOD_DEFINITION(JsonArray, set)
 }
 
 /**
+ * JsonArray method setBoolean(index, value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, setBoolean)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_boolean(argv[1]->isTrue()));
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method setNull(index)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, setNull)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_null());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * JsonArray method setString(index, value)
+ */
+NXSL_METHOD_DEFINITION(JsonArray, setString)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_string_t(argv[1]->getValueAsCString()));
+   *result = vm->createValue();
+   return 0;
+}
+
+
+/**
  * Implementation of "JsonArray" class: constructor
  */
 NXSL_JsonArrayClass::NXSL_JsonArrayClass() : NXSL_Class()
@@ -376,10 +551,19 @@ NXSL_JsonArrayClass::NXSL_JsonArrayClass() : NXSL_Class()
    setName(_T("JsonArray"));
 
    NXSL_REGISTER_METHOD(JsonArray, append, 1);
+   NXSL_REGISTER_METHOD(JsonArray, appendBoolean, 1);
+   NXSL_REGISTER_METHOD(JsonArray, appendNull, 0);
+   NXSL_REGISTER_METHOD(JsonArray, appendString, 1);
    NXSL_REGISTER_METHOD(JsonArray, get, 1);
    NXSL_REGISTER_METHOD(JsonArray, insert, 2);
+   NXSL_REGISTER_METHOD(JsonArray, insertBoolean, 2);
+   NXSL_REGISTER_METHOD(JsonArray, insertNull, 1);
+   NXSL_REGISTER_METHOD(JsonArray, insertString, 2);
    NXSL_REGISTER_METHOD(JsonArray, serialize, 0);
    NXSL_REGISTER_METHOD(JsonArray, set, 2);
+   NXSL_REGISTER_METHOD(JsonArray, setBoolean, 2);
+   NXSL_REGISTER_METHOD(JsonArray, setNull, 1);
+   NXSL_REGISTER_METHOD(JsonArray, setString, 2);
 }
 
 /**

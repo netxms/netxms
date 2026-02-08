@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,6 +199,14 @@
 #define EVENT_RESPONSIBLE_USER_ADDED                145
 #define EVENT_RESPONSIBLE_USER_REMOVED              146
 #define EVENT_RESPONSIBLE_USER_MODIFIED             147
+#define EVENT_IF_SPEED_BELOW_MAXIMUM                148
+#define EVENT_INTERFACE_UNMANAGED                   149
+#define EVENT_NC_QUEUE_OVERFLOW                     150
+#define EVENT_INCIDENT_OPENED                       151
+#define EVENT_INCIDENT_STATE_CHANGED                152
+#define EVENT_INCIDENT_ASSIGNED                     153
+#define EVENT_INCIDENT_ALARM_LINKED                 154
+#define EVENT_INCIDENT_ALARM_UNLINKED               155
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

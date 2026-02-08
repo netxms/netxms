@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.propertypages.AbstractChart;
 import org.netxms.nxmc.modules.dashboards.propertypages.AlarmViewer;
 import org.netxms.nxmc.modules.dashboards.propertypages.AvailabilityChart;
-import org.netxms.nxmc.modules.dashboards.propertypages.CustomWidget;
 import org.netxms.nxmc.modules.dashboards.propertypages.DashboardElementPropertyPage;
 import org.netxms.nxmc.modules.dashboards.propertypages.DataSources;
 import org.netxms.nxmc.modules.dashboards.propertypages.DciSummaryTable;
@@ -80,7 +79,6 @@ public class DashboardElementPropertiesManager
       pageClasses.add(AbstractChart.class);
       pageClasses.add(AlarmViewer.class);
       pageClasses.add(AvailabilityChart.class);
-      pageClasses.add(CustomWidget.class);
       pageClasses.add(DataSources.class);
       pageClasses.add(DciSummaryTable.class);
       pageClasses.add(EmbeddedDashboard.class);

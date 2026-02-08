@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
-void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
@@ -271,7 +270,7 @@ static void ProcessPollCommand(const wchar_t *arg, wchar_t *szBuffer, CONSOLE_CT
       }
       else if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
       {
-         pollType = POLL_CONFIGURATION_NORMAL;
+         pollType = POLL_CONFIGURATION;
       }
       else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
       {
@@ -306,7 +305,7 @@ static void ProcessPollCommand(const wchar_t *arg, wchar_t *szBuffer, CONSOLE_CT
                Pollable* pollableObject = object->getAsPollable();
                switch(pollType)
                {
-                  case POLL_CONFIGURATION_NORMAL:
+                  case POLL_CONFIGURATION:
                      if (pollableObject->isConfigurationPollAvailable())
                         ThreadPoolExecute(g_pollerThreadPool, pollableObject, &Pollable::doForcedConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object));
                      break;
@@ -464,12 +463,25 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ExtractWord(pArg, szBuffer);
          ClearDBWriterData(console, szBuffer);
       }
+      else if (IsCommand(_T("NCQUEUE"), szBuffer, 3))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (ClearNotificationChannelQueue(szBuffer))
+         {
+            ConsoleWrite(console, _T("Notification channel queue cleared\n"));
+         }
+         else
+         {
+            ConsoleWrite(console, _T("Invalid notification channel name\n"));
+         }
+      }
       else if (szBuffer[0] == 0)
       {
          ConsoleWrite(console,
                   _T("Valid components:\n")
                   _T("   DBWriter Counters\n")
                   _T("   DBWriter DataQueue\n")
+                  _T("   NCQueue <channel-name>\n")
                   _T("\n"));
       }
       else
@@ -600,8 +612,8 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       ExtractWord(pArg, szBuffer);
       if (szBuffer[0] != 0)
       {
-         TCHAR value[MAX_CONFIG_VALUE];
-         ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE, _T(""));
+         TCHAR value[MAX_CONFIG_VALUE_LENGTH];
+         ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE_LENGTH, _T(""));
          ConsolePrintf(console, _T("%s = %s\n"), szBuffer, value);
       }
       else
@@ -881,6 +893,20 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, _T("Variable name missing\n"));
       }
    }
+   else if (IsCommand(_T("RELOAD"), szBuffer, 3))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("MIB"), szBuffer, 3))
+      {
+         ConsolePrintf(console, _T("Reloading MIB tree...\n"));
+         ReloadMIBTree();
+         ConsolePrintf(console, _T("MIB tree reloaded\n"));
+      }
+      else
+      {
+         ConsolePrintf(console, _T("Usage: RELOAD MIB\n"));
+      }
+   }
    else if (IsCommand(_T("SHOW"), szBuffer, 2))
    {
       // Get argument
@@ -1003,6 +1029,10 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          {
             ConsoleWrite(console, _T("Invalid subcommand\n"));
          }
+      }
+      else if (IsCommand(_T("EPP"), szBuffer, 3))
+      {
+         GetEventProcessingPolicy()->showRules(console);
       }
       else if (IsCommand(_T("EP"), szBuffer, 2))
       {
@@ -1322,13 +1352,13 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
          ConsoleWrite(console, _T("Loaded server modules:\n"));
-         ENUMERATE_MODULES(szName)
+         ENUMERATE_MODULES(name)
          {
             NXMODULE_METADATA *m = CURRENT_MODULE.metadata;
             if (m != nullptr)
-               ConsolePrintf(console, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
+               ConsolePrintf(console, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.name, m->moduleVersion, m->vendor);
             else
-               ConsolePrintf(console, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
+               ConsolePrintf(console, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.name);
          }
          ConsolePrintf(console, _T("%d modules loaded\n"), g_moduleList.size());
       }
@@ -1371,10 +1401,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          {
             ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
-      }
-      else if (IsCommand(_T("PE"), szBuffer, 2))
-      {
-         ShowPredictionEngines(console);
       }
       else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
@@ -1905,6 +1931,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
+            _T("   reload mib                        - Reload MIB tree from compiled file\n")
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
@@ -1915,6 +1942,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show dbstats                      - Show DB library statistics\n")
             _T("   show discovery ranges             - Show state of active network discovery by address range\n")
             _T("   show ep                           - Show event processing threads statistics\n")
+            _T("   show epp                          - Show event processing policy rules\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")
             _T("   show heap details                 - Show detailed heap information\n")
@@ -1923,7 +1951,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show modules                      - Show loaded server modules\n")
             _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
-            _T("   show pe                           - Show registered prediction engines\n")
             _T("   show pollers [summary]            - Show pollers state information\n")
             _T("   show queues                       - Show internal queues statistics\n")
             _T("   show routing-table <node>         - Show cached routing table for node\n")

@@ -1,0 +1,368 @@
+/*
+** NetXMS - Network Management System
+** Copyright (C) 2003-2026 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation; either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: iris.h
+**
+**/
+
+#ifndef _iris_h_
+#define _iris_h_
+
+#include <unordered_map>
+
+#define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
+
+/**
+ * AI assistant function handler
+ */
+typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
+
+/**
+ * Assistant function descriptor
+ */
+struct AssistantFunction
+{
+   std::string name;
+   std::string description;
+   std::vector<std::pair<std::string, std::string>> parameters;
+   AssistantFunctionHandler handler;
+
+   AssistantFunction(const std::string& name, const std::string& description,
+      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
+      : name(name), description(description), parameters(parameters), handler(handler)
+   {
+   }
+};
+
+/**
+ * Set of AI assistant functions
+ */
+typedef std::unordered_map<std::string, shared_ptr<AssistantFunction>> AssistantFunctionSet;
+
+/**
+ * AI task state
+ */
+enum class AITaskState
+{
+   SCHEDULED = 0,
+   RUNNING = 1,
+   COMPLETED = 2,
+   FAILED = 3
+};
+
+/**
+ * Confirmation type for binary questions
+ */
+enum class ConfirmationType
+{
+   APPROVE_REJECT = 0,
+   YES_NO = 1,
+   CONFIRM_CANCEL = 2
+};
+
+/**
+ * Pending question for user interaction
+ */
+struct PendingQuestion
+{
+   uint64_t id;
+   bool isMultipleChoice;
+   ConfirmationType confirmationType;
+   std::string text;
+   std::string context;
+   StringList options;
+   time_t expiresAt;
+   Condition responseReceived;
+   bool responded;
+   bool positiveResponse;
+   int selectedOption;
+
+   PendingQuestion() : responseReceived(false)
+   {
+      id = 0;
+      isMultipleChoice = false;
+      confirmationType = ConfirmationType::APPROVE_REJECT;
+      expiresAt = 0;
+      responded = false;
+      positiveResponse = false;
+      selectedOption = -1;
+   }
+};
+
+/**
+ * AI task
+ */
+class AITask
+{
+private:
+   uint32_t m_id;
+   uint32_t m_userId;
+   std::string m_prompt;
+   time_t m_lastExecutionTime;
+   time_t m_nextExecutionTime;
+   std::string m_memento;
+   StringBuffer m_explanation;
+   String m_description;
+   AITaskState m_state;
+   uint32_t m_iteration;
+
+   void logExecution();
+
+public:
+   AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt);
+   AITask(DB_RESULT hResult, int row);
+
+   void execute();
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getUserId() const { return m_userId; }
+   const wchar_t *getDescription() const { return m_description.cstr(); }
+   const std::string& getPrompt() const { return m_prompt; }
+   AITaskState getState() const { return m_state; }
+   time_t getLastExecutionTime() const { return m_lastExecutionTime; }
+   time_t getNextExecutionTime() const { return m_nextExecutionTime; }
+   uint32_t getIteration() const { return m_iteration; }
+   const wchar_t *getExplanation() const { return m_explanation.cstr(); }
+
+   void saveToDatabase() const;
+   void deleteFromDatabase();
+
+   json_t *toJson() const;
+
+   void setNextExecutionTime(time_t t);
+};
+
+/**
+ * Async request state for WebAPI
+ */
+enum class AsyncRequestState
+{
+   IDLE = 0,
+   PROCESSING = 1,
+   COMPLETED = 2
+};
+
+/**
+ * Chat with AI assistant
+ */
+class NXCORE_EXPORTABLE Chat
+{
+private:
+   uint32_t m_id;
+   uint32_t m_userId;
+   uint32_t m_boundIncidentId;  // ID of bound incident (0 if not bound)
+   Mutex m_mutex;
+   json_t *m_messages;
+   size_t m_initialMessageCount;
+   AssistantFunctionSet m_functions;
+   json_t *m_functionDeclarations;
+   time_t m_creationTime;
+   time_t m_lastUpdateTime;
+   PendingQuestion *m_pendingQuestion;
+   Mutex m_questionMutex;
+   AsyncRequestState m_asyncState;
+   char *m_asyncResult;
+   Mutex m_asyncMutex;
+   bool m_isInteractive;
+   char m_slot[32];  // Provider slot (e.g., "interactive", "background", "fast", "analytical")
+
+   void addMessage(const char *role, const char *content)
+   {
+      json_t *message = json_object();
+      json_object_set_new(message, "role", json_string(role));
+      json_object_set_new(message, "content", json_string(content));
+      json_array_append_new(m_messages, message);
+      nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+   }
+
+   void initializeFunctions();
+   std::string callFunction(const char *name, json_t *arguments);
+   std::string loadSkill(const char *skillName);
+
+public:
+   Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr, bool isInteractive = true);
+   ~Chat();
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getUserId() const { return m_userId; }
+   uint32_t getBoundIncidentId() const { return m_boundIncidentId; }
+   bool isInteractive() const { return m_isInteractive; }
+   const char *getSlot() const { return m_slot; }
+   void setSlot(const char *slot) { strlcpy(m_slot, slot, sizeof(m_slot)); }
+
+   void bindToIncident(uint32_t incidentId);
+
+   char *sendRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+
+   bool startAsyncRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+   AsyncRequestState getAsyncState() const { return m_asyncState; }
+   char *takeAsyncResult();
+
+   void clear();
+
+   bool askConfirmation(const char *text, const char *context, ConfirmationType type, uint32_t timeout = 300);
+   int askMultipleChoice(const char *text, const char *context, const StringList &options, uint32_t timeout = 300);
+   void handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption);
+   bool hasPendingQuestion() const { return m_pendingQuestion != nullptr; }
+   json_t *getPendingQuestion();
+};
+
+/**
+ * AI assistant skill
+ */
+struct AssistantSkill
+{
+   std::string name;
+   std::string description;
+   std::string prompt;
+   std::vector<AssistantFunction> functions;
+
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt) :
+      name(_name), description(_description), prompt(_prompt)
+   {
+   }
+
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AssistantFunction>& _functions) :
+      name(_name), description(_description), prompt(_prompt), functions(_functions)
+   {
+   }
+};
+
+/**
+ * Register assistant function. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler);
+
+/**
+ * Call globally registered AI assistant function (intended for MCP bridge)
+ */
+std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId);
+
+/**
+ * Fill message with registered function list
+ */
+void FillAIAssistantFunctionListMessage(NXCPMessage *msg);
+
+/**
+ * Register AI assistant skill. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt);
+
+/**
+ * Register AI assistant skill with functions. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt, const std::vector<AssistantFunction>& functions);
+
+/**
+ * Add custom prompt
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
+
+/**
+ * Add custom prompt from file
+ */
+void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName);
+
+/**
+ * Get current chat context (thread-local).
+ * Returns the Chat object that is currently processing a request on this thread, or nullptr if none.
+ * This allows AI function handlers to access the Chat for user interaction (e.g., askConfirmation).
+ */
+Chat NXCORE_EXPORTABLE *GetCurrentAIChat();
+
+/**
+ * Create new chat
+ * @param userId ID of the user creating the chat
+ * @param incidentId ID of incident to bind to (0 for no binding)
+ * @param rcc Pointer to store result code
+ */
+shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t incidentId, uint32_t *rcc);
+
+/**
+ * Get chat with given ID
+ */
+shared_ptr<Chat> NXCORE_EXPORTABLE GetAIAssistantChat(uint32_t chatId, uint32_t userId, uint32_t *rcc);
+
+/**
+ * Clear history for given chat session
+ */
+uint32_t NXCORE_EXPORTABLE ClearAIAssistantChat(uint32_t chatId, uint32_t userId);
+
+/**
+ * Delete chat
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userId);
+
+/**
+ * Send single independent query to AI assistant
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, int maxIterations = 32);
+
+/**
+ * Send single independent query to AI assistant using specific slot
+ * @param prompt Query prompt
+ * @param context Optional object context
+ * @param slot Provider slot to use (e.g., "fast", "analytical")
+ * @param maxIterations Maximum iterations for function calling
+ */
+char NXCORE_EXPORTABLE *QueryAIAssistantWithSlot(const char *prompt, NetObj *context, const char *slot, int maxIterations = 32);
+
+/**
+ * Register AI task
+ */
+uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime = 0);
+
+/**
+ * Delete AI task
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId);
+
+/**
+ * Convert JSON object to std::string and consume JSON object
+ */
+static inline std::string JsonToString(json_t *json)
+{
+   char *jsonText = json_dumps(json, 0);
+   json_decref(json);
+   std::string result(jsonText);
+   MemFree(jsonText);
+   return result;
+}
+
+/**
+ * Find object by its name or ID
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int objectClassHint = -1);
+
+/**
+ * Spawn background AI analysis for an incident
+ * @param incidentId ID of the incident to analyze
+ * @param depth Analysis depth: 0=quick, 1=standard, 2=thorough
+ * @param autoAssign If true, automatically assign incident based on AI suggestion
+ * @param customPrompt Optional custom instructions for analysis (can be nullptr)
+ */
+void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, bool autoAssign, const TCHAR *customPrompt);
+
+/**
+ * Generate anomaly detection profile for a DCI asynchronously
+ * @param dciId ID of the DCI
+ * @param nodeId ID of the node owning the DCI
+ */
+void NXCORE_EXPORTABLE GenerateAnomalyProfileAsync(uint32_t dciId, uint32_t nodeId);
+
+#endif

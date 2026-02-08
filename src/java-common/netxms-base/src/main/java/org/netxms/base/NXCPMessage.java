@@ -768,6 +768,18 @@ public class NXCPMessage
 		return (var != null) ? new Date(var.getAsInteger() * 1000) : null;
 	}
 
+   /**
+    * Get field as date, assuming received value is in milliseconds
+    * 
+    * @param fieldId field ID
+    * @return field value as Date object
+    */
+   public Date getFieldAsTimestamp(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? new Date(var.getAsInteger()) : null;
+   }
+
 	/**
     * Create binary NXCP message
     * 
@@ -1139,23 +1151,23 @@ public class NXCPMessage
    }
 
    /**
-    * Get string list from field
+    * Get field as list of strings
     * 
     * @param fieldId field ID
     * @return list of strings
     */
-   public List<String> getStringListFromField(long fieldId)
+   public List<String> getFieldAsStringList(long fieldId)
    {
       final NXCPMessageField var = findField(fieldId);
       String[] array = (var != null) ? var.getAsStringArrayEx() : null;
-      return Arrays.asList(array);      
+      return (array != null) ? Arrays.asList(array) : null;
    }
    
    /**
-    * Get field as array of 32 bit integers
+    * Get field as array of strings
     * 
     * @param fieldId field ID
-    * @return field value as array of Long objects
+    * @return field value as array of String objects
     */
    public String[] getFieldAsStringArrayEx(final long fieldId)
    {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,12 +29,14 @@
 #include <math.h>
 #include <gauge_helpers.h>
 #include "auth-token.h"
+#include <unordered_map>
 
 /**
  * Forward declarations of classes
  */
 class GenericClientSession;
 class ClientSession;
+class AgentConnectionEx;
 class Queue;
 class DataCollectionTarget;
 class Cluster;
@@ -116,28 +118,6 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<GeoLocation>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
 
-
-/**
- * Error message max field lenght
- */
-#define WEBSVC_ERROR_TEXT_MAX_SIZE 256
-
-/**
- * Web service custom request result data
- */
-struct WebServiceCallResult
-{
-   bool success;
-   uint32_t agentErrorCode;
-   uint32_t httpResponseCode;
-   wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
-   wchar_t *document;
-
-public:
-   WebServiceCallResult();
-   ~WebServiceCallResult();
-};
-
 /**
  * Geo area
  */
@@ -165,6 +145,91 @@ public:
 };
 
 /**
+ * Web service call rrror message max field lenght
+ */
+#define WEBSVC_ERROR_TEXT_MAX_SIZE 256
+
+/**
+ * Web service custom request result data
+ */
+struct WebServiceCallResult
+{
+   bool success;
+   uint32_t agentErrorCode;
+   uint32_t httpResponseCode;
+   wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
+   wchar_t *document;
+
+   WebServiceCallResult()
+   {
+      success = false;
+      agentErrorCode = ERR_SUCCESS;
+      httpResponseCode = 0;
+      errorMessage[0] = 0;
+      document = nullptr;
+   }
+
+   WebServiceCallResult(const WebServiceCallResult& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      document = MemCopyStringW(src.document);
+   }
+
+   WebServiceCallResult(WebServiceCallResult&& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      document = src.document;
+      src.document = nullptr;
+   }
+
+   ~WebServiceCallResult()
+   {
+      MemFree(document);
+   }
+
+   WebServiceCallResult& operator=(const WebServiceCallResult& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      MemFree(document);
+      document = MemCopyStringW(src.document);
+      return *this;
+   }
+
+   WebServiceCallResult& operator=(WebServiceCallResult&& src)
+   {
+      success = src.success;
+      agentErrorCode = src.agentErrorCode;
+      httpResponseCode = src.httpResponseCode;
+      memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
+      MemFree(document);
+      document = src.document;
+      src.document = nullptr;
+      return *this;
+   }
+};
+
+/**
+ * Interface for receiving TCP proxy data from agent
+ */
+class NXCORE_EXPORTABLE TcpProxyCallback
+{
+public:
+   virtual ~TcpProxyCallback() = default;
+   
+   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId, const void *data, size_t size, bool errorIndicator) = 0;
+   virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) = 0;
+};
+
+/**
  * Extended agent connection
  */
 class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
@@ -173,7 +238,7 @@ protected:
    uint32_t m_nodeId;
    shared_ptr<AgentTunnel> m_tunnel;
    shared_ptr<AgentTunnel> m_proxyTunnel;
-   ClientSession *m_tcpProxySession;
+   TcpProxyCallback *m_tcpProxyCallback;
    int64_t m_dbWriterQueueThreshold;
 
    virtual shared_ptr<AbstractCommChannel> createChannel() override;
@@ -202,7 +267,7 @@ public:
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
-   WebServiceCallResult *webServiceCustomRequest(HttpRequestMethod requestMEthod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+   WebServiceCallResult webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
          const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, uint32_t cacheRetentionTime, const TCHAR *data);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }
@@ -210,7 +275,7 @@ public:
    using AgentConnection::setProxy;
    void setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret);
 
-   void setTcpProxySession(ClientSession *session);
+   void setTcpProxyCallback(TcpProxyCallback *callback);
 };
 
 #ifdef _WIN32
@@ -584,8 +649,8 @@ public:
 
    bool put(const InetAddress& addr, const shared_ptr<NetObj>& object);
    bool put(const InetAddressList *addrList, const shared_ptr<NetObj>& object);
+   bool put(const InetAddressList& addrList, const shared_ptr<NetObj>& object) { return put(&addrList, object); }
    void remove(const InetAddress& addr);
-   void remove(const InetAddressList *addrList);
    shared_ptr<NetObj> get(const InetAddress& addr) const;
    shared_ptr<NetObj> find(bool (*comparator)(NetObj *, void *), void *context) const;
 
@@ -659,13 +724,14 @@ enum ChangeCode
 class SoftwarePackage
 {
 private:
-   TCHAR *m_name;
-   TCHAR *m_version;
-   TCHAR *m_vendor;
+   wchar_t *m_name;
+   wchar_t *m_version;
+   wchar_t *m_vendor;
    time_t m_date;
-   TCHAR *m_url;
-   TCHAR *m_description;
-   TCHAR *m_uninstallKey;
+   wchar_t *m_url;
+   wchar_t *m_description;
+   wchar_t *m_uninstallKey;
+   wchar_t *m_user;
    ChangeCode m_changeCode;
 
    SoftwarePackage();
@@ -680,14 +746,17 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
 
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getVersion() const { return m_version; }
-   const TCHAR* getVendor() const { return m_vendor; }
+   const wchar_t *getName() const { return m_name; }
+   const wchar_t *getVersion() const { return m_version; }
+   const wchar_t *getVendor() const { return m_vendor; }
    time_t getDate() const { return m_date; }
-   const TCHAR* getUrl() const { return m_url; }
-   const TCHAR* getDescription() const { return m_description; }
-   const TCHAR* getUninstallKey() const { return m_uninstallKey; }
+   const wchar_t *getUrl() const { return m_url; }
+   const wchar_t *getDescription() const { return m_description; }
+   const wchar_t *getUninstallKey() const { return m_uninstallKey; }
+   const wchar_t *getUser() const { return m_user; }
    ChangeCode getChangeCode() const { return m_changeCode; }
+
+   json_t *toJson() const;
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }
 
@@ -718,17 +787,17 @@ private:
    ChangeCode m_changeCode;
    uint32_t m_index;
    uint64_t m_capacity;
-   TCHAR *m_type;
-   TCHAR *m_vendor;
-   TCHAR *m_model;
-   TCHAR *m_partNumber;
-   TCHAR *m_serialNumber;
-   TCHAR *m_location;
-   TCHAR *m_description;
+   wchar_t *m_type;
+   wchar_t *m_vendor;
+   wchar_t *m_model;
+   wchar_t *m_partNumber;
+   wchar_t *m_serialNumber;
+   wchar_t *m_location;
+   wchar_t *m_description;
 
 public:
-   HardwareComponent(HardwareComponentCategory category, uint32_t index, const TCHAR *type,
-            const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
+   HardwareComponent(HardwareComponentCategory category, uint32_t index, const wchar_t *type,
+            const wchar_t *vendor, const wchar_t *model, const wchar_t *partNumber, const wchar_t *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
    HardwareComponent(HardwareComponentCategory category, const Table& table, int row);
    HardwareComponent(const HardwareComponent& src);
@@ -739,16 +808,18 @@ public:
 
    ChangeCode getChangeCode() const { return m_changeCode; };
    HardwareComponentCategory getCategory() const { return m_category; };
-   const TCHAR *getCategoryName() const;
+   const wchar_t *getCategoryName() const;
    uint32_t getIndex() const { return m_index; }
    uint64_t getCapacity() const { return m_capacity; }
-   const TCHAR *getType() const { return CHECK_NULL_EX(m_type); };
-   const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); };
-   const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); };
-   const TCHAR *getLocation() const { return CHECK_NULL_EX(m_location); };
-   const TCHAR *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
-   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
-   const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); };
+   const wchar_t *getType() const { return CHECK_NULL_EX(m_type); };
+   const wchar_t *getVendor() const { return CHECK_NULL_EX(m_vendor); };
+   const wchar_t *getModel() const { return CHECK_NULL_EX(m_model); };
+   const wchar_t *getLocation() const { return CHECK_NULL_EX(m_location); };
+   const wchar_t *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
+   const wchar_t *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
+   const wchar_t *getDescription() const { return CHECK_NULL_EX(m_description); };
+
+   json_t *toJson() const;
 
    void setIndex(int index) { m_index = index; }
    void setChangeCode(ChangeCode code) { m_changeCode = code; }
@@ -855,6 +926,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_OBJECT_URLS          0x04000000
 #define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_AP_PROPERTIES        0x10000000
+#define MODIFY_AI_DATA              0x20000000
+#define MODIFY_PORT_STOP_LIST       0x40000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -872,7 +945,7 @@ public:
    SummaryTableColumn(json_t *json);
    SummaryTableColumn(TCHAR *configStr);
 
-   void createExportRecord(TextFileWriter& xml, uint32_t id) const;
+   json_t *createExportRecord() const;
 };
 
 #ifdef _WIN32
@@ -919,7 +992,7 @@ public:
    bool isMultiInstance() const { return is_bit_set(m_flags, SUMMARY_TABLE_MULTI_INSTANCE); }
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
-   void createExportRecord(TextFileWriter& xml) const;
+   void createExportRecord(json_t *array) const;
 };
 
 /**
@@ -1220,6 +1293,15 @@ struct ResponsibleUser
    TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
 };
 
+/**
+ * Port stop list entry
+ */
+struct PortStopEntry
+{
+   uint16_t port;
+   char protocol;   // 'T' = TCP, 'U' = UDP, 'B' = Both
+};
+
 class ObjectIndex;
 
 /**
@@ -1250,6 +1332,8 @@ enum LoadStatementIndex
    LSI_IF_VLANS,
    LSI_IF_ADDRESSES,
    LSI_ACCESS_POINT,
+   LSI_AI_DATA,
+   LSI_PORT_STOP_LIST,
    LSI_MAX_VALUE
 };
 
@@ -1286,8 +1370,6 @@ private:
    bool saveACLToDB(DB_HANDLE hdb);
    bool saveModuleData(DB_HANDLE hdb);
 
-   void expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output);
-
 protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias
@@ -1313,6 +1395,7 @@ protected:
    VolatileCounter m_modified;
    bool m_isDeleted;
    bool m_isDeleteInitiated;
+   bool m_isUnpublished;
    bool m_isHidden;
    uuid m_mapImage;
    uint32_t m_drilldownObjectId;    // Object that should be opened on drill-down request
@@ -1327,6 +1410,7 @@ protected:
    uint32_t m_primaryZoneProxyId;       // ID of assigned primary zone proxy node
    uint32_t m_backupZoneProxyId;        // ID of assigned backup zone proxy node
    uint32_t m_assetId;  // ID of linked asset object
+   SharedString m_aiHint;  // Hint for AI anomaly profile generation
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
@@ -1339,6 +1423,12 @@ protected:
    StructArray<ResponsibleUser> *m_responsibleUsers;
    Mutex m_mutexResponsibleUsers;
 
+   std::unordered_map<std::string, json_t*> *m_aiData;
+   mutable Mutex m_aiDataLock;
+
+   StructArray<PortStopEntry> *m_portStopList;
+   mutable Mutex m_mutexPortStopList;
+
    Pollable* m_asPollable; // Only changed in Pollable class constructor
    DelegateObject* m_asDelegate; // Only changed in DelegateObject class constructor
 
@@ -1349,12 +1439,15 @@ protected:
    void unlockProperties() const { m_mutexProperties.unlock(); }
    void lockResponsibleUsersList() const { m_mutexResponsibleUsers.lock(); }
    void unlockResponsibleUsersList() const { m_mutexResponsibleUsers.unlock(); }
+   void lockPortStopList() const { m_mutexPortStopList.lock(); }
+   void unlockPortStopList() const { m_mutexPortStopList.unlock(); }
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    bool loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, bool ignoreEmptyResults = false);
    bool loadTrustedObjects(DB_HANDLE hdb);
+   bool loadPortStopListFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
    {
       return ExecuteQueryOnObject(hdb, m_id, query);
@@ -1378,6 +1471,7 @@ protected:
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
    void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session);
+   void setPortStopListFromMessage(const NXCPMessage& msg);
 
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
@@ -1446,9 +1540,13 @@ public:
 
    void updateObjectIndexes();
 
+   bool isUnpublished() const { return m_isUnpublished; }
+   void unpublish();
+   void publish();
+
    bool isHidden() const { return m_isHidden; }
-   void hide();
-   void unhide();
+   void setHidden(bool hidden);
+
    void markAsModified(uint32_t flags) { setModified(flags); }  // external API to mark object as modified
    void markAsSaved() { InterlockedAnd(&m_modified, 0); }
    uint32_t getModifyFlags() { return m_modified; }
@@ -1483,7 +1581,9 @@ public:
 
    virtual void postModify();
 
-   virtual bool setMgmtStatus(bool bIsManaged);
+   virtual bool setMgmtStatus(bool bIsManaged) final;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus);
+   virtual bool isManagementStatusChangeAllowed(bool isManaged);
    virtual void calculateCompoundStatus(bool forcedRecalc = false);
 
    uint32_t getUserRights(uint32_t userId) const;
@@ -1503,6 +1603,7 @@ public:
 
    void setAssetId(uint32_t assetId)  { lockProperties(); m_assetId = assetId; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    uint32_t getAssetId() const { return m_assetId; }
+   SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutexProperties); }
 
    bool addDashboard(uint32_t id);
    bool removeDashboard(uint32_t id);
@@ -1546,11 +1647,22 @@ public:
    {
       return expandText(textTemplate, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
    }
+   void expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output);
 
    void updateGeoLocationHistory(GeoLocation location);
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session);
+
+   bool hasOwnPortStopList() const;
+   void getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts) const;
+   bool isPortBlocked(uint16_t port, bool tcp) const;
+
+   json_t *getAllAIData() const;
+   json_t *getAIData(const char *key) const;
+   json_t *getAIDataKeys() const;
+   void setAIData(const char *key, json_t *value);
+   bool removeAIData(const char *key);
 
    virtual json_t *toJson();
 
@@ -1570,6 +1682,7 @@ public:
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByFuzzyName(const wchar_t *name, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint = -1);
@@ -1770,6 +1883,7 @@ protected:
 
    void toJson(json_t *root);
    void updateFromImport(ConfigEntry *config);
+   void updateFromImport(json_t *data);
 
 public:
    VersionableObject(NetObj *_this);
@@ -1807,9 +1921,10 @@ protected:
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
    void updateFromImport(const ConfigEntry& config, bool defaultAutoBindFlag, bool nxslV5);
+   void updateFromImport(json_t *data);
 
    void toJson(json_t *root);
-   void createExportRecord(TextFileWriter& xml);
+   json_t *createExportRecord();
 
    unique_ptr<SharedObjectArray<NetObj>> getObjectsForAutoBind(const TCHAR *configurationSuffix);
 
@@ -1940,13 +2055,14 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5);
+   virtual void updateFromImport(json_t *data, ImportContext *context);
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
    virtual json_t *toJson() override;
 
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
-   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
+   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr);
 
    int getItemCount() const { return m_dcObjects.size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
@@ -1965,7 +2081,7 @@ public:
    unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects(uint32_t userId = 0) const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
    SharedObjectArray<DCObject> getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0) const;
-   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userId) const;
+   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const wchar_t *name, const wchar_t *description, const wchar_t *tag, uint32_t relatedObjectId, uint32_t userId) const;
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *session, uint32_t requestId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;
@@ -2043,8 +2159,9 @@ protected:
    Mutex m_contentLock;
 
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
-   virtual void exportAdditionalData(TextFileWriter& xml);
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
+   virtual void importAdditionalData(json_t *data, ImportContext *context);
+   virtual void exportAdditionalData(json_t *root) const;
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -2066,11 +2183,12 @@ public:
    virtual uint32_t modifyFromMessage(const NXCPMessage& request);
 
    virtual void updateFromImport(const ConfigEntry *config, ImportContext *context);
-   virtual void createExportRecord(TextFileWriter& xml, uint32_t recordId);
+   virtual void updateFromImport(json_t *data, ImportContext *context);
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
 
-   virtual json_t *toJson();
+   virtual json_t *createExportRecord() const;
+   virtual json_t *toJson() const;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data);
    virtual void validate();
@@ -2082,8 +2200,9 @@ public:
 class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 {
 protected:
-   virtual void exportAdditionalData(TextFileWriter& xml) override;
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
+   virtual void importAdditionalData(json_t *data, ImportContext *context) override;
+   virtual void exportAdditionalData(json_t *root) const override;
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
@@ -2128,6 +2247,7 @@ private:
 protected:
    SharedObjectArray<GenericAgentPolicy> m_policyList;
    SharedObjectArray<GenericAgentPolicy> m_deletedPolicyList;
+   bool m_removeDCIOnDelete;
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
@@ -2161,11 +2281,12 @@ public:
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const override;
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5) override;
+   virtual void updateFromImport(json_t *data, ImportContext *context) override;
    virtual json_t *toJson() override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   void createExportRecord(TextFileWriter& xml);
+   void createExportRecord(json_t *array);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;
@@ -2178,6 +2299,7 @@ public:
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
    void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
+   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 };
 
 /**
@@ -2189,9 +2311,13 @@ struct InterfaceState
    uint32_t operState;
    uint32_t adminState;
    uint32_t dot1xPaeAuthState;
-   uint32_t dot1xBackendAuthState;;
+   uint32_t dot1xBackendAuthState;
    SpanningTreePortState stpPortState;
 };
+
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, InterfaceState>;
+#endif
 
 /**
  * Interface class
@@ -2212,6 +2338,7 @@ protected:
    uint32_t m_type;
    uint32_t m_mtu;
    uint64_t m_speed;
+   uint64_t m_maxSpeed;
    int32_t m_inboundUtilization;
    int32_t m_outboundUtilization;
    uint32_t m_bridgePortNumber;       // 802.1D port number
@@ -2284,7 +2411,7 @@ public:
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
-   virtual bool setMgmtStatus(bool isManaged) override;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus) override;
 
    virtual json_t *toJson() override;
 
@@ -2296,12 +2423,20 @@ public:
    void saveStateBeforeMaintenance(uint32_t nodeId);
    void generateEventsAfterMaintenace(uint32_t parentId);
 
-   const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
+   InetAddressList getIpAddressList() const { return GetAttributeWithLock(m_ipAddressList, m_mutexProperties); }
    InetAddress getFirstIpAddress() const;
+   InetAddress getFirstUnicastAddress() const;
+   InetAddress getFirstUnicastAddressV4() const;
+   bool hasIpAddress(const InetAddress& addr) const;
+   bool hasAddressInSubnet(const InetAddress& subnet) const;
+   bool hasAddressInSameSubnet(const InetAddress& addr) const;
+   InetAddress findSameSubnetAddress(const InetAddress& addr) const;
+   String getIpAddressListAsString() const;
    uint32_t getIfIndex() const { return m_index; }
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
    uint64_t getSpeed() const { return m_speed; }
+   uint64_t getMaxSpeed() const { return m_maxSpeed; }
    int32_t getInboundUtilization() const { return m_inboundUtilization; }
    int32_t getOutboundUtilization() const { return m_outboundUtilization; }
    uint32_t getBridgePortNumber() const { return m_bridgePortNumber; }
@@ -2350,10 +2485,14 @@ public:
    uint64_t getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(uint64_t id) { m_lastDownEventId = id; }
 
+   int32_t getRequiredPollCount() const { return m_requiredPollCount; }
+   void setRequiredPollCount(int32_t count) { m_requiredPollCount = count; markAsModified(MODIFY_INTERFACE_PROPERTIES); }
+
    void setMacAddress(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
+   void clearIpAddresses();
    void setBridgePortNumber(uint32_t bpn)
    {
       m_bridgePortNumber = bpn;
@@ -2435,6 +2574,11 @@ public:
       m_speed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
    }
+   void setMaxSpeed(uint64_t speed)
+   {
+      m_maxSpeed = speed;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
    void setIfType(uint32_t type)
    {
       m_type = type;
@@ -2475,6 +2619,46 @@ public:
 
    void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy);
 };
+
+inline InetAddress Interface::getFirstUnicastAddress() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddress();
+   unlockProperties();
+   return result;
+}
+
+inline InetAddress Interface::getFirstUnicastAddressV4() const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.getFirstUnicastAddressV4();
+   unlockProperties();
+   return result;
+}
+
+inline bool Interface::hasIpAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = m_ipAddressList.hasAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+inline InetAddress Interface::findSameSubnetAddress(const InetAddress& addr) const
+{
+   lockProperties();
+   InetAddress result = m_ipAddressList.findSameSubnetAddress(addr);
+   unlockProperties();
+   return result;
+}
+
+inline String Interface::getIpAddressListAsString() const
+{
+   lockProperties();
+   String result = m_ipAddressList.toString();
+   unlockProperties();
+   return result;
+}
 
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<Node>;
@@ -2716,8 +2900,9 @@ public:
    virtual uint16_t getModbusTcpPort() const { return 0; }
    virtual uint16_t getModbusUnitId() const { return 0; }
 
-   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
-   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table);
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size);
+   virtual uint32_t getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list);
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table);
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *table, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
@@ -2733,7 +2918,7 @@ public:
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
-   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId) override;
+   virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr) override;
 
    uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
    uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
@@ -2745,6 +2930,8 @@ public:
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
    void findDcis(const SearchQuery &query, uint32_t userId, SharedObjectArray<DCObject> *result);
 
+   shared_ptr<DCObject> createPushDciInstance(const wchar_t *name);
+
    uint64_t getCacheMemoryUsage();
 
    void updateDciCache();
@@ -2752,11 +2939,13 @@ public:
    void reloadDCItemCache(uint32_t dciId);
    void cleanDCIData(DB_HANDLE hdb);
    void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
+   bool hasV5IdataTable() const { return (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE) != 0; }
+   bool hasV5TdataTable() const { return (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE) != 0; }
+   void deleteV5DataTable(DB_HANDLE hdb, bool tdata);
    void queueItemsForPolling();
-   bool processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue);
+   bool processNewDCValue(const shared_ptr<DCObject>& dco, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints);
    void scheduleItemDataCleanup(uint32_t dciId);
    void scheduleTableDataCleanup(uint32_t dciId);
-   void queuePredictionEngineTraining();
 
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
@@ -2791,7 +2980,7 @@ struct MobileDeviceInfo
  */
 struct MobileDeviceStatus
 {
-   const TCHAR *commProtocol;
+   const wchar_t *commProtocol;
    GeoLocation geoLocation;
    int32_t altitude;
    float speed;
@@ -2802,7 +2991,7 @@ struct MobileDeviceStatus
 
    MobileDeviceStatus()
    {
-      commProtocol = _T("UNKNOWN");
+      commProtocol = L"UNKNOWN";
       altitude = 0;
       speed = -1;
       direction = -1;
@@ -2820,7 +3009,7 @@ private:
    typedef DataCollectionTarget super;
 
 protected:
-   TCHAR m_commProtocol[32];
+   wchar_t m_commProtocol[32];
    time_t m_lastReportTime;
    SharedString m_deviceId;
    SharedString m_vendor;
@@ -2861,7 +3050,7 @@ public:
    void updateSystemInfo(const MobileDeviceInfo& deviceInfo);
    void updateStatus(const MobileDeviceStatus& status);
 
-   const TCHAR *getCommProtocol() const { return m_commProtocol; }
+   const wchar_t *getCommProtocol() const { return m_commProtocol; }
    time_t getLastReportTime() const { return GetAttributeWithLock(m_lastReportTime, m_mutexProperties); }
    SharedString getDeviceId() const { return GetAttributeWithLock(m_deviceId, m_mutexProperties); }
    SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
@@ -3004,6 +3193,7 @@ protected:
    uint32_t m_dwNumResources;
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
+   bool m_removeDCIOnDelete;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3030,6 +3220,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
    virtual bool isContainerObject() const override { return true; }
+   virtual void prepareForDeletion() override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
@@ -3052,6 +3243,8 @@ public:
    bool addNode(const shared_ptr<Node>& node);
    void removeNode(const shared_ptr<Node>& node);
    void changeZone(uint32_t newZoneUIN);
+
+   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 };
 
 #ifdef _WIN32
@@ -3457,7 +3650,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFArea>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
 
-class ObjLink;
+struct ObjLink;
 
 /**
  * Status of device configuration backup job
@@ -3546,6 +3739,8 @@ protected:
    DriverData *m_driverData;
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
+   ObjectArray<AgentListDefinition> *m_agentLists; // List of supported lists
+   char *m_agentAIToolsSchema;  // JSON schema of AI tools from agent
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
    StringList *m_smclpMetrics;  // List of metrics supported by SM-CLP
    time_t m_failTimeAgent;
@@ -3636,6 +3831,7 @@ protected:
    uint16_t m_cipVendorCode;
    uint16_t m_modbusTcpPort;
    uint16_t m_modbusUnitId;
+   time_t m_decommissionTime;
    DeviceBackupJobStatus m_lastConfigBackupJobStatus;
 
    virtual bool isDataCollectionDisabled() override;
@@ -3714,10 +3910,14 @@ protected:
 
    void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
+   void syncEnvironmentWithAgent(AgentConnectionEx *conn);
+
+   virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value) override;
 
    bool updateInterfaceConfiguration(uint32_t requestId);
    bool deleteDuplicateInterfaces(uint32_t requestId);
    void executeInterfaceUpdateHook(Interface *iface);
+   void updateInterfacesFromEntityMib(const Component *component);
    void updatePhysicalContainerBinding(uint32_t containerId);
    DuplicateCheckResult checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
@@ -3912,6 +4112,9 @@ public:
 
    bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }
+   bool isDecommissioned() const { return is_bit_set(m_state, NSF_DECOMMISSIONED); }
+   time_t getDecommissionTime() const { return m_decommissionTime; }
+   void decommission(time_t expirationTime, bool clearIpAddresses);
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }
@@ -3984,6 +4187,7 @@ public:
    bool getLldpLocalPortInfo(uint32_t localPortNumber, LLDP_LOCAL_PORT_INFO *port) const;
    void showLLDPInfo(ServerConsole *console) const;
 
+   void setRequiredPollCount(uint32_t count) { m_requiredPollCount = count; markAsModified(MODIFY_NODE_PROPERTIES); }
    void setRecheckCapsFlag() { lockProperties(); m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; unlockProperties(); }
    void resolveVlanPorts(VlanList *vlanList);
    void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
@@ -3991,7 +4195,8 @@ public:
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
-   virtual bool setMgmtStatus(bool isManaged) override;
+   virtual bool isManagementStatusChangeAllowed(bool isManaged) override;
+   virtual void onMgmtStatusChange(bool isManaged, int oldStatus) override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    bool checkAgentTrapId(uint64_t id);
@@ -4000,16 +4205,17 @@ public:
    bool checkWindowsEventId(uint64_t id);
    bool checkAgentPushRequestId(uint64_t id);
 
-   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size) override;
-   virtual uint32_t getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table) override;
+   virtual uint32_t getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size) override;
+   virtual uint32_t getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list) override;
+   virtual uint32_t getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table) override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
-   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue);
-   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table);
-   DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list);
-   DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values);
+   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context = nullptr);
+   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context = nullptr);
+   DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context = nullptr);
+   DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values, const TCHAR *context = nullptr);
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
    DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
@@ -4030,14 +4236,21 @@ public:
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
    NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
    NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
+   NXSL_Value* getInstalledPackagesForNXSL(NXSL_VM* vm, const wchar_t *filter = nullptr, bool useRegex = false);
    NXSL_Value *getOSPFAreasForNXSL(NXSL_VM *vm);
    NXSL_Value *getOSPFNeighborsForNXSL(NXSL_VM *vm);
+
+   json_t *getHardwareComponentsAsJSON();
+   json_t *getSoftwarePackagesAsJSON(const wchar_t *filter = nullptr);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
 
    ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
+
+   ObjectArray<AgentListDefinition> *openListList();
+   void closeListList() { unlockProperties(); }
 
    void getSmclpMetrics(StringSet *metrics) const;
 
@@ -4046,6 +4259,8 @@ public:
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
+
+   shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);
 
    ModbusTransport *createModbusTransport();
 
@@ -4060,6 +4275,7 @@ public:
    uint32_t getEffectiveTcpProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
+   void writeListListToMessage(NXCPMessage *msg);
    void writeWinPerfObjectsToMessage(NXCPMessage *msg);
    void writePackageListToMessage(NXCPMessage *msg);
    void writeWsListToMessage(NXCPMessage *msg, uint32_t apId = 0);
@@ -4101,6 +4317,8 @@ public:
    NetworkDeviceDriver *getDriver() const { return m_driver; }
    DriverData *getDriverData() { return m_driverData; }
    void setDriverData(DriverData *data) { m_driverData = data; }
+   const char *getAgentAIToolsSchema() const { return m_agentAIToolsSchema; }
+   bool hasAgentAITools() const { return m_agentAIToolsSchema != nullptr; }
 
    void incSyslogMessageCount();
    void incSnmpTrapCount();
@@ -4405,6 +4623,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
+   virtual bool showThresholdSummary() const override;
+
    String getRackPasiveElementDescription(uint32_t id);
 
    virtual json_t *toJson() override;
@@ -4502,6 +4722,7 @@ protected:
    time_t m_lastHealthCheck;
    bool m_lockedForHealthCheck;
 
+   virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
@@ -5072,18 +5293,26 @@ public:
 /**
  * Dashboard element
  */
-class NXCORE_EXPORTABLE DashboardElement
+struct NXCORE_EXPORTABLE DashboardElement
 {
-public:
    int m_type;
-   TCHAR *m_data;
-   TCHAR *m_layout;
+   wchar_t *m_data;
+   wchar_t *m_layout;
 
    DashboardElement()
    {
+      m_type = 0;
       m_data = nullptr;
       m_layout = nullptr;
    }
+
+   DashboardElement(const DashboardElement &element)
+   {
+      m_type = element.m_type;
+      m_data = MemCopyString(element.m_data);
+      m_layout = MemCopyString(element.m_layout);
+   }
+
    ~DashboardElement()
    {
       MemFree(m_data);
@@ -5107,32 +5336,28 @@ template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DashboardElement>;
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, public AutoBindTarget, public Pollable, public DelegateObject
+class NXCORE_EXPORTABLE DashboardBase : public AbstractContainer, public Pollable, public AutoBindTarget, public DelegateObject
 {
 protected:
    typedef AbstractContainer super;
 
 protected:
    int m_numColumns;
-   int m_displayPriority;
    ObjectArray<DashboardElement> m_elements;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
 
-   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-
    void updateObjectAndDciList(DashboardElement *e);
 
 public:
-   Dashboard();
-   Dashboard(const TCHAR *name);
+   DashboardBase();
+   DashboardBase(const TCHAR *name);
+   DashboardBase(const TCHAR *name, DashboardBase *source);
 
-   shared_ptr<Dashboard> self() { return static_pointer_cast<Dashboard>(NObject::self()); }
-   shared_ptr<const Dashboard> self() const { return static_pointer_cast<const Dashboard>(NObject::self()); }
+   void updateFromTemplate(DashboardBase *source);
 
-   virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -5144,6 +5369,81 @@ public:
    virtual bool showThresholdSummary() const override;
    String getElementScript(int index) const;
    bool isElementContextObject(int index, uint32_t contextObject) const;
+};
+
+/**
+ * Dashboard object
+ */
+class NXCORE_EXPORTABLE Dashboard : public DashboardBase
+{
+protected:
+   typedef DashboardBase super;
+
+protected:
+   int m_displayPriority;
+   uint32_t m_forcedContextObjectId;// For Dashboards create form Dashboard Template
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   Dashboard();
+   Dashboard(const TCHAR *name);
+   Dashboard(const TCHAR *name, uint32_t contextId, DashboardBase *source);
+
+   shared_ptr<Dashboard> self() { return static_pointer_cast<Dashboard>(NObject::self()); }
+   shared_ptr<const Dashboard> self() const { return static_pointer_cast<const Dashboard>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+
+   virtual json_t *toJson() override;
+};
+
+/**
+ * Dashboard object
+ */
+class NXCORE_EXPORTABLE DashboardTemplate : public DashboardBase
+{
+protected:
+   typedef DashboardBase super;
+
+private:
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable: 4251 )
+#endif
+   std::unordered_map<uint32_t, uint32_t> m_instanceDashboards;
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
+   SharedString m_nameTemplate;
+
+protected:
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   DashboardTemplate();
+   DashboardTemplate(const TCHAR *name);
+
+   shared_ptr<DashboardTemplate> self() { return static_pointer_cast<DashboardTemplate>(NObject::self()); }
+   shared_ptr<const DashboardTemplate> self() const { return static_pointer_cast<const DashboardTemplate>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARDTEMPLATE; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+
+   virtual json_t *toJson() override;
 };
 
 /**
@@ -5669,7 +5969,7 @@ uint32_t NXCORE_EXPORTABLE FindLocalMgmtNode();
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByUIN(int32_t zoneUIN);
 shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();
-bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr, uint32_t *clusterId = nullptr, bool *isResource = nullptr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
 unique_ptr<StructArray<DependentNode>> GetNodeDependencies(uint32_t nodeId);
 IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
@@ -5678,10 +5978,10 @@ IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
 template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjectQueryResult>;
 #endif
 
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const TCHAR *query, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const wchar_t *query, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
          std::function<void(int)> progressCallback = nullptr, bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
-         const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0);
-unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+         const StringMap *inputFields = nullptr, uint32_t contextObjectId = 0, uint32_t limit = 0, StringMap *metadata = nullptr);
+unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjectQueries(uint32_t queryId, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
    std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
    const StringMap *inputFields, uint32_t contextObjectId = 0, uint32_t limit = 0);
 uint32_t GetObjectQueries(NXCPMessage *msg);

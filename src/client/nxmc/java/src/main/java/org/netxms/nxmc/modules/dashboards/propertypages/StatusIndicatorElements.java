@@ -70,6 +70,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
    public static final int COLUMN_OBJECT = 2;
    public static final int COLUMN_METRIC = 3;
    public static final int COLUMN_LABEL = 4;
+   public static final int COLUMN_DRILLDOWN_OBJECT = 5;
 
    private final I18n i18n = LocalizationHelper.getI18n(StatusIndicatorElements.class);
 
@@ -144,8 +145,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Type"), i18n.tr("Object/Tag"), i18n.tr("Metric"), i18n.tr("Label") };
-      final int[] columnWidths = { 40, 90, 200, 200, 150 };
+      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Type"), i18n.tr("Object/Tag"), i18n.tr("Metric"), i18n.tr("Label"), i18n.tr("Drill-down") };
+      final int[] columnWidths = { 40, 90, 200, 200, 150, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
@@ -325,7 +326,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 	}
 
 	/**
-	 * Move selected item up 
+	 * Move selected item up
 	 */
 	private void moveUp()
 	{
@@ -341,7 +342,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 			}
 		}
 	}
-	
+
 	/**
 	 * Move selected item down
 	 */
@@ -415,6 +416,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
                if (name == null)
                   name = i18n.tr("<unresolved>");
                return ((e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId())) + " / " + ((e.getDciId() != 0) ? name : e.getDciName());
+            case StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE:
+               return i18n.tr("<context>") + " / " + e.getDciName();
             case StatusIndicatorConfig.ELEMENT_TYPE_OBJECT:
                return (e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId());
             case StatusIndicatorConfig.ELEMENT_TYPE_SCRIPT:
@@ -441,6 +444,10 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
          StatusIndicatorElementConfig e = (StatusIndicatorElementConfig)element;
          switch(columnIndex)
          {
+            case COLUMN_DRILLDOWN_OBJECT:
+               if (e.getDrillDownObjectId() == 0)
+                  return "";
+               return (e.getDrillDownObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getDrillDownObjectId());
             case COLUMN_LABEL:
                return e.getLabel();
             case COLUMN_METRIC:
@@ -457,6 +464,8 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
             case COLUMN_OBJECT:
                if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_SCRIPT)
                   return e.getTag();
+               if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)
+                  return i18n.tr("<context>");
                return (e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId());
             case COLUMN_POSITION:
                return Integer.toString(elements.indexOf(e) + 1);
@@ -490,7 +499,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 
       /**
        * Resolve DCI names for given collection of condition DCIs and add to cache
-       * 
+       *
        * @param dciList
        */
       public void resolveDciNames(final Collection<StatusIndicatorElementConfig> elementList)
@@ -515,7 +524,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
 
       /**
        * Add single cache entry
-       * 
+       *
        * @param nodeId
        * @param dciId
        * @param name

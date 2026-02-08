@@ -1,682 +1,662 @@
 openapi: 3.0.2
 info:
   title: NetXMS REST API
-  description: Documnetation for NetXMS REST API
-  version: '4.3.2'
-  license: 
+  description: Documentation for NetXMS REST API
+  version: '5.0'
+  license:
     name: GNU Free Documentation License
     url: https://www.gnu.org/licenses/fdl-1.3.html
 servers:
   - url: http://127.0.0.1:8000
 security:
   - BasicAuth: []
-  - CookieAuth: [] 
+  - CookieAuth: []
+  - SessionHeader: []
+tags:
+  - name: API Info
+    description: API version and health check endpoints
+  - name: Authentication
+    description: Session management and authentication
+  - name: Objects
+    description: Object management operations
+  - name: Alarms
+    description: Alarm management and monitoring
+  - name: Data Collection
+    description: DCI configuration and data retrieval
+  - name: Business Services
+    description: Business service checks, tickets, and uptime
+  - name: Users
+    description: User and group management
+  - name: Events
+    description: Event sending
+  - name: Notifications
+    description: Notification management
+  - name: Object Tools
+    description: Object tool execution
+  - name: Polls
+    description: Object polling operations
+  - name: Network Map
+    description: Network map access management
+  - name: Search
+    description: Search operations
+  - name: Persistent Storage
+    description: Persistent storage key-value management
+  - name: Summary Tables
+    description: Ad-hoc summary table queries
+  - name: Graphs
+    description: Predefined graph management
+
 paths:
   /:
     get:
-      operationId: getServerInfo
-      summary: Check connection
-      description: Service is working
+      operationId: getRootInfo
+      summary: Check API connection
+      description: Returns basic API information. Does not require authentication.
+      security: []
       responses:
         '200':
-          description: OK
+          description: API is available
           content:
             application/json:
               schema:
                 type: object
+                properties:
+                  description:
+                    type: string
+                  version:
+                    type: string
+                  build:
+                    type: string
               example:
-                {
-                  "description": "NetXMS web service API version 4.3.0-rc223",
-                  "version": "4.3.0-rc223",
-                  "build": "4.3-223-g20c122be56"
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+                description: "NetXMS web service API version 5.0"
+                version: "5.0"
+                build: "5.0-1-g20c122be56"
       tags:
-        - Authentication
-    servers:
-      - url: http://127.0.0.1:8000
+        - API Info
+
+  /info:
+    get:
+      operationId: getApiInfo
+      summary: Get API information
+      description: Returns detailed API version information. Does not require authentication.
+      security: []
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiVersion:
+                    type: string
+                    description: API version number
+                  build:
+                    type: string
+                    description: Build tag
+                  clientVersion:
+                    type: string
+                    description: Client library version
+              example:
+                apiVersion: "2"
+                build: "5.0-1-g20c122be56"
+                clientVersion: "5.0"
+      tags:
+        - API Info
+
   /sessions:
     post:
       operationId: createSession
-      summary: Creating Rest API session
-      description: On success server will set cookie session_handle and json with session GUID and server version.
-                   When performing subsequent requests, session GUID should be provided in `Session-Id:` field of request's header
-                   or the cookie should be passed.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                login: 
-                  type: string
-                  example: admin
-                password: 
-                  type: string
-                  example: netxms
-      responses:
-        '200':
-          description: OK
-          headers: 
-            Set-Cookie:
-              schema: 
-                type: string
-                example: session_handle=f89b60cd-e6b7-4cc6-9b06-292405f09b17; Path=/
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                  "sessionHandle": "fcb60ade-6c5e-4625-aeff-74193d1d28fc",
-                  "session": {
-                    "server": {
-                      "address": "127.0.0.1",
-                      "serverName": "127.0.0.1",
-                      "version": "4.3.0-rc223",
-                      "color": "",
-                      "id": 3523187130265618400,
-                      "timeZone": "EET+02EEST"
-                    },
-                    "user": {
-                      "name": "admin",
-                      "id": 1,
-                      "globalAccessRights": 562743794990847
-                    },
-                    "encrypted": false,
-                    "objectsSynchronized": false,
-                    "passwordExpired": false,
-                    "zoningEnabled": true
-                  }
-                }
-        '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
-      tags:
-        - Authentication
-    servers:
-      - url: http://127.0.0.1:8000
-  /authenticate:
-    post:
-      operationId: externalAuthentication
-      summary: Performing external authentication
-      description: The API will return a 200 response if the credentials are correct, a 400 response if
-                   either login or password is not provided or 401 if the provided credentials are incorrect.
+      summary: Create REST API session
+      description: |
+        Creates a new session and returns session credentials.
+        On success, the server sets a `session_handle` cookie and returns a JSON object with session GUID and server information.
 
-                   Authentication used to gain Rest API session.
+        For subsequent requests, provide the session GUID either:
+        - In the `Session-Id` request header
+        - Via the `session_handle` cookie
+
+        Authentication can also be provided via HTTP Basic Authentication header instead of JSON body.
+      security: []
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
               properties:
-                login: 
+                login:
                   type: string
-                  example: admin
-                password: 
+                  description: Username
+                password:
                   type: string
-                  example: netxms
+                  description: Password
+                attachNotificationHandler:
+                  type: boolean
+                  description: If true, attaches notification handler to receive alarm notifications
+                  default: false
+            example:
+              login: admin
+              password: netxms
       responses:
         '200':
-          description: OK
+          description: Session created successfully
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              example: session_handle=f89b60cd-e6b7-4cc6-9b06-292405f09b17; Path=/
+            Session-Id:
+              schema:
+                type: string
+              description: Session GUID for use in subsequent requests
           content:
             application/json:
               schema:
-                type: object
-              example:
-                {
-                  "error": 0,
-                  "description": "Request completed successfully"
-                }
+                $ref: '#/components/schemas/SessionToken'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Authentication
-    servers:
-      - url: http://127.0.0.1:8000
+
   /sessions/{sid}:
-    delete:
-      operationId: logout
-      summary: Logout
-      description: To log out request with given session ID.
+    get:
+      operationId: getSession
+      summary: Get session information
+      description: Returns information about the current session. Use "self" as sid to get current session info.
       parameters:
         - name: sid
           in: path
           required: true
-          description: Session id to logout as. 
+          description: Session ID or "self" for current session
           schema:
             type: string
       responses:
         '200':
-          description: OK
+          description: Session information
           content:
             application/json:
               schema:
-                type: object
-              example:
-                {
-                  "description": "NetXMS web service API version 4.3.0-rc223",
-                  "version": "4.3.0-rc223",
-                  "build": "4.3-223-g20c122be56"
-                }
+                $ref: '#/components/schemas/NXCSession'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Authentication
-    servers:
-      - url: http://127.0.0.1:8000
 
-# Objects tag
+    delete:
+      operationId: deleteSession
+      summary: Logout / Delete session
+      description: Terminates the specified session. Use "self" to logout current session.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          description: Session ID to logout, or "self" for current session
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session terminated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Authentication
+
+  /authenticate:
+    post:
+      operationId: externalAuthentication
+      summary: Validate credentials
+      description: |
+        Validates credentials without creating a session.
+        Returns 200 if credentials are valid, 400 if missing parameters, 401 if invalid.
+        Useful for external authentication integration.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login
+                - password
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+            example:
+              login: admin
+              password: netxms
+      responses:
+        '200':
+          description: Credentials are valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Authentication
+
   /objects:
     get:
       operationId: getObjects
-      summary: Get multiple objects with filters
-      description: Request to get all objects available to this user or to get objects that fulfill
-                  filter requirements and are available to this user.
+      summary: Get objects with filters
+      description: |
+        Returns all objects available to the current user, optionally filtered.
+        Supports filtering by name, class, parent, zone, geographical area, state, and custom attributes.
       parameters:
         - name: area
           in: query
-          description: geographical area
+          description: 'Geographical area filter as "lat1,lon1,lat2,lon2" (bounding box)'
           schema:
             type: string
         - name: class
           in: query
-          description: comma-separated class list
+          description: Comma-separated list of object class names (e.g., "Node,Container")
           schema:
             type: string
         - name: name
           in: query
-          description: pattern or regex, if useRegex=true
+          description: Name filter (glob pattern or regex if regex=true)
           schema:
             type: string
         - name: parent
           in: query
-          description: parent object id
+          description: Filter objects that are children of given parent object ID
+          schema:
+            type: integer
+            format: int64
+        - name: primaryName
+          in: query
+          description: Filter nodes by primary name (glob pattern or regex if regex=true)
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Filter nodes by state flags (integer or hex with 0x prefix)
           schema:
             type: string
         - name: topLevelOnly
           in: query
-          description: select top level objects only. false by default
+          description: Return only top-level objects
           schema:
             type: boolean
-        - name: useRegex
+            default: false
+        - name: regex
           in: query
-          description:  treat name and custom attribute value as regex. false by default
+          description: Treat name and custom attribute filters as regex patterns
           schema:
             type: boolean
+            default: false
         - name: zone
           in: query
-          description: comma-separated list of zone UINs
+          description: Comma-separated list of zone UINs
           schema:
             type: string
-        - name: '@custom_attribute_name'
+        - name: '@{attributeName}'
           in: query
-          description: pattern or regex, if useRegex=true
+          description: 'Custom attribute filter. Use @attributeName=value format'
           schema:
-            type: object
-            #propertyName:
-            #  pattern: '^@[A-Za-z0-9]+$'  # Parameter names work only in 3.1
-            additionalProperties: false
-            example:
-              '@custAttrName1': '@custAttrValue1'
-              '@custAttrName2': '@custAttrValue2'
+            type: string
       responses:
         '200':
-          description: Will return filtered objects or all objects available to user.
+          description: List of objects
           content:
             application/json:
               schema:
                 type: object
-              example:
-                {
-                  "objects": [
-                      {
-                          "objectId": 1,
-                          "guid": "102a86aa-f987-4fd5-843c-d85017a79eb3",
-                          "objectName": "Entire Network",
-                          "alias": "",
-                          "nameOnMap": "",
-                          "objectClass": 4,
-                          "categoryId": 0,
-                          "flags": 0,
-                          "status": "CRITICAL",
-                          "isDeleted": false,
-                          "inMaintenanceMode": false,
-                          "maintenanceInitiatorId": 0,
-                          "primaryZoneProxyId": 0,
-                          "backupZoneProxyId": 0,
-                          "comments": "",
-                          "commentsSource": "",
-                          "geolocation": {
-                              "type": 0,
-                              "latitude": 0.0,
-                              "longitude": 0.0,
-                              "accuracy": 0,
-                              "timestamp": 0
-                          },
-                          "postalAddress": {
-                              "country": "",
-                              "region": "",
-                              "city": "",
-                              "district": "",
-                              "streetAddress": "",
-                              "postcode": ""
-                          },
-                          "mapImage": "00000000-0000-0000-0000-000000000000",
-                          "drillDownObjectId": 0,
-                          "trustedObjects": [],
-                          "inheritAccessRights": true,
-                          "accessList": [
-                              {
-                                  "inherited": false,
-                                  "userId": 1073741825,
-                                  "accessRights": 1048575
-                              }
-                          ],
-                          "statusCalculationMethod": 0,
-                          "statusPropagationMethod": 0,
-                          "fixedPropagatedStatus": "WARNING",
-                          "statusShift": 0,
-                          "statusTransformation": [
-                              "WARNING",
-                              "MINOR",
-                              "MAJOR",
-                              "CRITICAL"
-                          ],
-                          "statusSingleThreshold": 75,
-                          "statusThresholds": [
-                              80,
-                              60,
-                              40,
-                              20
-                          ],
-                          "creationTime": 0,
-                          "parents": [],
-                          "children": [
-                              4
-                          ],
-                          "dashboards": [],
-                          "customAttributes": {},
-                          "urls": [],
-                          "responsibleUsers": [],
-                          "objectClassName": "Network"
-                      }
-                  ]
-                }
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AbstractObject'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Objects
+
     post:
       operationId: createObject
-      summary: Create object
-      description: Request to create new object
+      summary: Create new object
+      description: Creates a new object with the specified parameters
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              $ref: '#/components/schemas/objectCreationAndModification'
+              $ref: '#/components/schemas/ObjectCreationData'
             examples:
               CreateNode:
-                summary: 'Minimal JSON for node creation under "Infrastructure Services" object'
-                value: {"objectType": 2, "name":"testNode", "parentId": 2, "primaryName":"10.5.0.12" }
+                summary: Create a node
+                value:
+                  objectType: 2
+                  name: "testNode"
+                  parentId: 2
+                  primaryName: "10.5.0.12"
               CreateContainer:
-                summary: 'Minimal JSON for container creation under "Infrastructure Services" object'
-                value: {"objectType": 5, "name":"New container", "parentId": 2}
+                summary: Create a container
+                value:
+                  objectType: 5
+                  name: "New container"
+                  parentId: 2
       responses:
         '200':
-          description: New object ID.
+          description: Object created successfully
           content:
             application/json:
               schema:
                 type: object
-              example:
-                { "id": 15130 }
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: ID of the created object
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Objects
-    servers:
-      - url: http://127.0.0.1:8000
+
   /objects/{object-id}:
     get:
       operationId: getObject
-      summary: Get object by id
-      description: Request to get exact object identified by ID or GUID.
+      summary: Get object by ID
+      description: Returns detailed information about a specific object
       parameters:
         - $ref: '#/components/parameters/objectId'
       responses:
         '200':
-          description: Object information identified by provided ID or GUID.
+          description: Object information
           content:
             application/json:
               schema:
-                type: object
-              example:
-                {
-                  "objectId": 1,
-                  "guid": "102a86aa-f987-4fd5-843c-d85017a79eb3",
-                  "objectName": "Entire Network",
-                  "alias": "",
-                  "nameOnMap": "",
-                  "objectClass": 4,
-                  "categoryId": 0,
-                  "flags": 0,
-                  "status": "CRITICAL",
-                  "isDeleted": false,
-                  "inMaintenanceMode": false,
-                  "maintenanceInitiatorId": 0,
-                  "primaryZoneProxyId": 0,
-                  "backupZoneProxyId": 0,
-                  "comments": "",
-                  "commentsSource": "",
-                  "geolocation": {
-                      "type": 0,
-                      "latitude": 0.0,
-                      "longitude": 0.0,
-                      "accuracy": 0,
-                      "timestamp": 0
-                  },
-                  "postalAddress": {
-                      "country": "",
-                      "region": "",
-                      "city": "",
-                      "district": "",
-                      "streetAddress": "",
-                      "postcode": ""
-                  },
-                  "mapImage": "00000000-0000-0000-0000-000000000000",
-                  "drillDownObjectId": 0,
-                  "trustedObjects": [],
-                  "inheritAccessRights": true,
-                  "accessList": [
-                      {
-                          "inherited": false,
-                          "userId": 1073741825,
-                          "accessRights": 1048575
-                      }
-                  ],
-                  "statusCalculationMethod": 0,
-                  "statusPropagationMethod": 0,
-                  "fixedPropagatedStatus": "WARNING",
-                  "statusShift": 0,
-                  "statusTransformation": [
-                      "WARNING",
-                      "MINOR",
-                      "MAJOR",
-                      "CRITICAL"
-                  ],
-                  "statusSingleThreshold": 75,
-                  "statusThresholds": [
-                      80,
-                      60,
-                      40,
-                      20
-                  ],
-                  "creationTime": 0,
-                  "parents": [],
-                  "children": [
-                      4
-                  ],
-                  "dashboards": [],
-                  "customAttributes": {},
-                  "urls": [],
-                  "responsibleUsers": [],
-                  "objectClassName": "Network"
-              }
+                $ref: '#/components/schemas/AbstractObject'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/ObjectNotFound'
       tags:
         - Objects
-    patch:
+
+    put:
       operationId: updateObject
       summary: Update object
-      description: Request to update object.                  
+      description: |
+        Updates object properties. Only provided fields are updated.
+        Array fields are replaced entirely (not merged).
       parameters:
         - $ref: '#/components/parameters/objectId'
       requestBody:
         required: true
-        description: Fields that are not set will not be updated. Array elements will be replaced fully (if new array does not contain old elements - they will be deleted).
-                     Json to update object's custom attributes (json should contain all custom attributes, attributes that are not part of JSON will be deleted)
         content:
           application/json:
             schema:
-              type: object
-              $ref: '#/components/schemas/objectModification'
+              $ref: '#/components/schemas/ObjectModificationData'
             example:
-                    {
-                        "customAttributes": {
-                            "test attr2": {
-                                "value": "new value"
-                            },
-                            "test attr": {
-                                "value": "new value"
-                            }
-                        }
-                      }
+              customAttributes:
+                "test attr":
+                  value: "new value"
       responses:
         '200':
-          description: If object was updated successfully. 
+          description: Object updated successfully
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/ObjectNotFound'
       tags:
-        - Objects    
+        - Objects
+
     delete:
       operationId: deleteObject
       summary: Delete object
-      description: Request to delete object.           
+      description: Deletes the specified object
       parameters:
         - $ref: '#/components/parameters/objectId'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                  "description": "NetXMS web service API version 4.3.0-rc223",
-                  "version": "4.3.0-rc223",
-                  "build": "4.3-223-g20c122be56"
-                }
+          description: Object deleted successfully
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      servers:
-        - url: http://127.0.0.1:8000
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          $ref: '#/components/responses/ObjectNotFound'
       tags:
         - Objects
-    servers:
-      - url: http://127.0.0.1:8000
 
-  #maintenance
   /objects/{object-id}/set-maintenance:
     post:
-      operationId: changeMintenanceState
-      summary: Change object's maintenance state
-      description: Change object's maintenance state
-      parameters:   
+      operationId: setMaintenanceState
+      summary: Set object maintenance state
+      description: Enters or leaves maintenance mode for the specified object
+      parameters:
         - $ref: '#/components/parameters/objectId'
       requestBody:
         required: true
-        description: If maintenance should be enabled or disabled and comment
         content:
           application/json:
             schema:
               type: object
+              required:
+                - maintenance
               properties:
-                maintenance: 
+                maintenance:
                   type: boolean
-                  description: true - if object should enter maintenance, and flase if object should leave maintenance
-                  example: true
-                comments: 
+                  description: true to enter maintenance, false to leave
+                comments:
                   type: string
-                  description: optional mintenance comment
-                  example: MAintenance comment
+                  description: Optional maintenance comment
+            example:
+              maintenance: true
+              comments: "Scheduled maintenance window"
       responses:
         '200':
-          description: Object maintenance status changed
+          description: Maintenance state changed
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Objects
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
 
-  #managed
   /objects/{object-id}/set-managed:
     post:
-      operationId: changeManagedState
-      summary: Change object's managed state
-      description: Change object's managed state
-      parameters:   
+      operationId: setManagedState
+      summary: Set object managed state
+      description: Sets object to managed or unmanaged state
+      parameters:
         - $ref: '#/components/parameters/objectId'
       requestBody:
         required: true
-        description: If object should be managed or unmanaged
         content:
           application/json:
             schema:
               type: object
+              required:
+                - managed
               properties:
-                managed: 
+                managed:
                   type: boolean
-                  description: true - if object should enter managed, and flase if object should be unmanaged
-                  example: true
+                  description: true for managed, false for unmanaged
+            example:
+              managed: true
       responses:
         '200':
-          description: Object management status changed
+          description: Management state changed
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Objects
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
 
-
-#network map anonymous access
-  /objects/{object-id}/anonymous-access:
+  /objects/{object-id}/bind:
     post:
-      operationId: enableAnonymousAccess
-      summary: Enable anonymous access to network map
-      description: Enable anonymous access to network map  
-      parameters:      
-        - $ref: '#/components/parameters/objectId' 
+      operationId: bindObject
+      summary: Bind child object
+      description: Binds the specified child object to this object (this object becomes parent)
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: ID of the child object to bind
+            example:
+              id: 123
       responses:
         '200':
-          description: OK access token returned
+          description: Object bound successfully
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Objects
+
+  /objects/{object-id}/bind-to:
+    post:
+      operationId: bindToObject
+      summary: Bind this object to parent
+      description: Binds this object as a child to the specified parent object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: ID of the parent object
+            example:
+              id: 456
+      responses:
+        '200':
+          description: Object bound successfully
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Objects
+
+  /objects/{object-id}/unbind:
+    post:
+      operationId: unbindObject
+      summary: Unbind child object
+      description: Unbinds the specified child object from this object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: ID of the child object to unbind
+            example:
+              id: 123
+      responses:
+        '200':
+          description: Object unbound successfully
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Objects
+
+  /objects/{object-id}/unbind-from:
+    post:
+      operationId: unbindFromObject
+      summary: Unbind this object from parent
+      description: Unbinds this object from the specified parent object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: ID of the parent object
+            example:
+              id: 456
+      responses:
+        '200':
+          description: Object unbound successfully
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Objects
+
+  /objects/{object-id}/change-zone:
+    post:
+      operationId: changeObjectZone
+      summary: Change object zone
+      description: Moves the object to a different zone
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - zoneUIN
+              properties:
+                zoneUIN:
+                  type: integer
+                  description: Target zone UIN
+            example:
+              zoneUIN: 1
+      responses:
+        '200':
+          description: Zone changed successfully
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Objects
+
+  /objects/{object-id}/anonymous-access:
+    get:
+      operationId: getAnonymousAccessToken
+      summary: Get network map anonymous access token
+      description: Returns the anonymous access token for the network map (if enabled)
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: Access token
           content:
             application/json:
               schema:
@@ -684,331 +664,1374 @@ paths:
                 properties:
                   token:
                     type: string
-                    description: Access token string 
-              example:
-                {
-                    "token": "5nohhaskul6kccbs2nobod2fiexnybkn"
-                }
         '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Network Map
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
 
-#Data collecton tag  
-  /objects/{object-id}/data-collection/set-status:
     post:
-      operationId: setStatus
-      summary: Update DCIs status
-      description: Request to update DCI list statuses     
-      parameters:      
-        - $ref: '#/components/parameters/objectId' 
-        - name: command
-          in: query
-          description: 'One of: disable or activate'
-          schema:
-            type: string
-      requestBody:
-        description: Request should contain JSON object with DCI ids array.
-        required: true
-        content:
+      operationId: enableAnonymousAccess
+      summary: Enable anonymous access to network map
+      description: Enables anonymous access for the network map and returns the access token
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: Access token generated
+          content:
             application/json:
               schema:
                 type: object
                 properties:
-                  alarms: 
-                    type: array
-                    items:
-                      type: integer
+                  token:
+                    type: string
               example:
-                      { 
-                         "dcis":[345383, 345384]
-                      }
+                token: "5nohhaskul6kccbs2nobod2fiexnybkn"
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Network Map
+
+  /objects/{object-id}/data-collection:
+    get:
+      operationId: getDataCollectionConfiguration
+      summary: List DCIs for object
+      description: Returns all data collection items configured for the object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: dciName
+          in: query
+          description: Filter by DCI name (case-insensitive substring match)
+          schema:
+            type: string
+        - name: dciNameRegexp
+          in: query
+          description: Filter by DCI name (regex pattern)
+          schema:
+            type: string
+        - name: dciDescription
+          in: query
+          description: Filter by DCI description (case-insensitive substring match)
+          schema:
+            type: string
+        - name: dciDescriptionRegexp
+          in: query
+          description: Filter by DCI description (regex pattern)
+          schema:
+            type: string
       responses:
         '200':
-          description: OK
-        '401':
-          description: Access denied 
+          description: List of data collection objects
           content:
             application/json:
               schema:
                 type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                properties:
+                  dataCollectionObjects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DataCollectionObject'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
       tags:
-        - Data collection 
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
-  /objects/{object-id}/data-collection/{dci-id}/force-poll:
+        - Data Collection
+
     post:
-      operationId: forecPollDci
-      summary: Force poll DCI
-      description: Request to delete object.     
-      parameters: 
+      operationId: createDci
+      summary: Create new DCI
+      description: Creates a new data collection item on the object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCollectionObject'
+      responses:
+        '200':
+          description: DCI created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: array
+                    items:
+                      type: integer
+                      format: int64
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/{dci-id}:
+    get:
+      operationId: getDci
+      summary: Get DCI details
+      description: Returns detailed information about a specific DCI
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+      responses:
+        '200':
+          description: DCI details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCollectionObject'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+    put:
+      operationId: updateDci
+      summary: Update DCI
+      description: Updates an existing data collection item
+      parameters:
         - $ref: '#/components/parameters/objectId'
         - $ref: '#/components/parameters/dciId'
       requestBody:
-        description: Request should contain empty JSON object.
         required: true
         content:
-            application/json:
-              schema:
-                type: object
-              example:
-                      { }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCollectionObject'
       responses:
         '200':
-          description: OK
+          description: DCI updated
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
         '401':
-          description: Access denied 
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+    delete:
+      operationId: deleteDci
+      summary: Delete DCI
+      description: Deletes the specified data collection item
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+      responses:
+        '200':
+          description: DCI deleted
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/set-status:
+    post:
+      operationId: setDciStatus
+      summary: Change DCI status
+      description: Enables or disables multiple DCIs
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: command
+          in: query
+          required: true
+          description: 'Command: "disable" or "activate"'
+          schema:
+            type: string
+            enum: [disable, activate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dcis
+              properties:
+                dcis:
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  description: Array of DCI IDs
+            example:
+              dcis: [345383, 345384]
+      responses:
+        '200':
+          description: Status changed
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/{dci-id}/force-poll:
+    post:
+      operationId: forcePollDci
+      summary: Force poll DCI
+      description: Initiates an immediate poll for the specified DCI
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Poll initiated
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/{dci-id}/last-value:
+    get:
+      operationId: getDciLastValue
+      summary: Get DCI last value
+      description: Returns the most recent value for the specified DCI
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+        - name: rowsAsObjects
+          in: query
+          description: For table DCIs, return rows as objects with column names as keys
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Last value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DciLastValue'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/{dci-id}/values:
+    get:
+      operationId: getDciHistoricalData
+      summary: Get DCI historical data
+      description: |
+        Returns historical data for the specified DCI.
+        Time range can be specified using from/to timestamps, timeInterval, or itemCount.
+        If no parameters provided, returns last hour of data.
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+        - name: from
+          in: query
+          description: Start timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: to
+          in: query
+          description: End timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: timeInterval
+          in: query
+          description: Time interval in seconds (alternative to from/to)
+          schema:
+            type: integer
+        - name: itemCount
+          in: query
+          description: Maximum number of items to return
+          schema:
+            type: integer
+        - name: outputFormat
+          in: query
+          description: 'For table DCIs: "RowColumn", "ColumnRow", or "InstanceColumnRow"'
+          schema:
+            type: string
+            enum: [RowColumn, ColumnRow, InstanceColumnRow]
+      responses:
+        '200':
+          description: Historical data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSeries'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/data-collection/query:
+    get:
+      operationId: queryDci
+      summary: Search DCIs
+      description: |
+        Searches for DCIs matching the query criteria.
+        Query parameters are combined into a search string.
+        Use "query" parameter for free-text search or specific field:value pairs.
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: query
+          in: query
+          description: Free-text search query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching DCIs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DciValue'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /objects/{object-id}/last-values:
+    get:
+      operationId: getLastValues
+      summary: Get all last values for object
+      description: |
+        Returns last values for all DCIs on the object.
+        If the object is not a data collection target, returns values from all child objects that are data collection targets.
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: dciName
+          in: query
+          description: Filter by DCI name (case-insensitive substring match)
+          schema:
+            type: string
+        - name: dciNameRegexp
+          in: query
+          description: Filter by DCI name (regex pattern)
+          schema:
+            type: string
+        - name: dciDescription
+          in: query
+          description: Filter by DCI description (case-insensitive substring match)
+          schema:
+            type: string
+        - name: dciDescriptionRegexp
+          in: query
+          description: Filter by DCI description (regex pattern)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Last values
           content:
             application/json:
               schema:
                 type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                properties:
+                  lastValues:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DciValue'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
       tags:
-        - Data collection 
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
+        - Data Collection
 
-#Alarms
-
-  /alarms:
+  /objects/{object-id}/polls:
     post:
-      operationId: changeAlarmState
-      summary: Change state of alarm
-      description: Change state of alarm     
-      parameters:       
-        - name: command
-          in: query
-          description: 'One of: terminate, acknowledge, sticky_acknowledge + timeout=int, resolve'
+      operationId: executePoll
+      summary: Execute object poll
+      description: |
+        Initiates a poll on the object. Returns a UUID to track poll output.
+        Poll types: autobind, configuration, "configuration full", discovery, interface, status, topology
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  description: Poll type
+                  enum: [autobind, configuration, "configuration full", "configuration with reset", discovery, interface, status, topology]
+            example:
+              type: "status"
+      responses:
+        '200':
+          description: Poll started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  UUID:
+                    type: string
+                    format: uuid
+                  type:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Polls
+
+  /objects/{object-id}/polls/output/{id}:
+    get:
+      operationId: getPollOutput
+      summary: Get poll output
+      description: Returns the output of a previously started poll
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: id
+          in: path
+          required: true
+          description: Poll UUID
           schema:
             type: string
+            format: uuid
+      responses:
+        '200':
+          description: Poll output
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                  completed:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Polls
+
+    post:
+      operationId: pollWithOutput
+      summary: Poll with output streaming
+      description: Executes poll and returns output stream
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: id
+          in: path
+          required: true
+          description: Poll UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Poll output
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Polls
+
+  /objects/{object-id}/object-tools:
+    get:
+      operationId: getObjectTools
+      summary: List object tools
+      description: Returns available object tools for the specified object (must be a node)
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: Object tool tree
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  root:
+                    $ref: '#/components/schemas/ObjectToolFolder'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Object Tools
+
+    post:
+      operationId: executeObjectTool
+      summary: Execute object tool
+      description: Executes an object tool on the specified object
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - toolData
+              properties:
+                toolData:
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: integer
+                      description: Object tool ID
+                    inputFields:
+                      type: array
+                      items:
+                        type: string
+                      description: Input field values as "value;fieldName" pairs
+                    maskedInputFields:
+                      type: array
+                      items:
+                        type: string
+                      description: Names of fields that should be masked
+            example:
+              toolData:
+                id: 1
+                inputFields: ["value1;field1", "value2;field2"]
+      responses:
+        '200':
+          description: Tool execution started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  UUID:
+                    type: string
+                    format: uuid
+                  toolId:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Object Tools
+
+  /objects/{object-id}/object-tools/output/{id}:
+    get:
+      operationId: getObjectToolOutput
+      summary: Get object tool output
+      description: Returns the output of a previously executed object tool
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: id
+          in: path
+          required: true
+          description: Tool execution UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tool output
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                  completed:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Object Tools
+
+    post:
+      operationId: streamObjectToolOutput
+      summary: Stream object tool output
+      description: Streams the output of a running object tool
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: id
+          in: path
+          required: true
+          description: Tool execution UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tool output stream
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Object Tools
+
+  /objects/{object-id}/checks:
+    get:
+      operationId: getBusinessServiceChecks
+      summary: List business service checks
+      description: Returns all checks for the business service
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: List of checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BusinessServiceCheck'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+    post:
+      operationId: createBusinessServiceCheck
+      summary: Create business service check
+      description: Creates a new check for the business service
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessServiceCheck'
+      responses:
+        '200':
+          description: Check created
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+  /objects/{object-id}/checks/{check-id}:
+    get:
+      operationId: getBusinessServiceCheck
+      summary: Get business service check
+      description: Returns details of a specific check
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Check details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessServiceCheck'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+    put:
+      operationId: updateBusinessServiceCheck
+      summary: Update business service check
+      description: Updates an existing check
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessServiceCheck'
+      responses:
+        '200':
+          description: Check updated
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+    delete:
+      operationId: deleteBusinessServiceCheck
+      summary: Delete business service check
+      description: Deletes the specified check
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Check deleted
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+  /objects/{object-id}/tickets:
+    get:
+      operationId: getBusinessServiceTickets
+      summary: Get business service tickets
+      description: Returns service tickets within the specified time period
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: start
+          in: query
+          description: Period start timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          in: query
+          description: Period end timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: timeRage
+          in: query
+          description: Time range (used with timeUnit)
+          schema:
+            type: integer
+        - name: timeUnit
+          in: query
+          description: 'Time unit: MINUTE, HOUR, or DAY'
+          schema:
+            type: string
+            enum: [MINUTE, HOUR, DAY]
+      responses:
+        '200':
+          description: Service tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BusinessServiceTicket'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+  /objects/{object-id}/uptime:
+    get:
+      operationId: getBusinessServiceUptime
+      summary: Get business service uptime
+      description: Returns service availability percentage for the specified time period
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+        - name: start
+          in: query
+          description: Period start timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          in: query
+          description: Period end timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: timeRage
+          in: query
+          description: Time range (used with timeUnit)
+          schema:
+            type: integer
+        - name: timeUnit
+          in: query
+          description: 'Time unit: MINUTE, HOUR, or DAY'
+          schema:
+            type: string
+            enum: [MINUTE, HOUR, DAY]
+      responses:
+        '200':
+          description: Uptime percentage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uptime:
+                    type: number
+                    format: double
+                    description: Availability percentage (0-100)
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Business Services
+
+  /alarms:
+    get:
+      operationId: getAlarms
+      summary: List alarms
+      description: |
+        Returns alarms with optional filtering.
+        Supports filtering by object, state, time range, key, and message.
+      parameters:
+        - name: objectId
+          in: query
+          description: Filter by source object ID
+          schema:
+            type: integer
+            format: int64
+        - name: objectGuid
+          in: query
+          description: Filter by source object GUID
+          schema:
+            type: string
+            format: uuid
+        - name: includeChildObjects
+          in: query
+          description: Include alarms from child objects
+          schema:
+            type: boolean
+            default: false
+        - name: state
+          in: query
+          description: 'Comma-separated states: outstanding, acknowledged, resolved, terminated (or 0-3)'
+          schema:
+            type: string
+        - name: createdBefore
+          in: query
+          description: Filter alarms created before timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: createdAfter
+          in: query
+          description: Filter alarms created after timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: updatedBefore
+          in: query
+          description: Filter alarms updated before timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: updatedAfter
+          in: query
+          description: Filter alarms updated after timestamp (Unix epoch seconds)
+          schema:
+            type: integer
+            format: int64
+        - name: key
+          in: query
+          description: Filter by alarm key (glob pattern)
+          schema:
+            type: string
+        - name: keyRegex
+          in: query
+          description: Filter by alarm key (regex pattern)
+          schema:
+            type: string
+        - name: message
+          in: query
+          description: Filter by alarm message (regex pattern)
+          schema:
+            type: string
+        - name: resolveReferences
+          in: query
+          description: Include resolved object, user, and event template references
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of alarms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alarms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alarm'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Alarms
+
+    post:
+      operationId: changeAlarmState
+      summary: Change alarm state
+      description: Performs bulk operations on alarms (terminate, acknowledge, resolve)
+      parameters:
+        - name: command
+          in: query
+          required: true
+          description: Command to execute
+          schema:
+            type: string
+            enum: [terminate, acknowledge, sticky_acknowledge, resolve]
         - name: timeout
           in: query
-          description: 'Additianal configuration for sticky_acknowledge command'
+          description: Timeout for sticky_acknowledge (seconds)
           schema:
             type: integer
       requestBody:
-        description: Request should contain JSON object with alarm id array.
         required: true
         content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  alarms: 
-                    type: array
-                    items:
-                      type: integer
-              example:
-                      { 
-                         "alarms":[345383, 345384]
-                      }
+          application/json:
+            schema:
+              type: object
+              required:
+                - alarms
+              properties:
+                alarms:
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  description: Array of alarm IDs
+                timeout:
+                  type: integer
+                  description: Alternative to query parameter for sticky_acknowledge timeout
+            example:
+              alarms: [345383, 345384]
       responses:
         '200':
-          description: OK
+          description: Operation completed
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
         '401':
-          description: Access denied 
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Alarms
+
+  /alarms/{alarm-id}:
+    get:
+      operationId: getAlarm
+      summary: Get alarm by ID
+      description: Returns detailed information about a specific alarm including resolved references
+      parameters:
+        - $ref: '#/components/parameters/alarmId'
+      responses:
+        '200':
+          description: Alarm details
           content:
             application/json:
               schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                $ref: '#/components/schemas/Alarm'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+        '404':
+          description: Alarm not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Alarms
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
+
   /alarms/{alarm-id}/comments:
     get:
       operationId: getAlarmComments
-      summary: Get all comments of given alarm
-      description: Get all comments of given alarm   
+      summary: Get alarm comments
+      description: Returns all comments for the specified alarm
       parameters:
         - $ref: '#/components/parameters/alarmId'
       responses:
         '200':
-          description: Will return list with all alarm comments
+          description: List of comments
           content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                  "comments": [
-                      {
-                          "id": 1,
-                          "alarmId": 346802,
-                          "userId": 1,
-                          "userName": "admin",
-                          "lastChangeTime": 1677587409,
-                          "text": "comment text"
-                      }
-                  ]
-              }
-        '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
-      tags:
-        - Alarms
-      servers:
-        - url: http://127.0.0.1:8000
-    post:
-      operationId: CreateCommentForAlarm
-      summary: Create new comment for alarm
-      description: Create new comment for alarm  
-      parameters:
-        - $ref: '#/components/parameters/alarmId'
-      requestBody:
-        description: Request should contain JSON with text.
-        required: true
-        content:
             application/json:
               schema:
                 type: object
                 properties:
-                  text:
-                    type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Access denied 
-          content:
-            application/json:
-              schema:
-                type: object
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AlarmComment'
               example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                comments:
+                  - id: 1
+                    alarmId: 346802
+                    userId: 1
+                    userName: "admin"
+                    lastChangeTime: 1677587409
+                    text: "comment text"
+        '401':
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Alarms
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
+
+    post:
+      operationId: createAlarmComment
+      summary: Create alarm comment
+      description: Adds a new comment to the alarm
+      parameters:
+        - $ref: '#/components/parameters/alarmId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Comment text
+            example:
+              text: "Investigation in progress"
+      responses:
+        '200':
+          description: Comment created
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Alarms
+
   /alarms/{alarm-id}/comments/{comment-id}:
     get:
       operationId: getAlarmComment
-      summary: Get exact alarm's comment
-      description: Will provide information about comment with given id form given alarm
+      summary: Get alarm comment
+      description: Returns a specific comment by ID
       parameters:
         - $ref: '#/components/parameters/alarmId'
         - $ref: '#/components/parameters/alarmCommentId'
       responses:
         '200':
-          description: OK
-        '401':
-          description: Access denied 
+          description: Comment details
           content:
             application/json:
               schema:
-                type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                $ref: '#/components/schemas/AlarmComment'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
       tags:
         - Alarms
-      servers:
-        - url: http://127.0.0.1:8000
+
+    put:
+      operationId: updateAlarmComment
+      summary: Update alarm comment
+      description: Updates an existing comment
+      parameters:
+        - $ref: '#/components/parameters/alarmId'
+        - $ref: '#/components/parameters/alarmCommentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+            example:
+              text: "Updated comment text"
+      responses:
+        '200':
+          description: Comment updated
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Alarms
+
     delete:
       operationId: deleteAlarmComment
-      summary: Delete alarm's comment
-      description: Will delete comment by id form given alarm
+      summary: Delete alarm comment
+      description: Deletes the specified comment
       parameters:
         - $ref: '#/components/parameters/alarmId'
         - $ref: '#/components/parameters/alarmCommentId'
       responses:
         '200':
-          description: OK
+          description: Comment deleted
         '401':
-          description: Access denied 
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Alarms
+
+  /events:
+    post:
+      operationId: sendEvent
+      summary: Send event
+      description: Sends an event to the server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventCode:
+                  type: integer
+                  format: int64
+                  description: Event code (alternative to eventName)
+                eventName:
+                  type: string
+                  description: Event name (alternative to eventCode)
+                objectId:
+                  type: integer
+                  format: int64
+                  description: Source object ID
+                parameters:
+                  type: array
+                  items:
+                    type: string
+                  description: Event parameters
+                userTag:
+                  type: string
+                  description: User tag
+                originTimestamp:
+                  type: integer
+                  format: int64
+                  description: Origin timestamp (Unix epoch seconds)
+            example:
+              eventName: "SYS_NODE_CRITICAL"
+              objectId: 123
+              parameters: ["parameter1", "parameter2"]
+      responses:
+        '200':
+          description: Event sent
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Events
+
+  /users:
+    get:
+      operationId: getUsers
+      summary: List users and groups
+      description: Returns all users and groups in the user database
+      parameters:
+        - name: type
+          in: query
+          description: 'Filter by type: "user", "group", or "any"'
+          schema:
+            type: string
+            enum: [user, group, any]
+        - name: name
+          in: query
+          description: Filter by name (glob pattern)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users/groups
           content:
             application/json:
               schema:
                 type: object
-              example:
-                {
-                    "description": "Access denied",
-                    "error": 2
-                }
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AbstractUserObject'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
       tags:
-        - Alarms
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
+        - Users
 
-#Find
+  /users/{user-id}:
+    get:
+      operationId: getUser
+      summary: Get user by ID
+      description: Returns user details. Use "self" to get current user.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: User ID, GUID, or "self"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbstractUserObject'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Users
+
+  /users/{user-id}/password:
+    post:
+      operationId: changePassword
+      summary: Change user password
+      description: Changes password for the specified user. Use "self" for current user.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          description: User ID, GUID, or "self"
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newPassword
+              properties:
+                oldPassword:
+                  type: string
+                  description: Current password (required when changing own password)
+                newPassword:
+                  type: string
+                  description: New password
+            example:
+              oldPassword: "currentPassword"
+              newPassword: "newSecurePassword123"
+      responses:
+        '200':
+          description: Password changed
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Users
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      summary: Poll session notifications
+      description: |
+        Long-polls for session notifications. Blocks for up to 60 seconds waiting for notifications.
+        Requires attachNotificationHandler=true when creating session.
+      responses:
+        '200':
+          description: Notifications received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SessionNotification'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+        '408':
+          description: Timeout - no notifications within 60 seconds
+      tags:
+        - Notifications
+
+  /user-agent-notifications:
+    get:
+      operationId: getUserAgentNotifications
+      summary: Get user agent notifications
+      description: Returns all user agent notifications
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Notifications
+
+    post:
+      operationId: createUserAgentNotification
+      summary: Create user agent notification
+      description: Creates a new user agent notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+                - objects
+              properties:
+                message:
+                  type: string
+                  description: Notification message
+                objects:
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  description: Target object IDs
+                startTime:
+                  type: integer
+                  format: int64
+                  description: Start time (Unix epoch seconds)
+                endTime:
+                  type: integer
+                  format: int64
+                  description: End time (Unix epoch seconds)
+                onStartup:
+                  type: boolean
+                  description: Show on startup
+                  default: false
+            example:
+              message: "Scheduled maintenance tonight"
+              objects: [1, 2, 3]
+              startTime: 1677600000
+              endTime: 1677686400
+      responses:
+        '200':
+          description: Notification created
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Notifications
 
   /find/mac-address:
     get:
       operationId: findMacAddress
       summary: Find MAC address
-      description: Find MAC address uding full mac address or it's first part
+      description: Searches for MAC address connections in the network
       parameters:
         - name: macAddress
           in: query
           required: true
+          description: MAC address or prefix to search for
           schema:
             type: string
-            description: Mac address or it's first part for search. 
         - name: searchLimit
           in: query
-          required: false
+          description: Maximum number of results (default 100)
           schema:
             type: integer
-            description: Optional. Number of results to be returned, defualt is 100.
+            default: 100
         - name: includeObjects
           in: query
-          required: false
+          description: Include object information in response
           schema:
             type: boolean
-            description: Optional. If provided, object information is included in respone.
+            default: false
       responses:
         '200':
-          description: Successful search of MAC address.
+          description: Search results
           content:
             application/json:
               schema:
@@ -1018,336 +2041,605 @@ paths:
                   properties:
                     localMacAddress:
                       type: string
-                      description: Local mac address
                     localNodeId:
                       type: integer
-                      description: Locla node id
+                      format: int64
                     localInterfaceId:
                       type: integer
-                      description: Local interface ID
+                      format: int64
                     localIpAddress:
                       type: string
-                      description: IP address
                     type:
                       type: string
-                      description: Connection type
                     nodeId:
                       type: integer
-                      description: Node or access point ID
+                      format: int64
                     interfaceId:
                       type: integer
-                      description: Interface ID
+                      format: int64
                     interfaceIndex:
                       type: integer
-                      description: Interface index
         '401':
-          description: Unauthorized.
+          $ref: '#/components/responses/AccessDenied'
       tags:
-        - Find
-      servers:
-        - url: http://127.0.0.1:8000
-    servers:
-      - url: http://127.0.0.1:8000   
+        - Search
 
-#Component definition
+  /persistent-storage:
+    get:
+      operationId: getPersistentStorage
+      summary: List persistent storage entries
+      description: Returns all key-value pairs in persistent storage
+      responses:
+        '200':
+          description: Storage entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  persistentstorage:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Persistent Storage
+
+    post:
+      operationId: createPersistentStorageEntry
+      summary: Create persistent storage entry
+      description: Creates a new key-value pair in persistent storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - key
+                - value
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+            example:
+              key: "myKey"
+              value: "myValue"
+      responses:
+        '200':
+          description: Entry created
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Persistent Storage
+
+  /persistent-storage/{key}:
+    get:
+      operationId: getPersistentStorageEntry
+      summary: Get persistent storage entry
+      description: Returns the value for the specified key
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entry value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Persistent Storage
+
+    put:
+      operationId: updatePersistentStorageEntry
+      summary: Update persistent storage entry
+      description: Updates the value for the specified key
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+            example:
+              value: "newValue"
+      responses:
+        '200':
+          description: Entry updated
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Persistent Storage
+
+    delete:
+      operationId: deletePersistentStorageEntry
+      summary: Delete persistent storage entry
+      description: Deletes the specified key-value pair
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entry deleted
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Persistent Storage
+
+  /predefined-graphs:
+    get:
+      operationId: getPredefinedGraphs
+      summary: List predefined graphs
+      description: Returns the tree of predefined graphs
+      responses:
+        '200':
+          description: Graph tree
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  root:
+                    $ref: '#/components/schemas/GraphFolder'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Graphs
+
+  /push-data:
+    post:
+      operationId: pushDciData
+      summary: Push DCI data
+      description: Pushes DCI values to the server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/DciPushData'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/DciPushData'
+            examples:
+              singleValue:
+                summary: Push single value
+                value:
+                  nodeId: 123
+                  dciId: 456
+                  value: "42"
+              multipleValues:
+                summary: Push multiple values
+                value:
+                  data:
+                    - nodeId: 123
+                      dciId: 456
+                      value: "42"
+                    - nodeId: 123
+                      dciId: 457
+                      value: "100"
+      responses:
+        '200':
+          description: Data pushed
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Data Collection
+
+  /summary-table/ad-hoc:
+    post:
+      operationId: queryAdHocSummaryTable
+      summary: Query ad-hoc summary table
+      description: Executes an ad-hoc DCI summary table query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - baseObject
+                - columns
+              properties:
+                baseObject:
+                  oneOf:
+                    - type: integer
+                      format: int64
+                    - type: string
+                  description: Base object ID or name
+                columns:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      columnName:
+                        type: string
+                        description: Display column name
+                      dciName:
+                        type: string
+                        description: DCI name pattern
+                      isRegexp:
+                        type: boolean
+                        description: Treat dciName as regex
+                        default: false
+                      useRegexp:
+                        type: boolean
+                        description: Alias for isRegexp
+                        default: false
+                      matchByDescription:
+                        type: boolean
+                        description: Match by description instead of name
+                        default: false
+                aggregationFunction:
+                  type: string
+                  description: Aggregation function
+                  enum: [LAST, MIN, MAX, AVG, SUM]
+                startDate:
+                  type: integer
+                  format: int64
+                  description: Start date (Unix epoch seconds)
+                endDate:
+                  type: integer
+                  format: int64
+                  description: End date (Unix epoch seconds)
+                multiInstance:
+                  type: boolean
+                  default: true
+            example:
+              baseObject: "Infrastructure Services"
+              columns:
+                - columnName: "CPU Usage"
+                  dciName: "System.CPU.Usage"
+                - columnName: "Memory Used"
+                  dciName: "System.Memory.Physical.Used"
+      responses:
+        '200':
+          description: Summary table results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  table:
+                    type: object
+                    properties:
+                      columns:
+                        type: array
+                        items:
+                          type: string
+                      rows:
+                        type: array
+                        items:
+                          type: array
+                          items:
+                            type: string
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/AccessDenied'
+      tags:
+        - Summary Tables
+
 components:
   securitySchemes:
     BasicAuth:
       type: http
       scheme: basic
-    CookieAuth:      
+      description: HTTP Basic Authentication with NetXMS username and password
+    CookieAuth:
       type: apiKey
       in: cookie
-      name: session_handle  
+      name: session_handle
+      description: Session cookie set after successful login
+    SessionHeader:
+      type: apiKey
+      in: header
+      name: Session-Id
+      description: Session ID header
+
   parameters:
     objectId:
       name: object-id
       in: path
       required: true
-      description: Object information identified by provided ID or GUID.
+      description: Object ID or GUID
       schema:
         type: string
     dciId:
       name: dci-id
       in: path
       required: true
-      description: DCI ID to forace poll
+      description: DCI ID or name
       schema:
-        type: integer
+        type: string
     alarmId:
       name: alarm-id
       in: path
       required: true
-      description: Id of the alarm
+      description: Alarm ID
       schema:
         type: integer
+        format: int64
     alarmCommentId:
       name: comment-id
       in: path
       required: true
-      description: id of the alarm comment 
+      description: Comment ID
       schema:
         type: integer
+        format: int64
+
+  responses:
+    AccessDenied:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: 2
+            description: "Access denied"
+    InvalidRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: 59
+            description: "Invalid argument"
+    ObjectNotFound:
+      description: Object not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: 3
+            description: "Invalid object ID"
+
   schemas:
-    objectCreation:
-      title: Object creation fields
+    ErrorResponse:
       type: object
       properties:
-        objectType:
+        error:
           type: integer
-          description: >
-            Possible options:
-          
-                * SUBNET: 1
-                * NODE: 2
-                * INTERFACE: 3
-                * NETWORK: 4
-                * CONTAINER: 5
-                * ZONE: 6
-                * SERVICEROOT: 7
-                * TEMPLATE: 8
-                * TEMPLATEGROUP: 9
-                * TEMPLATEROOT: 10
-                * NETWORKSERVICE: 11
-                * VPNCONNECTOR: 12
-                * CONDITION: 13
-                * CLUSTER: 14
-                * OBJECT_BUSINESSSERVICE_PROTOTYPE: 15
-                * NETWORKMAPROOT: 19
-                * NETWORKMAPGROUP: 20
-                * NETWORKMAP: 21
-                * DASHBOARDROOT: 22
-                * DASHBOARD: 23
-                * BUSINESSSERVICEROOT: 27
-                * BUSINESSSERVICE: 28
-                * NODELINK: 29
-                * SLMCHECK: 30
-                * MOBILEDEVICE: 31
-                * RACK: 32
-                * ACCESSPOINT: 33
-                * CHASSIS: 35
-                * DASHBOARDGROUP: 36
-                * SENSOR: 37  
-
-        name:
+          description: Error code
+        description:
           type: string
-          description: >
-            Object name
-        parentId:
+          description: Error description
+
+    SuccessResponse:
+      type: object
+      properties:
+        error:
           type: integer
-          description: >
-            Parent object id this object to be created under
+          example: 0
+        description:
+          type: string
+          example: "Request completed successfully"
+
+    SessionToken:
+      type: object
+      properties:
+        sessionHandle:
+          type: string
+          format: uuid
+          description: Session GUID for use in Session-Id header
+        session:
+          $ref: '#/components/schemas/NXCSession'
+
+    NXCSession:
+      type: object
+      properties:
+        server:
+          type: object
+          properties:
+            address:
+              type: string
+            serverName:
+              type: string
+            version:
+              type: string
+            color:
+              type: string
+            id:
+              type: integer
+              format: int64
+            timeZone:
+              type: string
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+            id:
+              type: integer
+            globalAccessRights:
+              type: integer
+              format: int64
+        encrypted:
+          type: boolean
+        objectsSynchronized:
+          type: boolean
+        passwordExpired:
+          type: boolean
+        zoningEnabled:
+          type: boolean
+
+    AbstractObject:
+      type: object
+      properties:
+        objectId:
+          type: integer
+          format: int64
+        guid:
+          type: string
+          format: uuid
+        objectName:
+          type: string
+        alias:
+          type: string
+        nameOnMap:
+          type: string
+        objectClass:
+          type: integer
+        categoryId:
+          type: integer
+        flags:
+          type: integer
+        status:
+          type: string
+          enum: [NORMAL, WARNING, MINOR, MAJOR, CRITICAL, UNKNOWN, UNMANAGED, DISABLED, TESTING]
+        isDeleted:
+          type: boolean
+        inMaintenanceMode:
+          type: boolean
+        maintenanceInitiatorId:
+          type: integer
+          format: int64
         comments:
           type: string
-          description: >
-            Object comment
-        creationFlags:
-          type: integer
-          description: >
-            Bit flags for object creation. Possible options:
-
-                * DISABLE ICMP: 0x0001
-                * DISABLE NXCP: 0x0002
-                * DISABLE SNMP: 0x0004
-                * CREATE UNMANAGED: 0x0008
-                * ENTER MAINTENANCE: 0x0010
-                * AS ZONE PROXY: 0x0020
-                * DISABLE ETHERNET IP: 0x0040
-                * SNMP SETTINGS LOCKED: 0x0080
-                * EXTERNAL GATEWAY: 0x0100
-
-        primaryName:
+        commentsSource:
           type: string
-          description: >
-            Node primary name (IP address or dns name)
-        agentPort:
-          type: integer
-          description: >
-            Node agent port
-        snmpPort:
-          type: integer
-          description: >
-            Node SNMP port
-        etherNetIpPort:
-          type: integer
-          description: >
-            Node ethernetIP port
-        sshPort:
-          type: integer
-          description: >
-            Node ssh port
-        ipAddress:
+        geolocation:
+          $ref: '#/components/schemas/Geolocation'
+        postalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+        mapImage:
           type: string
-          description: >
-            Interface IP address
-        agentProxyId:
+          format: uuid
+        drillDownObjectId:
           type: integer
-          description: >
-            Node agent proxy id
-        snmpProxyId:
-          type: integer
-          description: >
-            Node SNMP proxy id
-        etherNetIpProxyId:
-          type: integer
-          description: >
-            Node ethernetIP proxy id
-        icmpProxyId:
-          type: integer
-          description: >
-            Node ICMP proxy id
-        sshProxyId:
-          type: integer
-          description: >
-            Node ssh proxy id
-        mapType:
-          type: integer
-          description: >
-            Network map type
-        seedObjectIds:
+          format: int64
+        trustedObjects:
           type: array
           items:
             type: integer
-          description: >
-            Network map seed objects
+            format: int64
+        inheritAccessRights:
+          type: boolean
+        accessList:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessListElement'
+        creationTime:
+          type: integer
+          format: int64
+        parents:
+          type: array
+          items:
+            type: integer
+            format: int64
+        children:
+          type: array
+          items:
+            type: integer
+            format: int64
+        dashboards:
+          type: array
+          items:
+            type: integer
+            format: int64
+        customAttributes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CustomAttribute'
+        urls:
+          type: array
+          items:
+            type: object
+        responsibleUsers:
+          type: array
+          items:
+            type: integer
+        objectClassName:
+          type: string
+
+    ObjectCreationData:
+      type: object
+      required:
+        - objectType
+        - name
+        - parentId
+      properties:
+        objectType:
+          type: integer
+          description: |
+            Object type codes:
+            - 1: SUBNET
+            - 2: NODE
+            - 3: INTERFACE
+            - 4: NETWORK
+            - 5: CONTAINER
+            - 6: ZONE
+            - 8: TEMPLATE
+            - 9: TEMPLATEGROUP
+            - 11: NETWORKSERVICE
+            - 13: CONDITION
+            - 14: CLUSTER
+            - 21: NETWORKMAP
+            - 23: DASHBOARD
+            - 28: BUSINESSSERVICE
+            - 32: RACK
+            - 35: CHASSIS
+            - 37: SENSOR
+        name:
+          type: string
+        parentId:
+          type: integer
+          format: int64
+        comments:
+          type: string
+        creationFlags:
+          type: integer
+        primaryName:
+          type: string
+          description: Node primary name (IP address or DNS name)
+        agentPort:
+          type: integer
+        snmpPort:
+          type: integer
+        sshPort:
+          type: integer
         zoneUIN:
           type: integer
-          description: >
-            Subnet/Node/Zone zone UIN
-        serviceType:
-          type: integer
-          description: >
-            Network service types: 
-              
-                * CUSTOM - 0
-                * SSH - 1
-                * POP3 - 2
-                * SMTP - 3
-                * FTP - 4
-                * HTTP - 5
-                * HTTPS - 6
-                * TELNET - 7
-
-        ipPort:
-          type: integer
-          description: >
-            Network Service IP port
-        request:
-          type: string
-          description: >
-            Network Service request
-        response:
-          type: string
-          description: >
-            Network Service response
         linkedNodeId:
           type: integer
-          description: >
-            Linked object for Node Link object
+          format: int64
         template:
           type: boolean
-          description: >
-            If service check object is template 
-        macAddress:
-          type: string
-          description: >
-            Interface or sensor MAC address
-        ifIndex:
+        mapType:
           type: integer
-          description: >
-            Interface index
-        ifType:
-          type: integer
-          description: >
-            Interface type
-        module:
-          type: integer
-          description: >
-            Interface module number
-        port:
-          type: integer
-          description: >
-            Interface port
-        physicalPort:
-          type: boolean
-          description: >
-            IF interface has physical port
-        createStatusDci:
-          type: boolean
-          description: >
-            IF status DCI should be created for network service
-        deviceId:
-          type: string
-          description: >
-            Mobile device ID
-        height:
-          type: integer
-          description: >
-            Rack height
-        controllerId:
-          type: integer
-          description: >
-            Chassis controller node id
-        sshLogin:
-          type: string
-          description: >
-            Node ssh login
-        sshPassword:
-          type: string
-          description: >
-            Node password
-        deviceClass:
-          type: integer
-          description: >
-            Sensor device class
-        vendor:
-          type: string
-          description: >
-            Sensor vendor
-        commProtocol:
-          type: integer
-          description: >
-            Sensor communication protocol
-        xmlConfig:
-          type: string
-          description: >
-            Sensor XML config
-        xmlRegConfig:
-          type: string
-          description: >
-            Sensor XML registration config
-        serialNumber:
-          type: string
-          description: >
-            Sensor serial number
-        deviceAddress:
-          type: string
-          description: >
-            Sensor device address
-        metaType:
-          type: string
-          description: >
-            Sensor meta type
-        description:
-          type: string
-          description: >
-            Sensor description
-        sensorProxy:
-          type: integer
-          description: >
-            Sensor proxy node id
-        instanceDiscoveryMethod:
-          type: integer
-          description: >
-            Business service instance discovery method   
-            
-            Possible values:
-              
-                * IDM_AGENT_LIST - 1
-                * IDM_AGENT_TABLE - 2
-                * IDM_SCRIPT - 5
-    objectModification:
-      title: Object modification fields
+
+    ObjectModificationData:
       type: object
       properties:
         name:
@@ -1361,573 +2653,419 @@ components:
         acl:
           type: array
           items:
-            type: object
             $ref: '#/components/schemas/AccessListElement'
-          description: >
-            inheritAccessRights should be provided in the same request
         inheritAccessRights:
           type: boolean
-          description: >
-            acl should be provided in the same request
-        customAttributes: 
+        customAttributes:
           type: object
-          $ref: '#/components/schemas/CustomAttribute'
           additionalProperties:
-            type: string
-            description: >
-              Custom attribute name
-          description: >
-            JSON object {String: :ref:`CustomAttribute<custom-attribute-element-fields>`}
-            Object name is custom attribute name and value is in :ref:`CustomAttribute<custom-attribute-element-fields>` object
+            $ref: '#/components/schemas/CustomAttribute'
         autoBindFilter:
           type: string
-        version:
-          type: integer
         description:
           type: string
-        agentPort:
-          type: integer
-        agentSecret:
-          type: string
-        agentProxy:
-          type: integer
-        snmpPort:
-          type: integer
-        snmpVersion:
-          type: string
-          description: >
-            Node SNMP version:
-              
-                * V1
-                * V2C
-                * V3
-                * DEFAULT
-        snmpAuthMethod:
-          type: integer
-          description: >
-            snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpPrivMethod should be provided in the same request
-        snmpPrivMethod:
-          type: integer
-          description: >
-            snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpAuthMethod should be provided in the same request
-        snmpAuthName:
-          type: string
-          description: >
-            snmpAuthPassword, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
-        snmpAuthPassword:
-          type: string
-          description: >
-            snmpAuthName, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
-        snmpPrivPassword:
-          type: string
-          description: >
-            snmpAuthName, snmpAuthPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
-        snmpProxy:
-          type: integer
-
-        icmpProxy:
-          type: integer
-
-        trustedNodes:
-          type: array
-          items:
-            type: integer
-
         geolocation:
           $ref: '#/components/schemas/Geolocation'
-
-        mapBackground:
-          type: string
-          description: >
-            UUID.
-              
-              mapBackgroundLocation, mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request.
-        mapBackgroundLocation:
-          type: object
-          $ref: '#/components/schemas/Geolocation'
-          description: >
-            mapBackground, mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request.
-        mapBackgroundZoom:
-          type: integer
-          description: >
-            mapBackground, mapBackgroundLocation, mapBackgroundLocation, mapBackgroundColor should be provided in the same request.
-        mapBackgroundColor:
-          type: integer
-          description: >
-            mapBackground, mapBackgroundLocation, mapBackgroundLocation, mapBackgroundZoom should be provided in the same request.
-        mapImage:
-          type: string
-          description: >
-            UUID
-        columnCount:
-          type: integer
-
-        script:
-          type: string
-
-        activationEvent:
-          type: integer
-
-        deactivationEvent:
-          type: integer
-
-        sourceObject:
-          type: integer
-
-        activeStatus:
-          type: integer
-
-        inactiveStatus:
-          type: integer
-
-        drillDownObjectId:
-          type: integer
-
-        pollerNode:
-          type: integer
-
-        requiredPolls:
-          type: integer
-
-        serviceType:
-          type: integer
-
-        ipProtocol:
-          type: integer
-
-        ipPort:
-          type: integer
-
-        ipAddress:
-          type: string
-          description: >
-            Network service IP address
-        request:
-          type: string
-          description: >
-            Network service IP request
-        response:
-          type: string
-          description: >
-            Network service IP response
+        postalAddress:
+          $ref: '#/components/schemas/PostalAddress'
         objectFlags:
           type: integer
-          description: >
-            Object flags specific for each object. Possible values can be found in NXSL documentation under each object. (Example: `Node flags https://www.netxms.org/documentation/nxsl-latest/#_constants_6`) 
-              
-              objectFlagsMask should be provided in the same request. 
         objectFlagsMask:
           type: integer
-          description: >
-            Bitmask that defines which bits in objectFlags will have effect. objectFlags should be provided in the same request.
-        ifXTablePolicy:
-          type: integer
 
-        reportDefinition:
+    Geolocation:
+      type: object
+      properties:
+        type:
+          type: integer
+          description: '0: UNSET, 1: MANUAL, 2: GPS, 3: NETWORK'
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        accuracy:
+          type: integer
+          description: Accuracy in meters
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp
+
+    PostalAddress:
+      type: object
+      properties:
+        country:
           type: string
-
-        networkList:
-          type: array
-          items:
-              type: string
-          description: >
-            IP address list
-        statusCalculationMethod:
-          type: integer
-
-        statusPropagationMethod:
-          type: integer
-
-        fixedPropagatedStatus:
+        region:
           type: string
-          description: >
-            Object status: 
-              
-                * NORMAL
-                * WARNING
-                * MINOR
-                * MAJOR
-                * CRITICAL
-                * UNKNOWN
-                * UNMANAGED
-                * DISABLED
-                * TESTING
-        statusShift:
-          type: integer
-
-        statusTransformation:
-          type: array
-          description: >
-            ObjectStatus[]
-
-            Object status mapping list. Possible values:
-              
-                * NORMAL
-                * WARNING
-                * MINOR
-                * MAJOR
-                * CRITICAL
-                * UNKNOWN
-                * UNMANAGED
-                * DISABLED
-                * TESTING
-          items:
-            type: string
-        statusSingleThreshold:
-          type: integer
-
-        statusThresholds:
-          type: array
-          items:
-            type: integer
-
-        expectedState:
-          type: integer
-
-        linkColor:
-          type: integer
-
-        connectionRouting:
-          type: integer
-
-        discoveryRadius:
-          type: integer
-
-        height:
-          type: integer
-
-        filter:
+        city:
+          type: string
+        district:
+          type: string
+        streetAddress:
+          type: string
+        postcode:
           type: string
 
-        peerGatewayId:
-          type: integer
-
-        localNetworks:
-          type: array
-          items:
-              type: string
-          description: >
-            VPN networks IP address. remoteNetworks should be provided in the same request.
-        remoteNetworks:
-          type: array
-          items:
-              type: string
-          description: >
-            VPN networks IP address. localNetworks should be provided in the same request.
-        postalAddress:
-          type: object
-          $ref: '#/components/schemas/PostalAddress'
-        agentCacheMode:
-          type: string
-          description: >
-            Possible values:
-              
-                * DEFAULT
-                * ON
-                * OFF
-        agentCompressionMode:
-          type: string
-          description: >
-            Possible values:
-              
-                * DEFAULT
-                * ENABLED
-                * DISABLED
-        mapObjectDisplayMode:
-          type: string
-          description: >
-            Possible values:
-              
-                * ICON
-                * SMALL_LABEL
-                * LARGE_LABEL
-                * STATUS
-                * FLOOR_PLAN
-        physicalContainerObjectId:
-          type: integer
-        rackImageFront:
-          type: string
-          description: >
-            UUID. 
-              
-              rackImageRear, rackPosition, rackHeight, rackOrientation should be provided in the same request.
-        rackImageRear:
-          type: string
-          description: >
-            UUID. 
-              
-              rackImageFront, rackPosition, rackHeight, rackOrientation should be provided in the same request.
-        rackPosition:
-          type: integer
-          description: >
-            rackImageFront, rackImageRear, rackHeight, rackOrientation should be provided in the same request.
-        rackHeight:
-          type: integer
-          description: >
-            rackImageFront, rackImageRear, rackPosition, rackOrientation should be provided in the same request.
-        rackOrientation:
-          type: string
-          description: >
-            Possible values:
-              
-                * FILL
-                * FRONT
-                * REAR
-
-              rackImageFront, rackImageRear, rackPosition, rackHeight should be provided in the same request.
-        dashboards:
-          type: array
-          items:
-            type: integer
-        rackNumberingTopBottom:
-          type: boolean
-        controllerId:
-          type: integer
-        chassisId:
-          type: integer
-        sshProxy:
-          type: integer
-        sshLogin:
-          type: string
-        sshPassword:
-          type: string
-        sshPort:
-          type: integer
-        sshKeyId:
-          type: integer
-        zoneProxies:
-          type: array
-          items:
-            type: integer
-        urls:
-          type: array
-          items:
-            type: string
-          description: >
-            Object Urls
-        seedObjectIds:
-          type: array
-          items:
-            type: integer
-        macAddress:
-          type: string
-          description: >
-            Sensor mac address
-        deviceClass:
-          type: integer
-        vendor:
-          type: string
-        serialNumber:
-          type: string
-        deviceAddress:
-          type: string
-        metaType:
-          type: string
-        sensorProxy:
-          type: integer
-        xmlConfig:
-          type: string
-        snmpPorts:
-          type: array
-          items:
-              type: string
-        responsibleUsers:
-          type: array
-          items:
-            type: integer
-        icmpStatCollectionMode:
-          type: string
-          description: >
-            Possible values:
-              
-                * DEFAULT
-                * ON
-                * OFF
-        icmpTargets:
-          type: array
-          items:
-              type: string
-          description: >
-            ICMP ping targets IP addresses 
-        chassisPlacement:
-          type: string
-        etherNetIPPort:
-          type: integer
-        etherNetIPProxy:
-          type: integer
-        certificateMappingMethod:
-          type: string
-          description: >
-            Possible values:
-              
-                * SUBJECT
-                * PUBLIC_KEY
-                * COMMON_NAME
-                * TEMPLATE_ID
-
-              certificateMappingData should be provided in the same request. 
-        certificateMappingData:
-          type: string
-          description: >
-            certificateMappingMethod should be provided in the same request. 
-        categoryId:
-          type: integer
-        geoLocationControlMode:
-          description: >
-            GeoLocationControlMode
-            
-            Possible values:
-              
-                * NO_CONTROL
-                * RESTRICTED_AREAS
-                * ALLOWED_AREAS
-        geoAreas:
-          type: array
-          items:
-            type: integer
-
-        instanceDiscoveryMethod:
-          type: integer
-          description: >
-            Business service instance discovery method     
-            
-            Possible values:
-              
-                * IDM_AGENT_LIST - 1
-                * IDM_AGENT_TABLE - 2
-                * IDM_SCRIPT - 5
-        instanceDiscoveryData:
-          type: string
-          description: >
-            Business service instance discovery data    
-        instanceDiscoveryFilter:
-          type: string
-          description: >
-            Business service instance discovery data filtering script                 
-        autoBindFilter2:
-          type: integer
-          description: >
-            Second binding script used for DCI binding. Currently used in business service            
-        autoBindFlags:
-          type: integer
-          description: >
-            Auto bind bit flags     
-            
-            First script is currently used for object bind/unbind, second for dci bind/unbind. Possible values:
-              
-                * First script for auto bind is enabled - 0x0001
-                * First script for auto unbind is enabled - 0x0002
-                * Second script for auto bind is enabled - 0x0004
-                * Second script for auto unbind is enabled - 0x0008
-        objectStatusThreshold:
-          type: integer
-          description: >
-            Business service default threshold for auto created object checks  
-            
-            Possible values:
-              
-                * Default - 0
-                * Warning - 1 
-                * Minor - 2 
-                * Major - 3 
-                * Critical - 4 
-        dciStatusThreshold:
-          type: integer
-          description: >
-            Business service default threshold for auto created DCI checks   
-            
-            Possible values:
-              
-                * Default - 0
-                * Warning - 1 
-                * Minor - 2 
-                * Major - 3 
-                * Critical - 4 
-        sourceNode:
-          type: integer
-          description: >
-            Id of source node for business service instance discovery methods    
     AccessListElement:
-      title: Access list element fields
       type: object
       properties:
         userId:
           type: integer
         accessRights:
           type: integer
-          description: >
-            Bit flag field. Available options:
-            
-              * OBJECT ACCESS READ: 0x00000001
-              * OBJECT ACCESS MODIFY: 0x00000002
-              * OBJECT ACCESS CREATE: 0x00000004
-              * OBJECT ACCESS DELETE: 0x00000008
-              * OBJECT ACCESS READ ALARMS: 0x00000010
-              * OBJECT ACCESS ACL: 0x00000020
-              * OBJECT ACCESS UPDATE ALARMS: 0x00000040
-              * OBJECT ACCESS SEND EVENTS: 0x00000080
-              * OBJECT ACCESS CONTROL: 0x00000100
-              * OBJECT ACCESS TERM ALARMS: 0x00000200
-              * OBJECT ACCESS PUSH DATA: 0x00000400
-              * OBJECT ACCESS CREATE ISSUE: 0x00000800
-              * OBJECT ACCESS DOWNLOAD: 0x00001000
-              * OBJECT ACCESS UPLOAD: 0x00002000
-              * OBJECT ACCESS MANAGE FILES: 0x00004000
-              * OBJECT ACCESS MAINTENANCE: 0x00008000
-              * OBJECT ACCESS READ AGENT: 0x00010000
-              * OBJECT ACCESS READ SNMP: 0x00020000
-              * OBJECT ACCESS SCREENSHOT: 0x00040000
+          description: |
+            Bit flags:
+            - 0x00000001: READ
+            - 0x00000002: MODIFY
+            - 0x00000004: CREATE
+            - 0x00000008: DELETE
+            - 0x00000010: READ_ALARMS
+            - 0x00000020: ACL
+            - 0x00000040: UPDATE_ALARMS
+            - 0x00000080: SEND_EVENTS
+            - 0x00000100: CONTROL
+            - 0x00000200: TERM_ALARMS
+            - 0x00000400: PUSH_DATA
+            - 0x00008000: MAINTENANCE
+
     CustomAttribute:
-      title: Custom attribute fields
       type: object
       properties:
         value:
           type: string
-        flags: 
+        flags:
           type: integer
-          description: >
-            Available options:
-     
-                * INHERITABLE: 1
-    Geolocation:
-      title: Geolocation fields
+          description: '1: INHERITABLE'
+
+    DataCollectionObject:
       type: object
       properties:
-        type:
+        id:
           type: integer
-          description: >
-              Available options:
-            
-              * UNSET: 0
-              * MANUAL: 1
-              * GPS: 2
-              * NETWORK: 3
-        latitude:
-          type: number
-        longitude:
-          type: number
-        accuracy:
+          format: int64
+        nodeId:
           type: integer
-          description: >
-            Location accuracy in meters
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: integer
+        origin:
+          type: integer
+        dataType:
+          type: integer
+        pollingInterval:
+          type: integer
+        retentionTime:
+          type: integer
+        instanceMethod:
+          type: integer
+
+    DciValue:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nodeId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        value:
+          type: string
         timestamp:
           type: integer
-          description: >
-            UNIX timestamp
-    PostalAddress:
-      title: Postal address fields
+          format: int64
+        status:
+          type: integer
+        dataType:
+          type: integer
+        errorCount:
+          type: integer
+        activeThresholdSeverity:
+          type: integer
+
+    DciLastValue:
       type: object
       properties:
-        country:
+        dciType:
+          type: integer
+        dataOrigin:
           type: string
-        city:
+        timestamp:
+          type: integer
+          format: int64
+        value:
           type: string
-        streetAddress:
-          type: string
-        postcode: 
-          type: string
-    objectCreationAndModification:
-       allOf:
-        - $ref: '#/components/schemas/objectCreation'
-        - $ref: '#/components/schemas/objectModification'
+        tableValue:
+          type: object
 
+    DataSeries:
+      type: object
+      properties:
+        nodeId:
+          type: integer
+          format: int64
+        dciId:
+          type: integer
+          format: int64
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: integer
+                format: int64
+              value:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: object
+
+    DciPushData:
+      type: object
+      properties:
+        nodeId:
+          type: integer
+          format: int64
+          description: Target node ID
+        nodeName:
+          type: string
+          description: Target node name (alternative to nodeId)
+        dciId:
+          type: integer
+          format: int64
+          description: Target DCI ID
+        dciName:
+          type: string
+          description: Target DCI name (alternative to dciId)
+        value:
+          type: string
+          description: Value to push
+
+    Alarm:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        parentId:
+          type: integer
+          format: int64
+        creationTime:
+          type: integer
+          format: int64
+        lastChangeTime:
+          type: integer
+          format: int64
+        sourceObjectId:
+          type: integer
+          format: int64
+        sourceEventCode:
+          type: integer
+        sourceEventId:
+          type: integer
+          format: int64
+        dciId:
+          type: integer
+          format: int64
+        currentSeverity:
+          type: integer
+        originalSeverity:
+          type: integer
+        repeatCount:
+          type: integer
+        state:
+          type: integer
+          description: '0: OUTSTANDING, 1: ACKNOWLEDGED, 2: RESOLVED, 3: TERMINATED'
+        message:
+          type: string
+        key:
+          type: string
+        helpDeskState:
+          type: integer
+        helpDeskRef:
+          type: string
+        acknowledgedByUser:
+          type: integer
+        resolvedByUser:
+          type: integer
+        terminatedByUser:
+          type: integer
+        ackTimeout:
+          type: integer
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+        sourceObject:
+          $ref: '#/components/schemas/AbstractObject'
+        sourceEventName:
+          type: string
+        acknowledgedByUserName:
+          type: string
+        resolvedByUserName:
+          type: string
+        terminatedByUserName:
+          type: string
+        dci:
+          $ref: '#/components/schemas/DciValue'
+        zoneUIN:
+          type: integer
+        zoneName:
+          type: string
+
+    AlarmComment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        alarmId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+        userName:
+          type: string
+        lastChangeTime:
+          type: integer
+          format: int64
+        text:
+          type: string
+
+    BusinessServiceCheck:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: integer
+        objectId:
+          type: integer
+          format: int64
+        dciId:
+          type: integer
+          format: int64
+        script:
+          type: string
+        threshold:
+          type: integer
+        reason:
+          type: string
+        state:
+          type: integer
+        description:
+          type: string
+
+    BusinessServiceTicket:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        serviceId:
+          type: integer
+          format: int64
+        checkId:
+          type: integer
+          format: int64
+        checkDescription:
+          type: string
+        creationTime:
+          type: integer
+          format: int64
+        closeTime:
+          type: integer
+          format: int64
+        reason:
+          type: string
+
+    AbstractUserObject:
+      type: object
+      properties:
+        id:
+          type: integer
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        flags:
+          type: integer
+        systemRights:
+          type: integer
+          format: int64
+        ldapDn:
+          type: string
+        ldapId:
+          type: string
+        created:
+          type: integer
+          format: int64
+
+    ObjectToolFolder:
+      type: object
+      properties:
+        name:
+          type: string
+        tools:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+              type:
+                type: integer
+              flags:
+                type: integer
+        subFolders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectToolFolder'
+
+    GraphFolder:
+      type: object
+      properties:
+        name:
+          type: string
+        graphs:
+          type: array
+          items:
+            type: object
+        subFolders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphFolder'
+
+    SessionNotification:
+      type: object
+      properties:
+        code:
+          type: integer
+        subCode:
+          type: integer
+        object:
+          type: object

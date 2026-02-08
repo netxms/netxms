@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.datacollection.views;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -48,10 +47,8 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.GraphDefinition;
-import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Memento;
@@ -365,22 +362,13 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(configuration.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   if (chart.isDisposed())
                      return;
-
-                  int i = 0;
-                  for(ChartDciConfig dci : configuration.getDciList())
-                  {
-                     ChartDciConfig item = chart.getItem(i);
-                     if (item != null)
-                        item.measurementUnit = measurementUnits.get(dci.getDciId());
-                     i++;
-                  }
+                  
                   chart.rebuild();
                   chartParent.layout(true, true);
                   updateChart();
@@ -453,8 +441,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          protected void run(IProgressMonitor monitor) throws Exception
          {
             monitor.beginTask(getName(), dciList.length);
-            final DciData[] data = new DciData[dciList.length];
-            final Threshold[][] thresholds = new Threshold[dciList.length][];
+            final DataSeries[] data = new DataSeries[dciList.length];
             for(int i = 0; i < dciList.length; i++)
             {
                currentItem = dciList[i];
@@ -463,13 +450,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                   data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
                         configuration.getTimeTo(), 0,
                         currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
-                  thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else
                {
                   data[i] = session.getCollectedTableData(currentItem.nodeId, currentItem.dciId, currentItem.instance,
                         currentItem.column, configuration.getTimeFrom(), configuration.getTimeTo(), 0);
-                  thresholds[i] = null;
                }
                monitor.worked(1);
             }
@@ -478,7 +463,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                if (!((Widget)chart).isDisposed())
                {
                   chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
-                  setChartData(data, thresholds);
+                  setChartData(data);
                   clearMessages();
                }
                updateInProgress = false;
@@ -899,11 +884,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     * 
     * @param data Retrieved DCI data
     */
-   private void setChartData(final DciData[] data, Threshold[][] thresholds)
+   private void setChartData(final DataSeries[] data)
    {
       for(int i = 0; i < data.length; i++)
          chart.updateParameter(i, data[i], false);
-      chart.setThresholds(thresholds);
       chart.refresh();
    }
 

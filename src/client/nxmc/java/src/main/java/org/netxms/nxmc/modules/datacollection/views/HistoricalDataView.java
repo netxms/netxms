@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -32,11 +31,13 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
@@ -46,6 +47,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.views.ViewWithContext;
+import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.HistoricalDataSelectionDialog;
@@ -54,6 +56,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataFilter
 import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -62,11 +65,13 @@ import org.xnap.commons.i18n.I18n;
 public class HistoricalDataView extends ViewWithContext
 {
    private final I18n i18n = LocalizationHelper.getI18n(HistoricalDataView.class);
-	
+
 	// Columns
-   public static final int COLUMN_TIME = 0;
-   public static final int COLUMN_DATA = 1;
-	
+   public static final int COLUMN_TIMESTAMP = 0;
+   public static final int COLUMN_VALUE = 1;
+   public static final int COLUMN_FORMATTED_VALUE = 2;
+   public static final int COLUMN_RAW_VALUE = 3;
+
    private NXCSession session;
 	private long contextId;
    private long ownerId;
@@ -75,7 +80,7 @@ public class HistoricalDataView extends ViewWithContext
 	private String nodeName;
 	private String tableName;
 	private String instance;
-	private String column;
+	private String column;   
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -85,6 +90,12 @@ public class HistoricalDataView extends ViewWithContext
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionDeleteDciEntry;
+   private Composite infoArea;
+   private Label labelDciId;
+   private Label labelDciName;
+   private RoundedLabel labelDciDescription;
+   private Label labelDciUnits;
+   private Label labelTableInfo;
 
    /**
     * Build view ID
@@ -126,6 +137,19 @@ public class HistoricalDataView extends ViewWithContext
     * Create new historical data view.
     *
     * @param contextObject context object
+    * @param ownerId DCI owner ID
+    * @param dciId DCI ID
+    */
+   public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId)
+   {
+      this(contextObject, ownerId, dciId, null, null, null);
+   }
+
+   /**
+    * Create new historical data view.
+    *
+    * @param contextObject context object
+    * @param ownerId DCI owner ID
     * @param dciId DCI ID
     * @param tableName table name
     * @param instance instance for table data
@@ -144,7 +168,7 @@ public class HistoricalDataView extends ViewWithContext
       this.tableName = tableName; 
       this.instance = instance; 
       this.column = column;
-      
+
       nodeName = contextObject.getObjectName();
       String dciName =  (tableName == null ? Long.toString(dciId) : tableName);
       fullName = nodeName + ": [" + dciName + "]";
@@ -169,7 +193,6 @@ public class HistoricalDataView extends ViewWithContext
       view.timeFrom = timeFrom;
       view.timeTo = timeTo;
       view.recordLimit = recordLimit;
-      
       return view;
    }
 
@@ -198,23 +221,63 @@ public class HistoricalDataView extends ViewWithContext
    @Override
    protected void createContent(Composite parent)
    {
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
+
+      infoArea = new Composite(parent, SWT.NONE);
+      infoArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 9;
+      infoArea.setLayout(layout);
+
+      labelDciId = new Label(infoArea, SWT.NONE);
+      labelDciId.setText(Long.toString(dciId));
+      createSeparator(infoArea);
+      labelDciDescription = new RoundedLabel(infoArea);
+      createSeparator(infoArea);
+      labelDciName = new Label(infoArea, SWT.NONE);
+      createSeparator(infoArea);
+      labelDciUnits = new Label(infoArea, SWT.NONE);
+      createSeparator(infoArea);
+      labelTableInfo = new Label(infoArea, SWT.NONE);
+
+      new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
 		final String[] names = (tableName != null) ? 
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
-         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Raw value") };
-		final int[] widths = { 150, 400, 400 };
+         new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Formatted value"), i18n.tr("Raw value") };
+      final int[] widths = { 180, 400, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());
 		viewer.setComparator(new HistoricalDataComparator());
 		HistoricalDataFilter filter = new HistoricalDataFilter();
       viewer.addFilter(filter);
+      viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		setFilterClient(viewer, filter);
 
 		createActions();
 		createContextMenu();
-		
+
 		refresh();
 	}
+
+   /**
+    * Create vertical separator.
+    *
+    * @param parent parent composite
+    */
+   private static void createSeparator(Composite parent)
+   {
+      GridData gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
+      gd.heightHint = 28;
+      new Label(parent, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(gd);
+   }
 
 	/**
 	 * Create actions
@@ -271,19 +334,10 @@ public class HistoricalDataView extends ViewWithContext
     */
 	private void createContextMenu()
 	{
-		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
-
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener((m) -> fillContextMenu(m));
+      viewer.getControl().setMenu(manager.createContextMenu(viewer.getControl()));
 	}
 
 	/**
@@ -308,28 +362,43 @@ public class HistoricalDataView extends ViewWithContext
 	{
 		if (updateInProgress)
 			return;
+
 		updateInProgress = true;
-		
-		new Job(i18n.tr("Read DCI data from server"), this) {
+
+      new Job(i18n.tr("Reading DCI data from server"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{            
-			   final DciData data;
+			   final DataSeries data;
 			   if (tableName != null)
 			      data = session.getCollectedTableData(ownerId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
                data = session.getCollectedData(ownerId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
-			   
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(data.getValues());
-						updateInProgress = false;
-					}
+
+            runInUIThread(() -> {
+               labelDciName.setText(data.getDciName());
+               labelDciDescription.setText(data.getDciDescription());
+               labelDciDescription.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(data.getActiveThresholdSeverity()));
+               if (data.getMeasurementUnit() != null)
+               {
+                  labelDciUnits.setText(data.getMeasurementUnit().getName());
+               }
+               else
+               {
+                  labelDciUnits.setText(i18n.tr("Measurement units not set"));
+               }
+               if (tableName != null)
+               {
+                  labelTableInfo.setText(tableName);
+               }
+
+               ((HistoricalDataLabelProvider)viewer.getLabelProvider()).setDataFormatter(data.getDataFormatter());
+               viewer.setInput(data.getValues());
+               updateInProgress = false;
+               infoArea.layout();
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -371,7 +440,7 @@ public class HistoricalDataView extends ViewWithContext
             for(DciDataRow r : list)
                session.deleteDciEntry(contextId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
 
-            final DciData data;
+            final DataSeries data;
             if (tableName != null)
                data = session.getCollectedTableData(contextId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else

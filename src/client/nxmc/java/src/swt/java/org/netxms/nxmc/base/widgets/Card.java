@@ -154,7 +154,7 @@ public abstract class Card extends DashboardComposite
    @Override
    public Point computeSize(int wHint, int hHint, boolean changed)
    {
-      if (!clientArea.isVisible())
+      if ((clientArea == null) || clientArea.isDisposed() || !clientArea.isVisible())
          return new Point(wHint == SWT.DEFAULT ? headerSize.x + 1 : wHint, hHint == SWT.DEFAULT ? headerSize.y + 1 : hHint);
       return super.computeSize(wHint, hHint, changed);
    }

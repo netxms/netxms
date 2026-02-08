@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;

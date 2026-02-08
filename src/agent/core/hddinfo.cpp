@@ -72,12 +72,61 @@ static void LogSmartCtlMessages(json_t *root, const TCHAR *prefix)
 }
 
 /**
+ * Validates device parameter to prevent command injection
+ *
+ * @param device Device name to validate
+ * @returns true if device name is valid, false otherwise
+ */
+static bool ValidateDeviceName(const TCHAR *device)
+{
+   if (device == nullptr || *device == 0)
+      return false;
+
+   // Check length
+   size_t len = _tcslen(device);
+   if (len > 128)  // Reasonable maximum device name length
+      return false;
+
+   // Unix device validation; smartctl on Windows uses UNIX naming convention for devices
+   // Allow: letters, digits, slash, underscore, hyphen, dot
+   for (size_t i = 0; i < len; i++)
+   {
+      TCHAR c = device[i];
+      if (!(_istalnum(c) || c == _T('/') || c == _T('_') || c == _T('-') || c == _T('.')))
+         return false;
+   }
+
+   // Must start with slash (absolute path) or letter
+   if (!(device[0] == _T('/') || _istalpha(device[0])))
+      return false;
+
+   // Prevent command injection patterns
+   if (_tcsstr(device, _T("..")) != nullptr ||  // Directory traversal
+       _tcsstr(device, _T(";")) != nullptr ||   // Command separator
+       _tcsstr(device, _T("&")) != nullptr ||   // Command separator
+       _tcsstr(device, _T("|")) != nullptr ||   // Pipe
+       _tcsstr(device, _T("`")) != nullptr ||   // Command substitution
+       _tcsstr(device, _T("$(")) != nullptr ||  // Command substitution
+       _tcsstr(device, _T("${")) != nullptr)    // Variable expansion
+      return false;
+
+   return true;
+}
+
+/**
  * Executes smartctl command for given device
  *
  * @returns smartctl output as json_t object or nullptr on failure
  */
 static json_t *RunSmartCtl(const TCHAR *device, bool detailed)
 {
+   // Validate device name to prevent command injection
+   if (!ValidateDeviceName(device))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("RunSmartCtl: Invalid device name \"%s\""), device);
+      return nullptr;
+   }
+
    TCHAR cmd[MAX_PATH];
 #ifdef _WIN32
    TCHAR binDir[MAX_PATH];
@@ -229,6 +278,35 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
    LONG rc;
    json_t *element = json_object_get_by_path_a(root, jsonPath);
+   if ((element == nullptr) && (arg[0] == 'A'))
+   {
+      // check for attribute name in ata_smart_attributes
+      json_t *attributes = json_object_get_by_path_a(root, "ata_smart_attributes/table");
+      if (json_is_array(attributes))
+      {
+         size_t i;
+         json_t *attr;
+         json_array_foreach(attributes, i, attr)
+         {
+            const char *name = json_object_get_string_utf8(attr, "name", nullptr);
+            if ((name != nullptr) && (strcmp(name, jsonPath) == 0))
+            {
+               element = json_object_get_by_path_a(attr, "value");
+               break;
+            }
+         }
+      }
+
+      // check for attribute name in nvme_smart_health_information_log
+      if (element == nullptr)
+      {
+         json_t *nvmeLog = json_object_get_by_path_a(root, "nvme_smart_health_information_log");
+         if (json_is_object(nvmeLog))
+         {
+            element = json_object_get(nvmeLog, jsonPath);
+         }
+      }
+   }
    if ((element != nullptr) && !json_is_null(element))
    {
       GetValueFromJson(element, value);

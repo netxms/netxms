@@ -93,6 +93,8 @@ public class SoftwarePackageLabelProvider extends LabelProvider implements ITabl
 					return p.getVendor();
             case SoftwareInventoryView.COLUMN_VERSION:
 					return p.getVersion();
+            case SoftwareInventoryView.COLUMN_USER:
+               return p.getUser();
 			}
 		}
 		return null;

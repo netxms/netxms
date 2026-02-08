@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,8 +84,8 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 /**
  * Create hardware component
  */
-HardwareComponent::HardwareComponent(HardwareComponentCategory category, uint32_t index, const TCHAR *type,
-         const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber)
+HardwareComponent::HardwareComponent(HardwareComponentCategory category, uint32_t index, const wchar_t *type,
+         const wchar_t *vendor, const wchar_t *model, const wchar_t *partNumber, const wchar_t *serialNumber)
 {
    m_category = category;
    m_index = index;
@@ -137,7 +137,7 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
 
    for(int i = 0; i < table.getNumColumns(); i++)
    {
-      const TCHAR *cname = table.getColumnName(i);
+      const wchar_t *cname = table.getColumnName(i);
       if (!_tcsicmp(cname, _T("HANDLE")) ||
           !_tcsicmp(cname, _T("NUMBER")) ||
           !_tcsicmp(cname, _T("INDEX")))
@@ -208,7 +208,7 @@ HardwareComponent::~HardwareComponent()
 void HardwareComponent::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    uint32_t fieldId = baseId;
-   msg->setField(fieldId++, static_cast<INT16>(m_category));
+   msg->setField(fieldId++, static_cast<int16_t>(m_category));
    msg->setField(fieldId++, m_index);
    msg->setField(fieldId++, CHECK_NULL_EX(m_type));
    msg->setField(fieldId++, CHECK_NULL_EX(m_vendor));
@@ -218,6 +218,27 @@ void HardwareComponent::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(fieldId++, CHECK_NULL_EX(m_partNumber));
    msg->setField(fieldId++, CHECK_NULL_EX(m_serialNumber));
    msg->setField(fieldId++, CHECK_NULL_EX(m_description));
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *HardwareComponent::toJson() const
+{
+   json_t *root = json_object();
+
+   json_object_set_new(root, "category", json_integer(static_cast<int>(m_category)));
+   json_object_set_new(root, "index", json_integer(m_index));
+   json_object_set_new(root, "type", json_string_t(CHECK_NULL_EX(m_type)));
+   json_object_set_new(root, "vendor", json_string_t(CHECK_NULL_EX(m_vendor)));
+   json_object_set_new(root, "model", json_string_t(CHECK_NULL_EX(m_model)));
+   json_object_set_new(root, "location", json_string_t(CHECK_NULL_EX(m_location)));
+   json_object_set_new(root, "capacity", json_integer(m_capacity));
+   json_object_set_new(root, "partNumber", json_string_t(CHECK_NULL_EX(m_partNumber)));
+   json_object_set_new(root, "serialNumber", json_string_t(CHECK_NULL_EX(m_serialNumber)));
+   json_object_set_new(root, "description", json_string_t(CHECK_NULL_EX(m_description)));
+
+   return root;
 }
 
 /**
@@ -242,9 +263,9 @@ bool HardwareComponent::saveToDatabase(DB_STATEMENT hStmt) const
 /**
  * Get category name
  */
-const TCHAR *HardwareComponent::getCategoryName() const
+const wchar_t *HardwareComponent::getCategoryName() const
 {
-   static const TCHAR *names[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory"), _T("Storage"), _T("Battery"), _T("NetworkAdapter") };
+   static const wchar_t *names[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory"), _T("Storage"), _T("Battery"), _T("NetworkAdapter") };
    uint32_t index = (uint32_t)m_category;
-   return names[(index < sizeof(names) / sizeof(TCHAR*)) ? index : 0];
+   return names[(index < sizeof(names) / sizeof(wchar_t*)) ? index : 0];
 }

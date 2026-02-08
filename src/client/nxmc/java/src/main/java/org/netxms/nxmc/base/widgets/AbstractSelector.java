@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,10 @@ package org.netxms.nxmc.base.widgets;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -42,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
@@ -58,8 +54,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AbstractSelector extends Composite
 {
-   private static final Image ERROR_ICON = ResourceManager.getImage("icons/labeled-control-alert.png");
-
    private final I18n i18n = LocalizationHelper.getI18n(AbstractSelector.class);
 
 	private Label label;
@@ -74,6 +68,7 @@ public class AbstractSelector extends Composite
 	private Action actionCopy;
    private Image imageContext = null;
 	private Image scaledImage = null;
+   private Image errorIcon = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
 
    /**
@@ -239,15 +234,13 @@ public class AbstractSelector extends Composite
 
       text.setToolTipText(configurator.getTextToolTip());
 
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				if (scaledImage != null)
-					scaledImage.dispose();
-            if (imageContext != null)
-               imageContext.dispose();
-			}
+      addDisposeListener((e) -> {
+         if (scaledImage != null)
+            scaledImage.dispose();
+         if (imageContext != null)
+            imageContext.dispose();
+         if (errorIcon != null)
+            errorIcon.dispose();
 		});
 	}
 
@@ -270,19 +263,10 @@ public class AbstractSelector extends Composite
 	 */
 	private void createContextMenu()
 	{
-		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
-
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu(text);
-		text.setMenu(menu);
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
+      text.setMenu(menuMgr.createContextMenu(text));
 	}
 
 	/**
@@ -508,10 +492,13 @@ public class AbstractSelector extends Composite
 
       if (errorMessage == null)
       {
+         if (errorIcon == null)
+            errorIcon = ResourceManager.getImage("icons/labeled-control-alert.png");
+
          errorMessage = new CLabel(this, SWT.NONE);
          errorMessage.setForeground(ThemeEngine.getForegroundColor("List.Error"));
          errorMessage.setText(message);
-         errorMessage.setImage(ERROR_ICON);
+         errorMessage.setImage(errorIcon);
          layout(true, true);
       }
    }

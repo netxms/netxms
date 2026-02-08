@@ -33,8 +33,9 @@ SNMP_MIBObject::SNMP_MIBObject()
    m_dwOID = 0;
    m_pszName = nullptr;
    m_pszDescription = nullptr;
-	m_pszTextualConvention = nullptr;
-	m_index = nullptr;
+   m_pszTextualConvention = nullptr;
+   m_displayHint = nullptr;
+   m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -43,8 +44,8 @@ SNMP_MIBObject::SNMP_MIBObject()
 /**
  * Construct object with all data
  */
-SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type,
-      int status, int access, const TCHAR *description, const TCHAR *textualConvention, const TCHAR *index)
+SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type, int status, int access,
+      const TCHAR *description, const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index)
 {
    initialize();
 
@@ -52,6 +53,7 @@ SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type,
    m_pszName = MemCopyString(name);
    m_pszDescription = MemCopyString(description);
    m_pszTextualConvention = MemCopyString(textualConvention);
+   m_displayHint = MemCopyString(displayHint);
    m_index = MemCopyString(index);
    m_iStatus = status;
    m_iAccess = access;
@@ -68,8 +70,9 @@ SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name)
    m_dwOID = oid;
    m_pszName = MemCopyString(name);
    m_pszDescription = nullptr;
-	m_pszTextualConvention = nullptr;
-	m_index = nullptr;
+   m_pszTextualConvention = nullptr;
+   m_displayHint = nullptr;
+   m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
    m_iType = -1;
@@ -100,8 +103,9 @@ SNMP_MIBObject::~SNMP_MIBObject()
    }
    MemFree(m_pszName);
    MemFree(m_pszDescription);
-	MemFree(m_pszTextualConvention);
-	MemFree(m_index);
+   MemFree(m_pszTextualConvention);
+   MemFree(m_displayHint);
+   MemFree(m_index);
 }
 
 /**
@@ -137,16 +141,19 @@ SNMP_MIBObject *SNMP_MIBObject::findChildByID(uint32_t oid)
 /**
  * Set information
  */
-void SNMP_MIBObject::setInfo(int type, int status, int access, const TCHAR *description, const TCHAR *textualConvention, const TCHAR *index)
+void SNMP_MIBObject::setInfo(int type, int status, int access, const TCHAR *description,
+      const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index)
 {
    MemFree(m_pszDescription);
-	MemFree(m_pszTextualConvention);
-	MemFree(m_index);
+   MemFree(m_pszTextualConvention);
+   MemFree(m_displayHint);
+   MemFree(m_index);
    m_iType = type;
    m_iStatus = status;
    m_iAccess = access;
    m_pszDescription = MemCopyString(description);
-	m_pszTextualConvention = MemCopyString(textualConvention);
+   m_pszTextualConvention = MemCopyString(textualConvention);
+   m_displayHint = MemCopyString(displayHint);
    m_index = MemCopyString(index);
 }
 
@@ -244,12 +251,19 @@ void SNMP_MIBObject::writeToFile(ZFile *file, uint32_t flags)
       WriteStringToFile(file, CHECK_NULL_EX(m_pszDescription));
       file->writeByte(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
 
-		if (m_pszTextualConvention != nullptr)
-		{
-			file->writeByte(MIB_TAG_TEXTUAL_CONVENTION);
-			WriteStringToFile(file, m_pszTextualConvention);
-			file->writeByte(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
-		}
+      if (m_pszTextualConvention != nullptr)
+      {
+         file->writeByte(MIB_TAG_TEXTUAL_CONVENTION);
+         WriteStringToFile(file, m_pszTextualConvention);
+         file->writeByte(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
+      }
+
+      if (m_displayHint != nullptr)
+      {
+         file->writeByte(MIB_TAG_DISPLAY_HINT);
+         WriteStringToFile(file, m_displayHint);
+         file->writeByte(MIB_TAG_DISPLAY_HINT | MIB_END_OF_TAG);
+      }
    }
 
    if (m_index != nullptr)
@@ -376,6 +390,11 @@ bool SNMP_MIBObject::readFromFile(ZFile *file)
             m_index = ReadStringFromFile(file);
             CHECK_NEXT_TAG(MIB_TAG_INDEX | MIB_END_OF_TAG);
             break;
+         case MIB_TAG_DISPLAY_HINT:
+            MemFree(m_displayHint);
+            m_displayHint = ReadStringFromFile(file);
+            CHECK_NEXT_TAG(MIB_TAG_DISPLAY_HINT | MIB_END_OF_TAG);
+            break;
          case MIB_TAG_TYPE:
             m_iType = file->readByte();
             CHECK_NEXT_TAG(MIB_TAG_TYPE | MIB_END_OF_TAG);
@@ -458,6 +477,25 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObje
       rc = SNMP_ERR_FILE_IO;
    }
    return rc;
+}
+
+/**
+ * Find MIB object by full OID path
+ */
+SNMP_MIBObject LIBNXSNMP_EXPORTABLE *SnmpFindMIBObjectByOID(SNMP_MIBObject *root, const SNMP_ObjectId& oid)
+{
+   if (root == nullptr)
+      return nullptr;
+
+   SNMP_MIBObject *curr = root;
+   for (size_t i = 0; i < oid.length(); i++)
+   {
+      SNMP_MIBObject *child = curr->findChildByID(oid.value()[i]);
+      if (child == nullptr)
+         return (i > 0) ? curr : nullptr;  // Return last matching object, or null if no match
+      curr = child;
+   }
+   return curr;
 }
 
 /**

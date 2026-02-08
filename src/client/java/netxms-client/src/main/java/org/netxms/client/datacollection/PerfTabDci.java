@@ -34,7 +34,6 @@ public class PerfTabDci
    private String perfTabSettings;
    private String instance;
    private String instanceName;
-   private MeasurementUnit measurementUnit;
 
    /**
     * Create performance tab DCI information object from NXCP message
@@ -58,7 +57,6 @@ public class PerfTabDci
       if (instanceName == null)
          instanceName = instance;
       rootTemplateDciId = msg.getFieldAsInt64(baseId + 8);
-      measurementUnit = new MeasurementUnit(msg, baseId + 9);
 	}
 
 	/**
@@ -131,15 +129,5 @@ public class PerfTabDci
    public String getInstanceName()
    {
       return instanceName;
-   }
-
-   /**
-    * Get measurement unit for this DCI.
-    *
-    * @return measurement unit for this DCI
-    */
-   public MeasurementUnit getMeasurementUnit()
-   {
-      return measurementUnit;
    }
 }

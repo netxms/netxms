@@ -332,18 +332,12 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
    {
       case NETSRV_CUSTOM:
          status = CheckTCP(nullptr, addr, port, g_netsvcTimeout);
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_SSH:
          status = CheckSSH(nullptr, addr, port, g_netsvcTimeout);
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_TELNET:
          status = CheckTelnet(nullptr, addr, port, g_netsvcTimeout);
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_POP3:
       case NETSRV_POP3S:
@@ -359,8 +353,6 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
          {
             status = PC_ERR_BAD_PARAMS;
          }
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_SMTP:
       case NETSRV_SMTPS:
@@ -372,8 +364,6 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
          {
             status = PC_ERR_BAD_PARAMS;
          }
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_HTTP:
       case NETSRV_HTTPS:
@@ -389,13 +379,9 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
          {
             status = PC_ERR_BAD_PARAMS;
          }
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       case NETSRV_TLS:
          status = CheckTLS(nullptr, addr, port, g_netsvcTimeout);
-         pResponse->setField(VID_RCC, ERR_SUCCESS);
-         pResponse->setField(VID_SERVICE_STATUS, status);
          break;
       default:
          status = PC_ERR_BAD_PARAMS;
@@ -403,6 +389,8 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
    }
 
    uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - start);
+   pResponse->setField(VID_RCC, ERR_SUCCESS);
+   pResponse->setField(VID_SERVICE_STATUS, status);
    pResponse->setField(VID_RESPONSE_TIME, elapsed);
    return true;
 }

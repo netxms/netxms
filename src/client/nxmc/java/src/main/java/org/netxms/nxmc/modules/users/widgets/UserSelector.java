@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public class UserSelector extends AbstractSelector
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
 
-   private int userId = 0;
+   private int userId = -1;
    private Image imageUser;
    private Image imageGroup;
 
@@ -118,7 +118,7 @@ public class UserSelector extends AbstractSelector
       if (userId == 0)
          return;
 
-      userId = 0;
+      userId = -1;
       setText(i18n.tr("<none>"));
       setImage(null);
       getTextControl().setToolTipText(null);
@@ -146,14 +146,19 @@ public class UserSelector extends AbstractSelector
          return; // nothing to change
 
       this.userId = userId;
-      if (userId != 0)
+      if (userId != -1)
       {
          AbstractUserObject object = Registry.getSession().findUserDBObjectById(userId, () -> {
-            AbstractUserObject updatedObject = Registry.getSession().findUserDBObjectById(userId, null);
+            final AbstractUserObject updatedObject = Registry.getSession().findUserDBObjectById(userId, null);
             if (updatedObject != null)
             {
-               setText(updatedObject.getName());
-               setImage(updatedObject instanceof User ? imageUser : imageGroup);
+               getDisplay().asyncExec(() -> {
+                  if (!isDisposed())
+                  {
+                     setText(updatedObject.getName());
+                     setImage(updatedObject instanceof User ? imageUser : imageGroup);
+                  }
+               });
             }
          });
          if (object != null)

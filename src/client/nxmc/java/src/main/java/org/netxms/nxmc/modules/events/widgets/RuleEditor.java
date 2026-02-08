@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceManager;
@@ -53,6 +54,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ProgressBar;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
@@ -63,15 +66,19 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.TimeFrame;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.Card;
+import org.netxms.nxmc.base.widgets.MarkdownViewer;
 import org.netxms.nxmc.base.widgets.helpers.DashboardElementButton;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.propertypages.RuleAction;
 import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
+import org.netxms.nxmc.modules.events.propertypages.RuleAiAgentInstructions;
 import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
+import org.netxms.nxmc.modules.events.propertypages.RuleIncident;
 import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
 import org.netxms.nxmc.modules.events.propertypages.RuleCustomAttribute;
 import org.netxms.nxmc.modules.events.propertypages.RuleDowntimeControl;
@@ -112,6 +119,8 @@ public class RuleEditor extends Composite
    private Composite mainArea;
    private Card condition;
    private Card action;
+   private Card explanation;
+   private Composite explanationArea;
    private Label expandButton;
    private Label editButton;
    private boolean modified = false;
@@ -787,10 +796,44 @@ public class RuleEditor extends Composite
                }
             }
          }
-         
+
          if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0)
          {
             createLabel(clientArea, 1, false, i18n.tr("and create helpdesk ticket"), listener);
+         }
+
+         if ((rule.getFlags() & EventProcessingPolicyRule.REQUEST_AI_COMMENT) != 0)
+         {
+            createLabel(clientArea, 1, false, i18n.tr("and add AI assistant's comment"), listener);
+         }
+
+         if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) != 0)
+         {
+            final MouseListener incidentListener = createMouseListener("Incident");
+            if (rule.getIncidentDelay() > 0)
+               createLabel(clientArea, 1, false, String.format(i18n.tr("and create incident after %d seconds delay"), rule.getIncidentDelay()), incidentListener);
+            else
+               createLabel(clientArea, 1, false, i18n.tr("and create incident immediately"), incidentListener);
+            if ((rule.getFlags() & EventProcessingPolicyRule.AI_ANALYZE_INCIDENT) != 0)
+            {
+               createLabel(clientArea, 2, false,
+                     ((rule.getFlags() & EventProcessingPolicyRule.AI_AUTO_ASSIGN) != 0) ? i18n.tr("with AI assistant analysis and automatic assignment") : i18n.tr("with AI assistant analysis"),
+                     incidentListener);
+               String instructions = rule.getIncidentAIPrompt();
+               if ((instructions != null) && !instructions.isEmpty())
+               {
+                  createLabel(clientArea, 2, false, i18n.tr("using the following AI assistant instructions:"), incidentListener);
+                  Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
+                  GridData gd = new GridData();
+                  gd.horizontalIndent = INDENT * 3;
+                  gd.horizontalAlignment = SWT.FILL;
+                  gd.grabExcessHorizontalSpace = true;
+                  aiInstructions.setLayoutData(gd);
+                  aiInstructions.setText(instructions);
+                  aiInstructions.setEditable(false);
+                  aiInstructions.addMouseListener(incidentListener);
+               }
+            }
          }
       }
 
@@ -924,7 +967,7 @@ public class RuleEditor extends Composite
          scriptEditor.getTextWidget().setEditable(false);
          scriptEditor.getTextWidget().addMouseListener(listener);
       }
-      
+
       /* timer cancellations */
       if (!rule.getTimerCancellations().isEmpty())
       {
@@ -936,6 +979,23 @@ public class RuleEditor extends Composite
             clabel.addMouseListener(listener);
             clabel.setText(tc);
          }
+      }
+
+      /* AI agent instructions */
+      if (!rule.getAiAgentInstructions().isBlank())
+      {
+         final MouseListener listener = createMouseListener("AIAgentInstructions");
+         addActionGroupLabel(clientArea, i18n.tr("Instruct AI agent:"), SharedIcons.IMG_AI_ASSISTANT, listener);
+
+         Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
+         GridData gd = new GridData();
+         gd.horizontalIndent = INDENT * 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         aiInstructions.setLayoutData(gd);
+         aiInstructions.setText(rule.getAiAgentInstructions());
+         aiInstructions.setEditable(false);
+         aiInstructions.addMouseListener(listener);
       }
 
       /* flags */
@@ -1041,12 +1101,14 @@ public class RuleEditor extends Composite
       pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));
       pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));
       pm.addTo("Action", new PreferenceNode("Alarm", new RuleAlarm(this)));
+      pm.addTo("Action", new PreferenceNode("Incident", new RuleIncident(this)));
       pm.addTo("Action", new PreferenceNode("Downtime", new RuleDowntimeControl(this)));
       pm.addTo("Action", new PreferenceNode("PersistentStorage", new RulePersistentStorage(this)));
       pm.addTo("Action", new PreferenceNode("CustomAttributes", new RuleCustomAttribute(this)));
       pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));
       pm.addTo("Action", new PreferenceNode("ActionScript", new RuleActionScript(this)));
       pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
+      pm.addTo("Action", new PreferenceNode("AIAgentInstructions", new RuleAiAgentInstructions(this)));
       pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 
       PropertyDialog dlg = new PropertyDialog(editor.getWindow().getShell(), pm, String.format(i18n.tr("Edit Rule %d"), ruleNumber)) {
@@ -1212,6 +1274,73 @@ public class RuleEditor extends Composite
       headerLabel.setBackground(color);
       expandButton.setBackground(color);
       editButton.setBackground(color);
+   }
+
+   /**
+    * Update rule explanation area
+    */
+   public void updateExplanation()
+   {
+      if (explanation == null)
+      {
+         explanation = new Card(mainArea, i18n.tr("Explanation")) {
+            @Override
+            protected Control createClientArea(Composite parent)
+            {
+               setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Explanation"));
+               setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
+               explanationArea = new Composite(parent, SWT.NONE);
+               explanationArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
+               GridLayout layout = new GridLayout();
+               explanationArea.setLayout(layout);
+               return explanationArea;
+            }
+         };
+         GridData gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.FILL;
+         explanation.setLayoutData(gd);
+      }
+
+      for(Control c : explanationArea.getChildren())
+         c.dispose();
+
+      new Label(explanationArea, SWT.NONE).setText(i18n.tr("Generating explanation..."));
+      new ProgressBar(explanationArea, SWT.INDETERMINATE).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      setCollapsed(false, true);
+
+      Job job = new Job(i18n.tr("Explaining EPP rule"), getEditorView()) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final String explanation = session.explainEventProcessingPolicyRule(rule.getGuid());
+            runInUIThread(() -> {
+               if (RuleEditor.this.isDisposed())
+                  return;
+
+               for(Control c : explanationArea.getChildren())
+                  c.dispose();
+
+               MarkdownViewer explanationText = new MarkdownViewer(explanationArea, SWT.NONE);
+               explanationText.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
+               explanationText.setText(explanation);
+               GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+               gd.heightHint = 500;
+               explanationText.setLayoutData(gd);
+               explanationText.setRenderCompletionHandler(() -> editor.updateEditorAreaLayout());
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot explain EPP rule");
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**

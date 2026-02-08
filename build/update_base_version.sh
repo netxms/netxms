@@ -22,12 +22,4 @@ mvn -f src/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT -DprocessAllMo
 mvn -f src/client/nxmc/java/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT
 mvn -f tests/integration/pom.xml versions:commit -DnewVersion=$VERSION-SNAPSHOT
 
-./build/update_plugin_versions.py . $VERSION.0
-
-cat src/java/netxms-eclipse/Core/plugin.xml | sed -E "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION.0\\2," > ./plugin.xml
-mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
-
-cat src/java/netxms-eclipse/Product/nxmc.product | sed -E "s,^Version [0-9.]+\$,Version $VERSION.0," > nxmc.product
-mv ./nxmc.product src/java/netxms-eclipse/Product/nxmc.product
-
 sed -i -E "s,NETXMS_VERSION=[0-9.]+-SNAPSHOT,NETXMS_VERSION=$VERSION-SNAPSHOT,g" src/java-common/netxms-base/src/main/resources/netxms-version.properties

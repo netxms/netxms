@@ -19,9 +19,7 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -31,11 +29,8 @@ import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -56,7 +51,6 @@ public abstract class ComparisonChartElement extends ElementWidget
    protected Chart chart;
 	protected NXCSession session;
 	protected int refreshInterval = 30;
-	protected boolean updateThresholds = false;
    protected List<ChartDciConfig> runtimeDciList = new ArrayList<>();
 
 	private ViewRefreshController refreshController;
@@ -168,14 +162,12 @@ public abstract class ComparisonChartElement extends ElementWidget
                }
             }
 
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
             runInUIThread(() -> {
                if (chart.isDisposed())
                   return;
 
                for(ChartDciConfig dci : runtimeDciList)
                {
-                  dci.measurementUnit = measurementUnits.get(dci.getDciId());
                   chart.addParameter(new ChartDciConfig(dci));
                }
 
@@ -223,7 +215,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-            final DciData[] data = new DciData[runtimeDciList.size()];
+            final DataSeries[] data = new DataSeries[runtimeDciList.size()];
             for(int i = 0; i < runtimeDciList.size(); i++)
 				{
                ChartDciConfig dci = runtimeDciList.get(i);
@@ -235,24 +227,6 @@ public abstract class ComparisonChartElement extends ElementWidget
                   data[i] = session.getCollectedTableData(dci.nodeId, dci.dciId, dci.instance, dci.column, null, null, 1, dashboardId);
 				}
 
-            final Threshold[][] thresholds;
-            if (updateThresholds)
-            {
-               thresholds = new Threshold[runtimeDciList.size()][];
-               for(int i = 0; i < runtimeDciList.size(); i++)
-               {
-                  ChartDciConfig dci = runtimeDciList.get(i);
-                  if (dci.type == ChartDciConfig.ITEM)
-                     thresholds[i] = session.getThresholds(dci.nodeId, dci.dciId, dashboardId);
-                  else
-                     thresholds[i] = new Threshold[0];
-               }
-            }
-            else
-            {
-               thresholds = null;
-            }
-
             runInUIThread(() -> {
                updateInProgress = false;
                if (chart.isDisposed())
@@ -260,10 +234,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 
                for(int i = 0; i < data.length; i++)
 					{
-                  DciDataRow lastValue = data[i].getLastValue();
-                  chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
-                  if (updateThresholds)
-                     chart.updateParameterThresholds(i, thresholds[i]);
+                  chart.updateParameter(i, data[i], false);
 					}
                chart.refresh();
                clearMessages();

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "nxcore.h"
 #include <nxcore_ps.h>
 #include <netxms_maps.h>
+#include <nxai.h>
+#include <nms_pkg.h>
 
 /**
  * Externals
@@ -614,6 +616,64 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **result,
 }
 
 /**
+ * Get list of packages available for deployment
+ * Syntax:
+ *    GetAvailablePackages()              - all packages
+ *    GetAvailablePackages(platform)      - filter by platform
+ *    GetAvailablePackages(platform, type) - filter by platform and type
+ * Returns: Array of DeploymentPackage objects
+ */
+static int F_GetAvailablePackages(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   const TCHAR *platformFilter = nullptr;
+   const TCHAR *typeFilter = nullptr;
+
+   if (argc >= 1)
+   {
+      if (!argv[0]->isNull())
+      {
+         if (!argv[0]->isString())
+            return NXSL_ERR_NOT_STRING;
+         platformFilter = argv[0]->getValueAsCString();
+      }
+   }
+
+   if (argc >= 2)
+   {
+      if (!argv[1]->isNull())
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         typeFilter = argv[1]->getValueAsCString();
+      }
+   }
+
+   ObjectArray<PackageDetails> *packages = GetAllPackages(platformFilter, typeFilter);
+   NXSL_Array *a = new NXSL_Array(vm);
+   for (int i = 0; i < packages->size(); i++)
+   {
+      PackageDetails *p = packages->get(i);
+      PackageDetails *copy = new PackageDetails();
+      copy->id = p->id;
+      _tcslcpy(copy->type, p->type, 16);
+      _tcslcpy(copy->name, p->name, MAX_OBJECT_NAME);
+      _tcslcpy(copy->version, p->version, 32);
+      _tcslcpy(copy->platform, p->platform, MAX_PLATFORM_NAME_LEN);
+      copy->packageFile = p->packageFile;
+      copy->command = p->command;
+      copy->description = p->description;
+      a->append(vm->createValue(vm->createObject(&g_nxslDeploymentPackageClass, copy)));
+   }
+   delete packages;
+
+   *result = vm->createValue(a);
+   return 0;
+}
+
+/**
  * Get all nodes
  * Returns array of accessible node objects
  * (empty array if trusted nodes check is on and current node not provided)
@@ -961,7 +1021,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	{
 		node->setPrimaryHostName(pname);
 		NetObj::linkObjects(parent, node);
-		node->unhide();
+		node->publish();
 		*result = node->createNXSLObject(vm);
 	}
 	else
@@ -1003,7 +1063,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	shared_ptr<Container> container = make_shared<Container>(name);
 	NetObjInsert(container, true, false);
 	NetObj::linkObjects(parent, container);
-	container->unhide();
+	container->publish();
 
 	*ppResult = container->createNXSLObject(vm);
 	return 0;
@@ -1388,7 +1448,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 	{
 		*result = vm->createValue();
 	}
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1413,19 +1473,40 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 	if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
+   // Create PDU and send request
+   uint32_t oid[MAX_OID_LEN];
+   size_t nameLen = SnmpParseOID(argv[1]->getValueAsCString(), oid, MAX_OID_LEN);
+   if (nameLen == 0)
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   TCHAR buffer[4096];
-	if (SnmpGetEx(transport, argv[1]->getValueAsCString(), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS)
-	{
-		*result = vm->createValue(buffer);
-	}
-	else
-	{
-		*result = vm->createValue();
-	}
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
 
-	return 0;
+   SNMP_PDU *response;
+   if (transport->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
+   {
+      if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      {
+         TCHAR buffer[4096];
+         SNMP_Variable *pVar = response->getVariable(0);
+         *result = vm->createValue(FormatSNMPValue(pVar, buffer, 4096));
+      }
+      else
+      {
+         *result = vm->createValue();
+      }
+      delete response;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+	return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1524,7 +1605,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
-   static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(std::move(*var)))));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -1641,10 +1722,12 @@ static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Val
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
-         if (event == ACE_DATA)
-            static_cast<StringBuffer*>(context)->append(text);
-      }, &output);
+      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true,
+         [] (ActionCallbackEvent event, const void *text, void *context) -> void
+         {
+            if (event == ACE_DATA)
+               static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
+         }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
@@ -1774,7 +1857,7 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
  * Optional second argumet is default value
  * Returns variable's value if found, default value if not found, and null if not found and no default value given
  */
-static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if ((argc == 0) || (argc > 2))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1782,14 +1865,14 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	TCHAR buffer[MAX_CONFIG_VALUE];
-	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE, _T("")))
+	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
+	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE_LENGTH, L""))
 	{
-		*ppResult = vm->createValue(buffer);
+		*result = vm->createValue(buffer);
 	}
 	else
 	{
-		*ppResult = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
+		*result = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
 	}
 
 	return 0;
@@ -1944,7 +2027,7 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
 
    uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
    const TCHAR *message = argv[1]->getValueAsString(&len);
-   IntegerArray<uint32_t> idList(16,16);
+   IntegerArray<uint32_t> idList(64, 64);
    idList.add(static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId());
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
@@ -2188,6 +2271,58 @@ static int F_IsMarkdownComment(int argc, NXSL_Value **argv, NXSL_Value **result,
 }
 
 /**
+ * Query AI assistant
+ * Syntax:
+ *    QueryAIAssistant(prompt, [context])
+ * where:
+ *     prompt - prompt to send to AI assistant
+ *     context - NetXMS object providing context for AI assistant (optional)
+ * Return value:
+ *     answer from AI assistant or null on failure
+ */
+static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc == 0) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc == 2) && !argv[1]->isObject(_T("NetObj")))
+      return NXSL_ERR_NOT_OBJECT;
+
+   char *prompt = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   NetObj *context = (argc == 2) ? static_cast<shared_ptr<NetObj>*>(argv[1]->getValueAsObject()->getData())->get() : nullptr;
+   char *answer = QueryAIAssistant(prompt, context);
+   MemFree(prompt);
+
+   *result = (answer != nullptr) ? vm->createValue(answer) : vm->createValue();
+   MemFree(answer);
+
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Register AI task
+ * Syntax:
+ *    RegisterAITask(taskDescription, prompt)
+ * where:
+ *     taskDescription - description of the AI task
+ *     prompt - prompt to send to AI assistant
+ * Return value:
+ *     registered task ID
+ */
+static int F_RegisterAITask(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   uint32_t taskId = RegisterAITask(argv[0]->getValueAsCString(), 0, argv[1]->getValueAsCString());
+   *result = vm->createValue(taskId);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2228,6 +2363,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "FindObjectByGUID", F_FindObjectByGUID, -1 },
    { "FindVendorByMACAddress", F_FindVendorByMACAddress, 1 },
    { "GetAllNodes", F_GetAllNodes, -1 },
+   { "GetAvailablePackages", F_GetAvailablePackages, -1 },
    { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
    { "GetCustomAttribute", F_GetCustomAttribute, 2, true },
    { "GetEventParameter", F_GetEventParameter, 2, true },
@@ -2251,6 +2387,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "PollerTrace", F_PollerTrace, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
    { "PostEventEx", F_PostEventEx, -1 },
+   { "QueryAIAssistant", F_QueryAIAssistant, -1 },
+   { "RegisterAITask", F_RegisterAITask, 2 },
 	{ "RenameObject", F_RenameObject, 2, true },
 	{ "SendMail", F_SendMail, -1, true },
 	{ "SendNotification", F_SendNotification, 4 },
@@ -2481,9 +2619,9 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("MapLinkStyle::DashDotDot", 5);
 
       // Map link data label position
-      NXSL_ENV_CONSTANT("MapLinkStyle::Center", 0);
-      NXSL_ENV_CONSTANT("MapLinkStyle::Object1", 1);
-      NXSL_ENV_CONSTANT("MapLinkStyle::Object2", 2);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Center", 0);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Object1", 1);
+      NXSL_ENV_CONSTANT("LinkLabelPosition::Object2", 2);
    }
 
    if (name.value[0] == 'N')
@@ -2512,19 +2650,24 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeCapability::FileManager", NC_HAS_FILE_MANAGER);
       NXSL_ENV_CONSTANT("NodeCapability::IEEE802_1x", NC_IS_8021X);
       NXSL_ENV_CONSTANT("NodeCapability::IfXTable", NC_HAS_IFXTABLE);
-      NXSL_ENV_CONSTANT("NodeCapability::LocalVNC", NC_IS_LOCAL_VNC);
       NXSL_ENV_CONSTANT("NodeCapability::LLDP", NC_IS_LLDP);
       NXSL_ENV_CONSTANT("NodeCapability::LLDPv2", NC_LLDP_V2_MIB);
+      NXSL_ENV_CONSTANT("NodeCapability::LocalManagement", NC_IS_LOCAL_MGMT);
+      NXSL_ENV_CONSTANT("NodeCapability::LocalVNC", NC_IS_LOCAL_VNC);
       NXSL_ENV_CONSTANT("NodeCapability::ModbusTCP", NC_IS_MODBUS_TCP);
       NXSL_ENV_CONSTANT("NodeCapability::NDP", NC_IS_NDP);
+      NXSL_ENV_CONSTANT("NodeCapability::NewPolicyTypes", NC_IS_NEW_POLICY_TYPES);
       NXSL_ENV_CONSTANT("NodeCapability::OSPF", NC_IS_OSPF);
       NXSL_ENV_CONSTANT("NodeCapability::Printer", NC_IS_PRINTER);
       NXSL_ENV_CONSTANT("NodeCapability::ProfiNet", NC_IS_PROFINET);
       NXSL_ENV_CONSTANT("NodeCapability::RegisteredForBackup", NC_REGISTERED_FOR_BACKUP);
       NXSL_ENV_CONSTANT("NodeCapability::Router", NC_IS_ROUTER);
+      NXSL_ENV_CONSTANT("NodeCapability::ServiceManager", NC_HAS_SERVICE_MANAGER);
       NXSL_ENV_CONSTANT("NodeCapability::SMCLP", NC_IS_SMCLP);
       NXSL_ENV_CONSTANT("NodeCapability::SNMP", NC_IS_SNMP);
       NXSL_ENV_CONSTANT("NodeCapability::SSH", NC_IS_SSH);
+      NXSL_ENV_CONSTANT("NodeCapability::SSHCommandChannel", NC_SSH_COMMAND_CHANNEL);
+      NXSL_ENV_CONSTANT("NodeCapability::SSHInteractiveChannel", NC_SSH_INTERACTIVE_CHANNEL);
       NXSL_ENV_CONSTANT("NodeCapability::STP", NC_IS_STP);
       NXSL_ENV_CONSTANT("NodeCapability::UserAgent", NC_HAS_USER_AGENT);
       NXSL_ENV_CONSTANT("NodeCapability::VLAN", NC_HAS_VLANS);
@@ -2632,12 +2775,12 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
 /**
  * Call hook script
  */
-NXSL_VM *FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object)
+ScriptVMHandle NXCORE_EXPORTABLE FindHookScript(const wchar_t *hookName, shared_ptr<NetObj> object)
 {
-   TCHAR scriptName[MAX_PATH] = _T("Hook::");
-   _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
-   if (vm == nullptr)
-      nxlog_debug_tag(_T("nxsl.hooks"), 7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+   wchar_t scriptName[MAX_PATH] = L"Hook::";
+   wcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, object);
+   if (!vm.isValid())
+      nxlog_debug_tag(L"nxsl.hooks", 7, L"FindHookScript: cannot load hook script \"%s\" (%s)", hookName, vm.failureReasonText());
    return vm;
 }

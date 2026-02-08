@@ -345,7 +345,8 @@ json_t *NetworkMapLinkContainer::getConfigInstance()
       m_config = json_loads(m_link->getConfig(), 0, &error);
       if (m_config == nullptr)
       {
-         nxlog_debug_tag(_T("netmap"), 6, _T("Cannot parse response JSON"));
+         if (*m_link->getConfig() != 0)
+            nxlog_debug_tag(_T("netmap"), 6, _T("Cannot parse response JSON: %s"), m_config);
          m_config = json_object();
          json_object_set_new(m_config, "routing", json_integer(0));
          json_object_set_new(m_config, "dciList", json_array());

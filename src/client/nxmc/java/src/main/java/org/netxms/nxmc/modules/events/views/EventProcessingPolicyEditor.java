@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.EPPSaveResult;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -54,6 +55,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
+import org.netxms.nxmc.modules.events.dialogs.EPPConflictDialog;
 import org.netxms.nxmc.modules.events.views.helpers.RuleClipboard;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -72,7 +74,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private final I18n i18n = LocalizationHelper.getI18n(EventProcessingPolicyEditor.class);
 
    private NXCSession session;
-   private boolean policyLocked = false;
    private EventProcessingPolicy policy;
    private SessionListener sessionListener;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
@@ -115,6 +116,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Action actionEnableRule;
    private Action actionDisableRule;
    private Action actionAddRule;
+   private Action actionExplain;
 
    /**
     * Create event processing policy editor view
@@ -184,7 +186,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             return arg0.getRuleNumber() - arg1.getRuleNumber();
          }
       });
-      
+
       createActions();
    }
 
@@ -194,7 +196,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
-      openEventProcessingPolicy();
+      reloadPolicy();
       super.postContentCreate();
    }
 
@@ -229,7 +231,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          @Override
          public void run()
          {
-            savePolicy(false);
+            savePolicy();
          }
       };
       actionSave.setEnabled(false);
@@ -326,11 +328,19 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             insertRule(ruleEditors.size());
          }
       };
+
+      actionExplain = new Action(i18n.tr("E&xplain")) {
+         @Override
+         public void run()
+         {
+            explainRule();
+         }
+      };
    }
 
    /**
     * Fill local pull-down menu
-    * 
+    *
     * @param manager Menu manager for pull-down menu
     */
    @Override
@@ -347,7 +357,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Fill local tool bar
-    * 
+    *
     * @param manager Menu manager for local toolbar
     */
    @Override
@@ -369,44 +379,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
-    * Open event processing policy
-    */
-   private void openEventProcessingPolicy()
-   {
-      Job job = new Job(i18n.tr("Loading event processing policy"), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            List<ServerAction> actions = session.getActions();
-            synchronized(EventProcessingPolicyEditor.this.actions)
-            {
-               for(ServerAction a : actions)
-               {
-                  EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
-               }
-            }
-            policy = session.openEventProcessingPolicy();
-            policyLocked = true;
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  initPolicyEditor();
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot load event processing policy");
-         }
-      };
-      job.start();
-   }
-
-   /**
-    * Init policy editor
+    * Initialize policy editor
     */
    private void initPolicyEditor()
    {
@@ -443,7 +416,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Process session notifications
-    * 
+    *
     * @param n notification
     */
    private void processSessionNotification(SessionNotification n)
@@ -473,7 +446,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Set all rules to collapsed or expanded state
-    * 
+    *
     * @param collapsed true to collapse all, false to expand
     */
    private void setAllRulesCollapsed(boolean collapsed)
@@ -488,24 +461,26 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Save policy to server
-    * 
-    * @param unlockAfterSave if true, remove EPP lock after save
     */
-   public void savePolicy(final boolean unlockAfterSave)
+   public void savePolicy()
    {
       actionSave.setEnabled(false);
-      if (unlockAfterSave)
-         policyLocked = false;
       new Job(i18n.tr("Saving event processing policy"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.saveEventProcessingPolicy(policy);
-            if (unlockAfterSave)
-               session.closeEventProcessingPolicy();
-            runInUIThread(() -> {
-               modified = false;
-            });
+            EPPSaveResult result = session.saveEventProcessingPolicy(policy);
+            if (result.isSuccess())
+            {
+               runInUIThread(() -> {
+                  modified = false;
+               });
+            }
+            else
+            {
+               // Conflicts detected - handle in UI thread
+               runInUIThread(() -> handleSaveConflicts(result));
+            }
          }
 
          @Override
@@ -523,6 +498,64 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
+    * Handle save conflicts by showing dialog and taking appropriate action.
+    *
+    * @param result save result containing conflict information
+    */
+   private void handleSaveConflicts(EPPSaveResult result)
+   {
+      EPPConflictDialog dialog = new EPPConflictDialog(getWindow().getShell(), result.getConflicts(), policy);
+      if (dialog.open() == EPPConflictDialog.RELOAD)
+      {
+         reloadPolicy();
+      }
+   }
+
+   /**
+    * Reload policy from server, discarding local changes.
+    */
+   private void reloadPolicy()
+   {
+      // Clear current editors
+      for(RuleEditor editor : ruleEditors)
+      {
+         if (!editor.isDisposed())
+            editor.dispose();
+      }
+      ruleEditors.clear();
+      selection.clear();
+      lastSelectedRule = -1;
+
+      new Job(i18n.tr("Reloading event processing policy"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            policy = session.getEventProcessingPolicy();
+            List<ServerAction> serverActions = session.getActions();
+            synchronized(actions)
+            {
+               actions.clear();
+               for(ServerAction a : serverActions)
+                  actions.put(a.getId(), a);
+            }
+            runInUIThread(() -> {
+               System.out.println("Policy version: " + policy.getVersion());
+               initPolicyEditor();
+               modified = false;
+               actionSave.setEnabled(false);
+               updateEditorAreaLayout();
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot reload event processing policy");
+         }
+      }.start();
+   }
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -530,23 +563,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    {
       if (sessionListener != null)
          session.removeListener(sessionListener);
-
-      if (policyLocked)
-      {
-         new Job(i18n.tr("Closing event processing policy"), null) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               session.closeEventProcessingPolicy();
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot close event processing policy");
-            }
-         }.start();
-      }
 
       imageStop.dispose();
       imageAlarm.dispose();
@@ -577,7 +593,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Find server action by ID
-    * 
+    *
     * @param id action id
     * @return server action object or null
     */
@@ -588,7 +604,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Find server actions for list of Ids
-    * 
+    *
     * @param idList list of action identifiers
     * @return list of server actions
     */
@@ -606,7 +622,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Return complete actions list
-    * 
+    *
     * @return actions list
     */
    public Collection<ServerAction> getActions()
@@ -648,7 +664,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Get "cancel timer" image
-    * 
+    *
     * @return "cancel timer" image
     */
    public Image getImageCancelTimer()
@@ -743,12 +759,12 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Set selection to given rule
-    * 
+    *
     * @param e rule editor
     */
    public void setSelection(RuleEditor e)
    {
-      clearSelection();      
+      clearSelection();
       addToSelection(e, false);
    }
 
@@ -765,7 +781,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Add rule to selection
-    * 
+    *
     * @param e rule editor
     */
    public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
@@ -783,13 +799,13 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       selection.add(e);
       e.setSelected(true);
       lastSelectedRule = e.getRuleNumber();
-      
+
       onSelectionChange();
    }
-   
+
    /**
     * Remove rule from selection
-    * 
+    *
     * @param e rule editor
     */
    public void removeFromSelection(RuleEditor e)
@@ -797,7 +813,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       selection.remove(e);
       e.setSelected(false);
       lastSelectedRule = -1;
-      
+
       onSelectionChange();
    }
 
@@ -812,6 +828,19 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       actionCut.setEnabled(selection.size() > 0);
       actionCopy.setEnabled(selection.size() > 0);
       actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
+      actionExplain.setEnabled(selection.size() == 1);
+   }
+
+   /**
+    * Explain selected rule
+    */
+   private void explainRule()
+   {
+      if (selection.size() != 1)
+         return;
+
+      RuleEditor editor = selection.iterator().next();
+      editor.updateExplanation();
    }
 
    /**
@@ -840,7 +869,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Insert new rule at given position
-    * 
+    *
     * @param position
     */
    private void insertRule(int position)
@@ -958,17 +987,17 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       updateEditorAreaLayout();
       setModified(true);
    }
-   
+
    /**
     * Moves rule selection
-    * 
+    *
     * @param anchor - where the selection is being moved
     */
    public void moveSelection(RuleEditor anchor)
    {
       if (selection.contains(anchor))
          return;
-      
+
       List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
       for(RuleEditor e : ruleEditors)
       {
@@ -988,7 +1017,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          }
       }
 
-      policy = new EventProcessingPolicy(movedRuleEditors.size());
+      policy = new EventProcessingPolicy(movedRuleEditors.size(), policy.getVersion());
       int i = 0;
       for(RuleEditor e : movedRuleEditors)
       {
@@ -1013,11 +1042,13 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Fill context menu for rule
-    * 
+    *
     * @param manager menu manager
     */
    public void fillRuleContextMenu(IMenuManager manager)
    {
+      manager.add(actionExplain);
+      manager.add(new Separator());
       manager.add(actionEnableRule);
       manager.add(actionDisableRule);
       manager.add(new Separator());
@@ -1072,7 +1103,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
    /**
     * Check if given rule should be visible
-    * 
+    *
     * @param rule
     * @return
     */
@@ -1106,6 +1137,10 @@ public class EventProcessingPolicyEditor extends ConfigurationView
             return true;
       }
 
+      // Check rule GUID
+      if (rule.getGuid().toString().toLowerCase().contains(filterText))
+         return true;
+
       return false;
    }
 
@@ -1115,8 +1150,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    public void save()
    {
-      // This method should be called only when save on close is selected, so do unlock after save
-      savePolicy(true);
+      savePolicy();
    }
 
    /**
@@ -1125,33 +1159,14 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    public void refresh()
    {
-      if (!policyLocked)
-      {
-         openEventProcessingPolicy();
-         return;
-      }
-      
       if (isModified())
       {
-         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"), 
+         if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Unsaved Changes"),
                i18n.tr("Are you sure you want to refresh and lose all not saved changes?")))
          {
             return;
          }
       }
-      new Job(i18n.tr("Closing event processing policy"), null) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            session.closeEventProcessingPolicy();
-            runInUIThread(() -> openEventProcessingPolicy());
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot close event processing policy");
-         }
-      }.start();
+      reloadPolicy();
    }
 }

@@ -45,6 +45,12 @@
     <ClCompile Include="iostat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="usb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h">

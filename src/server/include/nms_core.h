@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,10 +100,14 @@
 #define IDG_BUSINESS_SERVICE_RECORD 29
 #define IDG_MAINTENANCE_JOURNAL     30
 #define IDG_PACKAGE_DEPLOYMENT_JOB  31
+#define IDG_INCIDENT                32
+#define IDG_INCIDENT_COMMENT        33
+#define IDG_INCIDENT_ACTIVITY       34
+#define IDG_SC_MIGRATION_TASK       35
 
 /**** ID functions *****/
 bool InitIdTable();
-uint32_t CreateUniqueId(int group);
+uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group);
 void SaveCurrentFreeId();
 
 
@@ -133,7 +137,6 @@ void SaveCurrentFreeId();
 #include "nxcore_winperf.h"
 #include "nxcore_schedule.h"
 #include "nms_objects.h"
-#include "nms_locks.h"
 #include "nms_script.h"
 
 /**
@@ -153,6 +156,7 @@ void SaveCurrentFreeId();
 #define DEBUG_TAG_DC_EIP            _T("dc.eip")
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
 #define DEBUG_TAG_DC_POLLER         _T("dc.poller")
+#define DEBUG_TAG_DC_SSH            _T("dc.ssh")
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")
 #define DEBUG_TAG_DC_THRESHOLDS     _T("dc.thresholds")
 #define DEBUG_TAG_DC_TRANSFORM      _T("dc.transform")
@@ -195,7 +199,6 @@ void SaveCurrentFreeId();
  * Client session flags
  */
 #define CSF_TERMINATED           ((uint32_t)0x00000001)
-#define CSF_EPP_LOCKED           ((uint32_t)0x00000002)
 #define CSF_EPP_UPLOAD           ((uint32_t)0x00000010)
 #define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
 #define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
@@ -406,7 +409,7 @@ public:
    }
    virtual ~ServerDownloadFileInfo();
 
-   virtual void close(bool success);
+   virtual void close(bool success, bool deleteOnFailure = true) override;
 
    void setUploadData(uint32_t data) { m_uploadData = data; }
    void updatePackageDBInfo(const wchar_t *description, const wchar_t *pkgName, const wchar_t *pkgVersion, const wchar_t *pkgType,
@@ -543,6 +546,8 @@ template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
  * Forward declaration for syslog message class
  */
 class SyslogMessage;
+struct DeletedRuleInfo;
+class EPPConflict;
 
 /**
  * Client login information
@@ -552,7 +557,7 @@ struct LoginInfo;
 /**
  * Client (user) session
  */
-class NXCORE_EXPORTABLE ClientSession : public GenericClientSession
+class NXCORE_EXPORTABLE ClientSession : public GenericClientSession, public TcpProxyCallback
 {
 private:
    SOCKET m_socket;
@@ -574,9 +579,11 @@ private:
 	wchar_t m_language[8];       // Client's desired language
    time_t m_loginTime;
    SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
-   uint32_t m_dwNumRecordsToUpload; // Number of records to be uploaded
-   uint32_t m_dwRecordsUploaded;
-   EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
+   uint32_t m_eppExpectedRuleCount;  // Number of rules expected to be uploaded
+   SharedObjectArray<EPRule> m_eppRuleList;   // List of loaded EPP rules
+   uint32_t m_eppBaseVersion;        // Base version for EPP optimistic concurrency
+   DeletedRuleInfo *m_eppDeletedRules;  // Deleted rules info for EPP optimistic concurrency
+   uint32_t m_eppDeletedRuleCount;   // Number of deleted rules
    SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> m_downloadFileMap;
    VolatileCounter m_refCount;
    uint32_t m_encryptionRqId;
@@ -685,6 +692,7 @@ private:
    void leaveMaintenanceMode(const NXCPMessage& request);
    void openNodeDCIList(const NXCPMessage& request);
    void closeNodeDCIList(const NXCPMessage& request);
+   void getDCObject(const NXCPMessage& request);
    void modifyNodeDCI(const NXCPMessage& request);
    void copyDCI(const NXCPMessage& request);
    void bulkDCIUpdate(const NXCPMessage& request);
@@ -707,6 +715,7 @@ private:
    void createObject(const NXCPMessage& request);
    void changeObjectBinding(const NXCPMessage& request, bool bind);
    void deleteObject(const NXCPMessage& request);
+   void decommissionNode(const NXCPMessage& request);
    void getAlarms(const NXCPMessage& request);
    void getAlarm(const NXCPMessage& request);
    void getAlarmEvents(const NXCPMessage& request);
@@ -721,6 +730,16 @@ private:
 	void updateAlarmComment(const NXCPMessage& request);
 	void deleteAlarmComment(const NXCPMessage& request);
 	void updateAlarmStatusFlow(const NXCPMessage& request);
+   void getIncidents(const NXCPMessage& request);
+   void getIncidentDetails(const NXCPMessage& request);
+   void createIncident(const NXCPMessage& request);
+   void updateIncident(const NXCPMessage& request);
+   void changeIncidentState(const NXCPMessage& request);
+   void assignIncident(const NXCPMessage& request);
+   void linkAlarmToIncident(const NXCPMessage& request);
+   void unlinkAlarmFromIncident(const NXCPMessage& request);
+   void addIncidentComment(const NXCPMessage& request);
+   void getIncidentActivity(const NXCPMessage& request);
    void createAction(const NXCPMessage& request);
    void updateAction(const NXCPMessage& request);
    void deleteAction(const NXCPMessage& request);
@@ -729,6 +748,7 @@ private:
    void onTrap(const NXCPMessage& request);
    void onWakeUpNode(const NXCPMessage& request);
    void queryMetric(const NXCPMessage& request);
+   void queryList(const NXCPMessage& request);
    void queryTable(const NXCPMessage& request);
    void editTrap(const NXCPMessage& request, int operation);
    void lockTrapCfg(const NXCPMessage& request, bool lock);
@@ -742,6 +762,7 @@ private:
    void getPackageDeploymentJobs(const NXCPMessage& request);
    void cancelPackageDeploymentJob(const NXCPMessage& request);
    void getParametersList(const NXCPMessage& request);
+   void getListsList(const NXCPMessage& request);
    void getUserVariable(const NXCPMessage& request);
    void setUserVariable(const NXCPMessage& request);
    void copyUserVariable(const NXCPMessage& request);
@@ -784,11 +805,12 @@ private:
    void getRelatedEventList(const NXCPMessage& request);
    void getDCIScriptList(const NXCPMessage& request);
 	void getDCIInfo(const NXCPMessage& request);
-   void getDciMeasurementUnits(const NXCPMessage& request);
    void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);
+   void importConfigurationLegacy(const NXCPMessage& request);
    void importConfigurationFromFile(const NXCPMessage& request);
+   void finalizeConfigurationImport(const char* content, uint32_t flags, NXCPMessage *response);
    void getGraph(const NXCPMessage& request);
 	void getGraphList(const NXCPMessage& request);
 	void saveGraph(const NXCPMessage& request);
@@ -817,6 +839,7 @@ private:
 	void queryServerLog(const NXCPMessage& request);
 	void getServerLogQueryData(const NXCPMessage& request);
    void getServerLogRecordDetails(const NXCPMessage& request);
+   void getServerLogQuerySql(const NXCPMessage& request);
 	void sendDCIThresholds(const NXCPMessage& request);
 	void addClusterNode(const NXCPMessage& request);
    void addWirelessDomainController(const NXCPMessage& request);
@@ -886,8 +909,6 @@ private:
    void unbindAgentTunnel(const NXCPMessage& request);
    void setupTcpProxy(const NXCPMessage& request);
    void closeTcpProxy(const NXCPMessage& request);
-   void getPredictionEngines(const NXCPMessage& request);
-   void getPredictedData(const NXCPMessage& request);
    void expandMacros(const NXCPMessage& request);
    void updatePolicy(const NXCPMessage& request);
    void deletePolicy(const NXCPMessage& request);
@@ -904,6 +925,7 @@ private:
    void updateNotificationChannel(const NXCPMessage& request);
    void removeNotificationChannel(const NXCPMessage& request);
    void renameNotificationChannel(const NXCPMessage& request);
+   void clearNotificationChannelQueue(const NXCPMessage& request);
    void getNotificationDrivers(const NXCPMessage& request);
    void startActiveDiscovery(const NXCPMessage& request);
    void getPhysicalLinks(const NXCPMessage& request);
@@ -961,14 +983,27 @@ private:
    void unlinkAsset(const NXCPMessage& request);
    void updateNetworkMapElementLocaiton(const NXCPMessage& request);
    void compileMibs(const NXCPMessage& request);
-   void openEventProcessingPolicy(const NXCPMessage& request);
-   void closeEventProcessingPolicy(const NXCPMessage& request);
+   void getEventProcessingPolicy(const NXCPMessage& request);
    void saveEventProcessingPolicy(const NXCPMessage& request);
    void processEventProcessingPolicyRecord(const NXCPMessage& request);
+   void finishEPPSave(uint32_t requestId);
+   void explainEventProcessingPolicyRule(const NXCPMessage& request);
    void updatePeerInterface(const NXCPMessage& request);
    void clearPeerInterface(const NXCPMessage& request);
    void queryAiAssistant(const NXCPMessage& request);
+   void createAiAssistantChat(const NXCPMessage& request);
    void clearAiAssistantChat(const NXCPMessage& request);
+   void deleteAiAssistantChat(const NXCPMessage& request);
+   void requestAiAssistantComment(const NXCPMessage& request);
+   void getAiAssistantFunctions(const NXCPMessage& request);
+   void callAiAssistantFunction(const NXCPMessage& request);
+   void getAiAgentTasks(const NXCPMessage& request);
+   void deleteAiAgentTask(const NXCPMessage& request);
+   void addAiAgentTask(const NXCPMessage& request);
+   void handleAiQuestionResponse(const NXCPMessage& request);
+   void getAIMessages(const NXCPMessage& request);
+   void setAIMessageStatus(const NXCPMessage& request);
+   void deleteAIMessage(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);
@@ -978,7 +1013,7 @@ private:
    void sendObjectUpdates();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
-   void finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response);
+
    uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, WCHAR *name, WCHAR *description, WCHAR *tag);
 
 public:
@@ -1041,8 +1076,8 @@ public:
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
-   void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator);
-   void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
+   virtual void onTcpProxyData(AgentConnectionEx *conn, uint32_t channelId, const void *data, size_t size, bool errorIndicator) override;
+   virtual void onTcpProxyAgentDisconnect(AgentConnectionEx *conn) override;
 
    void unregisterServerCommand(pid_t taskId);
 };
@@ -1103,6 +1138,7 @@ public:
    SNMPTrapParameterMapping();
    SNMPTrapParameterMapping(DB_RESULT mapResult, int row);
    SNMPTrapParameterMapping(ConfigEntry *entry);
+   SNMPTrapParameterMapping(json_t *json);
    SNMPTrapParameterMapping(const NXCPMessage& msg, uint32_t base);
    ~SNMPTrapParameterMapping();
 
@@ -1139,6 +1175,7 @@ public:
    SNMPTrapMapping();
    SNMPTrapMapping(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
    SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5);
+   SNMPTrapMapping(json_t *json, const uuid& guid, uint32_t id, uint32_t eventCode, bool nxslV5);
    SNMPTrapMapping(const NXCPMessage& msg);
    ~SNMPTrapMapping();
 
@@ -1157,6 +1194,9 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getScriptSource() const { return m_scriptSource; }
    const NXSL_Program *getScript() const { return m_script; }
+
+   json_t *createExportRecord() const;
+   json_t *toJson() const;
 };
 
 /**
@@ -1295,6 +1335,7 @@ bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bo
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
+char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *defaultValue);
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create);
 bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable);
 
@@ -1307,14 +1348,16 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const wchar_t *variable, int32_t value
 void NXCORE_EXPORTABLE FindConfigFile();
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
-bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo);
+void ExecuteDatabasePasswordCommand();
+void RetrieveDatabaseCredentialsFromVault();
+
 void NXCORE_EXPORTABLE UnlockDatabase();
+void NXCORE_EXPORTABLE ShutdownDatabase();
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 bool NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
-void NXCORE_EXPORTABLE ShutdownDatabase();
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
 int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);
@@ -1323,8 +1366,8 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
-void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp, bool anomalyDetected);
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
+void QueueRawDciDataUpdate(Timestamp timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, Timestamp cacheTimestamp, bool anomalyDetected);
 void QueueRawDciDataDelete(uint32_t dciId);
 int64_t GetIDataWriterQueueSize();
 int64_t GetRawDataWriterQueueSize();
@@ -1334,8 +1377,8 @@ void StopDBWriter();
 void OnDBWriterMaxQueueSizeChange();
 void ClearDBWriterData(ServerConsole *console, const TCHAR *component);
 
-void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
-void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
+void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, const TCHAR *value);
+void PerfDataStorageRequest(DCTable *dci, Timestamp timestamp, Table *value);
 
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
@@ -1343,9 +1386,28 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
          int32_t zoneUIN, bool initialDiscovery);
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
-bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId);
-bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId);
-bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN, SSHCredentials *selectedCredentials, uint16_t *selectedPort);
+bool LoadMIBTree();
+void ReloadMIBTree();
+wchar_t NXCORE_EXPORTABLE *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize);
+
+bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const TCHAR *login, const TCHAR *password, uint32_t keyId);
+bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login,
+   const TCHAR *password, uint32_t keyId);
+bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN,
+   SSHCredentials *selectedCredentials, uint16_t *selectedPort);
+bool SSHCheckCommandChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
+   const char *testCommand, const char *testPattern);
+bool SSHCheckCommandChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
+   const char *testCommand, const char *testPattern);
+bool SSHCheckInteractiveChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
+   const char *promptPattern, const char *terminalType);
+bool SSHCheckInteractiveChannel(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port,
+   const wchar_t *login, const wchar_t *password, uint32_t keyId,
+   const char *promptPattern, const char *terminalType);
 
 bool VNCCheckConnection(Node *proxyNode, const InetAddress& addr, uint16_t port);
 bool VNCCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port);
@@ -1368,11 +1430,15 @@ void PrintNetworkDeviceDriverList(ServerConsole *console);
 void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();
 void ShutdownNotificationChannels();
-void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
-void GetNotificationChannels(NXCPMessage *msg);
-void GetNotificationDrivers(NXCPMessage *msg);
-char *GetNotificationChannelConfiguration(const TCHAR *name);
-bool IsNotificationChannelExists(const TCHAR *name);
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId);
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId);
+bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name);
+void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg);
+void NXCORE_EXPORTABLE GetNotificationChannels(Table *table);
+json_t NXCORE_EXPORTABLE *GetNotificationChannels(bool basicInfoOnly);
+void NXCORE_EXPORTABLE GetNotificationDrivers(NXCPMessage *msg);
+char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name);
+bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name);
 void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
 void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
 void RenameNotificationChannel(TCHAR *name, TCHAR *newName);
@@ -1429,7 +1495,7 @@ void CreateTrapMappingMessage(NXCPMessage *msg);
 uint32_t CreateNewTrapMapping(uint32_t *trapId);
 uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg);
 uint32_t DeleteTrapMapping(uint32_t id);
-void CreateTrapMappingExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateTrapMappingExportRecord(uint32_t id);
 uint32_t ResolveTrapMappingGuid(const uuid& guid);
 void AddTrapMappingToList(const shared_ptr<SNMPTrapMapping>& tm);
 shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid);
@@ -1440,17 +1506,20 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
-void CreateObjectToolExportRecord(TextFileWriter& xml, uint32_t id);
+json_t *CreateObjectToolExportRecord(uint32_t id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
+bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
-json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess);
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter);
+json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId, bool fullAccess);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
-bool CreateSummaryTableExportRecord(uint32_t id, TextFileWriter& xml);
+bool CreateSummaryTableExportRecord(uint32_t id, json_t *array);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
+bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context);
 json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
@@ -1498,6 +1567,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
          session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args);
 
 uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
+uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuffer **log);
+uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer **log);
 void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, const wchar_t *descriptionFormat, ...);
 
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
@@ -1695,7 +1766,7 @@ extern uint32_t g_agentCommandTimeout;
 extern uint32_t g_agentRestartWaitTime;
 extern uint32_t g_thresholdRepeatInterval;
 extern uint32_t g_requiredPolls;
-extern uint32_t g_offlineDataRelevanceTime;
+extern int64_t g_offlineDataRelevanceTime;
 extern int32_t g_instanceRetentionTime;
 extern uint32_t g_snmpTrapStormCountThreshold;
 extern uint32_t g_snmpTrapStormDurationThreshold;

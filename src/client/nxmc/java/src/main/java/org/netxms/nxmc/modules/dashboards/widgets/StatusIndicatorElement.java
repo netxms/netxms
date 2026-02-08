@@ -25,10 +25,8 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -39,16 +37,22 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.DciTemplateConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig.StatusIndicatorElementConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
+import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ViewRefreshController;
@@ -71,7 +75,8 @@ public class StatusIndicatorElement extends ElementWidget
 	private ViewRefreshController refreshController;
    private boolean requireScriptRun = false;
    private boolean requireDataCollection = false;
-   private StatusIndicatorElementWidget[] elementWidgets;
+   private List<StatusIndicatorElementWidget> elementWidgets = new ArrayList<>();
+   private List<StatusIndicatorElementConfig> resolvedElements = new ArrayList<>();
 
 	private static final int ELEMENT_HEIGHT = 36;
 
@@ -105,68 +110,101 @@ public class StatusIndicatorElement extends ElementWidget
       layout.makeColumnsEqualWidth = true;
       getContentArea().setLayout(layout);
 
-      elementWidgets = new StatusIndicatorElementWidget[config.getElements().length];
-      for(int i = 0; i < elementWidgets.length; i++)
+      // Check what types of data sources we have
+      for(StatusIndicatorElementConfig e : config.getElements())
       {
-         StatusIndicatorElementConfig e = config.getElements()[i];
          if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_SCRIPT)
             requireScriptRun = true;
          else if ((e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI) || (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE))
             requireDataCollection = true;
-         elementWidgets[i] = new StatusIndicatorElementWidget(getContentArea(), e);
-         elementWidgets[i].setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       }
 
-      Job job = new Job(i18n.tr("Synchronize objects"), view) {
+      Job job = new Job(i18n.tr("Synchronizing objects"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
+            // Build resolved elements list, expanding DCI templates with multi-match
+            final List<StatusIndicatorElementConfig> resolved = new ArrayList<>();
             List<Long> relatedObjects = new ArrayList<Long>();
+            DciValue[] nodeDciList = null;
+            AbstractObject contextObject = getContext();
+
             for(StatusIndicatorElementConfig e : config.getElements())
             {
                if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_OBJECT)
-                  relatedObjects.add(getEffectiveObjectId(e.getObjectId()));
-            }
-            if (!relatedObjects.isEmpty())
-            {
-               session.syncMissingObjects(relatedObjects, NXCSession.OBJECT_SYNC_WAIT);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     if (!isDisposed())
-                        refreshData();
-                  }
-               });
-            }
-
-            // Resolve DCI names
-            DciValue[] nodeDciList = null;
-            for(int i = 0; i < elementWidgets.length; i++)
-            {
-               StatusIndicatorElementConfig e = config.getElements()[i];
-               if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)
                {
-                  AbstractObject contextObject = getContext();
+                  resolved.add(e);
+                  relatedObjects.add(getEffectiveObjectId(e.getObjectId()));
+               }
+               else if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)
+               {
                   if (contextObject == null)
-                     break;
+                  {
+                     resolved.add(e); // Add unresolved template
+                     continue;
+                  }
 
                   if (nodeDciList == null)
                      nodeDciList = session.getLastValues(contextObject.getObjectId());
 
-                  Pattern namePattern = !e.getDciName().isEmpty() ? Pattern.compile(e.getDciName()) : null;
-                  Pattern descriptionPattern = !e.getDciDescription().isEmpty() ? Pattern.compile(e.getDciDescription()) : null;
+                  DciTemplateConfig tc = e.getTemplateConfig();
+                  Pattern namePattern = compilePattern(tc.getDciName(), tc.isRegexMatch());
+                  Pattern descriptionPattern = compilePattern(tc.getDciDescription(), tc.isRegexMatch());
+                  Pattern tagPattern = compilePattern(tc.getDciTag(), tc.isRegexMatch());
+
+                  boolean foundMatch = false;
                   for(DciValue dciInfo : nodeDciList)
                   {
-                     if (((namePattern != null) && namePattern.matcher(dciInfo.getName()).find()) || ((descriptionPattern != null) && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+                     boolean match = matchesPattern(namePattern, dciInfo.getName()) ||
+                                     matchesPattern(descriptionPattern, dciInfo.getDescription()) ||
+                                     matchesPattern(tagPattern, dciInfo.getUserTag());
+                     if (match)
                      {
-                        e.setObjectId(contextObject.getObjectId());
-                        e.setDciId(dciInfo.getId());
-                        break;
+                        StatusIndicatorElementConfig resolvedElement;
+                        if (!foundMatch)
+                        {
+                           // First match - use original element
+                           resolvedElement = e;
+                           foundMatch = true;
+                        }
+                        else
+                        {
+                           // Additional matches - create copy
+                           resolvedElement = new StatusIndicatorElementConfig(e);
+                        }
+                        resolvedElement.setObjectId(contextObject.getObjectId());
+                        resolvedElement.setDciId(dciInfo.getId());
+                        resolvedElement.setLabel(dciInfo.getDescription());
+                        resolved.add(resolvedElement);
+
+                        if (!tc.isMultiMatch())
+                           break;
                      }
                   }
+
+                  if (!foundMatch)
+                  {
+                     resolved.add(e); // Add unresolved template
+                  }
+               }
+               else
+               {
+                  resolved.add(e);
                }
             }
+
+            if (!relatedObjects.isEmpty())
+            {
+               session.syncMissingObjects(relatedObjects, NXCSession.OBJECT_SYNC_WAIT);
+            }
+
+            runInUIThread(() -> {
+               if (!isDisposed())
+               {
+                  createWidgets(resolved);
+                  refreshData();
+               }
+            });
          }
 
          @Override
@@ -180,20 +218,44 @@ public class StatusIndicatorElement extends ElementWidget
 
 		startRefreshTimer();
 
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            refreshController.dispose();
-         }
-      });
+      addDisposeListener((e) -> refreshController.dispose());
 	}
+
+   /**
+    * Create widgets for resolved elements.
+    *
+    * @param resolved list of resolved element configurations
+    */
+   private void createWidgets(List<StatusIndicatorElementConfig> resolved)
+   {
+      // Dispose existing widgets
+      for(StatusIndicatorElementWidget w : elementWidgets)
+      {
+         w.dispose();
+      }
+      elementWidgets.clear();
+      resolvedElements.clear();
+      resolvedElements.addAll(resolved);
+
+      // Create new widgets
+      for(StatusIndicatorElementConfig e : resolvedElements)
+      {
+         StatusIndicatorElementWidget widget = new StatusIndicatorElementWidget(getContentArea(), e);
+         widget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+         elementWidgets.add(widget);
+      }
+
+      getContentArea().layout(true, true);
+   }
 
 	/**
 	 * Refresh element content
 	 */
    private void refreshData()
 	{
+      if (elementWidgets.isEmpty())
+         return; // Widgets not yet created
+
       if (requireDataCollection || requireScriptRun)
       {
          Job job = new Job(i18n.tr("Update status indicator"), view) {
@@ -219,9 +281,8 @@ public class StatusIndicatorElement extends ElementWidget
                if (requireDataCollection)
                {
                   List<MapDataSource> dciList = new ArrayList<>();
-                  for(int i = 0; i < config.getElements().length; i++)
+                  for(StatusIndicatorElementConfig e : resolvedElements)
                   {
-                     StatusIndicatorElementConfig e = config.getElements()[i];
                      if (((e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI) || (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)) && (e.getDciId() != 0))
                      {
                         dciList.add(new MapDataSource(e.getObjectId(), e.getDciId()));
@@ -234,13 +295,9 @@ public class StatusIndicatorElement extends ElementWidget
                   dciValues = null;
                }
 
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     if (!isDisposed())
-                        updateElements(scriptData, dciValues);
-                  }
+               runInUIThread(() -> {
+                  if (!isDisposed())
+                     updateElements(scriptData, dciValues);
                });
             }
 
@@ -288,10 +345,13 @@ public class StatusIndicatorElement extends ElementWidget
                   {
                      w.setStatus(ObjectStatus.UNKNOWN);
                   }
+                  w.setVisible(true);
+                  ((GridData)w.getLayoutData()).exclude = false;
                }
                else
                {
-                  w.setStatus(ObjectStatus.UNKNOWN);
+                  w.setVisible(false);
+                  ((GridData)w.getLayoutData()).exclude = true;
                }
                break;
             case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
@@ -317,6 +377,7 @@ public class StatusIndicatorElement extends ElementWidget
                break;
          }
       }
+      getContentArea().layout(true, true);
    }
 
 	/**
@@ -338,12 +399,67 @@ public class StatusIndicatorElement extends ElementWidget
 	}
 
    /**
+    * Compile pattern for DCI matching.
+    *
+    * @param pattern pattern string
+    * @param isRegex true if pattern should be treated as regular expression
+    * @return compiled pattern or null if pattern is empty
+    */
+   private static Pattern compilePattern(String pattern, boolean isRegex)
+   {
+      if ((pattern == null) || pattern.isEmpty())
+         return null;
+      return isRegex ? Pattern.compile(pattern) : Pattern.compile(Pattern.quote(pattern));
+   }
+
+   /**
+    * Check if value matches pattern.
+    *
+    * @param pattern compiled pattern (can be null)
+    * @param value value to match
+    * @return true if pattern is not null and value matches
+    */
+   private static boolean matchesPattern(Pattern pattern, String value)
+   {
+      return (pattern != null) && (value != null) && pattern.matcher(value).find();
+   }
+
+   /**
+    * Open drill-down object
+    */
+   private void openDrillDownObject(long drillDownObjectId)
+   {
+      if ((view == null) || (drillDownObjectId == 0))
+         return;
+
+      AbstractObject object = Registry.getSession().findObjectById(drillDownObjectId);
+      if (object == null)
+         return;
+
+      if (object instanceof Dashboard)
+      {
+         Dashboard dashboard = (Dashboard)object;
+         AbstractObject dashboardContext = (view instanceof AbstractDashboardView) ? ((AbstractDashboardView)view).getDashboardContext() : null;
+         long dashboardContextId = (dashboardContext != null) ? dashboardContext.getObjectId() : 0;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new DrilldownDashboardView(dashboard, dashboardContextId, contextObjectId));
+      }
+      else if (object instanceof NetworkMap)
+      {
+         NetworkMap map = (NetworkMap)object;
+         long contextObjectId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+         view.openView(new AdHocPredefinedMapView(contextObjectId, map));
+      }
+   }
+
+   /**
     * Widget that draws single status indicator element
     */
    private class StatusIndicatorElementWidget extends Canvas
    {
       private StatusIndicatorElementConfig elementConfig;
       private ObjectStatus status;
+      private boolean mouseDown = false;
 
       /**
        * Create new status indicator element wiodget
@@ -354,15 +470,38 @@ public class StatusIndicatorElement extends ElementWidget
       StatusIndicatorElementWidget(Composite parent, StatusIndicatorElementConfig elementConfig)
       {
          super(parent, SWT.NONE);
+
          this.elementConfig = elementConfig;
          status = ObjectStatus.UNKNOWN;
-         addPaintListener(new PaintListener() {
+
+         setBackground(parent.getBackground());
+         addPaintListener((e) -> drawContent(e.gc));
+
+         addMouseListener(new MouseListener() {
             @Override
-            public void paintControl(PaintEvent e)
+            public void mouseDown(MouseEvent e)
             {
-               drawContent(e.gc);
+               if (e.button == 1)
+                  mouseDown = true;
+            }
+
+            @Override
+            public void mouseUp(MouseEvent e)
+            {
+               if ((e.button == 1) && mouseDown)
+               {
+                  mouseDown = false;
+                  openDrillDownObject(StatusIndicatorElementWidget.this.elementConfig.getDrillDownObjectId());
+               }
+            }
+
+            @Override
+            public void mouseDoubleClick(MouseEvent e)
+            {
+               mouseDown = false;
             }
          });
+         setCursor(getDisplay().getSystemCursor((elementConfig.getDrillDownObjectId() != 0) ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
       }
 
       /**

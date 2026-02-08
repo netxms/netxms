@@ -94,6 +94,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryMethod.add(i18n.tr("Internal Table"));
       discoveryMethod.add(i18n.tr("SM-CLP Targets"));
       discoveryMethod.add(i18n.tr("SM-CLP Properties"));
+      discoveryMethod.add(i18n.tr("Push"));
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -251,6 +252,8 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
          case DataCollectionObject.IDM_SMCLP_TARGETS:
          case DataCollectionObject.IDM_SMCLP_PROPERTIES:
             return i18n.tr("Target");
+         case DataCollectionObject.IDM_PUSH:
+            return i18n.tr("Pattern");
 		}
       return "";
 	}

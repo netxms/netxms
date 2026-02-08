@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,6 +154,92 @@ public class ScriptEditor extends CompositeWithMessageArea
       editor = new Text(content, editorStyle | SWT.MULTI);
       editor.setData(RWT.CUSTOM_VARIANT, "monospace");
       editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      editor.addTraverseListener((e) -> {
+         if (e.detail == SWT.TRAVERSE_TAB_NEXT)
+         {
+            e.doit = false; // Prevent default tab traversal
+
+            Point selection = editor.getSelection();
+            if (selection.x == selection.y)
+            {
+               // Insert tab character at current caret position
+               editor.insert("\t");
+               editor.setSelection(editor.getCaretPosition() + 1); // Move caret after the inserted tab
+            }
+            else
+            {
+               // Find each line starting within selection and indent it
+               String text = editor.getText();
+               int startLineOffset = text.lastIndexOf('\n', selection.x - 1);
+               if (startLineOffset == -1)
+                  startLineOffset = 0;
+               else
+                  startLineOffset++; // Move to the first character of the line
+               int endLineOffset = text.indexOf('\n', selection.y - 1);
+               if (endLineOffset == -1)
+                  endLineOffset = text.length();
+               StringBuilder newText = new StringBuilder();
+               int lineStart = startLineOffset;
+               while(lineStart < endLineOffset)
+               {
+                  int lineEnd = text.indexOf('\n', lineStart);
+                  if (lineEnd == -1 || lineEnd > endLineOffset)
+                     lineEnd = endLineOffset;
+                  newText.append("\t").append(text, lineStart, lineEnd);
+                  if (lineEnd < endLineOffset)
+                     newText.append('\n');
+                  lineStart = lineEnd + 1;
+               }
+               editor.setText(text.substring(0, startLineOffset) + newText.toString() + text.substring(endLineOffset));
+               editor.setSelection(selection.x, selection.x + newText.length());
+            }
+
+            editor.setFocus();
+         }
+         else if (e.detail == SWT.TRAVERSE_TAB_PREVIOUS)
+         {
+            Point selection = editor.getSelection();
+            if (selection.x == selection.y)
+               return; // No selection - nothing to unindent
+
+            e.doit = false; // Prevent default tab traversal
+
+            // Find each line starting within selection and unindent it
+            String text = editor.getText();
+            int startLineOffset = text.lastIndexOf('\n', selection.x - 1);
+            if (startLineOffset == -1)
+               startLineOffset = 0;
+            else
+               startLineOffset++; // Move to the first character of the line
+            int endLineOffset = text.indexOf('\n', selection.y - 1);
+            if (endLineOffset == -1)
+               endLineOffset = text.length();
+            StringBuilder newText = new StringBuilder();
+            int lineStart = startLineOffset;
+            while(lineStart < endLineOffset)
+            {
+               int lineEnd = text.indexOf('\n', lineStart);
+               if (lineEnd == -1 || lineEnd > endLineOffset)
+                  lineEnd = endLineOffset;
+               if (text.startsWith("\t", lineStart))
+               {
+                  newText.append(text, lineStart + 1, lineEnd);
+               }
+               else
+               {
+                  newText.append(text, lineStart, lineEnd);
+               }
+               if (lineEnd < endLineOffset)
+                  newText.append('\n');
+               lineStart = lineEnd + 1;
+            }
+            editor.setText(text.substring(0, startLineOffset) + newText.toString() + text.substring(endLineOffset));
+            editor.setSelection(selection.x, selection.x + newText.length());
+
+            editor.setFocus();
+         }
+      });
 
       if (showCompileButton)
       {

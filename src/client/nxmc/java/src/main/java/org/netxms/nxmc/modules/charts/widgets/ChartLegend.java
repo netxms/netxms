@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.charts.widgets;
 import java.util.List;
 import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -42,10 +43,10 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartType;
-import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
@@ -87,17 +88,7 @@ public class ChartLegend extends Composite
             headerFont.dispose();
       });
 
-      mouseListener = new MouseListener() {
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
-         }
-
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-         }
-
+      mouseListener = new MouseAdapter() {
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -336,9 +327,11 @@ public class ChartLegend extends Composite
       for(DataSeries s : chart.getDataSeries())
       {
          ChartDciConfig item = chart.getItem(row);
-         String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
-               ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.measurementUnit);
+         DataFormatter formatter = s.getDataFormatter()
+               .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
+               .setFormatString(item.getDisplayFormat())
+               .setDataType(DataType.FLOAT)
+               .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)
@@ -353,7 +346,7 @@ public class ChartLegend extends Composite
          }
          row++;
       }
-      chart.layout();
+      chart.layout(true, true);
    }
 
    /**

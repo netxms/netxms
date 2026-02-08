@@ -79,10 +79,10 @@ int32_t LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHA
 /**
  * Write string value to metadata table
  */
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TCHAR *value)
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const wchar_t *variable, const wchar_t *value)
 {
    // Check for variable existence
-   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"SELECT var_value FROM metadata WHERE var_name=?");
    if (hStmt == NULL)
       return false;
 
@@ -100,7 +100,7 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TC
    // Create or update variable value
    if (bVarExist)
    {
-      hStmt = DBPrepare(g_dbHandle, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
+      hStmt = DBPrepare(g_dbHandle, L"UPDATE metadata SET var_value=? WHERE var_name=?");
       if (hStmt == NULL)
          return false;
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
@@ -108,13 +108,13 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TC
    }
    else
    {
-      hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
+      hStmt = DBPrepare(g_dbHandle, L"INSERT INTO metadata (var_name,var_value) VALUES (?,?)");
       if (hStmt == NULL)
          return false;
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
    }
-   bool success = DBExecute(hStmt);
+   bool success = SQLExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
 }
@@ -122,11 +122,10 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TC
 /**
  * Write integer value to metadata table
  */
-bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, int32_t value)
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const wchar_t *variable, int32_t value)
 {
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, _T("%d"), value);
-   return DBMgrMetaDataWriteStr(variable, buffer);
+   wchar_t buffer[64];
+   return DBMgrMetaDataWriteStr(variable, IntegerToString(value, buffer));
 }
 
 /**

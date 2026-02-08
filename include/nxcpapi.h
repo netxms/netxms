@@ -130,6 +130,7 @@ public:
    void setField(uint32_t fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
    void setField(uint32_t fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
    void setField(uint32_t fieldId, const MacAddress& value) { set(fieldId, NXCP_DT_BINARY, value.value(), false, value.length()); }
+   void setField(uint32_t fieldId, Timestamp value) { setField(fieldId, value.asMilliseconds()); }
    void setField(uint32_t fieldId, const StringList &data);
    void setField(uint32_t fieldId, const StringSet &data);
 
@@ -156,6 +157,7 @@ public:
    double getFieldAsDouble(uint32_t fieldId) const;
    bool getFieldAsBoolean(uint32_t fieldId) const;
    time_t getFieldAsTime(uint32_t fieldId) const;
+   Timestamp getFieldAsTimestamp(uint32_t fieldId) const;
    size_t getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const;
    size_t getFieldAsInt32Array(uint32_t fieldId, IntegerArray<uint32_t> *data) const;
    const BYTE *getBinaryFieldPtr(uint32_t fieldId, size_t *size) const;
@@ -165,6 +167,7 @@ public:
 	char *getFieldAsMBString(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
 	char *getFieldAsUtf8String(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
    SharedString getFieldAsSharedString(uint32_t fieldId, size_t maxSize = 0) const;
+   String getFieldAsString(uint32_t fieldId, size_t maxSize) const;
    size_t getFieldAsBinary(uint32_t fieldId, BYTE *buffer, size_t bufferSize) const;
    InetAddress getFieldAsInetAddress(uint32_t fieldId) const;
    MacAddress getFieldAsMacAddress(uint32_t fieldId) const;

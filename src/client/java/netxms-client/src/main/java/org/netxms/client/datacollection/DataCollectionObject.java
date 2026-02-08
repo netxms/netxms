@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.snmp.SnmpVersion;
 
@@ -39,17 +40,13 @@ public abstract class DataCollectionObject
 	public static final int DCO_TYPE_ITEM    = 1;
 	public static final int DCO_TYPE_TABLE   = 2;
 
-	// data collection object status
-	public static final int ACTIVE = 0;
-	public static final int DISABLED = 1;
-	public static final int NOT_SUPPORTED = 2;
-
 	// common data collection flags
-	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x00080;
-   public static final int DCF_TRANSFORM_AGGREGATED     = 0x00100;
-   public static final int DCF_CACHE_MODE_MASK          = 0x03000;
-   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x04000;
-   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x08000;
+	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x000080;
+   public static final int DCF_TRANSFORM_AGGREGATED     = 0x000100;
+   public static final int DCF_CACHE_MODE_MASK          = 0x003000;
+   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x004000;
+   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x008000;
+   public static final int DCF_UNSUPPORTED_AS_ERROR     = 0x080000;
 
    // Instance discovery methods
    public static final int IDM_NONE = 0;
@@ -63,6 +60,7 @@ public abstract class DataCollectionObject
    public static final int IDM_INTERNAL_TABLE = 8;
    public static final int IDM_SMCLP_TARGETS = 9;
    public static final int IDM_SMCLP_PROPERTIES = 10;
+   public static final int IDM_PUSH = 11;
 
    // Polling schedule types
    public static final int POLLING_SCHEDULE_DEFAULT  = 0;
@@ -88,7 +86,7 @@ public abstract class DataCollectionObject
    protected int retentionType;
 	protected String retentionTime;
    protected DataOrigin origin;
-	protected int status;
+   protected DataCollectionObjectStatus status;
    protected int flags;
    protected int stateFlags;
 	protected String transformationScript;
@@ -99,6 +97,7 @@ public abstract class DataCollectionObject
 	protected String perfTabSettings;
 	protected int snmpPort;
    protected SnmpVersion snmpVersion;
+   protected String snmpContext;
 	protected ArrayList<String> schedules;
 	protected Object userData;
    protected String comments;
@@ -131,7 +130,7 @@ public abstract class DataCollectionObject
 		retentionType = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TYPE);
 		retentionTime = msg.getFieldAsString(NXCPCodes.VID_RETENTION_TIME);
       origin = DataOrigin.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE));
-		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
+      status = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS));
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
 		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
@@ -144,6 +143,7 @@ public abstract class DataCollectionObject
       snmpVersion = msg.isFieldPresent(NXCPCodes.VID_SNMP_VERSION)
             ? SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION))
             : SnmpVersion.DEFAULT;
+      snmpContext = msg.getFieldAsString(NXCPCodes.VID_SNMP_CONTEXT);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		instanceRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_RETENTION);
 		
@@ -189,7 +189,7 @@ public abstract class DataCollectionObject
 		retentionType = RETENTION_DEFAULT;
 		retentionTime = null;
       origin = DataOrigin.AGENT;
-		status = ACTIVE;
+      status = DataCollectionObjectStatus.ACTIVE;
 		flags = 0;
 		transformationScript = null;
 		perfTabSettings = null;
@@ -199,6 +199,7 @@ public abstract class DataCollectionObject
       userTag = "";
 		snmpPort = 0;
       snmpVersion = SnmpVersion.DEFAULT;
+      snmpContext = "";
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instanceName = "";
@@ -267,6 +268,7 @@ public abstract class DataCollectionObject
 	   perfTabSettings = src.perfTabSettings;
 	   snmpPort = src.snmpPort;
       snmpVersion = src.snmpVersion;
+      snmpContext = src.snmpContext;
 	   schedules = new ArrayList<String>(src.schedules);
 	   userData = src.userData;
 	   comments = src.comments;
@@ -293,7 +295,7 @@ public abstract class DataCollectionObject
       msg.setFieldInt16(NXCPCodes.VID_RETENTION_TYPE, retentionType);
 		msg.setField(NXCPCodes.VID_RETENTION_TIME, retentionTime);
       msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin.getValue());
-		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status.getValue());
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
@@ -306,6 +308,7 @@ public abstract class DataCollectionObject
 			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
       msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, snmpVersion.getValue());
+      msg.setField(NXCPCodes.VID_SNMP_CONTEXT, snmpContext);
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
 
@@ -509,7 +512,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @return the status
 	 */
-	public int getStatus()
+   public DataCollectionObjectStatus getStatus()
 	{
 		return status;
 	}
@@ -517,7 +520,7 @@ public abstract class DataCollectionObject
 	/**
 	 * @param status the status to set
 	 */
-	public void setStatus(int status)
+   public void setStatus(DataCollectionObjectStatus status)
 	{
 		this.status = status;
 	}
@@ -695,6 +698,26 @@ public abstract class DataCollectionObject
    public void setSnmpVersion(SnmpVersion snmpVersion)
    {
       this.snmpVersion = snmpVersion;
+   }
+
+   /**
+    * Get custom SNMP context for this DCI.
+    *
+    * @return custom SNMP context or empty string for node default
+    */
+   public String getSnmpContext()
+   {
+      return snmpContext;
+   }
+
+   /**
+    * Set custom SNMP context for this DCI.
+    *
+    * @param snmpContext custom SNMP context or empty string for node default
+    */
+   public void setSnmpContext(String snmpContext)
+   {
+      this.snmpContext = snmpContext;
    }
 
    /**
@@ -976,6 +999,29 @@ public abstract class DataCollectionObject
          flags |= DCF_HIDE_ON_LAST_VALUES_PAGE;
       else
          flags &= ~DCF_HIDE_ON_LAST_VALUES_PAGE;
+   }
+
+   /**
+    * Returns if unsupported state is interpreted as data collection error
+    * 
+    * @return true if unsupported state is interpreted as data collection error
+    */
+   public boolean isUnsupportedAsError()
+   {
+      return (flags & DCF_UNSUPPORTED_AS_ERROR) != 0;
+   }
+
+   /**
+    * Enable or disable interpretation of unsupported state as data collection error
+    * 
+    * @param enable true to enable
+    */
+   public void setUnsupportedAsError(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_UNSUPPORTED_AS_ERROR;
+      else
+         flags &= ~DCF_UNSUPPORTED_AS_ERROR;
    }
 
    /**

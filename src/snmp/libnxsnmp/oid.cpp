@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
 SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix)
 {
    m_length = base.m_length + 1;
-   m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+   m_value = (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocArrayNoInit<uint32_t>(m_length);
    memcpy(m_value, base.m_value, base.m_length * sizeof(uint32_t));
    m_value[m_length - 1] = suffix;
 }
@@ -40,7 +40,7 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t suffix)
 SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &base, uint32_t *suffix, size_t length)
 {
    m_length = base.m_length + length;
-   m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+   m_value = (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocArrayNoInit<uint32_t>(m_length);
    memcpy(m_value, base.m_value, base.m_length * sizeof(uint32_t));
    memcpy(&m_value[base.m_length], suffix, length * sizeof(uint32_t));
 }
@@ -52,9 +52,18 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 {
    if (&src == this)
       return *this;
-   MemFree(m_value);
+   if (m_value != m_internalBuffer)
+      MemFree(m_value);
    m_length = src.m_length;
-   m_value = MemCopyArray(src.m_value, m_length);
+   if (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE)
+   {
+      m_value = m_internalBuffer;
+      memcpy(m_value, src.m_value, m_length * sizeof(uint32_t));
+   }
+   else
+   {
+      m_value = MemAllocArrayNoInit<uint32_t>(m_length);
+   }
    return *this;
 }
 
@@ -65,11 +74,20 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(SNMP_ObjectId&& src)
 {
    if (&src == this)
       return *this;
-   MemFree(m_value);
+   if (m_value != m_internalBuffer)
+      MemFree(m_value);
    m_length = src.m_length;
-   m_value = src.m_value;
+   if (src.m_value == src.m_internalBuffer)
+   {
+      m_value = m_internalBuffer;
+      memcpy(m_value, src.m_value, m_length * sizeof(uint32_t));
+   }
+   else
+   {
+      m_value = src.m_value;
+   }
    src.m_length = 0;
-   src.m_value = nullptr;
+   src.m_value = src.m_internalBuffer;
    return *this;
 }
 
@@ -113,9 +131,18 @@ int SNMP_ObjectId::compare(const uint32_t *oid, size_t length) const
  */
 void SNMP_ObjectId::setValue(const uint32_t *value, size_t length)
 {
-   MemFree(m_value);
+   if (m_value != m_internalBuffer)
+      MemFree(m_value);
    m_length = length;
-   m_value = MemCopyArray(value, length);
+   if (m_length <= SNMP_OID_INTERNAL_BUFFER_SIZE)
+   {
+      m_value = m_internalBuffer;
+      memcpy(m_value, value, m_length * sizeof(uint32_t));
+   }
+   else
+   {
+      m_value = MemCopyArray(value, length);
+   }
 }
 
 /**
@@ -125,8 +152,22 @@ void SNMP_ObjectId::setValue(const uint32_t *value, size_t length)
  */
 void SNMP_ObjectId::extend(uint32_t subId)
 {
-   m_value = MemReallocArray(m_value, m_length + 1);
-   m_value[m_length++] = subId;
+   if ((m_value == m_internalBuffer) && (m_length < SNMP_OID_INTERNAL_BUFFER_SIZE))
+   {
+      m_value[m_length++] = subId;
+   }
+   else if (m_value == m_internalBuffer)
+   {
+      uint32_t *newValue = MemAllocArrayNoInit<uint32_t>(m_length + 1);
+      memcpy(newValue, m_value, m_length * sizeof(uint32_t));
+      newValue[m_length++] = subId;
+      m_value = newValue;
+   }
+   else
+   {
+      m_value = MemReallocArray(m_value, m_length + 1);
+      m_value[m_length++] = subId;
+   }
 }
 
 /**
@@ -137,7 +178,20 @@ void SNMP_ObjectId::extend(uint32_t subId)
  */
 void SNMP_ObjectId::extend(const uint32_t *subId, size_t length)
 {
-   m_value = MemReallocArray(m_value, m_length + length);
+   if (m_value == m_internalBuffer)
+   {
+      if ((m_length + length > SNMP_OID_INTERNAL_BUFFER_SIZE))
+      {
+         uint32_t *newValue = MemAllocArrayNoInit<uint32_t>(m_length + length);
+         memcpy(newValue, m_value, m_length * sizeof(uint32_t));
+         m_value = newValue;
+      }
+   }
+   else
+   {
+      m_value = MemReallocArray(m_value, m_length + length);
+      memcpy(&m_value[m_length], subId, length * sizeof(uint32_t));
+   }
    memcpy(&m_value[m_length], subId, length * sizeof(uint32_t));
    m_length += length;
 }
@@ -162,5 +216,25 @@ SNMP_ObjectId SNMP_ObjectId::parse(const TCHAR *oid)
 {
    uint32_t buffer[MAX_OID_LEN];
    size_t length = SnmpParseOID(oid, buffer, MAX_OID_LEN);
+   return SNMP_ObjectId(buffer, length);
+}
+
+/**
+ * Parse OID
+ */
+SNMP_ObjectId SNMP_ObjectId::parseA(const char *oid)
+{
+   uint32_t buffer[MAX_OID_LEN];
+   size_t length = SnmpParseOIDA(oid, buffer, MAX_OID_LEN);
+   return SNMP_ObjectId(buffer, length);
+}
+
+/**
+ * Parse OID
+ */
+SNMP_ObjectId SNMP_ObjectId::parseW(const wchar_t *oid)
+{
+   uint32_t buffer[MAX_OID_LEN];
+   size_t length = SnmpParseOIDW(oid, buffer, MAX_OID_LEN);
    return SNMP_ObjectId(buffer, length);
 }

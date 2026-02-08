@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 #include <nxcore_websvc.h>
 #include <gauge_helpers.h>
 
+void ScheduleThresholdRepeatEventsOnStartup();
+
 /**
  * Interval between DCI polling
  */
@@ -33,6 +35,11 @@
  * Thread pool for data collectors
  */
 ThreadPool *g_dataCollectorThreadPool = nullptr;
+
+/**
+ * Thread pool for threshold repeat events
+ */
+ThreadPool *g_thresholdRepeatPool = nullptr;
 
 /**
  * DCI cache loader queue
@@ -78,7 +85,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
 				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(),
-                     buffer, MAX_RESULT_LENGTH, dci.isInterpretSnmpRawValue() ? (int)dci.getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+                     buffer, MAX_RESULT_LENGTH, dci.isInterpretSnmpRawValue() ? (int)dci.getSnmpRawValueType() : SNMP_RAWTYPE_NONE, dci.getSnmpContext());
 			   }
 			   else
 			   {
@@ -112,17 +119,24 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
          case DS_SSH:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE));
+               Node *node = static_cast<Node*>(dcTarget);
+               if (node->isPortBlocked(node->getSshPort(), true))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DC_SSH, 5, _T("DataCollector(%s [%u]): SSH port %u blocked by port stop list"), node->getName(), node->getId(), node->getSshPort());
+                  *error = DCE_COMM_ERROR;
+                  break;
+               }
+               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(node->getEffectiveSshProxy(), OBJECT_NODE));
                if (proxy != nullptr)
                {
-                  TCHAR name[MAX_PARAM_NAME], ipAddr[64];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
-                             static_cast<Node*>(dcTarget)->getIpAddress().toString(ipAddr),
-                             static_cast<uint32_t>(static_cast<Node*>(dcTarget)->getSshPort()),
-                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()).cstr(),
-                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()).cstr(),
+                  wchar_t name[MAX_PARAM_NAME], ipAddr[64];
+                  nx_swprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
+                             node->getIpAddress().toString(ipAddr),
+                             static_cast<uint32_t>(node->getSshPort()),
+                             EscapeStringForAgent(node->getSshLogin()).cstr(),
+                             EscapeStringForAgent(node->getSshPassword()).cstr(),
                              EscapeStringForAgent(dci.getName()).cstr(),
-                             static_cast<Node*>(dcTarget)->getSshKeyId());
+                             node->getSshKeyId());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
                else
@@ -239,7 +253,7 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, const DCTa
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result);
+               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result, table.getSnmpContext());
             }
 			   else
             {
@@ -281,7 +295,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
             dcObject->getId(), dcObjectName.cstr());
 
       // Update item's last poll time and clear busy flag so item can be polled again
-      dcObject->setLastPollTime(time(nullptr));
+      dcObject->setLastPollTime(Timestamp::now());
       dcObject->clearBusyFlag();
       return;
    }
@@ -313,16 +327,18 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       }
       else
       {
+         // Change item's status to "not supported"
+         dcObject->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
          target.reset();
       }
    }
 
-   time_t currTime = time(nullptr);
+   Timestamp currTime = Timestamp::now();
    if (target != nullptr)
    {
       if (!IsShutdownInProgress())
       {
-         TCHAR value[MAX_RESULT_LENGTH];
+         wchar_t value[MAX_RESULT_LENGTH];
          shared_ptr<Table> table;
          uint32_t error;
          switch(dcObject->getType())
@@ -338,13 +354,16 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
                break;
          }
 
+         if ((error == DCE_NOT_SUPPORTED) && dcObject->isUnsupportedAsError())
+            error = DCE_COLLECTION_ERROR;
+
          // Transform and store received value into database or handle error
          switch(error)
          {
             case DCE_SUCCESS:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                   dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, value, table);
+               static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, value, table, false);
                break;
             case DCE_COLLECTION_ERROR:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
@@ -368,11 +387,10 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
          // Send session notification when force poll is performed
          if (dcObject->isForcePollRequested())
          {
-            ClientSession *session = dcObject->processForcePoll();
-            if (session != nullptr)
+            session_id_t sessionId = dcObject->processForcePoll();
+            if (sessionId != -1)
             {
-               session->notify(NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
-               session->decRefCount();
+               NotifyClientSession(sessionId, NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
             }
          }
       }
@@ -477,13 +495,17 @@ static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
  */
 void InitDataCollector()
 {
-   g_dataCollectorThreadPool = ThreadPoolCreate(_T("DATACOLL"),
-            ConfigReadInt(_T("ThreadPool.DataCollector.BaseSize"), 10),
-            ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
+   g_dataCollectorThreadPool = ThreadPoolCreate(L"DATACOLL",
+            ConfigReadInt(L"ThreadPool.DataCollector.BaseSize", 10),
+            ConfigReadInt(L"ThreadPool.DataCollector.MaxSize", 250),
             256 * 1024);
+
+   g_thresholdRepeatPool = ThreadPoolCreate(L"THREVT", 2, 4);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller);
    s_cacheLoaderThread = ThreadCreateEx(CacheLoader);
+
+   ScheduleThresholdRepeatEventsOnStartup();
 }
 
 /**
@@ -494,6 +516,7 @@ void StopDataCollection()
    ThreadJoin(s_itemPollerThread);
    ThreadJoin(s_cacheLoaderThread);
    ThreadPoolDestroy(g_dataCollectorThreadPool);
+   ThreadPoolDestroy(g_thresholdRepeatPool);
 }
 
 /**
@@ -647,7 +670,7 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
          uint16_t uid = static_cast<uint16_t>(_tcstoul(metric, &eptr, 10));
          if ((uid > 255) || (*eptr != _T(':')))
          {
-            nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("ParseModbusMetric(%s): invalid unit ID"), metric);
+            nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, L"ParseModbusMetric(%s): invalid unit ID", metric);
             return false;
          }
          *unitId = uid;
@@ -666,11 +689,281 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
    int a = _tcstol(addressPart, &eptr, 0);
    if ((a < 0) || (a > 65535) || ((*eptr != 0) && (*eptr != _T('|'))))
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("ParseModbusMetric(%s): invalid register address"), metric);
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, L"ParseModbusMetric(%s): invalid register address", metric);
       return false;
    }
    *address = a;
 
    *conversion = (*eptr == _T('|')) ? eptr + 1 : _T("");
    return true;
+}
+
+#define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
+
+/**
+ * Migrate recent (last 24 hours) data from v5 per-object tables to new tables.
+ * This is a blocking call that runs at startup before DCI caches are loaded and
+ * before clients can connect, ensuring recent data is immediately visible.
+ */
+void MigrateRecentV5Data()
+{
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      return;
+
+   SharedObjectArray<NetObj> objects(1024, 1024);
+   g_idxAccessPointById.getObjects(&objects);
+   g_idxChassisById.getObjects(&objects);
+   g_idxClusterById.getObjects(&objects);
+   g_idxCollectorById.getObjects(&objects);
+   g_idxMobileDeviceById.getObjects(&objects);
+   g_idxNodeById.getObjects(&objects);
+   g_idxSensorById.getObjects(&objects);
+
+   // Collect objects that have v5 tables
+   SharedObjectArray<NetObj> idataObjects(256, 256);
+   SharedObjectArray<NetObj> tdataObjects(256, 256);
+   for(int i = 0; i < objects.size(); i++)
+   {
+      DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(objects.get(i));
+      if (dct->hasV5IdataTable())
+         idataObjects.add(objects.getShared(i));
+      if (dct->hasV5TdataTable())
+         tdataObjects.add(objects.getShared(i));
+   }
+
+   if (idataObjects.isEmpty() && tdataObjects.isEmpty())
+      return;
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Migrating recent data from v5 tables (%d idata, %d tdata)", idataObjects.size(), tdataObjects.size());
+
+   time_t cutoffSeconds = time(nullptr) - 86400;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   TCHAR query[1024];
+   int migratedCount = 0;
+   const TCHAR *idataTsExpr = V5TimestampToMs(false);
+   const TCHAR *tdataTsExpr = V5TimestampToMs(true);
+
+   for(int i = 0; i < idataObjects.size(); i++)
+   {
+      uint32_t id = idataObjects.get(i)->getId();
+      _sntprintf(query, 1024,
+         _T("INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)")
+         _T(" SELECT item_id,%s,idata_value,raw_value")
+         _T(" FROM idata_v5_%u WHERE idata_timestamp>=") INT64_FMT,
+         id, idataTsExpr, id, static_cast<int64_t>(cutoffSeconds));
+      if (DBQuery(hdb, query))
+      {
+         _sntprintf(query, 1024, _T("DELETE FROM idata_v5_%u WHERE idata_timestamp>=") INT64_FMT,
+            id, static_cast<int64_t>(cutoffSeconds));
+         DBQuery(hdb, query);
+         migratedCount++;
+      }
+   }
+
+   for(int i = 0; i < tdataObjects.size(); i++)
+   {
+      uint32_t id = tdataObjects.get(i)->getId();
+      _sntprintf(query, 1024,
+         _T("INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)")
+         _T(" SELECT item_id,%s,tdata_value")
+         _T(" FROM tdata_v5_%u WHERE tdata_timestamp>=") INT64_FMT,
+         id, tdataTsExpr, id, static_cast<int64_t>(cutoffSeconds));
+      if (DBQuery(hdb, query))
+      {
+         nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>=" INT64_FMT, id, static_cast<int64_t>(cutoffSeconds));
+         DBQuery(hdb, query);
+         migratedCount++;
+      }
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Recent v5 data migration completed (%d tables migrated)", migratedCount);
+}
+
+/**
+ * Background thread handle for v5 data migration
+ */
+static THREAD s_v5DataMigrationThread = INVALID_THREAD_HANDLE;
+
+/**
+ * Background thread for migrating remaining v5 data (older than 24 hours).
+ * Processes data in 1-day batches, newest first, to minimize impact on server operations.
+ * When a v5 table is fully emptied, it is dropped and the corresponding flag is cleared.
+ */
+static void V5DataMigrationThread()
+{
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration thread started");
+
+   const wchar_t *idataTsExpr = V5TimestampToMs(false);
+   const wchar_t *tdataTsExpr = V5TimestampToMs(true);
+
+   while(!SleepAndCheckForShutdown(10))
+   {
+      bool anyRemaining = false;
+
+      auto filter = [] (NetObj *object) -> bool
+      {
+         DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(object);
+         return dct->hasV5IdataTable() || dct->hasV5TdataTable();
+      };
+      SharedObjectArray<NetObj> objects(1024, 1024);
+      g_idxAccessPointById.getObjects(&objects, filter);
+      g_idxChassisById.getObjects(&objects, filter);
+      g_idxClusterById.getObjects(&objects, filter);
+      g_idxCollectorById.getObjects(&objects, filter);
+      g_idxMobileDeviceById.getObjects(&objects, filter);
+      g_idxNodeById.getObjects(&objects, filter);
+      g_idxSensorById.getObjects(&objects, filter);
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      wchar_t query[1024];
+      bool processed = false;
+
+      for(int i = 0; i < objects.size() && !processed; i++)
+      {
+         DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(objects.get(i));
+         uint32_t id = dct->getId();
+
+         if (dct->hasV5IdataTable())
+         {
+            if (DBBegin(hdb))
+            {
+               bool success = false;
+               nx_swprintf(query, 1024, L"SELECT max(idata_timestamp) FROM idata_v5_%u", id);
+               DB_RESULT hResult = DBSelect(hdb, query);
+               if (hResult != nullptr)
+               {
+                  int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+                  DBFreeResult(hResult);
+
+                  if (maxTs == 0)
+                  {
+                     dct->deleteV5DataTable(hdb, false);
+                  }
+                  else
+                  {
+                     int64_t batchStart = maxTs - 86400;
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+                        L" SELECT item_id,%s,idata_value,raw_value"
+                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT,
+                        id, idataTsExpr, id, batchStart);
+                     if (DBQuery(hdb, query))
+                     {
+                        nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT, id, batchStart);
+                        success = DBQuery(hdb, query);
+                     }
+                     anyRemaining = true;
+                     processed = true;
+                  }
+               }
+
+               if (success)
+                  DBCommit(hdb);
+               else
+                  DBRollback(hdb);
+            }
+         }
+
+         if (dct->hasV5TdataTable())
+         {
+            if (DBBegin(hdb))
+            {
+               bool success = false;
+               nx_swprintf(query, 1024, L"SELECT max(tdata_timestamp) FROM tdata_v5_%u", id);
+               DB_RESULT hResult = DBSelect(hdb, query);
+               if (hResult != nullptr)
+               {
+                  int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+                  DBFreeResult(hResult);
+
+                  if (maxTs == 0)
+                  {
+                     dct->deleteV5DataTable(hdb, true);
+                  }
+                  else
+                  {
+                     int64_t batchStart = maxTs - 86400;
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                        L" SELECT item_id,%s,tdata_value"
+                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
+                        id, tdataTsExpr, id, batchStart);
+                     if (DBQuery(hdb, query))
+                     {
+                        nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
+                           id, batchStart);
+                        success = DBQuery(hdb, query);
+                     }
+                     anyRemaining = true;
+                     processed = true;
+                  }
+               }
+
+               if (success)
+                  DBCommit(hdb);
+               else
+                  DBRollback(hdb);
+            }
+         }
+      }
+
+      DBConnectionPoolReleaseConnection(hdb);
+
+      if (!anyRemaining && !processed)
+      {
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"All v5 data migration completed");
+         break;
+      }
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration thread stopped"));
+}
+
+/**
+ * Start background v5 data migration thread
+ */
+void StartV5DataMigration()
+{
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      return;
+
+   // Check if any v5 tables exist before starting thread
+   bool hasV5Tables = false;
+   auto callback = [&hasV5Tables] (NetObj *object) -> EnumerationCallbackResult
+   {
+      DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(object);
+      if (dct->hasV5IdataTable() || dct->hasV5TdataTable())
+      {
+         hasV5Tables = true;
+         return _STOP;
+      }
+      return _CONTINUE;
+   };
+   g_idxAccessPointById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxChassisById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxClusterById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxCollectorById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxMobileDeviceById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxNodeById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxSensorById.forEach(callback);
+
+   if (hasV5Tables)
+      s_v5DataMigrationThread = ThreadCreateEx(V5DataMigrationThread);
+   else
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"No v5 data tables found, skipping migration");
+}
+
+/**
+ * Stop background v5 data migration thread
+ */
+void StopV5DataMigration()
+{
+   ThreadJoin(s_v5DataMigrationThread);
 }

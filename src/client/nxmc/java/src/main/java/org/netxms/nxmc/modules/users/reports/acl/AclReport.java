@@ -132,7 +132,11 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Managet Agent Configs");
+      cell.setCellValue("Manage Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Agent Tunnels");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -208,10 +212,6 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Register Agents");
-      cell.setCellStyle(headerStyle);
-
-      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Reporting Server");
       cell.setCellStyle(headerStyle);
 
@@ -225,6 +225,10 @@ public class AclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Schedule Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Search Network");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -342,6 +346,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, user);
@@ -360,11 +365,11 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, user);
-         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, user);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, user);
@@ -451,7 +456,11 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Managet Agent Configs");
+      cell.setCellValue("Manage Agent Configs");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Manage Agent Tunnels");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -527,10 +536,6 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Register Agents");
-      cell.setCellStyle(headerStyle);
-
-      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Reporting Server");
       cell.setCellStyle(headerStyle);
 
@@ -544,6 +549,10 @@ public class AclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Schedule Scripts");
+      cell.setCellStyle(headerStyle);
+
+      cell = headerRow.createCell(columnIndex++);
+      cell.setCellValue("Search Network");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -667,6 +676,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, group);
@@ -685,11 +695,11 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, group);
-         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, group);
+         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, group);
@@ -829,6 +839,14 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Push Data");
 
+      cell = headerRow.createCell(PermissionsSheetCells.MANAGE_POLICIES.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Manage Policies");
+
+      cell = headerRow.createCell(PermissionsSheetCells.MANAGE_INCIDENTS.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Manage Incidents");
+
       sheet.setColumnWidth(PermissionsSheetCells.OBJECT_NAME.ordinal(), 20480);
       sheet.setColumnWidth(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal(), 4096);
 
@@ -864,6 +882,8 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, PermissionsSheetCells.MANAGE_FILES, UserAccessRights.OBJECT_ACCESS_MANAGE_FILES, element);
          createPermissionCell(row, PermissionsSheetCells.SEND_EVENTS, UserAccessRights.OBJECT_ACCESS_SEND_EVENTS, element);
          createPermissionCell(row, PermissionsSheetCells.PUSH_DATA, UserAccessRights.OBJECT_ACCESS_PUSH_DATA, element);
+         createPermissionCell(row, PermissionsSheetCells.MANAGE_POLICIES, UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES, element);
+         createPermissionCell(row, PermissionsSheetCells.MANAGE_INCIDENTS, UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, element);
       }
    }
 }

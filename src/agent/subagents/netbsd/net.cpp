@@ -612,6 +612,9 @@ LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue, Ab
 						case IF_INFO_PACKETS_OUT:
 							ret_uint(pValue, ifnet.if_opackets);
 							break;
+						case IF_INFO_IN_DROPS:
+							ret_uint(pValue, ifnet.if_iqdrops);
+							break;
 						default:
 							nRet = SYSINFO_RC_UNSUPPORTED;
 							break;

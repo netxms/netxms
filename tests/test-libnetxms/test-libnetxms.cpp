@@ -449,6 +449,66 @@ static void TestStringSet()
    AssertFalse(s->contains(_T("key-42 lorem ipsum")));
    EndTest();
 
+   StartTest(_T("String set - copy constructor"));
+   {
+      StringSet copy(*s);
+      AssertEquals(copy.size(), s->size());
+      AssertTrue(copy.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(copy.contains(_T("key-99999 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-17 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-42 lorem ipsum")));
+      AssertTrue(copy.equals(s));
+      // Verify deep copy - modifying copy doesn't affect original
+      copy.remove(_T("key-0 lorem ipsum"));
+      AssertFalse(copy.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(s->contains(_T("key-0 lorem ipsum")));
+   }
+   EndTest();
+
+   StartTest(_T("String set - move constructor"));
+   {
+      StringSet temp(*s);  // make a copy to move from
+      size_t tempSize = temp.size();
+      StringSet moved(std::move(temp));
+      AssertEquals(moved.size(), tempSize);
+      AssertTrue(moved.contains(_T("key-0 lorem ipsum")));
+      AssertTrue(moved.contains(_T("key-99999 lorem ipsum")));
+      AssertFalse(moved.contains(_T("key-17 lorem ipsum")));
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
+   StartTest(_T("String set - copy assignment"));
+   {
+      StringSet target;
+      target.add(_T("existing"));
+      target = *s;
+      AssertEquals(target.size(), s->size());
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertTrue(target.equals(s));
+      // Verify deep copy
+      target.remove(_T("key-0 lorem ipsum"));
+      AssertTrue(s->contains(_T("key-0 lorem ipsum")));
+   }
+   EndTest();
+
+   StartTest(_T("String set - move assignment"));
+   {
+      StringSet temp(*s);  // make a copy to move from
+      size_t tempSize = temp.size();
+      StringSet target;
+      target.add(_T("existing"));
+      target = std::move(temp);
+      AssertEquals(target.size(), tempSize);
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
    StartTest(_T("String set - clear"));
    start = GetMonotonicClockTime();
    s->clear();
@@ -513,6 +573,63 @@ static void TestCountingStringSet()
    AssertEquals(cs->remove(_T("key-17 lorem ipsum")), 0);   // remove non-existent key
    AssertFalse(cs->contains(_T("key-17 lorem ipsum")));
    AssertEquals(cs->size(), setSize - 1);
+   EndTest();
+
+   StartTest(_T("Counting string set - copy constructor"));
+   {
+      StringSet copy(*cs);
+      AssertEquals(copy.size(), cs->size());
+      AssertTrue(copy.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(copy.contains(_T("key-17 lorem ipsum")));
+      AssertEquals(copy.count(_T("key-888 lorem ipsum")), 2);
+      AssertTrue(copy.equals(cs));
+      // Verify deep copy
+      copy.remove(_T("key-0 lorem ipsum"));
+      AssertEquals(copy.count(_T("key-0 lorem ipsum")), 1);
+      AssertEquals(cs->count(_T("key-0 lorem ipsum")), 2);
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - move constructor"));
+   {
+      StringSet temp(*cs);
+      size_t tempSize = temp.size();
+      StringSet moved(std::move(temp));
+      AssertEquals(moved.size(), tempSize);
+      AssertTrue(moved.contains(_T("key-0 lorem ipsum")));
+      AssertEquals(moved.count(_T("key-888 lorem ipsum")), 2);
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - copy assignment"));
+   {
+      StringSet target;
+      target.add(_T("existing"));
+      target = *cs;
+      AssertEquals(target.size(), cs->size());
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(target.count(_T("key-888 lorem ipsum")), 2);
+      AssertTrue(target.equals(cs));
+   }
+   EndTest();
+
+   StartTest(_T("Counting string set - move assignment"));
+   {
+      StringSet temp(*cs);
+      size_t tempSize = temp.size();
+      StringSet target;
+      target.add(_T("existing"));
+      target = std::move(temp);
+      AssertEquals(target.size(), tempSize);
+      AssertTrue(target.contains(_T("key-0 lorem ipsum")));
+      AssertFalse(target.contains(_T("existing")));
+      AssertEquals(target.count(_T("key-888 lorem ipsum")), 2);
+      AssertEquals(temp.size(), static_cast<size_t>(0));
+      AssertTrue(temp.isEmpty());
+   }
    EndTest();
 
    StartTest(_T("Counting string set - clear"));
@@ -672,6 +789,22 @@ static void TestString()
    AssertFalse(s1.equalsIgnoreCase(_T("alpha beta")));
    AssertTrue(s1.equalsIgnoreCase(s4));
    AssertTrue(s1.equalsIgnoreCase(_T("Alpha Beta Gamma")));
+   EndTest();
+
+   StartTest(_T("String - fuzzyEquals"));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("hello")), 1.0));
+   AssertFalse(String(_T("hello")).fuzzyEquals(String(_T("world")), 1.0));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("world")), 0.0));
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("hallo")), 0.8));  // 1 substitution out of 5
+   AssertFalse(String(_T("hello")).fuzzyEquals(String(_T("hallo")), 0.9)); // Distance too high
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("helo")), 0.8));  // 1 deletion
+   AssertTrue(String(_T("hello")).fuzzyEquals(String(_T("helllo")), 0.8));  // 1 insertion
+   AssertTrue(String(_T("kitten")).fuzzyEquals(String(_T("sitting")), 0.5)); // 3 edits out of 7 chars
+   AssertFalse(String(_T("kitten")).fuzzyEquals(String(_T("sitting")), 0.7));  // Too many edits
+   AssertFalse(String(_T("a")).fuzzyEquals(String(_T("b")), 0.01)); // 100% different
+   AssertTrue(String(_T("a")).fuzzyEquals(String(_T("b")), 0.0));  // Threshold allows it
+   AssertTrue(String(_T("programming")).fuzzyEquals(String(_T("programing")), 0.9));
+   AssertTrue(String(_T("algorithm")).fuzzyEquals(String(_T("algoritm")), 0.85));
    EndTest();
 
    StartTest(_T("String - append"));

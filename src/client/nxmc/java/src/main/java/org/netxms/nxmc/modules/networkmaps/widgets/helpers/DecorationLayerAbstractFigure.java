@@ -39,7 +39,7 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 	private boolean selected = false;
 	private int lastX;
 	private int lastY;
-	
+
 	/**
 	 * @param decoration
 	 * @param labelProvider
@@ -48,7 +48,7 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 	{
 	   this.decoration = decoration;
 		this.viewer = viewer;
-		
+
 		addMouseListener(this);
 	}
 
@@ -57,7 +57,7 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
     */
 	@Override
 	protected abstract void paintFigure(Graphics gc);
-	
+
 	/**
 	 * Stop dragging
 	 */
@@ -181,9 +181,17 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 		this.selected = selected;
 		repaint();
 	}
-	
+
 	/**
 	 * Refresh figure
 	 */
 	public abstract void refresh();
+
+   /**
+    * Notify that element has been changed (moved or resized)
+    */
+   protected void notifyElementChanged()
+   {
+      viewer.onDecorationMove(decoration);
+   }
 }

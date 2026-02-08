@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,11 @@
 
 #define DEBUG_TAG_DC_CONFIG      _T("dc.config")
 #define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
+
+/**
+ * Queue storage class migration (defined in sc_migration.cpp)
+ */
+uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
 
 /**
  * Default retention time for collected data
@@ -57,9 +62,9 @@ DCObjectStorageClass DCObject::storageClassFromRetentionTime(int retentionTime)
 /**
  * Get name of storage class
  */
-const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
+const wchar_t *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
 {
-   static const TCHAR *names[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+   static const wchar_t *names[] = { L"default", L"7", L"30", L"90", L"180", L"other" };
    return names[static_cast<int>(storageClass)];
 }
 
@@ -81,8 +86,8 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_retentionTime = 0;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_lastPoll = 0;
-   m_lastValueTimestamp = 0;
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = Timestamp::fromMilliseconds(0);
    m_nextPollTime = 0;
    m_schedules = nullptr;
    m_tLastCheck = 0;
@@ -95,7 +100,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 	m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -129,8 +134,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_retentionTime = src->m_retentionTime;
    m_source = src->m_source;
    m_status = src->m_status;
-   m_lastPoll = shadowCopy ? src->m_lastPoll : 0;
-   m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : 0;
+   m_lastPollTime = shadowCopy ? src->m_lastPollTime : Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = shadowCopy ? src->m_lastValueTimestamp : Timestamp::fromMilliseconds(0);
    m_nextPollTime = shadowCopy ? src->m_nextPollTime : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_errorCount = shadowCopy ? src->m_errorCount : 0;
@@ -140,8 +145,9 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_sourceNode = src->m_sourceNode;
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
+   m_snmpContext = src->m_snmpContext;
 	m_doForcePoll = false;
-	m_pollingSession = nullptr;
+	m_pollingSessionId = -1;
    m_lastScriptErrorReport = 0;
    m_schedules = (src->m_schedules != nullptr) ? new StringList(src->m_schedules) : nullptr;
    m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
@@ -172,8 +178,8 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
-   m_lastPoll = 0;
-   m_lastValueTimestamp = 0;
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = Timestamp::fromMilliseconds(0);
    m_nextPollTime = 0;
    m_flags = 0;
    m_stateFlags = 0;
@@ -186,7 +192,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_snmpVersion = SNMP_VERSION_DEFAULT;
    m_lastScriptErrorReport = 0;
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    m_instanceDiscoveryMethod = IDM_NONE;
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -240,8 +246,8 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_status = config->getSubEntryValueAsBoolean(_T("isDisabled")) ? ITEM_STATUS_DISABLED : ITEM_STATUS_ACTIVE;
    m_busy = 0;
    m_scheduledForDeletion = 0;
-   m_lastPoll = 0;
-   m_lastValueTimestamp = 0;
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = Timestamp::fromMilliseconds(0);
    m_nextPollTime = 0;
    m_tLastCheck = 0;
    m_errorCount = 0;
@@ -250,18 +256,19 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
+   m_snmpContext = config->getSubEntryValue(_T("snmpContext"));
    m_schedules = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = config->getSubEntryValue(_T("comments"));
    m_doForcePoll = false;
-   m_pollingSession = nullptr;
+   m_pollingSessionId = -1;
    if (nxslV5)
    {
-      setTransformationScript(config->getSubEntryValue(_T("transformation")));
+      setTransformationScriptInternal(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
+      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
    }
 
    // for compatibility with old format
@@ -300,6 +307,77 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
 
    updateTimeIntervalsInternal();
 }
+/**
+ * Create DCObject from imported JSON configuration
+ */
+DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+{
+   m_id = CreateUniqueId(IDG_ITEM);
+   m_guid = json_object_get_uuid(json, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
+   m_ownerId = (owner != nullptr) ? owner->getId() : 0;
+   m_templateId = 0;
+   m_templateItemId = 0;
+   m_name = json_object_get_string(json, "name", _T("unnamed"));
+   m_description = json_object_get_string(json, "description", m_name);
+   m_systemTag = json_object_get_string(json, "systemTag", nullptr);
+   m_userTag = json_object_get_string(json, "userTag", nullptr);
+   m_source = static_cast<BYTE>(json_object_get_int32(json, "origin"));
+   m_flags = json_object_get_int32(json, "flags");
+   m_pollingIntervalSrc = json_object_get_string(json, "interval", _T(""));
+   m_pollingScheduleType = json_object_get_int32(json, "scheduleType", (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM);
+   m_retentionTimeSrc = json_object_get_string(json, "retention", _T(""));
+   m_retentionType = json_object_get_int32(json, "retentionType", (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM);
+   m_status = json_object_get_int32(json, "isDisabled") ? ITEM_STATUS_DISABLED : ITEM_STATUS_ACTIVE;
+   m_busy = 0;
+   m_scheduledForDeletion = 0;
+   m_lastPollTime = Timestamp::fromMilliseconds(0);
+   m_lastValueTimestamp = Timestamp::fromMilliseconds(0);
+   m_nextPollTime = 0;
+   m_tLastCheck = 0;
+   m_errorCount = 0;
+   m_resourceId = 0;
+   m_sourceNode = 0;
+   m_perfTabSettings = json_object_get_string(json, "perfTabSettings", _T(""));
+   m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
+   m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
+   m_snmpContext = json_object_get_string(json, "snmpContext", _T(""));
+   m_schedules = nullptr;
+   m_lastScriptErrorReport = 0;
+   m_comments = json_object_get_string(json, "comments", _T(""));
+   m_doForcePoll = false;
+   m_pollingSessionId = -1;
+   setTransformationScriptInternal(json_object_get_string(json, "transformation", _T("")));
+
+   json_t *schedulesArray = json_object_get(json, "schedules");
+   if (json_is_array(schedulesArray))
+   {
+      m_schedules = new StringList();
+      size_t index;
+      json_t *scheduleJson;
+      json_array_foreach(schedulesArray, index, scheduleJson)
+      {
+         if (json_is_string(scheduleJson))
+         {
+            m_schedules->addMBString(json_string_value(scheduleJson));
+         }
+      }
+   }
+
+   m_instanceDiscoveryMethod = static_cast<WORD>(json_object_get_int32(json, "instanceDiscoveryMethod"));
+   m_instanceDiscoveryData = json_object_get_string(json, "instanceDiscoveryData", _T(""));
+   setInstanceFilter(json_object_get_string(json, "instanceFilter", _T("")));
+   m_instanceName = json_object_get_string(json, "instance", _T(""));
+   m_instanceRetentionTime = json_object_get_int32(json, "instanceRetentionTime", -1);
+   m_instanceGracePeriodStart = 0;
+   m_startTime = 0;
+   m_thresholdDisableEndTime = 0;
+   m_relatedObject = 0;
+
+   updateTimeIntervalsInternal();
+}
+
 
 /**
  * Destructor
@@ -481,7 +559,7 @@ bool DCObject::deleteAllData()
 /**
  * Delete single DCI entry
  */
-bool DCObject::deleteEntry(time_t timestamp)
+bool DCObject::deleteEntry(Timestamp timestamp)
 {
    return false;
 }
@@ -629,29 +707,8 @@ String DCObject::expandSchedule(const TCHAR *schedule)
          if (closingBracker != nullptr)
          {
             *closingBracker = 0;
-
-            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner.lock(), createDescriptorInternal());
-            if (vm != nullptr)
-            {
-               if (vm->run(0, nullptr))
-               {
-                  NXSL_Value *result = vm->getResult();
-                  if (result != nullptr)
-                  {
-                     const TCHAR *temp = result->getValueAsCString();
-                     if (temp != nullptr)
-                     {
-                        nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 7, _T("DCObject::expandSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
-                        expandedSchedule = temp;
-                     }
-                  }
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
-               }
-               delete vm;
-            }
+            StringBuffer output;
+            m_owner.lock()->expandScriptMacro(scriptName, nullptr, nullptr, createDescriptorInternal(), &expandedSchedule);
          }
          else
          {
@@ -699,11 +756,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
       {
          // DCI cannot be force polled at the moment, clear force poll request
          nxlog_debug_tag(DEBUG_TAG_DC_SCHEDULER, 6, _T("Forced poll of DC object %s [%u] on node %s [%u] cancelled"), m_name.cstr(), m_id, getOwnerName(), m_ownerId);
-         if (m_pollingSession != nullptr)
-         {
-            m_pollingSession->decRefCount();
-            m_pollingSession = nullptr;
-         }
+         m_pollingSessionId = -1;
          m_doForcePoll = false;
          unlock();
          return false;
@@ -755,9 +808,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = ((m_lastPoll + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPollTime.asTime() + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
 			else
-		      result = ((m_lastPoll + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
+		      result = ((m_lastPollTime.asTime() + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
       }
    }
    else
@@ -821,6 +874,7 @@ void DCObject::createMessage(NXCPMessage *msg)
 	msg->setField(VID_AGENT_PROXY, m_sourceNode);
 	msg->setField(VID_SNMP_PORT, m_snmpPort);
    msg->setField(VID_SNMP_VERSION, static_cast<int16_t>(m_snmpVersion));
+   msg->setField(VID_SNMP_CONTEXT, m_snmpContext);
    msg->setField(VID_COMMENTS, m_comments);
    msg->setField(VID_PERFTAB_SETTINGS, m_perfTabSettings);
 	if (m_schedules != nullptr)
@@ -852,6 +906,9 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 {
    lock();
 
+   // Capture old storage class before updating retention settings
+   DCObjectStorageClass oldStorageClass = getStorageClass();
+
    m_name = msg.getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
    m_description = msg.getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
    m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DCI_TAG_LENGTH);
@@ -863,13 +920,14 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
 	m_sourceNode = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
    m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
+   m_snmpContext = msg.getFieldAsSharedString(VID_SNMP_CONTEXT);
 	m_perfTabSettings = msg.getFieldAsSharedString(VID_PERFTAB_SETTINGS);
 	m_comments = msg.getFieldAsSharedString(VID_COMMENTS);
 
    m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
    {
-      TCHAR buffer[MAX_DB_STRING];
+      wchar_t buffer[MAX_DB_STRING];
       m_pollingIntervalSrc = msg.getFieldAsString(VID_POLLING_INTERVAL, buffer, MAX_DB_STRING);
    }
    else
@@ -879,7 +937,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_retentionType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_RETENTION_TYPE));
    if (m_retentionType == DC_RETENTION_CUSTOM)
    {
-      TCHAR buffer[MAX_DB_STRING];
+      wchar_t buffer[MAX_DB_STRING];
       m_retentionTimeSrc = msg.getFieldAsString(VID_RETENTION_TIME, buffer, MAX_DB_STRING);
    }
    else
@@ -888,8 +946,24 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    }
    updateTimeIntervalsInternal();
 
+   // Check if storage class changed (only for TimescaleDB with single table mode)
+   // Skip migration for template items - templates do not collect data
+   // Skip migration if instance discovery method is configured - instance discovery DCIs do not collect data
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      auto owner = m_owner.lock();
+      if ((owner != nullptr) && owner->isDataCollectionTarget())
+      {
+         DCObjectStorageClass newStorageClass = getStorageClass();
+         if (oldStorageClass != newStorageClass)
+         {
+            QueueStorageClassMigration(m_id, (getType() == DCO_TYPE_ITEM) ? 'I' : 'T', oldStorageClass, newStorageClass);
+         }
+      }
+   }
+
    TCHAR *tmp = msg.getFieldAsString(VID_TRANSFORMATION_SCRIPT);
-   setTransformationScript(tmp);
+   setTransformationScriptInternal(tmp);
    MemFree(tmp);
 
    // Update schedules
@@ -1033,11 +1107,13 @@ void DCObject::expandInstance()
 {
    StringBuffer temp = m_name;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instanceName);
    m_name = temp;
 
    temp = m_description;
    temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instanceName);
    m_description = temp;
 }
@@ -1048,6 +1124,9 @@ void DCObject::expandInstance()
 void DCObject::updateFromTemplate(DCObject *src)
 {
    lock();
+
+   // Capture old storage class before updating retention settings
+   DCObjectStorageClass oldStorageClass = getStorageClass();
 
    m_name = expandMacros(src->m_name, MAX_ITEM_NAME);
    m_description = expandMacros(src->m_description, MAX_DB_STRING);
@@ -1060,12 +1139,23 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_retentionTimeSrc = src->m_retentionTimeSrc;
    updateTimeIntervalsInternal();
 
+   // Check if storage class changed (only for TimescaleDB with single table mode)
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      DCObjectStorageClass newStorageClass = getStorageClass();
+      if (oldStorageClass != newStorageClass)
+      {
+         QueueStorageClassMigration(m_id, (getType() == DCO_TYPE_ITEM) ? 'I' : 'T', oldStorageClass, newStorageClass);
+      }
+   }
+
    m_source = src->m_source;
    m_flags = src->m_flags;
    m_sourceNode = src->m_sourceNode;
    m_resourceId = src->m_resourceId;
    m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
+   m_snmpContext = src->m_snmpContext;
    m_comments = src->m_comments;
    m_perfTabSettings = src->m_perfTabSettings;
 
@@ -1081,7 +1171,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 
    // DCObject::updateFromTemplate can be called in two different scenarios:
    // 1. When template DCI was changed and we have to update DCI on data collection target;
-   // 2. When instance discovery DCI was changed and we have to update DCIs on same node created 
+   // 2. When instance discovery DCI was changed and we have to update DCIs on same node created
    //    from that instance discovery DCI.
    // In second case, instance discovery method should not be changed, and instance data should be updated instead.
    // Owner object being the same as template object is an indicator that this DCI was created by instance discovery.
@@ -1111,16 +1201,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 /**
  * Process new data collection error
  */
-void DCObject::processNewError(bool noInstance)
-{
-   time_t now = time(nullptr);
-   processNewError(noInstance, now);
-}
-
-/**
- * Process new data collection error
- */
-void DCObject::processNewError(bool noInstance, time_t now)
+void DCObject::processNewError(bool noInstance, Timestamp timestamp)
 {
 }
 
@@ -1138,7 +1219,7 @@ bool DCObject::hasValue()
 /**
  * Set new transformation script
  */
-void DCObject::setTransformationScript(const TCHAR *source)
+void DCObject::setTransformationScriptInternal(const wchar_t *source)
 {
    if ((source != nullptr) && !IsBlankString(source))
    {
@@ -1209,6 +1290,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
+   m_snmpContext = config->getSubEntryValue(_T("snmpContext"));
    if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
       m_status = ITEM_STATUS_DISABLED;
 
@@ -1239,11 +1321,11 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
 
    if (nxslV5)
    {
-      setTransformationScript(config->getSubEntryValue(_T("transformation")));
+      setTransformationScriptInternal(config->getSubEntryValue(_T("transformation")));
    }
    else
    {
-      setTransformationScript(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
+      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
    }
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -1304,27 +1386,23 @@ NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm) const
 /**
  * Process force poll request
  */
-ClientSession *DCObject::processForcePoll()
+session_id_t DCObject::processForcePoll()
 {
    lock();
-   ClientSession *session = m_pollingSession;
-   m_pollingSession = nullptr;
+   session_id_t sessionId = m_pollingSessionId;
+   m_pollingSessionId = -1;
    m_doForcePoll = false;
    unlock();
-   return session;
+   return sessionId;
 }
 
 /**
  * Request force poll
  */
-void DCObject::requestForcePoll(ClientSession *session)
+void DCObject::requestForcePoll(session_id_t sessionId)
 {
    lock();
-   if (m_pollingSession != nullptr)
-      m_pollingSession->decRefCount();
-   m_pollingSession = session;
-   if (m_pollingSession != nullptr)
-      m_pollingSession->incRefCount();
+   m_pollingSessionId = sessionId;
    m_doForcePoll = true;
    unlock();
 }
@@ -1593,7 +1671,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "description", json_string_w(m_description));
    json_object_set_new(root, "systemTag", json_string_w(m_systemTag));
    json_object_set_new(root, "userTag", json_string_w(m_userTag));
-   json_object_set_new(root, "lastPoll", json_time_string(m_lastPoll));
+   json_object_set_new(root, "lastPollTime", m_lastPollTime.asJson());
    json_object_set_new(root, "pollingInterval", json_string_w(m_pollingIntervalSrc));
    json_object_set_new(root, "retentionTime", json_string_w(m_retentionTimeSrc));
    json_object_set_new(root, "source", json_integer(m_source));
@@ -1610,6 +1688,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
+   json_object_set_new(root, "snmpContext", json_string_w(m_snmpContext));
    json_object_set_new(root, "perfTabSettings", json_string_w(m_perfTabSettings));
    json_object_set_new(root, "transformationScript", json_string_w(m_transformationScriptSource));
    json_object_set_new(root, "comments", json_string_w(m_comments));
@@ -1721,6 +1800,91 @@ static void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *s
 }
 
 /**
+ * Extract script names from text
+ * Possible options:
+ * "%[name]",
+ * "%[name.function(123,"A textual parameter")]"
+ * "%[name/function(123,"A textual parameter")]"
+ */
+void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies)
+{
+   wchar_t name[512];
+   wcslcpy(name, origin, 512);
+   TrimW(name);
+
+   TCHAR *searchStart = name;
+   while(true)
+   {
+      wchar_t *macroStart = wcschr(searchStart, L'%');
+      if (macroStart == nullptr || *(macroStart + 1) == 0)
+         break;
+
+      if (*(macroStart + 1) != L'[')
+      {
+         searchStart = macroStart + 2;
+         continue;
+      }
+
+      macroStart += 2;
+      wchar_t *macroEnd = wcschr(macroStart, L']');
+      if (macroEnd == nullptr)
+         break;
+
+      *macroEnd = 0;
+
+      wchar_t *p = wcschr(macroStart, L'(');
+      if (p != nullptr)
+      {
+         *p = 0;
+      }
+
+      char entryPoint[MAX_IDENTIFIER_LENGTH];
+      ExtractScriptEntryPoint(macroStart, entryPoint);
+
+      dependencies->add(macroStart);
+
+      searchStart = macroEnd + 1;
+   }
+}
+
+/**
+ * Extract script names from text
+ * Possible options:
+ * "%{script:name}"
+ */
+static void FindScriptTemplateMacrosInText(const wchar_t *name, StringSet *dependencies)
+{
+   const wchar_t *searchStart = name;
+   while(true)
+   {
+      const wchar_t *macroStart = wcschr(searchStart, L'%');
+      if (macroStart == nullptr || *(macroStart + 1) == 0)
+         break;
+
+      if (wcsnicmp(macroStart, L"%{script:", 9) != 0)
+      {
+         searchStart = macroStart + 2;
+         continue;
+      }
+
+      macroStart += 9;
+      const wchar_t *macroEnd = wcschr(macroStart, _T('}'));
+      if (macroEnd == nullptr)
+         break;
+
+      size_t len = macroEnd - macroStart;
+      wchar_t *scriptName = (wchar_t *)MemAlloc((len + 1) * sizeof(wchar_t));
+      wcsncpy(scriptName, macroStart, len);
+      scriptName[len] = 0;
+
+      dependencies->add(scriptName);
+      MemFree(scriptName);
+
+      searchStart = macroEnd + 1;
+   }
+}
+
+/**
  * Get all script dependencies for this object
  */
 void DCObject::getScriptDependencies(StringSet *dependencies) const
@@ -1733,15 +1897,42 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 
    AddScriptDependencies(dependencies, m_transformationScript.get());
    AddScriptDependencies(dependencies, m_instanceFilter.get());
+
+   if (!m_retentionTimeSrc.isEmpty())
+   {
+      FindScriptMacrosInText(m_retentionTimeSrc, dependencies);
+   }
+
+   if (!m_pollingIntervalSrc.isEmpty())
+   {
+      FindScriptMacrosInText(m_pollingIntervalSrc, dependencies);
+   }
+
+   if (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)
+   {
+      if (m_schedules != nullptr)
+      {
+         for(int i = 0; i < m_schedules->size(); i++)
+         {
+            FindScriptMacrosInText(m_schedules->get(i), dependencies);
+         }
+      }
+   }
+   FindScriptMacrosInText(m_pollingIntervalSrc, dependencies);
+
+   FindScriptTemplateMacrosInText(m_name, dependencies);
+   FindScriptTemplateMacrosInText(m_description, dependencies);
+   FindScriptTemplateMacrosInText(m_instanceName, dependencies);
+   FindScriptTemplateMacrosInText(m_instanceDiscoveryData, dependencies);
 }
 
 /**
  * Get data source name
  */
-const TCHAR *DCObject::getDataProviderName(int dataProvider)
+const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), _T("modbus") };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : _T("unknown");
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : L"unknown";
 }
 
 /**
@@ -1827,7 +2018,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
    m_errorCount = object.m_errorCount;
    m_pollingInterval = object.getEffectivePollingInterval();
    m_pollingScheduleType = object.m_pollingScheduleType;
-   m_lastPollTime = object.m_lastPoll;
+   m_lastPollTime = object.m_lastPollTime;
    m_lastCollectionTime = object.m_lastValueTimestamp;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
@@ -1871,8 +2062,8 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_p
    m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
    m_pollingScheduleType = (object != nullptr) ? object->getPollingScheduleType() : 0;
    m_errorCount = (object != nullptr) ? object->getErrorCount() : 0;
-   m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : 0;
-   m_lastCollectionTime = (object != nullptr) ? object->getLastValueTimestamp() : 0;
+   m_lastPollTime = (object != nullptr) ? object->getLastPollTime() : Timestamp::fromMilliseconds(0);
+   m_lastCollectionTime = (object != nullptr) ? object->getLastValueTimestamp() : Timestamp::fromMilliseconds(0);
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
    m_relatedObject = (object != nullptr) ? object->getRelatedObject() : 0;
@@ -1955,4 +2146,92 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    }
 
    return result;
+}
+
+/**
+ * Update DCObject from imported JSON configuration
+ */
+void DCObject::updateFromImport(json_t *json)
+{
+   lock();
+
+   m_name = json_object_get_string(json, "name", _T("unnamed"));
+   m_description = json_object_get_string(json, "description", m_name);
+   m_systemTag = json_object_get_string(json, "systemTag", nullptr);
+   m_userTag = json_object_get_string(json, "userTag", nullptr);
+   m_source = static_cast<BYTE>(json_object_get_int32(json, "origin"));
+   m_flags = json_object_get_int32(json, "flags");
+   m_perfTabSettings = json_object_get_string(json, "perfTabSettings", nullptr);
+   m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
+   m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
+   m_snmpContext = json_object_get_string(json, "snmpContext", _T(""));
+
+   json_t *isDisabledObj = json_object_get(json, "isDisabled");
+   if (json_is_true(isDisabledObj))
+      m_status = ITEM_STATUS_DISABLED;
+
+   m_pollingIntervalSrc = json_object_get_string(json, "interval", nullptr);
+   json_t *scheduleTypeObj = json_object_get(json, "scheduleType");
+   if (scheduleTypeObj != nullptr)
+   {
+      m_pollingScheduleType = json_integer_value(scheduleTypeObj);
+   }
+   else
+   {
+      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      if (m_flags & 1)  // for compatibility with old format
+         m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
+   }
+
+   m_retentionTimeSrc = json_object_get_string(json, "retention", nullptr);
+   json_t *retentionTypeObj = json_object_get(json, "retentionType");
+   if (retentionTypeObj != nullptr)
+   {
+      m_retentionType = json_integer_value(retentionTypeObj);
+   }
+   else
+   {
+      m_retentionType = (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      if (m_flags & 0x200) // for compatibility with old format
+         m_retentionType = DC_RETENTION_NONE;
+   }
+
+   updateTimeIntervalsInternal();
+
+   String transformation = json_object_get_string(json, "transformation", _T(""));
+   setTransformationScriptInternal(transformation);
+
+   json_t *schedulesArray = json_object_get(json, "schedules");
+   if (json_is_array(schedulesArray))
+   {
+      if (m_schedules != nullptr)
+         m_schedules->clear();
+      else
+         m_schedules = new StringList();
+
+      size_t index;
+      json_t *scheduleItem;
+      json_array_foreach(schedulesArray, index, scheduleItem)
+      {
+         if (json_is_string(scheduleItem))
+         {
+            m_schedules->addMBString(json_string_value(scheduleItem));
+         }
+      }
+   }
+   else
+   {
+      delete_and_null(m_schedules);
+   }
+
+   m_instanceDiscoveryMethod = static_cast<WORD>(json_object_get_int32(json, "instanceDiscoveryMethod"));
+   m_instanceDiscoveryData = json_object_get_string(json, "instanceDiscoveryData", nullptr);
+
+   String instanceFilter = json_object_get_string(json, "instanceFilter", _T(""));
+   setInstanceFilter(instanceFilter);
+
+   m_instanceName = json_object_get_string(json, "instance", nullptr);
+   m_instanceRetentionTime = json_object_get_int32(json, "instanceRetentionTime", -1);
+
+   unlock();
 }

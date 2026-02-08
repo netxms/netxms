@@ -27,11 +27,11 @@
 /**
  * Create new action
  */
-Action::Action(const TCHAR *name)
+Action::Action(const wchar_t *name)
 {
    id = CreateUniqueId(IDG_ACTION);
    guid = uuid::generate();
-   _tcsncpy(this->name, name, MAX_OBJECT_NAME);
+   wcslcpy(this->name, name, MAX_OBJECT_NAME);
    isDisabled = true;
    type = ServerActionType::LOCAL_COMMAND;
    emailSubject[0] = 0;
@@ -63,13 +63,13 @@ Action::Action(const Action& src)
 {
    id = src.id;
    guid = src.guid;
-   _tcscpy(name, src.name);
+   wcscpy(name, src.name);
    type = src.type;
    isDisabled = src.isDisabled;
-   _tcscpy(rcptAddr, src.rcptAddr);
-   _tcscpy(emailSubject, src.emailSubject);
+   wcscpy(rcptAddr, src.rcptAddr);
+   wcscpy(emailSubject, src.emailSubject);
    data = MemCopyString(src.data);
-   _tcscpy(channelName, src.channelName);
+   wcscpy(channelName, src.channelName);
 }
 
 /**
@@ -95,16 +95,16 @@ void Action::saveToDatabase() const
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   static const TCHAR *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
+   static const wchar_t *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
             _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
             _T("channel_name"), nullptr };
-   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("actions"), _T("action_id"), id, columns);
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"actions", L"action_id", id, columns);
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(type));
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)(isDisabled ? 1 : 0));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(isDisabled ? 1 : 0));
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rcptAddr, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, emailSubject, DB_BIND_STATIC);
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, data, DB_BIND_STATIC);
@@ -115,6 +115,69 @@ void Action::saveToDatabase() const
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get description of server action type
+ */
+static inline const char *ServerActionTypeDescription(ServerActionType type)
+{
+   switch(type)
+   {
+      case ServerActionType::AGENT_COMMAND:
+         return "execute command on remote node via agent";
+      case ServerActionType::FORWARD_EVENT:
+         return "forward event to another server";
+      case ServerActionType::LOCAL_COMMAND:
+         return "execute command on server";
+      case ServerActionType::NOTIFICATION:
+         return "send notification";
+      case ServerActionType::NXSL_SCRIPT:
+         return "execute server-side script";
+      case ServerActionType::SSH_COMMAND:
+         return "execute command on remote node via SSH";
+   }
+   return "";
+}
+
+/**
+ * Get name of data field for given action type
+ */
+static inline const char *ServerActionDataFieldName(ServerActionType type)
+{
+   switch(type)
+   {
+      case ServerActionType::AGENT_COMMAND:
+      case ServerActionType::LOCAL_COMMAND:
+      case ServerActionType::SSH_COMMAND:
+         return "command";
+      case ServerActionType::NOTIFICATION:
+         return "message";
+      case ServerActionType::NXSL_SCRIPT:
+         return "scriptName";
+   }
+   return "data";
+}
+
+/**
+ * Create JSON object from action object
+ */
+json_t *Action::toJson() const
+{
+   json_t *root = json_object();
+
+   json_object_set_new(root, "id", json_integer(id));
+   json_object_set_new(root, "guid", guid.toJson());
+   json_object_set_new(root, "name", json_string_t(name));
+   json_object_set_new(root, "type", json_integer(static_cast<uint32_t>(type)));
+   json_object_set_new(root, "typeDescription", json_string(ServerActionTypeDescription(type)));
+   json_object_set_new(root, "isDisabled", json_boolean(isDisabled));
+   json_object_set_new(root, "recipientAddress", json_string_t(rcptAddr));
+   json_object_set_new(root, "emailSubject", json_string_t(emailSubject));
+   json_object_set_new(root, ServerActionDataFieldName(type), json_string_t(CHECK_NULL_EX(data)));
+   json_object_set_new(root, "notificationChannelName", json_string_t(channelName));
+
+   return root;
 }
 
 /**
@@ -570,7 +633,9 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, context->data.cstr());
             else
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
-            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, event.getCode(), event.getId(), ruleId);
+            // Pass event and source object for NXSL notification channels
+            shared_ptr<NetObj> sourceObject = FindObjectById(event.getSourceId());
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId);
          }
          else
          {
@@ -819,18 +884,36 @@ void SendActionsToClient(ClientSession *session, uint32_t requestId)
    msg.setField(VID_ACTION_ID, (UINT32)0);
    session->sendMessage(&msg);
 }
+/**
+ * Get actions as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetActions()
+{
+   json_t *actions = json_array();
+   s_actions.forEach(
+      [actions](const uint32_t& id, const shared_ptr<Action>& action) -> EnumerationCallbackResult
+      {
+         json_array_append_new(actions, action->toJson());
+         return _CONTINUE;
+      });
+   return actions;
+}
+
+
 
 /**
- * Export action configuration
+ * Create export record for action as JSON object
  */
-void CreateActionExportRecord(TextFileWriter& xml, uint32_t id)
+json_t *CreateActionExportRecord(uint32_t id)
 {
+   json_t *action = nullptr;
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return;
+      return nullptr;
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -839,35 +922,29 @@ void CreateActionExportRecord(TextFileWriter& xml, uint32_t id)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         xml.appendUtf8String("\t\t<action id=\"")
-            .append(id)
-            .appendUtf8String("\">\n\t\t\t<guid>")
-            .append(DBGetFieldGUID(hResult, 0, 0))
-            .appendUtf8String("</guid>\n\t\t\t<name>")
-            .appendPreallocated(DBGetFieldForXML(hResult, 0, 1))
-            .appendUtf8String("</name>\n\t\t\t<type>")
-            .append(DBGetFieldULong(hResult, 0, 2))
-            .appendUtf8String("</type>\n\t\t\t<recipientAddress>")
-            .appendPreallocated(DBGetFieldForXML(hResult, 0, 3))
-            .appendUtf8String("</recipientAddress>\n\t\t\t<emailSubject>")
-            .appendPreallocated(DBGetFieldForXML(hResult, 0, 4))
-            .appendUtf8String("</emailSubject>\n\t\t\t<data>")
-            .appendPreallocated(DBGetFieldForXML(hResult, 0, 5))
-            .appendUtf8String("</data>\n\t\t\t<channelName>")
-            .appendPreallocated(DBGetFieldForXML(hResult, 0, 6))
-            .appendUtf8String("</channelName>\n")
-            .appendUtf8String("\t\t</action>\n");
+         TCHAR buffer[256];
+         action = json_object();
+         json_object_set_new(action, "id", json_integer(id));
+         json_object_set_new(action, "guid", json_string_t(DBGetFieldGUID(hResult, 0, 0).toString()));
+         json_object_set_new(action, "name", json_string_t(DBGetField(hResult, 0, 1, buffer, 256)));
+         json_object_set_new(action, "type", json_integer(DBGetFieldULong(hResult, 0, 2)));
+         json_object_set_new(action, "recipientAddress", json_string_t(DBGetField(hResult, 0, 3, buffer, 256)));
+         json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, buffer, 256)));
+         json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));
+         json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, buffer, 256)));
       }
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
+
+   return action;
 }
 
 /**
  * Check if given action ID is valid
  */
-bool IsValidActionId(uint32_t id)
+bool NXCORE_EXPORTABLE IsValidActionId(uint32_t id)
 {
    return s_actions.getShared(id) != nullptr;
 }
@@ -875,7 +952,7 @@ bool IsValidActionId(uint32_t id)
 /**
  * Get GUID of given action
  */
-uuid GetActionGUID(uint32_t id)
+uuid NXCORE_EXPORTABLE GetActionGUID(uint32_t id)
 {
    shared_ptr<Action> action = s_actions.getShared(id);
    uuid guid = (action != NULL) ? action->guid : uuid::NULL_UUID;
@@ -893,11 +970,20 @@ static bool ActionGUIDComparator(const uint32_t& id, const Action& action, const
 /**
  * Find action by GUID
  */
-uint32_t FindActionByGUID(const uuid& guid)
+uint32_t NXCORE_EXPORTABLE FindActionByGUID(const uuid& guid)
 {
    shared_ptr<Action> action = s_actions.findElement(ActionGUIDComparator, &guid);
    uint32_t id = (action != nullptr) ? action->id : 0;
    return id;
+}
+
+/**
+ * Get action as JSON object by ID
+ */
+json_t NXCORE_EXPORTABLE *GetActionById(uint32_t id)
+{
+   shared_ptr<Action> action = s_actions.getShared(id);
+   return (action != nullptr) ? action->toJson(): nullptr;
 }
 
 /**
@@ -958,10 +1044,77 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
       action->channelName[0] = 0;
    else
       _tcslcpy(action->channelName, config->getSubEntryValue(_T("channelName")), MAX_OBJECT_NAME);
+
+   if (action->data != nullptr)
+      MemFree(action->data);
    action->data = MemCopyString(config->getSubEntryValue(_T("data")));
    action->saveToDatabase();
    EnumerateClientSessions(SendActionDBUpdate, action.get());
    s_actions.set(action->id, action);
+
+   return true;
+}
+
+/**
+ * Import single action from JSON (follows legacy XML import pattern)
+ */
+bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
+{
+   String name = json_object_get_string(action, "name", _T(""));
+   if (name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Missing action name"));
+      return false;
+   }
+
+   const uuid guid = json_object_get_uuid(action, "guid");
+   shared_ptr<Action> actionObj = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : shared_ptr<Action>();
+   if (actionObj == nullptr)
+   {
+      if (s_actions.findElement(ActionNameComparator, name.cstr()) != NULL)
+      {
+         context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Action with name \"%s\" already exists"), (const TCHAR *)name);
+         return false;
+      }
+
+      actionObj = make_shared<Action>(name);
+      actionObj->isDisabled = false;
+      if (!guid.isNull())
+         actionObj->guid = guid;
+      s_updateCode = NX_NOTIFY_ACTION_CREATED;
+   }
+   else
+   {
+      TCHAR guidText[64];
+      if (!overwrite)
+      {
+         context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s (skipping)"),
+                  actionObj->name, actionObj->guid.toString(guidText));
+         return true;
+      }
+      context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s"), actionObj->name, actionObj->guid.toString(guidText));
+      _tcslcpy(actionObj->name, name, MAX_OBJECT_NAME);
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
+      actionObj = make_shared<Action>(*actionObj);
+   }
+
+   // Set action properties from JSON
+   actionObj->type = static_cast<ServerActionType>(json_object_get_int32(action, "type", static_cast<int32_t>(ServerActionType::LOCAL_COMMAND)));
+
+   String emailSubject = json_object_get_string(action, "emailSubject", _T(""));
+   _tcslcpy(actionObj->emailSubject, emailSubject, MAX_EMAIL_SUBJECT_LEN);
+   String rcptAddr = json_object_get_string(action, "recipientAddress", _T(""));
+   _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);
+   String channelName = json_object_get_string(action, "channelName", _T(""));
+   _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
+   String data = json_object_get_string(action, "data", _T(""));
+   if (actionObj->data != nullptr)
+      MemFree(actionObj->data);
+   actionObj->data = MemCopyString(data.isEmpty() ? nullptr : data.cstr());
+
+   actionObj->saveToDatabase();
+   EnumerateClientSessions(SendActionDBUpdate, actionObj.get());
+   s_actions.set(actionObj->id, actionObj);
 
    return true;
 }

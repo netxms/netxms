@@ -172,6 +172,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.Interface.MTU(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_MTU, DCI_DT_INT, DCIDESC_NET_INTERFACE_MTU },
    { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_OUT_ERRORS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_IN_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_OUT_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },

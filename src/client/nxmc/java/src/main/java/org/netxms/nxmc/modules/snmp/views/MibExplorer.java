@@ -213,7 +213,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			{
 				MibObject object = mibBrowser.getSelection();
 				details.setObject(object);
-				actionWalk.setEnabled(object.getObjectId() != null);
+            actionWalk.setEnabled((object != null) && (object.getObjectId() != null));
 			}
 		});
 

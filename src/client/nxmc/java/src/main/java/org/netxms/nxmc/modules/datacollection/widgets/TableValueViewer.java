@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,10 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -49,6 +52,7 @@ public class TableValueViewer extends BaseTableValueViewer
    private long objectId = 0;
    private long dciId = 0;
    private String objectName = null;
+   private String statusMessage = null;
    private Action actionShowHistory;
    private Action actionShowLineChart;
    private Action actionShowBarChart;
@@ -81,7 +85,7 @@ public class TableValueViewer extends BaseTableValueViewer
    @Override
    protected String buildConfigId(String configSubId)
    {
-      StringBuilder sb = new StringBuilder("TableLastValues."); 
+      StringBuilder sb = new StringBuilder("TableLastValues.");
       sb.append(dciId);
       if (configSubId != null)
       {
@@ -99,15 +103,15 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super.createActions();
 
-      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) { 
+      actionShowHistory = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) {
          @Override
          public void run()
          {
             showHistory();
          }
       };
-      
-      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) { 
+
+      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
          @Override
          public void run()
          {
@@ -115,7 +119,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) { 
+      actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) {
          @Override
          public void run()
          {
@@ -123,7 +127,7 @@ public class TableValueViewer extends BaseTableValueViewer
          }
       };
 
-      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")) { 
+      actionShowPieChart = new Action(i18n.tr("&Pie chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-pie.png")) {
          @Override
          public void run()
          {
@@ -175,11 +179,10 @@ public class TableValueViewer extends BaseTableValueViewer
          final String instance = buildInstanceString(cells[i].getViewerRow());
          final String tableName = column.getDisplayName() + ": " + instance.replace("~~~", " / ");
          AbstractObject object = session.findObjectById(objectId);
-         
          view.openView(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()));
       }
    }
-   
+
    /**
     * Show line chart
     */
@@ -199,7 +202,7 @@ public class TableValueViewer extends BaseTableValueViewer
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          final String instance = buildInstanceString(cells[i].getViewerRow());
-         
+
          ChartDciConfig config = new ChartDciConfig();
          config.nodeId = objectId;
          config.dciId = dciId;
@@ -208,7 +211,7 @@ public class TableValueViewer extends BaseTableValueViewer
          config.instance = instance;
          config.column = column.getName();
          items.add(config);
-         
+
       }
 
       AbstractObject object = view.getObject();
@@ -276,7 +279,7 @@ public class TableValueViewer extends BaseTableValueViewer
     */
    public String getTitle()
    {
-      return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]");  
+      return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]");
    }
 
    /**
@@ -285,9 +288,67 @@ public class TableValueViewer extends BaseTableValueViewer
    @Override
    protected Table readData() throws Exception
    {
+      statusMessage = null;
       if (objectId == 0)
          return null;
-      return session.getTableLastValues(objectId, dciId);
+
+      Table table = session.getTableLastValues(objectId, dciId);
+
+      // Always check DCI status to detect errors, even if table has cached data
+      DciValue dciInfo = getDciInfo();
+      if (dciInfo != null)
+      {
+         if (dciInfo.getStatus() == DataCollectionObjectStatus.DISABLED)
+         {
+            statusMessage = i18n.tr("Data collection is disabled");
+            return null;
+         }
+         else if (dciInfo.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
+         {
+            statusMessage = i18n.tr("Metric is not supported");
+            return null;
+         }
+         else if (dciInfo.getErrorCount() > 0)
+         {
+            statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), dciInfo.getErrorCount());
+            return null;
+         }
+         else if ((table == null) || (table.getRowCount() == 0))
+         {
+            if (dciInfo.isNoValueObject())
+            {
+               statusMessage = i18n.tr("No data collected yet");
+               return null;
+            }
+         }
+      }
+
+      return table;
+   }
+
+   /**
+    * Get DCI info for this table DCI
+    *
+    * @return DCI value info or null if not found
+    */
+   private DciValue getDciInfo() throws Exception
+   {
+      DciValue[] dciList = session.getLastValues(objectId);
+      for(DciValue dci : dciList)
+      {
+         if ((dci.getId() == dciId) && (dci.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+            return dci;
+      }
+      return null;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#getNoDataMessage()
+    */
+   @Override
+   protected String getNoDataMessage()
+   {
+      return statusMessage;
    }
 
    /**
@@ -306,5 +367,16 @@ public class TableValueViewer extends BaseTableValueViewer
    protected String getReadJobErrorMessage()
    {
       return String.format(i18n.tr("Cannot get data for table DCI %d"), dciId);
+   }
+
+   /**
+    * Reset columns to default state
+    */
+   public void resetColumns()
+   {
+      if (currentData == null)
+         return;
+      currentData.deleteAllRows();
+      viewer.reset();
    }
 }

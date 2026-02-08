@@ -184,7 +184,7 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 /**
  * Return protocol name
  */
-const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p)
+const TCHAR NXCORE_EXPORTABLE *GetLinkLayerProtocolName(LinkLayerProtocol p)
 {
    switch(p)
    {

@@ -39,6 +39,11 @@ static Mutex s_parserLock;
 static bool s_processOfflineEvents;
 
 /**
+ * File offset retention time
+ */
+static uint32_t s_offsetRetentionTime;
+
+/**
  * File parsing thread
  */
 static void ParserThreadFile(LogParser *parser, off_t startOffset)
@@ -233,10 +238,130 @@ static LONG H_MetricTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abst
 }
 
 /**
+ * Save parser file position to database
+ */
+static void SaveParserPosition(DB_HANDLE hdb, const LogParser *p)
+{
+   off_t currentPosition = p->getCurrentOffset();
+   if (currentPosition < 0 || p->getStatus() != LogParserStatus::LPS_RUNNING)
+      return;
+
+   String parserId = DBPrepareString(hdb, p->getIdentifier());
+   String fileName = DBPrepareString(hdb, p->getFileName());
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT OR REPLACE INTO logwatch_files (name,path,size,last_update_time) VALUES (%s,%s,") UINT64_FMT _T(",%u)"),
+      parserId.cstr(), fileName.cstr(), static_cast<int64_t>(currentPosition), static_cast<uint32_t>(time(nullptr)));
+
+   if (!DBQuery(hdb, query))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to save file position for parser %s (file: %s)"), p->getName(), p->getFileName());
+   }
+}
+
+/**
+ * Save parser file position to database
+ */
+static void SaveParserPosition(const LogParser *p)
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb != nullptr)
+      SaveParserPosition(hdb, p);
+}
+
+/**
+ * Save current file positions for all running parsers
+ */
+static void SaveFilePositions()
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+   {
+      s_parserLock.lock();
+      for (int i = 0; i < s_parsers.size(); i++)
+      {
+         SaveParserPosition(hdb, s_parsers.get(i));
+      }
+      s_parserLock.unlock();
+   }
+
+   AgentSetTimer(60000, SaveFilePositions);  // every minute
+}
+
+/**
+ * Delete old file positions from database
+ */
+static void DeleteOldFilePositions()
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb != nullptr)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("DELETE FROM logwatch_files WHERE last_update_time<%d"),
+         static_cast<int>(time(nullptr) - s_offsetRetentionTime));
+      if (!DBQuery(hdb, query))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to delete old file positions"));
+      }
+   }
+
+   AgentSetTimer(24 * 3600 * 1000, DeleteOldFilePositions);  // every day
+}
+
+/**
+ * Restore parser file position from database
+ */
+static off_t RestoreParserFilePosition(LogParser *parser)
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return -1;
+
+   // Prepare statement with bind parameters
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT size FROM logwatch_files WHERE name=? AND path=?"));
+   if (hStmt == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to prepare statement for restoring file position for parser %s (file: %s)"), parser->getName(), parser->getFileName());
+      return -1;
+   }
+
+   const String &parserId = parser->getIdentifier();
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, parserId.cstr(), DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, parser->getFileName(), DB_BIND_STATIC);
+
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   off_t position = -1;
+
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         position = static_cast<off_t>(DBGetFieldInt64(hResult, 0, 0));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Restored file position ") INT64_FMT _T(" for parser %s (file: %s)"),
+            position, parser->getName(), parser->getFileName());
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("No saved position found for parser %s (file: %s)"), parser->getName(), parser->getFileName());
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Database query failed while restoring position for parser %s (file: %s)"), parser->getName(), parser->getFileName());
+   }
+
+   DBFreeStatement(hStmt);
+   return position;
+}
+
+/**
  * Called by master agent at unload
  */
 static void SubagentShutdown()
 {
+   SaveFilePositions();
+
    for(int i = 0; i < s_parsers.size(); i++)
       s_parsers.get(i)->stop();
 
@@ -352,6 +477,7 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
       int index = matchingFiles.indexOf(monitoredFiles.get(i));
       if (index != -1)
       {
+         SaveParserPosition(activeParsers->get(monitoredFiles.get(i)));
          matchingFiles.remove(index);
          monitoredFiles.remove(i);
       }
@@ -373,7 +499,7 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
       p->setCallback(LogParserMatch);
       p->setDataPushCallback(AgentPushParameterData);
       p->setActionCallback(ExecuteAction);
-      p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? static_cast<off_t>(-1) : static_cast<off_t>(0)));
+      p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? RestoreParserFilePosition(p) : static_cast<off_t>(0)));
       activeParsers->set(matchingFiles.get(i), p);
    }
 
@@ -437,14 +563,14 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 			for (int i = 0; i < parsers->size(); i++)
 			{
 				LogParser *parser = parsers->get(i);
-				const TCHAR *parserName = parser->getFileName();
-				if (parserName != nullptr && parserName[0] != 0)
+				const TCHAR *parserFileName = parser->getFileName();
+				if (parserFileName != nullptr && parserFileName[0] != 0)
 				{
-               if (_tcscspn(parserName + 1, _T("*?")) != _tcslen(parserName + 1))
+               if (_tcscspn(parserFileName + 1, _T("*?")) != _tcslen(parserFileName + 1))
                {
                   parser->setGuid(guid);
                   s_templateParsers.add(parser);
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\" (GUID = %s)"), parserName, guid.toString().cstr());
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\" (GUID = %s)"), parserFileName, guid.toString().cstr());
                }
                else
                {
@@ -453,7 +579,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
                   parser->setActionCallback(ExecuteAction);
                   parser->setGuid(guid);
                   s_parsers.add(parser);
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\" (GUID = %s)"), parserName, guid.toString().cstr());
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\" (GUID = %s)"), parserFileName, guid.toString().cstr());
 #ifdef _WIN32
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
@@ -545,6 +671,8 @@ static bool SubagentInit(Config *config)
    InitLogParserLibrary();
 
    s_processOfflineEvents = config->getValueAsBoolean(_T("/LogWatch/ProcessOfflineEvents"), false);
+   uint32_t offset = config->getValueAsUInt(_T("/LogWatch/LogOffsetRetentionTime"), 10);
+   s_offsetRetentionTime = offset * 24 * 3600;
 
 	ConfigEntry *parsers = config->getEntry(_T("/LogWatch/Parser"));
 	if (parsers != nullptr)
@@ -557,6 +685,7 @@ static bool SubagentInit(Config *config)
    for (int i = 0; i < s_parsers.size(); i++)
 	{
       LogParser *p = s_parsers.get(i);
+      off_t startPos = RestoreParserFilePosition(p);
 #ifdef _WIN32
 		if (p->getFileName()[0] == _T('*'))	// event log
 		{
@@ -567,10 +696,10 @@ static bool SubagentInit(Config *config)
 		}
 		else	// regular file
 		{
-			p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
+			p->setThread(ThreadCreateEx(ParserThreadFile, p, startPos));
 		}
 #else
-		p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
+		p->setThread(ThreadCreateEx(ParserThreadFile, p, startPos));
 #endif
 	}
 
@@ -579,6 +708,9 @@ static bool SubagentInit(Config *config)
       LogParser *p = s_templateParsers.get(i);
       p->setThread(ThreadCreateEx(TemplateParserThread, p));
    }
+
+   AgentSetTimer(60000, SaveFilePositions);  // every minute
+   DeleteOldFilePositions();
 
 	return true;
 }
@@ -610,6 +742,7 @@ static void OnAgentNotify(UINT32 code, void *data)
       }
 
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
+      SaveParserPosition(p);
       p->stop();
       s_parsers.remove(i);
       i--;
@@ -639,6 +772,7 @@ static void OnAgentNotify(UINT32 code, void *data)
       if (!p->getGuid().equals(n->guid))
          continue;
 
+      off_t startPos = RestoreParserFilePosition(p);
 #ifdef _WIN32
       if (p->getFileName()[0] == _T('*'))	// event log
       {
@@ -649,10 +783,10 @@ static void OnAgentNotify(UINT32 code, void *data)
       }
       else	// regular file
       {
-         p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
+         p->setThread(ThreadCreateEx(ParserThreadFile, p, startPos));
       }
 #else
-      p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
+      p->setThread(ThreadCreateEx(ParserThreadFile, p, startPos));
 #endif
    }
 

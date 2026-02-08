@@ -430,7 +430,7 @@ public class ObjectQueryManager extends ConfigurationView
             final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), 0, null, null, inputValues, 0, true, 0, (p) -> {
                monitor.worked(p - progress);
                progress = p;
-            });
+            }, null);
             monitor.done();
             runInUIThread(() -> openView(new ObjectQueryResultView(query.getName(), resultSet)));
          }

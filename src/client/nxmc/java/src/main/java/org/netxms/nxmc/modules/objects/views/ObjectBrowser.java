@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
@@ -60,6 +62,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
@@ -73,6 +76,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.NavigationView;
@@ -81,6 +85,7 @@ import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -101,6 +106,7 @@ public class ObjectBrowser extends NavigationView
    private Action actionMoveDashboard;
    private Action actionMoveMap;
    private Action actionMoveAsset;
+   private Action actionShowHiddenObjects;
 
    /**
     * @param name
@@ -256,6 +262,38 @@ public class ObjectBrowser extends NavigationView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      boolean showHiddenObjects = PreferenceStore.getInstance().getAsBoolean("ObjectBrowser.ShowHiddenObjects." + subtreeType.toString(), false);
+      objectTree.setShowHiddenObjects(showHiddenObjects);
+      actionShowHiddenObjects.setChecked(showHiddenObjects);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionShowHiddenObjects);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionShowHiddenObjects);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * Add correct move action to object context menu in infrastructure tree.
     *
     * @param manager menu manager
@@ -352,6 +390,17 @@ public class ObjectBrowser extends NavigationView
             moveObject(SubtreeType.ASSETS);
          }
       };
+
+      actionShowHiddenObjects = new Action(i18n.tr("Show &hidden objects"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            objectTree.setShowHiddenObjects(isChecked());
+            PreferenceStore.getInstance().set("ObjectBrowser.ShowHiddenObjects." + subtreeType.toString(), isChecked());
+         }
+      };
+      actionShowHiddenObjects.setChecked(objectTree.isShowHiddenObjects());
+      actionShowHiddenObjects.setImageDescriptor(ResourceManager.getImageDescriptor("icons/hidden-objects.png"));
    }
 
    /**
@@ -437,6 +486,7 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_DASHBOARD);
             classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
             classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDTEMPLATE);
             break;
          case INFRASTRUCTURE:
             classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
@@ -573,7 +623,10 @@ public class ObjectBrowser extends NavigationView
                   (currentObject instanceof DashboardGroup)) &&
                  ((parentObject instanceof DashboardRoot) ||
                  (parentObject instanceof DashboardGroup) ||
-                 (parentObject instanceof Dashboard))) ? true : false;
+                 (parentObject instanceof Dashboard)) || 
+                 ((currentObject instanceof DashboardTemplate) &&
+                 ((parentObject instanceof DashboardRoot) || 
+                 (parentObject instanceof DashboardGroup)))) ? true : false;
          default:
             return false;
       }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,14 @@ public class NXCPCodes
    public static final int CMD_DELETE_CONFIG_VARIABLE = 0x0011;
    public static final int CMD_NOTIFY = 0x0012;
 	public static final int CMD_TRAP = 0x0013;
-	public static final int CMD_OPEN_EPP = 0x0014;
-	public static final int CMD_CLOSE_EPP = 0x0015;
-	public static final int CMD_SAVE_EPP = 0x0016;
-	public static final int CMD_EPP_RECORD = 0x0017;
+	public static final int CMD_GET_EPP = 0x0014;
+   public static final int CMD_SAVE_EPP = 0x0015;
+   public static final int CMD_EPP_RECORD = 0x0016;
+   public static final int CMD_EXPLAIN_EPP_RULE = 0x0017;
 	public static final int CMD_EVENT_DB_UPDATE = 0x0018;
 	public static final int CMD_TRAP_CFG_UPDATE = 0x0019;
 	public static final int CMD_SET_EVENT_INFO = 0x001A;
-   public static final int CMD_GET_DCI_MEASUREMENT_UNITS = 0x001B;
+   public static final int CMD_REQUEST_AI_ASSISTANT_COMMENT = 0x001B;
 	public static final int CMD_LOAD_EVENT_DB = 0x001C;
 	public static final int CMD_REQUEST_COMPLETED = 0x001D;
 	public static final int CMD_LOAD_USER_DB = 0x001E;
@@ -109,8 +109,8 @@ public class NXCPCodes
 	public static final int CMD_ACTION_DATA = 0x0053;
 	public static final int CMD_SETUP_AGENT_TUNNEL = 0x0054;
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
-	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
-	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
+   // public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
+   // public static final int CMD_GET_PREDICTED_DATA = 0x0057;
 	public static final int CMD_STOP_SERVER_COMMAND = 0x0058;
 	public static final int CMD_POLL_OBJECT = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;
@@ -493,6 +493,37 @@ public class NXCPCodes
    public static final int CMD_SET_COMPONENT_TOKEN = 0x01D8;
    public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
    public static final int CMD_LINK_NETWORK_MAP_NODES = 0x01DA;
+   public static final int CMD_GET_DC_OBJECT = 0x01DB;
+   public static final int CMD_GET_AI_ASSISTANT_FUNCTIONS = 0x01DC;
+   public static final int CMD_CALL_AI_ASSISTANT_FUNCTION = 0x01DD;
+   public static final int CMD_GET_AI_AGENT_TASKS = 0x01DE;
+   public static final int CMD_DELETE_AI_AGENT_TASK = 0x01DF;
+   public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;
+   public static final int CMD_CREATE_AI_ASSISTANT_CHAT = 0x01E1;
+   public static final int CMD_DELETE_AI_ASSISTANT_CHAT = 0x01E2;
+   public static final int CMD_AI_FUNCTION_CALL = 0x01E3;
+   public static final int CMD_CLEAR_NOTIFICATION_QUEUE = 0x01E4;
+   public static final int CMD_DECOMMISSION_NODE = 0x01E5;
+   public static final int CMD_GET_INCIDENTS = 0x01E6;
+   public static final int CMD_GET_INCIDENT_DETAILS = 0x01E7;
+   public static final int CMD_CREATE_INCIDENT = 0x01E8;
+   public static final int CMD_UPDATE_INCIDENT = 0x01E9;
+   public static final int CMD_CHANGE_INCIDENT_STATE = 0x01EA;
+   public static final int CMD_ASSIGN_INCIDENT = 0x01EB;
+   public static final int CMD_LINK_ALARM_TO_INCIDENT = 0x01EC;
+   public static final int CMD_UNLINK_ALARM_FROM_INCIDENT = 0x01ED;
+   public static final int CMD_ADD_INCIDENT_COMMENT = 0x01EE;
+   public static final int CMD_GET_INCIDENT_ACTIVITY = 0x01EF;
+   public static final int CMD_INCIDENT_UPDATE = 0x01F0;
+   public static final int CMD_AI_AGENT_QUESTION = 0x01F1;
+   public static final int CMD_AI_AGENT_RESPONSE = 0x01F2;
+   public static final int CMD_GET_AI_MESSAGES = 0x01F6;
+   public static final int CMD_AI_MESSAGE_UPDATE = 0x01F7;
+   public static final int CMD_SET_AI_MESSAGE_STATUS = 0x01F8;
+   public static final int CMD_DELETE_AI_MESSAGE = 0x01F9;
+   public static final int CMD_GET_LOG_QUERY_SQL = 0x01FA;
+   public static final int CMD_GET_LIST_LIST = 0x01FB;
+   public static final int CMD_QUERY_LIST = 0x01FC;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -606,7 +637,7 @@ public class NXCPCodes
 	public static final long VID_ACTION_DATA = 100;
 	public static final long VID_EMAIL_SUBJECT = 101;
 	public static final long VID_RCPT_ADDR = 102;
-	public static final long VID_NPE_NAME = 103;
+   // public static final long VID_NPE_NAME = 103;
 	public static final long VID_CATEGORY_ID = 104;
 	public static final long VID_DCI_DELTA_CALCULATION = 105;
 	public static final long VID_TRANSFORMATION_SCRIPT = 106;
@@ -773,7 +804,7 @@ public class NXCPCodes
 	public static final long VID_PORT = 268;
 	public static final long VID_PDU = 269;
 	public static final long VID_PDU_SIZE = 270;
-//	public static final long VID_IS_SYSTEM = 271;
+   public static final long VID_AI_AGENT_INSTRUCTIONS = 271;
 	public static final long VID_GRAPH_CONFIG = 272;
 	public static final long VID_NUM_GRAPHS = 273;
 	public static final long VID_GRAPH_ID = 274;
@@ -1367,6 +1398,71 @@ public class NXCPCodes
    public static final long VID_SMTP_TLS_MODE = 864;
    public static final long VID_PEER_LAST_UPDATED = 865;
    public static final long VID_THRESHOLD_ENABLE_TIME = 866;
+   public static final long VID_FORCED_CONTEXT_OBJECT = 867;
+   public static final long VID_DASHBOARD_NAME_TEMPLATE = 868;
+   public static final long VID_USE_MULTIPLIER = 869;
+   public static final long VID_ARGUMENTS = 870;
+   public static final long VID_METADATA_SIZE = 871;
+   public static final long VID_MAX_SPEED = 872;
+   public static final long VID_PROMPT = 873;
+   public static final long VID_TIMESTAMP_MS = 874;
+   public static final long VID_CHAT_ID = 875;
+   public static final long VID_SYSLOG_NUM_RECORDS = 876;
+   public static final long VID_WIN_LOG_NUM_RECORDS = 877;
+   public static final long VID_DECOMMISSION_TIME = 878;
+   public static final long VID_CLEAR_IP_ADDRESSES = 879;
+   public static final long VID_INCIDENT_ID = 880;
+   public static final long VID_INCIDENT_STATE = 881;
+   public static final long VID_INCIDENT_TITLE = 882;
+   public static final long VID_INCIDENT_DESCRIPTION = 883;
+   public static final long VID_INCIDENT_ASSIGNED_USER = 884;
+   public static final long VID_SOURCE_ALARM_ID = 885;
+   public static final long VID_CLOSED_BY_USER = 886;
+   public static final long VID_CLOSE_TIME = 887;
+   public static final long VID_RESOLVE_TIME = 888;
+   public static final long VID_INCIDENT_DELAY = 889;
+   public static final long VID_AI_QUESTION_ID = 890;
+   public static final long VID_AI_QUESTION_TYPE = 891;
+   public static final long VID_AI_CONFIRMATION_TYPE = 892;
+   public static final long VID_AI_QUESTION_TEXT = 893;
+   public static final long VID_AI_QUESTION_CONTEXT = 894;
+   public static final long VID_AI_QUESTION_TIMEOUT = 895;
+   public static final long VID_AI_RESPONSE_POSITIVE = 896;
+   public static final long VID_AI_RESPONSE_OPTION = 897;
+   public static final long VID_AI_QUESTION_OPTIONS = 898;
+   public static final long VID_TERMINAL_TYPE = 899;
+   public static final long VID_OUTPUT = 900;
+   public static final long VID_INCIDENT_AI_DEPTH = 901;
+   public static final long VID_INCIDENT_AI_PROMPT = 902;
+   public static final long VID_SAMPLE_SAVE_INTERVAL = 903;
+   public static final long VID_AI_MESSAGE_ID = 904;
+   public static final long VID_AI_MESSAGE_TYPE = 905;
+   public static final long VID_AI_MESSAGE_TITLE = 906;
+   public static final long VID_AI_MESSAGE_TEXT = 907;
+   public static final long VID_AI_MESSAGE_STATUS = 908;
+   public static final long VID_AI_MESSAGE_EXPIRATION = 909;
+   public static final long VID_AI_MESSAGE_SPAWN_DATA = 910;
+   public static final long VID_AI_MESSAGE_RELATED_OBJ = 911;
+   public static final long VID_AI_MESSAGE_SOURCE_TASK = 912;
+   public static final long VID_PORT_STOP_COUNT = 913;
+   public static final long VID_SNMP_CONTEXT = 914;
+   public static final long VID_QUERY_SQL = 915;
+   public static final long VID_AI_FUNCTION_NAME = 916;
+   public static final long VID_AI_HINT = 917;
+   public static final long VID_TEMPLATE_REMOVAL_GP = 918;
+   public static final long VID_EPP_VERSION = 919;
+   public static final long VID_RULE_VERSION = 920;
+   public static final long VID_BASE_VERSION = 921;
+   public static final long VID_MODIFIED_BY_GUID = 922;
+   public static final long VID_MODIFIED_BY_NAME = 923;
+   public static final long VID_CONFLICT_COUNT = 924;
+   public static final long VID_CONFLICT_TYPE = 925;
+   public static final long VID_RULE_MODIFIED = 926;
+   public static final long VID_DELETED_RULE_COUNT = 927;
+   public static final long VID_RULE_VERSION_COUNT = 928;
+   public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
+   public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
+   public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1395,6 +1491,7 @@ public class NXCPCodes
    public static final long VID_URL_LIST_BASE = 0x74000000L;
    public static final long VID_ICMP_TARGET_LIST_BASE = 0x75000000L;
    public static final long VID_ASSET_PROPERTIES_BASE = 0x76000000L;
+   public static final long VID_PORT_STOP_LIST_BASE = 0x77000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
@@ -1462,6 +1559,8 @@ public class NXCPCodes
    public static final long VID_RADIO_LIST_BASE = 0x34000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
+	public static final long VID_SYSLOG_RULES_LIST_BASE = 0x20000000L;
+	public static final long VID_WIN_EVENT_RULES_LIST_BASE = 0x30000000L;
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
@@ -1492,4 +1591,8 @@ public class NXCPCodes
    public static final long VID_WARNING_LIST_BASE = 0x38000000L;
    public static final long VID_PARTIAL_OBJECT_INFO_BASE = 0x10000000L;
    public static final long VID_UNIT_NAMES_BASE = 0x10000000L;
+   public static final long VID_METADATA_BASE = 0x1F000000L;
+   public static final long VID_INCIDENT_LIST_BASE = 0x60000000L;
+   public static final long VID_ACTIVITY_LIST_BASE = 0x61000000L;
+   public static final long VID_COMMENT_LIST_BASE = 0x62000000L;
 }

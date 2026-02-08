@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -77,19 +77,41 @@ SNMP_Variable::SNMP_Variable(std::initializer_list<uint32_t> name, uint32_t type
 /**
  * Copy constructor
  */
-SNMP_Variable::SNMP_Variable(const SNMP_Variable *src) : m_name(src->m_name), m_codepage(src->m_codepage)
+SNMP_Variable::SNMP_Variable(const SNMP_Variable& src) : m_name(src.m_name), m_codepage(src.m_codepage)
 {
-   m_valueLength = src->m_valueLength;
-   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src->m_value != nullptr))
+   m_valueLength = src.m_valueLength;
+   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
    {
       m_value = m_valueBuffer;
-      memcpy(m_value, src->m_value, m_valueLength);
+      memcpy(m_value, src.m_value, m_valueLength);
    }
    else
    {
-      m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
+      m_value = (src.m_value != nullptr) ? MemCopyBlock(src.m_value, src.m_valueLength) : nullptr;
    }
-   m_type = src->m_type;
+   m_type = src.m_type;
+}
+
+/**
+ * Move constructor
+ */
+SNMP_Variable::SNMP_Variable(SNMP_Variable&& src) : m_name(std::move(src.m_name)), m_codepage(src.m_codepage)
+{
+   m_valueLength = src.m_valueLength;
+   if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+   {
+      m_value = m_valueBuffer;
+      memcpy(m_value, src.m_value, m_valueLength);
+      if (src.m_value != src.m_valueBuffer)
+         MemFreeAndNull(src.m_value);
+   }
+   else
+   {
+      m_value = src.m_value;
+      src.m_value = nullptr;
+   }
+   src.m_valueLength = 0;
+   m_type = src.m_type;
 }
 
 /**
@@ -99,6 +121,68 @@ SNMP_Variable::~SNMP_Variable()
 {
    if (m_value != m_valueBuffer)
       MemFree(m_value);
+}
+
+/**
+ * Assignment operator
+ */
+SNMP_Variable& SNMP_Variable::operator=(const SNMP_Variable& src)
+{
+   if (this != &src)
+   {
+      m_name = src.m_name;
+      m_codepage = src.m_codepage;
+
+      m_valueLength = src.m_valueLength;
+      if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = m_valueBuffer;
+         memcpy(m_value, src.m_value, m_valueLength);
+      }
+      else
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = (src.m_value != nullptr) ? MemCopyBlock(src.m_value, src.m_valueLength) : nullptr;
+      }
+      m_type = src.m_type;
+   }
+   return *this;
+}
+
+/**
+ * Move assignment operator
+ */
+SNMP_Variable& SNMP_Variable::operator=(SNMP_Variable&& src)
+{
+   if (this != &src)
+   {
+      m_name = std::move(src.m_name);
+      m_codepage = src.m_codepage;
+
+      m_valueLength = src.m_valueLength;
+      if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src.m_value != nullptr))
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = m_valueBuffer;
+         memcpy(m_value, src.m_value, m_valueLength);
+         if (src.m_value != src.m_valueBuffer)
+            MemFreeAndNull(src.m_value);
+      }
+      else
+      {
+         if (m_value != m_valueBuffer)
+            MemFree(m_value);
+         m_value = src.m_value;
+         src.m_value = nullptr;
+      }
+      src.m_valueLength = 0;
+      m_type = src.m_type;
+   }
+   return *this;
 }
 
 /**
@@ -117,15 +201,17 @@ bool SNMP_Variable::decode(const BYTE *data, size_t varLength)
 
    bool success = false;
    SNMP_OID oid;
-   memset(&oid, 0, sizeof(SNMP_OID));
    if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)&oid))
    {
-      m_name.setValue(oid.value, (size_t)oid.length);
+      m_name.setValue(oid.value, oid.length);
       varLength -= length + dwIdLength;
       pbCurrPos += length;
       success = true;
+      if (oid.value != oid.internalBuffer)
+      {
+         MemFree(oid.value);
+      }
    }
-   MemFree(oid.value);
 
    if (success)
       success = decodeContent(pbCurrPos, varLength - length - dwIdLength, false);
@@ -151,16 +237,18 @@ bool SNMP_Variable::decodeContent(const BYTE *data, size_t dataLength, bool encl
    {
       case ASN_OBJECT_ID:
          SNMP_OID oid;
-         memset(&oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(m_type, pbCurrPos, length, reinterpret_cast<BYTE*>(&oid)))
          {
             m_valueLength = oid.length * sizeof(uint32_t);
-            m_value = reinterpret_cast<BYTE*>(oid.value);
+            if (oid.value != oid.internalBuffer)
+            {
+               m_value = reinterpret_cast<BYTE*>(oid.value);
+            }
+            else
+            {
+               m_value = MemCopyBlock(reinterpret_cast<BYTE*>(oid.value), m_valueLength);
+            }
             success = true;
-         }
-         else
-         {
-            MemFree(oid.value);
          }
          break;
       case ASN_INTEGER:
@@ -392,20 +480,32 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
    switch(m_type)
    {
       case ASN_INTEGER:
-         _sntprintf(buffer, bufferSize, _T("%d"), *reinterpret_cast<int32_t*>(m_value));
+         if (bufferSize >= 12)
+            IntegerToString(*reinterpret_cast<int32_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         _sntprintf(buffer, bufferSize, _T("%u"), *reinterpret_cast<uint32_t*>(m_value));
+         if (bufferSize >= 12)
+            IntegerToString(*reinterpret_cast<uint32_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_INTEGER64:
-         _sntprintf(buffer, bufferSize, INT64_FMT, *reinterpret_cast<int64_t*>(m_value));
+         if (bufferSize >= 22)
+            IntegerToString(*reinterpret_cast<int64_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_COUNTER64:
       case ASN_UINTEGER64:
-         _sntprintf(buffer, bufferSize, UINT64_FMT, *reinterpret_cast<uint64_t*>(m_value));
+         if (bufferSize >= 22)
+            IntegerToString(*reinterpret_cast<uint64_t*>(m_value), buffer);
+         else
+            buffer[0] = 0;
          break;
       case ASN_FLOAT:
          _sntprintf(buffer, bufferSize, _T("%f"), *reinterpret_cast<float*>(m_value));
@@ -559,6 +659,148 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 	}
 
 	return buffer;
+}
+
+/**
+ * Get value formatted according to display hint
+ * Falls back to getValueAsPrintableString() if hint is null/empty or parsing fails
+ */
+TCHAR *SNMP_Variable::getValueWithDisplayHint(const TCHAR *hint, TCHAR *buffer, size_t bufferSize) const
+{
+   // Validate inputs
+   if ((buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
+
+   // Fall back if no hint or not an octet string
+   if ((hint == nullptr) || (*hint == 0) || (m_type != ASN_OCTET_STRING))
+   {
+      bool convertToHex = true;
+      return getValueAsPrintableString(buffer, bufferSize, &convertToHex);
+   }
+
+   // Parse and apply display hint
+   // RFC 2579 display-hint format: 1*octet-format
+   // Each octet-format: [*]repeat-count format-char [separator]
+   // For simple hints like "1x:", the pattern repeats for all bytes
+   StringBuffer result;
+   size_t valuePos = 0;
+   const TCHAR *hintPos = hint;
+   TCHAR lastSeparator = 0;  // Track separator for repeating pattern
+   bool firstElement = true;
+
+   while (valuePos < m_valueLength)
+   {
+      // If we've exhausted the hint but still have bytes, restart from beginning
+      // This handles simple repeating patterns like "1x:" for MAC addresses
+      if (*hintPos == 0)
+      {
+         // If the hint had a separator at the end, it means repeat the pattern
+         if (lastSeparator != 0)
+         {
+            hintPos = hint;  // Restart hint from beginning
+         }
+         else
+         {
+            // No separator at end means remaining bytes should be formatted in hex
+            break;
+         }
+      }
+
+      // Check for variable repeat indicator
+      bool variableRepeat = false;
+      if (*hintPos == _T('*'))
+      {
+         variableRepeat = true;
+         hintPos++;
+      }
+
+      // Parse repeat count (number of octets to format)
+      int repeatCount = 0;
+      while (_istdigit(*hintPos))
+      {
+         repeatCount = repeatCount * 10 + (*hintPos - _T('0'));
+         hintPos++;
+      }
+
+      if (repeatCount == 0)
+         repeatCount = 1;
+
+      // If variable repeat, get count from next octet in value
+      if (variableRepeat && valuePos < m_valueLength)
+      {
+         repeatCount = m_value[valuePos++];
+      }
+
+      // Parse format character
+      TCHAR formatChar = *hintPos++;
+      if (formatChar == 0)
+         break;
+
+      // Parse optional separator
+      TCHAR separator = 0;
+      if (*hintPos != 0 && !_istdigit(*hintPos) && *hintPos != _T('*'))
+      {
+         separator = *hintPos++;
+      }
+      lastSeparator = separator;  // Remember for pattern repetition
+
+      // Format the octets according to repeat count
+      for (int i = 0; i < repeatCount && valuePos < m_valueLength; i++)
+      {
+         // Add separator between items (not before first one in entire output)
+         if (!firstElement && separator != 0)
+            result.append(separator);
+         firstElement = false;
+
+         switch (formatChar)
+         {
+            case _T('x'):  // Hexadecimal (lowercase)
+               {
+                  TCHAR hex[3];
+                  hex[0] = bin2hex(m_value[valuePos] >> 4);
+                  hex[1] = bin2hex(m_value[valuePos] & 0x0F);
+                  hex[2] = 0;
+                  result.append(hex);
+                  valuePos++;
+               }
+               break;
+
+            case _T('d'):  // Decimal (unsigned)
+               {
+                  TCHAR decimal[8];
+                  _sntprintf(decimal, 8, _T("%u"), static_cast<unsigned int>(m_value[valuePos++]));
+                  result.append(decimal);
+               }
+               break;
+
+            case _T('o'):  // Octal
+               {
+                  TCHAR octal[8];
+                  _sntprintf(octal, 8, _T("%o"), static_cast<unsigned int>(m_value[valuePos++]));
+                  result.append(octal);
+               }
+               break;
+
+            case _T('a'):  // ASCII character
+            case _T('t'):  // UTF-8 (treat as ASCII for single bytes)
+               if (m_value[valuePos] >= 0x20 && m_value[valuePos] < 0x7F)
+                  result.append(static_cast<TCHAR>(m_value[valuePos]));
+               else
+                  result.append(_T('.'));  // Non-printable placeholder
+               valuePos++;
+               break;
+
+            default:
+               // Unknown format character, skip byte
+               valuePos++;
+               break;
+         }
+      }
+   }
+
+   // Copy result to buffer
+   _tcslcpy(buffer, result.cstr(), bufferSize);
+   return buffer;
 }
 
 /**

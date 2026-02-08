@@ -42,7 +42,7 @@
     <ProjectGuid>{E95263B5-A248-4163-95F3-E33CA679AEB3}</ProjectGuid>
     <RootNamespace>winnt</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -199,7 +199,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -224,7 +224,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -249,7 +249,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -266,7 +266,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -287,7 +287,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -310,7 +310,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -332,7 +332,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -355,7 +355,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -377,7 +377,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;netapi32.lib;psapi.lib;wtsapi32.lib;ws2_32.lib;iphlpapi.lib;ntdll.lib;setupapi.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).nsm</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -395,7 +395,9 @@
     <ClCompile Include="net.cpp" />
     <ClCompile Include="procinfo.cpp" />
     <ClCompile Include="prod.cpp" />
+    <ClCompile Include="registry.cpp" />
     <ClCompile Include="system.cpp" />
+    <ClCompile Include="usb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />

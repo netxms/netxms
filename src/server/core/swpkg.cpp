@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,9 +27,11 @@
  */
 int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
 {
-   int rc = _tcscmp((*p1)->getName(), (*p2)->getName());
+   int rc = wcscmp((*p1)->getName(), (*p2)->getName());
    if (rc == 0)
-      rc = _tcscmp((*p1)->getVersion(), (*p2)->getVersion());
+      rc = wcscmp((*p1)->getVersion(), (*p2)->getVersion());
+   if (rc == 0)
+      rc = wcscmp(CHECK_NULL_EX((*p1)->getUser()), CHECK_NULL_EX((*p2)->getUser()));
    return rc;
 }
 
@@ -38,7 +40,7 @@ int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePacka
  */
 static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
 {
-   return _tcscmp((*p1)->getName(), (*p2)->getName());
+   return wcscmp((*p1)->getName(), (*p2)->getName());
 }
 
 /**
@@ -58,7 +60,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
          continue;
       }
 
-      if (!_tcscmp(p->getVersion(), np->getVersion()))
+      if (!wcscmp(p->getVersion(), np->getVersion()))
          continue;
 
       if (newSet->bsearch(p, PackageNameVersionComparator) != nullptr)
@@ -93,7 +95,7 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
       SoftwarePackage *p = newSet->get(i);
       if (p->getChangeCode() == CHANGE_UPDATED)
          continue;   // already marked as upgrade for some existing package
-      if (oldSet->bsearch(p, PackageNameVersionComparator) != NULL)
+      if (oldSet->bsearch(p, PackageNameVersionComparator) != nullptr)
          continue;
 
       p->setChangeCode(CHANGE_ADDED);
@@ -108,9 +110,9 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
  */
 #define EXTRACT_VALUE(name, field) \
 	{ \
-		if (!_tcsicmp(table.getColumnName(i), _T(name))) \
+		if (!wcsicmp(table.getColumnName(i), _T(name))) \
 		{ \
-			const TCHAR *value = table.getAsString(row, i); \
+			const wchar_t *value = table.getAsString(row, i); \
 			pkg->field = MemCopyString(value); \
 			continue; \
 		} \
@@ -134,6 +136,7 @@ SoftwarePackage *SoftwarePackage::createFromTableRow(const Table& table, int row
       EXTRACT_VALUE("URL", m_url);
       EXTRACT_VALUE("DESCRIPTION", m_description);
       EXTRACT_VALUE("UNINSTALL_KEY", m_uninstallKey);
+      EXTRACT_VALUE("USER", m_user);
 
       if (!_tcsicmp(table.getColumnName(i), _T("DATE")))
          pkg->m_date = table.getAsUInt(row, i);
@@ -169,6 +172,7 @@ SoftwarePackage::SoftwarePackage()
 	m_url = nullptr;
 	m_description = nullptr;
 	m_uninstallKey = nullptr;
+	m_user = nullptr;
 	m_changeCode = CHANGE_NONE;
 }
 
@@ -182,11 +186,12 @@ SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
 {
    m_name = DBGetField(result, row, 0, nullptr, 0);
    m_version = DBGetField(result, row, 1, nullptr, 0);
-   m_vendor = DBGetField(result, row, 2, nullptr, 0);
-   m_date = (time_t)DBGetFieldULong(result, row, 3);
-   m_url = DBGetField(result, row, 4, nullptr, 0);
-   m_description = DBGetField(result, row, 5, nullptr, 0);
-   m_uninstallKey = DBGetField(result, row, 6, nullptr, 0);
+   m_user = DBGetField(result, row, 2, nullptr, 0);
+   m_vendor = DBGetField(result, row, 3, nullptr, 0);
+   m_date = (time_t)DBGetFieldULong(result, row, 4);
+   m_url = DBGetField(result, row, 5, nullptr, 0);
+   m_description = DBGetField(result, row, 6, nullptr, 0);
+   m_uninstallKey = DBGetField(result, row, 7, nullptr, 0);
    m_changeCode = CHANGE_NONE;
 }
 
@@ -202,6 +207,7 @@ SoftwarePackage::SoftwarePackage(const SoftwarePackage& src)
    m_url = MemCopyString(src.m_url);
    m_description = MemCopyString(src.m_description);
    m_uninstallKey = MemCopyString(src.m_uninstallKey);
+   m_user = MemCopyString(src.m_user);
    m_changeCode = src.m_changeCode;
 }
 
@@ -216,6 +222,7 @@ SoftwarePackage::~SoftwarePackage()
 	MemFree(m_url);
 	MemFree(m_description);
    MemFree(m_uninstallKey);
+   MemFree(m_user);
 }
 
 /**
@@ -229,6 +236,7 @@ SoftwarePackage& SoftwarePackage::operator=(const SoftwarePackage& src)
    MemFree(m_url);
    MemFree(m_description);
    MemFree(m_uninstallKey);
+   MemFree(m_user);
 
    m_name = MemCopyString(src.m_name);
    m_version = MemCopyString(src.m_version);
@@ -237,6 +245,7 @@ SoftwarePackage& SoftwarePackage::operator=(const SoftwarePackage& src)
    m_url = MemCopyString(src.m_url);
    m_description = MemCopyString(src.m_description);
    m_uninstallKey = MemCopyString(src.m_uninstallKey);
+   m_user = MemCopyString(src.m_user);
    return *this;
 }
 
@@ -253,6 +262,26 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(fieldId++, CHECK_NULL_EX(m_url));
 	msg->setField(fieldId++, CHECK_NULL_EX(m_description));
    msg->setField(fieldId++, CHECK_NULL_EX(m_uninstallKey));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_user));
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *SoftwarePackage::toJson() const
+{
+   json_t *root = json_object();
+
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "version", json_string_t(m_version));
+   json_object_set_new(root, "vendor", json_string_t(m_vendor));
+   json_object_set_new(root, "date", json_integer(static_cast<json_int_t>(m_date)));
+   json_object_set_new(root, "url", json_string_t(m_url));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "uninstallKey", json_string_t(m_uninstallKey));
+   json_object_set_new(root, "user", json_string_t(m_user));
+
+   return root;
 }
 
 /**
@@ -260,12 +289,22 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, uint32_t baseId) const
  */
 bool SoftwarePackage::saveToDatabase(DB_STATEMENT hStmt) const
 {
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 127);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC, 63);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 63);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_date));
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC, 255);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_uninstallKey, DB_BIND_STATIC, 255);
+   // Generate package_id: name|version|user
+   StringBuffer packageId;
+   packageId.append(CHECK_NULL_EX(m_name));
+   packageId.append(_T('|'));
+   packageId.append(CHECK_NULL_EX(m_version));
+   packageId.append(_T('|'));
+   packageId.append(CHECK_NULL_EX(m_user));
+
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, packageId, DB_BIND_TRANSIENT, 319);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 127);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC, 63);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_user, DB_BIND_STATIC, 127);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 63);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_date));
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC, 255);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_uninstallKey, DB_BIND_STATIC, 255);
    return DBExecute(hStmt);
 }

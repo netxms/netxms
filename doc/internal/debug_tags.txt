@@ -136,6 +136,8 @@ npe.tsre	Time series regression engine
 ntcb		NTCB module
 ntcb.session	NTCB module sessions
 
+nxsl.ssh	NXSL SSH session operations
+
 nxcp.streamcomp	NXCP stream compression
 
 obj.*		Object related
@@ -203,7 +205,7 @@ snmp.proxy	SNMP proxy related
 snmp.trap	SNMP trap processing
 snmp.trap.flood	SNMP trap flood detection
 ssh		SSH subagent
-
+ssh.channel	SSH interactive channel (server-side)
 
 startup		Server startup
 statcoll	Internal server statistic collector

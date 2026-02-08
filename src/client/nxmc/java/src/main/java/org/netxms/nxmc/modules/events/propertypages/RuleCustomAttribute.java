@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Custom attribute" property page for EPP rule
+ * "Custom Attributes" property page for EPP rule
  */
 public class RuleCustomAttribute extends RuleBasePropertyPage
 {

@@ -251,9 +251,32 @@ static bool BuildFullOID(MP_MODULE *module, MP_OBJECT *pObject, StringSet *unres
 }
 
 /**
+ * Find textual convention by name across all loaded modules
+ * This is used to find TCs when a simple typedef (from SMIv1) shadows them
+ */
+static MP_OBJECT *FindTextualConventionByName(const ObjectArray<MP_MODULE>& moduleList, const char *name)
+{
+   for(int i = 0; i < moduleList.size(); i++)
+   {
+      MP_MODULE *module = moduleList.get(i);
+      for(int j = 0; j < module->pObjectList->size(); j++)
+      {
+         MP_OBJECT *obj = module->pObjectList->get(j);
+         if ((obj->iType == MIBC_TEXTUAL_CONVENTION) &&
+             (obj->pszName != nullptr) &&
+             !strcmp(obj->pszName, name))
+         {
+            return obj;
+         }
+      }
+   }
+   return nullptr;
+}
+
+/**
  * Resolve syntax for object
  */
-static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
+static void ResolveSyntax(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *module, MP_OBJECT *pObject)
 {
    if ((pObject->iSyntax != -1) || (pObject->pszDataType == nullptr))
       return;
@@ -261,6 +284,7 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
    char *pszType = pObject->pszDataType;
    MP_MODULE *pCurrModule = module;
    MP_OBJECT *pType;
+   MP_OBJECT *pTextualConvention = nullptr;  // Save first TC encountered in chain
    do
    {
 		int index = 0;
@@ -273,14 +297,33 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
          pType = FindImportedObjectByName(pCurrModule, CHECK_NULL_A(pszType), &pCurrModule);
       if (pType == nullptr)
          break;
+      // Save first textual convention encountered
+      if ((pTextualConvention == nullptr) && (pType->iType == MIBC_TEXTUAL_CONVENTION))
+         pTextualConvention = pType;
       pszType = pType->pszDataType;
    } while(pType->iSyntax == -1);
 
    if (pType != nullptr)
    {
       pObject->iSyntax = pType->iSyntax;
-		if (pType->iType == MIBC_TEXTUAL_CONVENTION)
-         pObject->pszTextualConvention = MemCopyStringA(pType->pszDescription);
+      // Copy TC info from first textual convention in chain, not final type
+      if (pTextualConvention != nullptr)
+      {
+         pObject->pszTextualConvention = MemCopyStringA(pTextualConvention->pszName);
+         pObject->displayHint = MemCopyStringA(pTextualConvention->displayHint);
+      }
+      else if (pObject->pszDataType != nullptr)
+      {
+         // If no TC found in chain but we have a type name, search for TC with same name
+         // in all loaded modules. This handles SMIv1 MIBs that define simple typedefs
+         // (like PhysAddress ::= OCTET STRING) which shadow SMIv2 TCs with display hints.
+         MP_OBJECT *tc = FindTextualConventionByName(moduleList, pObject->pszDataType);
+         if (tc != nullptr)
+         {
+            pObject->pszTextualConvention = MemCopyStringA(tc->pszName);
+            pObject->displayHint = MemCopyStringA(tc->displayHint);
+         }
+      }
    }
    else
    {
@@ -291,7 +334,7 @@ static void ResolveSyntax(MP_MODULE *module, MP_OBJECT *pObject)
 /**
  * Resolve object identifiers
  */
-static void ResolveObjects(MP_MODULE *module)
+static void ResolveObjects(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *module)
 {
    StringSet unresolvedSymbols;
    for(int i = 0; i < module->pObjectList->size(); i++)
@@ -301,7 +344,7 @@ static void ResolveObjects(MP_MODULE *module)
       {
          if (BuildFullOID(module, object, &unresolvedSymbols))
          {
-            ResolveSyntax(module, object);
+            ResolveSyntax(moduleList, module, object);
          }
          else
          {
@@ -343,26 +386,29 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
                      }
                   }
 #ifdef UNICODE
-						WCHAR *wname = WideStringFromMBString(pObject->pszName);
-						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
-						WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
+                  WCHAR *wname = WideStringFromMBString(pObject->pszName);
+                  WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+                  WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
+                  WCHAR *wdh = WideStringFromMBString(pObject->displayHint);
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
-                                               wdescr, wtc,
+                                               wdescr, wtc, wdh,
                                                (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
-						MemFree(wname);
-						MemFree(wdescr);
-						MemFree(wtc);
+                  MemFree(wname);
+                  MemFree(wdescr);
+                  MemFree(wtc);
+                  MemFree(wdh);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                pObject->pszDescription,
-															  pObject->pszTextualConvention,
-															  (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                                               pObject->pszTextualConvention,
+                                               pObject->displayHint,
+                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 #endif
 					}
                else
@@ -393,15 +439,18 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
                      }
                   }
 #ifdef UNICODE
-						WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
-						WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
+                  WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
+                  WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
+                  WCHAR *wdh = WideStringFromMBString(pObject->displayHint);
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
-                     wdescr, wtc, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
-						MemFree(wdescr);
-						MemFree(wtc);
+                     wdescr, wtc, wdh, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                  MemFree(wdescr);
+                  MemFree(wtc);
+                  MemFree(wdh);
 #else
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
-                     pObject->pszDescription, pObject->pszTextualConvention, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                     pObject->pszDescription, pObject->pszTextualConvention, pObject->displayHint,
+                     (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
 #endif
                   if (pNewObj->getName() == nullptr)
 						{
@@ -507,7 +556,7 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **rootObject)
    {
       MP_MODULE *module = moduleList.get(i);
       MarkStep(module->pszName);
-      ResolveObjects(module);
+      ResolveObjects(moduleList, module);
    }
    CompleteStage();
 

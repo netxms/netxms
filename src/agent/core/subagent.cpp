@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 
 					// Add lists provided by this subagent to common list
 					for(size_t i = 0; i < info->numLists; i++)
-						AddList(info->lists[i].name, info->lists[i].handler, info->lists[i].arg, info->mericFilter);
+						AddList(info->lists[i].name, info->lists[i].handler, info->lists[i].arg, info->lists[i].description, info->mericFilter);
 
 					// Add tables provided by this subagent to common list
 					for(size_t i = 0; i < info->numTables; i++)
@@ -136,6 +136,9 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 					// Add actions provided by this subagent to common list
 					for(size_t i = 0; i < info->numActions; i++)
 						AddAction(info->actions[i].name, false, info->actions[i].arg, info->actions[i].handler, info->name, info->actions[i].description);
+
+					// Register AI tools provided by this subagent
+					RegisterAIToolsFromSubagent(info);
 
 					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), info->name, moduleName, info->version);
 					success = true;
@@ -329,6 +332,27 @@ bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessag
       {
          processed = s->commandHandler(command, request, response, session);
          session->debugPrintf(7, _T("Command %sprocessed by sub-agent %s"), 
+            processed ? _T("") : _T("not "), s->name);
+      }
+   }
+   return processed;
+}
+
+/**
+ * Process binary message by subagents
+ * Uses the same commandHandler but with response=nullptr to indicate binary message
+ */
+bool ProcessBinaryMessageBySubAgent(NXCPMessage *msg, AbstractCommSession *session)
+{
+   bool processed = false;
+   uint32_t command = msg->getCode();
+   for(int i = 0; (i < s_subAgents.size()) && !processed; i++)
+   {
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->info;
+      if (s->commandHandler != nullptr)
+      {
+         processed = s->commandHandler(command, msg, nullptr, session);
+         session->debugPrintf(7, _T("Binary message %sprocessed by sub-agent %s"),
             processed ? _T("") : _T("not "), s->name);
       }
    }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, i18n.tr("Manage two-factor authentication methods")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, i18n.tr("Configure server actions")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, i18n.tr("Manage agent configurations")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_TASKS, i18n.tr("Manage AI tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, i18n.tr("Manage Image Library")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, i18n.tr("Manage mapping tables")));
@@ -103,11 +104,12 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, i18n.tr("Manage own scheduled tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, i18n.tr("Manage persistent storage")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, i18n.tr("Read server files")));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, i18n.tr("Manage agent tunnels")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, i18n.tr("Manage agent tunnels")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, i18n.tr("Reporting server access")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, i18n.tr("Schedule file upload"))); 
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, i18n.tr("Schedule object maintenance")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, i18n.tr("Schedule script execution")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, i18n.tr("Search network")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, i18n.tr("Send notifications")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, i18n.tr("Edit server configuration variables")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, i18n.tr("Access server console")));
@@ -123,6 +125,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, i18n.tr("View event log")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, i18n.tr("View syslog")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, i18n.tr("View SNMP trap log")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_WELCOME_PAGE, i18n.tr("View welcome page")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, i18n.tr("Manage web service definitions")));
 
       Composite dialogArea = new Composite(parent, SWT.BORDER);

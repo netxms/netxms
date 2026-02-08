@@ -45,6 +45,7 @@ import org.netxms.client.PollState;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
+import org.netxms.client.PortStopEntry;
 import org.netxms.client.users.ResponsibleUser;
 
 /**
@@ -98,6 +99,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_NETWORKMAP = 21;
 	public static final int OBJECT_DASHBOARDROOT = 22;
 	public static final int OBJECT_DASHBOARD = 23;
+   public static final int OBJECT_DASHBOARDTEMPLATE = 24;
 	public static final int OBJECT_BUSINESSSERVICEROOT = 27;
 	public static final int OBJECT_BUSINESSSERVICE = 28;
 	public static final int OBJECT_COLLECTOR = 29;
@@ -109,6 +111,7 @@ public abstract class AbstractObject
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;
+   
 	public static final int OBJECT_CUSTOM = 10000;
 
 	// Status calculation methods
@@ -137,6 +140,7 @@ public abstract class AbstractObject
    protected int flags;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
+	protected boolean isHidden = false;
 	protected boolean inMaintenanceMode = false;
    protected int maintenanceInitiatorId = 0;
 	protected long primaryZoneProxyId = 0;
@@ -148,6 +152,7 @@ public abstract class AbstractObject
 	protected UUID mapImage;
 	protected long drillDownObjectId;
    protected long assetId;
+   protected String aiHint;
 	protected final HashSet<Long> trustedObjects = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
@@ -165,6 +170,7 @@ public abstract class AbstractObject
 	protected final Map<String, CustomAttribute> customAttributes = new HashMap<String, CustomAttribute>(0);
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
    protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
+   protected final List<PortStopEntry> portStopList = new ArrayList<PortStopEntry>(0);
 	protected Map<String, Object> moduleData = null;
    protected PollState[] pollStates = null;
    protected boolean partialObject;
@@ -229,6 +235,7 @@ public abstract class AbstractObject
       categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
+		isHidden = msg.getFieldAsBoolean(NXCPCodes.VID_IS_HIDDEN);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
       maintenanceInitiatorId = msg.getFieldAsInt32(NXCPCodes.VID_MAINTENANCE_INITIATOR);
@@ -241,6 +248,7 @@ public abstract class AbstractObject
 		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
       assetId = msg.getFieldAsInt64(NXCPCodes.VID_ASSET_ID);
+      aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
@@ -332,6 +340,12 @@ public abstract class AbstractObject
       id = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
       for(i = 0; i < count; i++, id += 10)
          responsibleUsers.add(new ResponsibleUser(msg, id));
+
+      // Port stop list
+      count = msg.getFieldAsInt32(NXCPCodes.VID_PORT_STOP_COUNT);
+      id = NXCPCodes.VID_PORT_STOP_LIST_BASE;
+      for(i = 0; i < count; i++, id += 10)
+         portStopList.add(new PortStopEntry(msg, id));
 
       // Poll states
       count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_POLL_STATES);
@@ -547,6 +561,16 @@ public abstract class AbstractObject
 	public boolean isDeleted()
 	{
 		return isDeleted;
+	}
+
+	/**
+	 * Check if object is hidden
+	 *
+	 * @return true if object is hidden
+	 */
+	public boolean isHidden()
+	{
+		return isHidden;
 	}
 
 	/**
@@ -880,7 +904,17 @@ public abstract class AbstractObject
 	}
 
    /**
-    * Get  list of associated dashboards
+    * Get list of associated dashboard identifiers
+    * 
+    * @return set of the dashboard object identifiers
+    */
+   public Set<Long> getDashboardIdentifiers()
+   {
+      return new HashSet<Long>(dashboards);
+   }
+
+   /**
+    * Get list of associated dashboards
     * 
     * @param accessibleOnly if set to true, only accessible dashboards will be returned
     * @return list of the dashboard objects
@@ -1167,6 +1201,16 @@ public abstract class AbstractObject
    }
 
    /**
+    * Get AI hint for this object.
+    *
+    * @return AI hint string or null
+    */
+   public String getAiHint()
+   {
+      return aiHint;
+   }
+
+   /**
     * @return the statusCalculationMethod
     */
 	public int getStatusCalculationMethod()
@@ -1353,12 +1397,22 @@ public abstract class AbstractObject
    
    /**
     * Get direct responsible users
-    * 
+    *
     * @return responsible users list
     */
    public List<ResponsibleUser> getResponsibleUsers()
    {
       return responsibleUsers;
+   }
+
+   /**
+    * Get port stop list for this object (own list, not inherited).
+    *
+    * @return port stop list
+    */
+   public List<PortStopEntry> getPortStopList()
+   {
+      return portStopList;
    }
 
    /**

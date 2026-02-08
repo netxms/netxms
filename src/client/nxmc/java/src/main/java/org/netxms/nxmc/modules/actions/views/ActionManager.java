@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -64,7 +63,6 @@ import org.xnap.commons.i18n.I18n;
 public class ActionManager extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ActionManager.class);
-   private static final String ID = "ActionList";
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
@@ -89,7 +87,7 @@ public class ActionManager extends ConfigurationView
     */
    public ActionManager()
    {
-      super(LocalizationHelper.getI18n(ActionManager.class).tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"), ID, true);
+      super(LocalizationHelper.getI18n(ActionManager.class).tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"), "configuration.actions", true);
       session = Registry.getSession();
    }
 
@@ -103,7 +101,7 @@ public class ActionManager extends ConfigurationView
             i18n.tr("Subject"), i18n.tr("Data"), i18n.tr("Channel") };
       final int[] columnWidths = { 150, 90, 100, 120, 200, 100 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      WidgetHelper.restoreTableViewerSettings(viewer, ID);
+      WidgetHelper.restoreTableViewerSettings(viewer, "ActionManager");
       viewer.setContentProvider(new ArrayContentProvider());
       ActionLabelProvider labelProvider = new ActionLabelProvider();
       viewer.setLabelProvider(labelProvider);
@@ -135,7 +133,7 @@ public class ActionManager extends ConfigurationView
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, ID);
+            WidgetHelper.saveTableViewerSettings(viewer, "ActionManager");
          }
       });
 
@@ -305,12 +303,7 @@ public class ActionManager extends ConfigurationView
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());

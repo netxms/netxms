@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ DCTable::DCTable(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start,
  *    related_object,polling_schedule_type,retention_type,polling_interval_src,
- *    retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time
+ *    retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time,snmp_context
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -80,7 +80,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
 	m_resourceId = DBGetFieldUInt32(hResult, row, 12);
 	m_sourceNode = DBGetFieldUInt32(hResult, row, 13);
 	m_perfTabSettings = DBGetFieldAsSharedString(hResult, row, 14);
-   setTransformationScript(DBGetFieldAsString(hResult, row, 15));
+	setTransformationScriptInternal(DBGetFieldAsString(hResult, row, 15));
    m_comments = DBGetFieldAsSharedString(hResult, row, 16);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    m_instanceDiscoveryMethod = DBGetFieldUInt16(hResult, row, 18);
@@ -98,6 +98,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
    m_stateFlags = DBGetFieldUInt32(hResult, row, 30);
    m_userTag = DBGetFieldAsSharedString(hResult, row, 31);
    m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 32);
+   m_snmpContext = DBGetFieldAsSharedString(hResult, row, 33);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -163,6 +164,43 @@ DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& own
 }
 
 /**
+ * Create DCTable from imported JSON configuration
+ */
+DCTable::DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCObject(json, owner)
+{
+   m_columns = new ObjectArray<DCTableColumn>(0, 8, Ownership::True);
+   m_thresholds = new ObjectArray<DCTableThreshold>(0, 8, Ownership::True);
+   
+   json_t *columnsArray = json_object_get(json, "columns");
+   if (json_is_array(columnsArray))
+   {
+      size_t index;
+      json_t *columnJson;
+      json_array_foreach(columnsArray, index, columnJson)
+      {
+         if (json_is_object(columnJson))
+         {
+            m_columns->add(new DCTableColumn(columnJson));
+         }
+      }
+   }
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new DCTableThreshold(thresholdJson));
+         }
+      }
+   }
+}
+
+/**
  * Destructor
  */
 DCTable::~DCTable()
@@ -201,7 +239,7 @@ bool DCTable::deleteAllData()
 /**
  * Delete single DCI entry
  */
-bool DCTable::deleteEntry(time_t timestamp)
+bool DCTable::deleteEntry(Timestamp timestamp)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -211,17 +249,17 @@ bool DCTable::deleteEntry(time_t timestamp)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=to_timestamp(")  UINT64_FMT _T(")"),
-                  getStorageClassName(getStorageClass()), m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=ms_to_timestamptz(")  INT64_FMT _T(")"),
+                  getStorageClassName(getStorageClass()), m_id, timestamp.asMilliseconds());
       }
       else
       {
-         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_id, static_cast<uint64_t>(timestamp));
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_id, timestamp.asMilliseconds());
       }
    }
    else
    {
-      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") UINT64_FMT, m_ownerId, m_id, static_cast<uint64_t>(timestamp));
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=") INT64_FMT, m_ownerId, m_id, timestamp.asMilliseconds());
    }
    bool success = DBQuery(hdb, query);
    unlock();
@@ -233,10 +271,12 @@ bool DCTable::deleteEntry(time_t timestamp)
 /**
  * Process new collected value. Should return true on success.
  * If returns false, current poll result will be converted into data collection error.
+ * If allowPastDataPoints is false, data points with timestamp older than last stored one
+ * will be rejected.
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus)
+bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
 {
    *updateStatus = false;
    lock();
@@ -246,6 +286,13 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
    // Normally m_owner shouldn't be nullptr for polled items, but who knows...
    if (owner == nullptr)
    {
+      unlock();
+      return false;
+   }
+
+   if (!allowPastDataPoints && (timestamp < m_lastValueTimestamp))
+   {
+      // Old value, ignore
       unlock();
       return false;
    }
@@ -294,7 +341,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	      if (g_dbSyntax == DB_SYNTAX_TSDB)
 	      {
 	         wchar_t query[256];
-	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,to_timestamp(?),?)"),
+	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,ms_to_timestamptz(?),?)"),
 	                  getStorageClassName(getStorageClass()));
             hStmt = DBPrepare(hdb, query);
 	      }
@@ -312,7 +359,7 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   if (hStmt != nullptr)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
+		   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, timestamp);
 		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->toPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
@@ -326,13 +373,13 @@ bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, 
 	   DBConnectionPoolReleaseConnection(hdb);
    }
 
-   time_t now = time(nullptr);
+   Timestamp now = Timestamp::now();
    if (((g_offlineDataRelevanceTime <= 0) || (timestamp > (now - g_offlineDataRelevanceTime))) &&
-       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp)))
+       ((m_thresholdDisableEndTime == 0) || (m_thresholdDisableEndTime > 0 && m_thresholdDisableEndTime < timestamp.asTime())))
    {
       checkThresholds(value.get());
 
-      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now))
+      if ((m_thresholdDisableEndTime > 0) && (m_thresholdDisableEndTime < now.asTime()))
       {
          // Thresholds were disabled, reset disable end time
          m_thresholdDisableEndTime = 0;
@@ -483,7 +530,7 @@ void DCTable::checkThresholds(Table *value)
 /**
  * Process new data collection error
  */
-void DCTable::processNewError(bool noInstance, time_t now)
+void DCTable::processNewError(bool noInstance, Timestamp timestamp)
 {
 	m_errorCount++;
 }
@@ -526,7 +573,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       L"instd_method", L"instd_data", L"instd_filter", L"instance", L"instance_retention_time",
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"user_tag",
-      L"thresholds_disable_end_time", nullptr
+      L"thresholds_disable_end_time", L"snmp_context", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"dc_tables", L"item_id", m_id, columns);
@@ -573,7 +620,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
    DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
-   DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_snmpContext, DB_BIND_STATIC);
+   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -794,12 +842,12 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
    lock();
 	if (m_lastValue != nullptr)
 	{
-      msg->setFieldFromTime(VID_TIMESTAMP, m_lastValueTimestamp);
+      msg->setField(VID_TIMESTAMP_MS, m_lastValueTimestamp);
       m_lastValue->fillMessage(msg, 0, -1);
 	}
 	else
 	{
-      msg->setFieldFromTime(VID_TIMESTAMP, static_cast<uint32_t>(0));
+      msg->setField(VID_TIMESTAMP_MS, static_cast<int64_t>(0));
 	}
    unlock();
 }
@@ -848,7 +896,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
       msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
       msg->setField(fieldId++, _T(""));             // compatibility: value
    }
-   msg->setFieldFromTime(fieldId++, m_lastPoll);
+   msg->setField(fieldId++, m_lastPollTime);
    msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));
    msg->setField(fieldId++, m_errorCount);
@@ -1042,9 +1090,14 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
    {
       DCTableColumn *col = m_columns->get(i);
       int index = t->getColumnIndex(col->getName());
-      if (index != -1)
+      if (index == -1)
       {
-         TableColumnDefinition *cd = t->getColumnDefinitions().get(index);
+         t->insertColumn(i, col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
+      }
+      else if (_tcscmp(t->getColumnName(i), col->getName()) != 0)
+      {
+         t->swapColumns(i, index);
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
          if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());
@@ -1054,7 +1107,13 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
       }
       else
       {
-         t->addColumn(col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
+         if (cd != nullptr)
+         {
+            cd->setDataType(col->getDataType());
+            cd->setInstanceColumn(col->isInstanceColumn());
+            cd->setDisplayName(col->getDisplayName());
+         }
       }
    }
    unlock();
@@ -1102,114 +1161,84 @@ void DCTable::updateFromTemplate(DCObject *src)
 }
 
 /**
- * Create management pack record
+ * Create JSON configuration export record
  */
-void DCTable::createExportRecord(TextFileWriter& xml) const
+json_t *DCTable::createExportRecord() const
 {
-   lock();
+   json_t *root = json_object();
+   
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "origin", json_integer(m_source));
+   json_object_set_new(root, "scheduleType", json_integer(m_pollingScheduleType));
+   json_object_set_new(root, "interval", json_string_t(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionType", json_integer(m_retentionType));
+   json_object_set_new(root, "retention", json_string_t(m_retentionTimeSrc));
+   json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
+   json_object_set_new(root, "userTag", json_string_t(m_userTag));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
+   json_object_set_new(root, "snmpContext", json_string_t(m_snmpContext));
+   json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
+   json_object_set_new(root, "instance", json_string_t(m_instanceName));
+   json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "isDisabled", json_boolean(m_status == ITEM_STATUS_DISABLED));
 
-   xml.append(_T("\t\t\t\t<dctable id=\""));
-   xml.append(m_id);
-   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
-   xml.append(m_guid);
-   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
-   xml.append(EscapeStringForXML2(m_name));
-   xml.append(_T("</name>\n\t\t\t\t\t<description>"));
-   xml.append(EscapeStringForXML2(m_description));
-   xml.append(_T("</description>\n\t\t\t\t\t<origin>"));
-   xml.append(static_cast<int32_t>(m_source));
-   xml.append(_T("</origin>\n\t\t\t\t\t<scheduleType>"));
-   xml.append(static_cast<int32_t>(m_pollingScheduleType));
-   xml.append(_T("</scheduleType>\n\t\t\t\t\t<interval>"));
-   xml.append(EscapeStringForXML2(m_pollingIntervalSrc));
-   xml.append(_T("</interval>\n\t\t\t\t\t<retentionType>"));
-   xml.append(static_cast<int32_t>(m_retentionType));
-   xml.append(_T("</retentionType>\n\t\t\t\t\t<retention>"));
-   xml.append(EscapeStringForXML2(m_retentionTimeSrc));
-   xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
-   xml.append(EscapeStringForXML2(m_systemTag));
-   xml.append(_T("</systemTag>\n\t\t\t\t\t<userTag>"));
-   xml.append(EscapeStringForXML2(m_userTag));
-   xml.append(_T("</userTag>\n\t\t\t\t\t<flags>"));
-   xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t\t<snmpPort>"));
-   xml.append(m_snmpPort);
-   xml.append(_T("</snmpPort>\n\t\t\t\t\t<snmpVersion>"));
-   xml.append(m_snmpVersion);
-   xml.append(_T("</snmpVersion>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
-   xml.append(m_instanceDiscoveryMethod);
-   xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instance>"));
-   xml.append(EscapeStringForXML2(m_instanceName));
-   xml.append(_T("</instance>\n\t\t\t\t\t<instanceRetentionTime>"));
-   xml.append(m_instanceRetentionTime);
-   xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.append(_T("</comments>\n\t\t\t\t\t<isDisabled>"));
-   xml.append(BooleanToString(m_status == ITEM_STATUS_DISABLED));
-   xml.append(_T("</isDisabled>\n"));
-
-	if (!m_transformationScriptSource.isBlank())
-	{
-		xml.append(_T("\t\t\t\t\t<transformation>"));
-		xml.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
-		xml.append(_T("</transformation>\n"));
-	}
+   if (!m_transformationScriptSource.isBlank())
+   {
+      json_object_set_new(root, "transformation", json_string_t(m_transformationScriptSource));
+   }
 
    if ((m_schedules != nullptr) && !m_schedules->isEmpty())
    {
-      xml.append(_T("\t\t\t\t\t<schedules>\n"));
+      json_t *schedules = json_array();
       for(int i = 0; i < m_schedules->size(); i++)
       {
-         xml.append(_T("\t\t\t\t\t\t<schedule>"));
-         xml.append(EscapeStringForXML2(m_schedules->get(i)));
-         xml.append(_T("</schedule>\n"));
+         json_array_append_new(schedules, json_string_t(m_schedules->get(i)));
       }
-      xml.append(_T("\t\t\t\t\t</schedules>\n"));
+      json_object_set_new(root, "schedules", schedules);
    }
 
-	if (m_columns != nullptr)
-	{
-	   xml.append(_T("\t\t\t\t\t<columns>\n"));
-		for(int i = 0; i < m_columns->size(); i++)
-		{
-			m_columns->get(i)->createExportRecord(xml, i + 1);
-		}
-	   xml.append(_T("\t\t\t\t\t</columns>\n"));
-	}
-
-	if (m_thresholds != nullptr)
-	{
-	   xml.append(_T("\t\t\t\t\t<thresholds>\n"));
-		for(int i = 0; i < m_thresholds->size(); i++)
-		{
-			m_thresholds->get(i)->createExportRecord(xml, i + 1);
-		}
-	   xml.append(_T("\t\t\t\t\t</thresholds>\n"));
-	}
-
-	if (!m_perfTabSettings.isEmpty())
-	{
-		xml.append(_T("\t\t\t\t\t<perfTabSettings>"));
-		xml.appendPreallocated(EscapeStringForXML(m_perfTabSettings, -1));
-		xml.append(_T("</perfTabSettings>\n"));
-	}
-
-	if (m_instanceDiscoveryData != nullptr)
+   if (m_columns != nullptr)
    {
-      xml += _T("\t\t\t\t\t<instanceDiscoveryData>");
-      xml.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
-      xml += _T("</instanceDiscoveryData>\n");
+      json_t *columns = json_array();
+      for(int i = 0; i < m_columns->size(); i++)
+      {
+         json_array_append_new(columns, m_columns->get(i)->createExportRecord());
+      }
+      json_object_set_new(root, "columns", columns);
+   }
+
+   if (m_thresholds != nullptr)
+   {
+      json_t *thresholds = json_array();
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         json_array_append_new(thresholds, m_thresholds->get(i)->createExportRecord());
+      }
+      json_object_set_new(root, "thresholds", thresholds);
+   }
+
+   if (!m_perfTabSettings.isEmpty())
+   {
+      json_object_set_new(root, "perfTabSettings", json_string_t(m_perfTabSettings));
+   }
+
+   if (!m_instanceDiscoveryData.isBlank())
+   {
+      json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
    }
 
    if (!m_instanceFilterSource.isBlank())
    {
-      xml.append(_T("\t\t\t\t\t<instanceFilter>"));
-      xml.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
-      xml.append(_T("</instanceFilter>\n"));
+      json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    }
-
-   unlock();
-   xml.append(_T("\t\t\t\t</dctable>\n"));
+   
+   return root;
 }
 
 /**
@@ -1241,6 +1270,48 @@ void DCTable::updateFromImport(ConfigEntry *config, bool nxslV5)
          m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
       }
    }
+   unlock();
+}
+
+/**
+ * Update DCTable from imported JSON configuration
+ */
+void DCTable::updateFromImport(json_t *json)
+{
+   DCObject::updateFromImport(json);
+
+   lock();
+   
+   m_columns->clear();
+   json_t *columnsArray = json_object_get(json, "columns");
+   if (json_is_array(columnsArray))
+   {
+      size_t index;
+      json_t *columnJson;
+      json_array_foreach(columnsArray, index, columnJson)
+      {
+         if (json_is_object(columnJson))
+         {
+            m_columns->add(new DCTableColumn(columnJson));
+         }
+      }
+   }
+
+   m_thresholds->clear();
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      size_t index;
+      json_t *thresholdJson;
+      json_array_foreach(thresholdsArray, index, thresholdJson)
+      {
+         if (json_is_object(thresholdJson))
+         {
+            m_thresholds->add(new DCTableThreshold(thresholdJson));
+         }
+      }
+   }
+   
    unlock();
 }
 
@@ -1347,32 +1418,74 @@ void DCTable::loadCache()
    }
    else
    {
-      switch(g_dbSyntax)
+      shared_ptr<DataCollectionOwner> owner = getOwner();
+      bool hasV5Table = (owner != nullptr) && (owner->getRuntimeFlags() & ODF_HAS_TDATA_V5_TABLE);
+      if (hasV5Table)
       {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"), m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), m_ownerId, m_id);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_ownerId, m_id);
-            break;
-         default:
-            nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
-            query[0] = 0;   // Unsupported database
-            break;
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM ")
+                  _T("(SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ")
+                  _T("UNION ALL SELECT tdata_value,%s FROM tdata_v5_%u WHERE item_id=%u) d ")
+                  _T("ORDER BY tdata_timestamp DESC"), m_ownerId, m_id, V5TimestampToMs(true), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM ")
+                  _T("(SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ")
+                  _T("UNION ALL SELECT tdata_value,%s FROM tdata_v5_%u WHERE item_id=%u) ")
+                  _T("ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_ownerId, m_id, V5TimestampToMs(true), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_MYSQL:
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_SQLITE:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM ")
+                  _T("(SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ")
+                  _T("UNION ALL SELECT tdata_value,%s FROM tdata_v5_%u WHERE item_id=%u) d ")
+                  _T("ORDER BY tdata_timestamp DESC LIMIT 1"), m_ownerId, m_id, V5TimestampToMs(true), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_DB2:
+               _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM ")
+                  _T("(SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ")
+                  _T("UNION ALL SELECT tdata_value,%s FROM tdata_v5_%u WHERE item_id=%u) d ")
+                  _T("ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_ownerId, m_id, V5TimestampToMs(true), m_ownerId, m_id);
+               break;
+            default:
+               nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
+               query[0] = 0;
+               break;
+         }
+      }
+      else
+      {
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_MSSQL:
+               _sntprintf(query, 512, _T("SELECT TOP 1 tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC"), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_ORACLE:
+               _sntprintf(query, 512, _T("SELECT * FROM (SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC) WHERE ROWNUM<=1"), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_MYSQL:
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_SQLITE:
+            case DB_SYNTAX_TSDB:
+               _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC LIMIT 1"), m_ownerId, m_id);
+               break;
+            case DB_SYNTAX_DB2:
+               _sntprintf(query, 512, _T("SELECT tdata_value,tdata_timestamp FROM tdata_%u WHERE item_id=%u ORDER BY tdata_timestamp DESC FETCH FIRST 1 ROWS ONLY"), m_ownerId, m_id);
+               break;
+            default:
+               nxlog_debug_tag(_T("dc"), 2, _T("INTERNAL ERROR: unsupported database in DCTable::loadCache"));
+               query[0] = 0;   // Unsupported database
+               break;
+         }
       }
    }
 
    char *encodedTable = nullptr;
-   time_t timestamp = 0;
+   Timestamp timestamp = Timestamp::fromMilliseconds(0);
    if (query[0] != 0)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1382,7 +1495,7 @@ void DCTable::loadCache()
          if (DBGetNumRows(hResult) > 0)
          {
             encodedTable = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
-            timestamp = DBGetFieldULong(hResult, 0, 1);
+            timestamp = DBGetFieldTimestamp(hResult, 0, 1);
          }
          DBFreeResult(hResult);
       }

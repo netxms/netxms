@@ -131,14 +131,12 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	private void createPopupMenu()
 	{
-		// Create menu manager
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
-		// Create menu
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
 	}
 
 	/**
@@ -148,7 +146,7 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-		manager.add(actionCopy);
+      manager.add(actionCopy);
 		manager.add(new Separator());
 	}
 
@@ -241,6 +239,26 @@ public abstract class AbstractTraceWidget extends Composite
       viewer.refresh();
 	}
 
+   /**
+    * Add multiple elements at once (for historical data loading).
+    * Elements are added in order, with first element ending up at the top.
+    *
+    * @param elements elements to add
+    */
+   public void addElements(java.util.List<?> elements)
+   {
+      if (isDisposed() || elements.isEmpty())
+         return;
+
+      for(int i = elements.size() - 1; i >= 0; i--)
+      {
+         if (data.size() == MAX_ELEMENTS)
+            data.removeLast();
+         data.addFirst(elements.get(i));
+      }
+      viewer.refresh();
+   }
+
 	/**
     * Refresh viewer
     */
@@ -301,6 +319,19 @@ public abstract class AbstractTraceWidget extends Composite
    public AbstractTraceViewFilter getFilter()
    {
       return filter;
+   }
+
+   /**
+    * Set filter text.
+    *
+    * @param text new filter text
+    */
+   public void setFilterText(String text)
+   {
+      if (filter == null)
+         return;
+      filter.setFilterString(!text.isEmpty() ? text : null);
+      viewer.refresh();
    }
 
    /**

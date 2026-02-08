@@ -1,6 +1,6 @@
 /* Test global variables */
 
-global x;
+global x, m = 24;
 
 x = 1;
 y = 2;
@@ -9,6 +9,7 @@ test();
 
 assert(x == 10);
 assert(y == 2);
+assert(m == 24);
 
 global z = 123;
 assert(z == 123);
@@ -16,9 +17,13 @@ assert(z == 123);
 function test()
 {
 	assert(x == 1);
+	assert(m == 24);
 	assert(y == null);
 	x = 10;
 	y = 20;
+	local m;
+	m = 7;
+	assert(m == 7);
 }
 
 global x = 42;

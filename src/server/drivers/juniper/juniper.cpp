@@ -217,7 +217,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    }
 
    VlanList *vlans = new VlanList();
-   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1 };
+   SNMP_ObjectId oid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1, 5 };  // jnxExVlanTag
    const SNMP_Variable *v;
    while((v = vlanTable->getNext(oid)) != nullptr)
    {
@@ -225,7 +225,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
       vlans->add(vlan);
 
       oid = v->getName();
-      oid.changeElement(oid.length() - 2, 2);   // VLAN name
+      oid.changeElement(oid.length() - 2, 2);   // jnxExVlanName
       const SNMP_Variable *name = vlanTable->get(oid);
       if (name != nullptr)
       {
@@ -234,9 +234,11 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
       }
 
       // VLAN ports
-      uint32_t vlanId = oid.getElement(oid.length() - 1);
+      oid.changeElement(oid.length() - 2, 4);   // jnxExVlanPortGroupInstance
+      uint32_t vlanIndex = vlanTable->getAsUInt32(oid);
+
       SNMP_ObjectId baseOid { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1, 5, 0 };
-      baseOid.changeElement(baseOid.length() - 1, vlanId);
+      baseOid.changeElement(baseOid.length() - 1, vlanIndex);
       const SNMP_Variable *p = nullptr;
       while((p = portTable->getNext((p != nullptr) ? p->getName() : baseOid)) != nullptr)
       {
@@ -394,6 +396,40 @@ void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverD
 bool JuniperDriver::isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData)
 {
    return true;
+}
+
+/**
+ * Get SSH driver hints for Juniper JunOS devices
+ */
+void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // JunOS prompt patterns:
+   // - Operational mode: user@hostname>
+   // - Configuration mode: user@hostname#
+   // - May include routing instance: user@hostname:instance>
+   hints->promptPattern = "^[\\w.-]+@[\\w.-]+(:[\\w.-]+)?[>%#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+@[\\w.-]+(:[\\w.-]+)?#\\s*$";
+
+   // JunOS uses class-based authorization, not enable/disable model
+   // Some systems may still have "enable" equivalent via "start shell"
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // Pagination control - use "set cli screen-length 0" in operational mode
+   hints->paginationDisableCmd = "set cli screen-length 0";
+   hints->paginationPrompt = "---\\([Mm]ore\\s*\\d*%?\\)---|---\\(more\\)---";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = "show version | match JUNOS";
+   hints->testCommandPattern = "JUNOS";
+
+   // Timeouts (JunOS devices may be slower due to XML parsing)
+   hints->commandTimeout = 60000;
+   hints->connectTimeout = 20000;
 }
 
 /**

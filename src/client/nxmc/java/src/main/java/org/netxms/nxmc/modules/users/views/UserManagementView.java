@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.users.propertypages.General;
 import org.netxms.nxmc.modules.users.propertypages.GroupMembership;
 import org.netxms.nxmc.modules.users.propertypages.Members;
 import org.netxms.nxmc.modules.users.propertypages.SystemRights;
+import org.netxms.nxmc.modules.users.propertypages.TokenManagement;
 import org.netxms.nxmc.modules.users.propertypages.UIAccessRules;
 import org.netxms.nxmc.modules.users.views.helpers.DecoratingUserLabelProvider;
 import org.netxms.nxmc.modules.users.views.helpers.UserComparator;
@@ -207,24 +208,18 @@ public class UserManagementView extends ConfigurationView
       if (session.isUserDatabaseSynchronized())
          return;
 
-      Job job = new Job(i18n.tr("Synchronize users"), this) {
+      Job job = new Job(i18n.tr("Synchronizing users"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.syncUserDatabase();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {                      
-                  viewer.setInput(session.getUserDatabaseObjects());
-               }
-            });
+            runInUIThread(() -> viewer.setInput(session.getUserDatabaseObjects()));
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot synchronize user database";
+            return i18n.tr("Cannot synchronize user database");
          }
       };
       job.setUser(false);
@@ -268,6 +263,7 @@ public class UserManagementView extends ConfigurationView
             {
                pm.addToRoot(new PreferenceNode("authentication", new Authentication((User)userObject, UserManagementView.this)));
                pm.addToRoot(new PreferenceNode("group-membership", new GroupMembership((User)userObject, UserManagementView.this)));
+               pm.addToRoot(new PreferenceNode("token-management", new TokenManagement((User)userObject, UserManagementView.this)));
             }
             else if (userObject instanceof UserGroup)
             {

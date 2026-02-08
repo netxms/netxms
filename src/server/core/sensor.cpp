@@ -331,11 +331,11 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
          break;
       case IDM_SNMP_WALK_VALUES:
          if (sourceNode != nullptr)
-            sourceNode->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances);
+            sourceNode->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances, dco->getSnmpContext());
          break;
       case IDM_SNMP_WALK_OIDS:
          if (sourceNode != nullptr)
-            sourceNode->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap);
+            sourceNode->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap, dco->getSnmpContext());
          break;
       case IDM_WEB_SERVICE:
          if (sourceNode != nullptr)

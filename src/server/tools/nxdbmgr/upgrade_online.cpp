@@ -29,7 +29,7 @@ bool ConvertTDataTables(int stage);
  */
 bool IsOnlineUpgradePending()
 {
-   TCHAR buffer[MAX_DB_STRING];
+   wchar_t buffer[MAX_DB_STRING];
    DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    return buffer[0] != 0;
@@ -40,22 +40,22 @@ bool IsOnlineUpgradePending()
  */
 void RegisterOnlineUpgrade(int major, int minor)
 {
-   TCHAR id[16];
+   wchar_t id[16];
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
-   TCHAR buffer[MAX_DB_STRING];
-   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   wchar_t buffer[MAX_DB_STRING];
+   DBMgrMetaDataReadStr(L"PendingOnlineUpgrades", buffer, MAX_DB_STRING, L"");
    Trim(buffer);
 
    if (buffer[0] == 0)
    {
-      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), id);
+      DBMgrMetaDataWriteStr(L"PendingOnlineUpgrades", id);
    }
    else
    {
-      _tcslcat(buffer, _T(","), MAX_DB_STRING);
-      _tcslcat(buffer, id, MAX_DB_STRING);
-      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), buffer);
+      wcslcat(buffer, L",", MAX_DB_STRING);
+      wcslcat(buffer, id, MAX_DB_STRING);
+      DBMgrMetaDataWriteStr(L"PendingOnlineUpgrades", buffer);
    }
 }
 
@@ -64,11 +64,11 @@ void RegisterOnlineUpgrade(int major, int minor)
  */
 void UnregisterOnlineUpgrade(int major, int minor)
 {
-   TCHAR id[16];
+   wchar_t id[16];
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
-   TCHAR buffer[MAX_DB_STRING];
-   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   wchar_t buffer[MAX_DB_STRING];
+   DBMgrMetaDataReadStr(L"PendingOnlineUpgrades", buffer, MAX_DB_STRING, L"");
    Trim(buffer);
 
    bool changed = false;
@@ -146,8 +146,8 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
       bool success = DBBegin(g_dbHandle);
       for(int i = 0; (i < count) && success; i++)
       {
-         UINT64 id = DBGetFieldUInt64(hResult, i, 0);
-         UINT32 objectId = DBGetFieldULong(hResult, i, 1);
+         uint64_t id = DBGetFieldUInt64(hResult, i, 0);
+         uint32_t objectId = DBGetFieldUInt32(hResult, i, 1);
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
          DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, id);
          success = DBExecute(hStmt);
@@ -503,6 +503,231 @@ static bool Upgrade_43_9()
 }
 
 /**
+ * Delete duplicate records from data table
+/**
+ * Delete duplicate records from data table, per-database engine.
+ * Supported: PostgreSQL, MySQL (8+ and MariaDB 10.2+), MSSQL, Oracle, SQLite.
+ */
+void DeleteDuplicateDataRecords(const wchar_t *tableType, uint32_t objectId)
+{
+   wchar_t query[2048] = L"";
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u a USING ("
+         L"    SELECT item_id, %s_timestamp, MIN(ctid) as min_ctid "
+         L"    FROM %s_%u "
+         L"    GROUP BY item_id, %s_timestamp "
+         L"    HAVING COUNT(*) > 1"
+         L") b "
+         L"WHERE a.item_id = b.item_id "
+         L"  AND a.%s_timestamp = b.%s_timestamp "
+         L"  AND a.ctid > b.min_ctid",
+         tableType, objectId,  // DELETE ... FROM %s_%u
+         tableType,            // b: SELECT ... %s_timestamp
+         tableType, objectId,  // b: FROM %s_%u
+         tableType,            // b: GROUP BY ... %s_timestamp
+         tableType, tableType // a.%s_timestamp = b.%s_timestamp
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MYSQL) // Assuming 8.0+ or 10.2+
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE t1 FROM %s_%u t1 "
+         L"JOIN ("
+         L"    SELECT item_id, %s_timestamp, "
+         L"           ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY item_id) AS rn "
+         L"    FROM %s_%u"
+         L") t2 "
+         L"ON t1.item_id = t2.item_id "
+         L"AND t1.%s_timestamp = t2.%s_timestamp "
+         L"WHERE t2.rn > 1",
+         tableType, objectId,
+         tableType,
+         tableType,
+         tableType, objectId,
+         tableType, tableType
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      nx_swprintf(query, 2048,
+         L"WITH Duplicates AS ("
+         L"    SELECT *, ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY item_id) AS rn "
+         L"    FROM %s_%u"
+         L") "
+         L"DELETE FROM Duplicates WHERE rn > 1",
+         tableType,
+         tableType, objectId
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u "
+         L"WHERE ROWID IN ("
+         L"    SELECT rid FROM ("
+         L"        SELECT ROWID AS rid, ROW_NUMBER() OVER (PARTITION BY item_id, %s_timestamp ORDER BY ROWID) AS rn "
+         L"        FROM %s_%u"
+         L"    ) WHERE rn > 1"
+         L")",
+         tableType, objectId,
+         tableType,
+         tableType, objectId
+      );
+   }
+   else if (g_dbSyntax == DB_SYNTAX_SQLITE)
+   {
+      nx_swprintf(query, 2048,
+         L"DELETE FROM %s_%u "
+         L"WHERE rowid NOT IN ("
+         L"    SELECT MIN(rowid) "
+         L"    FROM %s_%u "
+         L"    GROUP BY item_id, %s_timestamp"
+         L")",
+         tableType, objectId,
+         tableType, objectId,
+         tableType
+      );
+   }
+
+   if (query[0] != 0)
+      SQLQuery(query);
+}
+
+/**
+ * Add primary key for data tables for objects selected by given query
+ */
+static bool AddPKForDataTables(const wchar_t *query)
+{
+   bool success = false;
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      success = true;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+
+         if (IsDataTableExist(L"idata_%u", id))
+         {
+            DeleteDuplicateDataRecords(L"idata", id);
+
+            wchar_t table[64], index[64];
+            _sntprintf(table, 64, L"idata_%u", id);
+            _sntprintf(index, 64, L"idx_idata_%u_id_timestamp", id);
+            DBDropIndex(g_dbHandle, table, index);
+            DBAddPrimaryKey(g_dbHandle,table, _T("item_id,idata_timestamp"));
+         }
+
+         if (IsDataTableExist(L"tdata_%u", id))
+         {
+            DeleteDuplicateDataRecords(L"tdata", id);
+
+            wchar_t table[64], index[64];
+            _sntprintf(table, 64, L"tdata_%u", id);
+            _sntprintf(index, 64, L"idx_tdata_%u", id);
+            DBDropIndex(g_dbHandle, table, index);
+            DBAddPrimaryKey(g_dbHandle,table, L"item_id,tdata_timestamp");
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
+ * Add primary key to all data tables for given object class
+ */
+static bool AddPKForClassDataTables(const wchar_t *className)
+{
+   wchar_t query[1024];
+   _sntprintf(query, 256, L"SELECT id FROM %s", className);
+   return AddPKForDataTables(query);
+}
+
+/**
+ * Online upgrade for version 52.21
+ */
+static bool Upgrade_52_21()
+{
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"nodes"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"clusters"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"mobile_devices"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"access_points"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"chassis"));
+   CHK_EXEC_NO_SP(AddPKForClassDataTables(L"sensors"));
+   CHK_EXEC_NO_SP(AddPKForDataTables(L"SELECT id FROM object_containers WHERE object_class=29 OR object_class=30"));
+   return true;
+}
+
+/**
+ * Remove primary key from data tables for objects selected by given query
+ */
+static bool RemovePKFromDataTables(const wchar_t *query)
+{
+   bool success = false;
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      success = true;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+
+         if (IsDataTableExist(L"idata_%u", id))
+         {
+            wchar_t table[64], query[256];
+            _sntprintf(table, 64, L"idata_%u", id);
+            DBDropPrimaryKey(g_dbHandle, table);
+
+            _sntprintf(query, 256, L"CREATE INDEX idx_idata_%u_id_timestamp ON idata_%u(item_id,idata_timestamp DESC)", id, id);
+            SQLQuery(query);
+         }
+
+         if (IsDataTableExist(L"tdata_%u", id))
+         {
+            wchar_t table[64], query[256];
+            _sntprintf(table, 64, L"tdata_%u", id);
+            DBDropPrimaryKey(g_dbHandle, table);
+
+            _sntprintf(query, 256, L"CREATE INDEX idx_tdata_%u ON tdata_%u(item_id,tdata_timestamp)", id, id);
+            SQLQuery(query);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
+ * Remove primary key from all data tables for given object class
+ */
+static bool RemovePKFromClassDataTables(const wchar_t *className)
+{
+   wchar_t query[1024];
+   _sntprintf(query, 256, L"SELECT id FROM %s", className);
+   return RemovePKFromDataTables(query);
+}
+
+/**
+ * Online upgrade for version 52.24
+ */
+static bool Upgrade_52_24()
+{
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"nodes"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"clusters"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"mobile_devices"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"access_points"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"chassis"));
+   CHK_EXEC_NO_SP(RemovePKFromClassDataTables(L"sensors"));
+   CHK_EXEC_NO_SP(RemovePKFromDataTables(L"SELECT id FROM object_containers WHERE object_class=29 OR object_class=30"));
+   return true;
+}
+
+/**
  * Online upgrade registry
  */
 struct
@@ -512,6 +737,8 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
+   { 52, 24, Upgrade_52_24 },
+   { 52, 21, Upgrade_52_21 },
    { 43, 9,  Upgrade_43_9  },
    { 35, 2,  Upgrade_35_2  },
    { 33, 6,  Upgrade_33_6  },
@@ -526,7 +753,7 @@ struct
  */
 void RunPendingOnlineUpgrades()
 {
-   TCHAR buffer[MAX_DB_STRING];
+   wchar_t buffer[MAX_DB_STRING];
    DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    if (buffer[0] == 0)
@@ -534,6 +761,15 @@ void RunPendingOnlineUpgrades()
       _tprintf(_T("No pending background upgrades\n"));
       return;
    }
+
+   // Check if database is locked
+   bool locked = false;
+   wchar_t lockStatus[MAX_DB_STRING];
+   if (DBMgrMetaDataReadStr(L"DBBackgroundUpgradeLock", lockStatus, MAX_DB_STRING, L""))
+      locked = wcscmp(lockStatus, L"LOCKED") == 0;
+
+   if (locked && !GetYesNo(_T("Background upgrade is locked by another process\nAre you sure you want to start background upgrade?")))
+      return;
 
    StringList upgradeList = String(buffer).split(_T(","));
    for(int i = 0; i < upgradeList.size(); i++)
@@ -554,14 +790,20 @@ void RunPendingOnlineUpgrades()
          }
          if (handler != nullptr)
          {
+            DBMgrMetaDataWriteStr(_T("DBBackgroundUpgradeLock"), _T("LOCKED"));
+
             _tprintf(_T("Running background upgrade procedure for version %d.%d\n"), major, minor);
             if (!handler())
             {
                _tprintf(_T("Background upgrade procedure for version %d.%d failed\n"), major, minor);
+
+               DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("UNLOCKED"));
                break;
             }
             _tprintf(_T("Background upgrade procedure for version %d.%d completed\n"), major, minor);
             UnregisterOnlineUpgrade(major, minor);
+
+            DBMgrMetaDataWriteStr(_T("DBOnlineUpgradeLockStatus"), _T("UNLOCKED"));
          }
          else
          {

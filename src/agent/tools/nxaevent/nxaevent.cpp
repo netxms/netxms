@@ -131,7 +131,7 @@ static void ShowUsage(char *argv0)
 {
 	_tprintf(
 _T("NetXMS Agent Event Sender  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2025 Raden Solutions\n\n")
+_T("Copyright (c) 2006-2026 Raden Solutions\n\n")
 _T("Usage: %hs [OPTIONS] event_code [parameters]\n")
 _T("  \n")
 _T("Options:\n")

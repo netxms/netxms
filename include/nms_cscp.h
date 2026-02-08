@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -217,14 +217,14 @@ typedef struct
 #define CMD_DELETE_CONFIG_VARIABLE        0x0011
 #define CMD_NOTIFY                        0x0012
 #define CMD_TRAP                          0x0013
-#define CMD_OPEN_EPP                      0x0014
-#define CMD_CLOSE_EPP                     0x0015
-#define CMD_SAVE_EPP                      0x0016
-#define CMD_EPP_RECORD                    0x0017
+#define CMD_GET_EPP                       0x0014
+#define CMD_SAVE_EPP                      0x0015
+#define CMD_EPP_RECORD                    0x0016
+#define CMD_EXPLAIN_EPP_RULE              0x0017
 #define CMD_EVENT_DB_UPDATE               0x0018
 #define CMD_TRAP_CFG_UPDATE               0x0019
 #define CMD_SET_EVENT_INFO                0x001A
-#define CMD_GET_DCI_MEASUREMENT_UNITS     0x001B
+#define CMD_REQUEST_AI_ASSISTANT_COMMENT  0x001B
 #define CMD_LOAD_EVENT_DB                 0x001C
 #define CMD_REQUEST_COMPLETED             0x001D
 #define CMD_LOAD_USER_DB                  0x001E
@@ -283,8 +283,8 @@ typedef struct
 #define CMD_ACTION_DATA                   0x0053
 #define CMD_SETUP_AGENT_TUNNEL            0x0054
 #define CMD_EXECUTE_LIBRARY_SCRIPT        0x0055
-#define CMD_GET_PREDICTION_ENGINES        0x0056
-#define CMD_GET_PREDICTED_DATA            0x0057
+//#define CMD_GET_PREDICTION_ENGINES        0x0056
+//#define CMD_GET_PREDICTED_DATA            0x0057
 #define CMD_STOP_SERVER_COMMAND           0x0058
 #define CMD_POLL_OBJECT                   0x0059
 #define CMD_POLLING_INFO                  0x005A
@@ -672,6 +672,42 @@ typedef struct
 #define CMD_SET_COMPONENT_TOKEN           0x01D8
 #define CMD_CLEAR_AI_ASSISTANT_CHAT       0x01D9
 #define CMD_LINK_NETWORK_MAP_NODES        0x01DA
+#define CMD_GET_DC_OBJECT                 0x01DB
+#define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
+#define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
+#define CMD_GET_AI_AGENT_TASKS            0x01DE
+#define CMD_DELETE_AI_AGENT_TASK          0x01DF
+#define CMD_ADD_AI_AGENT_TASK             0x01E0
+#define CMD_CREATE_AI_ASSISTANT_CHAT      0x01E1
+#define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
+#define CMD_AI_FUNCTION_CALL              0x01E3
+#define CMD_CLEAR_NOTIFICATION_QUEUE      0x01E4
+#define CMD_DECOMMISSION_NODE             0x01E5
+#define CMD_GET_INCIDENTS                 0x01E6
+#define CMD_GET_INCIDENT_DETAILS          0x01E7
+#define CMD_CREATE_INCIDENT               0x01E8
+#define CMD_UPDATE_INCIDENT               0x01E9
+#define CMD_CHANGE_INCIDENT_STATE         0x01EA
+#define CMD_ASSIGN_INCIDENT               0x01EB
+#define CMD_LINK_ALARM_TO_INCIDENT        0x01EC
+#define CMD_UNLINK_ALARM_FROM_INCIDENT    0x01ED
+#define CMD_ADD_INCIDENT_COMMENT          0x01EE
+#define CMD_GET_INCIDENT_ACTIVITY         0x01EF
+#define CMD_INCIDENT_UPDATE               0x01F0
+#define CMD_AI_AGENT_QUESTION             0x01F1
+#define CMD_AI_AGENT_RESPONSE             0x01F2
+#define CMD_SETUP_SSH_CHANNEL             0x01F3
+#define CMD_SSH_CHANNEL_DATA              0x01F4
+#define CMD_CLOSE_SSH_CHANNEL             0x01F5
+#define CMD_GET_AI_MESSAGES               0x01F6
+#define CMD_AI_MESSAGE_UPDATE             0x01F7
+#define CMD_SET_AI_MESSAGE_STATUS         0x01F8
+#define CMD_DELETE_AI_MESSAGE             0x01F9
+#define CMD_GET_LOG_QUERY_SQL             0x01FA
+#define CMD_GET_LIST_LIST                 0x01FB
+#define CMD_QUERY_LIST                    0x01FC
+#define CMD_AI_GET_TOOLS                  0x01FD
+#define CMD_AI_EXECUTE_TOOL               0x01FE
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -786,7 +822,7 @@ typedef struct
 #define VID_ACTION_DATA             ((uint32_t)100)
 #define VID_EMAIL_SUBJECT           ((uint32_t)101)
 #define VID_RCPT_ADDR               ((uint32_t)102)
-#define VID_NPE_NAME                ((uint32_t)103)
+//#define VID_NPE_NAME                ((uint32_t)103)
 #define VID_CATEGORY_ID             ((uint32_t)104)
 #define VID_DCI_DELTA_CALCULATION   ((uint32_t)105)
 #define VID_TRANSFORMATION_SCRIPT   ((uint32_t)106)
@@ -954,7 +990,7 @@ typedef struct
 #define VID_PORT							((uint32_t)268)
 #define VID_PDU							((uint32_t)269)
 #define VID_PDU_SIZE						((uint32_t)270)
-//#define VID_IS_SYSTEM					((uint32_t)271)
+#define VID_AI_AGENT_INSTRUCTIONS   ((uint32_t)271)
 #define VID_GRAPH_CONFIG				((uint32_t)272)
 #define VID_NUM_GRAPHS					((uint32_t)273)
 #define VID_GRAPH_ID						((uint32_t)274)
@@ -1550,6 +1586,78 @@ typedef struct
 #define VID_SMTP_TLS_MODE           ((uint32_t)864)
 #define VID_PEER_LAST_UPDATED       ((uint32_t)865)
 #define VID_THRESHOLD_ENABLE_TIME   ((uint32_t)866)
+#define VID_FORCED_CONTEXT_OBJECT   ((uint32_t)867)
+#define VID_DASHBOARD_NAME_TEMPLATE ((uint32_t)868)
+#define VID_USE_MULTIPLIER          ((uint32_t)869)
+#define VID_ARGUMENTS               ((uint32_t)870)
+#define VID_METADATA_SIZE           ((uint32_t)871)
+#define VID_MAX_SPEED               ((uint32_t)872)
+#define VID_PROMPT                  ((uint32_t)873)
+#define VID_TIMESTAMP_MS            ((uint32_t)874)
+#define VID_CHAT_ID                 ((uint32_t)875)
+#define VID_SYSLOG_NUM_RECORDS      ((uint32_t)876)
+#define VID_WIN_LOG_NUM_RECORDS     ((uint32_t)877)
+#define VID_DECOMMISSION_TIME       ((uint32_t)878)
+#define VID_CLEAR_IP_ADDRESSES      ((uint32_t)879)
+#define VID_INCIDENT_ID             ((uint32_t)880)
+#define VID_INCIDENT_STATE          ((uint32_t)881)
+#define VID_INCIDENT_TITLE          ((uint32_t)882)
+#define VID_INCIDENT_DESCRIPTION    ((uint32_t)883)
+#define VID_INCIDENT_ASSIGNED_USER  ((uint32_t)884)
+#define VID_SOURCE_ALARM_ID         ((uint32_t)885)
+#define VID_CLOSED_BY_USER          ((uint32_t)886)
+#define VID_CLOSE_TIME              ((uint32_t)887)
+#define VID_RESOLVE_TIME            ((uint32_t)888)
+#define VID_INCIDENT_DELAY          ((uint32_t)889)
+#define VID_AI_QUESTION_ID          ((uint32_t)890)
+#define VID_AI_QUESTION_TYPE        ((uint32_t)891)
+#define VID_AI_CONFIRMATION_TYPE    ((uint32_t)892)
+#define VID_AI_QUESTION_TEXT        ((uint32_t)893)
+#define VID_AI_QUESTION_CONTEXT     ((uint32_t)894)
+#define VID_AI_QUESTION_TIMEOUT     ((uint32_t)895)
+#define VID_AI_RESPONSE_POSITIVE    ((uint32_t)896)
+#define VID_AI_RESPONSE_OPTION      ((uint32_t)897)
+#define VID_AI_QUESTION_OPTIONS     ((uint32_t)898)
+#define VID_TERMINAL_TYPE           ((uint32_t)899)
+#define VID_OUTPUT                  ((uint32_t)900)
+#define VID_INCIDENT_AI_DEPTH       ((uint32_t)901)
+#define VID_INCIDENT_AI_PROMPT      ((uint32_t)902)
+#define VID_SAMPLE_SAVE_INTERVAL    ((uint32_t)903)
+#define VID_AI_MESSAGE_ID           ((uint32_t)904)
+#define VID_AI_MESSAGE_TYPE         ((uint32_t)905)
+#define VID_AI_MESSAGE_TITLE        ((uint32_t)906)
+#define VID_AI_MESSAGE_TEXT         ((uint32_t)907)
+#define VID_AI_MESSAGE_STATUS       ((uint32_t)908)
+#define VID_AI_MESSAGE_EXPIRATION   ((uint32_t)909)
+#define VID_AI_MESSAGE_SPAWN_DATA   ((uint32_t)910)
+#define VID_AI_MESSAGE_RELATED_OBJ  ((uint32_t)911)
+#define VID_AI_MESSAGE_SOURCE_TASK  ((uint32_t)912)
+#define VID_PORT_STOP_COUNT         ((uint32_t)913)
+#define VID_SNMP_CONTEXT            ((uint32_t)914)
+#define VID_QUERY_SQL               ((uint32_t)915)
+#define VID_AI_FUNCTION_NAME        ((uint32_t)916)
+#define VID_AI_HINT                 ((uint32_t)917)
+#define VID_TEMPLATE_REMOVAL_GP     ((uint32_t)918)
+#define VID_EPP_VERSION             ((uint32_t)919)
+#define VID_RULE_VERSION            ((uint32_t)920)
+#define VID_BASE_VERSION            ((uint32_t)921)
+#define VID_MODIFIED_BY_GUID        ((uint32_t)922)
+#define VID_MODIFIED_BY_NAME        ((uint32_t)923)
+#define VID_CONFLICT_COUNT          ((uint32_t)924)
+#define VID_CONFLICT_TYPE           ((uint32_t)925)
+#define VID_RULE_MODIFIED           ((uint32_t)926)
+#define VID_DELETED_RULE_COUNT      ((uint32_t)927)
+#define VID_RULE_VERSION_COUNT      ((uint32_t)928)
+#define VID_AI_TOOL_NAME            ((uint32_t)929)
+#define VID_AI_TOOL_INPUT           ((uint32_t)930)
+#define VID_AI_TOOL_OUTPUT          ((uint32_t)931)
+#define VID_AI_TOOL_SCHEMA          ((uint32_t)932)
+#define VID_AI_TOOL_EXEC_TIME       ((uint32_t)933)
+
+// Base values for EPP optimistic concurrency
+#define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
+#define VID_CONFLICT_LIST_BASE      ((uint32_t)0x7B000000)
+#define VID_RULE_VERSION_LIST_BASE  ((uint32_t)0x7C000000)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)
@@ -1618,6 +1726,9 @@ typedef struct
 
 // Base value for ICMP target list
 #define VID_ICMP_TARGET_LIST_BASE   ((uint32_t)0x75000000)
+
+// Base value for port stop list
+#define VID_PORT_STOP_LIST_BASE     ((uint32_t)0x77000000)
 
 // Base value for asset properties
 #define VID_ASSET_PROPERTIES_BASE   ((uint32_t)0x76000000)
@@ -1758,6 +1869,8 @@ typedef struct
 #define VID_RADIO_LIST_BASE         ((uint32_t)0x34000000)
 
 #define VID_RULE_LIST_BASE          ((uint32_t)0x10000000)
+#define VID_SYSLOG_RULES_LIST_BASE  ((uint32_t)0x20000000)
+#define VID_WIN_EVENT_RULES_LIST_BASE ((uint32_t)0x30000000)
 
 #define VID_EXTENSION_LIST_BASE     ((uint32_t)0x10000000)
 
@@ -1818,5 +1931,11 @@ typedef struct
 #define VID_WARNING_LIST_BASE       ((uint32_t)0x38000000)
 
 #define VID_UNIT_NAMES_BASE         ((uint32_t)0x10000000)
+
+#define VID_METADATA_BASE           ((uint32_t)0x1F000000)
+
+#define VID_INCIDENT_LIST_BASE      ((uint32_t)0x60000000)
+#define VID_COMMENT_LIST_BASE       ((uint32_t)0x62000000)
+#define VID_ACTIVITY_LIST_BASE      ((uint32_t)0x61000000)
 
 #endif   /* _nms_cscp_h_ */

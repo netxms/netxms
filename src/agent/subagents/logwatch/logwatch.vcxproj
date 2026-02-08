@@ -42,7 +42,7 @@
     <ProjectGuid>{F8A8749E-E539-4A3B-A21C-2C5C86AE33EA}</ProjectGuid>
     <RootNamespace>logwatch</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -385,6 +385,9 @@
     <ClInclude Include="logwatch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\db\libnxdb\libnxdb.vcxproj">
+      <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

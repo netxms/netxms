@@ -48,6 +48,7 @@ public:
    virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 
 /**

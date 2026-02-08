@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,10 +21,10 @@
 **/
 
 #include "nxcore.h"
-#include <npe.h>
 #include <nxcore_websvc.h>
 #include <netxms_maps.h>
 #include <nms_users.h>
+#include <netxms-regex.h>
 
 /**
  * Data collector thread pool
@@ -96,6 +96,17 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 
       _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)") : _T("DROP TABLE tdata_%u"), m_id);
       QueueSQLRequest(query);
+
+      if (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE idata_v5_%u"), m_id);
+         QueueSQLRequest(query);
+      }
+      if (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE)
+      {
+         _sntprintf(query, 256, _T("DROP TABLE tdata_v5_%u"), m_id);
+         QueueSQLRequest(query);
+      }
    }
 
    if (success)
@@ -221,6 +232,26 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATE
    }
    DBFreeResult(hResult);
 
+   // Database handle passed to this method may point to cache database,
+   // so we need to acquire separate connection for checking existence of performance data tables
+   DB_HANDLE hdb2 = DBConnectionPoolAcquireConnection();
+
+   wchar_t tableName[64];
+   nx_swprintf(tableName, 64, L"idata_v5_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+   {
+      m_runtimeFlags |= ODF_HAS_IDATA_V5_TABLE;
+      nxlog_debug_tag(L"dc.v5migrate", 6, _T("DataCollectionTarget::loadFromDatabase(%s [%u]): Found idata_v5 table"), m_name, m_id);
+   }
+
+   nx_swprintf(tableName, 64, L"tdata_v5_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+   {
+      m_runtimeFlags |= ODF_HAS_TDATA_V5_TABLE;
+      nxlog_debug_tag(L"dc.v5migrate", 6, _T("DataCollectionTarget::loadFromDatabase(%s [%u]): Found tdata_v5 table"), m_name, m_id);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb2);
    return true;
 }
 
@@ -353,7 +384,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    int itemCount = 0;
    int tableCount = 0;
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
 
    readLockDciAccess();
 
@@ -442,7 +473,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                if (itemCount > 0)
                   queryItems.append(_T(" OR "));
                queryItems.append(_T("(idata_timestamp<"));
-               queryItems.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryItems.append(now - retentionTime * _LL(86400000));
                queryItems.append(_T(" AND item_id IN ("));
                queryItems.append(*idList);
                queryItems.append(_T("))"));
@@ -456,7 +487,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                if (tableCount > 0)
                   queryTables.append(_T(" OR "));
                queryTables.append(_T("(tdata_timestamp<"));
-               queryTables.append(static_cast<int64_t>(now - retentionTime * 86400));
+               queryTables.append(now - retentionTime * _LL(86400000));
                queryTables.append(_T(" AND item_id IN ("));
                queryTables.append(*idList);
                queryTables.append(_T("))"));
@@ -479,7 +510,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                queryItems.append(_T("(item_id="));
                queryItems.append(o->getId());
                queryItems.append(_T(" AND idata_timestamp<"));
-               queryItems.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryItems.append(now - o->getEffectiveRetentionTime() * _LL(86400000));
                queryItems.append(_T(')'));
                itemCount++;
             }
@@ -490,7 +521,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
                queryTables.append(_T("(item_id="));
                queryTables.append(o->getId());
                queryTables.append(_T(" AND tdata_timestamp<"));
-               queryTables.append(static_cast<int64_t>(now - o->getEffectiveRetentionTime() * 86400));
+               queryTables.append(now - o->getEffectiveRetentionTime() * _LL(86400000));
                queryTables.append(_T(')'));
                tableCount++;
             }
@@ -502,14 +533,14 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    if (sameRetentionTimeItems && (retentionTimeItems != -1))
    {
       queryItems.append(_T("idata_timestamp<"));
-      queryItems.append(static_cast<int64_t>(now - retentionTimeItems * 86400));
+      queryItems.append(now - retentionTimeItems * _LL(86400000));
       itemCount++;   // Indicate that query should be run
    }
 
    if (sameRetentionTimeTables && (retentionTimeTables != -1))
    {
       queryTables.append(_T("tdata_timestamp<"));
-      queryTables.append(static_cast<int64_t>(now - retentionTimeTables * 86400));
+      queryTables.append(now - retentionTimeTables * _LL(86400000));
       tableCount++;   // Indicate that query should be run
    }
 
@@ -539,7 +570,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    if (itemCount > 0)
    {
       LockIDataWrites();
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryItems.cstr());
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryItems.cstr());
       DBQuery(hdb, queryItems);
       UnlockIDataWrites();
       if (!ThrottleHousekeeper())
@@ -548,34 +579,92 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (tableCount > 0)
    {
-      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, queryTables.cstr());
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%u]): running query \"%s\""), m_name, m_id, queryTables.cstr());
       DBQuery(hdb, queryTables);
+   }
+
+   // Clean up v5 data tables (legacy per-object tables with second-precision timestamps)
+   if (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT max(idata_timestamp) FROM idata_v5_%u"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         time_t maxTimestamp = (DBGetNumRows(hResult) > 0) ? static_cast<time_t>(DBGetFieldInt64(hResult, 0, 0)) : 0;
+         DBFreeResult(hResult);
+
+         int maxRetention = 0;
+         readLockDciAccess();
+         for(int i = 0; i < m_dcObjects.size(); i++)
+         {
+            DCObject *o = m_dcObjects.get(i);
+            if (o->getType() == DCO_TYPE_ITEM && o->getEffectiveRetentionTime() > maxRetention)
+               maxRetention = o->getEffectiveRetentionTime();
+         }
+         unlockDciAccess();
+
+         if (maxTimestamp == 0 || (maxRetention > 0 && maxTimestamp < time(nullptr) - static_cast<time_t>(maxRetention) * 86400))
+         {
+            deleteV5DataTable(hdb, false);
+         }
+         else if (maxRetention > 0)
+         {
+            _sntprintf(query, 256, _T("DELETE FROM idata_v5_%u WHERE idata_timestamp<") INT64_FMT,
+               m_id, static_cast<int64_t>(time(nullptr) - static_cast<time_t>(maxRetention) * 86400));
+            DBQuery(hdb, query);
+         }
+      }
+   }
+
+   if (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT max(tdata_timestamp) FROM tdata_v5_%u"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         time_t maxTimestamp = (DBGetNumRows(hResult) > 0) ? static_cast<time_t>(DBGetFieldInt64(hResult, 0, 0)) : 0;
+         DBFreeResult(hResult);
+
+         int maxRetention = 0;
+         readLockDciAccess();
+         for(int i = 0; i < m_dcObjects.size(); i++)
+         {
+            DCObject *o = m_dcObjects.get(i);
+            if (o->getType() == DCO_TYPE_TABLE && o->getEffectiveRetentionTime() > maxRetention)
+               maxRetention = o->getEffectiveRetentionTime();
+         }
+         unlockDciAccess();
+
+         if (maxTimestamp == 0 || (maxRetention > 0 && maxTimestamp < time(nullptr) - static_cast<time_t>(maxRetention) * 86400))
+         {
+            deleteV5DataTable(hdb, true);
+         }
+         else if (maxRetention > 0)
+         {
+            _sntprintf(query, 256, _T("DELETE FROM tdata_v5_%u WHERE tdata_timestamp<") INT64_FMT,
+               m_id, static_cast<int64_t>(time(nullptr) - static_cast<time_t>(maxRetention) * 86400));
+            DBQuery(hdb, query);
+         }
+      }
    }
 }
 
 /**
- * Queue prediction engine training when necessary
+ * Delete V5 data table
  */
-void DataCollectionTarget::queuePredictionEngineTraining()
+void DataCollectionTarget::deleteV5DataTable(DB_HANDLE hdb, bool tdata)
 {
-   readLockDciAccess();
-   for(int i = 0; i < m_dcObjects.size(); i++)
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"DROP TABLE %s_v5_%u", tdata ? L"tdata" : L"idata", m_id);
+   if (DBQuery(hdb, query))
    {
-      DCObject *o = m_dcObjects.get(i);
-      if (o->getType() == DCO_TYPE_ITEM)
-      {
-         DCItem *dci = static_cast<DCItem*>(o);
-         if (dci->getPredictionEngine()[0] != 0)
-         {
-            PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
-            if ((e != nullptr) && e->requiresTraining())
-            {
-               QueuePredictionEngineTraining(e, dci);
-            }
-         }
-      }
+      lockProperties();
+      m_runtimeFlags &= tdata ? ~ODF_HAS_TDATA_V5_TABLE : ~ODF_HAS_IDATA_V5_TABLE;
+      unlockProperties();
+      nxlog_debug_tag(L"dc.v5migrate", 4, L"DataCollectionTarget::deleteV5DataTable(%s [%u]): dropped expired table %s_v5_%u", m_name, m_id, tdata ? L"tdata" : L"idata", m_id);
    }
-   unlockDciAccess();
 }
 
 /**
@@ -919,17 +1008,6 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
          msg->setField(fieldId+7, object->getInstanceName());
          shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
          msg->setField(fieldId+8, (src != nullptr) ? src->getTemplateItemId() : 0);
-         if (object->getType() == DCO_TYPE_ITEM)
-         {
-            msg->setField(fieldId+9, ((DCItem*)object)->getUnitName());
-            msg->setField(fieldId+10, ((DCItem*)object)->getMultiplier());
-         }
-         else
-         if (object->getType() == DCO_TYPE_ITEM)
-         {
-            msg->setField(fieldId+9, _T(""));
-            msg->setField(fieldId+10, 0);
-         }
 
          fieldId+=50;
 			count++;
@@ -971,12 +1049,15 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
 {
+   if (dcObject->getLastValueTimestamp() == timestamp)
+      return true;  // duplicate timestamp and/or value, silently ignore it
+
    bool updateStatus;
 	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
-	         static_cast<DCItem&>(*dcObject).processNewValue(currTime, itemValue, &updateStatus) :
-	         static_cast<DCTable&>(*dcObject).processNewValue(currTime, tableValue, &updateStatus);
+	         static_cast<DCItem&>(*dcObject).processNewValue(timestamp, itemValue, &updateStatus, allowPastDataPoints) :
+	         static_cast<DCTable&>(*dcObject).processNewValue(timestamp, tableValue, &updateStatus, allowPastDataPoints);
 	if (!success)
 	{
       // value processing failed, convert to data collection error
@@ -1116,7 +1197,7 @@ void DataCollectionTarget::updateDataCollectionTimeIntervals()
 /**
  * Get metric value for client
  */
-uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
+uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -1129,6 +1210,28 @@ uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, c
          if (checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
             rc = getMetricFromScript(name, buffer, size, this, shared_ptr<DCObjectInfo>());
          break;
+      case DS_WEB_SERVICE:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getMetricFromWebService(name, buffer, size);
+         break;
+      default:
+         return RCC_INCOMPATIBLE_OPERATION;
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
+ * Get list for client
+ */
+uint32_t DataCollectionTarget::getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_WEB_SERVICE:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getListFromWebService(name, list);
+         break;
       default:
          return RCC_INCOMPATIBLE_OPERATION;
    }
@@ -1138,7 +1241,7 @@ uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, c
 /**
  * Get table for client
  */
-uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
+uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -1195,7 +1298,7 @@ DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, sh
 {
    ENUMERATE_MODULES(pfGetInternalTable)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalTable(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalTable(\"%s\") in module %s"), name, CURRENT_MODULE.name);
       DataCollectionError rc = CURRENT_MODULE.pfGetInternalTable(this, name, result);
       if (rc != DCE_NOT_SUPPORTED)
          return rc;
@@ -1214,7 +1317,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 
    ENUMERATE_MODULES(pfGetInternalMetric)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalMetric(\"%s\") in module %s"), name, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 5, _T("Calling GetInternalMetric(\"%s\") in module %s"), name, CURRENT_MODULE.name);
       DataCollectionError rc = CURRENT_MODULE.pfGetInternalMetric(this, name, buffer, size);
       if (rc != DCE_NOT_SUPPORTED)
          return rc;
@@ -1829,6 +1932,8 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getTransformedDataType());
             tableData->getColumnDefinitions().get(i + offset)->setUnitName(static_cast<DCItem*>(object)->getUnitName());
             tableData->getColumnDefinitions().get(i + offset)->setMultiplier(static_cast<DCItem*>(object)->getMultiplier());
+            tableData->getColumnDefinitions().get(i + offset)->setUseMultiplier(static_cast<DCItem*>(object)->getUseMultiplier());
+
             if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
@@ -2137,7 +2242,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->msg->setField(info->baseInfoFieldId++, dco->getName());
    }
    info->msg->setField(info->baseInfoFieldId++, dco->getEffectivePollingInterval());
-   info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime());
+   info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime().asTime()); // convert to seconds for compatibility with older agents
    info->msg->setField(info->baseInfoFieldId++, m_guid);
    info->msg->setField(info->baseInfoFieldId++, dco->getSnmpPort());
    if (dco->getType() == DCO_TYPE_ITEM)
@@ -2145,6 +2250,8 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
    else
       info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(0));
    info->msg->setField(info->baseInfoFieldId++, primaryProxyId);
+
+   info->msg->setField(info->extraInfoFieldId + 1, dco->getLastPollTime()); // in milliseconds
 
    if (dco->getDataSource() == DS_SNMP_AGENT)
    {
@@ -2593,7 +2700,7 @@ void DataCollectionTarget::doInstanceDiscovery(uint32_t requestId)
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
       shared_ptr<DCObject> object = m_dcObjects.getShared(i);
-      if ((object->getInstanceDiscoveryMethod() != IDM_NONE) && (object->getStatus() != ITEM_STATUS_DISABLED))
+      if ((object->getInstanceDiscoveryMethod() != IDM_NONE) && (object->getInstanceDiscoveryMethod() != IDM_PUSH) &&(object->getStatus() != ITEM_STATUS_DISABLED))
       {
          object->setBusyFlag();
          rootObjects.add(object);
@@ -2720,9 +2827,9 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
          InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
-         const TCHAR *name = instanceObject->getInstanceName();
+         const wchar_t *name = instanceObject->getInstanceName();
          bool notify = false;
-         if (_tcscmp(name, object->getInstanceName()))
+         if (wcscmp(name, object->getInstanceName()))
          {
             object->setInstanceName(name);
             object->updateFromTemplate(root);
@@ -2734,7 +2841,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             object->setInstanceGracePeriodStart(0);
             object->setStatus(ITEM_STATUS_ACTIVE, false);
          }
-         if(instanceObject->getRelatedObject() != object->getRelatedObject())
+         if (instanceObject->getRelatedObject() != object->getRelatedObject())
          {
             object->setRelatedObject(instanceObject->getRelatedObject());
             changed = true;
@@ -2786,6 +2893,78 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 }
 
 /**
+ * Create new push DCI instance. Returns shared_ptr to created DCI on success or nullptr when no matching instance discovery DCI is found.
+ */
+shared_ptr<DCObject> DataCollectionTarget::createPushDciInstance(const wchar_t *name)
+{
+   bool created = false;
+
+   // collect instance discovery DCIs
+   SharedObjectArray<DCObject> rootObjects;
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      shared_ptr<DCObject> object = m_dcObjects.getShared(i);
+      if ((object->getInstanceDiscoveryMethod() == IDM_PUSH) && (object->getStatus() != ITEM_STATUS_DISABLED))
+      {
+         object->setBusyFlag();
+         rootObjects.add(object);
+      }
+   }
+   unlockDciAccess();
+
+   for(int i = 0; i < rootObjects.size(); i++)
+   {
+      shared_ptr<DCObject> object = rootObjects.getShared(i);
+      SharedString instanceData = object->getInstanceDiscoveryData();
+      if (!instanceData.isEmpty())
+      {
+         const char *eptr;
+         int eoffset;
+         PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(instanceData.cstr()), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         if (preg != nullptr)
+         {
+            int ovector[30];
+            int rc = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(name), static_cast<int>(wcslen(name)), 0, 0, ovector, 30);
+            if (rc >= 2)
+            {
+               int len = ovector[3] - ovector[2];
+               wchar_t instanceName[MAX_DB_STRING];
+               wcsncpy(instanceName, &name[ovector[2]], len);
+               instanceName[len] = 0;
+
+               StringMap instances;
+               instances.set(instanceName, instanceName);
+               StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(&instances);
+               if ((filteredInstances != nullptr) && !filteredInstances->isEmpty())
+               {
+                  nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): creating new DCO \"%s\" (instance=\"%s\")"), m_name, m_id, name, instanceName);
+                  CreateInstanceDCOData data(object.get(), self());
+                  filteredInstances->forEach(CreateInstanceDCI, &data);
+                  created = true;
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): instance \"%s\" filtered out for IDM_PUSH DCO \"%s\""),
+                            m_name, m_id, instanceName, object->getName().cstr());
+               }
+               delete filteredInstances;
+            }
+            _pcre_free_t(preg);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 5, _T("DataCollectionTarget::createPushDciInstance(%s [%u]): cannot compile regex \"%s\" for IDM_PUSH DCO \"%s\""),
+                      m_name, m_id, instanceData.cstr(), object->getName().cstr());
+         }
+      }
+      object->clearBusyFlag();
+   }
+
+   return created ? getDCObjectByName(name, 0) : nullptr;
+}
+
+/**
  * Get last (current) DCI values.
  */
 uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
@@ -2815,7 +2994,7 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(NXCPMessage *msg, bool o
 /**
  * Get last (current) DCI values.
  */
-uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter)
 {
    readLockDciAccess();
 
@@ -2825,7 +3004,8 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool obj
       if ((object->hasValue() || includeNoValueObjects) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
           (!overviewOnly || object->isShowInObjectOverview()) &&
-          object->hasAccess(userId))
+          object->hasAccess(userId) &&
+          (filter == nullptr || filter(object)))
       {
          json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
       }

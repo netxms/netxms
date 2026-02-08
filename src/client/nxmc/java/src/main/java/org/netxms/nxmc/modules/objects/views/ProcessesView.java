@@ -322,7 +322,7 @@ public class ProcessesView extends ObjectView
     */
    private static class ProcessLabelProvider extends LabelProvider implements ITableLabelProvider
    {
-      private DataFormatter formatter = new DataFormatter("%*sB", DataType.UINT64, MeasurementUnit.BYTES_IEC);
+      private DataFormatter formatter = new DataFormatter().setDataType(DataType.UINT64).setMeasurementUnit(MeasurementUnit.BYTES_IEC).setFormatString("%*sB");
 
       /**
        * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

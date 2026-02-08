@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -587,7 +587,7 @@ static uint32_t HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *
 /**
  * Handler for enumerating IP address prefixes via local routes in inetCidrRouteTable
  */
-static void ProcessInetCidrRouteingTableEntry(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
+static void ProcessInetCidrRouteingTableEntry(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList, const wchar_t *debugId)
 {
    if (var->getName().length() < 27)
       return;
@@ -629,7 +629,7 @@ static void ProcessInetCidrRouteingTableEntry(SNMP_Variable *var, SNMP_Transport
             {
                addr->setMaskBits(prefix.getMaskBits());
                TCHAR buffer[64];
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): mask bits set from routing table: %s/%d"), transport, addr->toString(buffer), addr->getMaskBits());
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): mask bits set from routing table: %s/%d"), debugId, addr->toString(buffer), addr->getMaskBits());
             }
          }
       }
@@ -704,7 +704,9 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 {
    bool success = false;
 
-	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%s)"), snmp, BooleanToString(useIfXTable));
+   wchar_t debugId[128];
+   nx_swprintf(debugId, 128, L"%s [%u]", node->getName(), node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 6, L"NetworkDeviceDriver::getInterfaces(%s): useIfXTable=%s, transport=%p", debugId, BooleanToString(useIfXTable), snmp);
 
    // Get number of interfaces
 	// Some devices may not return ifNumber at all or return completely insane values
@@ -714,7 +716,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 2, 1, 2, 1, 0 }, &interfaceCount, sizeof(uint32_t), 0);
 	if ((interfaceCount <= 0) || (interfaceCount > 4096))
 	{
-	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): invalid interface count %d received from device"), snmp, interfaceCount);
+	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): invalid interface count %d received from device"), debugId, interfaceCount);
 		interfaceCount = 64;
 	}
 
@@ -722,7 +724,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	InterfaceList *ifList = new InterfaceList(interfaceCount);
 
    // Gather interface indexes
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifTable"), snmp);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): reading indexes from ifTable"), debugId);
    uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 },
       [ifList] (SNMP_Variable *var) -> uint32_t
       {
@@ -732,13 +734,13 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
    if (rc == SNMP_ERR_SUCCESS)
    {
       // Gather additional interfaces from ifXTable
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading indexes from ifXTable"), snmp);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): reading indexes from ifXTable"), debugId);
       rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, HandlerIndexIfXTable, ifList);
       if (rc != SNMP_ERR_SUCCESS)
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.31.1.1.1.1 failed (%s)"), snmp, SnmpGetErrorText(rc));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): SNMP WALK 1.3.6.1.2.1.31.1.1.1.1 failed (%s)"), debugId, SnmpGetErrorText(rc));
 
       // Enumerate interfaces
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading interface information"), snmp);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): reading interface information"), debugId);
 		for(int i = 0; i < ifList->size(); i++)
       {
 			InterfaceInfo *iface = ifList->get(i);
@@ -753,7 +755,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	         oid[11] = iface->index;
 	         if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 12, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
 	         {
-	            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): cannot read interface description for interface %u"), snmp, iface->index);
+	            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): cannot read interface description for interface %u"), debugId, iface->index);
    	         continue;
 	         }
          }
@@ -786,7 +788,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
             }
             else
             {
-               _tcslcpy(iface->name, iface->description, MAX_DB_STRING);
+               wcslcpy(iface->name, iface->description, MAX_DB_STRING);
             }
 
             // Interface type
@@ -821,7 +823,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       // Interface IP addresses and netmasks from ipAddrTable
 		if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddrTable"), false))
 		{
-	      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading ipAddrTable"), snmp);
+	      nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): reading ipAddrTable"), debugId);
          uint32_t error = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 20, 1, 1 }, HandlerIpAddr, ifList);
          if (error == SNMP_ERR_SUCCESS)
          {
@@ -829,7 +831,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SnmpGetErrorText(error));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): SNMP WALK 1.3.6.1.2.1.4.20.1.1 failed (%s)"), debugId, SnmpGetErrorText(error));
          }
 		}
 		else
@@ -840,11 +842,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       // Get IP addresses from ipAddressTable if available
       if (!node->getCustomAttributeAsBoolean(_T("snmp.ignore.ipAddressTable"), false))
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%p): reading ipAddressTable"), snmp);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("NetworkDeviceDriver::getInterfaces(%s): reading ipAddressTable"), debugId);
          SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 34, 1, 3 }, HandlerIpAddressTable, ifList);
          if (ifList->isPrefixWalkNeeded())
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix length is not set for some IP addresses, walk on prefix table is needed"), snmp);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): prefix length is not set for some IP addresses, walk on prefix table is needed"), debugId);
             SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 32, 1, 5 }, HandlerIpAddressPrefixTable, ifList);
 
             // Re-check addresses
@@ -867,43 +869,43 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
             if (prefixNotFoundV4 || prefixNotFoundV6)
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): doing prefix lookup in routing table (IPv4=%s IPv6=%s)"),
-                  snmp, BooleanToString(prefixNotFoundV4), BooleanToString(prefixNotFoundV6));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): doing prefix lookup in routing table (IPv4=%s IPv6=%s)"),
+                  debugId, BooleanToString(prefixNotFoundV4), BooleanToString(prefixNotFoundV6));
                int limit = 1000;
                if (prefixNotFoundV4)
                {
                   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 8, 1 },
-                     [&limit, ifList, snmp] (SNMP_Variable *v) -> uint32_t
+                     [&limit, ifList, snmp, &debugId] (SNMP_Variable *v) -> uint32_t
                      {
-                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList);
+                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList, debugId);
                         return (--limit == 0) ? SNMP_ERR_ABORTED : SNMP_ERR_SUCCESS;
                      });
                   if (limit == 0)
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup aborted because routing table is too big"), snmp);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): prefix lookup aborted because routing table is too big"), debugId);
                }
                if (prefixNotFoundV6 && (limit > 0))
                {
                   limit = 1000;
                   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 8, 2 },
-                     [&limit, ifList, snmp] (SNMP_Variable *v) -> uint32_t
+                     [&limit, ifList, snmp, &debugId] (SNMP_Variable *v) -> uint32_t
                      {
-                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList);
+                        ProcessInetCidrRouteingTableEntry(v, snmp, ifList, debugId);
                         return (--limit == 0) ? SNMP_ERR_ABORTED : SNMP_ERR_SUCCESS;
                      });
                   if (limit == 0)
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup aborted because routing table is too big"), snmp);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): prefix lookup aborted because routing table is too big"), debugId);
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): prefix lookup in routing table is not needed"), snmp);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): prefix lookup in routing table is not needed"), debugId);
             }
          }
       }
    }
 	else
 	{
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK 1.3.6.1.2.1.2.2.1.1 failed (%s)"), snmp, SnmpGetErrorText(rc));
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): SNMP WALK 1.3.6.1.2.1.2.2.1.1 failed (%s)"), debugId, SnmpGetErrorText(rc));
 	}
 
    if (!success)
@@ -911,7 +913,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       delete_and_null(ifList);
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, ifList);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): completed, ifList=%p"), debugId, ifList);
    return ifList;
 }
 
@@ -1463,7 +1465,7 @@ bool NetworkDeviceDriver::hasMetrics()
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -1565,4 +1567,15 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, Driv
 ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs)
 {
    return nullptr;
+}
+
+/**
+ * Get SSH driver hints for interactive CLI sessions.
+ * Derived drivers can override this to provide device-specific hints.
+ * Default implementation relies on default values provided in SSHDriverHints constructor.
+ *
+ * @param hints pointer to SSHDriverHints structure to be filled
+ */
+void NetworkDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
 }

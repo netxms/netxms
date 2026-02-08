@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FontTools
 {
-   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
 
    private static Logger logger = LoggerFactory.getLogger(FontTools.class);
    private static Set<String> availableFonts = null;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,46 @@
 #include <ieee8021x.h>
 
 /**
+ * Convert interface admin state to text
+ */
+static const char *InterfaceAdminStateToText(InterfaceAdminState state)
+{
+   switch(state)
+   {
+      case IF_ADMIN_STATE_UP:
+         return "UP";
+      case IF_ADMIN_STATE_DOWN:
+         return "DOWN";
+      case IF_ADMIN_STATE_TESTING:
+         return "TESTING";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
+ * Convert interface operational state to text
+ */
+static const char *InterfaceOperStateToText(InterfaceOperState state)
+{
+   switch(state)
+   {
+      case IF_OPER_STATE_UP:
+         return "UP";
+      case IF_OPER_STATE_DOWN:
+         return "DOWN";
+      case IF_OPER_STATE_TESTING:
+         return "TESTING";
+      case IF_OPER_STATE_DORMANT:
+         return "DORMANT";
+      case IF_OPER_STATE_NOT_PRESENT:
+         return "NOT_PRESENT";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
  * Default constructor for Interface object
  */
 Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMaintenaceData(Ownership::True)
@@ -33,6 +73,7 @@ Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMainte
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -80,6 +121,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -99,7 +141,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
@@ -129,6 +171,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_type = ifType;
    m_mtu = 0;
    m_speed = 0;
+   m_maxSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
    m_ipAddressList.add(addrList);
@@ -149,7 +192,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
@@ -184,10 +227,11 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       return false;
 
 	DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_INTERFACE,
-		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
-		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
-		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,iftable_suffix,state_before_maintenance FROM interfaces WHERE id=?"));
+		L"SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,"
+		L"phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,"
+		L"admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,"
+      L"ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,max_speed,iftable_suffix,"
+      L"state_before_maintenance FROM interfaces WHERE id=?");
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -229,9 +273,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 27));
       m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 28));
       m_peerLastUpdated = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 29));
+      m_maxSpeed = DBGetFieldUInt64(hResult, 0, 30);
 
       wchar_t suffixText[128];
-      DBGetField(hResult, 0, 30, suffixText, 128);
+      DBGetField(hResult, 0, 31, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -244,27 +289,27 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
          }
       }
 
-      //Parse data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
-      String beforeMaintenaceData = DBGetFieldAsString(hResult, 0, 31);
+      // Parse data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
+      String beforeMaintenaceData = DBGetFieldAsString(hResult, 0, 32);
       if (!beforeMaintenaceData.isEmpty())
       {
-         StringList nodes = beforeMaintenaceData.split(_T(";"));
+         StringList nodes = beforeMaintenaceData.split(L";");
          for (int i = 0; i < nodes.size(); i++)
          {
-            StringList fields = String(nodes.get(i)).split(_T(":"));
+            StringList fields = String(nodes.get(i)).split(L":");
             if (fields.size() >= 7)
             {
-               uint32_t nodeId = _tcstoul(fields.get(0), nullptr, 0);
+               uint32_t nodeId = wcstoul(fields.get(0), nullptr, 0);
                if (nodeId == 0)
                   continue; // skip empty nodeId
 
                InterfaceState *state = new InterfaceState();
-               state->status = _tcstoul(fields.get(1), nullptr, 0);
-               state->operState = _tcstoul(fields.get(2), nullptr, 0);
-               state->adminState = _tcstoul(fields.get(3), nullptr, 0);
-               state->dot1xPaeAuthState = _tcstoul(fields.get(4), nullptr, 0);
-               state->dot1xBackendAuthState = _tcstoul(fields.get(5), nullptr, 0);
-               state->stpPortState = static_cast<SpanningTreePortState>(_tcstoul(fields.get(6), nullptr, 0));
+               state->status = wcstoul(fields.get(1), nullptr, 0);
+               state->operState = wcstoul(fields.get(2), nullptr, 0);
+               state->adminState = wcstoul(fields.get(3), nullptr, 0);
+               state->dot1xPaeAuthState = wcstoul(fields.get(4), nullptr, 0);
+               state->dot1xBackendAuthState = wcstoul(fields.get(5), nullptr, 0);
+               state->stpPortState = static_cast<SpanningTreePortState>(wcstoul(fields.get(6), nullptr, 0));
 
                m_beforeMaintenaceData.set(nodeId, state);
             }
@@ -295,7 +340,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
    DBFreeResult(hResult);
 
 	// Read VLANs
-   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_VLANS, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id"));
+   hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_IF_VLANS, L"SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -376,7 +421,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"description", L"admin_state", L"oper_state", L"dot1x_pae_state", L"dot1x_backend_state",
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
-         L"stp_port_state", L"if_name", L"peer_last_updated", L"state_before_maintenance", nullptr
+         L"stp_port_state", L"if_name", L"peer_last_updated", L"max_speed", L"state_before_maintenance",
+         nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"interfaces", L"id", m_id, columns);
@@ -428,6 +474,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
          DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_ifName, DB_BIND_STATIC, MAX_DB_STRING - 1);
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_peerLastUpdated));
+         DBBind(hStmt, 32, DB_SQLTYPE_BIGINT, m_maxSpeed);
 
          //Serialize data in format: nodeId:status:operState:adminState:dot1xPaeAuthState:dot1xBackendAuthState:stpPortState;...
          StringBuffer dataBeforeMaintenance;
@@ -437,9 +484,9 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
                state->dot1xPaeAuthState, state->dot1xBackendAuthState, state->stpPortState);
             return EnumerationCallbackResult::_CONTINUE;
          });
-         DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
+         DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
 
-         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -546,11 +593,11 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interfaces WHERE id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interfaces WHERE id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interface_address_list WHERE iface_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interface_address_list WHERE iface_id=?");
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
+      success = executeQueryOnObject(hdb, L"DELETE FROM interface_vlan_list WHERE iface_id=?");
    return success;
 }
 
@@ -584,7 +631,7 @@ static uint32_t statusToEvent[] =
    EVENT_INTERFACE_DOWN,     // Major
    EVENT_INTERFACE_DOWN,     // Critical
    EVENT_INTERFACE_UNKNOWN,  // Unknown
-   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
+   EVENT_INTERFACE_UNMANAGED,// Unmanaged
    EVENT_INTERFACE_DISABLED, // Disabled
    EVENT_INTERFACE_TESTING   // Testing
 };
@@ -595,14 +642,14 @@ static uint32_t statusToEventInverted[] =
    EVENT_INTERFACE_EXPECTED_DOWN, // Minor
    EVENT_INTERFACE_UNEXPECTED_UP, // Major
    EVENT_INTERFACE_UNEXPECTED_UP, // Critical
-   EVENT_INTERFACE_UNKNOWN,  // Unknown
-   EVENT_INTERFACE_UNKNOWN,  // Unmanaged
-   EVENT_INTERFACE_DISABLED, // Disabled
-   EVENT_INTERFACE_TESTING   // Testing
+   EVENT_INTERFACE_UNKNOWN,       // Unknown
+   EVENT_INTERFACE_UNMANAGED,     // Unmanaged
+   EVENT_INTERFACE_DISABLED,      // Disabled
+   EVENT_INTERFACE_TESTING        // Testing
 };
 
 /**
- * Pae state text
+ * PAE state text
  */
 static const TCHAR *paeStateText[] =
 {
@@ -632,7 +679,6 @@ static const TCHAR *backendStateText[] =
 };
 #define PAE_STATE_TEXT(x) ((((int)(x) <= PAE_STATE_RESTART) && ((int)(x) >= 0)) ? paeStateText[(int)(x)] : paeStateText[0])
 #define BACKEND_STATE_TEXT(x) ((((int)(x) <= BACKEND_STATE_IGNORE) && ((int)(x) >= 0)) ? backendStateText[(int)(x)] : backendStateText[0])
-
 
 /**
  * Generate events for interface after maintenance end.
@@ -688,8 +734,8 @@ void Interface::generateEventsAfterMaintenace(uint32_t parentId)
       if (m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH)
       {
          EventBuilder(EVENT_8021X_PAE_FORCE_UNAUTH, parentId)
-            .param(_T("interfaceIndex"), m_id)
-            .param(_T("interfaceName"), m_name)
+            .param(L"interfaceIndex", m_id)
+            .param(L"interfaceName", m_name)
             .post();
       }
    }
@@ -979,7 +1025,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	}
 	uint64_t oldSpeed = m_speed;
 	if (m_speed != speed)
-	{
+   {
 	   m_speed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
@@ -997,7 +1043,21 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
             .param(_T("oldSpeedText"), FormatNumber(static_cast<double>(oldSpeed), false, 0, -3, _T("bps")))
             .param(_T("newSpeed"), speed)
             .param(_T("newSpeedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+            .param(_T("maxSpeed"), m_maxSpeed)
+            .param(_T("maxSpeedText"), FormatNumber(static_cast<double>(m_maxSpeed), false, 0, -3, _T("bps")))
             .post();
+
+         if ((speed != 0) && (m_maxSpeed != 0) && (speed < m_maxSpeed))
+         {
+            EventBuilder(EVENT_IF_SPEED_BELOW_MAXIMUM, parent->getId())
+               .param(_T("ifIndex"), m_index)
+               .param(_T("ifName"), m_name)
+               .param(_T("speed"), speed)
+               .param(_T("speedText"), FormatNumber(static_cast<double>(speed), false, 0, -3, _T("bps")))
+               .param(_T("maxSpeed"), m_maxSpeed)
+               .param(_T("maxSpeedText"), FormatNumber(static_cast<double>(m_maxSpeed), false, 0, -3, _T("bps")))
+               .post();
+         }
       }
       unlockParentList();
    }
@@ -1267,6 +1327,7 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IF_TYPE, m_type);
    msg->setField(VID_MTU, m_mtu);
    msg->setField(VID_SPEED, m_speed);
+   msg->setField(VID_MAX_SPEED, m_maxSpeed);
    msg->setField(VID_INBOUND_UTILIZATION, m_inboundUtilization);
    msg->setField(VID_OUTBOUND_UTILIZATION, m_outboundUtilization);
    msg->setField(VID_PHY_CHASSIS, m_physicalLocation.chassis);
@@ -1300,6 +1361,19 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
  */
 uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
+   if (msg.isFieldExist(VID_MAC_ADDR))
+   {
+      if (isManuallyCreated())
+      {
+         m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
+      else
+      {
+         return RCC_INCOMPATIBLE_OPERATION;
+      }
+   }
+
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = msg.getFieldAsInt16(VID_REQUIRED_POLLS);
@@ -1545,7 +1619,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             .param(_T("remoteIfId"), iface->getId())
             .param(_T("remoteIfIndex"), iface->getIfIndex())
             .param(_T("remoteIfName"), iface->getName())
-            .param(_T("remoteIfIP"), iface->getIpAddressList()->getFirstUnicastAddress())
+            .param(_T("remoteIfIP"), iface->getFirstUnicastAddress())
             .param(_T("remoteIfMAC"), iface->getMacAddress())
             .param(_T("protocol"), protocol)
             .post();
@@ -1670,6 +1744,44 @@ InetAddress Interface::getFirstIpAddress() const
 }
 
 /**
+ * Check if interface has an address in given subnet (thread-safe)
+ */
+bool Interface::hasAddressInSubnet(const InetAddress& subnet) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (subnet.contains(m_ipAddressList.get(i)))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if interface has an address in same subnet as given address (thread-safe)
+ */
+bool Interface::hasAddressInSameSubnet(const InetAddress& addr) const
+{
+   lockProperties();
+   bool result = false;
+   for(int i = 0; i < m_ipAddressList.size(); i++)
+   {
+      if (m_ipAddressList.get(i).sameSubnet(addr))
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
  * Add IP address
  */
 void Interface::addIpAddress(const InetAddress& addr)
@@ -1727,6 +1839,46 @@ void Interface::deleteIpAddress(InetAddress addr)
          g_idxInterfaceByAddr.remove(addr);
       }
    }
+}
+
+/**
+ * Clear all IP addresses from interface
+ */
+void Interface::clearIpAddresses()
+{
+   // FIXME: make copy of address list and work on it (requires changes to InetAddressList)
+   if (!isExcludedFromTopology())
+   {
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+         {
+            zone->removeFromIndex(*this);
+         }
+      }
+      else
+      {
+         const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
+         for(int i = 0; i < list.size(); i++)
+         {
+            InetAddress *addr = list.get(i);
+            if (addr->isValidUnicast())
+            {
+               shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+               if ((o != nullptr) && (o->getId() == m_id))
+               {
+                  g_idxInterfaceByAddr.remove(*addr);
+               }
+            }
+         }
+      }
+   }
+
+   lockProperties();
+   m_ipAddressList.clear();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
+   unlockProperties();
 }
 
 /**
@@ -1889,17 +2041,25 @@ void Interface::clearOSPFInformation()
 /**
  * Set object's management status
  */
-bool Interface::setMgmtStatus(bool isManaged)
+void Interface::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
-   if (!super::setMgmtStatus(isManaged))
-      return false;
+   const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+   for(const std::shared_ptr<NetObj> parent : getParentList())
+   {
+      EventBuilder(isManaged ? EVENT_INTERFACE_UNKNOWN : EVENT_INTERFACE_UNMANAGED, parent->getId())
+                    .param(_T("interfaceObjectId"), m_id)
+                    .param(_T("interfaceName"), m_name)
+                    .param(_T("interfaceIpAddress"), addr)
+                    .param(_T("interfaceNetMask"), addr.getMaskBits())
+                    .param(_T("interfaceIndex"), m_index)
+                    .post();
+   }
 
    if (!isManaged && ConfigReadBoolean(_T("Objects.Interfaces.ClearPeerOnUnmanage"), false))
    {
       ClearPeer(getPeerInterfaceId());
       ClearPeer(getId());
    }
-   return true;
 }
 
 /**
@@ -1912,8 +2072,7 @@ json_t *Interface::toJson()
    lockProperties();
 
    json_object_set_new(root, "index", json_integer(m_index));
-   TCHAR text[64];
-   json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString(text)));
+   json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));
@@ -1921,15 +2080,20 @@ json_t *Interface::toJson()
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "mtu", json_integer(m_mtu));
    json_object_set_new(root, "speed", json_integer(m_speed));
+   json_object_set_new(root, "maxSpeed", json_integer(m_maxSpeed));
    json_object_set_new(root, "inboundUtilization", json_integer(m_inboundUtilization));
    json_object_set_new(root, "outboundUtilization", json_integer(m_outboundUtilization));
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));
    json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
    json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
+   json_object_set_new(root, "peerDiscoveryProtocolText", json_string_t(GetLinkLayerProtocolName(m_peerDiscoveryProtocol)));
    json_object_set_new(root, "adminState", json_integer(m_adminState));
+   json_object_set_new(root, "adminStateText", json_string(InterfaceAdminStateToText(static_cast<InterfaceAdminState>(m_adminState))));
    json_object_set_new(root, "operState", json_integer(m_operState));
+   json_object_set_new(root, "operStateText", json_string(InterfaceOperStateToText(static_cast<InterfaceOperState>(m_operState))));
    json_object_set_new(root, "stpPortState", json_integer(static_cast<json_int_t>(m_stpPortState)));
+   json_object_set_new(root, "stpPortStateText", json_string_t(STPPortStateToText(m_stpPortState)));
    json_object_set_new(root, "lastKnownOperState", json_integer(m_lastKnownOperState));
    json_object_set_new(root, "lastKnownAdminState", json_integer(m_lastKnownAdminState));
    json_object_set_new(root, "pendingOperState", json_integer(m_pendingOperState));
@@ -1947,7 +2111,8 @@ json_t *Interface::toJson()
 
    if (m_flags & IF_OSPF_INTERFACE)
    {
-      json_object_set_new(root, "ospfArea", json_string_t(IpToStr(m_ospfArea, text)));
+      char text[64];
+      json_object_set_new(root, "ospfArea", json_string(IpToStrA(m_ospfArea, text)));
       json_object_set_new(root, "ospfType", json_integer(static_cast<json_int_t>(m_ospfType)));
       json_object_set_new(root, "ospfState", json_integer(static_cast<json_int_t>(m_ospfState)));
    }

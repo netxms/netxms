@@ -54,10 +54,10 @@ public class EppSourceObjects extends AbstractSessionTest
    public static String TEST_CONTAINER_B = "container-b";
    public static String TEST_CONTAINER_B1 = "container-b1";
 
-   
-   
-   
-   //                  INFRASTRUCTURE 
+
+
+
+   //                  INFRASTRUCTURE
    //                  SERVICES
    //               /               \
    //           +------+             +------+
@@ -67,16 +67,16 @@ public class EppSourceObjects extends AbstractSessionTest
    //   +-------+         +-------+   +------+   +--------+
    //   |NODE A |         |  AB   |   |  B1  |   | NODE B |
    //   +-------+         +-------+   +------+   +--------+
-   //                        |             |   
+   //                        |             |
    //                     +-------+     +------+
    //                     |NODE AB|     |NODE B|
    //                     +-------+     +------+
-   
-   
+
+
    /**
-    * Checks if a container with specified parameters exists. 
+    * Checks if a container with specified parameters exists.
     * If it doesn't exist, creates a new A container with its sub-containers and nodes within them.
-    * 
+    *
     * @param session
     * @throws IOException
     * @throws NXCException
@@ -114,9 +114,9 @@ public class EppSourceObjects extends AbstractSessionTest
    }
 
    /**
-    * Checks if a container with specified parameters exists. 
+    * Checks if a container with specified parameters exists.
     * If it doesn't exist, creates a new B container with its sub-containers and nodes within them.
-    * 
+    *
     * @param session
     * @throws IOException
     * @throws NXCException
@@ -154,8 +154,8 @@ public class EppSourceObjects extends AbstractSessionTest
    }
 
    /**
-    * Removes a custom attribute list from a specified node. 
-    * 
+    * Removes a custom attribute list from a specified node.
+    *
     * @param session
     * @param nodeName
     * @throws Exception
@@ -166,10 +166,10 @@ public class EppSourceObjects extends AbstractSessionTest
       Map<String, CustomAttribute> attrList = new HashMap <>();
       session.setObjectCustomAttributes(node.getObjectId(), attrList);
    }
-   
+
    /**
     * Сreates a new EPP rule with specific parameters
-    * 
+    *
     * @param session
     * @param node
     * @param policy
@@ -185,7 +185,7 @@ public class EppSourceObjects extends AbstractSessionTest
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearch, eventTemplate, node);
       return testRule;
    }
-   
+
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
    //        |     B     |            |
@@ -195,21 +195,21 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
-      
+
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-            
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -227,8 +227,8 @@ public class EppSourceObjects extends AbstractSessionTest
 
       Thread.sleep(500);
 
-      assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A)); 
-      
+      assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
+
       assertEquals(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB), CA_VALUE);
@@ -239,14 +239,13 @@ public class EppSourceObjects extends AbstractSessionTest
       deleteCaListFromNode(session, TEST_NODE_AB);
 
       Thread.sleep(500);
-      
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -257,22 +256,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-            
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       List<Long> listForExclusion = new ArrayList<Long>();
       testRule.setSourceExclusions(listForExclusion);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -289,21 +288,20 @@ public class EppSourceObjects extends AbstractSessionTest
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
 
       Thread.sleep(500);
-      
-      assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE); 
-      
+
+      assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE);
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
       //To run next test
       deleteCaListFromNode(session, TEST_NODE_A);
-      
+
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
 
-      session.closeEventProcessingPolicy();
    }
 
    //        +-----------+------------+
@@ -315,28 +313,28 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
       session.saveEventProcessingPolicy(policy);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
-      
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
@@ -348,8 +346,8 @@ public class EppSourceObjects extends AbstractSessionTest
 
       Thread.sleep(500);
 
-      assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE); 
-      
+      assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE);
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
@@ -359,9 +357,8 @@ public class EppSourceObjects extends AbstractSessionTest
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -372,7 +369,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -384,16 +381,16 @@ public class EppSourceObjects extends AbstractSessionTest
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
       session.saveEventProcessingPolicy(policy);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
-      
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
@@ -402,12 +399,12 @@ public class EppSourceObjects extends AbstractSessionTest
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
-      
+
       Thread.sleep(500);
 
-      
+
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
-      
+
       assertEquals(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB), CA_VALUE);
@@ -422,9 +419,8 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
    //        |     B1    |            |
@@ -434,26 +430,26 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B1).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
       session.saveEventProcessingPolicy(policy);
-      
+
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
@@ -471,17 +467,16 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
-      
+
       //to run next test
       deleteCaListFromNode(session, TEST_NODE_B1);
-      
+
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_B1));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -492,21 +487,21 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B1).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -541,9 +536,8 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
    //        |           |     B1     |
@@ -553,21 +547,21 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B1).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -602,7 +596,6 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
 
-      session.closeEventProcessingPolicy();
    }
    //        INVERSE RULE
    //        +-----------+------------+
@@ -614,21 +607,21 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B1).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -651,17 +644,16 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
-      
+
       deleteCaListFromNode(session, TEST_NODE_B1);
 
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
 
-      session.closeEventProcessingPolicy();
    }
-   
-   
+
+
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
    //        |     B     |     B      |
@@ -671,22 +663,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -709,10 +701,9 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-   
-      
+
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -723,22 +714,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -753,9 +744,9 @@ public class EppSourceObjects extends AbstractSessionTest
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B).getObjectId(), new String[] {}, null, null, null);
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_B1).getObjectId(), new String[] {}, null, null, null);
       session.sendEvent(0, TEMPLATE_NAME, session.findObjectByName(TEST_NODE_AB).getObjectId(), new String[] {}, null, null, null);
-      
+
       Thread.sleep(500);
-      
+
       assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1), CA_VALUE);
@@ -772,8 +763,7 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
-      
-      session.closeEventProcessingPolicy();
+
    }
 
    //        +-----------+------------+
@@ -785,22 +775,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName("Infrastructure Services").getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -819,20 +809,19 @@ public class EppSourceObjects extends AbstractSessionTest
       Thread.sleep(500);
 
       assertEquals(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A), CA_VALUE);
-      
+
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
-      
+
       deleteCaListFromNode(session, TEST_NODE_A);
 
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -843,22 +832,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName("Infrastructure Services").getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -877,11 +866,11 @@ public class EppSourceObjects extends AbstractSessionTest
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
-      
+
       assertEquals(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1), CA_VALUE);
       assertEquals(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB), CA_VALUE);
-      
+
       deleteCaListFromNode(session, TEST_NODE_B);
       deleteCaListFromNode(session, TEST_NODE_B1);
       deleteCaListFromNode(session, TEST_NODE_AB);
@@ -892,9 +881,8 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-   
+
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
    //        |    B      |     IS     |
@@ -904,22 +892,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName("Infrastructure Services").getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() & ~ EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -942,9 +930,8 @@ public class EppSourceObjects extends AbstractSessionTest
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
 
-      session.closeEventProcessingPolicy();
    }
-      
+
    //        INVERSE RULE
    //        +-----------+------------+
    //        | INCLUSION | EXCLUSION  |
@@ -955,22 +942,22 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.openEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
 
       EventProcessingPolicyRule testRule = createTestRule(session, null, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
-      
+
       List<Long> listForInclusion = new ArrayList<Long>();
       listForInclusion.add(session.findObjectByName(TEST_CONTAINER_B).getObjectId());
       testRule.setSources(listForInclusion);
       List<Long> listForExclusion = new ArrayList<Long>();
       listForExclusion.add(session.findObjectByName("Infrastructure Services").getObjectId());
       testRule.setSourceExclusions(listForExclusion);
-      
+
       testRule.setFlags(testRule.getFlags() | EventProcessingPolicyRule.NEGATED_SOURCE);
-      
+
       Map<String, String> ruleCaSetList = new HashMap<>();
       ruleCaSetList.put("%n", "CA value");// creating a key-value set to pass into the rule
       testRule.setCustomAttributeStorageSet(ruleCaSetList);
@@ -997,15 +984,14 @@ public class EppSourceObjects extends AbstractSessionTest
       deleteCaListFromNode(session, TEST_NODE_B);
       deleteCaListFromNode(session, TEST_NODE_B1);
       deleteCaListFromNode(session, TEST_NODE_AB);
-      
+
       Thread.sleep(500);
 
       assertNull(session.findObjectByName(TEST_NODE_A).getCustomAttributeValue(TEST_NODE_A));
       assertNull(session.findObjectByName(TEST_NODE_B).getCustomAttributeValue(TEST_NODE_B));
       assertNull(session.findObjectByName(TEST_NODE_B1).getCustomAttributeValue(TEST_NODE_B1));
       assertNull(session.findObjectByName(TEST_NODE_AB).getCustomAttributeValue(TEST_NODE_AB));
-      
-      session.closeEventProcessingPolicy();
+
    }
 
 }

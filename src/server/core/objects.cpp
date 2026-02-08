@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -326,6 +326,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_VPNCONNECTOR:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
+         case OBJECT_DASHBOARDTEMPLATE:
 			case OBJECT_DASHBOARDROOT:
          case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
@@ -504,6 +505,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 		case OBJECT_VPNCONNECTOR:
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
+      case OBJECT_DASHBOARDTEMPLATE:
 		case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
@@ -602,16 +604,16 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 			}
 			else
 			{
-            const ObjectArray<InetAddress>& list = static_cast<const Interface&>(object).getIpAddressList()->getList();
-            for(int i = 0; i < list.size(); i++)
+            InetAddressList addrList = static_cast<const Interface&>(object).getIpAddressList();
+            for(int i = 0; i < addrList.size(); i++)
             {
-               InetAddress *addr = list.get(i);
-               if (addr->isValidUnicast())
+               InetAddress addr = addrList.get(i);
+               if (addr.isValidUnicast())
                {
-				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(addr);
 				      if ((o != nullptr) && (o->getId() == object.getId()))
 				      {
-					      g_idxInterfaceByAddr.remove(*addr);
+					      g_idxInterfaceByAddr.remove(addr);
 				      }
                }
             }
@@ -1102,49 +1104,49 @@ bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 }
 
 /**
+ * Select appropriate object index based on object class
+ *
+ * @param objectClassHint Object class to get index for
+ * @return Pointer to the appropriate index
+ */
+static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
+{
+   switch(objectClassHint)
+   {
+      case OBJECT_ACCESSPOINT:
+         return &g_idxAccessPointById;
+      case OBJECT_ASSET:
+         return &g_idxAssetById;
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
+         return &g_idxBusinessServicesById;
+      case OBJECT_CIRCUIT:
+         return &g_idxCircuitById;
+      case OBJECT_CLUSTER:
+         return &g_idxClusterById;
+      case OBJECT_COLLECTOR:
+         return &g_idxCollectorById;
+      case OBJECT_MOBILEDEVICE:
+         return &g_idxMobileDeviceById;
+      case OBJECT_NODE:
+         return &g_idxNodeById;
+      case OBJECT_SENSOR:
+         return &g_idxSensorById;
+      case OBJECT_SUBNET:
+         return &g_idxSubnetById;
+      case OBJECT_ZONE:
+         return &g_idxZoneByUIN;
+      default:
+         return &g_idxObjectById;
+   }
+}
+
+/**
  * Find object by ID
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
-
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->get(id);
 	if ((object == nullptr) || (objectClassHint == -1))
 		return object;
@@ -1182,45 +1184,7 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
    if (preg == nullptr)
       return unique_ptr<SharedObjectArray<NetObj>>();
 
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
-
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    std::pair<int, PCRE*> context(objectClassHint, preg);
    unique_ptr<SharedObjectArray<NetObj>> result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
    _pcre_free_t(preg);
@@ -1241,47 +1205,7 @@ const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defau
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->find(comparator, context);
    return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
@@ -1291,47 +1215,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint)
 {
-   ObjectIndex *index;
-   switch(objectClassHint)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      case OBJECT_SUBNET:
-         index = &g_idxSubnetById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
    shared_ptr<NetObj> object = index->find(comparator);
    return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
@@ -1339,13 +1223,39 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> co
 /**
  * Find object by name
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const wchar_t *name, int objectClassHint)
 {
 	return FindObject(
 	   [name, objectClassHint] (NetObj *object) -> bool
 	   {
-         return ((objectClassHint == -1) || (objectClassHint == object->getObjectClass())) && !object->isDeleted() && !_tcsicmp(object->getName(), name);
+         return ((objectClassHint == -1) || (objectClassHint == object->getObjectClass())) && !object->isDeleted() && !wcsicmp(object->getName(), name);
 	   }, objectClassHint);
+}
+
+/**
+ * Find object by name using fuzzy search (case insensitive)
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByFuzzyName(const wchar_t *name, int objectClassHint)
+{
+   double similarity = 0.79999;  // minimum similarity threshold
+   shared_ptr<NetObj> bestMatch = nullptr;
+   ObjectIndex *index = GetObjectIndexByClass(objectClassHint);
+   index->forEach(
+      [name, objectClassHint, &similarity, &bestMatch] (NetObj *object) -> EnumerationCallbackResult
+      {
+         if (object->isDeleted())
+            return _CONTINUE;
+         if (objectClassHint != -1 && objectClassHint != object->getObjectClass())
+            return _CONTINUE;
+         double s = CalculateStringSimilarity(name, object->getName(), true);
+         if (s > similarity)
+         {
+            similarity = s;
+            bestMatch = object->self();
+         }
+         return s < 1.0 ? _CONTINUE : _STOP;
+      });
+   return bestMatch;
 }
 
 /**
@@ -1371,16 +1281,34 @@ shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 
 /**
  * Check if given IP address is used by cluster (it's either
- * resource IP or located on one of sync subnets)
+ * resource IP or located on one of sync subnets).
+ * Optionally can return ID of cluster object and flag indicating
+ * if given IP address is resource IP.
  */
-bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr, uint32_t *clusterId, bool *isResource)
 {
 	return g_idxObjectById.find(
-	   [zoneUIN, ipAddr] (NetObj *object) -> bool
+	   [zoneUIN, ipAddr, clusterId, isResource] (NetObj *object) -> bool
 	   {
-         return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
-                (static_cast<Cluster*>(object)->getZoneUIN() == zoneUIN) &&
-                (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr) || static_cast<Cluster*>(object)->isSyncAddr(ipAddr));
+         if ((object->getObjectClass() != OBJECT_CLUSTER) || object->isDeleted() || (static_cast<Cluster*>(object)->getZoneUIN() != zoneUIN))
+	         return false;
+         if (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr))
+         {
+            if (clusterId != nullptr)
+               *clusterId = object->getId();
+            if (isResource != nullptr)
+               *isResource = true;
+            return true;
+         }
+         if (static_cast<Cluster*>(object)->isSyncAddr(ipAddr))
+         {
+            if (clusterId != nullptr)
+               *clusterId = object->getId();
+            if (isResource != nullptr)
+               *isResource = false;
+            return true;
+         }
+         return false;
 	   }) != nullptr;
 }
 
@@ -1415,7 +1343,7 @@ uint32_t FindLocalMgmtNode()
 
 /**
  * Template function for loading objects from database
- * 
+ *
  * @param className    object class name
  * @param hdb          database handle
  * @param query        sets table and WHERE condition, if needed
@@ -1514,7 +1442,9 @@ bool LoadObjects()
       bool success =
                DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_ai_data"), _T("object_id,data_key"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_urls"), _T("object_id,url_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("port_stop_list"), _T("object_id,id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("responsible_users"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("zones"), _T("id"), _T("*")) &&
@@ -1568,6 +1498,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_templates"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_template_instances"), _T("dashboard_template_id,instance_object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("business_services"), _T("id"), _T("*"), intColumns) &&
@@ -1577,7 +1509,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_statistics"), _T("object_id,poll_target"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,package_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
@@ -1728,6 +1660,7 @@ bool LoadObjects()
    LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_TEMPLATEGROUP));
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
    LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, preparedStatements, _T("dashboards"));
+   LoadObjectsFromTable<DashboardTemplate>(_T("dashboard templates"), hdb, preparedStatements, _T("dashboard_templates"));
    LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
    LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICE));
    LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICEPROTO));
@@ -1944,6 +1877,12 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_NODE:
+         if (static_cast<const Node&>(object).isDecommissioned())
+         {
+            ConsolePrintf(console, _T("   Decommissioned......: YES\n"));
+            ConsolePrintf(console, _T("   Decommissioned on...: %s\n"),
+                     FormatTimestamp(static_cast<const Node&>(object).getDecommissionTime(), buffer));
+         }
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: ") UINT64X_FMT(_T("012")) _T(" (isSNMP=%d isAgent=%d isEIP=%d isBridge=%d isRouter=%d isMgmt=%d)\n   SNMP ObjectId.......: %s\n"),
                        static_cast<const Node&>(object).getIpAddress().toString(buffer),
                        static_cast<const Node&>(object).getPrimaryHostName().cstr(),
@@ -1997,10 +1936,12 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<const AccessPoint&>(object).getIpAddress().toString(buffer));
          break;
       case OBJECT_INTERFACE:
+      {
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<const Interface&>(object).getMacAddress().toString(buffer));
-         for(int n = 0; n < static_cast<const Interface&>(object).getIpAddressList()->size(); n++)
+         InetAddressList addrList = static_cast<const Interface&>(object).getIpAddressList();
+         for(int n = 0; n < addrList.size(); n++)
          {
-            const InetAddress& a = static_cast<const Interface&>(object).getIpAddressList()->get(n);
+            InetAddress a = addrList.get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
          ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<const Interface&>(object).getIfIndex());
@@ -2012,6 +1953,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
          }
          PrintInterfaceIcmpStatistic(console, static_cast<const Interface&>(object));
          break;
+      }
       case OBJECT_TEMPLATE:
          ConsolePrintf(console, _T("   Version.............: %d\n"), static_cast<const Template&>(object).getVersion());
          break;
@@ -2153,6 +2095,9 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
       case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
+         if ((childClass == OBJECT_DASHBOARDGROUP) || (childClass == OBJECT_DASHBOARD) || (childClass == OBJECT_DASHBOARDTEMPLATE))
+            return true;
+         break;
       case OBJECT_DASHBOARD:
          if ((childClass == OBJECT_DASHBOARDGROUP) || (childClass == OBJECT_DASHBOARD))
             return true;
@@ -2370,41 +2315,7 @@ static EnumerationCallbackResult CreateObjectAccessSnapshot_Callback(NetObj *obj
  */
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
 {
-   ObjectIndex *index;
-   switch(objClass)
-   {
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_BUSINESSSERVICE:
-      case OBJECT_BUSINESSSERVICEPROTO:
-         index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_CIRCUIT:
-         index = &g_idxCircuitById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_COLLECTOR:
-         index = &g_idxCollectorById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-      case OBJECT_NODE:
-         index = &g_idxNodeById;
-         break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByUIN;
-         break;
-      case OBJECT_SENSOR:
-         index = &g_idxSensorById;
-         break;
-      default:
-         index = &g_idxObjectById;
-         break;
-   }
+   ObjectIndex *index = GetObjectIndexByClass(objClass);
 
    StructArray<ACL_ELEMENT> accessList;
    CreateObjectAccessSnapshot_CallbackData data;

@@ -825,9 +825,7 @@ static bool VerifyServerCertificate(X509 *cert)
             if (!dp.isEmpty())
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: certificate CRL DP: %s"), dp.cstr());
-               char *url = dp.getUTF8String();
-               AddRemoteCRL(url, true);
-               MemFree(url);
+               AddRemoteCRL(dp.getUTF8StdString().c_str(), true);
             }
 
             X509 *issuer = sk_X509_value(chain, 1);
@@ -1658,12 +1656,12 @@ Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
 
    StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
    if (fingerprintString.isEmpty())
-      return new Tunnel(hostname, port, certificate, password);
+      return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
 
    fingerprintString.replace(_T(":"), _T(""));
    BYTE fingerprint[SHA256_DIGEST_SIZE];
    StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
-   return new Tunnel(hostname, port, certificate, password, fingerprint);
+   return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
 }
 
 /**

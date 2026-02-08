@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,10 @@ public class EventProcessingPolicyRule
    public static final int NEGATED_TIME_FRAMES = 0x008000;
    public static final int START_DOWNTIME      = 0x010000;
    public static final int END_DOWNTIME        = 0x020000;
+   public static final int REQUEST_AI_COMMENT  = 0x040000;
+   public static final int CREATE_INCIDENT     = 0x080000;
+   public static final int AI_ANALYZE_INCIDENT = 0x100000;
+   public static final int AI_AUTO_ASSIGN      = 0x200000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
@@ -68,6 +72,11 @@ public class EventProcessingPolicyRule
    private List<Long> alarmCategoryIds;
    private String rcaScriptName;
    private String downtimeTag;
+   private int incidentDelay;
+   private String incidentTitle;
+   private String incidentDescription;
+   private int incidentAIAnalysisDepth;
+   private String incidentAIPrompt;
    private String actionScript;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
@@ -75,8 +84,16 @@ public class EventProcessingPolicyRule
    private List<String> persistentStorageDelete;
    private Map<String, String> customAttributeStorageSet;
    private List<String> customAttributeStorageDelete;
+   private String aiAgentInstructions;
    private String comments;
    private int ruleNumber;
+
+   // Optimistic concurrency control fields
+   private int version;
+   private boolean modified;
+   private UUID modifiedByGuid;
+   private String modifiedByName;
+   private long modificationTime;
 
    /**
     * Create empty rule
@@ -98,6 +115,11 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = new ArrayList<Long>(0);
       rcaScriptName = null;
       downtimeTag = "";
+      incidentDelay = 0;
+      incidentTitle = "";
+      incidentDescription = "";
+      incidentAIAnalysisDepth = 0;
+      incidentAIPrompt = null;
       actionScript = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
@@ -105,8 +127,16 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(0);
       customAttributeStorageSet = new HashMap<String, String>(0);
       customAttributeStorageDelete = new ArrayList<String>(0);
+      aiAgentInstructions = "";
       comments = "";
       ruleNumber = 0;
+
+      // New rules are inherently modified
+      version = 0;
+      modified = true;
+      modifiedByGuid = null;
+      modifiedByName = null;
+      modificationTime = 0;
    }
 
    /**
@@ -133,6 +163,11 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = src.alarmCategoryIds;
       rcaScriptName = src.rcaScriptName;
       downtimeTag = src.downtimeTag;
+      incidentDelay = src.incidentDelay;
+      incidentTitle = src.incidentTitle;
+      incidentDescription = src.incidentDescription;
+      incidentAIAnalysisDepth = src.incidentAIAnalysisDepth;
+      incidentAIPrompt = src.incidentAIPrompt;
       actionScript = src.actionScript;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
@@ -142,8 +177,16 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
       customAttributeStorageSet = new HashMap<String, String>(src.customAttributeStorageSet);
       customAttributeStorageDelete = new ArrayList<String>(src.customAttributeStorageDelete);
+      aiAgentInstructions = src.aiAgentInstructions;
       comments = src.comments;
       ruleNumber = src.ruleNumber;
+
+      // Copy is essentially a new rule (has new GUID)
+      version = 0;
+      modified = true;
+      modifiedByGuid = null;
+      modifiedByName = null;
+      modificationTime = 0;
    }
 
    /**
@@ -175,7 +218,13 @@ public class EventProcessingPolicyRule
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
+      incidentDelay = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_DELAY);
+      incidentTitle = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_TITLE);
+      incidentDescription = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_DESCRIPTION);
+      incidentAIAnalysisDepth = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH);
+      incidentAIPrompt = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_AI_PROMPT);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
+      aiAgentInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
@@ -186,7 +235,7 @@ public class EventProcessingPolicyRule
          actions.add(new ActionExecutionConfiguration(msg, fieldId));
          fieldId += 10;
       }
-      timerCancellations = msg.getStringListFromField(NXCPCodes.VID_TIMER_LIST);
+      timerCancellations = msg.getFieldAsStringList(NXCPCodes.VID_TIMER_LIST);
 
       persistentStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       persistentStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
@@ -195,6 +244,13 @@ public class EventProcessingPolicyRule
       customAttributeStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_DEL_COUNT);
 
       this.ruleNumber = ruleNumber;
+
+      // Read version tracking fields
+      version = msg.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION);
+      modified = false; // Fresh from server
+      modifiedByGuid = msg.getFieldAsUUID(NXCPCodes.VID_MODIFIED_BY_GUID);
+      modifiedByName = msg.getFieldAsString(NXCPCodes.VID_MODIFIED_BY_NAME);
+      modificationTime = msg.getFieldAsInt64(NXCPCodes.VID_MODIFICATION_TIME);
    }
 
    /**
@@ -237,13 +293,23 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds);
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
+      msg.setFieldInt32(NXCPCodes.VID_INCIDENT_DELAY, incidentDelay);
+      msg.setField(NXCPCodes.VID_INCIDENT_TITLE, incidentTitle);
+      msg.setField(NXCPCodes.VID_INCIDENT_DESCRIPTION, incidentDescription);
+      msg.setFieldInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH, incidentAIAnalysisDepth);
+      msg.setField(NXCPCodes.VID_INCIDENT_AI_PROMPT, incidentAIPrompt);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
+      msg.setField(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS, aiAgentInstructions);
 
       msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       msg.setFieldsFromStringCollection(persistentStorageDelete, NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 
       msg.setFieldsFromStringMap(customAttributeStorageSet, NXCPCodes.VID_CUSTOM_ATTR_SET_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_SET_COUNT);
       msg.setFieldsFromStringCollection(customAttributeStorageDelete, NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_DEL_COUNT);
+
+      // Send version tracking info
+      msg.setFieldInt32(NXCPCodes.VID_RULE_VERSION, version);
+      msg.setField(NXCPCodes.VID_RULE_MODIFIED, modified);
    }
 
    /**
@@ -264,6 +330,7 @@ public class EventProcessingPolicyRule
    public void setComments(String comments)
    {
       this.comments = comments;
+      this.modified = true;
    }
 
    /**
@@ -280,6 +347,7 @@ public class EventProcessingPolicyRule
    public void setFilterScript(String script)
    {
       this.filterScript = script;
+      this.modified = true;
    }
 
    /**
@@ -296,6 +364,7 @@ public class EventProcessingPolicyRule
    public void setFlags(int flags)
    {
       this.flags = flags;
+      this.modified = true;
    }
 
    /**
@@ -312,6 +381,7 @@ public class EventProcessingPolicyRule
    public void setAlarmKey(String alarmKey)
    {
       this.alarmKey = alarmKey;
+      this.modified = true;
    }
 
    /**
@@ -328,6 +398,7 @@ public class EventProcessingPolicyRule
    public void setAlarmMessage(String alarmMessage)
    {
       this.alarmMessage = alarmMessage;
+      this.modified = true;
    }
 
    /**
@@ -344,6 +415,7 @@ public class EventProcessingPolicyRule
    public void setAlarmSeverity(Severity alarmSeverity)
    {
       this.alarmSeverity = alarmSeverity;
+      this.modified = true;
    }
 
    /**
@@ -360,6 +432,7 @@ public class EventProcessingPolicyRule
    public void setAlarmTimeout(int alarmTimeout)
    {
       this.alarmTimeout = alarmTimeout;
+      this.modified = true;
    }
 
    /**
@@ -376,6 +449,7 @@ public class EventProcessingPolicyRule
    public void setAlarmTimeoutEvent(int alarmTimeoutEvent)
    {
       this.alarmTimeoutEvent = alarmTimeoutEvent;
+      this.modified = true;
    }
 
    /**
@@ -392,6 +466,7 @@ public class EventProcessingPolicyRule
    public void setAlarmCategories(List<Long> alarmCategoryIds)
    {
       this.alarmCategoryIds = alarmCategoryIds;
+      this.modified = true;
    }
 
    /**
@@ -406,10 +481,10 @@ public class EventProcessingPolicyRule
          if (alarmCategoryIds.get(i) == categoryId)
          {
             alarmCategoryIds.remove(i);
+            this.modified = true;
             break;
          }
       }
-
    }
 
    /**
@@ -430,6 +505,7 @@ public class EventProcessingPolicyRule
    public void setRcaScriptName(String rcaScriptName)
    {
       this.rcaScriptName = rcaScriptName;
+      this.modified = true;
    }
 
    /**
@@ -454,6 +530,7 @@ public class EventProcessingPolicyRule
    public void setSourceExclusions(List<Long> sourceExclusions)
    {
       this.sourceExclusions = sourceExclusions;
+      this.modified = true;
    }
 
    /**
@@ -494,6 +571,7 @@ public class EventProcessingPolicyRule
    public void setSources(List<Long> sources)
    {
       this.sources = sources;
+      this.modified = true;
    }
 
    /**
@@ -502,6 +580,7 @@ public class EventProcessingPolicyRule
    public void setEvents(List<Integer> events)
    {
       this.events = events;
+      this.modified = true;
    }
 
    /**
@@ -510,6 +589,7 @@ public class EventProcessingPolicyRule
    public void setActions(List<ActionExecutionConfiguration> actions)
    {
       this.actions = actions;
+      this.modified = true;
    }
 
    /**
@@ -526,6 +606,7 @@ public class EventProcessingPolicyRule
    public void setTimerCancellations(List<String> timerCancellations)
    {
       this.timerCancellations = timerCancellations;
+      this.modified = true;
    }
 
    /**
@@ -534,6 +615,7 @@ public class EventProcessingPolicyRule
    public void setPStorageSet(Map<String, String> persistentStorageSet)
    {
       this.persistentStorageSet = persistentStorageSet;
+      this.modified = true;
    }
 
    /**
@@ -542,6 +624,7 @@ public class EventProcessingPolicyRule
    public void setPStorageDelete(List<String> persistentStorageDelete)
    {
       this.persistentStorageDelete = persistentStorageDelete;
+      this.modified = true;
    }
 
    /**
@@ -647,6 +730,7 @@ public class EventProcessingPolicyRule
    public void setActionScript(String actionScript)
    {
       this.actionScript = actionScript;
+      this.modified = true;
    }
 
    /**
@@ -663,6 +747,7 @@ public class EventProcessingPolicyRule
    public void setCustomAttributeStorageSet(Map<String, String> customAttributeStorageSet)
    {
       this.customAttributeStorageSet = customAttributeStorageSet;
+      this.modified = true;
    }
 
    /**
@@ -679,6 +764,7 @@ public class EventProcessingPolicyRule
    public void setCustomAttributeStorageDelete(List<String> customAttributeStorageDelete)
    {
       this.customAttributeStorageDelete = customAttributeStorageDelete;
+      this.modified = true;
    }
 
    /**
@@ -695,6 +781,7 @@ public class EventProcessingPolicyRule
    public void setTimeFrames(List<TimeFrame> timeFrames)
    {
       this.timeFrames = timeFrames;
+      this.modified = true;
    }
 
    /**
@@ -711,5 +798,202 @@ public class EventProcessingPolicyRule
    public void setDowntimeTag(String downtimeTag)
    {
       this.downtimeTag = downtimeTag;
+      this.modified = true;
+   }
+
+   /**
+    * Get incident creation delay (in seconds).
+    *
+    * @return incident creation delay in seconds (0 = immediate)
+    */
+   public int getIncidentDelay()
+   {
+      return incidentDelay;
+   }
+
+   /**
+    * Set incident creation delay.
+    *
+    * @param incidentDelay incident creation delay in seconds (0 = immediate)
+    */
+   public void setIncidentDelay(int incidentDelay)
+   {
+      this.incidentDelay = incidentDelay;
+      this.modified = true;
+   }
+
+   /**
+    * Get incident title template.
+    *
+    * @return incident title template (empty string means use alarm message)
+    */
+   public String getIncidentTitle()
+   {
+      return incidentTitle;
+   }
+
+   /**
+    * Set incident title template.
+    *
+    * @param incidentTitle incident title template (null or empty string means use alarm message)
+    */
+   public void setIncidentTitle(String incidentTitle)
+   {
+      this.incidentTitle = (incidentTitle != null) ? incidentTitle : "";
+      this.modified = true;
+   }
+
+   /**
+    * Get incident description template.
+    *
+    * @return incident description template
+    */
+   public String getIncidentDescription()
+   {
+      return incidentDescription;
+   }
+
+   /**
+    * Set incident description template.
+    *
+    * @param incidentDescription incident description template
+    */
+   public void setIncidentDescription(String incidentDescription)
+   {
+      this.incidentDescription = (incidentDescription != null) ? incidentDescription : "";
+      this.modified = true;
+   }
+
+   /**
+    * @return the incidentAIAnalysisDepth
+    */
+   public int getIncidentAIAnalysisDepth()
+   {
+      return incidentAIAnalysisDepth;
+   }
+
+   /**
+    * @param incidentAIAnalysisDepth the incidentAIAnalysisDepth to set
+    */
+   public void setIncidentAIAnalysisDepth(int incidentAIAnalysisDepth)
+   {
+      this.incidentAIAnalysisDepth = incidentAIAnalysisDepth;
+      this.modified = true;
+   }
+
+   /**
+    * @return the incidentAIPrompt
+    */
+   public String getIncidentAIPrompt()
+   {
+      return (incidentAIPrompt != null) ? incidentAIPrompt : "";
+   }
+
+   /**
+    * @param incidentAIPrompt the incidentAIPrompt to set
+    */
+   public void setIncidentAIPrompt(String incidentAIPrompt)
+   {
+      this.incidentAIPrompt = incidentAIPrompt;
+      this.modified = true;
+   }
+
+   /**
+    * Get instructions for AI agent
+    *
+    * @return instructions for AI agent
+    */
+   public String getAiAgentInstructions()
+   {
+      return aiAgentInstructions;
+   }
+
+   /**
+    * Set instructions for AI agent
+    *
+    * @param aiAgentInstructions AI agent instructions to set
+    */
+   public void setAiAgentInstructions(String aiAgentInstructions)
+   {
+      this.aiAgentInstructions = aiAgentInstructions;
+      this.modified = true;
+   }
+
+   /**
+    * Get rule version for optimistic concurrency control.
+    *
+    * @return rule version
+    */
+   public int getVersion()
+   {
+      return version;
+   }
+
+   /**
+    * Set rule version.
+    *
+    * @param version new version
+    */
+   public void setVersion(int version)
+   {
+      this.version = version;
+   }
+
+   /**
+    * Check if rule has been modified since loading from server.
+    *
+    * @return true if modified
+    */
+   public boolean isModified()
+   {
+      return modified;
+   }
+
+   /**
+    * Set modified flag.
+    *
+    * @param modified new modified state
+    */
+   public void setModified(boolean modified)
+   {
+      this.modified = modified;
+   }
+
+   /**
+    * Clear modified flag.
+    */
+   public void clearModified()
+   {
+      this.modified = false;
+   }
+
+   /**
+    * Get GUID of user who last modified this rule.
+    *
+    * @return user GUID or null
+    */
+   public UUID getModifiedByGuid()
+   {
+      return modifiedByGuid;
+   }
+
+   /**
+    * Get name of user who last modified this rule.
+    *
+    * @return user name or null
+    */
+   public String getModifiedByName()
+   {
+      return modifiedByName;
+   }
+
+   /**
+    * Get timestamp of last modification.
+    *
+    * @return modification timestamp (Unix epoch) or 0
+    */
+   public long getModificationTime()
+   {
+      return modificationTime;
    }
 }

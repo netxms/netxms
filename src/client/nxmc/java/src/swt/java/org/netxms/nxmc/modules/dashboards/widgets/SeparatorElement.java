@@ -89,7 +89,6 @@ public class SeparatorElement extends ElementWidget
 
 		if (config.getLineWidth() > 0)
 		{
-	      System.out.println("Line width: " + config.getLineWidth());
 			e.gc.setForeground(fgColor);
 			Rectangle rect = getClientArea();
 			e.gc.setLineWidth(config.getLineWidth());

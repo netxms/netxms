@@ -94,6 +94,7 @@ public:
    AssetAttribute(const NXCPMessage &msg);
    AssetAttribute(DB_RESULT result, int row);
    AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bool nxslV5);
+   AssetAttribute(json_t *json);
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
@@ -103,7 +104,7 @@ public:
    bool deleteFromDatabase();
 
    json_t *toJson() const;
-   void createExportRecord(TextFileWriter& xml);
+   void createExportRecord(json_t *array);
 
    const wchar_t *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
@@ -157,23 +158,25 @@ struct AssetPropertyAutofillContext
 
 // Asset management functions
 void AssetManagementSchemaToMessage(NXCPMessage *msg);
-uint32_t CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
-uint32_t UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
-uint32_t DeleteAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
-std::pair<uint32_t, String> ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value);
-String GetAssetAttributeDisplayName(const TCHAR *name);
-bool IsMandatoryAssetProperty(const TCHAR *name);
-bool IsBooleanAssetProperty(const TCHAR *name);
-bool IsValidAssetPropertyName(const TCHAR *name);
-unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
+uint32_t NXCORE_EXPORTABLE CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
+uint32_t NXCORE_EXPORTABLE UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
+uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
+std::pair<uint32_t, String> NXCORE_EXPORTABLE ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value);
+String NXCORE_EXPORTABLE GetAssetAttributeDisplayName(const TCHAR *name);
+bool NXCORE_EXPORTABLE IsMandatoryAssetProperty(const TCHAR *name);
+bool NXCORE_EXPORTABLE IsBooleanAssetProperty(const TCHAR *name);
+bool NXCORE_EXPORTABLE IsValidAssetPropertyName(const TCHAR *name);
+unique_ptr<StringSet> NXCORE_EXPORTABLE GetAssetAttributeNames(bool mandatoryOnly = false);
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject);
 std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *object, uint32_t userId);
-void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
-void UnlinkAsset(Asset *asset, ClientSession *session);
+void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
+void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, ClientSession *session);
 void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);
-void ExportAssetManagementSchema(TextFileWriter& xml, const StringList& attributeNames);
+void ExportAssetManagementSchema(json_t *array, const StringList& attributeNames);
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context,bool nxslV5);
+void ImportAssetManagementSchema(json_t *root, bool overwrite, ImportContext *context);
 void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
+json_t NXCORE_EXPORTABLE *GetAssetManagementSchemaAsJson();
 
 /**
  * Find asset object by value of one of it's properties

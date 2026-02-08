@@ -50,6 +50,7 @@ public class AutoApply extends ObjectPropertyPage
    private Template template;
 	private Button checkboxEnableApply;
 	private Button checkboxEnableRemove;
+	private Label gracePeriodInfo;
 	private ScriptEditor filterSource;
 	private boolean initialBind;
    private boolean initialUnbind;
@@ -106,11 +107,13 @@ public class AutoApply extends ObjectPropertyPage
 					filterSource.setEnabled(true);
 					filterSource.setFocus();
 					checkboxEnableRemove.setEnabled(true);
+					gracePeriodInfo.setEnabled(true);
 				}
 				else
 				{
 					filterSource.setEnabled(false);
 					checkboxEnableRemove.setEnabled(false);
+					gracePeriodInfo.setEnabled(false);
 				}
 			}
       });
@@ -120,6 +123,28 @@ public class AutoApply extends ObjectPropertyPage
       checkboxEnableRemove.setText(i18n.tr("Remove this template automatically when object no longer passes through filter"));
       checkboxEnableRemove.setSelection(template.isAutoRemoveEnabled());
       checkboxEnableRemove.setEnabled(template.isAutoApplyEnabled());
+
+      // Display grace period information
+      gracePeriodInfo = new Label(dialogArea, SWT.NONE);
+      GridData gdGrace = new GridData();
+      gdGrace.horizontalIndent = 20;
+      gracePeriodInfo.setLayoutData(gdGrace);
+      gracePeriodInfo.setEnabled(template.isAutoApplyEnabled());
+
+      NXCSession session = Registry.getSession();
+      int gracePeriod = session.getTemplateRemovalGracePeriod();
+      if (gracePeriod <= 0)
+      {
+         gracePeriodInfo.setText(i18n.tr("(Removal is immediate when object no longer matches filter)"));
+      }
+      else if (gracePeriod == 1)
+      {
+         gracePeriodInfo.setText(i18n.tr("(Grace period: 1 day before removal)"));
+      }
+      else
+      {
+         gracePeriodInfo.setText(i18n.tr("(Grace period: {0} days before removal)", gracePeriod));
+      }
 
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);

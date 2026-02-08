@@ -89,6 +89,27 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
 /**
  * Destructor
  */
+
+/**
+ * Create from JSON record
+ */
+DCTableColumn::DCTableColumn(json_t *json)
+{
+   String name = json_object_get_string(json, "name", _T(""));
+   _tcslcpy(m_name, name, MAX_COLUMN_NAME);
+   
+   m_flags = static_cast<UINT16>(json_object_get_int32(json, "flags"));
+   
+   String displayName = json_object_get_string(json, "displayName", _T(""));
+   m_displayName = _tcsdup(displayName);
+
+   String oidStr = json_object_get_string(json, "snmpOid", _T(""));
+   if (!oidStr.isEmpty())
+   {
+      m_snmpOid = SNMP_ObjectId::parse(oidStr);
+   }
+}
+
 DCTableColumn::~DCTableColumn()
 {
    MemFree(m_displayName);
@@ -109,19 +130,6 @@ void DCTableColumn::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Create NXMP record
  */
-void DCTableColumn::createExportRecord(TextFileWriter& xml, int id) const
-{
-   xml.appendFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
-                          _T("\t\t\t\t\t\t\t<name>%s</name>\n")
-                          _T("\t\t\t\t\t\t\t<displayName>%s</displayName>\n")
-                          _T("\t\t\t\t\t\t\t<snmpOid>%s</snmpOid>\n")
-                          _T("\t\t\t\t\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t\t\t\t</column>\n"),
-								  id, (const TCHAR *)EscapeStringForXML2(m_name),
-								  (const TCHAR *)EscapeStringForXML2(CHECK_NULL_EX(m_displayName)),
-                          m_snmpOid.isValid() ? m_snmpOid.toString().cstr() : _T(""), (int)m_flags);
-}
-
 /**
  * Serialize to JSON
  */
@@ -133,4 +141,12 @@ json_t *DCTableColumn::toJson() const
    json_object_set_new(root, "snmpOid", m_snmpOid.isValid() ? json_string_t(m_snmpOid.toString()) : json_null());
    json_object_set_new(root, "flags", json_integer(m_flags));
    return root;
+}
+
+/**
+ * Create export record
+ */
+json_t *DCTableColumn::createExportRecord() const
+{
+   return toJson();
 }

@@ -41,10 +41,8 @@ import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.InterfaceTrafficDcis;
-import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
@@ -254,8 +252,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
                final Date from = new Date(System.currentTimeMillis() - chartConfiguration.getTimeRangeMillis());
                final Date to = new Date(System.currentTimeMillis());
                final InterfaceTrafficDcis perfData = session.getInterfaceTrafficDcis(getObject().getObjectId());
-               final DciData[] data = new DciData[2];
-               final Threshold[][] thresholds = new Threshold[2][];
+               final DataSeries[] data = new DataSeries[2];
                for(int i = 0; i < data.length; i++)
                {
                   Long currentDci = perfData.getDciList()[itemBase + i];
@@ -265,7 +262,6 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
                      continue;
                   }
                   data[i] = session.getCollectedData(nodeId, currentDci, from, to, 0, HistoricalDataType.PROCESSED);
-                  thresholds[i] = session.getThresholds(nodeId, currentDci);
                }
                
                runInUIThread(() -> {
@@ -295,7 +291,6 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
                            chart.updateParameter(0, data[1], false);
                      }
 
-                     chart.setThresholds(thresholds);
                      chart.refresh();
                   }
                });
@@ -337,7 +332,6 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
          item.lineChartType = ChartDciConfig.DEFAULT;
          item.invertValues = false;
          item.showThresholds = true;
-         item.measurementUnit = new MeasurementUnit(items.getUnitNames()[itemBase]);
          chart.addParameter(item);
       }
 
@@ -350,7 +344,6 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
          item.lineChartType = ChartDciConfig.DEFAULT;
          item.invertValues = (items.getDciList()[itemBase + 1] != 0);
          item.showThresholds = true;
-         item.measurementUnit = new MeasurementUnit(items.getUnitNames()[itemBase + 1]);
          chart.addParameter(item);
       }
       chart.rebuild();

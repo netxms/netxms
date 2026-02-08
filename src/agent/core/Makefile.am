@@ -1,5 +1,5 @@
 bin_PROGRAMS = nxagentd
-nxagentd_SOURCES = actions.cpp appagent.cpp bkgnd_metrics.cpp certinfo.cpp comm.cpp \
+nxagentd_SOURCES = actions.cpp aitools.cpp appagent.cpp bkgnd_metrics.cpp certinfo.cpp comm.cpp \
 		   config.cpp ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp event.cpp exec.cpp \
 		   extagent.cpp extdp.cpp filemon.cpp hddinfo.cpp localdb.cpp master.cpp \
 		   metrics.cpp modbus.cpp nproc.cpp nxagentd.cpp package.cpp policy.cpp \

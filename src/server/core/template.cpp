@@ -72,6 +72,7 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
  */
 Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
+   m_removeDCIOnDelete = true;
 }
 
 /**
@@ -79,6 +80,7 @@ Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::A
  */
 Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
+   m_removeDCIOnDelete = true;
 }
 
 /**
@@ -285,21 +287,19 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
 }
 
 /**
- * Create management pack record
+ * Create template JSON export record
  */
-void Template::createExportRecord(TextFileWriter& xml)
+void Template::createExportRecord(json_t *array)
 {
-   xml.appendUtf8String("\t\t<template id=\"");
-   xml.append(m_id);
-   xml.appendUtf8String("\">\n\t\t\t<guid>");
-   xml.append(m_guid);
-   xml.appendUtf8String("</guid>\n\t\t\t<name>");
-   xml.append(EscapeStringForXML2(m_name));
-   xml.appendUtf8String("</name>\n\t\t\t<comments>");
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.appendUtf8String("</comments>\n");
+   json_t *templateObj = json_object();
+   
+   json_object_set_new(templateObj, "id", json_integer(m_id));
+   json_object_set_new(templateObj, "guid", json_string_t(m_guid.toString()));
+   json_object_set_new(templateObj, "name", json_string_t(m_name));
+   json_object_set_new(templateObj, "comments", json_string_t(m_comments));
 
    // Path in groups
+   json_t *pathArray = json_array();
    StringList path;
    unique_ptr<SharedObjectArray<NetObj>> list = getParents(OBJECT_TEMPLATEGROUP);
    TemplateGroup *parent = nullptr;
@@ -310,35 +310,66 @@ void Template::createExportRecord(TextFileWriter& xml)
       list = parent->getParents(OBJECT_TEMPLATEGROUP);
    }
 
-   xml.appendUtf8String("\t\t\t<path>\n");
-   for(int j = path.size() - 1, id = 1; j >= 0; j--, id++)
+   for(int i = path.size() - 1; i >= 0; i--)
    {
-      xml.appendUtf8String("\t\t\t\t<element id=\"");
-      xml.append(id);
-      xml.appendUtf8String("\">");
-      xml.append(EscapeStringForXML2(path.get(j)));
-      xml.appendUtf8String("</element>\n");
+      json_array_append_new(pathArray, json_string_t(path.get(i)));
    }
-   xml.appendUtf8String("\t\t\t</path>\n\t\t\t<dataCollection>\n");
+   json_object_set_new(templateObj, "path", pathArray);
 
+   // Data collection objects
+   json_t *dataCollectionObj = json_object();
+   json_t *dcisArray = json_array();
+   json_t *dcTablesArray = json_array();
+   
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
-      m_dcObjects.get(i)->createExportRecord(xml);
+   {
+      DCObject *dcObj = m_dcObjects.get(i);
+      json_t *dciObj = dcObj->createExportRecord();
+      
+      // Add to appropriate array based on type
+      if (dcObj->getType() == DCO_TYPE_TABLE)
+      {
+         json_array_append_new(dcTablesArray, dciObj);
+      }
+      else
+      {
+         json_array_append_new(dcisArray, dciObj);
+      }
+   }
    unlockDciAccess();
+   
+   json_object_set_new(dataCollectionObj, "dcis", dcisArray);
+   json_object_set_new(dataCollectionObj, "dcTables", dcTablesArray);
+   json_object_set_new(templateObj, "dataCollection", dataCollectionObj);
 
-   xml.appendUtf8String("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n");
-
+   // Agent policies
+   json_t *agentPoliciesArray = json_array();
    lockProperties();
    for (int i = 0; i < m_policyList.size(); i++)
    {
-      m_policyList.get(i)->createExportRecord(xml, i + 1);
+      json_t *policyObj = m_policyList.get(i)->createExportRecord();
+      if (policyObj != nullptr)
+      {
+         json_object_set_new(policyObj, "id", json_integer(i + 1));
+         json_array_append_new(agentPoliciesArray, policyObj);
+      }
    }
    unlockProperties();
+   json_object_set_new(templateObj, "agentPolicies", agentPoliciesArray);
 
-   xml.appendUtf8String("\t\t\t</agentPolicies>\n");
-
-   AutoBindTarget::createExportRecord(xml);
-   xml.appendUtf8String("\t\t</template>\n");
+   // Auto bind configuration
+   json_t *autoBindConfig = AutoBindTarget::createExportRecord();
+   if (json_object_size(autoBindConfig) > 0)
+   {
+      json_object_set_new(templateObj, "autoBind", autoBindConfig);
+   }
+   else
+   {
+      json_decref(autoBindConfig);  // Free unused empty object
+   }
+   
+   json_array_append_new(array, templateObj);
 }
 
 /**
@@ -481,6 +512,61 @@ void Template::updateFromImport(ConfigEntry *config, ImportContext *context, boo
 }
 
 /**
+ * Update object from imported JSON configuration
+ */
+void Template::updateFromImport(json_t *data, ImportContext *context)
+{
+   // Call base class implementation first for common properties (name, flags, comments, data collection)
+   super::updateFromImport(data, context);
+   
+   // Update auto-bind configuration using AutoBindTarget's JSON method
+   AutoBindTarget::updateFromImport(data);
+
+   // Update version using VersionableObject's JSON method
+   VersionableObject::updateFromImport(data);
+
+   // Handle agent policies
+   lockProperties();
+   m_policyList.clear();
+   json_t *policiesArray = json_object_get(data, "agentPolicies");
+   if (json_is_array(policiesArray))
+   {
+      size_t index;
+      json_t *policyJson;
+      json_array_foreach(policiesArray, index, policyJson)
+      {
+         if (!json_is_object(policyJson))
+            continue;
+            
+         uuid guid = json_object_get_uuid(policyJson, "guid");
+         String policyType = json_object_get_string(policyJson, "type", _T("Unknown"));
+         
+         GenericAgentPolicy *policy = CreatePolicy(guid, policyType, m_id);
+         if (policy != nullptr)
+         {
+            // Use JSON updateFromImport method
+            policy->updateFromImport(policyJson, context);
+            bool found = false;
+            for (int j = 0; j < m_policyList.size(); j++)
+            {
+               if (m_policyList.get(j)->getGuid().equals(guid))
+               {
+                  m_policyList.replace(j, policy);
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               m_policyList.add(policy);
+         }
+      }
+   }
+
+   setModified(MODIFY_ALL);
+   unlockProperties();
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Template::toJson()
@@ -518,7 +604,7 @@ void Template::prepareForDeletion()
    {
       NetObj *object = getChildList().get(i);
       if (object->isDataCollectionTarget())
-         queueRemoveFromTarget(object->getId(), true);
+         queueRemoveFromTarget(object->getId(), m_removeDCIOnDelete);
       if (object->getObjectClass() == OBJECT_NODE)
       {
          removeAllPolicies(static_cast<Node*>(object));
@@ -743,26 +829,23 @@ bool Template::removePolicy(const uuid& guid)
  */
 void Template::applyPolicyChanges()
 {
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
+   unique_ptr<SharedObjectArray<NetObj>> nodes = getChildren(OBJECT_NODE);
+
+   for(int i = 0; i < nodes->size(); i++)
    {
-      NetObj *object = getChildList().get(i);
-      if (object->getObjectClass() == OBJECT_NODE)
+      shared_ptr<Node> node = static_pointer_cast<Node>(nodes->getShared(i));
+      AgentPolicyInfo *ap;
+      shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+      if (conn != nullptr)
       {
-         AgentPolicyInfo *ap;
-         shared_ptr<AgentConnectionEx> conn = static_cast<Node*>(object)->getAgentConnection();
-         if (conn != nullptr)
+         uint32_t rcc = conn->getPolicyInventory(&ap);
+         if (rcc == RCC_SUCCESS)
          {
-            UINT32 rcc = conn->getPolicyInventory(&ap);
-            if (rcc == RCC_SUCCESS)
-            {
-               checkPolicyDeployment(static_pointer_cast<Node>(getChildList().getShared(i)), ap);
-               delete ap;
-            }
+            checkPolicyDeployment(node, ap);
+            delete ap;
          }
       }
    }
-   unlockChildList();
 }
 
 /**
@@ -770,24 +853,14 @@ void Template::applyPolicyChanges()
  */
 void Template::forceApplyPolicyChanges()
 {
-   SharedObjectArray<Node> nodes(64, 64);
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      NetObj *object = getChildList().get(i);
-      if (object->getObjectClass() == OBJECT_NODE)
-      {
-         nodes.add(static_pointer_cast<Node>(getChildList().getShared(i)));
-      }
-   }
-   unlockChildList();
+   unique_ptr<SharedObjectArray<NetObj>> nodes = getChildren(OBJECT_NODE);
 
-   if (!nodes.isEmpty())
+   if (!nodes->isEmpty())
    {
       lockProperties();
-      for(int i = 0; i < nodes.size(); i++)
+      for(int i = 0; i < nodes->size(); i++)
       {
-         const shared_ptr<Node>& node = nodes.getShared(i);
+         const shared_ptr<Node> node = static_pointer_cast<Node>(nodes->getShared(i));
          for (int i = 0; i < m_policyList.size(); i++)
          {
             const shared_ptr<GenericAgentPolicy>& policy = m_policyList.getShared(i);

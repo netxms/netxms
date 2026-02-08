@@ -629,6 +629,19 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, cha
 }
 
 /**
+ * Get field's value as JSON object
+ */
+json_t LIBNXDB_EXPORTABLE *DBGetFieldJson(DB_RESULT hResult, int row, int column)
+{
+   char *value = DBGetFieldUTF8(hResult, row, column, nullptr, 0);
+   if (value == nullptr)
+      return nullptr;
+   json_t *json = json_loads(value, 0, nullptr);
+   MemFree(value);
+   return json;
+}
+
+/**
  * Get text field and escape it for XML document. Returned string
  * always dynamically allocated and must be destroyed by caller.
  */
@@ -826,10 +839,10 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column)
 {
    TCHAR buffer[256];
-   TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 256);
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
    return (value == nullptr) ? uuid::NULL_UUID : uuid::parse(value);
 }
 
@@ -1527,6 +1540,14 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const I
 }
 
 /**
+ * Bind timestamp
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, Timestamp value)
+{
+   DBBind(hStmt, pos, sqlType, value.asMilliseconds());
+}
+
+/**
  * Bind JSON object
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t *value, int allocType)
@@ -1534,7 +1555,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t 
    if (value != nullptr)
    {
       char *jsonText = json_dumps(value, JSON_COMPACT);
-      DBBind(hStmt, pos, sqlType, DB_CTYPE_UTF8_STRING, jsonText, DB_BIND_TRANSIENT);
+      DBBind(hStmt, pos, sqlType, DB_CTYPE_UTF8_STRING, CHECK_NULL_EX_A(jsonText), DB_BIND_TRANSIENT);
       MemFree(jsonText);
       if (allocType == DB_BIND_DYNAMIC)
          json_decref(value);

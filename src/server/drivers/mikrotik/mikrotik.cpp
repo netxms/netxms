@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,24 +24,19 @@
 #include <netxms-version.h>
 
 /**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
  * Get driver name
  */
-const TCHAR *MikrotikDriver::getName()
+const wchar_t *MikrotikDriver::getName()
 {
-   return _T("MIKROTIK");
+   return L"MIKROTIK";
 }
 
 /**
  * Get driver version
  */
-const TCHAR *MikrotikDriver::getVersion()
+const wchar_t *MikrotikDriver::getVersion()
 {
-   return s_driverVersion;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -110,7 +105,7 @@ bool MikrotikDriver::isFdbUsingIfIndex(const NObject *node, DriverData *driverDa
  */
 bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
-   _tcscpy(hwInfo->vendor, _T("MikroTik"));
+   wcscpy(hwInfo->vendor, L"MikroTik");
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));
@@ -121,37 +116,37 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
-      TCHAR buffer[256];
+      wchar_t buffer[256];
 
       const SNMP_Variable *v = response->getVariable(0);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          v->getValueAsString(buffer, 256);
-         TCHAR *p = !_tcsnicmp(buffer, _T("RouterOS "), 9) ? &buffer[9] : buffer;
-         _tcslcpy(hwInfo->productCode, p, 32);
+         wchar_t *p = !_tcsnicmp(buffer, L"RouterOS ", 9) ? &buffer[9] : buffer;
+         wcslcpy(hwInfo->productCode, p, 32);
       }
 
       v = response->getVariable(1);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+         wcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
       }
       else
       {
          // Use product code as product name if product name OID is not supported
-         _tcscpy(hwInfo->productName, hwInfo->productCode);
+         wcscpy(hwInfo->productName, hwInfo->productCode);
       }
 
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+         wcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
       }
 
       v = response->getVariable(3);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
+         wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
       }
 
       delete response;
@@ -408,6 +403,42 @@ DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *nod
 bool MikrotikDriver::hasMetrics()
 {
    return true;
+}
+
+/**
+ * Get SSH driver hints for MikroTik RouterOS devices
+ */
+void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // RouterOS prompt patterns:
+   // - Root menu: [admin@MikroTik] >
+   // - Submenu: [admin@MikroTik] /ip address>
+   // - With safe mode: [admin@MikroTik] <SAFE>>
+   // Username and hostname can contain letters, numbers, dashes, underscores
+   hints->promptPattern = "\\[[\\w.-]+@[\\w.-]+\\]\\s*(<SAFE>)?\\s*(/[\\w/ -]*)?[>]\\s*$";
+   hints->enabledPromptPattern = nullptr;  // RouterOS doesn't have enable mode
+
+   // No enable/privilege escalation in RouterOS
+   // Permissions are based on user group membership
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // RouterOS doesn't paginate SSH output by default
+   // But if configured, it may show: -- [Q quit|D dump|down]
+   hints->paginationDisableCmd = nullptr;  // Not needed for SSH
+   hints->paginationPrompt = "-- \\[Q quit";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "/quit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = ":put netxms_test";
+   hints->testCommandPattern = "netxms_test";
+
+   // Timeouts (RouterOS is generally responsive)
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 10000;
 }
 
 /**

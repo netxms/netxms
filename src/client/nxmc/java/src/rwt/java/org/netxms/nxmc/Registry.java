@@ -42,10 +42,11 @@ import org.netxms.nxmc.base.views.ToolsPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
 import org.netxms.nxmc.modules.assetmanagement.AssetsPerspective;
+import org.netxms.nxmc.modules.incidents.IncidentsPerspective;
 import org.netxms.nxmc.modules.businessservice.BusinessServicesPerspective;
+import org.netxms.nxmc.modules.dashboards.DashboardsPerspective;
 import org.netxms.nxmc.modules.datacollection.GraphsPerspective;
 import org.netxms.nxmc.modules.logviewer.views.LogViewerPerspective;
-import org.netxms.nxmc.modules.objects.DashboardsPerspective;
 import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
 import org.netxms.nxmc.modules.objects.MapsPerspective;
 import org.netxms.nxmc.modules.objects.NetworkPerspective;
@@ -379,6 +380,7 @@ public final class Registry
       pollManager = new PollManager();
 
       perspectives.add(new AlarmsPerspective());
+      perspectives.add(new IncidentsPerspective());
       perspectives.add(new AssetsPerspective());
       perspectives.add(new BusinessServicesPerspective());
       perspectives.add(new ConfigurationPerspective());

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,11 +24,18 @@
 
 #define DEBUG_TAG_SNMP_DISCOVERY _T("snmp.discovery")
 #define DEBUG_TAG_SNMP_ROUTES    _T("snmp.routes")
+#define DEBUG_TAG_SNMP_MIB       _T("snmp.mib")
 
 /**
  * MIB compilation mutex
  */
 Mutex m_mibCompilationMutex;
+
+/**
+ * Global MIB tree and synchronization
+ */
+static SNMP_MIBObject *s_mibRoot = nullptr;
+static RWLock s_mibTreeLock;
 
 /**
  * Extract IPv4 address encoded as OID elements at given offset
@@ -44,8 +51,13 @@ static inline uint32_t IPv4AddressFromOID(const SNMP_ObjectId& oid, uint32_t off
 /**
  * Handler for route enumeration via ipRouteTable
  */
-static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, std::pair<RoutingTable*, size_t> *context)
 {
+   RoutingTable *routingTable = context->first;
+   size_t limit = context->second;
+   if ((limit != 0) && (routingTable->size() >= limit))
+      return SNMP_ERR_ABORTED;
+
    SNMP_ObjectId oid(varbind->getName());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
@@ -95,8 +107,13 @@ static uint32_t HandlerIPRouteTable(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Handler for route enumeration via ipForwardTable
  */
-static uint32_t HandlerIPForwardTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, RoutingTable *routingTable)
+static uint32_t HandlerIPForwardTable(SNMP_Variable *varbind, SNMP_Transport *snmpTransport, std::pair<RoutingTable*, size_t> *context)
 {
+   RoutingTable *routingTable = context->first;
+   size_t limit = context->second;
+   if ((limit != 0) && (routingTable->size() >= limit))
+      return SNMP_ERR_ABORTED;
+
    SNMP_ObjectId oid(varbind->getName());
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
@@ -194,10 +211,12 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
 {
    shared_ptr<RoutingTable> routingTable = make_shared<RoutingTable>();
 
+   size_t limit = node.getCustomAttributeAsInt32(L"SysConfig:Topology.RoutingTable.MaxSize" , ConfigReadInt(L"Topology.RoutingTable.MaxSize", 4000));
+
    // Use snapshots because some devices does not respond to GET requests to individual table entries
    // Attempt to use inetCidrRouteTable first
    bool success = false;
-   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 });
+   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 }, limit * 20); // Each table entry is about 20 OIDs
    if (snapshot != nullptr)
    {
       success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable.get()) == _CONTINUE);
@@ -209,7 +228,7 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipCidrRouteTable
    if (!success || routingTable->isEmpty())
    {
-      SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 });
+      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 }, limit * 20); // Each table entry is about 20 OIDs
       if (snapshot != nullptr)
       {
          success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable.get()) == _CONTINUE);
@@ -222,7 +241,8 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipForwardTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
+      std::pair<RoutingTable*, size_t> context(routingTable.get(), limit);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 2, 1, 2 }, HandlerIPForwardTable, &context, false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipForwardTable"), node.getName(), node.getId(), routingTable->size());
    }
@@ -230,7 +250,8 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipRouteTable
    if (!success || routingTable->isEmpty())
    {
-      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, routingTable.get(), false, true) == SNMP_ERR_SUCCESS);
+      std::pair<RoutingTable*, size_t> context(routingTable.get(), limit);
+      success = (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 21, 1, 11 }, HandlerIPRouteTable, &context, false, true) == SNMP_ERR_SUCCESS);
       if (success)
          nxlog_debug_tag(DEBUG_TAG_SNMP_ROUTES, 5, _T("SnmpGetRoutingTable(%s [%u]): %d routes retrieved from ipRouteTable"), node.getName(), node.getId(), routingTable->size());
    }
@@ -300,8 +321,9 @@ unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN)
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
+         wchar_t community[MAX_DB_STRING];
          for(int i = 0; i < count; i++)
-            communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+            communities->add(DBGetField(hResult, i, 0, community, MAX_DB_STRING));
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -591,8 +613,9 @@ void MibCompilerExecutor::endOfOutput()
    msg.setField(VID_RCC, RCC_SUCCESS);
    m_session->sendMessage(msg);
 
+   ReloadMIBTree();
    NotifyClientSessions(NX_NOTIFY_MIB_UPDATED, 0);
-   nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: MIB compiler execution completed"));
+   nxlog_debug_tag(DEBUG_TAG_SNMP_MIB, 6, _T("CompileMibFiles: MIB compiler execution completed"));
 }
 
 /**
@@ -630,4 +653,73 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
    }
 
    return RCC_SUCCESS;
+}
+
+/**
+ * Load MIB tree from compiled file
+ */
+bool LoadMIBTree()
+{
+   TCHAR mibPath[MAX_PATH];
+   _tcscpy(mibPath, g_netxmsdDataDir);
+   _tcscat(mibPath, DFILE_COMPILED_MIB);
+
+   SNMP_MIBObject *newRoot = nullptr;
+   uint32_t rc = SnmpLoadMIBTree(mibPath, &newRoot);
+
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      s_mibTreeLock.writeLock();
+      SNMP_MIBObject *oldRoot = s_mibRoot;
+      s_mibRoot = newRoot;
+      s_mibTreeLock.unlock();
+
+      delete oldRoot;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SNMP_MIB, _T("MIB tree loaded from %s"), mibPath);
+      return true;
+   }
+   else if (rc == SNMP_ERR_FILE_IO)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_SNMP_MIB, _T("MIB file %s not found - display hints will not be available"), mibPath);
+      return true;  // Not fatal
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_SNMP_MIB, _T("Failed to load MIB tree from %s: %s"), mibPath, SnmpGetErrorText(rc));
+      return false;
+   }
+}
+
+/**
+ * Reload MIB tree
+ */
+void ReloadMIBTree()
+{
+   nxlog_debug_tag(DEBUG_TAG_SNMP_MIB, 2, _T("Reloading MIB tree"));
+   LoadMIBTree();
+}
+
+/**
+ * Format SNMP value with display hint if available
+ */
+wchar_t NXCORE_EXPORTABLE *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize)
+{
+   if ((var == nullptr) || (buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
+
+   s_mibTreeLock.readLock();
+   if (s_mibRoot != nullptr)
+   {
+      SNMP_MIBObject *mibObj = SnmpFindMIBObjectByOID(s_mibRoot, var->getName());
+      if ((mibObj != nullptr) && (mibObj->getDisplayHint() != nullptr))
+      {
+         var->getValueWithDisplayHint(mibObj->getDisplayHint(), buffer, bufferSize);
+         s_mibTreeLock.unlock();
+         return buffer;
+      }
+   }
+   s_mibTreeLock.unlock();
+
+   bool convertToHex = true;
+   return var->getValueAsPrintableString(buffer, bufferSize, &convertToHex);
 }

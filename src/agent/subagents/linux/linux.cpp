@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2024 Raden Solutions
+** Copyright (C) 2004-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -223,10 +223,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.Description(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
    { _T("Net.Interface.InErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INERRORS },
    { _T("Net.Interface.Link(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
+   { _T("Net.Interface.MaxSpeed(*)"), H_NetIfInfoSpeed, _T("M"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_MAXSPEED },
    { _T("Net.Interface.OutErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, nullptr, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, _T("S"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
    { _T("Net.IP.Forwarding"), H_NetIpForwarding, (TCHAR*)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
    { _T("Net.IP6.Forwarding"), H_NetIpForwarding, (TCHAR*)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },
 
@@ -237,6 +240,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.OutErrors64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTERRORS },
    { _T("Net.Interface.PacketsIn64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.InDrops64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops64(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_OUT_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTDROPS },
 #endif
 
    { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
@@ -419,6 +424,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.OS.Version"), H_OSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
    { _T("System.ProcessCount"), H_SystemProcessCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+   { _T("System.ServiceState(*)"), H_ServiceState, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
    { _T("System.ThreadCount"), H_ThreadCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
 
    { _T("System.Uname"), H_Uname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
@@ -445,7 +451,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
    { _T("System.PowerZones"), H_PowerZoneList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") }
+   { _T("System.ProcessList"), H_ProcessList, _T("1") },
+   { _T("System.Services"), H_ServiceList, nullptr }
 };
 
 /**
@@ -466,7 +473,8 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("System.ActiveUserSessions"), H_UserSessionTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
    { _T("System.OpenFiles"), H_OpenFilesTable, nullptr, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },
-   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
+   { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
+   { _T("System.Services"), H_ServiceTable, nullptr, _T("NAME"), _T("systemd services") }
 };
 
 /**
@@ -474,6 +482,10 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
  */
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
+   { _T("Service.Reload"), H_ServiceControl, _T("L"), _T("Reload service") },
+   { _T("Service.Restart"), H_ServiceControl, _T("R"), _T("Restart service") },
+   { _T("Service.Start"), H_ServiceControl, _T("S"), _T("Start service") },
+   { _T("Service.Stop"), H_ServiceControl, _T("T"), _T("Stop service") },
    { _T("System.HardRestart"), H_HardShutdown, _T("R"), _T("Restart system (hard reset)") },
    { _T("System.HardShutdown"), H_HardShutdown, _T("S"), _T("Shutdown system (hard shutdown/power off)") },
    { _T("System.Restart"), H_SoftShutdown, _T("R"), _T("Restart system") },

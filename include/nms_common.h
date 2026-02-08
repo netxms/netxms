@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -116,7 +116,7 @@
 #define MAX_SECRET_LENGTH        89
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
-#define MAX_CONFIG_VALUE         2000
+#define MAX_CONFIG_VALUE_LENGTH  2000
 #define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
 #define MAX_HELPDESK_REF_LEN     64
@@ -190,6 +190,7 @@ typedef int bool;
 #define HAVE_DECL_CURL_URL               1
 #define HAVE_DECL_CURLE_NOT_BUILT_IN     1
 #define HAVE_DECL_CURLE_UNKNOWN_OPTION   1
+#define HAVE_DECL_CURLOPT_CONNECT_TO     1
 #define HAVE_DECL_CURLOPT_RESOLVE        1
 #define HAVE_DECL_CURLOPT_XOAUTH2_BEARER 1
 #define VA_LIST_IS_POINTER               1
@@ -274,7 +275,6 @@ typedef int bool;
 
 #define HAVE_STD_ATOMIC         1
 
-#define HAVE_LIBCURL                      1
 #define HAVE_LIBJQ                        1
 
 #define HAVE_DIRENT_D_TYPE                1
@@ -359,6 +359,8 @@ typedef __int32 ssize_t;
 #define CAN_OVERLOAD_SSIZE_T	0
 #endif
 
+#define CAN_OVERLOAD_INT8_T     1
+
 typedef __int64 off64_t;
 
 typedef signed __int8 int8_t;
@@ -401,6 +403,8 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_LIBEXPAT  1
 #define HAVE_LOCALE_H  1
 #define HAVE_SETLOCALE 1
+
+#define strtok_r strtok_s
 
 #define SHLIB_SUFFIX	_T(".dll")
 

@@ -24,6 +24,7 @@ import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -68,6 +69,8 @@ public class ObjectInfo extends TableElement
          addPair(i18n.tr("Creation time"), DateFormatFactory.getDateTimeFormat().format(object.getCreationTime()), false);		
       if (object.getCategory() != null)
          addPair(i18n.tr("Category"), object.getCategory().getName());
+      if ((object instanceof Dashboard) && ((Dashboard)object).isTemplateInstance())
+         addPair(i18n.tr("Instance"), i18n.tr("Yes"));
       if (object.getAssetId() != 0)
       {
          AbstractObject asset = session.findObjectById(object.getAssetId(), Asset.class);

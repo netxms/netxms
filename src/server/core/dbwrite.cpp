@@ -41,7 +41,7 @@ struct DELAYED_SQL_REQUEST
  */
 struct DELAYED_IDATA_INSERT
 {
-   time_t timestamp;
+   Timestamp timestamp;
    uint32_t nodeId;
    uint32_t dciId;
    TCHAR *transformedValue;
@@ -54,8 +54,8 @@ struct DELAYED_IDATA_INSERT
 struct DELAYED_RAW_DATA_UPDATE
 {
    UT_hash_handle hh;
-   time_t timestamp;
-   time_t cacheTimestamp;
+   Timestamp timestamp;
+   Timestamp cacheTimestamp;
    uint32_t dciId;
    bool anomalyDetected;
    bool deleteFlag;
@@ -227,7 +227,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
 {
    if (s_queueMonitorDiscardFlag)
       return;
@@ -260,7 +260,7 @@ void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const T
 /**
  * Queue UPDATE request for raw_dci_values table
  */
-void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp, bool anomalyDetected)
+void QueueRawDciDataUpdate(Timestamp timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, Timestamp cacheTimestamp, bool anomalyDetected)
 {
    size_t rawValueLength = _tcslen(rawValue);
    size_t transformedValueLength = _tcslen(transformedValue);
@@ -390,7 +390,7 @@ static void IDataWriteThread(IDataWriter *writer)
                if (hStmt != nullptr)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
+                  DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, rq->timestamp);
                   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                   success = DBExecute(hStmt);
@@ -409,7 +409,7 @@ static void IDataWriteThread(IDataWriter *writer)
                   .append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("))
                   .append(rq->dciId)
                   .append(_T(','))
-                  .append(static_cast<int64_t>(rq->timestamp))
+                  .append(rq->timestamp)
                   .append(_T(','))
                   .append(DBPrepareString(hdb, rq->transformedValue))
                   .append(_T(','))
@@ -482,7 +482,7 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
             query.append(_T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
             query.append(rq->dciId);
             query.append(_T(','));
-            query.append(static_cast<int64_t>(rq->timestamp));
+            query.append(rq->timestamp);
             query.append(_T(','));
             query.append(DBPrepareString(hdb, rq->transformedValue));
             query.append(_T(','));
@@ -566,20 +566,20 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          query.append(rq->dciId);
          if (convertTimestamps)
          {
-            query.append(_T(",to_timestamp("), 14);
-            query.append(static_cast<int64_t>(rq->timestamp));
-            query.append(_T("),"), 2);
+            query.append(L",ms_to_timestamptz(", 19);
+            query.append(rq->timestamp);
+            query.append(L"),", 2);
          }
          else
          {
-            query.append(_T(','));
-            query.append(static_cast<int64_t>(rq->timestamp));
-            query.append(_T(','));
+            query.append(L',');
+            query.append(rq->timestamp);
+            query.append(L',');
          }
          query.append(DBPrepareString(g_dbDriver, rq->transformedValue));
-         query.append(_T(','));
+         query.append(L',');
          query.append(DBPrepareString(g_dbDriver, rq->rawValue));
-         query.append(_T(')'));
+         query.append(L')');
          MemFree(rq);
 
          count++;
@@ -591,7 +591,7 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
             break;
       }
 
-      query.append(_T(" ON CONFLICT DO NOTHING"));
+      query.append(L" ON CONFLICT DO NOTHING");
       InterlockedAdd(&writer->pendingRequests, count);
       PreparedStatement_PostgreSQL *s = memoryPool->allocate();
       s->statement = query.takeBuffer();
@@ -634,7 +634,7 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
       workerThreads[i] = ThreadCreateEx(QueryPrepareThread_PostgreSQL, writer, &statementQueue, &memoryPool);
 
    ThreadPool *writerPool = nullptr;
-   int numWriters = ConfigReadInt(_T("DBWriter.InsertParallelismDegree"), 1);
+   int numWriters = ConfigReadInt(L"DBWriter.InsertParallelismDegree", 1);
    if (numWriters > 1)
    {
       if (!idataLock)
@@ -737,7 +737,7 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
 static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
-   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+   int maxRecords = ConfigReadInt(L"DBWriter.MaxRecordsPerTransaction", 1000);
    while(true)
    {
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
@@ -759,13 +759,13 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
       if (DBBegin(hdb))
       {
          int count = 0;
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)");
          if (hStmt != nullptr)
          {
             while(true)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
+               DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, rq->timestamp);
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                bool success = DBExecute(hStmt);
@@ -834,8 +834,8 @@ static void SaveRawDataBatch(DELAYED_RAW_DATA_UPDATE *batch, int maxRecords)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->cacheTimestamp));
+               DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, rq->timestamp);
+               DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, rq->cacheTimestamp);
                DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->anomalyDetected ? _T("1") : _T("0"), DB_BIND_STATIC);
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, rq->dciId);
                success = DBExecute(hStmt);
@@ -888,12 +888,12 @@ static void SaveRawData(int maxRecords, ThreadPool *writerPool)
    int32_t batchSize = HASH_COUNT(batch);
    if (batchSize == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty raw data batch, skipping write cycle"));
+      nxlog_debug_tag(DEBUG_TAG, 7, L"Empty raw data batch, skipping write cycle");
       return;
    }
 
    InterlockedAdd(&s_batchSize, batchSize);
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("%d records in raw data batch"), batchSize);
+   nxlog_debug_tag(DEBUG_TAG, 7, L"%d records in raw data batch", batchSize);
 
    if (writerPool != nullptr)
       ThreadPoolExecute(writerPool, SaveRawDataBatch, batch, maxRecords);
@@ -907,19 +907,19 @@ static void SaveRawData(int maxRecords, ThreadPool *writerPool)
 static void RawDataWriteThread()
 {
    ThreadSetName("DBWriter/RData");
-   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
-   int flushInterval = ConfigReadInt(_T("DBWriter.RawDataFlushInterval"), 30);
+   int maxRecords = ConfigReadInt(L"DBWriter.MaxRecordsPerTransaction", 1000);
+   int flushInterval = ConfigReadInt(L"DBWriter.RawDataFlushInterval", 30);
    if (flushInterval < 1)
       flushInterval = 1;
 
    ThreadPool *writerPool = nullptr;
-   int numWriters = ConfigReadInt(_T("DBWriter.UpdateParallelismDegree"), 1);
+   int numWriters = ConfigReadInt(L"DBWriter.UpdateParallelismDegree", 1);
    if (numWriters > 1)
    {
-      writerPool = ThreadPoolCreate(_T("DBWRITE/RAW"), numWriters, numWriters);
+      writerPool = ThreadPoolCreate(L"DBWRITE/RAW", numWriters, numWriters);
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data flush interval is %d seconds (%d writer%s)"), flushInterval, (writerPool != nullptr) ? numWriters : 1, (numWriters > 1) ? _T("s") : _T(""));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Raw DCI data flush interval is %d seconds (%d writer%s)", flushInterval, (writerPool != nullptr) ? numWriters : 1, (numWriters > 1) ? _T("s") : _T(""));
    while(!SleepAndCheckForShutdown(flushInterval))
    {
       SaveRawData(maxRecords, writerPool);
@@ -928,7 +928,7 @@ static void RawDataWriteThread()
 
    if (writerPool != nullptr)
       ThreadPoolDestroy(writerPool);
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data writer stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Raw DCI data writer stopped");
 }
 
 /**

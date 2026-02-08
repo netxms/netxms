@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,8 +100,7 @@ public class ChartDciConfig implements NodeItemPair
    @Element(required = false)
    public String displayFormat;
 
-   @Element(required = false)
-   public MeasurementUnit measurementUnit;
+   private transient DciTemplateConfig templateConfig;
 
 	/**
 	 * Default constructor
@@ -113,7 +112,7 @@ public class ChartDciConfig implements NodeItemPair
 
    /**
     * Create ad-hoc config with given label
-    * 
+    *
     * @param label label to use
     */
    public ChartDciConfig(String label)
@@ -132,16 +131,15 @@ public class ChartDciConfig implements NodeItemPair
       showThresholds = false;
       invertValues = false;
       multiMatch = false;
-      regexMatch = true;
+      regexMatch = false;
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = null;
    }
 
 	/**
 	 * Copy constructor
-	 * 
+	 *
 	 * @param src source object
 	 */
 	public ChartDciConfig(ChartDciConfig src)
@@ -165,12 +163,12 @@ public class ChartDciConfig implements NodeItemPair
 		this.instance = src.instance;
 		this.column = src.column;
 		this.displayFormat = src.displayFormat;
-      this.measurementUnit = src.measurementUnit;
+      this.templateConfig = (src.templateConfig != null) ? new DciTemplateConfig(src.templateConfig) : null;
 	}
 
    /**
     * Create DCI info from DciValue object
-    * 
+    *
     * @param dci The DciValue
     */
    public ChartDciConfig(DciValue dci)
@@ -193,12 +191,11 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = dci.getMeasurementUnit();
    }
 
    /**
     * Create DCI info from DciValue object
-    * 
+    *
     * @param src initial configuration to copy form
     * @param dciValue runtime DCI information
     */
@@ -222,7 +219,6 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
-      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -236,7 +232,7 @@ public class ChartDciConfig implements NodeItemPair
 
    /**
     * Create DCI info from DciValue object
-    * 
+    *
     * @param src initial configuration to copy form
     * @param matcher matcher to get match group for node
     * @param dciValue runtime DCI information
@@ -261,7 +257,6 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
-      this.measurementUnit = dciValue.getMeasurementUnit();
 
       if (src.name.isEmpty())
       {
@@ -303,7 +298,7 @@ public class ChartDciConfig implements NodeItemPair
                      sb.append(c);
                   }
                   state = 0;
-                  break;    
+                  break;
                }
             }
          }
@@ -313,7 +308,7 @@ public class ChartDciConfig implements NodeItemPair
 
    /**
     * Create DCI info from DataCollectionObject object
-    * 
+    *
     * @param dci DCI to use as source
     */
    public ChartDciConfig(DataCollectionObject dci)
@@ -337,7 +332,6 @@ public class ChartDciConfig implements NodeItemPair
       instance = "";
       column = "";
       displayFormat = "";
-      measurementUnit = (dci instanceof DataCollectionItem) ? new MeasurementUnit(((DataCollectionItem)dci).getUnitName(), ((DataCollectionItem)dci).getMultiplier()) : null;
    }
 
    /**
@@ -362,7 +356,7 @@ public class ChartDciConfig implements NodeItemPair
 
 	/**
     * Get DCI label. Always returns non-empty string.
-    * 
+    *
     * @return DCI label
     */
 	public String getLabel()
@@ -380,7 +374,7 @@ public class ChartDciConfig implements NodeItemPair
 
    /**
     * Get display format
-    * 
+    *
     * @return The display format
     */
    public String getDisplayFormat()
@@ -390,7 +384,7 @@ public class ChartDciConfig implements NodeItemPair
 
 	/**
     * Get line chart type
-    * 
+    *
     * @return The display type
     */
    public int getLineChartType()
@@ -440,7 +434,7 @@ public class ChartDciConfig implements NodeItemPair
    public void setDciDescription(String dciDescription)
    {
       this.dciDescription = dciDescription;
-   }   
+   }
 
    /**
     * @return the dciTag
@@ -459,6 +453,41 @@ public class ChartDciConfig implements NodeItemPair
    }
 
    /**
+    * Get DCI template configuration. If not set, creates one populated from legacy fields.
+    *
+    * @return DCI template configuration
+    */
+   public DciTemplateConfig getTemplateConfig()
+   {
+      if (templateConfig == null)
+      {
+         templateConfig = new DciTemplateConfig();
+         templateConfig.setDciName(getDciName());
+         templateConfig.setDciDescription(getDciDescription());
+         templateConfig.setDciTag(getDciTag());
+         templateConfig.setRegexMatch(regexMatch);
+         templateConfig.setMultiMatch(multiMatch);
+      }
+      return templateConfig;
+   }
+
+   /**
+    * Apply DciTemplateConfig values to this config.
+    *
+    * @param config DCI template configuration to apply
+    */
+   public void applyTemplateConfig(DciTemplateConfig config)
+   {
+      templateConfig = config;
+      // Sync to legacy fields for serialization compatibility
+      dciName = config.getDciName();
+      dciDescription = config.getDciDescription();
+      dciTag = config.getDciTag();
+      regexMatch = config.isRegexMatch();
+      multiMatch = config.isMultiMatch();
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -467,7 +496,7 @@ public class ChartDciConfig implements NodeItemPair
       return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", dciTag=" + dciTag + ", type=" + type + ", color=" + color +
             ", name=" + name + ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
             invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", regexMatch=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" +
-            displayFormat + ", measurementUnit=" + measurementUnit + "]";
+            displayFormat + "]";
    }
 
    /**

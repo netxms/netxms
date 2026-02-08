@@ -70,6 +70,7 @@ public class LoginDialog extends Dialog
    private boolean hideVersion;
    private Text textLogin;
    private Text textPassword;
+   private String loginName;
    private String password;
    private AuthenticationType authMethod = AuthenticationType.PASSWORD;
 
@@ -345,10 +346,13 @@ public class LoginDialog extends Dialog
    {
       PreferenceStore settings = PreferenceStore.getInstance();
 
-      settings.set("Connect.Login", textLogin.getText());
+      // Store values while widgets are still available
+      loginName = textLogin.getText();
+      password = textPassword.getText();
+
+      settings.set("Connect.Login", loginName);
       settings.set("Connect.AuthMethod", authMethod.getValue());
 
-      password = textPassword.getText();
       super.okPressed();
    }
 
@@ -358,6 +362,28 @@ public class LoginDialog extends Dialog
    public String getPassword()
    {
       return password;
+   }
+
+   /**
+    * Get login name. Must be called after dialog is closed with OK.
+    *
+    * @return login name
+    */
+   public String getLoginName()
+   {
+      return loginName;
+   }
+
+   /**
+    * Get login credentials. Server must be provided since web client gets it from app properties.
+    * Must be called after dialog is closed with OK.
+    *
+    * @param server server address
+    * @return login credentials
+    */
+   public LoginCredentials getCredentials(String server)
+   {
+      return new LoginCredentials(server, loginName, password);
    }
 
    /**

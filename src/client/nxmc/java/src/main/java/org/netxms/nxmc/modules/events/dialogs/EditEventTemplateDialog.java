@@ -21,6 +21,9 @@ package org.netxms.nxmc.modules.events.dialogs;
 import java.util.HashSet;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -31,6 +34,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -43,6 +47,7 @@ import org.xnap.commons.i18n.I18n;
 public class EditEventTemplateDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(EditEventTemplateDialog.class);
+   private static final String CONFIG_PREFIX = "EditEventTemplateDialog"; //$NON-NLS-1$
 
 	private EventTemplate eventTemplate;
 	private boolean isNew;
@@ -66,6 +71,7 @@ public class EditEventTemplateDialog extends Dialog
 	public EditEventTemplateDialog(Shell parentShell, EventTemplate eventTemplate, boolean isNew)
 	{
 		super(parentShell);
+      setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.eventTemplate = eventTemplate;
 		this.isNew = isNew;
 	}
@@ -165,12 +171,25 @@ public class EditEventTemplateDialog extends Dialog
       description.setText(eventTemplate.getDescription());
       gd = new GridData();
       gd.horizontalSpan = 3;
+      gd.grabExcessVerticalSpace = true;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = 300;
       gd.widthHint = 450;
       gd.verticalAlignment = SWT.FILL;
       description.setLayoutData(gd);
+      
+      description.addDisposeListener(new DisposeListener() {
+         
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            Point size = getShell().getSize();
+            PreferenceStore settings = PreferenceStore.getInstance();
+            settings.set(CONFIG_PREFIX + ".cx", size.x);
+            settings.set(CONFIG_PREFIX + ".cy", size.y); 
+         }
+      });
 
 		return dialogArea;
 	}
@@ -205,5 +224,16 @@ public class EditEventTemplateDialog extends Dialog
 	{
       newShell.setText(isNew ? i18n.tr("Create Event Template") : i18n.tr("Edit Event Template"));
 		super.configureShell(newShell);
+      PreferenceStore settings = PreferenceStore.getInstance();
+      int cx = settings.getAsInteger(CONFIG_PREFIX + ".cx", 0);
+      int cy = settings.getAsInteger(CONFIG_PREFIX + ".cy", 0);
+      if ((cx > 0) && (cy > 0))
+      {
+         newShell.setSize(cx, cy);
+      }
+      else
+      {
+         newShell.setSize(920, 631);         
+      }
 	}
 }

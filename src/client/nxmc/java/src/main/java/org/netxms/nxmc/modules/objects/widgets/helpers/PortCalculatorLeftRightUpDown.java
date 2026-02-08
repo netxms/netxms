@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,38 +20,36 @@ package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import org.eclipse.swt.graphics.Point;
 
-/* 
+/**
  * Calculates port tab port layout
  * left-to-right, then up-down:
  *  1 2 3 4
  *  5 6 7 8
  */
-public class PortCalculatorLeftRightUpDown implements PortCalculator
+public class PortCalculatorLeftRightUpDown extends PortCalculator
 {
    private int x;
    private int y;
    private int portCount;
    private int col = 0;
-   private int nameSize;
+   private int baseX;
    private int rowCount;
 
    /**
-    * @param nameSize
+    * @param baseX
     * @param portCount
     * @param rowCount
     */
-   public PortCalculatorLeftRightUpDown(int nameSize, int portCount, int rowCount)
+   public PortCalculatorLeftRightUpDown(int baseX, int portCount, int rowCount)
    {
-      x = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + nameSize;
-      y = VERTICAL_MARGIN;
-      
+      this.x = this.baseX = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + baseX;
+      this.y = VERTICAL_MARGIN;
       this.portCount = portCount;
-      this.nameSize = nameSize;
       this.rowCount = rowCount;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator#calculateNextPos()
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.helpers.PortCalculator#calculateNextPos()
     */
    @Override
    public Point calculateNextPos()
@@ -68,13 +66,14 @@ public class PortCalculatorLeftRightUpDown implements PortCalculator
       {
          col = 0;
          y += VERTICAL_SPACING + PORT_HEIGHT;
-         x = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + nameSize;
+         x = baseX;
       }
       else
+      {
          x += HORIZONTAL_SPACING + PORT_WIDTH;
+      }
       
       col++;
-      
       return new Point(x, y);
    } 
 }

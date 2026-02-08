@@ -106,6 +106,8 @@ CREATE TABLE auth_tokens
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id);
+
 /**
  * User groups
  */
@@ -157,7 +159,7 @@ CREATE TABLE userdb_custom_attributes
 ) TABLE_TYPE;
 
 /**
- * Common object properties 
+ * Common object properties
  */
 CREATE TABLE object_properties
 (
@@ -200,6 +202,8 @@ CREATE TABLE object_properties
   creation_time integer not null,
   category integer not null,
   asset_id integer not null,
+  is_hidden integer not null,
+  ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -240,6 +244,17 @@ CREATE TABLE object_custom_attributes
 ) TABLE_TYPE;
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
+
+/*
+** Object AI data (key-value storage for AI agents)
+*/
+CREATE TABLE object_ai_data
+(
+  object_id integer not null,
+  data_key varchar(127) not null,
+  data_value SQL_TEXT null,
+  PRIMARY KEY(object_id,data_key)
+) TABLE_TYPE;
 
 /*
 ** Zone objects
@@ -367,7 +382,7 @@ CREATE TABLE physical_links
   right_object_id integer not null,
   right_patch_pannel_id integer not null,
   right_port_number integer not null,
-  right_front char(1) not null,  
+  right_front char(1) not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -483,6 +498,8 @@ CREATE TABLE nodes
   modbus_proxy integer not null,
   modbus_tcp_port integer not null,
   modbus_unit_id integer not null,
+  last_events varchar(255) null,
+  decommission_time integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -502,14 +519,16 @@ CREATE TABLE icmp_target_address_list
 CREATE TABLE software_inventory
 (
   node_id integer not null,
+  package_id varchar(319) not null,
   name varchar(127) not null,
-  version varchar(63) not null,
+  version varchar(63) null,
+  user_name varchar(127) null,
   vendor varchar(63) null,
   install_date integer not null,
   url varchar(255) null,
   description varchar(255) null,
   uninstall_key varchar(255) null,
-  PRIMARY KEY(node_id,name,version)
+  PRIMARY KEY(node_id,package_id)
 ) TABLE_TYPE;
 
 /**
@@ -649,6 +668,7 @@ CREATE TABLE interfaces
   if_index integer not null,
   mtu integer not null,
   speed SQL_INT64 not null,
+  max_speed SQL_INT64 not null,
   bridge_port integer not null,
   phy_chassis integer not null,
   phy_module integer not null,
@@ -882,6 +902,7 @@ CREATE TABLE items
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,
+  snmp_context varchar(255),
   datatype integer not null,
   transformed_datatype integer not null,
   polling_schedule_type char(1) not null,
@@ -900,12 +921,13 @@ CREATE TABLE items
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
   multiplier integer not null, // kilo, mega, milli, etc.
-  units_name varchar(63) null, // units name 
+  units_name varchar(63) null, // units name
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   instd_method integer not null,
   instd_data varchar(1023) null,
   instd_filter SQL_TEXT null,
   samples integer not null,
+  sample_save_interval integer not null,
   npe_name varchar(15) null,
   comments SQL_TEXT null,
   instance_retention_time integer not null,
@@ -913,6 +935,9 @@ CREATE TABLE items
   related_object integer not null,
   all_rearmed_event integer not null, // Event code to be generated when all thresholds are rearmed
   thresholds_disable_end_time integer not null,
+  anomaly_profile SQL_TEXT null,       // AI anomaly detection profile (JSON)
+  anomaly_profile_timestamp integer not null,
+  ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -966,6 +991,7 @@ CREATE TABLE dc_tables
   source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
   snmp_port integer not null,
   snmp_version integer not null,
+  snmp_context varchar(255),
   polling_schedule_type char(1) not null,
   polling_interval integer not null,
   polling_interval_src varchar(255) null,
@@ -1069,8 +1095,8 @@ CREATE TABLE raw_dci_values
   item_id integer not null,
   raw_value varchar(255) null,
   transformed_value varchar(255) null,
-  last_poll_time integer not null,
-  cache_timestamp integer not null,
+  last_poll_time SQL_INT64 not null,
+  cache_timestamp SQL_INT64 not null,
   anomaly_detected char(1) not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
@@ -1173,7 +1199,7 @@ CREATE VIEW idata AS
 CREATE TABLE idata
 (
    item_id integer not null,
-   idata_timestamp integer not null,
+   idata_timestamp SQL_INT64 not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
    PRIMARY KEY(item_id,idata_timestamp)
@@ -1254,12 +1280,35 @@ CREATE VIEW tdata AS
    UNION ALL
    SELECT * FROM tdata_sc_other;
 
+/**
+ * Storage class migration tasks (TimescaleDB only)
+ */
+CREATE TABLE dc_storage_class_migrations
+(
+   id integer not null,
+   dci_id integer not null,
+   dci_type char(1) not null,
+   old_storage_class char(1) not null,
+   new_storage_class char(1) not null,
+   status char(1) not null,
+   create_time integer not null,
+   start_time integer null,
+   end_time integer null,
+   last_processed_timestamp SQL_INT64 null,
+   records_copied integer not null,
+   error_message varchar(255) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_scm_status ON dc_storage_class_migrations(status);
+CREATE INDEX idx_scm_dci_id ON dc_storage_class_migrations(dci_id);
+
 #else
 
 CREATE TABLE tdata
 (
    item_id integer not null,
-   tdata_timestamp integer not null,
+   tdata_timestamp SQL_INT64 not null,
    tdata_value SQL_TEXT null,
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
@@ -1318,17 +1367,6 @@ CREATE INDEX idx_event_log_source ON event_log(event_source);
 #if defined(DB_POSTGRESQL) || defined(DB_TSDB)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
 #elif defined(DB_ORACLE)
-CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
-RETURN NUMBER
-DETERMINISTIC
-AS BEGIN
-   IF id > 0 THEN
-      RETURN id;
-   ELSE
-      RETURN NULL;
-   END IF;
-END;
-/
 CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id));
 #else
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
@@ -1445,6 +1483,15 @@ CREATE TABLE event_policy
   downtime_tag varchar(15) null,
   rca_script_name varchar(255) null,
   action_script SQL_TEXT null,
+  ai_instructions SQL_TEXT null,
+  incident_delay integer not null,  // Delay in seconds for incident creation (0 = immediate)
+  incident_title varchar(255) null,  // Incident title template (null = use alarm message)
+  incident_description varchar(2000) null,  // Incident description template
+  incident_ai_depth integer not null,
+  incident_ai_prompt varchar(2000) null,
+  modified_by_guid varchar(36) null,
+  modified_by_name varchar(63) null,
+  modification_time integer null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1486,13 +1533,15 @@ CREATE TABLE policy_time_frame_list
  */
 CREATE TABLE policy_action_list
 (
+  record_id integer not null,
   rule_id integer not null,
   action_id integer not null,
   timer_delay varchar(127) null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
-  snooze_time varchar(127) null, 
-  active char(1) not null
+  snooze_time varchar(127) null,
+  active char(1) not null,
+  PRIMARY KEY(record_id,rule_id)
 ) TABLE_TYPE;
 
 /**
@@ -1651,6 +1700,79 @@ CREATE TABLE alarm_state_changes
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_state_changes_by_id ON alarm_state_changes(alarm_id);
+
+/*
+** Incidents
+*/
+CREATE TABLE incidents
+(
+   id integer not null,
+   creation_time integer not null,
+   last_change_time integer not null,
+   state integer not null,
+   assigned_user_id integer null,
+   title varchar(255) not null,
+   source_alarm_id integer null,
+   source_object_id integer not null,
+   created_by_user integer not null,
+   resolved_by_user integer null,
+   closed_by_user integer null,
+   resolve_time integer null,
+   close_time integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incidents_state ON incidents(state);
+CREATE INDEX idx_incidents_source_object ON incidents(source_object_id);
+CREATE INDEX idx_incidents_assigned_user ON incidents(assigned_user_id);
+
+/*
+** Incident to alarm mapping
+*/
+CREATE TABLE incident_alarms
+(
+   incident_id integer not null,
+   alarm_id integer not null,
+   linked_time integer not null,
+   linked_by_user integer not null,
+   PRIMARY KEY(incident_id, alarm_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_alarms_alarm ON incident_alarms(alarm_id);
+
+/*
+** Incident comments
+*/
+CREATE TABLE incident_comments
+(
+   id integer not null,
+   incident_id integer not null,
+   creation_time integer not null,
+   user_id integer not null,
+   ai_generated char(1) not null,
+   comment_text SQL_TEXT not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_comments_incident ON incident_comments(incident_id);
+
+/*
+** Incident activity log
+*/
+CREATE TABLE incident_activity_log
+(
+   id integer not null,
+   incident_id integer not null,
+   timestamp integer not null,
+   user_id integer not null,
+   activity_type integer not null,
+   old_value varchar(255) null,
+   new_value varchar(255) null,
+   details varchar(1000) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_incident_activity_incident ON incident_activity_log(incident_id);
 
 /**
  * SNMP trap configuration
@@ -2049,7 +2171,7 @@ CREATE TABLE usm_credentials
 /*
 ** Well-known TCP or UDP ports
 */
-CREATE TABLE well_known_ports 
+CREATE TABLE well_known_ports
 (
    tag varchar(15) not null,
    zone integer not null,
@@ -2057,6 +2179,20 @@ CREATE TABLE well_known_ports
    port integer not null,
    PRIMARY KEY(tag,zone,id)
 ) TABLE_TYPE;
+
+/*
+** Port stop list - ports that should never be accessed by server
+*/
+CREATE TABLE port_stop_list
+(
+   object_id integer not null,
+   id integer not null,
+   port integer not null,
+   protocol char(1) not null,
+   PRIMARY KEY(object_id,id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_psl_object ON port_stop_list(object_id);
 
 /*
 ** Network maps
@@ -2136,7 +2272,7 @@ CREATE TABLE network_map_seed_nodes
 /**
  * Object location for deleted nodes
  */
-CREATE TABLE network_map_deleted_nodes 
+CREATE TABLE network_map_deleted_nodes
 (
   map_id integer not null,
   object_id integer not null,
@@ -2168,6 +2304,7 @@ CREATE TABLE dashboards
   id integer not null,
   num_columns integer not null,
   display_priority integer not null,
+  forced_context_object_id integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -2182,6 +2319,28 @@ CREATE TABLE dashboard_elements
   element_data SQL_TEXT null,
   layout_data SQL_TEXT null,
   PRIMARY KEY(dashboard_id,element_id)
+) TABLE_TYPE;
+
+/**
+ * Dashboard templates
+ */
+CREATE TABLE dashboard_templates
+(
+  id integer not null,
+  num_columns integer not null,
+  name_template varchar(255),
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Dashboard template instances
+ */
+CREATE TABLE dashboard_template_instances
+(
+  dashboard_template_id integer not null,
+  instance_object_id integer not null,
+  instance_dashboard_id integer not null,
+  PRIMARY KEY(dashboard_template_id, instance_object_id)
 ) TABLE_TYPE;
 
 /**
@@ -2228,7 +2387,7 @@ CREATE TABLE business_service_prototypes
 CREATE TABLE business_service_checks
 (
   id integer not null,
-  service_id integer not null,  
+  service_id integer not null,
   prototype_service_id integer not null,
   prototype_check_id integer not null,
   type integer not null, // 2 - threshold, 1 - script, 0 - object
@@ -2478,7 +2637,7 @@ CREATE TABLE responsible_users
 /**
  * Auto bind information for objects
  */
-CREATE TABLE auto_bind_target 
+CREATE TABLE auto_bind_target
 (
    object_id integer not null,
    bind_filter_1 SQL_TEXT null,
@@ -2490,7 +2649,7 @@ CREATE TABLE auto_bind_target
 /**
  * Versionning table for objects
  */
-CREATE TABLE versionable_object 
+CREATE TABLE versionable_object
 (
    object_id integer not null,
    version integer not null,
@@ -2500,8 +2659,8 @@ CREATE TABLE versionable_object
 /**
  * User agent messages
  */
-CREATE TABLE user_agent_notifications 
-( 
+CREATE TABLE user_agent_notifications
+(
    id integer not null,
    message varchar(1023) null,
    objects varchar(1023) not null,
@@ -2595,7 +2754,7 @@ CREATE TABLE websvc_headers
 /**
  * Shared secrets default and for zones
  */
-CREATE TABLE shared_secrets 
+CREATE TABLE shared_secrets
 (
    id integer not null,
    secret varchar(88) null,
@@ -2606,7 +2765,7 @@ CREATE TABLE shared_secrets
 /**
  * List of deleted DCIs to clear data on housekeeper
  */
-CREATE TABLE dci_delete_list 
+CREATE TABLE dci_delete_list
 (
    node_id integer not null,
    dci_id integer not null,
@@ -2663,7 +2822,7 @@ CREATE TABLE geo_areas
 /**
  * Data collection target information about object
  */
-CREATE TABLE dc_targets 
+CREATE TABLE dc_targets
 (
    id integer not null,
    geolocation_ctrl_mode integer not null,
@@ -2686,7 +2845,7 @@ CREATE TABLE pollable_objects
 /**
  * SSH keys
  */
-CREATE TABLE ssh_keys 
+CREATE TABLE ssh_keys
 (
    id integer not null,
    name varchar(255) not null,
@@ -2866,3 +3025,86 @@ CREATE TABLE downtime_log
    downtime_tag varchar(15) not null,
    PRIMARY KEY(object_id,start_time,downtime_tag)
 ) TABLE_TYPE;
+
+/**
+ * Active AI tasks
+ */
+CREATE TABLE ai_tasks
+(
+   id integer not null,
+   user_id integer not null,
+   description varchar(255),
+   prompt SQL_TEXT,
+   memento SQL_TEXT,
+   last_execution_time integer not null,
+   next_execution_time integer not null,
+   iteration integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * AI task execution log
+ */
+CREATE TABLE ai_task_execution_log
+(
+   record_id SQL_INT64 not null,
+#ifdef DB_TSDB
+   execution_timestamp timestamptz not null,
+#else
+   execution_timestamp integer not null,
+#endif
+   task_id integer not null,
+   task_description varchar(255),
+   user_id integer not null,
+   status char(1) not null, // C=completed, F=failed, S=scheduled
+   iteration integer not null,
+   explanation SQL_TEXT,
+#ifdef DB_TSDB
+  PRIMARY KEY(record_id,execution_timestamp)
+#else
+   PRIMARY KEY(record_id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_task_exec_log_timestamp ON ai_task_execution_log(execution_timestamp);
+CREATE INDEX idx_ai_task_exec_log_asset_id ON ai_task_execution_log(task_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+
+/**
+ * AI agent messages
+ */
+CREATE TABLE ai_messages
+(
+   id integer not null,
+   message_guid varchar(36) not null,
+   message_type integer not null,
+   creation_time integer not null,
+   expiration_time integer not null,
+   source_task_id integer null,
+   source_task_type varchar(63) null,
+   related_object_id integer null,
+   title varchar(255) not null,
+   message_text SQL_TEXT not null,
+   spawn_task_data SQL_TEXT null,
+   status integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_messages_expiration ON ai_messages(expiration_time);
+
+/**
+ * AI message recipients
+ */
+CREATE TABLE ai_message_recipients
+(
+   message_id integer not null,
+   user_id integer not null,
+   is_initiator char(1) not null,
+   read_time integer null,
+   PRIMARY KEY(message_id, user_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_msg_recipients_user ON ai_message_recipients(user_id);

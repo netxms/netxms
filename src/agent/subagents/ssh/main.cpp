@@ -1,6 +1,6 @@
 /*
 ** NetXMS SSH subagent
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,6 +136,7 @@ static bool SubagentInit(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Workaround for ssh_channel_read bug is %s"), g_sshChannelReadBugWorkaround ? _T("enabled") : _T("disabled"));
 
    InitializeSessionPool();
+   InitializeSSHChannelProxyManager();
    return true;
 }
 
@@ -144,8 +145,22 @@ static bool SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
+   ShutdownSSHChannelProxyManager();
    ShutdownSessionPool();
    ssh_finalize();
+}
+
+/**
+ * Command handler for SSH channel commands
+ */
+static bool SubagentCommandHandler(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   if (command == CMD_SSH_COMMAND)
+   {
+      ExecuteSSHCommand(*request, response, session);
+      return true;
+   }
+   return HandleSSHChannelCommand(command, request, response, session);
 }
 
 /**
@@ -153,7 +168,9 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_STRING, _T("Result of connectivity check") },
+   { _T("SSH.CheckCommandMode(*)"), H_SSHCheckCommandMode, nullptr, DCI_DT_INT, _T("Check SSH command/exec mode with output pattern matching") },
+   { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_INT, _T("Result of SSH connection check") },
+   { _T("SSH.CheckShellChannel(*)"), H_SSHCheckShellChannel, nullptr, DCI_DT_INT, _T("Check SSH interactive shell channel with prompt pattern matching") },
 	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 
@@ -180,7 +197,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("SSH"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
+   SubagentInit, SubagentShutdown, SubagentCommandHandler, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),

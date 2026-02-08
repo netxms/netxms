@@ -40,7 +40,7 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : 
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_status = STATUS_NORMAL;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_dciListModified = false;
    m_instanceDiscoveryChanges = false;
    setCreationTime();
@@ -284,10 +284,11 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"status,delta_calculation,transformation,template_id,description,"
         L"instance,template_item_id,flags,resource_id,proxy_node,multiplier,units_name,"
         L"perftab_settings,system_tag,snmp_port,snmp_raw_value_type,instd_method,instd_data,"
-        L"instd_filter,samples,comments,guid,npe_name,instance_retention_time,"
+        L"instd_filter,samples,sample_save_interval,comments,guid,npe_name,instance_retention_time,"
         L"grace_period_start,related_object,polling_schedule_type,retention_type,"
         L"polling_interval_src,retention_time_src,snmp_version,state_flags,all_rearmed_event,"
-        L"transformed_datatype,user_tag,thresholds_disable_end_time "
+        L"transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,"
+        L"anomaly_profile,anomaly_profile_timestamp,ai_hint "
         L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
@@ -309,7 +310,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"transformation_script,comments,guid,instd_method,instd_data,"
         L"instd_filter,instance,instance_retention_time,grace_period_start,"
         L"related_object,polling_schedule_type,retention_type,polling_interval_src,"
-        L"retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time "
+        L"retention_time_src,snmp_version,state_flags,user_tag,thresholds_disable_end_time,snmp_context "
         L"FROM dc_tables WHERE node_id=?");
 	if (hStmt != nullptr)
 	{
@@ -346,7 +347,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
    if (i == m_dcObjects.size())     // Add new item
    {
 		m_dcObjects.add(object);
-      object->setLastPollTime(0);    // Cause item to be polled immediately
+      object->setLastPollTime(Timestamp::fromMilliseconds(0));    // Cause item to be polled immediately
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
       object->clearBusyFlag();
@@ -513,9 +514,7 @@ uint32_t DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMess
 
    if (result == RCC_SUCCESS)
    {
-      lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
-      unlockProperties();
    }
 
    return result;
@@ -825,7 +824,7 @@ shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(uuid guid, uint32_t 
 /**
  * Get all DC objects with matching name, description, and tag
  */
-NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR *name, const WCHAR *description, const WCHAR *tag, uint32_t userID) const
+NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const wchar_t *name, const wchar_t *description, const wchar_t *tag, uint32_t relatedObjectId, uint32_t userID) const
 {
    NXSL_Array *list = new NXSL_Array(vm);
    readLockDciAccess();
@@ -835,6 +834,7 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const WCHAR
       if (((name == nullptr) || MatchString(name, curr->getName(), false)) &&
           ((description == nullptr) || MatchString(description, curr->getDescription(), false)) &&
           ((tag == nullptr) || MatchString(tag, curr->getUserTag(), false)) &&
+          ((relatedObjectId == 0) || (curr->getRelatedObject() == relatedObjectId)) &&
           curr->hasAccess(userID))
 		{
          list->set(list->size(), curr->createNXSLObject(vm));
@@ -1084,6 +1084,114 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
 }
 
 /**
+ * Update data collection owner from imported JSON configuration
+ */
+void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
+{
+   // Update basic properties (name, flags, comments)
+   lockProperties();
+   String name = json_object_get_string(data, "name", _T("Unnamed Object"));
+   wcslcpy(m_name, name, MAX_OBJECT_NAME);
+   
+   json_t *flagsObj = json_object_get(data, "flags");
+   if (json_is_integer(flagsObj))
+      m_flags = static_cast<uint32_t>(json_integer_value(flagsObj));
+   unlockProperties();
+   
+   String comments = json_object_get_string(data, "comments", _T(""));
+   setComments(comments.isEmpty() ? nullptr : comments.cstr());
+
+   // Data collection items and tables
+   ObjectArray<uuid> guidList(32, 32, Ownership::True);
+
+   writeLockDciAccess();
+   json_t *dataCollectionObj = json_object_get(data, "dataCollection");
+   if (json_is_object(dataCollectionObj))
+   {
+      // Handle DCIs (data collection items)
+      json_t *dcisArray = json_object_get(dataCollectionObj, "dcis");
+      if (json_is_array(dcisArray))
+      {
+         size_t index;
+         json_t *dciJson;
+         json_array_foreach(dcisArray, index, dciJson)
+         {
+            if (!json_is_object(dciJson))
+               continue;
+               
+            uuid guid = json_object_get_uuid(dciJson, "guid");
+            shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
+            if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
+            {
+               curr->updateFromImport(dciJson);
+            }
+            else
+            {
+               auto dci = make_shared<DCItem>(dciJson, self());
+               m_dcObjects.add(dci);
+               guid = dci->getGuid();  // For case when export file does not contain valid GUID
+            }
+            guidList.add(new uuid(guid));
+         }
+      }
+
+      // Handle DCTables (data collection tables)
+      json_t *dctablesArray = json_object_get(dataCollectionObj, "dctables");
+      if (json_is_array(dctablesArray))
+      {
+         size_t index;
+         json_t *dctableJson;
+         json_array_foreach(dctablesArray, index, dctableJson)
+         {
+            if (!json_is_object(dctableJson))
+               continue;
+               
+            uuid guid = json_object_get_uuid(dctableJson, "guid");
+            shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
+            if ((curr != nullptr) && (curr->getType() == DCO_TYPE_TABLE))
+            {
+               curr->updateFromImport(dctableJson);
+            }
+            else
+            {
+               auto dci = make_shared<DCTable>(dctableJson, self());
+               m_dcObjects.add(dci);
+               guid = dci->getGuid();  // For case when export file does not contain valid GUID
+            }
+            guidList.add(new uuid(guid));
+         }
+      }
+   }
+
+   // Delete DCIs missing in import
+   IntegerArray<uint32_t> deleteList;
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      bool found = false;
+      for(int j = 0; j < guidList.size(); j++)
+      {
+         if (guidList.get(j)->equals(m_dcObjects.get(i)->getGuid()))
+         {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         deleteList.add(m_dcObjects.get(i)->getId());
+      }
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false);
+
+   unlockDciAccess();
+
+   queueUpdate();
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *DataCollectionOwner::toJson()
@@ -1255,7 +1363,7 @@ uint32_t DataCollectionOwner::getDataCollectionSummary(NXCPMessage *msg, bool ob
 /**
  * Get last (current) DCI values.
  */
-uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
+uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter)
 {
    if (!includeNoValueObjects)
       return RCC_INCOMPATIBLE_OPERATION;
@@ -1267,7 +1375,8 @@ uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool obje
       DCObject *object = m_dcObjects.get(i);
       if ((!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
           (!overviewOnly || object->isShowInObjectOverview()) &&
-          object->hasAccess(userId))
+          object->hasAccess(userId) &&
+          (filter == nullptr || filter(object)))
       {
          json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
       }

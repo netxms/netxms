@@ -85,6 +85,52 @@ void NetworkPath::fillMessage(NXCPMessage *msg) const
 }
 
 /**
+ * Convert network path to JSON object
+ */
+json_t *NetworkPath::toJson() const
+{
+   json_t *path = json_object();
+   json_t *hops = json_array();
+   for(int i = 0; i < m_path.size(); i++)
+   {
+      const NetworkPathElement *e = m_path.get(i);
+      json_t *jsonHop = json_object();
+      json_object_set_new(jsonHop, "objectId", json_integer(e->object->getId()));
+      json_object_set_new(jsonHop, "objectName", json_string_t(e->object->getName()));
+      switch(e->type)
+      {
+         case NetworkPathElementType::PROXY:
+            json_object_set_new(jsonHop, "type", json_string("PROXY"));
+            json_object_set_new(jsonHop, "proxyNodeId", json_integer(e->ifIndex));
+            json_object_set_new(jsonHop, "proxyNodeName", json_string_t(GetObjectName(e->ifIndex, L"unknown")));
+            break;
+         case NetworkPathElementType::VPN:
+            json_object_set_new(jsonHop, "type", json_string("VPN"));
+            json_object_set_new(jsonHop, "vpnConnectorId", json_integer(e->ifIndex));
+            json_object_set_new(jsonHop, "vpnConnectorName", json_string_t(GetObjectName(e->ifIndex, L"unknown")));
+            break;
+         case NetworkPathElementType::ROUTE:
+            json_object_set_new(jsonHop, "type", json_string("ROUTE"));
+            if (e->ifIndex != 0)
+            {
+               json_object_set_new(jsonHop, "ifIndex", json_integer(e->ifIndex));
+            }
+            json_object_set_new(jsonHop, "nextHop", e->nextHop.toJson());
+            json_object_set_new(jsonHop, "route", e->route.toJson());
+            break;
+         case NetworkPathElementType::DUMMY:
+            json_object_set_new(jsonHop, "type", json_string("DUMMY"));
+            break;
+      }
+      json_object_set_new(jsonHop, "name", json_string_t(e->name));
+      json_array_append_new(hops, jsonHop);
+   }
+   json_object_set_new(path, "hops", hops);
+   json_object_set_new(path, "isComplete", json_boolean(m_complete));
+   return path;
+}
+
+/**
  * Print network path to server console
  */
 void NetworkPath::print(ServerConsole *console, int padding) const
@@ -135,7 +181,7 @@ void NetworkPath::print(ServerConsole *console, int padding) const
 /**
  * Trace route between two nodes
  */
-shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
+shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
 {
    uint32_t srcIfIndex;
    InetAddress srcAddr;

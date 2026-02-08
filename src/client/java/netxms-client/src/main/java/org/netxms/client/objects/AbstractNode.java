@@ -92,6 +92,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_IS_VNC                 = 0x0080000000L;
    public static final long NC_IS_LOCAL_VNC           = 0x0100000000L;
    public static final long NC_REGISTERED_FOR_BACKUP  = 0x0200000000L;
+   public static final long NC_HAS_SERVICE_MANAGER    = 0x0400000000L;
 
 	// Node flags
    public static final int NF_DISABLE_SMCLP_PROPERTIES  = 0x00004000;
@@ -122,6 +123,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int NSF_ICMP_UNREACHABLE         = 0x00200000;
 	public static final int NSF_SSH_UNREACHABLE          = 0x00400000;
 	public static final int NSF_MODBUS_UNREACHABLE       = 0x00800000;
+	public static final int NSF_DECOMMISSIONED           = 0x01000000;
 
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
@@ -228,6 +230,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected RadioInterface[] radios;
    protected NetworkPathCheckResult networkPathCheckResult;
    protected DeviceBackupJobStatus lastConfigBackupJobStatus;
+   protected Date decommissionTime;
 
 	/**
 	 * Create new node object.
@@ -346,6 +349,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       networkPathCheckResult = new NetworkPathCheckResult(msg);
       lastConfigBackupJobStatus = DeviceBackupJobStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_BACKUP_JOB_STATUS));
 
+      long decommissionTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_DECOMMISSION_TIME);
+      decommissionTime = (decommissionTimeSeconds > 0) ? new Date(decommissionTimeSeconds * 1000) : null;
+
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
       if(config != null && !config.isEmpty())
@@ -420,6 +426,26 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return stateFlags;
 	}
+
+   /**
+    * Check if this node is decommissioned.
+    *
+    * @return true if this node is decommissioned
+    */
+   public boolean isDecommissioned()
+   {
+      return (stateFlags & NSF_DECOMMISSIONED) != 0;
+   }
+
+   /**
+    * Get decommission expiration time.
+    *
+    * @return decommission expiration time or null if node is not decommissioned
+    */
+   public Date getDecommissionTime()
+   {
+      return decommissionTime;
+   }
 
 	/**
 	 * @return the nodeType
@@ -763,9 +789,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
 	/**
-	 * 
-	 * @return true if node supports spanning tree MIB
-	 */
+    * Check if node supports spanning tree MIB
+    * 
+    * @return true if node supports spanning tree MIB
+    */
 	public boolean isSpanningTreeSupported()
 	{
 		return (capabilities & NC_IS_STP) != 0;
@@ -818,6 +845,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return (capabilities & NC_HAS_AGENT_IFXCOUNTERS) != 0;
 	}
+
+   /**
+    * Check if node has service manager accessible via agent
+    * 
+    * @return true if node has service manager accessible via agent
+    */
+   public boolean hasServiceManager()
+   {
+      return (capabilities & NC_HAS_SERVICE_MANAGER) != 0;
+   }
 
    /**
     * Check for bridge capabilities flag

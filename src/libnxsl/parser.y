@@ -59,11 +59,15 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FSTRING_BEGIN
 %token T_FUNCTION
 %token T_GLOBAL
+%token T_HAS
 %token T_IDIV
 %token T_IF
 %token T_IMPORT
+%token T_LOCAL
+%token T_META
 %token T_NEW
 %token T_NULL
+%token T_OPTIONAL
 %token T_RANGE
 %token T_RETURN
 %token T_SELECT
@@ -97,6 +101,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %right ':'
 %left '?'
 %left T_CONCAT
+%left T_HAS
 %left T_OR
 %left T_AND
 %left '|'
@@ -117,6 +122,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valIdentifier> FunctionName
 %type <valIdentifier> GlobalVariableDeclarationStart
 %type <valIdentifier> ModuleName
+%type <valIdentifier> OptionalFunctionName
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
 %type <valInt32> SelectList
@@ -132,7 +138,16 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %%
 
 Script:
-	Module
+	MetadataHeader ScriptBody
+;
+
+MetadataHeader:
+	MetadataStatement MetadataHeader
+|
+;
+
+ScriptBody:
+	ModuleComponent ModuleBody
 {
 	char szErrorText[256];
 
@@ -176,9 +191,14 @@ Script:
 }
 ;
 
-Module:
-	ModuleComponent Module
-|	ModuleComponent
+ModuleBody:
+	ModuleBodyComponent ModuleBody
+|
+;
+
+ModuleBodyComponent:
+	ModuleComponent
+|	MetadataStatement
 ;
 
 ModuleComponent:
@@ -366,6 +386,10 @@ WithAssignment:
 }	
 ;
 
+MetadataStatement:
+    T_META '(' MetadataValues ')'
+;
+
 Metadata:
 	'(' MetadataValues ')'
 |
@@ -380,15 +404,26 @@ MetadataValue:
 	T_IDENTIFIER '=' Constant
 {
    TCHAR key[1024];
+   if (builder->getCurrentMetadataPrefix().length > 0)
+   {
 #ifdef UNICODE
-   size_t l = utf8_to_wchar(builder->getCurrentMetadataPrefix().value, -1, key, 1024);
-	key[l - 1] = L'.';
-   utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
+      size_t l = utf8_to_wchar(builder->getCurrentMetadataPrefix().value, -1, key, 1024);
+	   key[l - 1] = L'.';
+      utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
 #else
-	strlcpy(key, builder->getCurrentMetadataPrefix().value, 1024);
-	strlcat(key, ".", 1024);
-	strlcat(key, $1.v, 1024);
+	   strlcpy(key, builder->getCurrentMetadataPrefix().value, 1024);
+	   strlcat(key, ".", 1024);
+	   strlcat(key, $1.v, 1024);
 #endif
+   }
+   else
+   {
+#ifdef UNICODE
+      utf8_to_wchar($1.v, -1, key, 1024);
+#else
+      strlcpy(key, $1.v, 1024);
+#endif
+   }
    builder->setMetadata(key, $3->getValueAsCString());
 	builder->destroyValue($3);
 	$3 = nullptr;
@@ -762,6 +797,10 @@ Expression:
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
 }
+|	Expression T_HAS Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_HAS_BITS);
+}
 |	Expression '?'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
@@ -936,6 +975,7 @@ BuiltinStatement:
 |	SelectStatement
 |	ArrayStatement
 |	GlobalStatement
+|	LocalStatement
 |	T_BREAK ';'
 {
 	if (compiler->canUseBreak())
@@ -1328,6 +1368,26 @@ GlobalVariableDeclarationStart:
 }
 ;
 
+LocalStatement:
+	T_LOCAL LocalVariableList ';'
+;
+
+LocalVariableList:
+	LocalVariableDeclaration ',' LocalVariableList
+|	LocalVariableDeclaration
+;
+
+LocalVariableDeclaration:
+	T_IDENTIFIER
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LOCAL, $1, 0);
+}
+|	T_IDENTIFIER '=' Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_LOCAL, $1, 1);
+}
+;
+
 New:
 	T_NEW T_IDENTIFIER
 {
@@ -1369,6 +1429,18 @@ FunctionCall:
 	if (builder->getEnvironment()->isDeprecatedFunction($1))
 		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
 }
+|	OptionalFunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3, OPTIONAL_FUNCTION_CALL);
+	if (builder->getEnvironment()->isDeprecatedFunction($1))
+		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
+}
+|	OptionalFunctionName ')'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0, OPTIONAL_FUNCTION_CALL);
+	if (builder->getEnvironment()->isDeprecatedFunction($1))
+		compiler->warning(_T("Function \"%hs\" is deprecated"), $1.v);
+}
 ;
 
 ParameterList:
@@ -1397,6 +1469,18 @@ FunctionName:
 {
 	$$ = $1;
 	builder->addRequiredModule($1.v, lexer->getCurrLine(), true, false, false);
+}
+;
+
+OptionalFunctionName:
+	T_OPTIONAL T_IDENTIFIER '('
+{
+	$$ = $2;
+}
+|	T_OPTIONAL T_COMPOUND_IDENTIFIER '('
+{
+	$$ = $2;
+	builder->addRequiredModule($2.v, lexer->getCurrLine(), true, false, true);
 }
 ;
 

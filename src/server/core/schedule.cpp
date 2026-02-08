@@ -58,6 +58,16 @@ static void DelayedTaskDelete(void *taskId)
    DeleteScheduledTask(CAST_FROM_POINTER(taskId, uint32_t), 0, SYSTEM_ACCESS_FULL);
 }
 
+/**
+ * Removes scheduled task from database by id
+ */
+static void DeleteScheduledTaskFromDB(uint64_t id)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, id, L"DELETE FROM scheduled_tasks WHERE id=?");
+   DBConnectionPoolReleaseConnection(hdb);
+   NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
+}
 
 /**
  * Callback definition for missing task handlers
@@ -295,6 +305,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
             if (isSystemTask)
             {
                s_oneTimeTasks.remove(i);
+               DeleteScheduledTaskFromDB(id);
             }
             else
             {
@@ -346,6 +357,31 @@ void ScheduledTask::fillMessage(NXCPMessage *msg, uint32_t base) const
    msg->setField(base + 9, m_parameters->m_comments);
    msg->setField(base + 10, m_parameters->m_taskKey);
    unlock();
+}
+
+/**
+ * Serialize task to JSON object
+ */
+json_t *ScheduledTask::toJson() const
+{
+   lock();
+
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "taskHandlerId", json_string_t(m_taskHandlerId));
+   json_object_set_new(root, "schedule", json_string_t(m_schedule));
+   json_object_set_new(root, "parameters", json_string_t(m_parameters->m_persistentData));
+   json_object_set_new(root, "scheduledExecutionTime", json_integer(static_cast<int64_t>(m_scheduledExecutionTime)));
+   json_object_set_new(root, "lastExecutionTime", json_integer(static_cast<int64_t>(m_lastExecutionTime)));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "recurrent", json_boolean(m_recurrent));
+   json_object_set_new(root, "userId", json_integer(m_parameters->m_userId));
+   json_object_set_new(root, "objectId", json_integer(m_parameters->m_objectId));
+   json_object_set_new(root, "comments", json_string_t(m_parameters->m_comments));
+   json_object_set_new(root, "taskKey", json_string_t(m_parameters->m_taskKey));
+
+   unlock();
+   return root;
 }
 
 /**
@@ -412,7 +448,7 @@ uint32_t NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *taskHand
          ScheduledTaskTransientData *transientData, uint32_t owner, uint32_t objectId, uint64_t systemRights,
          const TCHAR *comments, const TCHAR *key, bool systemTask)
 {
-   ScheduledTask *task = FindScheduledTaskByHandlerId(taskHandlerId);
+   ScheduledTask *task = FindScheduledTaskByHandlerId(taskHandlerId, true);
    if (task != nullptr)
    {
       // Make sure that existing task marked as system if requested
@@ -657,17 +693,6 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
 }
 
 /**
- * Removes scheduled task from database by id
- */
-static void DeleteScheduledTaskFromDB(uint64_t id)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   ExecuteQueryOnObject(hdb, id, _T("DELETE FROM scheduled_tasks WHERE id=?"));
-	DBConnectionPoolReleaseConnection(hdb);
-	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
-}
-
-/**
  * Removes scheduled task by id
  */
 uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint64_t systemRights)
@@ -759,15 +784,15 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
 /**
  * Find scheduled task by task handler id
  */
-ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
+ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const wchar_t *taskHandlerId, bool recurrentOnly)
 {
-   ScheduledTask *task;
+   ScheduledTask *task = nullptr;
    bool found = false;
 
    s_recurrentTaskLock.lock();
    for (int i = 0; i < s_recurrentTasks.size(); i++)
    {
-      if (_tcscmp(s_recurrentTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      if (wcscmp(s_recurrentTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
       {
          task = s_recurrentTasks.get(i);
          found = true;
@@ -776,13 +801,13 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    }
    s_recurrentTaskLock.unlock();
 
-   if (found)
+   if (found || recurrentOnly)
       return task;
 
    s_oneTimeTaskLock.lock();
    for (int i = 0; i < s_oneTimeTasks.size(); i++)
    {
-      if (_tcscmp(s_oneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      if (wcscmp(s_oneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
       {
          task = s_oneTimeTasks.get(i);
          found = true;
@@ -793,7 +818,7 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    {
       for (int i = 0; i < s_completedOneTimeTasks.size(); i++)
       {
-         if (_tcscmp(s_completedOneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+         if (wcscmp(s_completedOneTimeTasks.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
          {
             task = s_completedOneTimeTasks.get(i);
             found = true;
@@ -803,10 +828,7 @@ ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskH
    }
    s_oneTimeTaskLock.unlock();
 
-   if (found)
-      return task;
-
-   return NULL;
+   return task;
 }
 
 /**
@@ -963,37 +985,28 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByObjectId(uint32_t objectId, bool all
 /**
  * Get number of scheduled tasks with given key
  */
-int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
+int NXCORE_EXPORTABLE CountScheduledTasksByKey(const String& taskKey)
 {
    int count = 0;
 
    s_oneTimeTaskLock.lock();
    for (int i = 0; i < s_oneTimeTasks.size(); i++)
    {
-      const TCHAR *k = s_oneTimeTasks.get(i)->getTaskKey();
-      if ((k != nullptr) && !_tcscmp(k, taskKey))
-      {
+      if (s_oneTimeTasks.get(i)->getTaskKey().equals(taskKey))
          count++;
-      }
    }
    for (int i = 0; i < s_completedOneTimeTasks.size(); i++)
    {
-      const TCHAR *k = s_completedOneTimeTasks.get(i)->getTaskKey();
-      if ((k != nullptr) && !_tcscmp(k, taskKey))
-      {
+      if (s_completedOneTimeTasks.get(i)->getTaskKey().equals(taskKey))
          count++;
-      }
    }
    s_oneTimeTaskLock.unlock();
 
    s_recurrentTaskLock.lock();
    for (int i = 0; i < s_recurrentTasks.size(); i++)
    {
-      const TCHAR *k = s_recurrentTasks.get(i)->getTaskKey();
-      if ((k != nullptr) && !_tcscmp(k, taskKey))
-      {
+      if (s_recurrentTasks.get(i)->getTaskKey().equals(taskKey))
          count++;
-      }
    }
    s_recurrentTaskLock.unlock();
 
@@ -1083,6 +1096,49 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights,
    s_recurrentTaskLock.unlock();
 
    msg->setField(VID_SCHEDULE_COUNT, taskCount);
+}
+
+/**
+ * Get scheduled tasks as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetScheduledTasks(uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context), void *context)
+{
+   json_t *tasks = json_array();
+
+   s_oneTimeTaskLock.lock();
+   for(int i = 0; i < s_oneTimeTasks.size(); i++)
+   {
+      ScheduledTask *task = s_oneTimeTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   for(int i = 0; i < s_completedOneTimeTasks.size(); i++)
+   {
+      ScheduledTask *task = s_completedOneTimeTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   s_oneTimeTaskLock.unlock();
+
+   s_recurrentTaskLock.lock();
+   for(int i = 0; i < s_recurrentTasks.size(); i++)
+   {
+      ScheduledTask *task = s_recurrentTasks.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
+      {
+         json_t *taskJson = task->toJson();
+         json_array_append_new(tasks, taskJson);
+      }
+   }
+   s_recurrentTaskLock.unlock();
+
+   return tasks;
 }
 
 /**
@@ -1353,7 +1409,7 @@ void InitializeTaskScheduler()
       for(int i = 0; i < count; i++)
       {
          ScheduledTask *task = new ScheduledTask(hResult, i);
-         if (!_tcscmp(task->getSchedule(), _T("")))
+         if (task->getSchedule().isEmpty())
          {
             nxlog_debug_tag(DEBUG_TAG, 7, _T("InitializeTaskScheduler: added one time task [%u] at ") INT64_FMT,
                      task->getId(), static_cast<int64_t>(task->getScheduledExecutionTime()));

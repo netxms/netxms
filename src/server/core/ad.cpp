@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 /**
  * Helper function to read last N values of given DCI
  */
-static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<time_t, time_t> *timeRanges, int numTimeRanges)
+static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<Timestamp, Timestamp> *timeRanges, int numTimeRanges, bool hasV5Table = false)
 {
    StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -39,12 +39,23 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
       {
          query.append(_T(" FROM idata_sc_"));
          query.append(DCObject::getStorageClassName(storageClass));
-         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)"));
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)"));
       }
       else
       {
          query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       }
+   }
+   else if (hasV5Table)
+   {
+      query.append(_T(" FROM (SELECT idata_timestamp,idata_value FROM idata_"));
+      query.append(nodeId);
+      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+      query.append(_T(" UNION ALL SELECT "));
+      query.append(V5TimestampToMs(false));
+      query.append(_T(",idata_value FROM idata_v5_"));
+      query.append(nodeId);
+      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
    }
    else
    {
@@ -63,8 +74,14 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dciId);
       for(int n = 0; n < numTimeRanges; n++)
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeRanges[n].first));
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(timeRanges[n].second));
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, timeRanges[n].first);
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, timeRanges[n].second);
+         if (hasV5Table)
+         {
+            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dciId);
+            DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, timeRanges[n].first.asMilliseconds() / 1000);
+            DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, timeRanges[n].second.asMilliseconds() / 1000);
+         }
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          {
@@ -72,7 +89,7 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
             for(int i = 0; i < count; i++)
             {
                ScoredDciValue *v = values->addPlaceholder();
-               v->timestamp = DBGetFieldULong(hResult, i, 0);
+               v->timestamp = DBGetFieldTimestamp(hResult, i, 0);
                v->value = DBGetFieldDouble(hResult, i, 1);
                v->score = 0;
             }
@@ -97,8 +114,8 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: invalid DCI ID [%u] on object %s [%u]"), dciId, dcTarget.getName(), dcTarget.getId());
    }
 
-   std::pair<time_t, time_t> timeRange(timeFrom, timeTo);
-   auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), &timeRange, 1);
+   std::pair<Timestamp, Timestamp> timeRange(Timestamp::fromTime(timeFrom), Timestamp::fromTime(timeTo));
+   auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), &timeRange, 1, dcTarget.hasV5IdataTable());
    if (series == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: cannot load data for DCI \"%s\" [%u] on object %s [%u]"), dci->getName().cstr(), dciId, dcTarget.getName(), dcTarget.getId());
@@ -149,17 +166,18 @@ bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci,
       depth = 90;
 
    // Construct time ranges for daily periods
-   time_t now = time(nullptr);
-   time_t t = now - width * 30;  // Half-interval in minutes to seconds
-   std::pair<time_t, time_t> timeRanges[90]; // up to 90 days back
+   Timestamp now = Timestamp::now();
+   Timestamp t = now - width * 30000;  // Half-interval in minutes to milliseconds
+   std::pair<Timestamp, Timestamp> timeRanges[90]; // up to 90 days back
+   int64_t w = static_cast<int64_t>(width) * 60000; // width in milliseconds
    for(int i = 0; i < depth; i++)
    {
       t -= 86400 * period;
       timeRanges[i].first = t;
-      timeRanges[i].second = t + width * 60;
+      timeRanges[i].second = t + w;
    }
 
-   auto series = LoadDciValues(dcTarget.getId(), dci.getId(), dci.getStorageClass(), timeRanges, depth);
+   auto series = LoadDciValues(dcTarget.getId(), dci.getId(), dci.getStorageClass(), timeRanges, depth, dcTarget.hasV5IdataTable());
    if (series == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("IsAnomalousValue(%s [%u], \"%s\"): cannot load DCI data"), dcTarget.getName(), dcTarget.getId(), dci.getName().cstr());

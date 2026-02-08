@@ -36,6 +36,7 @@ import org.apache.commons.daemon.DaemonContext;
 import org.apache.commons.daemon.DaemonInitException;
 import org.netxms.reporting.services.CommunicationManager;
 import org.netxms.reporting.services.FileMonitor;
+import org.netxms.reporting.services.Housekeeper;
 import org.netxms.reporting.services.ReportManager;
 import org.netxms.reporting.tools.SmtpSender;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ public final class Server implements Daemon
    private CommunicationManager communicationManager;
    private ReportManager reportManager;
    private FileMonitor fileMonitor;
+   private Housekeeper housekeeper;
    private Properties configuration = new Properties();
    private ThreadPoolExecutor threadPool;
    private SmtpSender smtpSender;
@@ -99,6 +101,7 @@ public final class Server implements Daemon
       communicationManager = new CommunicationManager(this);
       reportManager = new ReportManager(this);
       smtpSender = new SmtpSender(this);
+      housekeeper = new Housekeeper(this);
 
       File definitionsDirectory = reportManager.getDefinitionsDirectory();
       if (!definitionsDirectory.isDirectory() && !definitionsDirectory.mkdirs())
@@ -170,6 +173,7 @@ public final class Server implements Daemon
       listenerThread.start();
 
       fileMonitor.start();
+      housekeeper.start();
    }
 
    /**
@@ -178,6 +182,7 @@ public final class Server implements Daemon
    @Override
    public void stop() throws Exception
    {
+      housekeeper.stop();
       communicationManager.shutdown();
       listenerThread.interrupt();
    }
@@ -200,6 +205,7 @@ public final class Server implements Daemon
       reportManager = null;
       communicationManager = null;
       smtpSender = null;
+      housekeeper = null;
       threadPool = null;
    }
 
@@ -276,6 +282,30 @@ public final class Server implements Daemon
       String value = configuration.getProperty(name);
       logger.debug("Configuration property: {}={}", name, value != null ? value : "null");
       return (value != null) ? value : configuration.getProperty(name + "@remote", defaultValue);
+   }
+
+   /**
+    * Get server configuration property as integer
+    *
+    * @param name property name
+    * @param defaultValue default value
+    * @return property value or default value
+    */
+   public int getConfigurationPropertyAsInt(String name, int defaultValue)
+   {
+      String value = getConfigurationProperty(name);
+      if (value != null)
+      {
+         try
+         {
+            return Integer.parseInt(value);
+         }
+         catch(NumberFormatException e)
+         {
+            logger.warn("Cannot parse integer configuration property " + name + " with value " + value);
+         }
+      }
+      return defaultValue;
    }
 
    /**

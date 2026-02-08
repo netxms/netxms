@@ -32,6 +32,7 @@
 #define IF_INFO_PACKETS_IN       7
 #define IF_INFO_PACKETS_OUT      8
 #define IF_INFO_SPEED            9
+#define IF_INFO_IN_DROPS         10
 
 LONG H_NetIpForwarding(const char *, const char *, char *, AbstractCommSession *);
 LONG H_NetIfAdmStatus(const char *, const char *, char *, AbstractCommSession *);

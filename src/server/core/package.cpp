@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,6 +120,87 @@ uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details)
 
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
+}
+
+/**
+ * Get all deployment packages (for NXSL)
+ */
+ObjectArray<PackageDetails> *GetAllPackages(const TCHAR *platformFilter, const TCHAR *typeFilter)
+{
+   ObjectArray<PackageDetails> *packages = new ObjectArray<PackageDetails>(16, 16, Ownership::True);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult;
+
+   if ((platformFilter != nullptr) && (typeFilter != nullptr))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT pkg_id,pkg_type,pkg_name,version,platform,pkg_file,command,description FROM agent_pkg WHERE platform=? AND pkg_type=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, platformFilter, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, typeFilter, DB_BIND_STATIC);
+         hResult = DBSelectPrepared(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         hResult = nullptr;
+      }
+   }
+   else if (platformFilter != nullptr)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT pkg_id,pkg_type,pkg_name,version,platform,pkg_file,command,description FROM agent_pkg WHERE platform=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, platformFilter, DB_BIND_STATIC);
+         hResult = DBSelectPrepared(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         hResult = nullptr;
+      }
+   }
+   else if (typeFilter != nullptr)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT pkg_id,pkg_type,pkg_name,version,platform,pkg_file,command,description FROM agent_pkg WHERE pkg_type=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, typeFilter, DB_BIND_STATIC);
+         hResult = DBSelectPrepared(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         hResult = nullptr;
+      }
+   }
+   else
+   {
+      hResult = DBSelect(hdb, _T("SELECT pkg_id,pkg_type,pkg_name,version,platform,pkg_file,command,description FROM agent_pkg"));
+   }
+
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
+      {
+         PackageDetails *p = new PackageDetails();
+         p->id = DBGetFieldUInt32(hResult, i, 0);
+         DBGetField(hResult, i, 1, p->type, 16);
+         DBGetField(hResult, i, 2, p->name, MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 3, p->version, 32);
+         DBGetField(hResult, i, 4, p->platform, MAX_PLATFORM_NAME_LEN);
+         p->packageFile = DBGetFieldAsString(hResult, i, 5);
+         p->command = DBGetFieldAsString(hResult, i, 6);
+         p->description = DBGetFieldAsString(hResult, i, 7);
+         packages->add(p);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return packages;
 }
 
 /**

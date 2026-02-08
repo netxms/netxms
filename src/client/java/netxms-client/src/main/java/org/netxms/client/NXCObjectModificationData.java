@@ -62,9 +62,11 @@ public class NXCObjectModificationData
    private String name;
    private String primaryName;
    private String alias;
+   private String aiHint;
    private String nameOnMap;
    private Collection<AccessListElement> acl;
    private Boolean inheritAccessRights;
+   private Boolean isHidden;
    private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
    private Integer version;
@@ -171,6 +173,7 @@ public class NXCObjectModificationData
    private Long sensorProxy;
    private List<PassiveRackElement> passiveElements;
    private List<ResponsibleUser> responsibleUsers;
+   private List<PortStopEntry> portStopList;
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
    private String chassisPlacement;
@@ -198,6 +201,7 @@ public class NXCObjectModificationData
    private Integer mapWidth;
    private Integer mapHeight;
    private Long expectedCapabilities;
+   private String dashboardNameTemplate;
 
    /**
     * Constructor for creating modification data for given object
@@ -258,6 +262,26 @@ public class NXCObjectModificationData
    }
 
    /**
+    * Get AI hint for this object.
+    *
+    * @return AI hint string or null if not set
+    */
+   public String getAiHint()
+   {
+      return aiHint;
+   }
+
+   /**
+    * Set AI hint for this object.
+    *
+    * @param aiHint new AI hint
+    */
+   public void setAiHint(String aiHint)
+   {
+      this.aiHint = aiHint;
+   }
+
+   /**
     * Get object's name on network map.
     *
     * @return object's name on network map
@@ -307,6 +331,22 @@ public class NXCObjectModificationData
    public void setInheritAccessRights(boolean inheritAccessRights)
    {
       this.inheritAccessRights = inheritAccessRights;
+   }
+
+   /**
+    * @return the isHidden
+    */
+   public Boolean isHidden()
+   {
+      return isHidden;
+   }
+
+   /**
+    * @param isHidden the isHidden to set
+    */
+   public void setHidden(boolean isHidden)
+   {
+      this.isHidden = isHidden;
    }
 
    /**
@@ -2013,6 +2053,26 @@ public class NXCObjectModificationData
    }
 
    /**
+    * Get port stop list.
+    *
+    * @return port stop list or null if not set
+    */
+   public List<PortStopEntry> getPortStopList()
+   {
+      return portStopList;
+   }
+
+   /**
+    * Set port stop list. Use null to indicate no modification, empty list to clear.
+    *
+    * @param portStopList port stop list to set
+    */
+   public void setPortStopList(List<PortStopEntry> portStopList)
+   {
+      this.portStopList = portStopList;
+   }
+
+   /**
     * Get ICMP statistic collection mode
     * 
     * @return ICMP statistic collection mode
@@ -2473,5 +2533,25 @@ public class NXCObjectModificationData
    public void setExpectedCapabilities(Long expectedCapabilities)
    {
       this.expectedCapabilities = expectedCapabilities;
+   }
+
+   /**
+    * Get dashboard name template
+    * 
+    * @return dashboard name template
+    */
+   public String getDashboardNameTemplate()
+   {
+      return dashboardNameTemplate;
+   }
+
+   /**
+    * Set dashboard name template
+    * 
+    * @param dashboardNameTemplate dashboard name template
+    */
+   public void setDashboardNameTemplate(String dashboardNameTemplate)
+   {
+      this.dashboardNameTemplate = dashboardNameTemplate;
    }
 }

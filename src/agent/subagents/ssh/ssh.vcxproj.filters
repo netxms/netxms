@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="channel_proxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="handlers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

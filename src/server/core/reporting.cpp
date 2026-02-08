@@ -175,11 +175,13 @@ void RSConnector::sendConfiguration()
    msg.setField(VID_DB_PASSWORD, g_szDbPassword);
 
    TCHAR jdbcOptions[MAX_DB_STRING];
-   ConfigReadStr(_T("ReportingServer.JDBC.Properties"), jdbcOptions, MAX_DB_STRING, _T(""));
+   ConfigReadStr(L"ReportingServer.JDBC.Properties", jdbcOptions, MAX_DB_STRING, L"");
    msg.setField(VID_JDBC_OPTIONS, jdbcOptions);
 
+   msg.setField(VID_RETENTION_TIME, ConfigReadULong(L"ReportingServer.ResultsRetentionTime", 90));
+
    TCHAR channelName[MAX_OBJECT_NAME];
-   if (ConfigReadStr(_T("DefaultNotificationChannel.SMTP.Text"), channelName, MAX_OBJECT_NAME, _T("SMTP-Text")))
+   if (ConfigReadStr(L"DefaultNotificationChannel.SMTP.Text", channelName, MAX_OBJECT_NAME, L"SMTP-Text"))
    {
       char *configuration = GetNotificationChannelConfiguration(channelName);
       if (configuration != nullptr)
@@ -269,6 +271,12 @@ static EnumerationCallbackResult ViewBuilderCallback(NetObj *object, ViewBuilder
    if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))
    {
       context->query->append(_T("SELECT * FROM idata_")).append(object->getId()).append(_T(" UNION ALL "));
+      if (object->getRuntimeFlags() & ODF_HAS_IDATA_V5_TABLE)
+      {
+         context->query->append(_T("SELECT item_id,"));
+         context->query->append(V5TimestampToMs(false));
+         context->query->append(_T(" AS idata_timestamp,idata_value,raw_value FROM idata_v5_")).append(object->getId()).append(_T(" UNION ALL "));
+      }
       context->tableCount++;
    }
    return _CONTINUE;

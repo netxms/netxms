@@ -38,7 +38,7 @@ ObjectQueue<Event> g_eventQueue(4096, Ownership::True);
 /**
  * Event processing policy
  */
-EventPolicy *g_pEventPolicy = nullptr;
+static EventProcessingPolicy *s_eventProcessingPolicy = nullptr;
 
 /**
  * Unique event ID
@@ -70,10 +70,15 @@ void LoadLastEventId(DB_HANDLE hdb)
    }
 }
 
+EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy()
+{
+   return s_eventProcessingPolicy;
+}
+
 /**
  * Static data
  */
-static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
+static SharedHashMap<uint32_t, EventTemplate> s_eventTemplates;
 static SharedStringObjectMap<EventTemplate> s_eventNameIndex;
 static RWLock s_eventTemplatesLock;
 
@@ -105,6 +110,30 @@ EventTemplate::EventTemplate(const NXCPMessage& msg)
    m_messageTemplate = msg.getFieldAsString(VID_MESSAGE);
    m_description = msg.getFieldAsString(VID_DESCRIPTION);
    m_tags = msg.getFieldAsString(VID_TAGS);
+}
+
+/**
+ * Create event template from JSON
+ */
+EventTemplate::EventTemplate(const json_t *json)
+{
+   m_guid = uuid::generate();
+   m_code = CreateUniqueId(IDG_EVENT);
+
+   const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", "");
+   utf8_to_wchar(name, -1, m_name, MAX_EVENT_NAME);
+
+   m_severity = json_object_get_int32(const_cast<json_t*>(json), "severity", SEVERITY_NORMAL);
+   m_flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", EF_LOG);
+
+   const char *message = json_object_get_string_utf8(const_cast<json_t*>(json), "message", "");
+   m_messageTemplate = WideStringFromUTF8String(message);
+
+   const char *description = json_object_get_string_utf8(const_cast<json_t*>(json), "description", "");
+   m_description = WideStringFromUTF8String(description);
+
+   const char *tags = json_object_get_string_utf8(const_cast<json_t*>(json), "tags", "");
+   m_tags = WideStringFromUTF8String(tags);
 }
 
 /**
@@ -165,6 +194,43 @@ void EventTemplate::modifyFromMessage(const NXCPMessage& msg)
    m_description = msg.getFieldAsString(VID_DESCRIPTION);
    MemFree(m_tags);
    m_tags = msg.getFieldAsString(VID_TAGS);
+}
+
+/**
+ * Modify event template from JSON (only updates fields that are present in JSON)
+ */
+void EventTemplate::modifyFromJson(const json_t *json)
+{
+   const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+   if (name != nullptr)
+      utf8_to_wchar(name, -1, m_name, MAX_EVENT_NAME);
+
+   if (json_object_get(const_cast<json_t*>(json), "severity") != nullptr)
+      m_severity = json_object_get_int32(const_cast<json_t*>(json), "severity", m_severity);
+
+   if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
+      m_flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
+
+   const char *message = json_object_get_string_utf8(const_cast<json_t*>(json), "message", nullptr);
+   if (message != nullptr)
+   {
+      MemFree(m_messageTemplate);
+      m_messageTemplate = WideStringFromUTF8String(message);
+   }
+
+   const char *description = json_object_get_string_utf8(const_cast<json_t*>(json), "description", nullptr);
+   if (description != nullptr)
+   {
+      MemFree(m_description);
+      m_description = WideStringFromUTF8String(description);
+   }
+
+   const char *tags = json_object_get_string_utf8(const_cast<json_t*>(json), "tags", nullptr);
+   if (tags != nullptr)
+   {
+      MemFree(m_tags);
+      m_tags = WideStringFromUTF8String(tags);
+   }
 }
 
 /**
@@ -238,6 +304,7 @@ Event::Event()
    m_timestamp = 0;
    m_originTimestamp = 0;
 	m_customMessage = nullptr;
+   m_lastAlarmId = 0;
 	m_queueTime = 0;
 	m_queueBinding = nullptr;
 }
@@ -248,7 +315,7 @@ Event::Event()
 Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarmMessage(src.m_lastAlarmMessage)
 {
    m_id = src.m_id;
-   _tcscpy(m_name, src.m_name);
+   wcscpy(m_name, src.m_name);
    m_rootId = src.m_rootId;
    m_code = src.m_code;
    m_severity = src.m_severity;
@@ -263,6 +330,7 @@ Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarm
    m_originTimestamp = src.m_originTimestamp;
    m_tags.addAll(src.m_tags);
 	m_customMessage = MemCopyString(src.m_customMessage);
+   m_lastAlarmId = src.m_lastAlarmId;
    m_queueTime = src.m_queueTime;
    m_queueBinding = src.m_queueBinding;
    m_parameters.addAll(src.m_parameters);
@@ -288,38 +356,48 @@ Event *Event::createFromJson(json_t *json)
 
    json_int_t id, rootId, timestamp, originTimestamp;
    int origin;
+   uint32_t lastAlarmid = 0;
    const char *name = nullptr, *message = nullptr, *lastAlarmKey = nullptr, *lastAlarmMessage = nullptr;
    json_t *tags = nullptr;
-   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:s, s:o}",
+   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:s, s:i, s:o}",
             "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
             "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
             "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity,
             "message", &message, "lastAlarmKey", &lastAlarmKey, "lastAlarmMessage", &lastAlarmMessage,
+            "lastAlarmId", &lastAlarmid,
             (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
    {
-      if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:o}",
+      if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:s, s:o}",
                "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
                "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
                "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity,
-               "message", &message, "lastAlarmKey", &lastAlarmKey,
+               "message", &message, "lastAlarmKey", &lastAlarmKey, "lastAlarmMessage", &lastAlarmMessage,
                (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
       {
-         if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
+         if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:o}",
                   "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
                   "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
-                  "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
+                  "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity,
+                  "message", &message, "lastAlarmKey", &lastAlarmKey,
                   (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
          {
-            if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+            if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
                      "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
-                     "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
-                     "severity", &event->m_severity, "message", &message,
+                     "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
+                     "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
                      (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
             {
-               delete event;
-               return nullptr;   // Unpack failure
+               if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+                        "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
+                        "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
+                        "severity", &event->m_severity, "message", &message,
+                        (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
+               {
+                  delete event;
+                  return nullptr;   // Unpack failure
+               }
+               originTimestamp = timestamp;
             }
-            originTimestamp = timestamp;
          }
       }
    }
@@ -329,6 +407,7 @@ Event *Event::createFromJson(json_t *json)
    event->m_origin = static_cast<EventOrigin>(origin);
    event->m_timestamp = timestamp;
    event->m_originTimestamp = originTimestamp;
+   event->m_lastAlarmId = lastAlarmid;
    if (name != nullptr)
    {
       utf8_to_wchar(name, -1, event->m_name, MAX_EVENT_NAME);
@@ -554,6 +633,8 @@ void Event::prepareMessage(NXCPMessage *msg) const
 	msg->setField(fieldId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
 	   msg->setField(fieldId++, m_parameters.get(i));
+	for(int i = 0; i < m_parameterNames.size(); i++)
+	   msg->setField(fieldId++, m_parameterNames.get(i));
 	msg->setField(fieldId++, m_dciId);
 }
 
@@ -604,6 +685,7 @@ json_t *Event::toJson()
    json_object_set_new(root, "message", json_string_t(m_messageText));
    json_object_set_new(root, "lastAlarmKey", json_string_t(m_lastAlarmKey));
    json_object_set_new(root, "lastAlarmMessage", json_string_t(m_lastAlarmMessage));
+   json_object_set_new(root, "lastAlarmId", json_integer(m_lastAlarmId));
 
    if (!m_tags.isEmpty())
    {
@@ -723,12 +805,12 @@ bool InitEventSubsystem()
    // Create and initialize event processing policy
    if (success)
    {
-      g_pEventPolicy = new EventPolicy;
-      if (!g_pEventPolicy->loadFromDB())
+      s_eventProcessingPolicy = new EventProcessingPolicy();
+      if (!s_eventProcessingPolicy->loadFromDB())
       {
          success = FALSE;
          nxlog_write_tag(NXLOG_ERROR, _T("event.db"), _T("Error loading event processing policy from database"));
-         delete g_pEventPolicy;
+         delete s_eventProcessingPolicy;
       }
    }
 
@@ -740,7 +822,7 @@ bool InitEventSubsystem()
  */
 void ShutdownEventSubsystem()
 {
-   delete g_pEventPolicy;
+   delete s_eventProcessingPolicy;
 }
 
 /**
@@ -871,37 +953,28 @@ void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 }
 
 /**
- * Create export record for event template
+ * Create event template JSON export record
  */
-void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
+void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode)
 {
-   String strText, strDescr;
-
    s_eventTemplatesLock.readLock();
 
    // Find event template
    EventTemplate *e = s_eventTemplates.get(eventCode);
    if (e != nullptr)
    {
-      str.append(_T("\t\t<event id=\""));
-      str.append(e->getCode());
-      str.append(_T("\">\n\t\t\t<guid>"));
-      str.append(e->getGuid().toString());
-      str.append(_T("</guid>\n\t\t\t<name>"));
-      str.append(EscapeStringForXML2(e->getName()));
-      str.append(_T("</name>\n\t\t\t<code>"));
-      str.append(e->getCode());
-      str.append(_T("</code>\n\t\t\t<description>"));
-      str.append(EscapeStringForXML2(e->getDescription()));
-      str.append(_T("</description>\n\t\t\t<severity>"));
-      str.append(e->getSeverity());
-      str.append(_T("</severity>\n\t\t\t<flags>"));
-      str.append(e->getFlags());
-      str.append(_T("</flags>\n\t\t\t<message>"));
-      str.append(EscapeStringForXML2(e->getMessageTemplate()));
-      str.append(_T("</message>\n\t\t\t<tags>"));
-      str.append(EscapeStringForXML2(e->getTags()));
-      str.append(_T("</tags>\n\t\t</event>\n"));
+      json_t *eventObj = json_object();
+      
+      json_object_set_new(eventObj, "guid", json_string_t(e->getGuid().toString()));
+      json_object_set_new(eventObj, "name", json_string_t(e->getName()));
+      json_object_set_new(eventObj, "code", json_integer(e->getCode()));
+      json_object_set_new(eventObj, "description", json_string_t(e->getDescription()));
+      json_object_set_new(eventObj, "severity", json_integer(e->getSeverity()));
+      json_object_set_new(eventObj, "flags", json_integer(e->getFlags()));
+      json_object_set_new(eventObj, "message", json_string_t(e->getMessageTemplate()));
+      json_object_set_new(eventObj, "tags", json_string_t(e->getTags()));
+      
+      json_array_append_new(array, eventObj);
    }
 
    s_eventTemplatesLock.unlock();
@@ -910,7 +983,7 @@ void CreateEventTemplateExportRecord(TextFileWriter& str, uint32_t eventCode)
 /**
  * Resolve event name
  */
-bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
+bool NXCORE_EXPORTABLE EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
 {
    bool bRet = false;
 
@@ -934,7 +1007,7 @@ bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
 /**
  * Find event template by code - suitable for external call
  */
-shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByCode(uint32_t code)
 {
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventTemplates.getShared(code);
@@ -945,7 +1018,7 @@ shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code)
 /**
  * Find event template by name - suitable for external call
  */
-shared_ptr<EventTemplate> FindEventTemplateByName(const wchar_t *name)
+shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByName(const wchar_t *name)
 {
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> e = s_eventNameIndex.getShared(name);
@@ -1071,9 +1144,112 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
 }
 
 /**
+ * Create event template from JSON
+ */
+uint32_t NXCORE_EXPORTABLE CreateEventTemplateFromJson(const json_t *json, json_t **newValue)
+{
+   wchar_t name[MAX_EVENT_NAME] = L"";
+   const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "name", "");
+   utf8_to_wchar(nameUtf8, -1, name, MAX_EVENT_NAME);
+
+   if (!IsValidObjectName(name, TRUE))
+      return RCC_INVALID_OBJECT_NAME;
+
+   shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
+   if (et != nullptr)
+      return RCC_NAME_ALEARDY_EXISTS;
+
+   s_eventTemplatesLock.writeLock();
+
+   auto e = make_shared<EventTemplate>(json);
+   s_eventTemplates.set(e->getCode(), e);
+   s_eventNameIndex.set(e->getName(), e);
+
+   *newValue = e->toJson();
+   bool success = e->saveToDatabase();
+   if (success)
+   {
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+      e->fillMessage(&nmsg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+   }
+
+   s_eventTemplatesLock.unlock();
+
+   if (!success)
+   {
+      json_decref(*newValue);
+      *newValue = nullptr;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify event template from JSON
+ */
+uint32_t NXCORE_EXPORTABLE ModifyEventTemplateFromJson(uint32_t eventCode, const json_t *json, json_t **oldValue, json_t **newValue)
+{
+   const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+   if (nameUtf8 != nullptr)
+   {
+      wchar_t name[MAX_EVENT_NAME] = L"";
+      utf8_to_wchar(nameUtf8, -1, name, MAX_EVENT_NAME);
+
+      if (!IsValidObjectName(name, TRUE))
+         return RCC_INVALID_OBJECT_NAME;
+
+      shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
+      if ((et != nullptr) && (et->getCode() != eventCode))
+         return RCC_NAME_ALEARDY_EXISTS;
+   }
+
+   s_eventTemplatesLock.writeLock();
+
+   shared_ptr<EventTemplate> e = s_eventTemplates.getShared(eventCode);
+   if (e == nullptr)
+   {
+      s_eventTemplatesLock.unlock();
+      return RCC_INVALID_EVENT_CODE;
+   }
+
+   *oldValue = e->toJson();
+   s_eventNameIndex.remove(e->getName());
+   e->modifyFromJson(json);
+   s_eventNameIndex.set(e->getName(), e);
+
+   *newValue = e->toJson();
+   bool success = e->saveToDatabase();
+   if (success)
+   {
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+      e->fillMessage(&nmsg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+   }
+
+   s_eventTemplatesLock.unlock();
+
+   if (!success)
+   {
+      json_decref(*oldValue);
+      *oldValue = nullptr;
+      json_decref(*newValue);
+      *newValue = nullptr;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
  * Delete event template
  */
-uint32_t DeleteEventTemplate(uint32_t eventCode)
+uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode)
 {
    uint32_t rcc = RCC_SUCCESS;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1156,7 +1332,7 @@ unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode
       target->getEventReferences(eventCode, eventReferences);
    }
 
-   g_pEventPolicy->getEventReferences(eventCode, eventReferences);
+   s_eventProcessingPolicy->getEventReferences(eventCode, eventReferences);
    GetSNMPTrapsEventReferences(eventCode, eventReferences);
    GetSyslogEventReferences(eventCode, eventReferences);
    GetWindowsEventLogEventReferences(eventCode, eventReferences);

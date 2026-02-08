@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -45,7 +45,6 @@ LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend) = false;
  */
 bool LIBNETXMS_EXPORTABLE InitializeLibCURL()
 {
-#if HAVE_LIBCURL
    static VolatileCounter reentryGuarg = 0;
 
 retry:
@@ -92,9 +91,6 @@ retry:
 
    s_curlInitialized = 1;
    return true;
-#else
-   return false;
-#endif
 }
 
 /**
@@ -102,10 +98,8 @@ retry:
  */
 void LibCURLCleanup()
 {
-#if HAVE_LIBCURL
    if (s_curlInitialized > 0)
       curl_global_cleanup();
-#endif
 }
 
 /**

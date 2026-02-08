@@ -39,6 +39,27 @@
     <ClCompile Include="agent_policy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ai_core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_messages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_provider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_provider_ollama.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_provider_openai.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_remote.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ai_tasks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="alarm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -216,9 +237,6 @@
     <ClCompile Include="lln.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="locks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="logfilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -292,9 +310,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="np.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="npe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nxsl_classes.cpp">
@@ -525,6 +540,36 @@
     <ClCompile Include="devbackup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="webapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="webapi_auth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="webapi_context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="webapi_router.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skills.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="incident.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="import_legacy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="anomaly_profile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sc_migration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
@@ -576,9 +621,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_events.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\nms_locks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_objects.h">
@@ -651,6 +693,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\agent_tunnel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ai_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\asset_management.h">

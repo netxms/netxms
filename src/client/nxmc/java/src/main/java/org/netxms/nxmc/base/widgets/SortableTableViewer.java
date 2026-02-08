@@ -167,6 +167,18 @@ public class SortableTableViewer extends TableViewer
 	{
 		return initialized;
 	}
+
+   /**
+    * Reset viewer to uninitialized state
+    */
+   public void reset()
+   {
+      initialized = false;
+      columns.clear();
+      getTable().removeAll();
+      for(TableColumn c : getTable().getColumns())
+         c.dispose();
+   }
 	
 	/**
 	 * Disable sorting

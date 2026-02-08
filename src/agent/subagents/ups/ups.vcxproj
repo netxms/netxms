@@ -42,7 +42,7 @@
     <ProjectGuid>{53A73D5F-C7E2-449E-A222-F2D78C85D514}</ProjectGuid>
     <RootNamespace>ups</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -378,6 +378,7 @@
     <ClCompile Include="bcmxcp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="megatec.cpp" />
+    <ClCompile Include="mec0003.cpp" />
     <ClCompile Include="metasys.cpp" />
     <ClCompile Include="microdowell.cpp" />
     <ClCompile Include="serial.cpp" />

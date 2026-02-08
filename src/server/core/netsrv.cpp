@@ -60,7 +60,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
    m_responseTime = 0;
-   m_isHidden = true;
+   m_isUnpublished = true;
    setCreationTime();
 }
 

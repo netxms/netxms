@@ -148,7 +148,7 @@ public final class BrandingManager
          if (image != null)
             return image;
       }
-      return ResourceManager.getImageDescriptor("icons/app_logo.png");
+      return ResourceManager.getImageDescriptor("icons/app-logo.png");
    }
 
    /**
@@ -226,6 +226,22 @@ public final class BrandingManager
       for(BrandingProvider p : providers)
       {
          Boolean enabled = p.isExtendedHelpMenuEnabled();
+         if (enabled != null)
+            return enabled;
+      }
+      return true;
+   }
+
+   /**
+    * Control if welcome page is enabled.
+    *
+    * @return true if welcome page is enabled
+    */
+   public static boolean isWelcomePageEnabled()
+   {
+      for(BrandingProvider p : providers)
+      {
+         Boolean enabled = p.isWelcomePageEnabled();
          if (enabled != null)
             return enabled;
       }

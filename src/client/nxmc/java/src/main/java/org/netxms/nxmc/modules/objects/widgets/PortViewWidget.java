@@ -144,7 +144,11 @@ public class PortViewWidget extends DashboardComposite
 			public int compare(Interface i1, Interface i2)
 			{
 				if (i1.getModule() == i2.getModule())
-					return i1.getPort() - i2.getPort();
+            {
+               if (i1.getPIC() == i2.getPIC())
+                  return i1.getPort() - i2.getPort();
+               return i1.getPIC() - i2.getPIC();
+            }
 				return i1.getModule() - i2.getModule();
 			}
 		});

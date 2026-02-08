@@ -38,34 +38,8 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal called for \"%s\" \"%s\""), param, arg);
 
    // Substitute $1 .. $9 with actual arguments
-   StringBuffer cmdLine;
-   cmdLine.setAllocationStep(1024);
+   StringBuffer cmdLine = SubstituteCommandArguments(arg, param);
 
-   for (const TCHAR *sptr = arg; *sptr != 0; sptr++)
-   {
-      if (*sptr == _T('$'))
-      {
-         sptr++;
-         if (*sptr == 0)
-            break;   // Single $ character at the end of line
-         if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
-         {
-            TCHAR buffer[1024];
-            if (AgentGetParameterArg(param, *sptr - '0', buffer, 1024))
-            {
-               cmdLine.append(buffer);
-            }
-         }
-         else
-         {
-            cmdLine.append(*sptr);
-         }
-      }
-      else
-      {
-         cmdLine.append(*sptr);
-      }
-   }
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: command line is \"%s\""), cmdLine.cstr());
 
    LineOutputProcessExecutor executor(cmdLine);
@@ -139,7 +113,7 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 void ParseExternalTableData(const ExternalTableDefinition& td, const StringList& data, Table *table)
 {
    int numColumns = 0;
-   TCHAR **columns = SplitString(data.get(0), td.separator, &numColumns);
+   TCHAR **columns = SplitString(data.get(0), td.separator, &numColumns, td.mergeSeparators);
    for(int n = 0; n < numColumns; n++)
    {
       bool instanceColumn = false;
@@ -149,7 +123,7 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
             instanceColumn = true;
             break;
          }
-      int dataType = td.columnDataTypes.getInt32(columns[n], DCI_DT_INT);
+      int dataType = td.columnDataTypes.getInt32(columns[n], td.defaultColumnDataType);
       table->addColumn(columns[n], dataType, columns[n], instanceColumn);
       MemFree(columns[n]);
    }
@@ -159,7 +133,7 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
    {
       table->addRow();
       int count = 0;
-      TCHAR **values = SplitString(data.get(i), td.separator, &count);
+      TCHAR **values = SplitString(data.get(i), td.separator, &count, td.mergeSeparators);
       for(int n = 0; n < count; n++)
       {
          if (n < numColumns)
@@ -177,7 +151,8 @@ void ParseExternalTableData(const ExternalTableDefinition& td, const StringList&
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    const ExternalTableDefinition *td = reinterpret_cast<const ExternalTableDefinition*>(arg);
-   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mode=%c cmd=\"%s\""), cmd, td->separator, td->cmdLine[0], &td->cmdLine[1]);
+   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mergeSeparators=%s mode=%c cmd=\"%s\""),
+      cmd, td->separator, BooleanToString(td->mergeSeparators), td->cmdLine[0], &td->cmdLine[1]);
    StringList output;
    LONG status = RunExternal(cmd, td->cmdLine, &output);
    if (status == SYSINFO_RC_SUCCESS)

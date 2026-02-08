@@ -49,32 +49,76 @@ bool MacAddress::isBroadcast() const
 }
 
 /**
- * Returns string representation of MAC address
+ * Returns string representation of MAC address (ASCII)
  */
-TCHAR *MacAddress::toString(TCHAR *buffer, MacAddressNotation notation) const
+char *MacAddress::toStringA(char *buffer, MacAddressNotation notation) const
 {
+   if (m_length == 0)
+   {
+      *buffer = 0;
+      return buffer;
+   }
+
    switch(notation)
    {
       case MacAddressNotation::FLAT_STRING:
-         BinToStr(m_value, m_length, buffer);
+         BinToStrA(m_value, m_length, buffer);
          break;
       case MacAddressNotation::COLON_SEPARATED:
-         toStringInternal(buffer, _T(':'));
+         toStringInternalA(buffer, ':');
          break;
       case MacAddressNotation::BYTEPAIR_COLON_SEPARATED:
-         toStringInternal(buffer, _T(':'), true);
+         toStringInternalA(buffer, ':', true);
          break;
       case MacAddressNotation::HYPHEN_SEPARATED:
-         toStringInternal(buffer, _T('-'));
+         toStringInternalA(buffer, '-');
          break;
       case MacAddressNotation::DOT_SEPARATED:
-         toStringInternal3(buffer, _T('.'));
+         toStringInternal3A(buffer, '.');
          break;
       case MacAddressNotation::BYTEPAIR_DOT_SEPARATED:
-         toStringInternal(buffer, _T('.'), true);
+         toStringInternalA(buffer, '.', true);
          break;
       case MacAddressNotation::DECIMAL_DOT_SEPARATED:
-         toStringInternalDecimal(buffer, _T('.'));
+         toStringInternalDecimalA(buffer, '.');
+         break;
+   }
+   return buffer;
+}
+
+/**
+ * Returns string representation of MAC address (wide char)
+ */
+wchar_t *MacAddress::toStringW(wchar_t *buffer, MacAddressNotation notation) const
+{
+   if (m_length == 0)
+   {
+      *buffer = 0;
+      return buffer;
+   }
+
+   switch(notation)
+   {
+      case MacAddressNotation::FLAT_STRING:
+         BinToStrW(m_value, m_length, buffer);
+         break;
+      case MacAddressNotation::COLON_SEPARATED:
+         toStringInternalW(buffer, L':');
+         break;
+      case MacAddressNotation::BYTEPAIR_COLON_SEPARATED:
+         toStringInternalW(buffer, L':', true);
+         break;
+      case MacAddressNotation::HYPHEN_SEPARATED:
+         toStringInternalW(buffer, L'-');
+         break;
+      case MacAddressNotation::DOT_SEPARATED:
+         toStringInternal3W(buffer, L'.');
+         break;
+      case MacAddressNotation::BYTEPAIR_DOT_SEPARATED:
+         toStringInternalW(buffer, L'.', true);
+         break;
+      case MacAddressNotation::DECIMAL_DOT_SEPARATED:
+         toStringInternalDecimalW(buffer, L'.');
          break;
    }
    return buffer;
@@ -88,22 +132,16 @@ String MacAddress::toString(MacAddressNotation notation) const
    if (m_length == 0)
       return String();
 
-   TCHAR buffer[64]; // max_length(16) * 4
+   TCHAR buffer[32]; // max_length(8) * 4
    return String(toString(buffer, notation));
 }
 
 /**
- * Internal method to string for inserting separator every third char
+ * Returns string representation of MAC address for inserting separator every third char (wide char)
  */
-TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
+wchar_t *MacAddress::toStringInternal3W(wchar_t *buffer, wchar_t separator) const
 {
-   if (m_length == 0)
-   {
-      *buffer = 0;
-      return buffer;
-   }
-
-   TCHAR *curr = buffer;
+   wchar_t *curr = buffer;
    for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
@@ -118,22 +156,18 @@ TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
 }
 
 /**
- * Internal method to string
+ * Returns string representation of MAC address for inserting separator every third char (ASCII)
  */
-TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair) const
+char *MacAddress::toStringInternal3A(char *buffer, char separator) const
 {
-   if (m_length == 0)
-   {
-      *buffer = 0;
-      return buffer;
-   }
-
-   TCHAR *curr = buffer;
+   char *curr = buffer;
    for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
+      if (((curr+1) - buffer) % 4 == 0)
+         *curr++ = separator;
       *curr++ = bin2hex(m_value[i] & 15);
-      if (!bytePair || (((i+1) % 2 == 0)))
+      if (((curr+1) - buffer) % 4 == 0)
          *curr++ = separator;
    }
    *(curr - 1) = 0;
@@ -141,17 +175,67 @@ TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool b
 }
 
 /**
- * Internal method to string
+ * Returns string representation of MAC address (wide char)
  */
-TCHAR *MacAddress::toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const
+wchar_t *MacAddress::toStringInternalW(wchar_t *buffer, wchar_t separator, bool bytePair) const
 {
-   TCHAR *curr = buffer;
+   wchar_t *curr = buffer;
+   for(size_t i = 0; i < m_length; i++)
+   {
+      *curr++ = bin2hex(m_value[i] >> 4);
+      *curr++ = bin2hex(m_value[i] & 15);
+      if (!bytePair || (((i + 1) % 2 == 0)))
+         *curr++ = separator;
+   }
+   *(curr - 1) = 0;
+   return buffer;
+}
+
+/**
+ * Returns string representation of MAC address (ASCII)
+ */
+char *MacAddress::toStringInternalA(char *buffer, char separator, bool bytePair) const
+{
+   char *curr = buffer;
+   for(size_t i = 0; i < m_length; i++)
+   {
+      *curr++ = bin2hex(m_value[i] >> 4);
+      *curr++ = bin2hex(m_value[i] & 15);
+      if (!bytePair || (((i + 1) % 2 == 0)))
+         *curr++ = separator;
+   }
+   *(curr - 1) = 0;
+   return buffer;
+}
+
+/**
+ * Returns string representation of MAC address in decimal format (wide char)
+ */
+wchar_t *MacAddress::toStringInternalDecimalW(wchar_t *buffer, wchar_t separator) const
+{
+   wchar_t *curr = buffer;
    for(size_t i = 0; i < m_length; i++)
    {
       if (i > 0)
          *curr++ = separator;
-      _sntprintf(curr, 4, _T("%u"), static_cast<unsigned int>(m_value[i]));
-      curr += _tcslen(curr);
+      IntegerToString(m_value[i], curr);
+      curr += wcslen(curr);
+   }
+   return buffer;
+}
+
+/**
+ * Returns string representation of MAC address in decimal format (ASCII)
+ */
+char *MacAddress::toStringInternalDecimalA(char *buffer, char separator) const
+{
+   char *curr = buffer;
+   for(size_t i = 0; i < m_length; i++)
+   {
+      if (i > 0)
+         *curr++ = separator;
+      IntegerToString(m_value[i], curr);
+      curr += strlen(curr);
    }
    return buffer;
 }
@@ -222,9 +306,9 @@ MacAddress MacAddress::parse(const char *str, bool partialMac)
 }
 
 /**
- * Parse string as MAC address (WCHAR version)
+ * Parse string as MAC address (wide char version)
  */
-MacAddress MacAddress::parse(const WCHAR *str, bool partialMac)
+MacAddress MacAddress::parse(const wchar_t *str, bool partialMac)
 {
    char mb[256];
    wchar_to_mb(str, -1, mb, 256);

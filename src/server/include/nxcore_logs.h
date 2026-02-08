@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #ifndef _nxcore_logs_h_
 #define _nxcore_logs_h_
+
+#include <functional>
 
 #define MAX_COLUMN_NAME_LEN    64
 
@@ -46,6 +48,7 @@
 #define LC_ATM_TXN_CODE       15
 #define LC_ASSET_OPERATION    16
 #define LC_DEPLOYMENT_STATUS  17
+#define LC_AI_TASK_STATUS     18
 
 /**
  * Column filter types
@@ -93,6 +96,7 @@ struct NXCORE_LOG
 	const wchar_t *idColumn;
 	const wchar_t *relatedObjectIdColumn;
 	uint64_t requiredAccess;
+	const char *aiDescription;    // AI context description (UTF-8)
 	LOG_COLUMN columns[32];
 };
 
@@ -205,6 +209,7 @@ public:
    void release() { m_mutex.unlock(); }
 
    bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
+   StringBuffer buildQuerySql(LogFilter *filter, int64_t maxRecordId, uint32_t userId);
    Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
    void getRecordDetails(int64_t recordId, NXCPMessage *msg);
    void getColumnInfo(NXCPMessage *msg);
@@ -216,5 +221,7 @@ int32_t OpenLog(const wchar_t *name, ClientSession *session, uint32_t *rcc);
 uint32_t CloseLog(ClientSession *session, int32_t logHandle);
 void CloseAllLogsForSession(session_id_t sessionId);
 shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
+const NXCORE_LOG NXCORE_EXPORTABLE *FindLogDefinition(const wchar_t *name);
+void NXCORE_EXPORTABLE EnumerateLogDefinitions(std::function<void(const NXCORE_LOG*)> callback);
 
 #endif

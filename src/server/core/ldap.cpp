@@ -1002,11 +1002,11 @@ uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const wchar_t *passw
    open();
    uint32_t result;
 #ifdef _WIN32
-   wcslcpy(m_userDN, name, MAX_CONFIG_VALUE);
+   wcslcpy(m_userDN, name, MAX_CONFIG_VALUE_LENGTH);
    wcslcpy(m_userPassword, password, MAX_PASSWORD);
 #else
-   wchar_to_utf8(name, -1, m_userDN, MAX_CONFIG_VALUE);
-   m_userDN[MAX_CONFIG_VALUE - 1] = 0;
+   wchar_to_utf8(name, -1, m_userDN, MAX_CONFIG_VALUE_LENGTH);
+   m_userDN[MAX_CONFIG_VALUE_LENGTH - 1] = 0;
    wchar_to_utf8(password, -1, m_userPassword, MAX_PASSWORD);
    m_userPassword[MAX_PASSWORD - 1] = 0;
 #endif
@@ -1129,14 +1129,14 @@ LDAPConnection::LDAPConnection()
    m_groupDnEntryList = nullptr;
 
    TCHAR tmpPwd[MAX_PASSWORD];
-   TCHAR tmpLogin[MAX_CONFIG_VALUE];
+   TCHAR tmpLogin[MAX_CONFIG_VALUE_LENGTH];
    ConfigReadStr(_T("LDAP.SyncUserPassword"), tmpPwd, MAX_PASSWORD, _T(""));
-   ConfigReadStr(_T("LDAP.SyncUser"), tmpLogin, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LDAP.SyncUser"), tmpLogin, MAX_CONFIG_VALUE_LENGTH, _T(""));
    DecryptPassword(tmpLogin, tmpPwd, tmpPwd, MAX_PASSWORD);
-   LdapConfigRead(_T("LDAP.ConnectionString"), m_connList, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LDAP.SyncUser"), m_userDN, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LDAP.SearchBase"), m_searchBase, MAX_CONFIG_VALUE, _TLDAP(""));
-   LdapConfigRead(_T("LDAP.SearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _TLDAP("(objectClass=*)"));
+   LdapConfigRead(_T("LDAP.ConnectionString"), m_connList, MAX_CONFIG_VALUE_LENGTH, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SyncUser"), m_userDN, MAX_CONFIG_VALUE_LENGTH, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SearchBase"), m_searchBase, MAX_CONFIG_VALUE_LENGTH, _TLDAP(""));
+   LdapConfigRead(_T("LDAP.SearchFilter"), m_searchFilter, MAX_CONFIG_VALUE_LENGTH, _TLDAP("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
       ldap_strcpy(m_searchFilter, _TLDAP("(objectClass=*)"));
 #ifdef _WIN32

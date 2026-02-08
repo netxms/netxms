@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxms-regex.h>
 #include <nms_users.h>
+#include <nxai.h>
 
 #define DEBUG_TAG L"alarm"
 
@@ -383,7 +384,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
          const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(16, 16), m_alarmCategoryList(alarmCategoryList)
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(0, 64), m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -609,6 +610,19 @@ void Alarm::removeSubordinateAlarm(uint32_t alarmId)
 }
 
 /**
+ * Get list of related event identifiers as NXSL array
+ */
+NXSL_Value *Alarm::relatedEventsToNXSLArray(NXSL_VM *vm) const
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   for(int i = 0; i < m_relatedEvents.size(); i++)
+   {
+      a->append(vm->createValue(m_relatedEvents.get(i)));
+   }
+   return vm->createValue(a);
+}
+
+/**
  * Convert alarm category list to string
  */
 StringBuffer Alarm::categoryListToString()
@@ -626,7 +640,7 @@ StringBuffer Alarm::categoryListToString()
 /**
  * Convert alarm category list to NXSL array
  */
-NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm)
+NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm) const
 {
    NXSL_Array *a = new NXSL_Array(vm);
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
@@ -892,6 +906,38 @@ json_t *Alarm::toJson() const
 }
 
 /**
+ * Get AI assistant comment for alarm
+ */
+String Alarm::requestAIAssistantComment(GenericClientSession *session) const
+{
+   shared_ptr<NetObj> object = FindObjectById(m_sourceObject);
+   if (object == nullptr)
+      return String();
+
+   StringBuffer prompt(L"Analyze the following alarm and provide a concise comment that could help a network administrator to understand and resolve the issue. ");
+   prompt.append(L"Do not include any disclaimers or apologies in your response. ");
+   prompt.append(L"If the alarm message does not provide enough information to make a meaningful comment, simply state that. ");
+   prompt.append(L"Do not include alarm message in your response. ");
+   prompt.append(L"Use additional tools and data sources if needed to enrich your analysis.\n");
+   prompt.append(L"Here is the alarm information:\n");
+   prompt.append(L"Source object name: ").append(object->getName()).append("\n");
+   prompt.append(L"Source object ID: ").append(object->getId()).append("\n");
+   prompt.append(L"Severity: ").append(AlarmSeverityTextFromCode(m_currentSeverity)).append(L"\n");
+   prompt.append(L"Message: ").append(m_message).append(L"\n");
+   prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");
+   char *promptUtf8 = UTF8StringFromWideString(prompt);
+   // Use "fast" slot for quick alarm explanations
+   char *response = QueryAIAssistantWithSlot(promptUtf8, object.get(), "fast");
+   MemFree(promptUtf8);
+   if (response == nullptr)
+      return String();
+   StringBuffer result;
+   result.appendUtf8String(response);
+   MemFree(response);
+   return result.trim();
+}
+
+/**
  * Fill NXCP message with event data from SQL query
  * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
  */
@@ -1075,11 +1121,48 @@ void Alarm::updateParentAlarm(uint32_t parentAlarmId)
 }
 
 /**
+ * Add AI assistant comment to alarm
+ */
+static void AddAIAssistantComment(uint32_t alarmId)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: requesting AI assistant comment for alarm %u"), alarmId);
+
+   Alarm *alarm = FindAlarmById(alarmId);
+   if (alarm == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: alarm %u not found"), alarmId);
+      return;
+   }
+
+   String comment = alarm->requestAIAssistantComment();
+   if (!comment.isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: adding AI assistant comment to alarm %u (message=\"%s\")"), alarmId, alarm->getMessage());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: AI assistant comment: %s"), comment.cstr());
+      s_alarmList.lock();
+      Alarm *alarm = s_alarmList.find(alarmId);
+      if (alarm != nullptr)
+      {
+         uint32_t commentId;
+         alarm->updateAlarmComment(&commentId, comment, 0, true);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("AddAIAssistantComment: alarm %u not found in active alarm list"), alarmId);
+      }
+      s_alarmList.unlock();
+   }
+
+   // FindAlarmById creates a copy of the alarm, so we need to delete it here
+   delete alarm;
+}
+
+/**
  * Create new alarm
  */
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue)
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment)
 {
    uint32_t alarmId = 0;
    bool newAlarm = true;
@@ -1154,6 +1237,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, parent);
          }
       }
+
       if (event->getDciId() != 0)
       {
          shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
@@ -1170,6 +1254,15 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
                }
             }
          }
+      }
+
+      if (addAiComment)
+      {
+         ThreadPoolExecute(g_mainThreadPool,
+            [alarmId] () -> void
+            {
+               AddAIAssistantComment(alarmId);
+            });
       }
 
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
@@ -1835,7 +1928,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
  */
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 {
-   IntegerArray<uint32_t> deleteList(0, 128);
+   IntegerArray<uint32_t> deleteList;
 
 	s_alarmList.lock();
 	s_alarmList.forEach(

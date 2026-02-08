@@ -23,7 +23,7 @@
 #include "winnt_subagent.h"
 #include <winternl.h>
 
-static int s_cpuCount = 0;
+static uint32_t s_cpuCount = 0;
 static SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *s_cpuTimes = nullptr;
 static uint32_t *s_usage = nullptr;
 static uint32_t *s_idle = nullptr;
@@ -33,6 +33,18 @@ static uint32_t *s_interrupt = nullptr;
 static uint32_t *s_interruptCount = nullptr;
 static int s_bpos = 0;
 static win_mutex_t s_lock;
+
+/**
+ * Get total number of logical processors in the system
+ */
+static uint32_t GetTotalProcessorCount()
+{
+   uint32_t totalProcessors = 0;
+   WORD numGroups = GetActiveProcessorGroupCount();
+   for (WORD group = 0; group < numGroups; ++group)
+      totalProcessors += GetActiveProcessorCount(group);
+   return totalProcessors;
+}
 
 /**
  * CPU collector thread
@@ -154,9 +166,7 @@ static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
  */
 void StartCPUStatCollector()
 {
-   SYSTEM_INFO si;
-   GetSystemInfo(&si);
-   s_cpuCount = (int)si.dwNumberOfProcessors;
+   s_cpuCount = GetTotalProcessorCount();
    s_cpuTimes = MemAllocArray<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>(s_cpuCount * 2);
    s_usage = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
    s_idle = MemAllocArray<uint32_t>(900 * (s_cpuCount + 1));
@@ -309,8 +319,6 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
 */
 LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   SYSTEM_INFO sysInfo;
-   GetSystemInfo(&sysInfo);
-   ret_uint(value, sysInfo.dwNumberOfProcessors);
+   ret_uint(value, GetTotalProcessorCount());
    return SYSINFO_RC_SUCCESS;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,12 +28,36 @@
 #include <netxms_maps.h>
 #include <asset_management.h>
 #include <nms_users.h>
+#include <nms_pkg.h>
+#include <nxai.h>
 
 /**
  * Maintenance journal access
  */
 bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR *description);
 NXSL_Value *ReadMaintenanceJournal(const shared_ptr<NetObj>& object, NXSL_VM *vm, time_t startTime, time_t endTime);
+
+/**
+ * SSH session handle for NXSL
+ */
+struct SSHSessionData
+{
+   shared_ptr<SSHInteractiveChannel> channel;
+   uint32_t nodeId;
+
+   SSHSessionData(const shared_ptr<SSHInteractiveChannel>& ch, uint32_t node) : channel(ch)
+   {
+      nodeId = node;
+   }
+
+   ~SSHSessionData()
+   {
+      if (channel != nullptr && channel->isConnected())
+      {
+         channel->close();
+      }
+   }
+};
 
 /**
  * Safely get pointer from object data
@@ -701,7 +725,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
             (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
@@ -802,7 +826,11 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
 
    NXSL_VM *vm = _object->vm();
    auto object = SharedObjectFromData<NetObj>(_object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("alarms"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("aiHint"))
+   {
+      value = vm->createValue(object->getAIHint());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("alarms"))
    {
       ObjectArray<Alarm> *alarms = GetAlarms(object->getId(), true);
       alarms->setOwner(Ownership::False);
@@ -1507,6 +1535,10 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       data = MemCopyString(argv[0]->getValueAsCString());
    }
+   else if (argv[0]->isNull())
+   {
+      data = MemCopyStringW(websvc->first->getRequestData());
+   }
    else
    {
       return NXSL_ERR_NOT_STRING;
@@ -1552,8 +1584,8 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
    {
       acceptCached = false;
    }
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
+   WebServiceCallResult response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType, acceptCached);
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, new WebServiceCallResult(std::move(response))));
    MemFree(data);
 
    return 0;
@@ -1584,10 +1616,40 @@ static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, 
       acceptCached = false;
    }
 
-   WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr, acceptCached);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
+   WebServiceCallResult response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr, acceptCached);
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, new WebServiceCallResult(std::move(response))));
 
    return 0;
+}
+
+static inline bool HttpRequestMethodFromString(const wchar_t *s, HttpRequestMethod *value)
+{
+   if (!_tcsicmp(s, _T("GET")))
+   {
+      *value = HttpRequestMethod::_GET;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("POST")))
+   {
+      *value = HttpRequestMethod::_POST;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("PUT")))
+   {
+      *value = HttpRequestMethod::_PUT;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("DELETE")))
+   {
+      *value = HttpRequestMethod::_DELETE;
+      return true;
+   }
+   else if (!_tcsicmp(s, _T("PATCH")))
+   {
+      *value = HttpRequestMethod::_PATCH;
+      return true;
+   }
+   return false;
 }
 
 /**
@@ -1595,13 +1657,13 @@ static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, 
  */
 NXSL_METHOD_DEFINITION(Node, callWebService)
 {
-   if (argc < 2)
+   if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc > 0) && !argv[0]->isString())
+   if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   if ((argc > 1) && !argv[1]->isString())
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<WebServiceDefinition> d = FindWebServiceDefinition(argv[0]->getValueAsCString());
@@ -1610,38 +1672,31 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
    if (d == nullptr)
    {
       WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-      _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEBSVC_ERROR_TEXT_MAX_SIZE);
+      wcslcpy(webSwcResult->errorMessage, L"Web service definition not found", WEBSVC_ERROR_TEXT_MAX_SIZE);
       *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
       return 0;
    }
 
    WebServiceHandle websvc = WebServiceHandle(d, *node);
-   const TCHAR *requestMethod = argv[1]->getValueAsCString();
-   if (!_tcsicmp(_T("GET"), requestMethod))
+   HttpRequestMethod method = d->getHttpRequestMethod();
+   int argOffset = 1;
+   if (argc > 1)
    {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_GET);
-   }
-   else if (!_tcsicmp(_T("DELETE"), requestMethod))
-   {
-      return BaseWebServiceRequestWithoutData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_DELETE);
-   }
-   else if (!_tcsicmp(_T("POST"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_POST);
-   }
-   else if (!_tcsicmp(_T("PUT"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PUT);
-   }
-   else if (!_tcsicmp(_T("PATCH"), requestMethod))
-   {
-      return BaseWebServiceRequestWithData(&websvc, argc - 2, argv  + 2, result, vm, HttpRequestMethod::_PATCH);
+      if (argv[1]->isString() && !HttpRequestMethodFromString(argv[1]->getValueAsCString(), &method))
+      {
+         WebServiceCallResult *webSwcResult = new WebServiceCallResult();
+         wcslcpy(webSwcResult->errorMessage, L"Invalid web service request method", WEBSVC_ERROR_TEXT_MAX_SIZE);
+         *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
+         return 0;
+      }
+      argOffset = 2;
    }
 
-   WebServiceCallResult *webSwcResult = new WebServiceCallResult();
-   _tcslcpy(webSwcResult->errorMessage, _T("Invalid web service request method"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
-   return 0;
+   if (method == HttpRequestMethod::_GET || method == HttpRequestMethod::_DELETE)
+   {
+      return BaseWebServiceRequestWithoutData(&websvc, argc - argOffset, &argv[argOffset], result, vm, method);
+   }
+   return BaseWebServiceRequestWithData(&websvc, argc - argOffset, &argv[argOffset], result, vm, method);
 }
 
 /**
@@ -1806,10 +1861,12 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
       for(int i = 1; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
-         if (event == ACE_DATA)
-            static_cast<StringBuffer*>(context)->append(text);
-      }, &output);
+      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list, true,
+         [] (ActionCallbackEvent event, const void *text, void *context) -> void
+         {
+            if (event == ACE_DATA)
+               static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
+         }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
@@ -1864,6 +1921,37 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
    {
       *result = vm->createValue();
    }
+   return 0;
+}
+
+/**
+ * Node::getInstalledPackages(filter, useRegex) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInstalledPackages)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   const wchar_t *filter = nullptr;
+   bool useRegex = false;
+
+   if (argc >= 1)
+   {
+      if (!argv[0]->isNull())
+      {
+         if (!argv[0]->isString())
+            return NXSL_ERR_NOT_STRING;
+         filter = argv[0]->getValueAsCString();
+      }
+   }
+
+   if (argc >= 2)
+   {
+      useRegex = argv[1]->isTrue();
+   }
+
+   auto node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   *result = node->getInstalledPackagesForNXSL(vm, filter, useRegex);
    return 0;
 }
 
@@ -1965,6 +2053,67 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
    {
       *result = vm->createValue(vm->createObject(&g_nxslWebServiceClass, new WebServiceHandle(d, *node)));
    }
+   return 0;
+}
+
+/**
+ * Node::openSSHSession([user], [password], [keyId]) method
+ */
+NXSL_METHOD_DEFINITION(Node, openSSHSession)
+{
+   if (argc > 3)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+
+   const wchar_t *login = nullptr, *password = nullptr;
+   uint32_t keyId = 0;
+   if (argc >= 1)
+   {
+      if (!argv[0]->isString())
+         return NXSL_ERR_NOT_STRING;
+      login = argv[0]->getValueAsCString();
+
+      if (argc >= 2)
+      {
+         if (!argv[1]->isString())
+            return NXSL_ERR_NOT_STRING;
+         password = argv[1]->getValueAsCString();
+
+         if (argc >= 3)
+         {
+            if (!argv[2]->isInteger())
+               return NXSL_ERR_NOT_INTEGER;
+            keyId = argv[2]->getValueAsUInt32();
+         }
+      }
+   }
+
+   shared_ptr<SSHInteractiveChannel> channel = node->openInteractiveSSHChannel(login, password, keyId);
+   if (channel == nullptr)
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: cannot open SSH channel to %s [%u]", node->getName(), node->getId());
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Wait for initial prompt
+   if (!channel->waitForInitialPrompt())
+   {
+      nxlog_debug_tag(L"nxsl.ssh", 5, L"openSSHSession: timeout waiting for initial prompt from %s [%u]", node->getName(), node->getId());
+      channel->close();
+      *result = vm->createValue();
+      return 0;
+   }
+
+   // Disable pagination
+   channel->disablePagination();
+
+   nxlog_debug_tag(L"nxsl.ssh", 5, L"SSH session opened to %s [%u], channel %u", node->getName(), node->getId(), channel->getChannelId());
+
+   // Create NXSL object
+   SSHSessionData *sessionData = new SSHSessionData(channel, node->getId());
+   *result = vm->createValue(vm->createObject(&g_nxslSSHSessionClass, sessionData));
    return 0;
 }
 
@@ -2115,6 +2264,88 @@ NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
 }
 
 /**
+ * Node::setPollCountForStatusChange(count) method
+ */
+NXSL_METHOD_DEFINITION(Node, setPollCountForStatusChange)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   int count = argv[0]->getValueAsInt32();
+   if (count >= 0)
+      static_cast<shared_ptr<Node>*>(object->getData())->get()->setRequiredPollCount(count);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::isPortBlocked(port, protocol) method
+ */
+NXSL_METHOD_DEFINITION(Node, isPortBlocked)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int port = argv[0]->getValueAsInt32();
+   if ((port < 1) || (port > 65535))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
+   const TCHAR *protocol = argv[1]->getValueAsCString();
+   bool tcp;
+   if (!_tcsicmp(protocol, _T("tcp")))
+      tcp = true;
+   else if (!_tcsicmp(protocol, _T("udp")))
+      tcp = false;
+   else
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   *result = vm->createValue(node->isPortBlocked(static_cast<uint16_t>(port), tcp));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Node::getBlockedPorts(protocol) method
+ */
+NXSL_METHOD_DEFINITION(Node, getBlockedPorts)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *protocol = argv[0]->getValueAsCString();
+   bool tcp;
+   if (!_tcsicmp(protocol, _T("tcp")))
+      tcp = true;
+   else if (!_tcsicmp(protocol, _T("udp")))
+      tcp = false;
+   else
+   {
+      *result = vm->createValue(new NXSL_Array(vm));
+      return NXSL_ERR_SUCCESS;
+   }
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   IntegerArray<uint16_t> tcpPorts, udpPorts;
+   node->getEffectivePortStopList(&tcpPorts, &udpPorts);
+
+   NXSL_Array *array = new NXSL_Array(vm);
+   IntegerArray<uint16_t> *ports = tcp ? &tcpPorts : &udpPorts;
+   for(int i = 0; i < ports->size(); i++)
+      array->append(vm->createValue(ports->get(i)));
+
+   *result = vm->createValue(array);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
@@ -2140,12 +2371,16 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
+   NXSL_REGISTER_METHOD(Node, openSSHSession, -1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByMACAddress, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByName, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
+   NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
+   NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
    NXSL_REGISTER_METHOD(Node, getWebService, 1);
+   NXSL_REGISTER_METHOD(Node, isPortBlocked, 2);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
    NXSL_REGISTER_METHOD(Node, readAgentTable, 1);
@@ -2156,6 +2391,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
    NXSL_REGISTER_METHOD(Node, setExpectedCapabilities, 1);
    NXSL_REGISTER_METHOD(Node, setIfXTableUsageMode, 1);
+   NXSL_REGISTER_METHOD(Node, setPollCountForStatusChange, 1);
 }
 
 /**
@@ -2377,6 +2613,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = node->getHardwareComponentsForNXSL(vm);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasServiceManager"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_SERVICE_MANAGER));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasWinPDH"))
    {
       value = vm->createValue(is_bit_set(node->getCapabilities(), NC_HAS_WINPDH));
@@ -2437,6 +2677,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_CDP));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isDecommissioned"))
+   {
+      value = vm->createValue(node->isDecommissioned());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isNativeAgent"))
+   {
+      value = vm->createValue(node->isNativeAgent());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isEtherNetIP"))
    {
       value = vm->createValue(node->isEthernetIPSupported());
@@ -2492,6 +2740,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSH"))
    {
       value = vm->createValue(node->isSSHSupported());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSHCommandChannelAvailable"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_COMMAND_CHANNEL));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSSHInteractiveChannelAvailable"))
+   {
+      value = vm->createValue(is_bit_set(node->getCapabilities(), NC_SSH_INTERACTIVE_CHANNEL));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSONMP") || NXSL_COMPARE_ATTRIBUTE_NAME("isNDP"))
    {
@@ -2589,6 +2845,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("platformName"))
    {
       value = vm->createValue(node->getPlatformName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollCountForStatusChange"))
+   {
+      value = vm->createValue(node->getRequiredPollCount());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("primaryHostName"))
    {
@@ -2894,6 +3154,21 @@ NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
 }
 
 /**
+ * Interface::setPollCountForStatusChange(count) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setPollCountForStatusChange)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   int count = argv[0]->getValueAsInt32();
+   if (count >= 0)
+      static_cast<shared_ptr<Interface>*>(object->getData())->get()->setRequiredPollCount(count);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Interface: constructor
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
@@ -2907,6 +3182,7 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
    NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
    NXSL_REGISTER_METHOD(Interface, setIncludeInIcmpPoll, 1);
+   NXSL_REGISTER_METHOD(Interface, setPollCountForStatusChange, 1);
 }
 
 /**
@@ -3024,11 +3300,11 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddressList"))
    {
-      const InetAddressList *addrList = iface->getIpAddressList();
+      InetAddressList addrList = iface->getIpAddressList();
       NXSL_Array *a = new NXSL_Array(vm);
-      for(int i = 0; i < addrList->size(); i++)
+      for(int i = 0; i < addrList.size(); i++)
       {
-         a->append(NXSL_InetAddressClass::createObject(vm, addrList->get(i)));
+         a->append(NXSL_InetAddressClass::createObject(vm, addrList.get(i)));
       }
       value = vm->createValue(a);
    }
@@ -3190,6 +3466,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pic"))
    {
       value = vm->createValue(iface->getPIC());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollCountForStatusChange"))
+   {
+      value = vm->createValue(iface->getRequiredPollCount());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("port"))
    {
@@ -3846,7 +4126,7 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
    NetObj::linkObjects(thisObject, container);
-   container->unhide();
+   container->publish();
 
    *result = container->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
@@ -3864,7 +4144,7 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<Collector> collector = make_shared<Collector>(argv[0]->getValueAsCString());
    NetObjInsert(collector, true, false);
    NetObj::linkObjects(thisObject, collector);
-   collector->unhide();
+   collector->publish();
 
    *result = collector->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
@@ -3907,7 +4187,7 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    {
       node->setPrimaryHostName(pname);
       NetObj::linkObjects(thisObject, node);
-      node->unhide();
+      node->publish();
       *result = node->createNXSLObject(vm);
    }
    else
@@ -3946,7 +4226,7 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
    shared_ptr<Sensor> sensor = make_shared<Sensor>(argv[0]->getValueAsCString(), deviceClass, gatewayId, static_cast<uint16_t>((argc > 3) ? argv[3]->getValueAsUInt32() : 255));
    NetObjInsert(sensor, true, false);
    NetObj::linkObjects(thisObject, sensor);
-   sensor->unhide();
+   sensor->publish();
    *result = sensor->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -4479,11 +4759,32 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const NXSL_Identifi
 }
 
 /**
+ * Tunnel::bind(node)
+ */
+NXSL_METHOD_DEFINITION(Tunnel, bind)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *node = argv[0]->getValueAsObject();
+   if (!node->getClass()->instanceOf(L"Node"))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
+   uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
+   uint32_t rcc = tunnel->bind(nodeId, 0);
+   *result = vm->createValue(rcc);
+   return 0;
+}
+
+/**
  * NXSL class Tunnel: constructor
  */
 NXSL_TunnelClass::NXSL_TunnelClass() : NXSL_Class()
 {
    setName(_T("Tunnel"));
+
+   NXSL_REGISTER_METHOD(Tunnel, bind, 1);
 }
 
 /**
@@ -4859,9 +5160,17 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(event->getId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmId"))
+   {
+      value = vm->createValue(event->getLastAlarmId());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmKey"))
    {
       value = vm->createValue(event->getLastAlarmKey());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastAlarmMessage"))
+   {
+      value = vm->createValue(event->getLastAlarmMessage());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("message"))
    {
@@ -5098,6 +5407,17 @@ NXSL_METHOD_DEFINITION(Alarm, getComments)
 }
 
 /**
+ * Alarm::getComments() method
+ */
+NXSL_METHOD_DEFINITION(Alarm, requestAiAssistantComment)
+{
+   Alarm *alarm = static_cast<Alarm*>(object->getData());
+   String response = alarm->requestAIAssistantComment();
+   *result = !response.isEmpty() ? vm->createValue(response) : vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Alarm: constructor
  */
 NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
@@ -5109,6 +5429,7 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Alarm, terminate, -1);
    NXSL_REGISTER_METHOD(Alarm, addComment, -1);
    NXSL_REGISTER_METHOD(Alarm, getComments, 0);
+   NXSL_REGISTER_METHOD(Alarm, requestAiAssistantComment, 0);
 }
 
 /**
@@ -5135,6 +5456,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       // Cast UID to signed to represent invalid UID as -1
       value = vm->createValue(static_cast<int32_t>(alarm->getAckByUser()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ackByUser"))
+   {
+      value = GetUserDBObjectForNXSL(alarm->getAckByUser(), vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("categories"))
    {
@@ -5204,6 +5529,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(alarm->getParentAlarmId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("relatedEvents"))
+   {
+      value = alarm->relatedEventsToNXSLArray(vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("repeatCount"))
    {
       value = vm->createValue(alarm->getRepeatCount());
@@ -5213,13 +5542,17 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       // Cast UID to signed to represent invalid UID as -1
       value = vm->createValue(static_cast<int32_t>(alarm->getResolvedByUser()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("resolvedByUser"))
+   {
+      value = GetUserDBObjectForNXSL(alarm->getResolvedByUser(), vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("rcaScriptName"))
    {
       value = vm->createValue(alarm->getRcaScriptName());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ruleGuid"))
    {
-      TCHAR buffer[64];
+      wchar_t buffer[64];
       value = vm->createValue(alarm->getRuleGuid().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ruleDescription"))
@@ -5277,6 +5610,10 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
    {
       value = vm->createValue((INT64)alarmComment->getChangeTime());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("user"))
+   {
+      value = GetUserDBObjectForNXSL(alarmComment->getUserId(), vm);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("userId"))
    {
       value = vm->createValue(alarmComment->getUserId());
@@ -5300,11 +5637,66 @@ NXSL_METHOD_DEFINITION(DCI, forcePoll)
       shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(dcTarget.get())->getDCObjectById(dci->getId(), 0, true);
       if (dcObject != nullptr)
       {
-         dcObject->requestForcePoll(nullptr);
+         dcObject->requestForcePoll(-1);
       }
    }
    *result = vm->createValue();
    return 0;
+}
+
+/**
+ * DCI::generateAnomalyProfile() method
+ * Triggers asynchronous generation of AI-based anomaly detection profile
+ */
+NXSL_METHOD_DEFINITION(DCI, generateAnomalyProfile)
+{
+   const DCObjectInfo *dci = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   if (dci->getType() != DCO_TYPE_ITEM)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+   GenerateAnomalyProfileAsync(dci->getId(), dci->getOwnerId());
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
+ * Implementation of "DataPoint" class: constructor
+ */
+NXSL_DataPointClass::NXSL_DataPointClass() : NXSL_Class()
+{
+   setName(_T("DataPoint"));
+}
+
+/**
+ * Implementation of "DataPoint" class: object destructor
+ */
+void NXSL_DataPointClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<std::pair<time_t, String>*>(object->getData());
+}
+
+/**
+ * Implementation of "DataPoint" class: get attribute
+ */
+NXSL_Value *NXSL_DataPointClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto dp = static_cast<std::pair<time_t, String>*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(dp->first));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
+   {
+      value = vm->createValue(dp->second);
+   }
+   return value;
 }
 
 /**
@@ -5315,10 +5707,11 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
    setName(_T("DCI"));
 
    NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
+   NXSL_REGISTER_METHOD(DCI, generateAnomalyProfile, 0);
 }
 
 /**
- * Object destructor
+ * Implementation of "DCI" class: object destructor
  */
 void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
 {
@@ -5378,11 +5771,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastCollectionTime"))
    {
-      value = vm->createValue(static_cast<int64_t>(dci->getLastCollectionTime()));
+      value = vm->createValue(dci->getLastCollectionTime());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastPollTime"))
    {
-		value = vm->createValue(static_cast<int64_t>(dci->getLastPollTime()));
+		value = vm->createValue(dci->getLastPollTime());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
@@ -5496,7 +5889,7 @@ NXSL_Value *NXSL_ScoredDciValueClass::getAttr(NXSL_Object *object, const NXSL_Id
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
    {
-      value = vm->createValue(static_cast<int64_t>(v->timestamp));
+      value = vm->createValue(v->timestamp);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
    {
@@ -5856,7 +6249,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
 static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, NXSL_Array *varbinds)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(varbinds->vm());
-   varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(std::move(*var)))));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -6005,8 +6398,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const NXSL_Ident
 	else if (NXSL_COMPARE_ATTRIBUTE_NAME("printableValue"))
 	{
    	TCHAR strValue[1024];
-		bool convToHex = true;
-		t->getValueAsPrintableString(strValue, 1024, &convToHex);
+		FormatSNMPValue(t, strValue, 1024);
 		value = vm->createValue(strValue);
 	}
 	else if (NXSL_COMPARE_ATTRIBUTE_NAME("valueAsIp"))
@@ -6484,6 +6876,10 @@ NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const NXSL_Identi
    {
       value = vm->createValue(package->getUninstallKey());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("user"))
+   {
+      value = vm->createValue(package->getUser());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("url"))
    {
       value = vm->createValue(package->getUrl());
@@ -6505,6 +6901,69 @@ NXSL_Value* NXSL_SoftwarePackage::getAttr(NXSL_Object* object, const NXSL_Identi
 void NXSL_SoftwarePackage::onObjectDelete(NXSL_Object* object)
 {
    delete static_cast<SoftwarePackage*>(object->getData());
+}
+
+/**
+ * NXSL class DeploymentPackage: constructor
+ */
+NXSL_DeploymentPackageClass::NXSL_DeploymentPackageClass()
+{
+   setName(_T("DeploymentPackage"));
+}
+
+/**
+ * NXSL class DeploymentPackage: get attribute
+ */
+NXSL_Value* NXSL_DeploymentPackageClass::getAttr(NXSL_Object* object, const NXSL_Identifier& attr)
+{
+   NXSL_Value* value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM* vm = object->vm();
+
+   auto package = static_cast<PackageDetails*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("command"))
+   {
+      value = vm->createValue(package->command);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
+   {
+      value = vm->createValue(package->description);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("fileName"))
+   {
+      value = vm->createValue(package->packageFile);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      value = vm->createValue(package->id);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(package->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("platform"))
+   {
+      value = vm->createValue(package->platform);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(package->type);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("version"))
+   {
+      value = vm->createValue(package->version);
+   }
+   return value;
+}
+
+/**
+ * NXSL class DeploymentPackage: object destructor
+ */
+void NXSL_DeploymentPackageClass::onObjectDelete(NXSL_Object* object)
+{
+   delete static_cast<PackageDetails*>(object->getData());
 }
 
 /**
@@ -6681,6 +7140,10 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
    {
       value = vm->createValue(result->agentErrorCode);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("body"))
+   {
+      value = vm->createValue(result->document);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("document"))
    {
       value = vm->createValue(result->document);
@@ -6690,6 +7153,10 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
       value = vm->createValue(result->errorMessage);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("httpResponseCode"))
+   {
+      value = vm->createValue(result->httpResponseCode);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("statusCode"))
    {
       value = vm->createValue(result->httpResponseCode);
    }
@@ -7420,6 +7887,142 @@ void NXSL_NetworkPathCheckResultClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * SSHSession::execute(command, [timeout]) method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, execute)
+{
+   if (argc < 1 || argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (argc > 1 && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel == nullptr || !session->channel->isConnected())
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   uint32_t timeout = (argc > 1) ? argv[1]->getValueAsUInt32() : 0;
+
+   char command[4096];
+#ifdef UNICODE
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, command, sizeof(command));
+#else
+   strlcpy(command, argv[0]->getValueAsCString(), sizeof(command));
+#endif
+
+   StringList *output = session->channel->execute(command, timeout);
+   if (output != nullptr)
+   {
+      *result = vm->createValue(new NXSL_Array(vm, *output));
+      delete output;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * SSHSession::escalatePrivilege(password) method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, escalatePrivilege)
+{
+   if (argc != 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel == nullptr || !session->channel->isConnected())
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   bool success = session->channel->escalatePrivilege(argv[0]->getValueAsCString());
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
+ * SSHSession::close() method
+ */
+NXSL_METHOD_DEFINITION(SSHSession, close)
+{
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+   if (session->channel != nullptr && session->channel->isConnected())
+   {
+      session->channel->close();
+   }
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NXSL class SSHSession: constructor
+ */
+NXSL_SSHSessionClass::NXSL_SSHSessionClass() : NXSL_Class()
+{
+   setName(_T("SSHSession"));
+   NXSL_REGISTER_METHOD(SSHSession, execute, -1);
+   NXSL_REGISTER_METHOD(SSHSession, escalatePrivilege, 1);
+   NXSL_REGISTER_METHOD(SSHSession, close, 0);
+}
+
+/**
+ * NXSL class SSHSession: get attribute
+ */
+NXSL_Value *NXSL_SSHSessionClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   SSHSessionData *session = static_cast<SSHSessionData*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("connected"))
+   {
+      value = vm->createValue(session->channel != nullptr && session->channel->isConnected());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("privileged"))
+   {
+      value = vm->createValue(session->channel != nullptr && session->channel->isPrivileged());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastError"))
+   {
+      value = vm->createValue(session->channel != nullptr ?
+         static_cast<int32_t>(session->channel->getLastError()) : 0);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastErrorMessage"))
+   {
+      value = vm->createValue(session->channel != nullptr ?
+         session->channel->getLastErrorMessage() : _T(""));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeId"))
+   {
+      value = vm->createValue(session->nodeId);
+   }
+   return value;
+}
+
+/**
+ * SSHSession object destruction handler
+ */
+void NXSL_SSHSessionClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<SSHSessionData*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -7435,8 +8038,10 @@ NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_CollectorClass g_nxslCollectorClass;
 NXSL_ContainerClass g_nxslContainerClass;
+NXSL_DataPointClass g_nxslDataPointClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;
+NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
@@ -7459,6 +8064,7 @@ NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SoftwarePackage g_nxslSoftwarePackage;
+NXSL_SSHSessionClass g_nxslSSHSessionClass;
 NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_TemplateClass g_nxslTemplateClass;
 NXSL_TunnelClass g_nxslTunnelClass;

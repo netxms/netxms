@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -63,6 +64,7 @@ public class SNMP extends AbstractDCIPropertyPage
    private Spinner customSnmpPort;
    private Button checkUseCustomSnmpVersion;
    private Combo customSnmpVersion;
+   private Text snmpContext;
    
    /**
     * Create page.
@@ -163,7 +165,9 @@ public class SNMP extends AbstractDCIPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       customSnmpVersion.setLayoutData(gd);
-      
+
+      snmpContext = WidgetHelper.createLabeledText(pageArea, SWT.BORDER, 300, i18n.tr("SNMP context (empty to use node default)"), dco.getSnmpContext(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+
 		return pageArea;
 	}
 
@@ -236,6 +240,7 @@ public class SNMP extends AbstractDCIPropertyPage
       {
          dco.setSnmpVersion(SnmpVersion.DEFAULT);
       }
+      dco.setSnmpContext(snmpContext.getText().trim());
 		editor.modify();
 		
 		return true;
@@ -254,5 +259,6 @@ public class SNMP extends AbstractDCIPropertyPage
       }
       checkUseCustomSnmpPort.setSelection(false);
       customSnmpPort.setSelection(161);
+      snmpContext.setText("");
 	}
 }

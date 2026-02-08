@@ -42,7 +42,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{80DC10FD-1B9C-C64F-AC17-D8056036E134}</ProjectGuid>
     <RootNamespace>webapi</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -325,9 +325,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ai.cpp" />
     <ClCompile Include="alarms.cpp" />
-    <ClCompile Include="auth.cpp" />
-    <ClCompile Include="context.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="find.cpp" />
@@ -336,7 +335,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="objtools.cpp" />
-    <ClCompile Include="router.cpp" />
+    <ClCompile Include="tcpproxy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />

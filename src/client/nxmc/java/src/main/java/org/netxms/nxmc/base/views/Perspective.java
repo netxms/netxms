@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,7 +137,7 @@ public abstract class Perspective
     *
     * @return
     */
-   protected Object getContext()
+   public Object getContext()
    {
       if (mainFolder != null)
          return mainFolder.getContext();
@@ -157,6 +157,7 @@ public abstract class Perspective
          mainFolder.setContext(context);
       else if (mainArea != null)
          mainArea.setContext(context);
+      Registry.getMainWindow().setAiAssistantContext(context);
    }
 
    /**
@@ -172,7 +173,7 @@ public abstract class Perspective
          mainFolder.updateContext(context);
       else if (mainArea != null)
          mainArea.updateContext(context);
-   }   
+   }
 
    /**
     * Save perspective state
@@ -210,7 +211,20 @@ public abstract class Perspective
    public void hide()
    {
       if ((content != null) && !content.isDisposed())
+      {
          content.setVisible(false);
+
+         if (navigationFolder != null)
+            navigationFolder.setActive(false);
+         if (navigationArea != null)
+            navigationArea.setActive(false);
+         if (mainFolder != null)
+            mainFolder.setActive(false);
+         if (mainArea != null)
+            mainArea.setActive(false);
+         if (supplementaryFolder != null)
+            supplementaryFolder.setActive(false);
+      }
    }
 
    /**
@@ -229,11 +243,22 @@ public abstract class Perspective
       {
          content.setVisible(true);
       }
+      
+      if (navigationFolder != null)
+         navigationFolder.setActive(true);
+      if (navigationArea != null)
+         navigationArea.setActive(true);
+      if (mainFolder != null)
+         mainFolder.setActive(true);
+      if (mainArea != null)
+         mainArea.setActive(true);
+      if (supplementaryFolder != null)
+         supplementaryFolder.setActive(true);
 
       window.getShell().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
-         {
+         {            
             if (navigationFolder != null)
             {
                navigationFolder.setFocus();

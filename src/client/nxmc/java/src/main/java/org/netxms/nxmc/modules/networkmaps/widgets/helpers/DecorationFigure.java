@@ -46,12 +46,12 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 	private static final int MARGIN_Y = 4;
 	private static final int LABEL_MARGIN = 5;
 	private static final int TITLE_OFFSET = MARGIN_X + 10;
-	
+
 	private static final int TOP_LEFT = 0;
 	private static final int TOP_RIGHT = 1;
 	private static final int BOTTOM_LEFT = 2;
 	private static final int BOTTOM_RIGHT = 3;
-	
+
 	private NetworkMapDecoration decoration;
 	private MapLabelProvider labelProvider;
 	private Label label;
@@ -59,7 +59,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 	private boolean selected = false;
 	private int lastX;
 	private int lastY;
-	
+
 	/**
 	 * @param decoration
 	 * @param labelProvider
@@ -67,24 +67,24 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 	public DecorationFigure(NetworkMapDecoration decoration, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
 	{
 	   super(decoration, viewer);
-	   
+
 		this.decoration = decoration;
 		this.labelProvider = labelProvider;
-		
+
 		if (decoration.getDecorationType() == NetworkMapDecoration.GROUP_BOX)
 		{
 			setSize(decoration.getWidth(), decoration.getHeight());
-	
+
 			label = new Label(decoration.getTitle());
 			label.setFont(labelProvider.getTitleFont());
 			add(label);
-			
+
 			Dimension d = label.getPreferredSize();
 			label.setSize(d.width + LABEL_MARGIN * 2, d.height + 2);
 			label.setLocation(new Point(TITLE_OFFSET, 0));
 			label.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor())));
          label.setForegroundColor(ThemeEngine.getForegroundColor("Map.GroupBox"));
-			
+
 			createResizeHandle(BOTTOM_RIGHT);
 		}
 		else	// Image
@@ -96,12 +96,12 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 				setSize(bounds.width, bounds.height);
 			}
 			catch(IllegalArgumentException e)
-			{			
+			{
 				setSize(decoration.getWidth(), decoration.getHeight());
 			}
 		}
 	}
-	
+
 	/**
 	 * Create resize handle
 	 */
@@ -111,7 +111,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 		add(handle);
 		Dimension size = getSize();
 		handle.setSize(8, 8);
-		
+
 		switch(pos)
 		{
 			case TOP_LEFT:
@@ -131,7 +131,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 				handle.setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_SIZENWSE));
 				break;
 		}
-		
+
 		handle.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
@@ -141,9 +141,10 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 					resize = false;
 					Dimension size = getSize();
 					decoration.setSize(size.width, size.height);
+					notifyElementChanged();
 				}
 			}
-			
+
 			@Override
 			public void mousePressed(MouseEvent me)
 			{
@@ -155,7 +156,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 					me.consume();
 				}
 			}
-			
+
 			@Override
 			public void mouseDoubleClicked(MouseEvent me)
 			{
@@ -166,45 +167,45 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 			public void mouseMoved(MouseEvent me)
 			{
 			}
-			
+
 			@Override
 			public void mouseHover(MouseEvent me)
 			{
 			}
-			
+
 			@Override
 			public void mouseExited(MouseEvent me)
 			{
 			}
-			
+
 			@Override
 			public void mouseEntered(MouseEvent me)
 			{
 			}
-			
+
 			@Override
 			public void mouseDragged(MouseEvent me)
 			{
 				if (resize)
 				{
 					Dimension size = getSize();
-					
+
 					int dx = me.x - lastX;
 					int dy = me.y - lastY;
-					
+
 					if ((dx < 0) && (size.width <= 40))
 						dx = 0;
 					if ((dy < 0) && (size.height <= 20))
 						dy = 0;
-					
+
 					size.width += dx;
 					size.height += dy;
 					setSize(size);
-					
+
 					Point p = handle.getLocation();
 					p.performTranslate(dx, dy);
 					handle.setLocation(p);
-					
+
 					lastX = me.x;
 					lastY = me.y;
 					me.consume();
@@ -231,7 +232,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 				break;
 		}
 	}
-	
+
 	/**
 	 * Draw "group box" decoration
 	 */
@@ -239,29 +240,29 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 	{
 		gc.setAntialias(SWT.ON);
 		Rectangle rect = new Rectangle(getBounds());
-		
+
 		int topMargin = label.getSize().height / 2;
 		rect.x += MARGIN_X;
 		rect.y += topMargin;
 		rect.width -= MARGIN_X * 2;
 		rect.height -= MARGIN_Y + topMargin + 1;
-		
+
 		final Color color = labelProvider.getColors().create(ColorConverter.rgbFromInt(decoration.getColor()));
-		
+
 		gc.setBackgroundColor(color);
 		gc.setAlpha(16);
 		gc.fillRoundRectangle(rect, 8, 8);
 		gc.setAlpha(255);
-		
+
 		gc.setForegroundColor(color);
 		gc.setLineWidth(3);
 		gc.setLineStyle(selected ? SWT.LINE_DOT : SWT.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
-		
+
 		gc.setBackgroundColor(color);
 		gc.fillRoundRectangle(label.getBounds(), 8, 8);
 	}
-	
+
 	/**
 	 * Draw "image" decoration
 	 */
@@ -275,10 +276,10 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 			gc.drawImage(image, rect.x, rect.y);
 		}
 		catch(IllegalArgumentException e)
-		{			
+		{
 		}
 	}
-	
+
 	/**
 	 * Refresh figure
 	 */
@@ -302,7 +303,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 				setSize(bounds.width, bounds.height);
 			}
 			catch(IllegalArgumentException e)
-			{			
+			{
 				setSize(decoration.getWidth(), decoration.getHeight());
 			}
 		}

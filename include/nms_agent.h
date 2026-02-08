@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -136,6 +136,7 @@
 #define ERR_REMOTE_CONNECT_FAILED      ((uint32_t)934)
 #define ERR_SYSCALL_FAILED             ((uint32_t)935)
 #define ERR_TCP_PROXY_DISABLED         ((uint32_t)936)
+#define ERR_SSH_CHANNEL_OPEN_FAILED    ((uint32_t)937)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -445,10 +446,13 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_NET_INTERFACE_BYTESOUT               _T("Number of output bytes on interface {instance}")
 #define DCIDESC_NET_INTERFACE_DESCRIPTION            _T("Description of interface {instance}")
 #define DCIDESC_NET_INTERFACE_INERRORS               _T("Number of input errors on interface {instance}")
+#define DCIDESC_NET_INTERFACE_INDROPS                _T("Number of input packets dropped on interface {instance}")
 #define DCIDESC_NET_INTERFACE_LINK                   _T("Link status for interface {instance}")
+#define DCIDESC_NET_INTERFACE_MAXSPEED               _T("Maximum speed of interface {instance}")
 #define DCIDESC_NET_INTERFACE_MTU                    _T("MTU for interface {instance}")
 #define DCIDESC_NET_INTERFACE_OPERSTATUS             _T("Operational status of interface {instance}")
 #define DCIDESC_NET_INTERFACE_OUTERRORS              _T("Number of output errors on interface {instance}")
+#define DCIDESC_NET_INTERFACE_OUTDROPS               _T("Number of output packets dropped on interface {instance}")
 #define DCIDESC_NET_INTERFACE_PACKETSIN              _T("Number of input packets on interface {instance}")
 #define DCIDESC_NET_INTERFACE_PACKETSOUT             _T("Number of output packets on interface {instance}")
 #define DCIDESC_NET_INTERFACE_SPEED                  _T("Speed of interface {instance}")
@@ -1047,7 +1051,39 @@ struct NETXMS_SUBAGENT_ACTION
    TCHAR description[MAX_DB_STRING];
 };
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20201227)
+// Forward declaration for jansson JSON type
+struct json_t;
+
+/**
+ * AI Tool parameter definition
+ */
+struct AIToolParameter
+{
+   const char *name;
+   const char *type;          // "string", "integer", "boolean", "array", "object"
+   const char *description;
+   bool required;
+   const char *defaultValue;  // JSON value or nullptr
+   const char *constraints;   // JSON with min/max/enum, or nullptr
+};
+
+/**
+ * AI Tool definition
+ */
+struct AIToolDefinition
+{
+   const char *name;
+   const char *category;
+   const char *description;
+   const AIToolParameter *parameters;
+   size_t numParameters;
+
+   // Handler: receives parsed JSON params, returns JSON result object
+   // Caller will decref the result. Returns ERR_SUCCESS or error code.
+   uint32_t (*handler)(json_t *params, json_t **result, AbstractCommSession *session);
+};
+
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20260131)
 
 class NXCPMessage;
 
@@ -1074,6 +1110,8 @@ struct NETXMS_SUBAGENT_INFO
    NETXMS_SUBAGENT_ACTION *actions;
    size_t numPushParameters;
    NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
+   size_t numAITools;
+   AIToolDefinition *aiTools;
 };
 
 /**

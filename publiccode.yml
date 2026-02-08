@@ -1,0 +1,111 @@
+# This repository adheres to the publiccode.yml standard
+# https://yml.publiccode.tools/
+
+publiccodeYmlVersion: "0.4"
+
+name: NetXMS
+url: "https://github.com/netxms/netxms"
+landingURL: "https://www.netxms.org"
+softwareVersion: "5.2.8"
+releaseDate: "2025-12-04"
+logo: "doc/logo.png"
+platforms:
+  - web
+  - windows
+  - mac
+  - linux
+  - ios
+  - android
+
+categories:
+  - it-management
+  - it-service-management
+  - data-collection
+  - data-visualization
+  - it-security
+
+developmentStatus: stable
+
+softwareType: standalone/web
+
+usedBy:
+  - RAA School (UK)
+  - University of Florence (Italy)
+  - University of Lapland (Finland)
+  - SOPFEU - Forest Fire Protection Agency (Quebec, Canada)
+  - Government of Burkina Faso - IT Department
+
+description:
+  en:
+    shortDescription: >-
+      Enterprise-grade open-source network and infrastructure monitoring solution.
+    longDescription: >
+      NetXMS is an open-source network and infrastructure monitoring and
+      management solution that provides comprehensive performance and
+      availability monitoring with flexible event processing, alerting,
+      reporting, and graphing for all layers of IT infrastructure.
+
+
+      It's a unified solution that can monitor and manage your entire IT
+      infrastructure - from network switches to applications - all in one
+      place. NetXMS follows a distributed architecture with a central
+      management server, monitoring agents, and web/desktop clients. The
+      system supports multiple deployment scenarios from single-server
+      setups to large distributed environments.
+
+
+      Key capabilities include automatic network discovery, SNMP monitoring,
+      agent-based server/workstation monitoring, real-time log analysis,
+      topology-based event correlation, customizable dashboards, and a
+      built-in scripting language (NXSL) for advanced automation.
+
+    features:
+      - Automatic network discovery and topology mapping
+      - SNMP monitoring (all versions) with vendor-specific device drivers
+      - Universal monitoring agents for all major platforms
+      - Real-time log file monitoring and analysis
+      - Flexible event processing with policy-based automation
+      - Multi-channel notifications (email, SMS, Telegram, Slack, MS Teams)
+      - Customizable dashboards and network maps
+      - Built-in scripting language (NXSL) for automation
+      - REST API and Java API for integration
+      - Distributed monitoring with zone-based architecture
+      - High availability with automatic failover
+      - Business service monitoring and SLA tracking
+      - Web-based and desktop management consoles
+      - Fine-grained access control and audit logging
+
+    documentation: "https://www.netxms.org/documentation/adminguide/"
+    apiDocumentation: "https://www.netxms.org/documentation/javadoc/latest/"
+
+legal:
+  license: GPL-2.0-only
+  mainCopyrightOwner: Raden Solutions (Latvia, European Union)
+
+maintenance:
+  type: community
+  contacts:
+    - name: NetXMS Community Support
+      email: info@netxms.com
+    - name: Raden Solutions (Commercial Support)
+      email: sales@netxms.com
+      affiliation: Raden Solutions, Latvia, European Union
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - en
+
+dependsOn:
+  open:
+    - name: PostgreSQL
+      optional: true
+      versionMin: "10"
+    - name: MySQL
+      optional: true
+      versionMin: "5.7"
+    - name: MariaDB
+      optional: true
+      versionMin: "10.2"
+    - name: SQLite
+      optional: true

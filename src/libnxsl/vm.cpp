@@ -138,7 +138,8 @@ static int SelectResultType(int dataTypeLeft, int dataTypeRight, int operation)
       {
          if ((operation == OPCODE_REM) || (operation == OPCODE_LSHIFT) ||
              (operation == OPCODE_RSHIFT) || (operation == OPCODE_BIT_AND) ||
-             (operation == OPCODE_BIT_OR) || (operation == OPCODE_BIT_XOR))
+             (operation == OPCODE_BIT_OR) || (operation == OPCODE_BIT_XOR) ||
+             (operation == OPCODE_HAS_BITS))
          {
             nType = NXSL_DT_NULL;   // Error
          }
@@ -598,31 +599,6 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
       return var;
    }
 
-   var = m_globalVariables->find(name);
-   if (var != nullptr)
-   {
-      if (vs != nullptr)
-         *vs = m_globalVariables;
-      return var;
-   }
-
-   if (m_context != nullptr)
-   {
-      NXSL_Object *object = m_context->getValueAsObject();
-      NXSL_Value *value = object->getClass()->getAttr(object, name);
-      if (value != nullptr)
-      {
-         var = m_contextVariables->find(name);
-         if (var != nullptr)
-            var->setValue(value);
-         else
-            var = m_contextVariables->create(name, value);
-         if (vs != nullptr)
-            *vs = m_contextVariables;
-         return var;
-      }
-   }
-
    var = m_localVariables->find(name);
    if (var != nullptr)
    {
@@ -642,6 +618,33 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
       }
    }
 
+   if (m_context != nullptr)
+   {
+      // Create context variable from object attribute
+      // to improve performance of subsequent accesses
+      NXSL_Object *object = m_context->getValueAsObject();
+      NXSL_Value *value = object->getClass()->getAttr(object, name);
+      if (value != nullptr)
+      {
+         var = m_contextVariables->find(name);
+         if (var != nullptr)
+            var->setValue(value);
+         else
+            var = m_contextVariables->create(name, value);
+         if (vs != nullptr)
+            *vs = m_contextVariables;
+         return var;
+      }
+   }
+
+   var = m_globalVariables->find(name);
+   if (var != nullptr)
+   {
+      if (vs != nullptr)
+         *vs = m_globalVariables;
+      return var;
+   }
+
    return nullptr;
 }
 
@@ -656,6 +659,19 @@ NXSL_Variable *NXSL_VM::findOrCreateVariable(const NXSL_Identifier& name, NXSL_V
       var = m_localVariables->create(name);
       if (vs != nullptr)
          *vs = m_localVariables;
+   }
+   return var;
+}
+
+/**
+ * Find local variable or create if does not exist
+ */
+NXSL_Variable *NXSL_VM::findOrCreateLocalVariable(const NXSL_Identifier& name)
+{
+   NXSL_Variable *var = m_localVariables->find(name);
+   if (var == nullptr)
+   {
+      var = m_localVariables->create(name);
    }
    return var;
 }
@@ -1022,6 +1038,41 @@ void NXSL_VM::execute()
             }
          }
 			break;
+      case OPCODE_LOCAL:
+         // Check if variable already exist
+         pVar = m_localVariables->find(*cp->m_operand.m_identifier);
+         if (pVar == nullptr)
+         {
+            if (cp->m_stackItems > 0)  // with initialization
+            {
+               pValue = m_dataStack.pop();
+               if (pValue != nullptr)
+               {
+                  m_localVariables->create(*cp->m_operand.m_identifier, pValue);
+               }
+               else
+               {
+                  error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+            }
+            else
+            {
+               m_localVariables->create(*cp->m_operand.m_identifier, createValue());
+            }
+         }
+         else if (cp->m_stackItems > 0)   // process initialization block as assignment
+         {
+            pValue = m_dataStack.pop();
+            if (pValue != nullptr)
+            {
+               pVar->setValue(pValue);
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
+         break;
 		case OPCODE_GET_RANGE:
 		   pValue = m_dataStack.pop();
 		   if (pValue != nullptr)
@@ -1458,12 +1509,26 @@ void NXSL_VM::execute()
                   }
                   else
                   {
-                     error(NXSL_ERR_NO_FUNCTION);
+                     if (cp->m_addr2 == OPTIONAL_FUNCTION_CALL)
+                     {
+                        // optional function call, push null to stack
+                        for(int i = 0; i < cp->m_stackItems; i++)
+                           destroyValue(m_dataStack.pop());
+                        m_dataStack.push(createValue());
+
+                        // convert to push null
+                        cp->m_opCode = OPCODE_PUSH_NULL;
+                        destroyIdentifier(cp->m_operand.m_identifier);
+                     }
+                     else
+                     {
+                        error(NXSL_ERR_NO_FUNCTION);
+                     }
                   }
                }
                else
                {
-                  error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
+                  error(NXSL_ERR_NO_OBJECT_CONSTRUCTOR);
                }
             }
          }
@@ -1620,6 +1685,7 @@ void NXSL_VM::execute()
       case OPCODE_GE:
       case OPCODE_AND:
       case OPCODE_OR:
+      case OPCODE_HAS_BITS:
       case OPCODE_BIT_AND:
       case OPCODE_BIT_OR:
       case OPCODE_BIT_XOR:
@@ -1867,7 +1933,7 @@ void NXSL_VM::execute()
 					NXSL_Iterator *it = pValue->getValueAsIterator();
 					NXSL_Value *next = it->next();
 					m_dataStack.push(createValue(next != nullptr));
-					NXSL_Variable *var = findOrCreateVariable(it->getVariableName());
+					NXSL_Variable *var = findOrCreateLocalVariable(it->getVariableName());
 					if (!var->isConstant())
 					{
 						var->setValue((next != nullptr) ? createValueRef(next) : createValue());
@@ -2387,6 +2453,15 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      case OPCODE_RSHIFT:
                         pRes = getNonSharedValue(pVal1);
                         pRes->rshift(pVal2->getValueAsInt32());
+                        pVal1 = nullptr;
+                        break;
+                     case OPCODE_HAS_BITS:
+                        pRes = getNonSharedValue(pVal1);
+                        pRes->bitAnd(pVal2);
+                        if (pRes->EQ(pVal2))
+                           pRes->convert(NXSL_DT_BOOLEAN);
+                        else
+                           pRes->set(false);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_BIT_AND:

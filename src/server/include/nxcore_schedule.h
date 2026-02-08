@@ -199,6 +199,7 @@ public:
    void saveToDatabase(bool newObject) const;
    void fillMessage(NXCPMessage *msg) const;
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
+   json_t *toJson() const;
 
    bool canAccess(uint32_t userId, uint64_t systemAccess) const;
 
@@ -240,10 +241,11 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t taskId, uint32_t userId,
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 int NXCORE_EXPORTABLE DeleteScheduledTasksByObjectId(uint32_t objectId, bool allTasks = false);
 int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey);
-int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
+int NXCORE_EXPORTABLE CountScheduledTasksByKey(const String& taskKey);
 bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint64_t taskId);
-ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
+ScheduledTask NXCORE_EXPORTABLE *FindScheduledTaskByHandlerId(const wchar_t *taskHandlerId, bool recurrentOnly = false);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights);
+json_t NXCORE_EXPORTABLE *GetScheduledTasks(uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context) = nullptr, void *context = nullptr);
 void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context) = nullptr, void *context = nullptr);
 uint32_t UpdateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, uint64_t systemAccessRights);
 uint32_t CreateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, uint64_t systemAccessRights);

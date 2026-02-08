@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -529,6 +529,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          series.setLineColor(ColorConverter.colorFromInt(item.getColorAsInt(), colorCache));
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
+
+      int pollingInterval = chart.getDataSeries().get(index).getPollingInterval();
+      if (pollingInterval > 0)
+      {
+         // Use 3x polling interval as gap threshold (X-axis is in milliseconds)
+         series.setLineGapThreshold(pollingInterval * 3.0 * 1000.0);
+      }
 	}
 
    /**

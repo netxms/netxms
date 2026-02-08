@@ -242,7 +242,7 @@ public class ChartConfiguration
       minYScaleValue = src.minYScaleValue;
       maxYScaleValue = src.maxYScaleValue;
       refreshRate = src.refreshRate;
-      timePeriod = src.timePeriod;
+      timePeriod = (src.timePeriod != null) ? new TimePeriod(src.timePeriod) : null;
       modifyYBase = src.modifyYBase;
       useMultipliers = src.useMultipliers;
       rotation = src.rotation;

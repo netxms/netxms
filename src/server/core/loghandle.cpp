@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -257,91 +257,114 @@ StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
 }
 
 /**
+ * Build SQL query from filter
+ *
+ * @param filter log filter to use
+ * @param maxRecordId maximum record ID to include (pass -1 to omit this constraint)
+ * @param userId user ID for access control (pass 0 to skip access control check)
+ * @return SQL query string
+ */
+StringBuffer LogHandle::buildQuerySql(LogFilter *filter, int64_t maxRecordId, uint32_t userId)
+{
+   buildQueryColumnList();
+
+   StringBuffer query;
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         query.appendFormattedString(_T("SELECT TOP %u %s FROM %s"), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
+         break;
+      case DB_SYNTAX_INFORMIX:
+         query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s"), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
+         break;
+      case DB_SYNTAX_ORACLE:
+         query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
+         break;
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
+         query.appendFormattedString(_T("SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
+         break;
+   }
+
+   bool hasWhereClause = false;
+   if (maxRecordId >= 0)
+   {
+      query.appendFormattedString(_T(" WHERE %s<=") INT64_FMT, m_log->idColumn, maxRecordId);
+      hasWhereClause = true;
+   }
+
+   int filterSize = filter->getNumColumnFilter();
+   if (filterSize > 0)
+   {
+      for(int i = 0; i < filterSize; i++)
+      {
+         ColumnFilter *cf = filter->getColumnFilter(i);
+         query.append(hasWhereClause ? _T(" AND (") : _T(" WHERE ("));
+         query.append(cf->generateSql());
+         query.append(_T(")"));
+         hasWhereClause = true;
+      }
+   }
+
+   if ((userId != 0) && (m_log->relatedObjectIdColumn != nullptr) && ConfigReadBoolean(_T("Server.Security.ExtendedLogQueryAccessControl"), false))
+   {
+      String constraint = buildObjectAccessConstraint(userId);
+      if (!constraint.isEmpty())
+      {
+         query.append(hasWhereClause ? _T(" AND (") : _T(" WHERE ("));
+         query.append(constraint);
+         query.append(_T(")"));
+      }
+   }
+
+   query.append(filter->buildOrderClause());
+
+   // Limit record count
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
+         query.appendFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
+         break;
+      case DB_SYNTAX_ORACLE:
+         query.appendFormattedString(_T(") WHERE ROWNUM<=%u"), m_rowCountLimit);
+         break;
+      case DB_SYNTAX_DB2:
+         query.appendFormattedString(_T(" FETCH FIRST %u ROWS ONLY"), m_rowCountLimit);
+         break;
+   }
+
+   return query;
+}
+
+/**
  * Do query with current filter and column set
  */
 bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 {
-	int64_t startTime = GetCurrentTimeMs();
-	StringBuffer query;
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_MSSQL:
-			query.appendFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
-			break;
-		case DB_SYNTAX_INFORMIX:
-			query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
-			break;
-		case DB_SYNTAX_ORACLE:
-			query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
-			break;
-      case DB_SYNTAX_DB2:
-		case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-			query.appendFormattedString(_T("SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
-			break;
-	}
+   int64_t startTime = GetCurrentTimeMs();
+   StringBuffer query = buildQuerySql(m_filter, m_maxRecordId, userId);
 
-	query.appendFormattedString(_T(" WHERE %s<=") INT64_FMT, m_log->idColumn, m_maxRecordId);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("LOG QUERY: %s"), query.cstr());
 
-	int filterSize = m_filter->getNumColumnFilter();
-	if (filterSize > 0)
-	{
-		for(int i = 0; i < filterSize; i++)
-		{
-			ColumnFilter *cf = m_filter->getColumnFilter(i);
-			query.append(_T(" AND ("));
-			query.append(cf->generateSql());
-			query.append(_T(")"));
-		}
-	}
-
-   if ((userId != 0) && (m_log->relatedObjectIdColumn != nullptr) && ConfigReadBoolean(_T("Server.Security.ExtendedLogQueryAccessControl"), false))
+   DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
+   bool ret = false;
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 7, _T("LogHandle::query(): DB connection acquired"));
+   m_resultSet = DBSelect(dbHandle, query.cstr());
+   if (m_resultSet != nullptr)
    {
-		String constraint = buildObjectAccessConstraint(userId);
-		if (!constraint.isEmpty()) 
-      {
-			query += _T(" AND (");
-			query += constraint;
-			query += _T(")");
-		}
-	}
+      *rowCount = DBGetNumRows(m_resultSet);
+      ret = true;
+      nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("Log query successful, %d rows fetched in %d ms"), static_cast<int>(*rowCount), static_cast<int>(GetCurrentTimeMs() - startTime));
+   }
+   DBConnectionPoolReleaseConnection(dbHandle);
 
-	query.append(m_filter->buildOrderClause());
-
-	// Limit record count
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_MYSQL:
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-			query.appendFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
-			break;
-		case DB_SYNTAX_ORACLE:
-			query.appendFormattedString(_T(") WHERE ROWNUM<=%u"), m_rowCountLimit);
-			break;
-		case DB_SYNTAX_DB2:
-			query.appendFormattedString(_T(" FETCH FIRST %u ROWS ONLY"), m_rowCountLimit);
-			break;
-	}
-
-	nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("LOG QUERY: %s"), (const TCHAR *)query);
-
-	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
-	bool ret = false;
-	nxlog_debug_tag(DEBUG_TAG_LOGS, 7, _T("LogHandle::query(): DB connection acquired"));
-	m_resultSet = DBSelect(dbHandle, (const TCHAR *)query);
-	if (m_resultSet != NULL)
-	{
-		*rowCount = DBGetNumRows(m_resultSet);
-		ret = true;
-		nxlog_debug_tag(DEBUG_TAG_LOGS, 4, _T("Log query successful, %d rows fetched in %d ms"), (int)(*rowCount), (int)(GetCurrentTimeMs() - startTime));
-	}
-	DBConnectionPoolReleaseConnection(dbHandle);
-
-	return ret;
+   return ret;
 }
 
 /**

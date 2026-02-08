@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include "nxcore.h"
 
-#define DEBUG_TAG_ZONE_PROXY  _T("zone.proxy")
+#define DEBUG_TAG_ZONE_PROXY  L"zone.proxy"
 
 /**
  * Dump index to console
@@ -36,7 +36,7 @@ Zone::Zone() : super(), Pollable(this, Pollable::STATUS)
 {
    m_id = 0;
    m_uin = 0;
-   _tcscpy(m_name, _T("Default"));
+   wcscpy(m_name, L"Default");
    GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
@@ -122,7 +122,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
          hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
-         { 
+         {
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
@@ -248,6 +248,15 @@ void Zone::onObjectDelete(const NetObj& object)
 }
 
 /**
+ * Create NXCP message with object's essential data (for partial sync)
+ */
+void Zone::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageLockedEssential(msg, userId);
+   msg->setField(VID_ZONE_UIN, m_uin);
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Zone::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
@@ -354,16 +363,16 @@ bool Zone::showThresholdSummary() const
  */
 void Zone::removeFromIndex(const Interface& iface)
 {
-   const ObjectArray<InetAddress>& list = iface.getIpAddressList()->getList();
-   for(int i = 0; i < list.size(); i++)
+   InetAddressList addrList = iface.getIpAddressList();
+   for(int i = 0; i < addrList.size(); i++)
    {
-      InetAddress *addr = list.get(i);
-      if (addr->isValidUnicast())
+      InetAddress addr = addrList.get(i);
+      if (addr.isValidUnicast())
       {
-	      shared_ptr<NetObj> o = m_idxInterfaceByAddr->get(*addr);
+	      shared_ptr<NetObj> o = m_idxInterfaceByAddr->get(addr);
 	      if ((o != nullptr) && (o->getId() == iface.getId()))
 	      {
-		      m_idxInterfaceByAddr->remove(*addr);
+		      m_idxInterfaceByAddr->remove(addr);
 	      }
       }
    }

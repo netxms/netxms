@@ -35,12 +35,13 @@ NETXMS_EXECUTABLE_HEADER(nxadm)
 static void Help()
 {
    printf("NetXMS Server Administration Tool  Version " NETXMS_VERSION_STRING_A "\n"
-          "Copyright (c) 2004-2025 Raden Solutions\n\n"
+          "Copyright (c) 2004-2026 Raden Solutions\n\n"
           "Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n"
           "       nxadm [-u <login>] [-P|-p <password>] -i\n"
           "       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n"
           "       nxadm -P\n"
           "       nxadm -p <db password>\n"
+          "       nxadm -R\n"
           "       nxadm -h\n"
           "       nxadm -v\n\n"
           "Options:\n"
@@ -52,6 +53,7 @@ static void Help()
           "   -P             Provide database password for server startup or\n"
           "                  user's password for console access (password read from terminal)\n"
           "   -r             Use script's return value as exit code\n"
+          "   -R             Check if server is running (started and completed initialization)\n"
           "   -s <script>    Execute given NXSL script and disconnect\n"
           "   -u name        User name for authentication\n"
           "   -v             Display version and exit\n\n");
@@ -107,6 +109,45 @@ static bool SendPassword(const TCHAR *password)
    }
 
    return success;
+}
+
+/**
+ * Check if server is running
+ */
+static int ServerRunCheck()
+{
+   NXCPMessage msg(CMD_GET_SERVER_INFO, g_requestId++);
+   SendMsg(msg);
+
+   int exitCode;
+   NXCPMessage *response = RecvMsg();
+   if (response != nullptr)
+   {
+      uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+      if (rcc == RCC_SUCCESS)
+      {
+         WriteToTerminal(L"Server is running\n");
+         exitCode = 0;  // Server is running
+      }
+      else if (rcc == RCC_RESOURCE_NOT_AVAILABLE)
+      {
+         WriteToTerminal(L"Server is starting\n");
+         exitCode = 1;  // Server is starting
+      }
+      else
+      {
+         WriteToTerminalEx(L"ERROR: server error %u (%s)\n", rcc, GetServerErrorText(rcc));
+         exitCode = 3;  // Other error
+      }
+      delete response;
+   }
+   else
+   {
+      WriteToTerminal(L"ERROR: no response from server\n");
+      exitCode = 2;  // Communication error
+   }
+
+   return exitCode;
 }
 
 /**
@@ -425,7 +466,8 @@ enum WorkMode
    SHELL,
    COMMAND,
    SCRIPT,
-   DB_PASSWORD
+   DB_PASSWORD,
+   RUN_CHECK
 };
 
 /**
@@ -457,7 +499,7 @@ int main(int argc, char *argv[])
       // Parse command line
       opterr = 1;
       int ch;
-      while((ch = getopt(argc, argv, "c:ihp:Prs:u:v")) != -1)
+      while((ch = getopt(argc, argv, "c:ihp:PrRs:u:v")) != -1)
       {
          switch(ch)
          {
@@ -482,6 +524,9 @@ int main(int argc, char *argv[])
                break;
             case 'r':
                useScriptReturnValue = true;
+               break;
+            case 'R':
+               workMode = RUN_CHECK;
                break;
             case 's':
                command = WideStringFromMBStringSysLocale(optarg);
@@ -537,13 +582,16 @@ int main(int argc, char *argv[])
                case DB_PASSWORD:
                   exitCode = SendPassword(password) ? 0 : 3;
                   break;
+               case RUN_CHECK:
+                  exitCode = ServerRunCheck();
+                  break;
             }
 
             Disconnect();
          }
          else
          {
-            exitCode = 2;
+            exitCode = 2;  // Cannot connect to server
          }
       }
       else if (start && (workMode == UNDEFINED))

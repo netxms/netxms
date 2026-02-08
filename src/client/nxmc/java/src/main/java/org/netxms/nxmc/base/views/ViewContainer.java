@@ -63,6 +63,7 @@ public abstract class ViewContainer extends Composite
    protected Action showFilterAction;
    protected Runnable onFilterCloseCallback = null;
    protected KeyBindingManager keyBindingManager = new KeyBindingManager();
+   protected boolean isActive = true;
 
    /**
     * Create new view container.
@@ -332,6 +333,28 @@ public abstract class ViewContainer extends Composite
       View clone = view.cloneView();
       if (clone != null)
          PopOutViewWindow.open(clone);
+   }
+   
+   /**
+    * Set activation state for container itself 
+    * 
+    * @param active true to activate, false to deactivate
+    */
+   public void setActive(boolean active)
+   {
+      isActive = active;
+      if (active)
+      {
+         View view = getActiveView();
+         if (view != null)
+            view.activate();
+      }
+      else
+      {
+         View view = getActiveView();
+         if (view != null)
+            view.deactivate();
+      }
    }
 
    /**

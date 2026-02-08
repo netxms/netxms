@@ -54,6 +54,7 @@ import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.NetworkMap;
@@ -88,9 +89,9 @@ public final class ObjectMenuFactory
 {
    private static final String[] POLL_NAME = {
          "",
-         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Status"), 
-         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration (Full)"),
-         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Interface"), 
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Status"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration (with reset)"),
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Interface"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Topology"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration"), 
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Instance discovery"),
@@ -122,8 +123,8 @@ public final class ObjectMenuFactory
 		if (object instanceof AbstractNode)
 		{
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_FULL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_WITH_RESET, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INTERFACES, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.TOPOLOGY, viewPlacement);
@@ -135,9 +136,9 @@ public final class ObjectMenuFactory
       else if ((object instanceof BusinessService) || (object instanceof Cluster))
 		{
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
 		}
-      else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof Template))
+      else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof DashboardTemplate) || (object instanceof Template))
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
       }
@@ -149,13 +150,13 @@ public final class ObjectMenuFactory
       else if (object instanceof Sensor)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
       else if (object instanceof WirelessDomain)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
       }
       else if (object instanceof Collector || object instanceof Circuit)
       {
@@ -165,7 +166,7 @@ public final class ObjectMenuFactory
       else if (object instanceof AccessPoint)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)

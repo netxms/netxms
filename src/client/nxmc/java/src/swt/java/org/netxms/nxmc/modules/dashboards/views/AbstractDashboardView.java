@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -377,7 +377,7 @@ public abstract class AbstractDashboardView extends ObjectView
    /**
     * Rebuild dashboard
     */
-   protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
+   protected void rebuildDashboard(DashboardBase dashboard, AbstractObject dashboardContext)
    {
       if (dbc != null)
          dbc.dispose();

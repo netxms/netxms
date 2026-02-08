@@ -253,6 +253,9 @@ public:
    virtual NetworkMapElement *clone() const override;
 
 	uint32_t getObjectId() const { return m_objectId; }
+   uint32_t getWidth() const { return m_width; }
+   uint32_t getHeight() const { return m_height; }
+   void setSize(uint32_t width, uint32_t height) { m_width = width; m_height = height; }
 };
 
 /**
@@ -286,6 +289,7 @@ public:
 
    int32_t getWidth() const { return m_width; }
    int32_t getHeight() const { return m_height; }
+   void setSize(int32_t width, int32_t height) { m_width = width; m_height = height; }
 };
 
 /**

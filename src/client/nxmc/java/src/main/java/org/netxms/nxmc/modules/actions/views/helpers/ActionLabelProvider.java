@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ public class ActionLabelProvider extends DecoratingActionLabelProvider implement
 {
    private final I18n i18n = LocalizationHelper.getI18n(ActionLabelProvider.class);
 
-	public static final String[] ACTION_TYPE = 
+   public final String[] actionType = 
 	   { 
 	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Local Command"), 
 	      LocalizationHelper.getI18n(ActionLabelProvider.class).tr("Agent Command"), 
@@ -65,7 +65,7 @@ public class ActionLabelProvider extends DecoratingActionLabelProvider implement
 			case ActionManager.COLUMN_TYPE:
 				try
 				{
-               return ACTION_TYPE[action.getType().getValue()];
+               return actionType[action.getType().getValue()];
 				}
 				catch(IndexOutOfBoundsException e)
 				{

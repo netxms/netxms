@@ -22,8 +22,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -259,7 +261,9 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, "Container"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, "Dashboard"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDGROUP, "Dashboard Group"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, "Dashboard Root"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDTEMPLATE, "Dashboard Template"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_INTERFACE, "Interface"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_MOBILEDEVICE, "Mobile Device"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORK, "Network"));
@@ -278,6 +282,9 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_VPNCONNECTOR, "VPN Connector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ZONE, "Zone"));
    }
+
+   private final String[] defaultNames = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
+   private final int[] defaultWidths = { 90, 120, 300, 250, 300, 200 };
 
    private NXCSession session = Registry.getSession();
    private SessionListener sessionListener;
@@ -305,6 +312,8 @@ public class ObjectFinder extends View
    private Action actionExportAllToCSV;
    private IntermediateSelectionProvider resultSelectionProvider;
    private List<ObjectQueryResult> searchResult = new ArrayList<ObjectQueryResult>();
+   private Map<String, String> savedMetadata = new HashMap<String, String>();
+   private boolean showStandardAttributes = true;
 
    /**
     * Create find by MAC address view
@@ -321,6 +330,7 @@ public class ObjectFinder extends View
    protected void postClone(View origin)
    {
       super.postClone(origin);
+
       ObjectFinder view = (ObjectFinder)origin;
       text.setText(view.text.getText());
       radioPlainText.setSelection(view.radioPlainText.getSelection());
@@ -351,7 +361,7 @@ public class ObjectFinder extends View
       queryEditor.setText(view.queryEditor.getText());
 
       if (!view.searchResult.isEmpty())
-         updateResultTable(view.searchResult);
+         updateResultTable(view.searchResult, view.savedMetadata);
       else
          results.setInput(view.results.getInput());
    }
@@ -715,9 +725,7 @@ public class ObjectFinder extends View
       gd.horizontalAlignment = SWT.FILL;
       separator.setLayoutData(gd);
 
-      final String[] names = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
-      final int[] widths = { 90, 120, 300, 250, 300, 200 };
-      results = new SortableTableViewer(resultArea, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
+      results = new SortableTableViewer(resultArea, defaultNames, defaultWidths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       if (!session.isZoningEnabled())
          results.removeColumnById(COL_ZONE);
       results.setContentProvider(new ArrayContentProvider());
@@ -798,8 +806,6 @@ public class ObjectFinder extends View
                startQuery();
          }
       };
-      actionStartSearch.setId("org.netxms.ui.eclipse.objectbrowser.actions.startSearch");
-      actionStartSearch.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.start_search");
       addKeyBinding("F9", actionStartSearch);
 
       actionGoToObject = new Action("Go to &object") {
@@ -937,6 +943,7 @@ public class ObjectFinder extends View
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
+            final Map<String, String> metadata = new HashMap<>();
             final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0, (p) -> runInUIThread(() -> {
                long now = System.currentTimeMillis();
                if (now - lastUpdate > 1000)
@@ -946,10 +953,10 @@ public class ObjectFinder extends View
                   queryProgress.setSelection(p);
                   queryHeader.layout();
                }
-            }));
+            }), metadata);
             runInUIThread(() -> {
                queryStats.setText(i18n.tr("Query completed in {0} milliseconds, {1} objects found", System.currentTimeMillis() - startTime, objects.size()));
-               updateResultTable(objects);
+               updateResultTable(objects, metadata);
                queryEditor.setFocus();
             });
          }
@@ -1137,7 +1144,7 @@ public class ObjectFinder extends View
                }
             });
             runInUIThread(() -> {
-               resetResultTable();
+               resetResultTable(false);
                searchResult = new ArrayList<ObjectQueryResult>();
                results.setInput(objects);
             });
@@ -1206,12 +1213,31 @@ public class ObjectFinder extends View
 
    /**
     * Remove all columns except standard
+    * 
+    * @param ignoreStandardAttributes true to ignore standard attributes
     */
-   private void resetResultTable()
+   private void resetResultTable(boolean ignoreStandardAttributes)
    {
       TableColumn[] columns = results.getTable().getColumns();
-      for(int i = session.isZoningEnabled() ? 6 : 5; i < columns.length; i++)
-         columns[i].dispose();
+      if (ignoreStandardAttributes)
+      {
+         for(int i = 0; i < columns.length; i++)
+            columns[i].dispose();
+      }
+      else if (showStandardAttributes)
+      {
+         for(int i = session.isZoningEnabled() ? 6 : 5; i < columns.length; i++)
+            columns[i].dispose();
+      }
+      else
+      {
+         for(int i = 0; i < columns.length; i++)
+            columns[i].dispose();
+         // Recreate standard columns
+         for(int i = 0; i < (session.isZoningEnabled() ? defaultNames.length : defaultNames.length - 1); i++)
+            results.addColumn(defaultNames[i], defaultWidths[i]);
+      }
+      showStandardAttributes = !ignoreStandardAttributes;
       results.getTable().setSortColumn(null);
    }
 
@@ -1219,12 +1245,17 @@ public class ObjectFinder extends View
     * Update result table
     *
     * @param objects query result
+    * @param metadata query metadata
     */
-   private void updateResultTable(List<ObjectQueryResult> objects)
+   private void updateResultTable(List<ObjectQueryResult> objects, Map<String, String> metadata)
    {
-      resetResultTable();
+      String s = metadata.get("ignore_standard_attributes");
+      boolean ignoreStandardAttributes = (s != null) && s.equalsIgnoreCase("true");
+
+      resetResultTable(ignoreStandardAttributes);
 
       searchResult = objects;
+      savedMetadata = metadata;
 
       Set<String> registeredProperties = new HashSet<>();
       for(ObjectQueryResult r : objects)

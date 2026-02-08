@@ -95,9 +95,9 @@ String::String(const TCHAR *init)
 /**
  * Create string with given initial content
  */
-String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
+String::String(const TCHAR *init, ssize_t length, Ownership takeOwnership)
 {
-   m_length = (init == nullptr) ? 0 : ((len >= 0) ? len : _tcslen(init));
+   m_length = (init == nullptr) ? 0 : ((length >= 0) ? length : _tcslen(init));
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
@@ -122,6 +122,14 @@ String::String(const TCHAR *init, ssize_t len, Ownership takeOwnership)
  */
 String::String(const char *init, const char *codepage)
 {
+   if ((init == nullptr) || (init[0] == 0))
+   {
+      m_internalBuffer[0] = 0;
+      m_buffer = m_internalBuffer;
+      m_length = 0;
+      return;
+   }
+
    size_t len = strlen(init);
    m_buffer = (len < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocString(len + 1);
 #ifdef UNICODE
@@ -135,6 +143,39 @@ String::String(const char *init, const char *codepage)
    {
       memcpy(m_buffer, init, len + 1);
       m_length = len;
+   }
+#endif
+   m_buffer[m_length] = 0;
+}
+
+/**
+ * Create string with given initial content
+ */
+String::String(const char *init, ssize_t length, const char *codepage)
+{
+   if (length < 0)
+      length = (init != nullptr) ? strlen(init) : 0;
+
+   if ((init == nullptr) || (length == 0) || (init[0] == 0))
+   {
+      m_internalBuffer[0] = 0;
+      m_buffer = m_internalBuffer;
+      m_length = 0;
+      return;
+   }
+
+   m_buffer = (length < STRING_INTERNAL_BUFFER_SIZE) ? m_internalBuffer : MemAllocString(length + 1);
+#ifdef UNICODE
+   m_length = mbcp_to_wchar(init, length, m_buffer, length + 1, codepage);
+#else
+   if ((codepage != nullptr) && (!stricmp(codepage, "UTF8") || !stricmp(codepage, "UTF-8")))
+   {
+      m_length = utf8_to_mb(init, length, m_buffer, length + 1);
+   }
+   else
+   {
+      memcpy(m_buffer, init, length);
+      m_length = length;
    }
 #endif
    m_buffer[m_length] = 0;
@@ -284,6 +325,27 @@ char *String::getUTF8String() const
 }
 
 /**
+ * Get content as std::string in UTF-8 encoding
+ */
+std::string String::getUTF8StdString() const
+{
+   if (m_length == 0)
+      return std::string();
+
+#ifdef UNICODE
+   size_t l = wchar_utf8len(m_buffer, m_length);
+   Buffer<char, 1024> buffer(l + 1);
+   wchar_to_utf8(m_buffer, m_length + 1, buffer, l + 1);
+   return std::string(buffer);
+#else
+   char *utf8 = UTF8StringFromMBString(m_buffer);
+   std::string result(utf8);
+   MemFree(utf8);
+   return result;
+#endif
+}
+
+/**
  * Check that two strings are equal
  */
 bool String::equals(const String& s) const
@@ -324,6 +386,30 @@ bool String::equalsIgnoreCase(const TCHAR *s) const
 }
 
 /**
+ * Check that two strings are equal using fuzzy matching (Levenshtein distance)
+ * @param s String to compare with
+ * @param threshold Maximum allowed edit distance (0.0 = exact match, 1.0 = completely different)
+ * @return true if strings are similar within the threshold
+ */
+bool String::fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase) const
+{
+   if (threshold >= 1.0)
+      return equals(s);
+
+   if (threshold <= 0.0)
+      return true;
+
+   size_t maxLen = std::max(m_length, s.m_length);
+   if (maxLen == 0)
+      return true;  // Both strings are empty
+
+   size_t editDistance = CalculateLevenshteinDistance(m_buffer, m_length, s.m_buffer, s.m_length, ignoreCase);
+   double similarity = 1.0 - (static_cast<double>(editDistance) / maxLen);
+   const double epsilon = 1e-10;
+   return (similarity + epsilon) >= threshold;
+}
+
+/**
  * Check that this string starts with given sub-string
  */
 bool String::startsWith(const String& s) const
@@ -340,7 +426,7 @@ bool String::startsWith(const String& s) const
  */
 bool String::startsWith(const TCHAR *s) const
 {
-   if (s == NULL)
+   if (s == nullptr)
       return false;
    size_t l = _tcslen(s);
    if (l > m_length)
@@ -622,6 +708,15 @@ StringBuffer::StringBuffer(const TCHAR *init, size_t length) : String(init, leng
  * Create string buffer with given initial content
  */
 StringBuffer::StringBuffer(const char *init, const char *codepage) : String(init, codepage)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Create string buffer with given initial content
+ */
+StringBuffer::StringBuffer(const char *init, ssize_t length, const char *codepage) : String(init, length, codepage)
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2025 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ public class NotificationChannel
    private Date lastMessageTimestamp;
    private int messageCount;
    private int failureCount;
+   private int queueSize;
 
 	/**
 	 * Create notification channel object from NXCP message
@@ -64,6 +65,7 @@ public class NotificationChannel
       lastMessageTimestamp = msg.getFieldAsDate(baseId + 10);
       messageCount = msg.getFieldAsInt32(baseId + 11);
       failureCount = msg.getFieldAsInt32(baseId + 12);
+      queueSize = msg.getFieldAsInt32(baseId + 13);
 	}
 
 	/**
@@ -220,5 +222,15 @@ public class NotificationChannel
    public int getFailureCount()
    {
       return failureCount;
+   }
+
+   /**
+    * Get current queue size.
+    *
+    * @return current queue size
+    */
+   public int getQueueSize()
+   {
+      return queueSize;
    }
 }

@@ -32,6 +32,9 @@ public class DefaultDarkTheme extends Theme
    {
       super("Dark [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
+      elements.put("AiAssistant.AssistantMessage", new ThemeElement(new RGB(42, 42, 45), new RGB(230, 230, 230)));
+      elements.put("AiAssistant.ChatView", new ThemeElement(new RGB(53, 53, 53), null));
+      elements.put("AiAssistant.UserMessage", new ThemeElement(new RGB(35, 50, 65), new RGB(185, 205, 225)));
       elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
       elements.put("Chart.Base", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Chart.Data.1", new ThemeElement(null, new RGB(51, 160, 44)));
@@ -77,6 +80,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTree.Maintenance", new ThemeElement(null, new RGB(136, 136, 204)));
+      elements.put("ObjectTree.Decommissioned", new ThemeElement(null, new RGB(160, 160, 160)));
       elements.put("Rack", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
       elements.put("Rack.EmptySpace", new ThemeElement(new RGB(64, 64, 64), null));
@@ -86,6 +90,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(113, 115, 48), null));
       elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(90, 85, 97), null));
       elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(94, 102, 82), null));
+      elements.put("RuleEditor.Border.Explanation", new ThemeElement(new RGB(35, 50, 65), null));
       elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(56, 66, 77), null));
       elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(240, 240, 240)));
       elements.put("Status.Normal", new ThemeElement(new RGB(0, 137, 0), new RGB(0, 192, 0)));
@@ -99,8 +104,8 @@ public class DefaultDarkTheme extends Theme
       elements.put("Status.Testing", new ThemeElement(new RGB(138, 0, 143), new RGB(255, 128, 255)));
       elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
       elements.put("TextInput.Error", new ThemeElement(new RGB(48, 0, 0), null));
-      elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 13));
+      elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 13));
       elements.put("Window.Header.Highlight", new ThemeElement(new RGB(71, 113, 134), new RGB(192, 192, 192)));
-      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0, 54, 77), new RGB(240, 240, 240), "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 14));
+      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0, 54, 77), new RGB(240, 240, 240), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 14));
    }
 }

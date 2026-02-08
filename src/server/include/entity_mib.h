@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -144,6 +144,11 @@ public:
  * Build component tree form entity MIB
  */
 shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo);
+
+/**
+ * Get interface physical location from ENTITY MIB component hierarchy
+ */
+InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntityMib(const Component *port);
 
 /**
  * NXSL "Component" class

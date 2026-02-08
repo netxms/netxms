@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
 import org.netxms.client.constants.AggregationFunction;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -151,7 +152,7 @@ public class DataCollectionTest extends AbstractSessionTest
          }
 
          @Override
-         public void onStatusChange(long id, int status)
+         public void onStatusChange(long id, DataCollectionObjectStatus status)
          {
          }
       });

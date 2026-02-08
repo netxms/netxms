@@ -21,6 +21,8 @@ package org.netxms.nxmc.modules.dashboards.config;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.swt.SWT;
+import org.netxms.client.datacollection.DciTemplateConfig;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.DciIdMatchingData;
 import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
@@ -47,8 +49,18 @@ public class TableValueConfig extends DashboardElementConfig
    @Element(required = false)
    public String dciTag;
 
+   @Element(required = false)
+   private DciTemplateConfig templateConfig;
+
 	@Element(required = false)
 	private int refreshRate = 30;
+
+   @Element(required = false)
+   private String sortColumn = null;
+
+   @Element(required = false)
+   private int sortDirection = SWT.UP;
+
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
@@ -180,6 +192,37 @@ public class TableValueConfig extends DashboardElementConfig
    }
 
    /**
+    * Get DCI template configuration. If not set, creates one populated from legacy fields.
+    *
+    * @return DCI template configuration
+    */
+   public DciTemplateConfig getTemplateConfig()
+   {
+      if (templateConfig == null)
+      {
+         templateConfig = new DciTemplateConfig();
+         templateConfig.setDciName(getDciName());
+         templateConfig.setDciDescription(getDciDescription());
+         templateConfig.setDciTag(getDciTag());
+      }
+      return templateConfig;
+   }
+
+   /**
+    * Apply DciTemplateConfig values.
+    *
+    * @param config DCI template configuration to apply
+    */
+   public void applyTemplateConfig(DciTemplateConfig config)
+   {
+      templateConfig = config;
+      // Sync to legacy fields for serialization compatibility
+      dciName = config.getDciName();
+      dciDescription = config.getDciDescription();
+      dciTag = config.getDciTag();
+   }
+
+   /**
     * @return
     */
 	public int getRefreshRate()
@@ -194,4 +237,36 @@ public class TableValueConfig extends DashboardElementConfig
 	{
 		this.refreshRate = refreshRate;
 	}
+
+   /**
+    * @return sort column
+    */
+   public String getSortColumn()
+   {
+      return sortColumn;
+   }
+
+   /**
+    * @param sortColumn the sortColumn to set
+    */
+   public void setSortColumn(String sortColumn)
+   {
+      this.sortColumn = sortColumn;
+   }
+
+   /**
+    * @return sort direction (SWT.UP or SWT.DOWN)
+    */
+   public int getSortDirection()
+   {
+      return sortDirection;
+   }
+
+   /**
+    * @param sortDirection the sortDirection to set (SWT.UP or SWT.DOWN)
+    */
+   public void setSortDirection(int sortDirection)
+   {
+      this.sortDirection = sortDirection;
+   }
 }

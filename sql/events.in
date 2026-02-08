@@ -274,7 +274,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   9) operation - Threshold''s operation code' CONCAT CRLF CONCAT
 		'   10) function - Threshold''s function code' CONCAT CRLF CONCAT
 		'   11) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   12) thresholdDefinition - Threshold''s textual definition'
+		'   12) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
+		'   13) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   14) instanceName - Instance name same as instance' CONCAT CRLF CONCAT
+		'   15) thresholdId - Threshold''s ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -294,7 +297,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) operation - Threshold''s operation code' CONCAT CRLF CONCAT
 		'   9) function - Threshold''s function code' CONCAT CRLF CONCAT
 		'   10) pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
-		'   11) thresholdDefinition - Threshold''s textual definition'
+		'   11) thresholdDefinition - Threshold''s textual definition' CONCAT CRLF CONCAT
+		'   12) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   13) instanceName - Instance name same as instance' CONCAT CRLF CONCAT
+		'   14) thresholdId - Threshold''s ID'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
         (
@@ -308,7 +314,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
                 '   2) dciDescription - Data collection item description' CONCAT CRLF CONCAT
                 '   3) dciId - Data collection item ID' CONCAT CRLF CONCAT
                 '   4) instance - Instance' CONCAT CRLF CONCAT
-                '   5) dciValue - Last collected DCI value'
+                '   5) dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   6) instanceValue - Instance value' CONCAT CRLF CONCAT
+		'   7) instanceName - Instance name same as instance'
         );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -840,27 +848,27 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_TABLE_THRESHOLD_ACTIVATED, 'SYS_TABLE_THRESHOLD_ACTIVATED', 'c08a1cfe-3128-40c2-99cc-378e7ef91f79',
 		EVENT_SEVERITY_MINOR, 1,
-		'Threshold activated on table "%2" row %4 (%5)',
+		'Threshold activated on table "%<dciDescription>" row %<row> (%<instance>)',
 		'Generated when table threshold is activated.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Table DCI name' CONCAT CRLF CONCAT
-		'   2) Table DCI description' CONCAT CRLF CONCAT
-		'   3) Table DCI ID' CONCAT CRLF CONCAT
-		'   4) Table row' CONCAT CRLF CONCAT
-		'   5) Instance'
+		'   1) dciName - Table DCI name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Table DCI description' CONCAT CRLF CONCAT
+		'   3) dciId - Table DCI ID' CONCAT CRLF CONCAT
+		'   4) row - Table row' CONCAT CRLF CONCAT
+		'   5) instance - Instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_TABLE_THRESHOLD_DEACTIVATED, 'SYS_TABLE_THRESHOLD_DEACTIVATED', '479085e7-e1d1-4f2a-9d96-1d522f51b26a',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Threshold deactivated on table "%2" row %4 (%5)',
+		'Threshold deactivated on table "%<dciDescription>" row %<row> (%<instance>)',
 		'Generated when table threshold is deactivated.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Table DCI name' CONCAT CRLF CONCAT
-		'   2) Table DCI description' CONCAT CRLF CONCAT
-		'   3) Table DCI ID' CONCAT CRLF CONCAT
-		'   4) Table row' CONCAT CRLF CONCAT
-		'   5) Instance'
+		'   1) dciName - Table DCI name' CONCAT CRLF CONCAT
+		'   2) dciDescription - Table DCI description' CONCAT CRLF CONCAT
+		'   3) dciId - Table DCI ID' CONCAT CRLF CONCAT
+		'   4) row - Table row' CONCAT CRLF CONCAT
+		'   5) instance - Instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1751,14 +1759,31 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_IF_SPEED_CHANGED, 'SYS_IF_SPEED_CHANGED', '3967eab5-71c0-4ba7-aeb9-eb70bcf5caa9',
       EVENT_SEVERITY_NORMAL, 1, 
       'Interface %<ifName> speed changed from %<oldSpeedText> to %<newSpeedText>',
-      'Generated when system detects interface speed change.'   CONCAT CRLF CONCAT
-      'Parameters:'   CONCAT CRLF CONCAT
-      '   1) ifIndex - Interface index'   CONCAT CRLF CONCAT
-      '   2) ifName - Interface name'   CONCAT CRLF CONCAT
-      '   3) oldSpeed - Old speed in bps'   CONCAT CRLF CONCAT
-      '   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)'   CONCAT CRLF CONCAT
-      '   5) newSpeed - New speed in bps'   CONCAT CRLF CONCAT
-      '   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)'
+      'Generated when system detects interface speed change.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) ifIndex - Interface index' CONCAT CRLF CONCAT
+      '   2) ifName - Interface name' CONCAT CRLF CONCAT
+      '   3) oldSpeed - Old speed in bps' CONCAT CRLF CONCAT
+      '   4) oldSpeedText - Old speed in bps with optional multiplier (kbps, Mbps, etc.)' CONCAT CRLF CONCAT
+      '   5) newSpeed - New speed in bps' CONCAT CRLF CONCAT
+      '   6) newSpeedText - New speed in bps with optional multiplier (kbps, Mbps, etc.)' CONCAT CRLF CONCAT
+      '   7) maxSpeed - Maximum speed in bps' CONCAT CRLF CONCAT
+      '   8) maxSpeedText - Maximum speed in bps with optional multiplier (kbps, Mbps, etc.)'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_IF_SPEED_BELOW_MAXIMUM, 'SYS_IF_SPEED_BELOW_MAXIMUM', 'c020c587-ab9f-4834-ba3c-91583c2871b1',
+      EVENT_SEVERITY_WARNING, 1, 
+      'Interface %<ifName> speed %<speedText> is below maximum %<maxSpeedText>',
+      'Generated when system detects that interface speed is below maximum.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) ifIndex - Interface index' CONCAT CRLF CONCAT
+      '   2) ifName - Interface name' CONCAT CRLF CONCAT
+      '   3) speed - Current speed in bps' CONCAT CRLF CONCAT
+      '   4) speedText - Current speed in bps with optional multiplier (kbps, Mbps, etc.)' CONCAT CRLF CONCAT
+      '   5) maxSpeed - Maximum speed in bps' CONCAT CRLF CONCAT
+      '   6) maxSpeedText - Maximum speed in bps with optional multiplier (kbps, Mbps, etc.)'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1805,6 +1830,95 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   5) objectId - Object ID' CONCAT CRLF CONCAT
 		'   6) objectName - Object name' CONCAT CRLF CONCAT
 		'   7) operator - Operator (user who made change to the object)'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INTERFACE_UNMANAGED, 'SYS_IF_UNMANAGED', 'dd449241-1886-41e3-a279-9a084ff64cec',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface "%<interfaceName>" changed state to UNMANAGED (IP Addr: %<interfaceIpAddress>/%<interfaceNetMask>, IfIndex: %<interfaceIndex>)',
+		'Generated when interface status changed to unmanaged.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) interfaceObjectId - Interface object ID' CONCAT CRLF CONCAT
+		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
+		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
+		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
+		'   5) interfaceIndex - Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_NC_QUEUE_OVERFLOW, 'SYS_NC_QUEUE_OVERFLOW', '67b1aebf-3862-44fa-9ff8-9098c9e63a12',
+		EVENT_SEVERITY_WARNING, 1,
+		'Notification channel "%<channelName>" queue overflow (size=%<queueSize>, limit=%<maxQueueSize>)',
+		'Generated when notification channel queue size exceeds configured threshold.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) channelName - Notification channel name' CONCAT CRLF CONCAT
+		'   2) queueSize - Current queue size' CONCAT CRLF CONCAT
+		'   3) maxQueueSize - Configured maximum queue size'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_OPENED, 'SYS_INCIDENT_OPENED', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> opened (%<title>)',
+		'Generated when a new incident is created.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) sourceAlarmId - Source alarm ID (0 if manual)' CONCAT CRLF CONCAT
+		'   4) userId - User ID who created (0 if auto)'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_STATE_CHANGED, 'SYS_INCIDENT_STATE_CHANGED', 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> state changed from %<oldStateName> to %<newStateName>',
+		'Generated when incident state changes.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) oldState - Previous state code' CONCAT CRLF CONCAT
+		'   4) oldStateName - Previous state name' CONCAT CRLF CONCAT
+		'   5) newState - New state code' CONCAT CRLF CONCAT
+		'   6) newStateName - New state name' CONCAT CRLF CONCAT
+		'   7) userId - User ID who changed state'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ASSIGNED, 'SYS_INCIDENT_ASSIGNED', 'e5f6a7b8-c9d0-1234-efab-345678901234',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Incident #%<incidentId> assigned to user %<assignedUserName>',
+		'Generated when an incident is assigned to a user.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) assignedUserId - Assigned user ID' CONCAT CRLF CONCAT
+		'   4) assignedUserName - Assigned user name' CONCAT CRLF CONCAT
+		'   5) assignedByUser - User ID who assigned'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ALARM_LINKED, 'SYS_INCIDENT_ALARM_LINKED', 'ee499067-16c1-493d-8d1b-eefe02a4efb0',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Alarm #%<alarmId> linked to incident #%<incidentId>',
+		'Generated when an alarm is linked to an incident.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   4) userId - User ID who liked'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_INCIDENT_ALARM_UNLINKED, 'SYS_INCIDENT_ALARM_UNLINKED', '7b5b0dff-0498-4342-a2ca-033a6f30d0a0',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Alarm #%<alarmId> unlinked from incident #%<incidentId>',
+		'Generated when an alarm is unlinked from an incident.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) incidentId - Incident ID' CONCAT CRLF CONCAT
+		'   2) title - Incident title' CONCAT CRLF CONCAT
+		'   3) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   4) userId - User ID who unliked'
 	);
 
 /*

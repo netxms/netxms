@@ -329,11 +329,13 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
       if (dwIndex != 0)
       {
 			int metric = CAST_FROM_POINTER(arg, int);
-			if ((metric == NETINFO_IF_SPEED) || 
-			    (metric == NETINFO_IF_PACKETS_IN_64) || 
-			    (metric == NETINFO_IF_PACKETS_OUT_64) || 
-			    (metric == NETINFO_IF_BYTES_IN_64) || 
-				 (metric == NETINFO_IF_BYTES_OUT_64))
+			if ((metric == NETINFO_IF_SPEED) ||
+			    (metric == NETINFO_IF_PACKETS_IN_64) ||
+			    (metric == NETINFO_IF_PACKETS_OUT_64) ||
+			    (metric == NETINFO_IF_BYTES_IN_64) ||
+				 (metric == NETINFO_IF_BYTES_OUT_64) ||
+				 (metric == NETINFO_IF_IN_DROPS_64) ||
+				 (metric == NETINFO_IF_OUT_DROPS_64))
 			{
 				MIB_IF_ROW2 info;
 
@@ -357,6 +359,12 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 							break;
 						case NETINFO_IF_SPEED:
 							ret_uint64(value, info.TransmitLinkSpeed);
+							break;
+						case NETINFO_IF_IN_DROPS_64:
+							ret_uint64(value, info.InDiscards);
+							break;
+						case NETINFO_IF_OUT_DROPS_64:
+							ret_uint64(value, info.OutDiscards);
 							break;
 						default:
 							iResult = SYSINFO_RC_UNSUPPORTED;
@@ -414,6 +422,12 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 							break;
 						case NETINFO_IF_ADMIN_STATUS:
 							ret_uint(value, info.dwAdminStatus ? 1 : 2);
+							break;
+						case NETINFO_IF_IN_DROPS:
+							ret_uint(value, info.dwInDiscards);
+							break;
+						case NETINFO_IF_OUT_DROPS:
+							ret_uint(value, info.dwOutDiscards);
 							break;
 						default:
 							iResult = SYSINFO_RC_UNSUPPORTED;

@@ -20,23 +20,70 @@ package org.netxms.client.events;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class represents NetXMS event processing policy.
  */
 public class EventProcessingPolicy
 {
-	private List<EventProcessingPolicyRule> rules;
+   /**
+    * Information about a deleted rule for conflict detection
+    */
+   public static class DeletedRuleInfo
+   {
+      private UUID guid;
+      private int version;
 
-	/**
-	 * Create new policy object.
-	 * 
-	 * @param numRules Expected number of rules
-	 */
-	public EventProcessingPolicy(int numRules)
-	{
-		rules = new ArrayList<EventProcessingPolicyRule>(numRules);
-	}
+      /**
+       * Create deleted rule info.
+       *
+       * @param guid rule GUID
+       * @param version rule version when deleted
+       */
+      public DeletedRuleInfo(UUID guid, int version)
+      {
+         this.guid = guid;
+         this.version = version;
+      }
+
+      /**
+       * Get rule GUID.
+       *
+       * @return rule GUID
+       */
+      public UUID getGuid()
+      {
+         return guid;
+      }
+
+      /**
+       * Get rule version when it was deleted.
+       *
+       * @return rule version
+       */
+      public int getVersion()
+      {
+         return version;
+      }
+   }
+
+   private List<EventProcessingPolicyRule> rules;
+   private int version;
+   private List<DeletedRuleInfo> deletedRules;
+
+   /**
+    * Create new policy object.
+    *
+    * @param numRules Expected number of rules
+    * @param version Policy version from server
+    */
+   public EventProcessingPolicy(int numRules, int version)
+   {
+      rules = new ArrayList<EventProcessingPolicyRule>(numRules);
+      this.version = version;
+      deletedRules = new ArrayList<>();
+   }
 	
 	/**
 	 * Add new rule.
@@ -59,27 +106,66 @@ public class EventProcessingPolicy
 		rules.add(index, rule);
 	}
 
-	/**
-	 * Delete rule.
-	 * 
-	 * @param rule rule object to be remove
-	 */
-	public void deleteRule(EventProcessingPolicyRule rule)
-	{
-		try
-		{
-			rules.remove(rule);
-		}
-		catch(IndexOutOfBoundsException e)
-		{
-		}
-	}
+   /**
+    * Delete rule.
+    *
+    * @param rule rule object to be remove
+    */
+   public void deleteRule(EventProcessingPolicyRule rule)
+   {
+      if (rules.remove(rule))
+      {
+         // Track deletion for conflict detection (only if rule has a server version)
+         if (rule.getVersion() > 0)
+         {
+            deletedRules.add(new DeletedRuleInfo(rule.getGuid(), rule.getVersion()));
+         }
+      }
+   }
 
-	/**
-	 * @return the rules
-	 */
-	public List<EventProcessingPolicyRule> getRules()
-	{
-		return rules;
-	}
+   /**
+    * @return the rules
+    */
+   public List<EventProcessingPolicyRule> getRules()
+   {
+      return rules;
+   }
+
+   /**
+    * Get policy version for optimistic concurrency control.
+    *
+    * @return policy version
+    */
+   public int getVersion()
+   {
+      return version;
+   }
+
+   /**
+    * Set policy version.
+    *
+    * @param version new version
+    */
+   public void setVersion(int version)
+   {
+      this.version = version;
+   }
+
+   /**
+    * Get list of deleted rules.
+    *
+    * @return list of deleted rules
+    */
+   public List<DeletedRuleInfo> getDeletedRules()
+   {
+      return deletedRules;
+   }
+
+   /**
+    * Clear deleted rules list.
+    */
+   public void clearDeletedRules()
+   {
+      deletedRules.clear();
+   }
 }

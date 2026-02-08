@@ -77,16 +77,11 @@ bool InfluxDBStorageDriver::init(Config *config)
 
    if (!_tcsnicmp(protocol, _T("api"), 3))
    {
-#if HAVE_LIBCURL
       if (!InitializeLibCURL())
       {
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("cURL initialization failed"));
          return false;
       }
-#else
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Driver built without libcurl, API protocols are not supported"));
-      return false;
-#endif
    }
 
    m_enableUnsignedType = config->getValueAsBoolean(L"/InfluxDB/EnableUnsignedType", m_enableUnsignedType);
@@ -113,12 +108,10 @@ bool InfluxDBStorageDriver::init(Config *config)
       InfluxDBSender *sender;
       if (!wcsicmp(protocol, L"udp"))
          sender = new UDPSender(*config);
-#if HAVE_LIBCURL
       else if (!wcsicmp(protocol, L"api-v1"))
          sender = new APIv1Sender(*config);
       else
          sender = new APIv2Sender(*config);
-#endif
       sender->start();
       m_senders.add(sender);
    }
@@ -227,13 +220,13 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
 /**
  * Build and queue metric from item DCI's
  */
-bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const wchar_t *value)
+bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
             _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
             dci->getOwnerName(), dci->getDataSource(), dci->getType(), dci->getName().cstr(), dci->getDescription().cstr(),
             dci->getInstanceName().cstr(), dci->getTransformedDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(),
-            value, static_cast<INT64>(timestamp));
+            value, timestamp.asMilliseconds());
 
    // Dont't try to send empty values
    if (*value == 0)
@@ -521,8 +514,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       else
          data.append(_T(' '));
    }
-   data.append(static_cast<uint64_t>(timestamp));
-   data.append(_T("000000000")); // Use nanosecond precision
+   data.append(timestamp.asNanoseconds());
 
    int senderIndex = dci->getId() % m_senders.size();
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Queuing data to sender #%d: %s"), senderIndex, data.cstr());

@@ -107,3 +107,37 @@ InterfaceList *HuaweiSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 
    return ifList;
 }
+
+/**
+ * Get SSH driver hints for Huawei VRP devices
+ */
+void HuaweiSWDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Huawei VRP prompt patterns:
+   // - User view: <hostname>
+   // - System view: [hostname]
+   // - Interface view: [hostname-GigabitEthernet0/0/1]
+   // - Other config views: [hostname-xxx]
+   hints->promptPattern = "^[<\\[][\\w.-]+([-][\\w/.-]+)?[>\\]]\\s*$";
+   hints->enabledPromptPattern = "^\\[[\\w.-]+([-][\\w/.-]+)?\\]\\s*$";
+
+   // Privilege escalation uses "super" command
+   hints->enableCommand = "super";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "screen-length 0 temporary";
+   hints->paginationPrompt = "---- More ----|  ---- More ----|^--More--";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "quit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = "display version | include VRP";
+   hints->testCommandPattern = "VRP";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}

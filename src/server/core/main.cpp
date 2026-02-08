@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include <nxnet.h>
 #include <nxstat.h>
 #include <netxms-editline.h>
+#include <nms_incident.h>
 
 #ifdef _WIN32
 #include <errno.h>
@@ -93,8 +94,6 @@ void CleanupObjects();
 void LoadPerfDataStorageDrivers();
 void ShutdownPerfDataStorageDrivers();
 void ImportLocalConfiguration(bool overwrite);
-void RegisterPredictionEngines();
-void ShutdownPredictionEngines();
 void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
@@ -104,6 +103,8 @@ void LoadObjectQueries();
 THREAD StartEventProcessor();
 void StartHouseKeeper();
 void StopHouseKeeper();
+void InitStorageClassMigration();
+void ShutdownStorageClassMigration();
 void StartSNMPAgent();
 void StopSNMPAgent();
 void LoadTrapMappings();
@@ -112,6 +113,8 @@ void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
 void LoadWellKnownPortList();
+bool InitAIAssistant();
+void ShutdownAIMessageManager();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -126,6 +129,7 @@ void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &parameters);
 void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& parameters);
+void RegenerateAnomalyProfiles(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -135,6 +139,10 @@ void LoadAssetManagementSchema();
 
 void StartPackageDeploymentManager();
 void StopPackageDeploymentManager();
+
+bool InitWebAPI();
+void StartWebAPI();
+void ShutdownWebAPI();
 
 /**
  * Syslog server control
@@ -192,8 +200,8 @@ uint32_t g_mapUpdatePollingInterval;
 uint32_t g_icmpPingSize;
 uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
-uint32_t g_offlineDataRelevanceTime = 86400;
 uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
+int64_t g_offlineDataRelevanceTime = 86400000;  // Default offline data relevance time (milliseconds)
 PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
@@ -358,6 +366,130 @@ time_t NXCORE_EXPORTABLE GetLicenseProblemTimestamp(uint32_t id)
 }
 
 /**
+ * Read lock flag from database. We cannot use ConfigReadInt here because it uses cached values.
+ */
+static int32_t ReadLockFlag()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_value FROM config WHERE var_name='DBLockFlag'");
+   if (hResult == nullptr)
+      return -1;
+
+   int32_t lockFlag = DBGetNumRows(hResult) > 0 ? DBGetFieldInt32(hResult, 0, 0) : 0;
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+   return lockFlag;
+}
+
+/**
+ * Read lock status from database. We cannot use ConfigReadStr here because it uses cached values.
+ */
+static void ReadLockStatus(wchar_t *buffer)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_value FROM config WHERE var_name='DBLockStatus'");
+   if (hResult == nullptr)
+   {
+      wcscpy(buffer, L"ERROR");
+   }
+   else
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, buffer, 256);
+      }
+      else
+      {
+         wcscpy(buffer, L"UNLOCKED");
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Lock entire database and clear all other locks
+ * Will return FALSE if someone already locked database
+ */
+static bool LockDatabase(InetAddress *lockAddr, wchar_t *lockInfo)
+{
+   bool success = false;
+
+   *lockAddr = InetAddress();
+   lockInfo[0] = 0;
+
+   // Check current database lock status
+   int retryCount = 10;
+retry:
+   wchar_t buffer[256];
+   ReadLockStatus(buffer);
+   nxlog_debug_tag(L"db.lock", 6, L"DBLockStatus=\"%s\"", buffer);
+
+   if (!wcscmp(buffer, L"UNLOCKED"))
+   {
+      if (--retryCount < 0)
+      {
+         wcscpy(lockInfo, L"LOCK ERROR");
+         nxlog_debug_tag(L"db.lock", 1, L"Failed to acquire database lock after multiple attempts");
+         return false;
+      }
+
+      if (ReadLockFlag() != 0)
+      {
+         nxlog_debug_tag(L"db.lock", 6, L"Another instance is in the process of acquiring lock");
+         ThreadSleepMs(1000); // Wait for other instance to complete lock acquisition or exit
+         goto retry;
+      }
+
+      // First phase of double lock - set temporary flag
+      int32_t lockFlag;
+      RAND_bytes((BYTE *)&lockFlag, sizeof(int32_t));
+      lockFlag &= 0x7FFFFFFF;  // Ensure positive value
+      ConfigWriteInt(L"DBLockFlag", lockFlag, true, false, false);
+      ThreadSleepMs(500);  // Small delay to ensure that if other instance also writes flag, we will read updated value
+      int32_t checkFlag = ReadLockFlag();
+      if (checkFlag != lockFlag)
+      {
+         nxlog_debug_tag(L"db.lock", 6, L"Double lock first phase failed: written flag=%d, read flag=%d", lockFlag, checkFlag);
+         ThreadSleepMs(1000); // Wait for other instance to complete lock acquisition or exit
+         goto retry;  // Another instance is in the process of acquiring lock
+      }
+
+      nxlog_debug_tag(L"db.lock", 6, L"Double lock first phase succeeded");
+
+      GetLocalIPAddress().toString(buffer);
+      ConfigWriteStr(L"DBLockStatus", buffer, true, false);
+      GetSysInfoStr(buffer, sizeof(buffer));
+      ConfigWriteStr(L"DBLockInfo", buffer, true, false);
+      ConfigWriteULong(L"DBLockPID", GetCurrentProcessId(), true, false);
+      ConfigWriteInt(L"DBLockFlag", 0, true, false, false);
+      success = true;
+   }
+   else if (!wcsncmp(buffer, L"NXDBMGR", 7))
+   {
+      wcslcpy(lockInfo, buffer, 256);
+   }
+   else if (wcscmp(buffer, L"ERROR"))
+   {
+      *lockAddr = InetAddress::parse(buffer);
+      ConfigReadStr(L"DBLockInfo", lockInfo, 256, L"<error>");
+   }
+
+   return success;
+}
+
+/**
+ * Unlock database
+ */
+void NXCORE_EXPORTABLE UnlockDatabase()
+{
+   ConfigWriteStr(L"DBLockStatus", L"UNLOCKED", false);
+   ConfigWriteStr(L"DBLockInfo", L"", false);
+   ConfigWriteULong(L"DBLockPID", 0, false);
+   ConfigWriteInt(L"DBLockFlag", 0, false);
+}
+
+/**
  * Disconnect from database (exportable function for startup module)
  */
 void NXCORE_EXPORTABLE ShutdownDatabase()
@@ -449,7 +581,7 @@ static void LoadGlobalConfig()
    g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
    g_instancePollingInterval = ConfigReadInt(_T("DataCollection.InstancePollingInterval"), 600);
-   g_routingTableUpdateInterval = ConfigReadInt(_T("Topology.RoutingTableUpdateInterval"), 300);
+   g_routingTableUpdateInterval = ConfigReadInt(_T("Topology.RoutingTable.UpdateInterval"), 300);
    g_statusPollingInterval = ConfigReadInt(_T("Objects.StatusPollingInterval"), 60);
    g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
    g_autobindPollingInterval = ConfigReadInt(_T("Objects.AutobindPollingInterval"), 3600);
@@ -574,7 +706,7 @@ static void LoadGlobalConfig()
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("Objects.PollCountForStatusChange"), 1);
-   g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400);
+   g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400) * 1000L; // Config value is in seconds
    g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
@@ -972,6 +1104,12 @@ bool NXCORE_EXPORTABLE Initialize()
 	// Wait for database password if needed
 	GetDatabasePassword();
 
+	// Execute database password command if configured
+	ExecuteDatabasePasswordCommand();
+
+	// Retrieve database credentials from Vault if configured
+	RetrieveDatabaseCredentialsFromVault();
+
    // Set up callback for DBConnect
    DBSetSessionInitCallback(DbSessionInitCallback);
 
@@ -1183,6 +1321,9 @@ retry_db_lock:
       return false;
 #endif
 
+   if (!InitWebAPI())
+      return false;
+
    // Create thread pools
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Creating thread pools"));
    g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
@@ -1212,6 +1353,9 @@ retry_db_lock:
    // Load and compile scripts
    LoadScripts();
 
+   // Load MIB tree for SNMP display hint support
+   LoadMIBTree();
+
    // Initialize persistent storage
    PersistentStorageInit();
 
@@ -1225,14 +1369,7 @@ retry_db_lock:
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
-   RegisterPredictionEngines();
-
-   // Check if AI assistant is available
-   ENUMERATE_MODULES(pfProcessRequestToAiAssistant)
-   {
-      RegisterComponent(L"AI-ASSISTANT");
-      break;
-   }
+   InitAIAssistant();
 
    // Load users and authentication methods
    LoadTwoFactorAuthenticationMethods();
@@ -1257,6 +1394,10 @@ retry_db_lock:
    if (!InitAlarmManager())
       return false;
 
+   // Initialize incidents
+   if (!InitIncidentManager())
+      return false;
+
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
    LoadNetworkDeviceDrivers();
@@ -1266,6 +1407,8 @@ retry_db_lock:
    if (!LoadObjects())
       return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
+
+   MigrateRecentV5Data();
 
    // Check if management node object presented in database
    CheckForMgmtNode();
@@ -1304,6 +1447,8 @@ retry_db_lock:
    LoadPerfDataStorageDrivers();
    LoadWebServiceDefinitions();
    InitDataCollector();
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      InitStorageClassMigration();
    LoadAssetManagementSchema();
 
    LoadObjectQueries();
@@ -1335,6 +1480,7 @@ retry_db_lock:
    s_pollManagerThread = ThreadCreateEx(PollManager, &pollManagerInitialized);
 
    StartHouseKeeper();
+   StartV5DataMigration();
 
    // Start event processor
    s_eventProcessorThread = StartEventProcessor();
@@ -1383,11 +1529,16 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(INCIDENT_CREATE_TASK_ID, CreateIncidentFromAlarmTask, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
    AddUniqueRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Process unbound agent tunnels"), nullptr, true);
    AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Renew agent certificates"), nullptr, true);
+
+   // Initialize anomaly detection subsystem
+   RegisterSchedulerTaskHandler(L"System.RegenerateAnomalyProfiles", RegenerateAnomalyProfiles, 0);
+   AddUniqueRecurrentScheduledTask(L"System.RegenerateAnomalyProfiles", L"0 12 * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"Regenerate DCI anomaly profiles", nullptr, true);
 
    // Send summary emails
    if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))
@@ -1412,6 +1563,9 @@ retry_db_lock:
    s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
+
+   // Start web server
+   StartWebAPI();
 
    StartPackageDeploymentManager();
 
@@ -1459,11 +1613,17 @@ void NXCORE_EXPORTABLE Shutdown()
          g_moduleList.get(i)->pfShutdown();
    }
 
+   ShutdownAIMessageManager();
+   ShutdownWebAPI();
+
    ThreadJoin(s_statCollectorThread);
 
    StopPackageDeploymentManager();
 
    StopHouseKeeper();
+   StopV5DataMigration();
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+      ShutdownStorageClassMigration();
    ShutdownTaskScheduler();
 
    StopSNMPAgent();
@@ -1472,7 +1632,6 @@ void NXCORE_EXPORTABLE Shutdown()
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
 
-	ShutdownPredictionEngines();
    StopObjectMaintenanceThreads();
    StopDataCollection();
 
@@ -1521,6 +1680,7 @@ void NXCORE_EXPORTABLE Shutdown()
    CleanupActions();
    ShutdownEventSubsystem();
    ShutdownAlarmManager();
+   ShutdownIncidentManager();
    ShutdownNotificationChannels();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Event processing stopped"));
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmStateChangeFailureDialog;
+import org.netxms.nxmc.modules.alarms.dialogs.AssistantCommentDialog;
 import org.netxms.nxmc.modules.alarms.views.AlarmDetails;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
@@ -141,11 +142,14 @@ public class AlarmList extends CompositeWithMessageArea
 	private Action actionStickyAcknowledge;
 	private Action actionTerminate;
 	private Action actionGoToObject;
+	private Action actionGoToDci;
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
+   private Action actionCreateIncident;
    private Action actionExportToCsv;
    private Action actionShowAlarmDetails;
+   private Action actionQueryAssistant;
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
@@ -155,6 +159,7 @@ public class AlarmList extends CompositeWithMessageArea
    private long rootObject;
    private boolean blinkEnabled = false;
    private int warningMessageId = 0;
+   private boolean aiAssistantAvailable;
 
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
@@ -184,6 +189,7 @@ public class AlarmList extends CompositeWithMessageArea
       session = Registry.getSession();
       this.view = view;
 		this.visibilityValidator = visibilityValidator;
+      aiAssistantAvailable = session.isServerComponentRegistered("AI-ASSISTANT");
 
       getContent().setLayout(new FillLayout());
 
@@ -540,8 +546,16 @@ public class AlarmList extends CompositeWithMessageArea
             unlinkIssue();
          }
       };
-      
-      actionGoToObject = new Action(i18n.tr("Go to &object")) {
+
+      actionCreateIncident = new Action(i18n.tr("Create &incident"), ResourceManager.getImageDescriptor("icons/incident.png")) {
+         @Override
+         public void run()
+         {
+            createIncident();
+         }
+      };
+
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
 			@Override
 			public void run()
 			{
@@ -554,6 +568,21 @@ public class AlarmList extends CompositeWithMessageArea
 			}
 		};
       actionGoToObject.setId("AlarmList.GoToObject");
+      
+      actionGoToDci = new Action(i18n.tr("Go to &DCI")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            
+            final long objectId = ((Alarm)selection.getFirstElement()).getSourceObjectId();
+            final long dciId = ((Alarm)selection.getFirstElement()).getDciId();
+            MainWindow.switchToObject(objectId, dciId);
+         }
+      };
+      actionGoToDci.setId("AlarmList.GoToDci");
 
       actionExportToCsv = new ExportToCsvAction(view, alarmViewer, true);
 
@@ -588,7 +617,6 @@ public class AlarmList extends CompositeWithMessageArea
          @Override
          public void run()
          {
-
             IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
             if (selection.size() != 1)
                return;
@@ -598,6 +626,14 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       actionShowAlarmDetails.setId("AlarmList.ShowAlarmDetails");
+
+      actionQueryAssistant = new Action(i18n.tr("As&k AI assistant..."), SharedIcons.AI_ASSISTANT) {
+         @Override
+         public void run()
+         {
+            queryAssistant();
+         }
+      };
 	}
 
 	/**
@@ -747,6 +783,8 @@ public class AlarmList extends CompositeWithMessageArea
          // manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
 			manager.add(new Separator());
 			manager.add(actionGoToObject);
+			if (((Alarm)selection.getFirstElement()).getDciId() != 0)
+            manager.add(actionGoToDci);
 			manager.add(new Separator());
 		}
 
@@ -771,6 +809,12 @@ public class AlarmList extends CompositeWithMessageArea
                if ((session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES) != 0)
                   manager.add(actionUnlinkIssue);
             }
+         }
+         manager.add(new Separator());
+         manager.add(actionCreateIncident);
+         if (aiAssistantAvailable)
+         {
+            manager.add(actionQueryAssistant);
          }
          manager.add(new Separator());
          manager.add(objectMenuManager);
@@ -1267,6 +1311,41 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
+    * Create incident from selected alarm
+    */
+   private void createIncident()
+   {
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final Alarm alarm = (Alarm)selection.getFirstElement();
+      new Job(i18n.tr("Create incident"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final long incidentId = session.createIncident(alarm.getSourceObjectId(), alarm.getMessage(), null, alarm.getId());
+            runInUIThread(() -> {
+               if (isDisposed())
+                  return;
+
+               String message = String.format(i18n.tr("Incident #%d created successfully"), incidentId);
+               if (view != null)
+                  view.addMessage(MessageArea.SUCCESS, message);
+               else
+                  MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Incident"), message);
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create incident from alarm");
+         }
+      }.start();
+   }
+
+   /**
     * Get underlying table viewer.
     * 
     * @return
@@ -1299,6 +1378,60 @@ public class AlarmList extends CompositeWithMessageArea
       PreferenceStore.getInstance().set("AlarmList.ShowStatusColor", show);
    }
    
+   /**
+    * Send request to AI assistant for selected alarm
+    */
+   private void queryAssistant()
+   {
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final Alarm alarm = (Alarm)selection.getFirstElement();
+      new Job(i18n.tr("Querying AI assistant"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final String comments = session.requestAiAssistantComment(alarm.getId());
+            runInUIThread(() -> {
+               if (isDisposed())
+                  return;
+
+               AssistantCommentDialog dlg = new AssistantCommentDialog((view != null) ? view.getWindow().getShell() : null, comments);
+               if (dlg.open() == Window.OK)
+               {
+                  String text = dlg.getText().trim();
+                  if (!text.isEmpty())
+                     addComment(alarm.getId(), text);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot query AI assistant");
+         }
+      }.start();
+   }
+
+   private void addComment(final long alarmId, final String text)
+   {
+      new Job(i18n.tr("Adding alarm comment"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.updateAlarmComment(alarmId, 0, text);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot add alarm comment");
+         }
+      }.start();
+   }
+
    /**
     * @return true if filter is enabled
     */

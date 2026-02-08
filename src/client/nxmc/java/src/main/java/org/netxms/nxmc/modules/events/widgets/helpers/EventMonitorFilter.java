@@ -31,6 +31,17 @@ import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 public class EventMonitorFilter extends AbstractTraceViewFilter
 {
    private NXCSession session = Registry.getSession();
+   private int[] eventCodes = null;
+
+   /**
+    * Set event codes filter.
+    *
+    * @param codes array of allowed event codes (null or empty for no filter)
+    */
+   public void setEventCodes(int[] codes)
+   {
+      this.eventCodes = (codes != null && codes.length > 0) ? codes : null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -38,11 +49,48 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-      Event event = (Event)element;
+      long sourceId;
+      String message;
+      int code;
 
-      if ((rootObjectId != 0) && (rootObjectId != event.getSourceId()))
+      if (element instanceof Event)
       {
-         AbstractObject object = session.findObjectById(event.getSourceId());
+         Event event = (Event)element;
+         sourceId = event.getSourceId();
+         message = event.getMessage();
+         code = event.getCode();
+      }
+      else if (element instanceof HistoricalEvent)
+      {
+         HistoricalEvent event = (HistoricalEvent)element;
+         sourceId = event.getSourceId();
+         message = event.getMessage();
+         code = event.getCode();
+      }
+      else
+      {
+         return false;
+      }
+
+      // Check event code filter
+      if (eventCodes != null)
+      {
+         boolean found = false;
+         for(int allowedCode : eventCodes)
+         {
+            if (code == allowedCode)
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            return false;
+      }
+
+      if ((rootObjectId != 0) && (rootObjectId != sourceId))
+      {
+         AbstractObject object = session.findObjectById(sourceId);
          if ((object == null) || !object.isChildOf(rootObjectId))
             return false;
       }
@@ -50,9 +98,9 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      return 
-         event.getMessage().toLowerCase().contains(filterString) ||
-         session.getEventName(event.getCode()).toLowerCase().contains(filterString) || 
-         session.getObjectName(event.getSourceId()).toLowerCase().contains(filterString); 
+      return
+         message.toLowerCase().contains(filterString) ||
+         session.getEventName(code).toLowerCase().contains(filterString) ||
+         session.getObjectName(sourceId).toLowerCase().contains(filterString);
 	}
 }

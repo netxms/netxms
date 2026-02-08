@@ -52,9 +52,9 @@
  */
 static char s_hostname[MAX_DNS_NAME] = "localhost";
 static int s_port = 8443;
-static char s_service[MAX_CONFIG_VALUE] = "";
+static char s_service[MAX_CONFIG_VALUE_LENGTH] = "";
 static char s_trustedCA[MAX_PATH] = "";
-static char s_validateURL[MAX_CONFIG_VALUE] = "/cas/serviceValidate";
+static char s_validateURL[MAX_CONFIG_VALUE_LENGTH] = "/cas/serviceValidate";
 static StringSet s_proxies;
 static Mutex s_lock;
 
@@ -65,23 +65,23 @@ void CASReadSettings()
 {
    s_lock.lock();
 
-   ConfigReadStrA(_T("CAS.Host"), s_hostname, MAX_DNS_NAME, "localhost");
-   s_port = ConfigReadInt(_T("CAS.Port"), 8443);
-   ConfigReadStrA(_T("CAS.Service"), s_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
-   ConfigReadStrA(_T("CAS.TrustedCACert"), s_trustedCA, MAX_PATH, "");
-   ConfigReadStrA(_T("CAS.ValidateURL"), s_validateURL, MAX_CONFIG_VALUE, "/cas/serviceValidate");
+   ConfigReadStrA(L"CAS.Host", s_hostname, MAX_DNS_NAME, "localhost");
+   s_port = ConfigReadInt(L"CAS.Port", 8443);
+   ConfigReadStrA(L"CAS.Service", s_service, MAX_CONFIG_VALUE_LENGTH, "http://127.0.0.1:10080/nxmc");
+   ConfigReadStrA(L"CAS.TrustedCACert", s_trustedCA, MAX_PATH, "");
+   ConfigReadStrA(L"CAS.ValidateURL", s_validateURL, MAX_CONFIG_VALUE_LENGTH, "/cas/serviceValidate");
 
-   TCHAR proxies[MAX_CONFIG_VALUE];
-   ConfigReadStr(_T("CAS.AllowedProxies"), proxies, MAX_CONFIG_VALUE, _T(""));
+   wchar_t proxies[MAX_CONFIG_VALUE_LENGTH];
+   ConfigReadStr(_T("CAS.AllowedProxies"), proxies, MAX_CONFIG_VALUE_LENGTH, L"");
    s_proxies.clear();
-   Trim(proxies);
+   TrimW(proxies);
    if (proxies[0] != 0)
    {
-      s_proxies.splitAndAdd(proxies, _T(","));
+      s_proxies.splitAndAdd(proxies, L",");
    }
 
    s_lock.unlock();
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS configuration reloaded"));
+   nxlog_debug_tag(DEBUG_TAG, 4, L"CAS configuration reloaded");
 }
 
 /**

@@ -10,10 +10,6 @@ echo VERSION=%VERSION%
 
 for /f "delims=" %%a in ('cat build/netxms-build-tag.properties ^| grep NETXMS_VERSION_BASE^= ^| cut -d^= -f2') do @set VERSION_BASE=%%a
 
-type src\java\netxms-eclipse\Core\plugin.xml | sed -r "s,^(.*;Version) [0-9.]+(&#x0A.*)$,\1 %VERSION%\2," > plugin.xml
-copy /Y plugin.xml src\java\netxms-eclipse\Core\plugin.xml
-del plugin.xml
-
 cd sql
 make -f Makefile.w32
 cd ..

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ static bool LoadNetXMSModule(const wchar_t *name)
                   module.hModule = hModule;
                   module.metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
                   g_moduleList.add(module);
-                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Server module %s loaded successfully", module.szName);
+                  nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Server module %s loaded successfully", module.name);
                   success = true;
                }
                else

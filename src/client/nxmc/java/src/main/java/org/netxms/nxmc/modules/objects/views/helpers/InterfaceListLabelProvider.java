@@ -120,6 +120,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
          case InterfacesView.COLUMN_MAC_ADDRESS:
             return iface.getMacAddress().toString();
+         case InterfacesView.COLUMN_MAX_SPEED:
+            return (iface.getMaxSpeed() > 0) ? ifSpeedTotext(iface.getMaxSpeed()) : "";
          case InterfacesView.COLUMN_MTU:
             return Integer.toString(iface.getMtu());
          case InterfacesView.COLUMN_NAME:
@@ -153,7 +155,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
                return iface.getPhysicalLocation();
             return null;
          case InterfacesView.COLUMN_SPEED:
-            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : "";
+            return ((iface.getOperState() == Interface.OPER_STATE_UP) && (iface.getSpeed() > 0)) ? ifSpeedTotext(iface.getSpeed()) : "";
          case InterfacesView.COLUMN_STATUS:
             return StatusDisplayInfo.getStatusText(iface.getStatus());
          case InterfacesView.COLUMN_STP_STATE:

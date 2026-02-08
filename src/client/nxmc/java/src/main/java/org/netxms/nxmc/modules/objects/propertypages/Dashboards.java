@@ -49,6 +49,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
@@ -69,7 +70,7 @@ public class Dashboards extends ObjectPropertyPage
    private I18n i18n = LocalizationHelper.getI18n(Dashboards.class);
 
 	public static final int COLUMN_NAME = 0;
-	
+
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button deleteButton;
@@ -112,13 +113,13 @@ public class Dashboards extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { i18n.tr("Dashboard / Map") };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -126,10 +127,11 @@ public class Dashboards extends ObjectPropertyPage
       viewer.setLabelProvider(new DecoratingObjectLabelProvider((object) -> viewer.update(object, null)));
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
 
-      for(AbstractObject d : object.getDashboards(false))
-   		dashboards.put(d.getObjectId(), d);
-      for(AbstractObject m : object.getNetworkMaps(false))
-         dashboards.put(m.getObjectId(), m);
+      for(AbstractObject d : Registry.getSession().findMultipleObjects(object.getDashboardIdentifiers(), true))
+      {
+         if ((d instanceof Dashboard) || (d instanceof NetworkMap) || (d instanceof UnknownObject))
+   		   dashboards.put(d.getObjectId(), d);
+      }
       viewer.setInput(dashboards.values().toArray());
 
       GridData gridData = new GridData();
@@ -174,7 +176,7 @@ public class Dashboards extends ObjectPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-		
+
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
       deleteButton.addSelectionListener(new SelectionAdapter() {
@@ -199,10 +201,10 @@ public class Dashboards extends ObjectPropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      
+
 		return dialogArea;
 	}
-	
+
    /**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
     */
@@ -211,10 +213,10 @@ public class Dashboards extends ObjectPropertyPage
 	{
 		if (!isModified)
          return true; // Nothing to apply
-		
+
 		if (isApply)
 			setValid(false);
-		
+
       final NXCSession session = Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		Set<Long> idList = dashboards.keySet();

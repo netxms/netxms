@@ -1,0 +1,85 @@
+/* Bitwise operations testing */
+
+// Test variables
+a = 12;    // 1100 in binary
+b = 10;    // 1010 in binary
+c = 7;     // 0111 in binary
+d = 0;     // 0000 in binary
+e = 255;   // 11111111 in binary (8 bits)
+f = -1;    // All bits set
+
+// Bitwise AND (&) tests
+assert((a & b) == 8);      // 1100 & 1010 = 1000 (8)
+assert((a & c) == 4);      // 1100 & 0111 = 0100 (4)
+assert((b & c) == 2);      // 1010 & 0111 = 0010 (2)
+assert((a & d) == 0);      // 1100 & 0000 = 0000 (0)
+assert((e & 15) == 15);    // 11111111 & 00001111 = 00001111 (15)
+assert((a & a) == a);      // Self AND returns same value
+assert((0 & 0) == 0);      // Zero AND zero is zero
+
+// "has" operation test - syntactic sugar for bitwise AND
+assert(a has (1 << 2));
+assert(not (a has (1 << 1)));
+assert(not (a has c));
+assert(e has c);
+
+// Bitwise OR (|) tests
+assert((a | b) == 14);     // 1100 | 1010 = 1110 (14)
+assert((a | c) == 15);     // 1100 | 0111 = 1111 (15)
+assert((b | c) == 15);     // 1010 | 0111 = 1111 (15)
+assert((a | d) == 12);     // 1100 | 0000 = 1100 (12)
+assert((d | 0) == 0);      // Zero OR zero is zero
+assert((a | a) == a);      // Self OR returns same value
+assert((5 | 8) == 13);     // 0101 | 1000 = 1101 (13)
+
+// Bitwise XOR (^) tests
+assert((a ^ b) == 6);      // 1100 ^ 1010 = 0110 (6)
+assert((a ^ c) == 11);     // 1100 ^ 0111 = 1011 (11)
+assert((b ^ c) == 13);     // 1010 ^ 0111 = 1101 (13)
+assert((a ^ d) == 12);     // 1100 ^ 0000 = 1100 (12)
+assert((a ^ a) == 0);      // Self XOR returns zero
+assert((0 ^ 0) == 0);      // Zero XOR zero is zero
+assert((15 ^ 15) == 0);    // Same values XOR to zero
+assert((5 ^ 3) == 6);      // 0101 ^ 0011 = 0110 (6)
+
+// Bitwise NOT (~) tests
+assert((~0) == -1);        // NOT 0 is all bits set (-1 in two's complement)
+assert((~(-1)) == 0);      // NOT -1 is 0
+assert((~1) == -2);        // NOT 1 is -2 in two's complement
+assert((~(-2)) == 1);      // NOT -2 is 1
+assert((~15) == -16);      // NOT 15 is -16
+assert((~(-16)) == 15);    // NOT -16 is 15
+
+// Complex combinations
+assert(((a & b) | c) == 15);     // (8 | 7) = 15
+assert(((a | b) & c) == 6);      // (14 & 7) = 6
+assert(((a ^ b) & c) == 6);      // (6 & 7) = 6
+assert((~(a & b)) == -9);        // ~8 = -9
+assert((~(a | b)) == -15);       // ~14 = -15
+assert((~(a ^ b)) == -7);        // ~6 = -7
+
+// Testing with larger numbers
+x = 1024;   // 10000000000 in binary
+y = 512;    // 01000000000 in binary
+z = 1536;   // 11000000000 in binary
+
+assert((x & y) == 0);      // No common bits
+assert((x | y) == z);      // OR gives sum when no common bits
+assert((x ^ y) == z);      // XOR gives sum when no common bits
+assert((z & x) == x);      // z contains all bits of x
+assert((z & y) == y);      // z contains all bits of y
+
+// Edge cases with powers of 2
+assert((1 & 2) == 0);      // Adjacent powers of 2 have no common bits
+assert((1 | 2) == 3);      // OR of adjacent powers of 2
+assert((1 ^ 2) == 3);      // XOR of adjacent powers of 2
+assert((4 & 4) == 4);      // Power of 2 AND itself
+assert((8 | 8) == 8);      // Power of 2 OR itself
+assert((16 ^ 16) == 0);    // Power of 2 XOR itself
+
+// Precedence tests (bitwise operations have specific precedence)
+assert((1 | 2 & 4) == 1);  // & has higher precedence than |
+assert((1 ^ 2 | 4) == 7);  // ^ has higher precedence than |
+assert((~1 & 2) == 2);     // ~ has highest precedence
+
+return 0;

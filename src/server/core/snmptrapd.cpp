@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,12 +115,11 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
          SNMP_Variable *varbind = pdu->getVariable(index);
          if (varbind != nullptr)
          {
-            bool convertToHex = true;
             TCHAR name[64], buffer[3072];
             _sntprintf(name, 64, _T("%d"), pm->getPosition());
             event.param(name,
                ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                  varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                  FormatSNMPValue(varbind, buffer, 3072) :
                   varbind->getValueAsString(buffer, 3072));
          }
       }
@@ -134,11 +133,10 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
             int result = varbind->getName().compare(*(pm->getOid()));
             if ((result == OID_EQUAL) || (result == OID_LONGER))
             {
-               bool convertToHex = true;
                TCHAR buffer[3072];
                event.param(varbind->getName().toString(),
                   ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                     varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                     FormatSNMPValue(varbind, buffer, 3072) :
                      varbind->getValueAsString(buffer, 3072));
                break;
             }
@@ -158,7 +156,7 @@ static void GenerateTrapEvent(SnmpTrap *trap, const shared_ptr<Node>& node, cons
          NXSL_Array *varbinds = new NXSL_Array(vm);
          for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
          {
-            varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
+            varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(*pdu->getVariable(i)))));
          }
          vm->setGlobalVariable("$varbinds", vm->createValue(varbinds));
          event.vm(vm);
@@ -191,9 +189,8 @@ void SnmpTrap::buildVarbindList()
 
       v->getName().toString(oidText, 1024);
 
-      bool convertToHex = true;
       if (g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION)
-         v->getValueAsPrintableString(data, 4096, &convertToHex);
+         FormatSNMPValue(v, data, 4096);
       else
          v->getValueAsString(data, 4096);
 

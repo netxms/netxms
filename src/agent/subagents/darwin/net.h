@@ -21,9 +21,33 @@
 #ifndef __NET_H__
 #define __NET_H__
 
+/**
+ * Network interface request types
+ */
+enum
+{
+   IF_INFO_BYTES_IN,
+   IF_INFO_BYTES_IN_64,
+   IF_INFO_BYTES_OUT,
+   IF_INFO_BYTES_OUT_64,
+   IF_INFO_PACKETS_IN,
+   IF_INFO_PACKETS_IN_64,
+   IF_INFO_PACKETS_OUT,
+   IF_INFO_PACKETS_OUT_64,
+   IF_INFO_IN_ERRORS,
+   IF_INFO_IN_ERRORS_64,
+   IF_INFO_OUT_ERRORS,
+   IF_INFO_OUT_ERRORS_64,
+   IF_INFO_IN_DROPS,
+   IF_INFO_IN_DROPS_64,
+   IF_INFO_OUT_DROPS,
+   IF_INFO_OUT_DROPS_64
+};
+
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);

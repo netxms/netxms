@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
+#include <netxms-regex.h>
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 #include <netxms_maps.h>
@@ -174,6 +175,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_lldpLocalPortInfo = nullptr;
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
+   m_agentLists = nullptr;
+   m_agentAIToolsSchema = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -245,6 +248,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipVendorCode = 0;
    m_modbusTcpPort = MODBUS_TCP_DEFAULT_PORT;
    m_modbusUnitId = 255;
+   m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
@@ -303,6 +307,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_lldpLocalPortInfo = nullptr;
    m_agentParameters = nullptr;
    m_agentTables = nullptr;
+   m_agentLists = nullptr;
+   m_agentAIToolsSchema = nullptr;
    m_driverParameters = nullptr;
    m_smclpMetrics = nullptr;
    m_pollerNode = 0;
@@ -314,7 +320,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
@@ -380,6 +386,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_modbusUnitId = newNodeData->modbusUnitId;
    m_l1TopologyUsed = false;
    m_topologyDepth = -1;
+   m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
 }
 
@@ -392,6 +399,8 @@ Node::~Node()
    delete[] m_proxyConnections;
    delete m_agentParameters;
    delete m_agentTables;
+   delete m_agentLists;
+   MemFree(m_agentAIToolsSchema);
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
@@ -446,7 +455,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
-      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities FROM nodes WHERE id=?"));
+      _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -634,6 +643,10 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       m_pathCheckResult.rootCauseInterfaceId = DBGetFieldUInt32(hResult, 0, 88);
    }
    m_expectedCapabilities = DBGetFieldUInt64(hResult, 0, 89);
+   StringList elements = DBGetFieldAsString(hResult, 0, 90).split(L";");
+   for (i = 0; i < MIN(elements.size(), MAX_LAST_EVENTS); i++)
+      m_lastEvents[i] = _tcstoul(elements.get(i), nullptr, 10);
+   m_decommissionTime = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 91));
 
    DBFreeResult(hResult);
 
@@ -758,7 +771,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    {
       // Load software packages
       hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_SOFTWARE_INVENTORY,
-         _T("SELECT name,version,vendor,install_date,url,description,uninstall_key FROM software_inventory WHERE node_id=?"));
+         _T("SELECT name,version,user_name,vendor,install_date,url,description,uninstall_key FROM software_inventory WHERE node_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1085,7 +1098,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
          _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
          _T("modbus_unit_id"), _T("vnc_password"), _T("vnc_port"), _T("vnc_proxy"), _T("path_check_reason"), _T("path_check_node_id"),
-         _T("path_check_iface_id"), L"expected_capabilities", nullptr
+         _T("path_check_iface_id"), L"expected_capabilities", L"last_events", L"decommission_time", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1227,7 +1240,14 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 88, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseNodeId);
          DBBind(hStmt, 89, DB_SQLTYPE_INTEGER, m_pathCheckResult.rootCauseInterfaceId);
          DBBind(hStmt, 90, DB_SQLTYPE_BIGINT, m_expectedCapabilities);
-         DBBind(hStmt, 91, DB_SQLTYPE_INTEGER, m_id);
+         StringList lastEvents;
+         for (int i = 0; i < MAX_LAST_EVENTS; i++)
+         {
+            lastEvents.add(m_lastEvents[i]);
+         }
+         DBBind(hStmt, 91, DB_SQLTYPE_VARCHAR, lastEvents.join(L";"), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 92, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_decommissionTime));
+         DBBind(hStmt, 93, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1277,7 +1297,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       if ((m_softwarePackages != nullptr) && !m_softwarePackages->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
-                  _T("INSERT INTO software_inventory (node_id,name,version,vendor,install_date,url,description,uninstall_key) VALUES (?,?,?,?,?,?,?,?)"),
+                  _T("INSERT INTO software_inventory (node_id,package_id,name,version,user_name,vendor,install_date,url,description,uninstall_key) VALUES (?,?,?,?,?,?,?,?,?,?)"),
                   m_softwarePackages->size() > 1);
          if (hStmt != nullptr)
          {
@@ -1984,7 +2004,7 @@ shared_ptr<Interface> Node::findInterfaceByIP(const InetAddress& addr) const
    {
       NetObj *curr = getChildList().get(i);
       if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-          static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(addr))
+          static_cast<Interface*>(curr)->hasIpAddress(addr))
       {
          iface = static_pointer_cast<Interface>(getChildList().getShared(i));
          break;
@@ -2005,20 +2025,13 @@ shared_ptr<Interface> Node::findInterfaceBySubnet(const InetAddress& subnet) con
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() != OBJECT_INTERFACE)
-         continue;
-
-      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
-      for(int j = 0; j < addrList->size(); j++)
+      if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+          static_cast<Interface*>(curr)->hasAddressInSubnet(subnet))
       {
-         if (subnet.contains(addrList->get(j)))
-         {
-            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-            goto stop_search;
-         }
+         iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+         break;
       }
    }
-stop_search:
    unlockChildList();
    return iface;
 }
@@ -2034,20 +2047,13 @@ shared_ptr<Interface> Node::findInterfaceInSameSubnet(const InetAddress& addr) c
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() != OBJECT_INTERFACE)
-         continue;
-
-      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
-      for(int j = 0; j < addrList->size(); j++)
+      if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+          static_cast<Interface*>(curr)->hasAddressInSameSubnet(addr))
       {
-         if (addrList->get(j).sameSubnet(addr))
-         {
-            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-            goto stop_search;
-         }
+         iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+         break;
       }
    }
-stop_search:
    unlockChildList();
    return iface;
 }
@@ -2108,7 +2114,7 @@ bool Node::isMyIP(const InetAddress& addr) const
    {
       NetObj *curr = getChildList().get(i);
       if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-          static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(addr))
+          static_cast<Interface*>(curr)->hasIpAddress(addr))
       {
          unlockChildList();
          return true;
@@ -2336,8 +2342,8 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
 
    NetObjInsert(iface, true, false);
    linkObjects(self(), iface);
-   if (!m_isHidden)
-      iface->unhide();
+   if (!m_isUnpublished)
+      iface->publish();
 
    const InetAddress& addr = iface->getFirstIpAddress();
    EventBuilder(EVENT_INTERFACE_ADDED, m_id)
@@ -2372,18 +2378,18 @@ void Node::deleteInterface(Interface *iface)
    // Check if we should unlink node from interface's subnet
    if (!iface->isExcludedFromTopology())
    {
-      const ObjectArray<InetAddress>& list = iface->getIpAddressList()->getList();
-      for(int i = 0; i < list.size(); i++)
+      InetAddressList addrList = iface->getIpAddressList();
+      for(int i = 0; i < addrList.size(); i++)
       {
          bool doUnlink = true;
-         const InetAddress *addr = list.get(i);
+         InetAddress addr = addrList.get(i);
 
          readLockChildList();
          for(int j = 0; j < getChildList().size(); j++)
          {
             NetObj *curr = getChildList().get(j);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && (curr != iface) &&
-                static_cast<Interface*>(curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
+                static_cast<Interface*>(curr)->findSameSubnetAddress(addr).isValid())
             {
                doUnlink = false;
                break;
@@ -2394,7 +2400,7 @@ void Node::deleteInterface(Interface *iface)
          if (doUnlink)
          {
             // Last interface in subnet, should unlink node
-            shared_ptr<Subnet> subnet = FindSubnetByIP(m_zoneUIN, addr->getSubnetAddress());
+            shared_ptr<Subnet> subnet = FindSubnetByIP(m_zoneUIN, addr.getSubnetAddress());
             if (subnet != nullptr)
             {
                unlinkObjects(subnet.get(), this);
@@ -2410,12 +2416,22 @@ void Node::deleteInterface(Interface *iface)
 }
 
 /**
+ * Check if management status change is allowed
+ */
+bool Node::isManagementStatusChangeAllowed(bool isManaged)
+{
+   return !isManaged || !(m_state & NSF_DECOMMISSIONED);
+}
+
+/**
  * Set object's management status
  */
-bool Node::setMgmtStatus(bool isManaged)
+void Node::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
-   if (!super::setMgmtStatus(isManaged))
-      return false;
+   // Generate event if current object is a node
+   EventBuilder(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id)
+      .param(_T("previousNodeStatus"), oldStatus)
+      .post();
 
    if (IsZoningEnabled())
    {
@@ -2431,7 +2447,6 @@ bool Node::setMgmtStatus(bool isManaged)
    onDataCollectionChange();
 
    CALL_ALL_MODULES(pfOnNodeMgmtStatusChange, (self(), isManaged));
-   return true;
 }
 
 /**
@@ -2549,7 +2564,7 @@ bool Node::lockForRoutingTablePoll()
        (m_status != STATUS_UNMANAGED) &&
        !(m_flags & NF_DISABLE_ROUTE_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.RoutingTableUpdateInterval"), g_routingTableUpdateInterval)) &&
+       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Topology.RoutingTable.UpdateInterval"), g_routingTableUpdateInterval)) &&
        !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_routingPollState.schedule();
@@ -2644,7 +2659,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId
 
    // Read capability expiration time and current time
    time_t capabilityExpirationTime = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 604800));
-   time_t capabilityExpirationGracePeriod = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationTime"), 3600));
+   time_t capabilityExpirationGracePeriod = static_cast<time_t>(ConfigReadULong(_T("Objects.Nodes.CapabilityExpirationGracePeriod"), 3600));
    time_t now = time(nullptr);
 
    bool agentConnected = false;
@@ -3630,7 +3645,7 @@ restart_status_poll:
    // Call hooks in loaded modules
    ENUMERATE_MODULES(pfStatusPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       CURRENT_MODULE.pfStatusPollHook(this, pSession, rqId, poller);
    }
 
@@ -3982,7 +3997,7 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
    if (result.rootCauseFound)
       return result;
 
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): will do second pass"), m_name, m_id);
 
    result = checkNetworkPathLayer2(requestId, true);
    if (result.rootCauseFound)
@@ -4025,10 +4040,10 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
          {
             sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
-            _sntprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
+            nx_swprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
 
             wchar_t key[64];
-            _sntprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
+            nx_swprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
             ThreadPoolExecuteSerialized(g_pollerThreadPool, key, RemoveAgentPolicy, data);
          }
 
@@ -4243,7 +4258,7 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
             const Component *root = m_components->getRoot();
             if (root != nullptr)
             {
-               // Device could be reported as but consist from single chassis only
+               // Device could be reported as stack but consist from single chassis only
                if ((root->getClass() == COMPONENT_CLASS_STACK) && (root->getChildren().size() == 1) && (root->getChildren().get(0)->getClass() == COMPONENT_CLASS_CHASSIS))
                {
                   root = root->getChildren().get(0);
@@ -4374,7 +4389,9 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
       setModified(MODIFY_HARDWARE_INVENTORY);
    }
    else if (components != nullptr)
+   {
       setModified(MODIFY_HARDWARE_INVENTORY);
+   }
 
    m_hardwareComponents = components;
    unlockProperties();
@@ -4726,14 +4743,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    }
 
    // Update system description
-   TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
+   wchar_t buffer[MAX_RESULT_LENGTH] = { 0 };
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
    {
-      getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
+      getMetricFromAgent(L"System.Uname", buffer, MAX_RESULT_LENGTH);
    }
    else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
    {
-      getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
+      getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, L"1.3.6.1.2.1.1.1.0", buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
    }
 
    if (buffer[0] != _T('\0'))
@@ -4761,6 +4778,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    if (updateInterfaceConfiguration(rqId))
       modified |= MODIFY_NODE_PROPERTIES;
+
+   // Update interface physical port flag and location from ENTITY MIB
+   if (m_components != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s [%u]): updating interface information from ENTITY MIB"), m_name, m_id);
+      updateInterfacesFromEntityMib(m_components->getRoot());
+   }
 
    POLL_CANCELLATION_CHECKPOINT();
 
@@ -4949,7 +4973,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    // Call hooks in loaded modules
    ENUMERATE_MODULES(pfConfPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
          modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
    }
@@ -5334,7 +5358,7 @@ bool Node::confPollAgent()
          StringList secrets;
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneUIN);
 
@@ -5342,8 +5366,9 @@ bool Node::confPollAgent()
             if (hResult != NULL)
             {
                int count = DBGetNumRows(hResult);
+               wchar_t secret[128];
                for(int i = 0; i < count; i++)
-                  secrets.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+                  secrets.add(DBGetField(hResult, i, 0, secret, 128));
                DBFreeResult(hResult);
             }
             DBFreeStatement(hStmt);
@@ -5455,20 +5480,23 @@ bool Node::confPollAgent()
       // if Net.Interface.64BitCounters not supported by agent then use
       // only presence of 64 bit parameters as indicator
       bool netIf64bitCounters = true;
-      if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), buffer, MAX_DB_STRING) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(L"Net.Interface.64BitCounters", buffer, MAX_DB_STRING) == ERR_SUCCESS)
       {
-         netIf64bitCounters = _tcstol(buffer, nullptr, 10) ? true : false;
+         netIf64bitCounters = wcstol(buffer, nullptr, 10) ? true : false;
       }
 
       ObjectArray<AgentParameterDefinition> *plist;
+      ObjectArray<AgentListDefinition> *llist;
       ObjectArray<AgentTableDefinition> *tlist;
-      uint32_t rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
+      uint32_t rcc = pAgentConn->getSupportedParameters(&plist, &llist, &tlist);
       if (rcc == ERR_SUCCESS)
       {
          lockProperties();
          delete m_agentParameters;
+         delete m_agentLists;
          delete m_agentTables;
          m_agentParameters = plist;
+         m_agentLists = llist;
          m_agentTables = tlist;
 
          // Check for 64-bit interface counters
@@ -5477,7 +5505,7 @@ bool Node::confPollAgent()
          {
             for(int i = 0; i < plist->size(); i++)
             {
-               if (!_tcsicmp(plist->get(i)->getName(), _T("Net.Interface.BytesIn64(*)")))
+               if (!wcsicmp(plist->get(i)->getName(), L"Net.Interface.BytesIn64(*)"))
                {
                   m_capabilities |= NC_HAS_AGENT_IFXCOUNTERS;
                   break;
@@ -5489,7 +5517,60 @@ bool Node::confPollAgent()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u"), m_name, rcc);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%u", m_name, rcc);
+      }
+
+      // Get AI tools schema from agent
+      char *aiToolsSchema = nullptr;
+      rcc = pAgentConn->getAITools(&aiToolsSchema);
+      if (rcc == ERR_SUCCESS && aiToolsSchema != nullptr)
+      {
+         lockProperties();
+         MemFree(m_agentAIToolsSchema);
+         m_agentAIToolsSchema = aiToolsSchema;
+         unlockProperties();
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): retrieved AI tools schema"), m_name);
+      }
+      else if (rcc == ERR_UNKNOWN_COMMAND)
+      {
+         // Agent doesn't support AI tools - clear cached schema
+         lockProperties();
+         MemFreeAndNull(m_agentAIToolsSchema);
+         unlockProperties();
+      }
+
+      // Check for service manager support
+      StringList *services;
+      rcc = pAgentConn->getList(L"System.Services", &services);
+      if (rcc == ERR_SUCCESS)
+      {
+         delete services;
+
+         lockProperties();
+         if (!(m_capabilities & NC_HAS_SERVICE_MANAGER))
+         {
+            m_capabilities |= NC_HAS_SERVICE_MANAGER;
+            hasChanges = true;
+         }
+         unlockProperties();
+
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): service manager interface is supported by agent"), m_name);
+      }
+      else if (rcc == ERR_UNKNOWN_METRIC)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): service manager interface is not supported by agent"), m_name);
+
+         lockProperties();
+         if (m_capabilities & NC_HAS_SERVICE_MANAGER)
+         {
+            m_capabilities &= ~NC_HAS_SERVICE_MANAGER;
+            hasChanges = true;
+         }
+         unlockProperties();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getList(\"System.Services\") failed: rcc=%u"), m_name, rcc);
       }
 
       // Get supported Windows Performance Counters
@@ -5603,9 +5684,16 @@ bool Node::confPollEthernetIP()
       return false;
    }
 
+   if (isPortBlocked(m_eipPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 5, _T("Node::confPollEthernetIP(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_eipPort);
+      sendPollerMsg(L"   EtherNet/IP polling skipped because port %u is blocked by port stop list\r\n", m_eipPort);
+      return false;
+   }
+
    bool hasChanges = false;
 
-   sendPollerMsg(_T("   Checking EtherNet/IP...\r\n"));
+   sendPollerMsg(L"   Checking EtherNet/IP...\r\n");
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
 
    CIP_Identity *identity = nullptr;
@@ -6271,7 +6359,14 @@ bool Node::confPollSsh()
    sendPollerMsg(_T("   Checking SSH connectivity...\r\n"));
 
    bool modified = false;
-   bool success = checkSshConnection();
+   bool success = false;
+
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   if (!sshLogin.isNull() && !sshLogin.isEmpty())
+   {
+      success = SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
+   }
+
    if (!success)
    {
       SSHCredentials credentials;
@@ -6293,16 +6388,100 @@ bool Node::confPollSsh()
    {
       sendPollerMsg(POLLER_INFO _T("   SSH connection is available\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH connected"), m_name);
+
+      // Check for command channel and interactive shell support
+      SSHDriverHints hints;
+      if (m_driver != nullptr)
+      {
+         m_driver->getSSHDriverHints(&hints);
+      }
+
+      // Check command channel using driver hints or defaults
+      sendPollerMsg(_T("   Checking SSH command channel...\r\n"));
+      bool commandChannelAvailable = SSHCheckCommandChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+            sshLogin, getSshPassword(), m_sshKeyId, hints.testCommand, hints.testCommandPattern);
+      if (commandChannelAvailable)
+      {
+         sendPollerMsg(POLLER_INFO _T("   SSH command channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH command channel available"), m_name);
+      }
+      else
+      {
+         sendPollerMsg(_T("   SSH command channel is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH command channel not available"), m_name);
+      }
+
+      // Check interactive shell channel using driver hints or defaults
+      sendPollerMsg(_T("   Checking SSH interactive channel...\r\n"));
+      bool shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+            sshLogin, getSshPassword(), m_sshKeyId, hints.promptPattern, hints.terminalType);
+      if (!shellChannelAvailable && (hints.enabledPromptPattern != nullptr))
+      {
+         // Retry with enabled prompt pattern
+         shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+               sshLogin, getSshPassword(), m_sshKeyId, hints.enabledPromptPattern, hints.terminalType);
+      }
+      if (shellChannelAvailable)
+      {
+         sendPollerMsg(POLLER_INFO _T("   SSH interactive channel is available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): SSH interactive channel available"), m_name);
+      }
+      else
+      {
+         sendPollerMsg(_T("   SSH interactive channel is not available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH interactive channel not available"), m_name);
+      }
+
       lockProperties();
+
       if (!(m_capabilities & NC_IS_SSH))
       {
          m_capabilities |= NC_IS_SSH;
          modified = true;
       }
+
+      // Update command channel capability
+      if (commandChannelAvailable)
+      {
+         if (!(m_capabilities & NC_SSH_COMMAND_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_COMMAND_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_COMMAND_CHANNEL;
+            modified = true;
+         }
+      }
+
+      // Update shell channel capability
+      if (shellChannelAvailable)
+      {
+         if (!(m_capabilities & NC_SSH_INTERACTIVE_CHANNEL))
+         {
+            m_capabilities |= NC_SSH_INTERACTIVE_CHANNEL;
+            modified = true;
+         }
+      }
+      else
+      {
+         if (m_capabilities & NC_SSH_INTERACTIVE_CHANNEL)
+         {
+            m_capabilities &= ~NC_SSH_INTERACTIVE_CHANNEL;
+            modified = true;
+         }
+      }
+
       unlockProperties();
 
       ExitFromUnreachableState();
-      modified = confPollSmclp();
+
+      if (confPollSmclp())
+         modified = true;
    }
    else
    {
@@ -6322,7 +6501,11 @@ bool Node::confPollSmclp()
 
    StringBuffer output;
    bool success = getDataFromSmclp(L"version", &output);
-   success = output.contains(L"status=0");
+   if (success)
+   {
+      success = output.contains(L"status=0");
+   }
+
    if(success)
    {
       sendPollerMsg(POLLER_INFO _T("   SM-CLP protocol is supported\r\n"));
@@ -6565,6 +6748,55 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
 }
 
 /**
+ * Update interface physical port flag and location from ENTITY MIB component tree
+ */
+void Node::updateInterfacesFromEntityMib(const Component *component)
+{
+   if (component == nullptr)
+      return;
+
+   if ((component->getClass() == COMPONENT_CLASS_PORT) && (component->getIfIndex() != 0))
+   {
+      shared_ptr<Interface> iface = findInterfaceByIndex(component->getIfIndex());
+      if (iface != nullptr)
+      {
+         bool updated = false;
+
+         // Mark as physical port if not already set
+         if (!iface->isPhysicalPort())
+         {
+            iface->setPhysicalPortFlag(true);
+            updated = true;
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
+               _T("Node::updateInterfacesFromEntityMib(%s [%u]): interface %s marked as physical port"),
+               m_name, m_id, iface->getName());
+         }
+
+         // Set physical location if not already set by driver
+         InterfacePhysicalLocation currentLoc = iface->getPhysicalLocation();
+         if (currentLoc.equals(InterfacePhysicalLocation()))
+         {
+            InterfacePhysicalLocation loc = InterfacePhysicalLocationFromEntityMib(component);
+            if (!loc.equals(InterfacePhysicalLocation()))
+            {
+               iface->setPhysicalLocation(loc);
+               updated = true;
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
+                  _T("Node::updateInterfacesFromEntityMib(%s [%u]): interface %s location set to %u/%u/%u/%u"),
+                  m_name, m_id, iface->getName(), loc.chassis, loc.module, loc.pic, loc.port);
+            }
+         }
+
+         if (updated)
+            executeInterfaceUpdateHook(iface.get());
+      }
+   }
+
+   for (int i = 0; i < component->getChildren().size(); i++)
+      updateInterfacesFromEntityMib(component->getChildren().get(i));
+}
+
+/**
  * Delete duplicate interfaces
  * (find and delete multiple interfaces with same ifIndex value created by version prior to 2.0-M3)
  */
@@ -6601,7 +6833,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
    for(int i = 0; i < deleteList.size(); i++)
    {
       Interface *iface = deleteList.get(i);
-      sendPollerMsg(POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
+      sendPollerMsg(POLLER_WARNING L"   Duplicate interface \"%s\" deleted\r\n", iface->getName());
       deleteInterface(iface);
    }
 
@@ -6613,7 +6845,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
  */
 bool Node::updateInterfaceConfiguration(uint32_t requestId)
 {
-   sendPollerMsg(_T("Checking interface configuration...\r\n"));
+   sendPollerMsg(L"Checking interface configuration...\r\n");
 
    bool hasChanges = deleteDuplicateInterfaces(requestId);
 
@@ -6670,7 +6902,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                .param(_T("interfaceIpAddress"), addr)
                .param(_T("interfaceMask"), addr.getMaskBits())
                .post();
-               
+
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -6701,21 +6933,21 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       !pInterface->getMacAddress().equals(ifInfo->macAddr, MAC_ADDR_LENGTH))
                   {
-                     TCHAR szOldMac[64], szNewMac[64];
-                     pInterface->getMacAddress().toString(szOldMac);
-                     MACToStr(ifInfo->macAddr, szNewMac);
+                     wchar_t macAddrTextOld[64], macAddrTextNew[64];
+                     pInterface->getMacAddress().toString(macAddrTextOld);
+                     MACToStr(ifInfo->macAddr, macAddrTextNew);
                      EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
-                        .param(_T("interfaceObjectId"), pInterface->getId(), EventBuilder::OBJECT_ID_FORMAT)
-                        .param(_T("interfaceIndex"), pInterface->getIfIndex())
-                        .param(_T("interfaceObjectId"), pInterface->getName())
-                        .param(_T("oldMacAddress"), szOldMac)
-                        .param(_T("newMacAddress"), szNewMac)
+                        .param(L"interfaceObjectId", pInterface->getId(), EventBuilder::OBJECT_ID_FORMAT)
+                        .param(L"interfaceIndex", pInterface->getIfIndex())
+                        .param(L"interfaceName", pInterface->getName())
+                        .param(L"oldMacAddress", macAddrTextOld)
+                        .param(L"newMacAddress", macAddrTextNew)
                         .post();
 
                      pInterface->setMacAddress(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
-                  TCHAR expandedName[MAX_OBJECT_NAME];
+                  wchar_t expandedName[MAX_OBJECT_NAME];
                   pInterface->expandName(ifObjectName, expandedName);
                   if (_tcscmp(expandedName, pInterface->getName()))
                   {
@@ -6771,12 +7003,21 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
                      interfaceUpdated = true;
                   }
+                  if (ifInfo->maxSpeed != pInterface->getMaxSpeed())
+                  {
+                     pInterface->setMaxSpeed(ifInfo->maxSpeed);
+                     if ((ifInfo->maxSpeed > 0) && (pInterface->getSpeed() < ifInfo->maxSpeed))
+                     {
+                        pInterface->setSpeed(0); // reset current speed to force check against max speed at next status poll
+                     }
+                     interfaceUpdated = true;
+                  }
 
                   // Check for deleted IPs and changed masks
-                  const InetAddressList *ifList = pInterface->getIpAddressList();
-                  for(int n = 0; n < ifList->size(); n++)
+                  InetAddressList ifList = pInterface->getIpAddressList();
+                  for(int n = 0; n < ifList.size(); n++)
                   {
-                     const InetAddress& ifAddr = ifList->get(n);
+                     InetAddress ifAddr = ifList.get(n);
                      InetAddress addr = ifInfo->ipAddrList.findAddress(ifAddr);
                      if (addr.isValid())
                      {
@@ -6830,7 +7071,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   for(int m = 0; m < ifInfo->ipAddrList.size(); m++)
                   {
                      InetAddress addr = ifInfo->ipAddrList.get(m);
-                     if (!ifList->hasAddress(addr))
+                     if (!ifList.hasAddress(addr))
                      {
                         if (addr.getMaskBits() == 0)
                         {
@@ -6932,7 +7173,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          {
             auto iface = deleteList.get(j);
             sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
-            const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
+            InetAddress addr = iface->getFirstUnicastAddress();
             EventBuilder(EVENT_INTERFACE_DELETED, m_id)
                .param(_T("interfaceIndex"), iface->getIfIndex())
                .param(_T("interfaceName"), iface->getName())
@@ -6962,7 +7203,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          if (iface->isFake())
          {
             // Check if primary IP is different from interface's IP
-            if (!iface->getIpAddressList()->hasAddress(m_ipAddress))
+            if (!iface->hasIpAddress(m_ipAddress))
             {
                deleteInterface(iface);
                if (m_ipAddress.isValidUnicast())
@@ -7105,10 +7346,10 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       case IDM_SNMP_WALK_VALUES:
-         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances);
+         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances, dco->getSnmpContext());
          break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap);
+         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap, dco->getSnmpContext());
          break;
       case IDM_WEB_SERVICE:
          node->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
@@ -7237,6 +7478,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
             m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
          }
       }
+      syncEnvironmentWithAgent(m_agentConnection.get());
       m_agentConnection->enableTraps();
       clearFileUpdateConnection();
       setLastAgentCommTime();
@@ -7253,7 +7495,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
 /**
  * Convert SNMP error code to DC collection error code
  */
-inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
+static inline DataCollectionError DCErrorFromSNMPError(uint32_t snmpError)
 {
    switch(snmpError)
    {
@@ -7271,9 +7513,22 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 }
 
 /**
+ * Convert context string to UTF-8
+ */
+static inline char *ContextToUtf8(const wchar_t *context, char *buffer, size_t size)
+{
+   if ((context != nullptr) && (*context != 0))
+   {
+      wchar_to_utf8(context, -1, buffer, size);
+      return buffer;
+   }
+   return nullptr;
+}
+
+/**
  * Get DCI value via SNMP. Buffer size should be at least 64 characters.
  */
-DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue)
+DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context)
 {
    if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -7291,12 +7546,30 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
    }
 
    uint32_t snmpResult;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp != nullptr)
    {
       if (interpretRawValue == SNMP_RAWTYPE_NONE)
       {
-         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, buffer, size * sizeof(TCHAR), SG_PSTRING_RESULT, nullptr);
+         SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+         request.bindVariable(new SNMP_Variable(name));
+
+         SNMP_PDU *response;
+         snmpResult = snmp->doRequest(&request, &response);
+         if (snmpResult == SNMP_ERR_SUCCESS)
+         {
+            if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+            {
+               SNMP_Variable *varbind = response->getVariable(0);
+               FormatSNMPValue(varbind, buffer, size);
+            }
+            else
+            {
+               snmpResult = SNMP_ERR_NO_OBJECT;
+            }
+            delete response;
+         }
       }
       else
       {
@@ -7321,7 +7594,7 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
                   IntegerToString(ntohq(*reinterpret_cast<uint64_t*>(rawValue)), buffer);
                   break;
                case SNMP_RAWTYPE_DOUBLE:
-                  _sntprintf(buffer, size, _T("%f"), ntohd(*reinterpret_cast<double*>(rawValue)));
+                  nx_swprintf(buffer, size, L"%f", ntohd(*reinterpret_cast<double*>(rawValue)));
                   break;
                case SNMP_RAWTYPE_IP_ADDR:
                   if (length == 4)
@@ -7434,9 +7707,10 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
+DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context)
 {
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
@@ -7486,10 +7760,11 @@ static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Get list of values from SNMP
  */
-DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list)
+DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context)
 {
    *list = nullptr;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
@@ -7507,10 +7782,11 @@ DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, c
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values)
+DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values, const TCHAR *context)
 {
    *values = nullptr;
-   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   char contextUtf8[256];
+   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
@@ -7822,11 +8098,11 @@ bool Node::getDataFromSmclp(const wchar_t *command, StringBuffer *output)
          arguments.add(m_sshKeyId);
          unlockProperties();
 
-         rcc = conn->executeCommand(_T("SSH.Command"), arguments, true,
-            [] (ActionCallbackEvent event, const TCHAR *text, void *context) -> void
+         rcc = conn->executeCommand(L"SSH.Command", arguments, true,
+            [] (ActionCallbackEvent event, const void *text, void *context) -> void
             {
                if (event == ACE_DATA)
-                  static_cast<StringBuffer*>(context)->append(text);
+                  static_cast<StringBuffer*>(context)->append(static_cast<const wchar_t*>(text));
             }, output);
       }
    }
@@ -8133,6 +8409,12 @@ DataCollectionError Node::getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *bu
    if (!(m_capabilities & NC_IS_ETHERNET_IP))
       return DCE_NOT_SUPPORTED;
 
+   if (isPortBlocked(m_eipPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_EIP, 5, _T("Node::getMetricFromEtherNetIP(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_eipPort);
+      return DCE_COMM_ERROR;
+   }
+
    DataCollectionError result = GetEtherNetIPAttribute(m_ipAddress, m_eipPort, metric, 5000, buffer, size);
    nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromEtherNetIP(%s): result=%d"), m_name, metric, result);
    return result;
@@ -8231,7 +8513,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
          table->set(6, iface->getSpeed());
          table->set(7, iface->getMTU());
          table->set(8, iface->getMacAddress().toString(buffer));
-         table->set(9, iface->getIpAddressList()->toString());
+         table->set(9, iface->getIpAddressListAsString());
          table->set(10, iface->getAdminState());
          table->set(11, iface->getOperState());
          if (iface->getInboundUtilization() >= 0)
@@ -8401,6 +8683,18 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
 
          *result = table;
       }
+      else if (!_tcsicmp(name, _T("Server.NotificationChannels")))
+      {
+         auto table = make_shared<Table>();
+         GetNotificationChannels(table.get());
+         *result = table;
+      }
+      else if (!_tcsicmp(name, _T("Server.Queues")))
+      {
+         auto table = make_shared<Table>();
+         GetAllQueueStatistics(table.get());
+         *result = table;
+      }
       else
       {
          rc = DCE_NOT_SUPPORTED;
@@ -8459,7 +8753,7 @@ static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int ty
  */
 static DataCollectionError GetNotificationChannelStatus(const TCHAR *metric, std::function<void (const NotificationChannelStatus&)> callback)
 {
-   TCHAR channel[64];
+   wchar_t channel[64];
    AgentGetParameterArg(metric, 1, channel, 64);
 
    NotificationChannelStatus status;
@@ -8742,7 +9036,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, -1, loginName), buffer);
       }
@@ -8752,7 +9046,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName), buffer);
       }
@@ -8762,7 +9056,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), name, false))
       {
-         TCHAR loginName[256];
+         wchar_t loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
          IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName), buffer);
       }
@@ -9002,19 +9296,19 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::AVERAGE, buffer);
+         rc = GetQueueStatistics(name, StatisticType::AVERAGE, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Current(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::CURRENT, buffer);
+         rc = GetQueueStatistics(name, StatisticType::CURRENT, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Max(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::MAX, buffer);
+         rc = GetQueueStatistics(name, StatisticType::MAX, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Min(*)"), name, false))
       {
-         rc = GetQueueStatistic(name, StatisticType::MIN, buffer);
+         rc = GetQueueStatistics(name, StatisticType::MIN, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ReceivedSNMPTraps")))
       {
@@ -9112,7 +9406,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
 /**
  * Get metric value for client
  */
-uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
+uint32_t Node::getMetricForClient(int origin, uint32_t userId, const wchar_t *name, wchar_t *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -9140,9 +9434,27 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name
 }
 
 /**
+ * Get list for client
+ */
+uint32_t Node::getListForClient(int origin, uint32_t userId, const wchar_t *name, StringList **list)
+{
+   DataCollectionError rc = DCE_ACCESS_DENIED;
+   switch(origin)
+   {
+      case DS_NATIVE_AGENT:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
+            rc = getListFromAgent(name, list);
+         break;
+      default:
+         return super::getListForClient(origin, userId, name, list);
+   }
+   return RCCFromDCIError(rc);
+}
+
+/**
  * Get table for client
  */
-uint32_t Node::getTableForClient(int origin, uint32_t userId, const TCHAR *name, shared_ptr<Table> *table)
+uint32_t Node::getTableForClient(int origin, uint32_t userId, const wchar_t *name, shared_ptr<Table> *table)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
    switch(origin)
@@ -9326,6 +9638,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PATH_CHECK_REASON, static_cast<int16_t>(m_pathCheckResult.reason));
    msg->setField(VID_PATH_CHECK_NODE_ID, m_pathCheckResult.rootCauseNodeId);
    msg->setField(VID_PATH_CHECK_INTERFACE_ID, m_pathCheckResult.rootCauseInterfaceId);
+   msg->setFieldFromTime(VID_DECOMMISSION_TIME, m_decommissionTime);
 }
 
 /**
@@ -9419,7 +9732,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
          {
             NetObj *curr = getChildList().get(i);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-                static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
+                static_cast<Interface*>(curr)->hasIpAddress(ipAddr))
                break;
          }
          unlockChildList();
@@ -9466,7 +9779,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
             {
                NetObj *curr = getChildList().get(i);
                if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-                   static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
+                   static_cast<Interface*>(curr)->hasIpAddress(ipAddr))
                   break;
             }
             unlockChildList();
@@ -9760,7 +10073,7 @@ uint32_t Node::wakeUp()
       NetObj *object = getChildList().get(i);
       if ((object->getObjectClass() == OBJECT_INTERFACE) &&
           (object->getStatus() != STATUS_UNMANAGED) &&
-          static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+          static_cast<Interface*>(object)->getFirstUnicastAddressV4().isValid())
       {
          rcc = static_cast<Interface*>(object)->wakeUp();
          if (rcc == RCC_SUCCESS)
@@ -9776,7 +10089,7 @@ uint32_t Node::wakeUp()
          NetObj *object = getChildList().get(i);
          if ((object->getObjectClass() == OBJECT_INTERFACE) &&
              (object->getStatus() == STATUS_UNMANAGED) &&
-             static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+             static_cast<Interface*>(object)->getFirstUnicastAddressV4().isValid())
          {
             rcc = static_cast<Interface*>(object)->wakeUp();
             if (rcc == RCC_SUCCESS)
@@ -9911,6 +10224,34 @@ void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 }
 
 /**
+ * Put list of supported lists into NXCP message
+ */
+void Node::writeListListToMessage(NXCPMessage *msg)
+{
+   lockProperties();
+
+   if (m_agentLists != nullptr)
+   {
+      msg->setField(VID_NUM_ENUMS, static_cast<uint32_t>(m_agentLists->size()));
+
+      uint32_t fieldId = VID_ENUM_LIST_BASE;
+      for(int i = 0; i < m_agentLists->size(); i++)
+      {
+         m_agentLists->get(i)->fillMessage(msg, fieldId);
+         fieldId += 10;
+      }
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeListListToMessage(): sending %d lists"), m_name, m_agentLists->size());
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT, 6, _T("Node[%s]::writeListListToMessage(): list is missing"), m_name);
+      msg->setField(VID_NUM_ENUMS, static_cast<uint32_t>(0));
+   }
+
+   unlockProperties();
+}
+
+/**
  * Put list of supported Windows performance counters into NXCP message
  */
 void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
@@ -9978,6 +10319,15 @@ ObjectArray<AgentTableDefinition> *Node::openTableList()
 {
    lockProperties();
    return m_agentTables;
+}
+
+/**
+ * Open list of supported lists for reading
+ */
+ObjectArray<AgentListDefinition> *Node::openListList()
+{
+   lockProperties();
+   return m_agentLists;
 }
 
 /**
@@ -10174,8 +10524,15 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       return shared_ptr<AgentConnectionEx>();
    }
 
-   shared_ptr<AgentConnectionEx> conn;
+   // Check port stop list for agent port (only applies to direct connections, not tunnels)
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
+   if ((tunnel == nullptr) && isPortBlocked(m_agentPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::createAgentConnection(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_agentPort);
+      return shared_ptr<AgentConnectionEx>();
+   }
+
+   shared_ptr<AgentConnectionEx> conn;
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): using agent tunnel"), m_name, m_id);
@@ -10538,7 +10895,8 @@ shared_ptr<RoutingTable> Node::readRoutingTable()
       shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
-         routingTable = conn->getRoutingTable();
+         size_t limit = getCustomAttributeAsInt32(L"SysConfig:Topology.RoutingTable.MaxSize" , ConfigReadInt(L"Topology.RoutingTable.MaxSize", 4000));
+         routingTable = conn->getRoutingTable(limit);
       }
    }
    if ((routingTable == nullptr) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
@@ -10596,7 +10954,7 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
          shared_ptr<Interface> iface = findInterfaceByIndex(route->ifIndex);
          if (iface != nullptr)
          {
-            *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
+            *srcAddr = iface->getFirstUnicastAddressV4();
          }
          else
          {
@@ -10641,7 +10999,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
          }
       }
       else if ((object->getObjectClass() == OBJECT_INTERFACE) &&
-               static_cast<Interface*>(object)->getIpAddressList()->findSameSubnetAddress(destAddr).isValid())
+               static_cast<Interface*>(object)->findSameSubnetAddress(destAddr).isValid())
       {
          *nextHop = destAddr;
          *route = InetAddress::INVALID;
@@ -10672,7 +11030,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
       {
          shared_ptr<Interface> iface = findInterfaceByIndex(bestRoute->ifIndex);
          if (bestRoute->nextHop.isAnyLocal() && (iface != nullptr) &&
-             (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
+             (iface->getFirstUnicastAddressV4().getHostBits() == 0))
          {
             // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
             // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
@@ -11020,6 +11378,13 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
    if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return nullptr;
 
+   uint16_t effectivePort = (port != 0) ? port : m_snmpPort;
+   if (isPortBlocked(effectivePort, false))
+   {
+      nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): port %u blocked by port stop list", m_name, m_id, effectivePort);
+      return nullptr;
+   }
+
    SNMP_Transport *transport = nullptr;
    uint32_t snmpProxy = getEffectiveSnmpProxy();
    if (snmpProxy == 0)
@@ -11100,6 +11465,62 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
 }
 
 /**
+ * Open interactive SSH channel to the node via SSH proxy
+ */
+shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId)
+{
+   // Check SSH capability
+   if (!(m_capabilities & NC_IS_SSH))
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): node does not support SSH", m_name, m_id);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   uint32_t proxyId = getEffectiveSshProxy();
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxyNode == nullptr)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): SSH proxy node [%u] not found", m_name, m_id, proxyId);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   shared_ptr<AgentConnectionEx> agentConn = proxyNode->createAgentConnection();
+   if (agentConn == nullptr)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot connect to SSH proxy node %s [%u]",
+               m_name, m_id, proxyNode->getName(), proxyId);
+      return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   // Get driver hints before opening channel (needed for terminal type)
+   SSHDriverHints hints;
+   if (m_driver != nullptr)
+   {
+      m_driver->getSSHDriverHints(&hints);
+   }
+
+   // Open SSH channel through agent
+   uint32_t channelId;
+   uint32_t rcc = agentConn->openSSHChannel(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
+            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, hints.terminalType, &channelId);
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot open interactive SSH channel via proxy node %s [%u] (%u: %s)",
+               m_name, m_id, proxyNode->getName(), proxyId, rcc, AgentErrorCodeToText(rcc));
+               return shared_ptr<SSHInteractiveChannel>();
+   }
+
+   shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
+
+   agentConn->setSSHChannelDataHandler(channelId,
+      [channel] (const BYTE *data, size_t size, bool errorIndicator)
+      {
+         channel->onDataReceived(data, size, errorIndicator);
+      });
+   return channel;
+}
+
+/**
  * Resolve node's name
  */
 bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
@@ -11165,10 +11586,10 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
          NetObj *curr = getChildList().get(i);
          if ((curr->getObjectClass() == OBJECT_INTERFACE) && !static_cast<Interface*>(curr)->isLoopback())
          {
-            const InetAddressList *list = static_cast<Interface*>(curr)->getIpAddressList();
-            for(int n = 0; n < list->size(); n++)
+            InetAddressList addrList = static_cast<Interface*>(curr)->getIpAddressList();
+            for(int n = 0; n < addrList.size(); n++)
             {
-               const InetAddress& a = list->get(i);
+               InetAddress a = addrList.get(n);
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
                {
                   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
@@ -11630,8 +12051,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                if ((node != nullptr) && (!ws->ipAddr.isValid()))
                {
                   shared_ptr<Interface> iface = node->findInterfaceByMAC(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
-                  if ((iface != nullptr) && iface->getIpAddressList()->getFirstUnicastAddressV4().isValid())
-                     ws->ipAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
+                  if ((iface != nullptr) && iface->getFirstUnicastAddressV4().isValid())
+                     ws->ipAddr = iface->getFirstUnicastAddressV4();
                   else
                      ws->ipAddr = node->getIpAddress();
                }
@@ -11785,7 +12206,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    poller->setStatus(_T("calling modules"));
    ENUMERATE_MODULES(pfTopologyPollHook)
    {
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.name);
       CURRENT_MODULE.pfTopologyPollHook(this, pSession, rqId, poller);
    }
 
@@ -12054,9 +12475,10 @@ void Node::checkSubnetBinding()
       if (iface->isExcludedFromTopology())
          continue;
 
-      for(int m = 0; m < iface->getIpAddressList()->size(); m++)
+      InetAddressList ifaceAddrList = iface->getIpAddressList();
+      for(int m = 0; m < ifaceAddrList.size(); m++)
       {
-         const InetAddress& a = iface->getIpAddressList()->get(m);
+         InetAddress a = ifaceAddrList.get(m);
          if (a.isValidUnicast())
          {
             addrList.add(a);
@@ -12327,6 +12749,48 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 }
 
 /**
+ * Get list of hardware components as JSON array
+ */
+json_t *Node::getHardwareComponentsAsJSON()
+{
+   json_t *componentsArray = nullptr;
+   lockProperties();
+   if (m_hardwareComponents != nullptr)
+   {
+      componentsArray = json_array();
+      int hcSize = m_hardwareComponents->size();
+      for (int i = 0; i < hcSize; i++)
+      {
+         json_array_append_new(componentsArray, m_hardwareComponents->get(i)->toJson());
+      }
+   }
+   unlockProperties();
+   return componentsArray;
+}
+
+/**
+ * Get list of software packages as JSON array
+ */
+json_t *Node::getSoftwarePackagesAsJSON(const wchar_t *filter)
+{
+   json_t *packagesArray = nullptr;
+   lockProperties();
+   if (m_softwarePackages != nullptr)
+   {
+      packagesArray = json_array();
+      int spSize = m_softwarePackages->size();
+      for (int i = 0; i < spSize; i++)
+      {
+         SoftwarePackage *pkg = m_softwarePackages->get(i);
+         if ((filter == nullptr) || (wcsistr(pkg->getName(), filter) != nullptr) || (wcsistr(pkg->getDescription(), filter) != nullptr))
+            json_array_append_new(packagesArray, pkg->toJson());
+      }
+   }
+   unlockProperties();
+   return packagesArray;
+}
+
+/**
  * Get list of parent objects for NXSL script
  */
 NXSL_Value *Node::getParentsForNXSL(NXSL_VM *vm)
@@ -12405,6 +12869,83 @@ NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
       }
    }
    unlockProperties();
+   return vm->createValue(a);
+}
+
+/**
+ * Get list of installed packages for NXSL script with optional filtering
+ */
+NXSL_Value* Node::getInstalledPackagesForNXSL(NXSL_VM* vm, const wchar_t *filter, bool useRegex)
+{
+   if ((filter == nullptr) || (filter[0] == 0))
+      return getSoftwarePackagesForNXSL(vm);
+
+   NXSL_Array *a = new NXSL_Array(vm);
+
+   PCRE *compiledRegex = nullptr;
+   if (useRegex && (filter != nullptr) && (filter[0] != 0))
+   {
+      const char *eptr;
+      int eoffset;
+      compiledRegex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(filter), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+      if (compiledRegex == nullptr)
+      {
+         nxlog_debug_tag(L"nxsl.packages", 6, L"Node::getInstalledPackagesForNXSL: invalid regular expression \"%s\"", filter);
+         return vm->createValue(a);  // Return empty array on invalid regex
+      }
+   }
+
+   bool useGlob = !useRegex && ((filter != nullptr) && ((wcschr(filter, L'*') != nullptr) || (wcschr(filter, L'?') != nullptr)));
+
+   lockProperties();
+   if (m_softwarePackages != nullptr)
+   {
+      for (int i = 0; i < m_softwarePackages->size(); i++)
+      {
+         SoftwarePackage *pkg = m_softwarePackages->get(i);
+         bool match = true;
+
+         if ((filter != nullptr) && (filter[0] != 0))
+         {
+            if (compiledRegex != nullptr)
+            {
+               int pmatch[30];
+               int rc = _pcre_exec_t(compiledRegex, nullptr, reinterpret_cast<const PCRE_TCHAR*>(pkg->getName()), static_cast<int>(wcslen(pkg->getName())), 0, 0, pmatch, 30);
+               match = (rc >= 0);
+
+               if (!match && (pkg->getDescription() != nullptr))
+               {
+                  rc = _pcre_exec_t(compiledRegex, nullptr,
+                     reinterpret_cast<const PCRE_TCHAR*>(pkg->getDescription()),
+                     static_cast<int>(_tcslen(pkg->getDescription())), 0, 0, pmatch, 30);
+                  match = (rc >= 0);
+               }
+            }
+            else if (useGlob)
+            {
+               match = MatchStringW(filter, pkg->getName(), false);
+               if (!match && (pkg->getDescription() != nullptr))
+                  match = MatchStringW(filter, pkg->getDescription(), false);
+            }
+            else
+            {
+               match = (wcsistr(pkg->getName(), filter) != nullptr);
+               if (!match && (pkg->getDescription() != nullptr))
+                  match = (wcsistr(pkg->getDescription(), filter) != nullptr);
+            }
+         }
+
+         if (match)
+         {
+            a->append(vm->createValue(vm->createObject(&g_nxslSoftwarePackage, new SoftwarePackage(*pkg))));
+         }
+      }
+   }
+   unlockProperties();
+
+   if (compiledRegex != nullptr)
+      _pcre_free_t(compiledRegex);
+
    return vm->createValue(a);
 }
 
@@ -12906,8 +13447,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
             msg.setField(baseInfoFieldId++, static_cast<int16_t>(dco->getDataSource()));
             msg.setField(baseInfoFieldId++, dco->getName());
             msg.setField(baseInfoFieldId++, dco->getEffectivePollingInterval());
-            msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
+            msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime().asTime()); // convert to seconds for compatibility with older agents
             baseInfoFieldId += 4;
+            msg.setField(extraInfoFieldId + 1, dco->getLastPollTime());
             extraInfoFieldId += 1000;
             if (dco->isAdvancedSchedule())
             {
@@ -12973,6 +13515,57 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 }
 
 /**
+ * Synchronize environment variables from custom attributes with agent
+ */
+void Node::syncEnvironmentWithAgent(AgentConnectionEx *conn)
+{
+   StringMap envVars;
+   forEachCustomAttribute(
+      [&envVars] (const wchar_t *name, const CustomAttribute *attr) -> EnumerationCallbackResult
+      {
+         if (!wcsncmp(name, L"AgentEnv:", 9) && name[9] != 0)
+         {
+            envVars.set(&name[9], attr->value);
+         }
+         return _CONTINUE;
+      });
+
+   if (envVars.isEmpty())
+      return;
+
+   uint32_t rcc = conn->setEnvironmentVariables(envVars);
+   if (rcc == ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::syncEnvironmentWithAgent(%s [%u]): %d environment variables sent to agent", m_name, m_id, envVars.size());
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::syncEnvironmentWithAgent(%s [%u]): failed to send environment variables (%s)", m_name, m_id, AgentErrorCodeToText(rcc));
+   }
+}
+
+/**
+ * Called when custom attribute changes - sync AgentEnv: attributes with agent
+ */
+void Node::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
+{
+   super::onCustomAttributeChange(name, value);
+   if (!wcsncmp(name, L"AgentEnv:", 9) && name[9] != 0)
+   {
+      shared_ptr<Node> node = self();
+      ThreadPoolExecute(g_mainThreadPool,
+         [node] () -> void
+         {
+            shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+            if (conn != nullptr)
+            {
+               node->syncEnvironmentWithAgent(conn.get());
+            }
+         });
+   }
+}
+
+/**
  * Fully removes all DCI configuration from node
  */
 void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
@@ -12981,7 +13574,7 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::clearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%d]"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, L"Node::clearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%u]", m_name, m_id);
       delete response;
    }
 }
@@ -13420,6 +14013,18 @@ void Node::populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, u
 }
 
 /**
+ * Node type names
+ */
+static const char *s_nodeTypeNames[] =
+{
+   "Unknown",
+   "Physical",
+   "Virtual",
+   "Controller",
+   "Container"
+};
+
+/**
  * Serialize object to JSON
  */
 json_t *Node::toJson()
@@ -13429,9 +14034,63 @@ json_t *Node::toJson()
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
+
+   // Capability flags JSON object with boolean attributes
+   json_t *capabilities = json_object();
+   json_object_set_new(capabilities, "isSnmp", json_boolean(m_capabilities & NC_IS_SNMP));
+   json_object_set_new(capabilities, "isNativeAgent", json_boolean(m_capabilities & NC_IS_NATIVE_AGENT));
+   json_object_set_new(capabilities, "isBridge", json_boolean(m_capabilities & NC_IS_BRIDGE));
+   json_object_set_new(capabilities, "isRouter", json_boolean(m_capabilities & NC_IS_ROUTER));
+   json_object_set_new(capabilities, "isLocalMgmt", json_boolean(m_capabilities & NC_IS_LOCAL_MGMT));
+   json_object_set_new(capabilities, "isPrinter", json_boolean(m_capabilities & NC_IS_PRINTER));
+   json_object_set_new(capabilities, "isOspf", json_boolean(m_capabilities & NC_IS_OSPF));
+   json_object_set_new(capabilities, "isSsh", json_boolean(m_capabilities & NC_IS_SSH));
+   json_object_set_new(capabilities, "isCdp", json_boolean(m_capabilities & NC_IS_CDP));
+   json_object_set_new(capabilities, "isNdp", json_boolean(m_capabilities & NC_IS_NDP));
+   json_object_set_new(capabilities, "isLldp", json_boolean(m_capabilities & NC_IS_LLDP));
+   json_object_set_new(capabilities, "isVrrp", json_boolean(m_capabilities & NC_IS_VRRP));
+   json_object_set_new(capabilities, "hasVlans", json_boolean(m_capabilities & NC_HAS_VLANS));
+   json_object_set_new(capabilities, "is8021x", json_boolean(m_capabilities & NC_IS_8021X));
+   json_object_set_new(capabilities, "isStp", json_boolean(m_capabilities & NC_IS_STP));
+   json_object_set_new(capabilities, "hasEntityMib", json_boolean(m_capabilities & NC_HAS_ENTITY_MIB));
+   json_object_set_new(capabilities, "hasIfxTable", json_boolean(m_capabilities & NC_HAS_IFXTABLE));
+   json_object_set_new(capabilities, "hasAgentIfxCounters", json_boolean(m_capabilities & NC_HAS_AGENT_IFXCOUNTERS));
+   json_object_set_new(capabilities, "hasWinPdh", json_boolean(m_capabilities & NC_HAS_WINPDH));
+   json_object_set_new(capabilities, "isWifiController", json_boolean(m_capabilities & NC_IS_WIFI_CONTROLLER));
+   json_object_set_new(capabilities, "isSmclp", json_boolean(m_capabilities & NC_IS_SMCLP));
+   json_object_set_new(capabilities, "isNewPolicyTypes", json_boolean(m_capabilities & NC_IS_NEW_POLICY_TYPES));
+   json_object_set_new(capabilities, "hasUserAgent", json_boolean(m_capabilities & NC_HAS_USER_AGENT));
+   json_object_set_new(capabilities, "isEthernetIp", json_boolean(m_capabilities & NC_IS_ETHERNET_IP));
+   json_object_set_new(capabilities, "isModbusTcp", json_boolean(m_capabilities & NC_IS_MODBUS_TCP));
+   json_object_set_new(capabilities, "isProfinet", json_boolean(m_capabilities & NC_IS_PROFINET));
+   json_object_set_new(capabilities, "hasFileManager", json_boolean(m_capabilities & NC_HAS_FILE_MANAGER));
+   json_object_set_new(capabilities, "lldpV2Mib", json_boolean(m_capabilities & NC_LLDP_V2_MIB));
+   json_object_set_new(capabilities, "emulatedEntityMib", json_boolean(m_capabilities & NC_EMULATED_ENTITY_MIB));
+   json_object_set_new(capabilities, "deviceView", json_boolean(m_capabilities & NC_DEVICE_VIEW));
+   json_object_set_new(capabilities, "isWifiAp", json_boolean(m_capabilities & NC_IS_WIFI_AP));
+   json_object_set_new(capabilities, "isVnc", json_boolean(m_capabilities & NC_IS_VNC));
+   json_object_set_new(capabilities, "isLocalVnc", json_boolean(m_capabilities & NC_IS_LOCAL_VNC));
+   json_object_set_new(capabilities, "registeredForBackup", json_boolean(m_capabilities & NC_REGISTERED_FOR_BACKUP));
+   json_object_set_new(capabilities, "hasServiceManager", json_boolean(m_capabilities & NC_HAS_SERVICE_MANAGER));
+   json_object_set_new(root, "capabilities", capabilities);
+
+   // State flags JSON object with boolean attributes
+   json_t *state = json_object();
+   json_object_set_new(state, "agentUnreachable", json_boolean(m_state & NSF_AGENT_UNREACHABLE));
+   json_object_set_new(state, "snmpUnreachable", json_boolean(m_state & NSF_SNMP_UNREACHABLE));
+   json_object_set_new(state, "ethernetIpUnreachable", json_boolean(m_state & NSF_ETHERNET_IP_UNREACHABLE));
+   json_object_set_new(state, "cacheModeNotSupported", json_boolean(m_state & NSF_CACHE_MODE_NOT_SUPPORTED));
+   json_object_set_new(state, "snmpTrapFlood", json_boolean(m_state & NSF_SNMP_TRAP_FLOOD));
+   json_object_set_new(state, "icmpUnreachable", json_boolean(m_state & NSF_ICMP_UNREACHABLE));
+   json_object_set_new(state, "sshUnreachable", json_boolean(m_state & NSF_SSH_UNREACHABLE));
+   json_object_set_new(state, "modbusUnreachable", json_boolean(m_state & NSF_MODBUS_UNREACHABLE));
+   json_object_set_new(state, "unreachable", json_boolean(m_state & DCSF_UNREACHABLE));
+   json_object_set_new(state, "networkPathProblem", json_boolean(m_state & DCSF_NETWORK_PATH_PROBLEM));
+   json_object_set_new(root, "state", state);
+
    json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    json_object_set_new(root, "stateFlags", json_integer(m_state));
-   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "type", json_string(s_nodeTypeNames[(int)m_type]));
    json_object_set_new(root, "subType", json_string_t(m_subType));
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
@@ -13458,10 +14117,10 @@ json_t *Node::toJson()
    json_object_set_new(root, "driverName", json_string_t(m_driver->getName()));
    json_object_set_new(root, "downSince", json_time_string(m_downSince));
    json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
-   json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
-   json_object_set_new(root, "agentProxy", json_integer(m_agentProxy));
-   json_object_set_new(root, "snmpProxy", json_integer(m_snmpProxy));
-   json_object_set_new(root, "icmpProxy", json_integer(m_icmpProxy));
+   json_object_set_new(root, "pollerNodeId", json_integer(m_pollerNode));
+   json_object_set_new(root, "agentProxyNodeId", json_integer(m_agentProxy));
+   json_object_set_new(root, "snmpProxyNodeId", json_integer(m_snmpProxy));
+   json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
    char baseBridgeAddrText[64];
    json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
@@ -13486,7 +14145,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
    json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
    json_object_set_new(root, "modbusTCPPort", json_integer(m_modbusTcpPort));
-   json_object_set_new(root, "modbusProxy", json_integer(m_modbusProxy));
+   json_object_set_new(root, "modbusProxyNodeId", json_integer(m_modbusProxy));
    json_object_set_new(root, "vncPassword", json_string_t(m_vncPassword));
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
@@ -13929,6 +14588,12 @@ void Node::updateClusterMembership()
 ModbusTransport *Node::createModbusTransport()
 {
 #if WITH_MODBUS
+   if (isPortBlocked(m_modbusTcpPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 5, _T("Node::createModbusTransport(%s [%u]): port %u blocked by port stop list"), m_name, m_id, m_modbusTcpPort);
+      return nullptr;
+   }
+
    ModbusTransport *transport = nullptr;
    uint32_t modbusProxy = getEffectiveModbusProxy();
    if (modbusProxy == 0)
@@ -13952,4 +14617,40 @@ ModbusTransport *Node::createModbusTransport()
 #else
    return nullptr;
 #endif
+}
+
+/**
+ * Decommission node - mark for deletion by housekeeper
+ */
+void Node::decommission(time_t expirationTime, bool clearIpAddresses)
+{
+   setMgmtStatus(false);
+
+   lockProperties();
+   m_state |= NSF_DECOMMISSIONED;
+   m_decommissionTime = expirationTime;
+   setModified(MODIFY_NODE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+
+   if (clearIpAddresses)
+   {
+      m_ipAddress = InetAddress();
+   }
+   unlockProperties();
+
+   if (clearIpAddresses)
+   {
+      readLockChildList();
+      for (int i = 0; i < getChildList().size(); i++)
+      {
+         NetObj *child = getChildList().get(i);
+         if (child->getObjectClass() == OBJECT_INTERFACE)
+         {
+            static_cast<Interface*>(child)->clearIpAddresses();
+         }
+      }
+      unlockChildList();
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] decommissioned, expiration time %u"),
+      m_name, m_id, static_cast<uint32_t>(expirationTime));
 }

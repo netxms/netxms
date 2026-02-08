@@ -67,7 +67,8 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
-   private Button checkDetectAnomalies;
+   private Button checkDetectAnomaliesIF;
+   private Button checkDetectAnomaliesAI;
 	private Button checkAllThresholds;
    private Button disableProcessing;
    private Button disableUntil;
@@ -120,9 +121,13 @@ public class Thresholds extends AbstractDCIPropertyPage
 		if (dci.getTemplateId() == dci.getNodeId())	// DCI created by instance discovery
 			instance.getTextControl().setEditable(false);
 
-      checkDetectAnomalies = new Button(dialogArea, SWT.CHECK);
-      checkDetectAnomalies.setText(i18n.tr("Detect anomalies"));
-      checkDetectAnomalies.setSelection(dci.isAnomalyDetectionEnabled());
+      checkDetectAnomaliesIF = new Button(dialogArea, SWT.CHECK);
+      checkDetectAnomaliesIF.setText(i18n.tr("Detect anomalies using isolation forest algorithm"));
+      checkDetectAnomaliesIF.setSelection(dci.isAnomalyDetectionEnabledIF());
+
+      checkDetectAnomaliesAI = new Button(dialogArea, SWT.CHECK);
+      checkDetectAnomaliesAI.setText(i18n.tr("Detect anomalies using AI"));
+      checkDetectAnomaliesAI.setSelection(dci.isAnomalyDetectionEnabledAI());
 
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
       checkAllThresholds.setText(i18n.tr("Process all thresholds"));
@@ -452,7 +457,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		dci.setInstanceName(instance.getText());
-      dci.setAnomalyDetectionEnabled(checkDetectAnomalies.getSelection());
+      dci.setAnomalyDetectionEnabled(checkDetectAnomaliesIF.getSelection(), checkDetectAnomaliesAI.getSelection());
       dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);

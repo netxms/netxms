@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2025 Reden Solutions
+** Copyright (C) 2003-2026 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -210,6 +210,24 @@ enum DataCollectionError
 };
 
 /**
+ * Get textual representation of DataCollectionError value
+ */
+static inline const wchar_t *DataCollectionErrorToText(DataCollectionError e)
+{
+   switch(e)
+   {
+      case DCE_SUCCESS: return L"Success";
+      case DCE_COMM_ERROR: return L"Communication error";
+      case DCE_NOT_SUPPORTED: return L"Not supported";
+      case DCE_IGNORE: return L"Ignore";
+      case DCE_NO_SUCH_INSTANCE: return L"No such instance";
+      case DCE_COLLECTION_ERROR: return L"Collection error";
+      case DCE_ACCESS_DENIED: return L"Access denied";
+      default: return L"Unknown error";
+   }
+}
+
+/**
  * Agent action output callback events
  */
 enum ActionCallbackEvent
@@ -331,6 +349,7 @@ private:
       type = IFTYPE_OTHER;
       mtu = 0;
       speed = 0;
+      maxSpeed = 0;
       bridgePort = 0;
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
@@ -345,6 +364,7 @@ public:
 	uint32_t type;
 	uint32_t mtu;
    uint64_t speed;  // interface speed in bits/sec
+   uint64_t maxSpeed;
    uint32_t bridgePort;
 	InterfacePhysicalLocation location;
    InetAddressList ipAddrList;
@@ -674,8 +694,10 @@ public:
    double getCustomAttributeAsDouble(const TCHAR *key, double defaultValue) const;
    bool getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) const;
 
-   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
-   StringMap *getCustomAttributes(const TCHAR *regexp) const;
+   StringMap *getCustomAttributes(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
+   StringMap *getCustomAttributes(const wchar_t *regexp) const;
+
+   json_t *getCustomAttributesAsJson(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
 
    void setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable);
    void setCustomAttribute(const TCHAR *key, int32_t value);
@@ -887,6 +909,31 @@ public:
 };
 
 /**
+ * Agent list definition
+ */
+class LIBNXSRV_EXPORTABLE AgentListDefinition
+{
+private:
+   String m_name;
+   String m_description;
+
+public:
+   AgentListDefinition(const NXCPMessage& msg, uint32_t baseId) :
+      m_name(msg.getFieldAsString(baseId, MAX_PARAM_NAME)), m_description(msg.getFieldAsString(baseId + 1, 512)) {}
+   AgentListDefinition(const AgentListDefinition& src) : m_name(src.m_name), m_description(src.m_description) {}
+   AgentListDefinition(const wchar_t *name, const wchar_t *description) : m_name(name), m_description(description) {}
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      msg->setField(baseId, m_name);
+      msg->setField(baseId + 1, m_description);
+   }
+
+   const wchar_t *getName() const { return m_name.cstr(); }
+   const wchar_t *getDescription() const { return m_description.cstr(); }
+};
+
+/**
  * Remote file information
  */
 class LIBNXSRV_EXPORTABLE RemoteFileInfo
@@ -1039,6 +1086,33 @@ template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(size_t)>;
 #endif
 
 /**
+ * SSH channel data callback type
+ */
+typedef std::function<void(const BYTE*, size_t, bool)> SSHChannelDataCallback;
+
+struct SSHChannelCallbackIndexEntry;
+
+/**
+ * SSH channel callback index
+ */
+class LIBNXSRV_EXPORTABLE SSHChannelCallbackIndex
+{
+private:
+   SSHChannelCallbackIndexEntry *m_data;
+
+public:
+   SSHChannelCallbackIndex()
+   {
+      m_data = nullptr;
+   }
+   ~SSHChannelCallbackIndex();
+
+   void add(uint32_t id, SSHChannelDataCallback handler);
+   void remove(uint32_t id);
+   SSHChannelDataCallback get(uint32_t id);
+};
+
+/**
  * Agent connection
  */
 class LIBNXSRV_EXPORTABLE AgentConnection : public enable_shared_from_this<AgentConnection>
@@ -1082,6 +1156,8 @@ private:
 	bool m_fileUpdateConnection;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
+	SSHChannelCallbackIndex m_sshChannelHandlers;
+   Mutex m_sshChannelLock;
 
    uint32_t setupEncryption(RSA_KEY serverKey);
    uint32_t authenticate(BOOL bProxyData);
@@ -1120,6 +1196,7 @@ protected:
    virtual uint32_t processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
+   virtual void processSSHChannelData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
 
    const InetAddress& getIpAddr() const { return m_addr; }
@@ -1160,11 +1237,12 @@ public:
    uint32_t setServerId(uint64_t serverId);
    uint32_t enableTraps();
    uint32_t enableFileUpdates();
+   uint32_t setEnvironmentVariables(const StringMap& variables);
    uint32_t setComponentToken(const char *component, uint32_t expirationTime, const char *secret);
 
    shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
-   shared_ptr<RoutingTable> getRoutingTable();
+   shared_ptr<RoutingTable> getRoutingTable(size_t limit = 0);
    uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);
    uint32_t getList(const TCHAR *param, StringList **list);
    uint32_t getTable(const TCHAR *param, Table **table);
@@ -1180,8 +1258,8 @@ public:
    uint32_t nop();
    uint32_t getRemoteSystemTime(int64_t *remoteTime, int32_t *offset = nullptr, uint32_t *roundtripTime = nullptr, bool *allowSync = nullptr);
    uint32_t synchronizeTime();
-   uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
-         void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
+   uint32_t executeCommand(const wchar_t *command, const StringList &args, bool withOutput = false,
+         void (*outputCallback)(ActionCallbackEvent, const void*, void*) = nullptr, void *context = nullptr, bool utf8Output = false);
    uint32_t changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t changeFilePermissions(const TCHAR *file, bool allowPathExpansion, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
@@ -1195,7 +1273,7 @@ public:
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
-   uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
+   uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
    uint32_t getPolicyInventory(AgentPolicyInfo **info);
@@ -1205,6 +1283,16 @@ public:
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
    uint32_t closeTcpProxy(uint32_t channelId);
+
+   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId);
+   uint32_t sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size);
+   uint32_t closeSSHChannel(uint32_t channelId);
+   void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
+   void removeSSHChannelDataHandler(uint32_t channelId);
+   uint32_t executeSSHCommand(const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, const char *command, ByteStream *output);
+
+   uint32_t getAITools(char **schema);
+   uint32_t executeAITool(const char *toolName, const char *jsonParams, char **jsonResult, uint32_t *executionTime = nullptr);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
@@ -1352,6 +1440,144 @@ public:
 };
 
 #endif   /* WITH_MODBUS */
+
+/**
+ * SSH driver hints for interactive CLI sessions
+ */
+struct LIBNXSRV_EXPORTABLE SSHDriverHints
+{
+   const char *promptPattern;           // Regex for command prompt
+   const char *enabledPromptPattern;    // Regex for privileged prompt
+   const char *enableCommand;           // "enable" or equivalent
+   const char *enablePromptPattern;     // "Password:" pattern
+   const char *paginationDisableCmd;    // "terminal length 0"
+   const char *paginationPrompt;        // "--More--" pattern
+   const char *paginationContinue;      // " " (space)
+   const char *exitCommand;             // "exit"
+   const char *testCommand;             // Command for testing command/exec mode
+   const char *testCommandPattern;      // Expected pattern in test command output
+   const char *terminalType;            // Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
+   uint32_t commandTimeout;             // Default timeout (ms)
+   uint32_t connectTimeout;             // Connection timeout (ms)
+
+   SSHDriverHints()
+   {
+      promptPattern = "[>$]\\s*$";
+      enabledPromptPattern = "#\\s*$";
+      enableCommand = nullptr;
+      enablePromptPattern = nullptr;
+      paginationDisableCmd = nullptr;
+      paginationPrompt = "-+[Mm][Oo][Rr][Ee]-+";
+      paginationContinue = " ";
+      exitCommand = "exit";
+      testCommand = "echo netxms_test_12345";
+      testCommandPattern = "netxms_test_12345";
+      terminalType = "vt100";
+      commandTimeout = 30000;
+      connectTimeout = 10000;
+   }
+};
+
+class SSHInteractiveChannel;
+
+#ifdef _WIN32
+template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<SSHInteractiveChannel>;
+#endif
+
+/**
+ * Interactive SSH channel with server-side parsing
+ */
+class LIBNXSRV_EXPORTABLE SSHInteractiveChannel
+{
+private:
+   shared_ptr<AgentConnection> m_agentConn;
+   uint32_t m_channelId;
+   SSHDriverHints m_hints;
+
+   // Prompt detection
+   void *m_promptRegex;
+   void *m_promptRegexW;
+   void *m_enabledPromptRegex;
+   void *m_enabledPromptRegexW;
+   void *m_paginationRegex;
+
+   // State
+   bool m_connected;
+   bool m_privileged;
+   uint32_t m_lastError;
+   MutableString m_lastErrorMessage;
+
+   // Data buffer (receives async data from agent)
+   ByteStream m_buffer;
+   Mutex m_bufferLock;
+   Condition m_dataReceived;
+
+   // Internal methods
+   bool waitForPrompt(uint32_t timeout);
+   bool checkPromptMatch();
+   void processIncomingData();
+   void respondToTerminalQueries(const BYTE *data, size_t size);
+   void removeControlCharacters() { m_buffer.removeTerminalControlCharacters(); }
+   void collapseCharacterByCharacterOutput();
+   bool handlePagination();
+   StringList *parseOutput(const char *sentCommand);
+   bool isCommandEcho(const wchar_t *line, const char *command);
+
+public:
+   SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, uint32_t channelId, const SSHDriverHints& hints);
+   ~SSHInteractiveChannel();
+
+   /**
+    * Callback for incoming data from agent
+    */
+   void onDataReceived(const BYTE *data, size_t size, bool errorIndicator);
+
+   /**
+    * Wait for initial prompt after connection
+    */
+   bool waitForInitialPrompt();
+
+   /**
+    * Disable pagination (best effort)
+    */
+   void disablePagination();
+
+   /**
+    * Execute command and return output
+    */
+   StringList *execute(const char *command, uint32_t timeout = 0);
+
+   /**
+    * Escalate to privileged mode
+    */
+   bool escalatePrivilege(const TCHAR *enablePassword);
+
+   /**
+    * Check if in privileged mode
+    */
+   bool isPrivileged() const { return m_privileged; }
+
+   /**
+    * Check if connected
+    */
+   bool isConnected() const { return m_connected; }
+
+   /**
+    * Get channel ID
+    */
+   uint32_t getChannelId() const { return m_channelId; }
+
+   /**
+    * Close channel
+    */
+   void close();
+
+   /**
+    * Error information
+    */
+   uint32_t getLastError() const { return m_lastError; }
+   const wchar_t *getLastErrorMessage() const { return m_lastErrorMessage.cstr(); }
+};
 
 /**
  * ISC flags

@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2023 Victor Kirhenshtein
+** Copyright (C) 2004-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -102,10 +102,10 @@ bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
    }
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
-      query.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
-      query.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-      query.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-      query.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+      query.replace(L"$SQL:BLOB", g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
+      query.replace(L"$SQL:TEXT", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      query.replace(L"$SQL:TXT4K", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      query.replace(L"$SQL:INT64", g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
    }
    if (g_dbSyntax == DB_SYNTAX_MYSQL)
       query.append(g_tableSuffix);
@@ -453,4 +453,33 @@ void LIBNXDBMGR_EXPORTABLE DecodeSQLString(TCHAR *str)
       }
    }
    str[posOut] = 0;
+}
+
+/**
+ * Convert column to INT64 type
+ */
+bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column)
+{
+   if ((g_dbSyntax == DB_SYNTAX_SQLITE) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+      return true;  // no changes needed
+
+   StringBuffer query(L"ALTER TABLE ");
+   query.append(table);
+   query.append((g_dbSyntax == DB_SYNTAX_MYSQL) ? L" MODIFY " :L" ALTER COLUMN ");
+   query.append(column);
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_DB2:
+         query.append(L" SET DATA TYPE ");
+         break;
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         query.append(L" TYPE ");
+         break;
+      default:
+         query.append(L" ");
+         break;
+   }
+   query.append(g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   return SQLQuery(query);
 }

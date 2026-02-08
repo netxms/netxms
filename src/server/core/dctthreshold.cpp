@@ -262,6 +262,14 @@ json_t *DCTableCondition::toJson() const
 }
 
 /**
+ * Create export record
+ */
+json_t *DCTableCondition::createExportRecord() const
+{
+   return toJson();
+}
+
+/**
  * Check if this condition equals to given condition
  */
 bool DCTableCondition::equals(DCTableCondition *c) const
@@ -334,6 +342,36 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 }
 
 /**
+ * Create condition group from JSON record
+ */
+DCTableConditionGroup::DCTableConditionGroup(json_t *json)
+{
+   json_t *conditionsArray = json_object_get(json, "conditions");
+   if (json_is_array(conditionsArray))
+   {
+      size_t count = json_array_size(conditionsArray);
+      m_conditions = new ObjectArray<DCTableCondition>(count, 4, Ownership::True);
+      
+      size_t index;
+      json_t *conditionJson;
+      json_array_foreach(conditionsArray, index, conditionJson)
+      {
+         if (json_is_object(conditionJson))
+         {
+            String column = json_object_get_string(conditionJson, "column", _T(""));
+            String value = json_object_get_string(conditionJson, "value", _T(""));
+            int operation = json_object_get_int32(conditionJson, "operation");
+            m_conditions->add(new DCTableCondition(column, operation, value));
+         }
+      }
+   }
+   else
+   {
+      m_conditions = new ObjectArray<DCTableCondition>(8, 8, Ownership::True);
+   }
+}
+
+/**
  * Condition group destructor
  */
 DCTableConditionGroup::~DCTableConditionGroup()
@@ -365,6 +403,23 @@ json_t *DCTableConditionGroup::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "conditions", json_object_array(m_conditions));
+   return root;
+}
+
+/**
+ * Create export record
+ */
+json_t *DCTableConditionGroup::createExportRecord() const
+{
+   json_t *root = json_object();
+   json_t *conditionsArray = json_array();
+   
+   for(int i = 0; i < m_conditions->size(); i++)
+   {
+      json_array_append_new(conditionsArray, m_conditions->get(i)->createExportRecord());
+   }
+   
+   json_object_set_new(root, "conditions", conditionsArray);
    return root;
 }
 
@@ -490,6 +545,37 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e) : m_groups(0, 8, Ownership::T
 /**
  * Load conditions from database
  */
+
+/**
+ * Create DCTableThreshold from JSON record
+ */
+DCTableThreshold::DCTableThreshold(json_t *json) : m_groups(0, 8, Ownership::True), m_instances(Ownership::True), m_instancesBeforeMaint(Ownership::True)
+{
+   m_id = CreateUniqueId(IDG_THRESHOLD);
+   
+   String activationEvent = json_object_get_string(json, "activationEvent", _T("SYS_TABLE_THRESHOLD_ACTIVATED"));
+   m_activationEvent = EventCodeFromName(activationEvent);
+   
+   String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_TABLE_THRESHOLD_DEACTIVATED"));
+   m_deactivationEvent = EventCodeFromName(deactivationEvent);
+   
+   m_sampleCount = json_object_get_int32(json, "sampleCount", 1);
+
+   json_t *groupsArray = json_object_get(json, "groups");
+   if (json_is_array(groupsArray))
+   {
+      size_t index;
+      json_t *groupJson;
+      json_array_foreach(groupsArray, index, groupJson)
+      {
+         if (json_is_object(groupJson))
+         {
+            m_groups.add(new DCTableConditionGroup(groupJson));
+         }
+      }
+   }
+}
+
 void DCTableThreshold::loadConditions(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT group_id,column_name,check_operation,check_value FROM dct_threshold_conditions WHERE threshold_id=? ORDER BY group_id,sequence_number"));
@@ -868,38 +954,45 @@ void DCTableThreshold::generateEventsAfterMaintenance(DCTable *table)
 /**
  * Create NXMP record for threshold
  */
-void DCTableThreshold::createExportRecord(TextFileWriter& xml, int id) const
+/**
+ * Create configuration export record (simplified structure matching XML export)
+ */
+json_t *DCTableThreshold::createExportRecord() const
 {
-   TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
-
-   EventNameFromCode(m_activationEvent, activationEvent);
-   EventNameFromCode(m_deactivationEvent, deactivationEvent);
-   xml.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
-                          _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
-                          _T("\t\t\t\t\t\t\t<groups>\n"),
-								  id, (const TCHAR *)EscapeStringForXML2(activationEvent),
-								  (const TCHAR *)EscapeStringForXML2(deactivationEvent),
-								  m_sampleCount);
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   
+   // Export groups with proper export records
+   json_t *groupsArray = json_array();
    for(int i = 0; i < m_groups.size(); i++)
    {
-      xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t<group id=\"%d\">\n\t\t\t\t\t\t\t\t\t<conditions>\n"), i + 1);
-      const ObjectArray<DCTableCondition> *conditions = m_groups.get(i)->getConditions();
-      for(int j = 0; j < conditions->size(); j++)
-      {
-         DCTableCondition *c = conditions->get(j);
-         xml.appendFormattedString(_T("\t\t\t\t\t\t\t\t\t\t<condition id=\"%d\">\n")
-                                _T("\t\t\t\t\t\t\t\t\t\t\t<column>%s</column>\n")
-                                _T("\t\t\t\t\t\t\t\t\t\t\t<operation>%d</operation>\n")
-                                _T("\t\t\t\t\t\t\t\t\t\t\t<value>%s</value>\n")
-                                _T("\t\t\t\t\t\t\t\t\t\t</condition>\n"),
-                                j + 1, (const TCHAR *)EscapeStringForXML2(c->getColumn()),
-                                c->getOperation(), (const TCHAR *)EscapeStringForXML2(c->getValue()));
-      }
-      xml.append(_T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n"));
+      json_array_append_new(groupsArray, m_groups.get(i)->createExportRecord());
    }
-   xml.append(_T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n"));
+   json_object_set_new(root, "groups", groupsArray);
+   
+   // Convert event codes to event names
+   TCHAR activationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_activationEvent, activationEventName))
+   {
+      json_object_set_new(root, "activationEvent", json_string_t(activationEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "activationEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   TCHAR deactivationEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_deactivationEvent, deactivationEventName))
+   {
+      json_object_set_new(root, "deactivationEvent", json_string_t(deactivationEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "deactivationEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   return root;
 }
 
 /**

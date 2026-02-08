@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,7 +138,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, const StringMap &),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, time_t),
+      bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
@@ -223,6 +223,7 @@ TCHAR g_snmpTrapListenAddress[MAX_PATH] = _T("*");
 uint16_t g_wListenPort = AGENT_LISTEN_PORT;
 TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, Ownership::True);
+StringList g_acceptedEnvVars;
 uint32_t g_externalCommandTimeout = 0;   // External process execution timeout for external commands (actions) in milliseconds (0 = unset)
 uint32_t g_externalMetricTimeout = 0;  // External process execution timeout for external metrics in milliseconds (0 = unset)
 uint32_t g_externalMetricProviderTimeout = 30000;  // External metric provider timeout in milliseconds
@@ -316,6 +317,7 @@ static pid_t s_pid;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { _T("AcceptedEnvironmentVariables"), CT_STRING_LIST, 0, 0, 0, 0, &g_acceptedEnvVars, nullptr },
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
@@ -1314,6 +1316,15 @@ BOOL Initialize()
 			ParseServerList(m_pszControlServerList, true, false);
 		if (m_pszServerList != nullptr)
 			ParseServerList(m_pszServerList, false, false);
+
+      // Set default accepted environment variable patterns if not configured
+      if (g_acceptedEnvVars.contains(_T("none")))
+         g_acceptedEnvVars.clear();
+      else if (g_acceptedEnvVars.isEmpty())
+      {
+         g_acceptedEnvVars.add(_T("NX_*"));
+         g_acceptedEnvVars.add(_T("NETXMS_*"));
+      }
 
       // Add built-in actions
       AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));

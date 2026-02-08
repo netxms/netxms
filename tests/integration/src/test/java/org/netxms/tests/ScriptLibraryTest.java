@@ -45,10 +45,18 @@ public class ScriptLibraryTest extends AbstractSessionTest
       assertNotNull(library);
       assertFalse(library.isEmpty());
       assertFalse(library.get(0).getName().isEmpty());
-
-      Script script = session.getScript(library.get(0).getId());
-      assertEquals(library.get(0).getId(), script.getId());
-      assertEquals(library.get(0).getName(), script.getName());
+      Script libScript = library.get(0);
+      for (Script s : library)
+      {
+         if (s.getName().equals("Hook::RegisterForConfigurationBackup"))
+         {
+            libScript = s;
+            break;
+         }
+      }
+      Script script = session.getScript(libScript.getId());
+      assertEquals(libScript.getId(), script.getId());
+      assertEquals(libScript.getName(), script.getName());
       assertFalse(script.getSource().isEmpty());
 
       session.disconnect();

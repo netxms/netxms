@@ -24,11 +24,107 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 52.20 to 53.0
+ * Upgrade from 52.24 to 53.0
+ */
+static bool H_UpgradeFromV24()
+{
+   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 52.23 to 52.24
+ */
+static bool H_UpgradeFromV23()
+{
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      if (DBMgrMetaDataReadInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 0) == 0)
+      {
+         // Previous upgrade code was removed; PostgreSQL.DataTablesHavePK is an indicator that data tables already converted to use PK
+         DBMgrMetaDataWriteInt32(L"PostgreSQL.DataTablesHavePK", 1);
+      }
+      CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='PostgreSQL.SkipPrimaryKeyUpdate'")));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
+ * Upgrade from 52.22 to 52.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.EnableWelcomePage",
+            L"1",
+            L"Enable or disable welcome page in client application (shown when server is upgraded to new version and contains release notes).",
+            nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
+ * Upgrade from 52.21 to 52.22
+ */
+static bool H_UpgradeFromV21()
+{
+   static const TCHAR *batch =
+      _T("UPDATE config SET var_name='Topology.RoutingTable.UpdateInterval' WHERE var_name='Topology.RoutingTableUpdateInterval'\n")
+      _T("UPDATE object_custom_attributes SET attr_name='SysConfig:Topology.RoutingTable.UpdateInterval' WHERE attr_name='SysConfig:Topology.RoutingTableUpdateInterval'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(L"Topology.RoutingTable.MaxSize",
+            L"4000",
+            L"Maximum retrievable routing table size. Larger routing tables will not be retrieved from devices.",
+            L"records", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
+ * Upgrade from 52.20 to 52.21
  */
 static bool H_UpgradeFromV20()
 {
-   CHK_EXEC(SetMajorSchemaVersion(53, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_action_list ADD record_id integer")));
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         CHK_EXEC(SQLQuery(_T("SET @rownum := 0")));
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = (@rownum := @rownum + 1)")));
+         break;
+      case DB_SYNTAX_TSDB:
+      case DB_SYNTAX_PGSQL:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = sub.rn FROM (SELECT ctid, ROW_NUMBER() OVER (ORDER BY rule_id, action_id) AS rn FROM policy_action_list) sub WHERE policy_action_list.ctid = sub.ctid")));
+         break;
+      case DB_SYNTAX_SQLITE:
+         CHK_EXEC(SQLQuery(_T("UPDATE policy_action_list SET record_id = (SELECT COUNT(*) FROM policy_action_list AS t2 WHERE t2.rowid <= policy_action_list.rowid)")));
+         break;
+      case DB_SYNTAX_ORACLE:
+         CHK_EXEC(SQLQuery(_T("MERGE INTO policy_action_list t USING (SELECT rowid AS rid, ROW_NUMBER() OVER (ORDER BY rowid) AS rn FROM policy_action_list) s ON (t.rowid = s.rid) WHEN MATCHED THEN UPDATE SET t.record_id = s.rn")));
+         break;
+      case DB_SYNTAX_MSSQL:
+         CHK_EXEC(SQLQuery(_T("WITH numbered AS (SELECT ROW_NUMBER() OVER (ORDER BY rule_id, action_id) AS rn, * FROM policy_action_list) UPDATE numbered SET record_id = rn")));
+         break;
+      default:
+         WriteToTerminal(L"Unsupported DB syntax for row numbering in policy_action_list\n");
+         return false;
+   }
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("record_id")));
+   DBAddPrimaryKey(g_dbHandle, _T("policy_action_list"), _T("record_id,rule_id"));
+
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      // Previous upgrade code was removed; PostgreSQL.SkipPrimaryKeyUpdate is an indicator that no changes were made to data tables
+      DBMgrMetaDataWriteInt32(L"PostgreSQL.SkipPrimaryKeyUpdate", 1);
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
    return true;
 }
 
@@ -452,7 +548,11 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 20, 53, 0,  H_UpgradeFromV20 },
+   { 24, 53, 0,  H_UpgradeFromV24 },
+   { 23, 52, 24, H_UpgradeFromV23 },
+   { 22, 52, 23, H_UpgradeFromV22 },
+   { 21, 52, 22, H_UpgradeFromV21 },
+   { 20, 52, 21, H_UpgradeFromV20 },
    { 19, 52, 20, H_UpgradeFromV19 },
    { 18, 52, 19, H_UpgradeFromV18 },
    { 17, 52, 18, H_UpgradeFromV17 },

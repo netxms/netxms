@@ -49,19 +49,22 @@ class MP_SYNTAX
 public:
    int nSyntax;
    char *pszStr;
-	char *pszDescription;
+   char *pszDescription;
+   char *displayHint;
 
    MP_SYNTAX()
    {
       nSyntax = 0;
       pszStr = nullptr;
-	   pszDescription = nullptr;
+      pszDescription = nullptr;
+      displayHint = nullptr;
    }
 
    ~MP_SYNTAX()
    {
       MemFree(pszStr);
       MemFree(pszDescription);
+      MemFree(displayHint);
    }
 };
 
@@ -118,6 +121,7 @@ public:
    char *pszName;
    char *pszDescription;
    char *pszTextualConvention;
+   char *displayHint;
    int iSyntax;
    char *pszDataType;   // For defined types
    int iStatus;
@@ -135,6 +139,7 @@ public:
       pszName = nullptr;
       pszDescription = nullptr;
       pszTextualConvention = nullptr;
+      displayHint = nullptr;
       pszDataType = nullptr;
       oid = nullptr;
       index = nullptr;
@@ -146,6 +151,7 @@ public:
       MemFree(pszName);
       MemFree(pszDescription);
       MemFree(pszTextualConvention);
+      MemFree(displayHint);
       MemFree(pszDataType);
       delete oid;
       delete index;

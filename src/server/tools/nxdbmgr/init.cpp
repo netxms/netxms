@@ -79,6 +79,14 @@ static char *FindEndOfQuery(char *start, char *batchEnd)
                   procEnd = true;
                }
             }
+            else if (*ptr == '$')
+            {
+               if (!strnicmp(ptr, "$$ LANGUAGE", 11))
+               {
+                  // PostgreSQL function definition end, next ; will mark end of query
+                  proc = false;
+               }
+            }
 				else if ((*ptr == '\r') || (*ptr == '\n'))
 				{
 					// CR/LF should be replaced with spaces, otherwise at least
@@ -119,7 +127,7 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
    for(char *query = batch; query < batch + size; query = next)
    {
       next = FindEndOfQuery(query, batch + size);
-      if (!IsEmptyQuery((char *)query))
+      if (!IsEmptyQuery(query))
       {
          wchar_t *wcQuery = WideStringFromMBString(query);
          result = SQLQuery(wcQuery, showOutput);

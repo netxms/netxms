@@ -19,7 +19,7 @@
     </licenses>
 
     <properties>
-        <revision>5.1-SNAPSHOT</revision>
+        <revision>6.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.finalName>${project.artifactId}-${project.version}</build.finalName>
     </properties>

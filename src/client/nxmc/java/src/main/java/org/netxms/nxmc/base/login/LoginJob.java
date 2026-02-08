@@ -69,22 +69,25 @@ public class LoginJob implements IRunnableWithProgress
    private String clientAddress;
 
    /**
-    * @param display
-    * @param server
-    * @param loginName
-    * @param encryptSession
+    * Create login job with specified credentials.
+    *
+    * @param display current display
+    * @param credentials login credentials
+    * @param ignoreProtocolVersion true to ignore protocol version mismatch
+    * @param enableCompression true to enable protocol compression
     */
-   public LoginJob(Display display, boolean ignoreProtocolVersion, boolean enableCompression)
+   public LoginJob(Display display, LoginCredentials credentials, boolean ignoreProtocolVersion, boolean enableCompression)
    {
       this.display = display;
-
-      PreferenceStore settings = PreferenceStore.getInstance(display);
-      this.server = settings.getAsString("Connect.Server");
-      this.loginName = settings.getAsString("Connect.Login");
+      this.server = credentials.getServer();
+      this.loginName = credentials.getLoginName();
+      this.authMethod = credentials.getAuthMethod();
+      this.password = credentials.getPassword();
+      this.certificate = credentials.getCertificate();
+      this.signature = credentials.getSignature();
       this.enableCompression = enableCompression;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
-      authMethod = AuthenticationType.PASSWORD;
-      clientAddress = Registry.getClientAddress();
+      this.clientAddress = Registry.getClientAddress();
    }
 
    /**
@@ -330,42 +333,4 @@ public class LoginJob implements IRunnableWithProgress
       }
    }
 
-   /**
-    * Set password for this login job
-    * 
-    * @param password
-    */
-   public void setPassword(String password)
-   {
-      this.password = password;
-      authMethod = AuthenticationType.PASSWORD;
-   }
-
-   /**
-    * Set certificate and signature for this login job
-    * 
-    * @param signature
-    */
-   public void setCertificate(Certificate certificate, Signature signature)
-   {
-      this.certificate = certificate;
-      this.signature = signature;
-      authMethod = AuthenticationType.CERTIFICATE;
-   }
-
-   /**
-    * Set authentication mode to "token" (login name will be interpreted as token).
-    */
-   public void setAuthByToken()
-   {
-      authMethod = AuthenticationType.TOKEN;
-   }
-
-   /**
-    * @param enableCompression the enableCompression to set
-    */
-   public void setEnableCompression(boolean enableCompression)
-   {
-      this.enableCompression = enableCompression;
-   }
 }

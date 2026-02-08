@@ -236,7 +236,7 @@ bool ClickHouseSender::sendBatch(const std::vector<MetricRecord>& records)
 
    for (const MetricRecord& record : records)
    {
-      packet.writeL(static_cast<uint32_t>(record.timestamp));
+      packet.writeL(static_cast<uint32_t>(record.timestamp.asTime()));
       WriteStringWithLength(packet, record.host.c_str());
       WriteStringWithLength(packet, record.name.c_str());
       if (m_standardColumnFlags & COL_IVALUE)

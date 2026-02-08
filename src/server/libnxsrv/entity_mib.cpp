@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,19 +199,23 @@ uint32_t Component::updateFromSnmp(SNMP_Transport *snmp)
 	   m_firmware = MemCopyString(_T(""));
 
 	// Read entAliasMappingIdentifier
-	oid[8] = 3;
-	oid[9] = 2;
-	oid[10] = 1;
-   oid[11] = 2;
-	oid[12] = m_index;
-	oid[13] = 0;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 14, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-   {
-      if (!_tcsncmp(buffer, _T(".1.3.6.1.2.1.2.2.1.1."), 21))
+	if (m_class == COMPONENT_CLASS_PORT)
+	{
+      oid[8] = 3;
+      oid[9] = 2;
+      oid[10] = 1;
+      oid[11] = 2;
+      oid[12] = m_index;
+      oid[13] = 0;
+      SNMP_ObjectId aliasOid;
+      if (SnmpGetEx(snmp, nullptr, oid, 14, &aliasOid, 0, SG_OBJECT_ID_RESULT) == SNMP_ERR_SUCCESS)
       {
-         m_ifIndex = _tcstoul(&buffer[21], nullptr, 10);
+         if (aliasOid.startsWith({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 }))
+         {
+            m_ifIndex = aliasOid.getElement(10);
+         }
       }
-   }
+	}
 
 	return SNMP_ERR_SUCCESS;
 }
@@ -389,6 +393,54 @@ shared_ptr<ComponentTree> LIBNXSRV_EXPORTABLE BuildComponentTree(SNMP_Transport 
 		elements.setOwner(Ownership::True);	// cause element destruction on exit
 	}
 	return tree;
+}
+
+/**
+ * Get interface physical location from ENTITY MIB component hierarchy
+ */
+InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntityMib(const Component *port)
+{
+   InterfacePhysicalLocation location;
+
+   if (port->getPosition() > 0)
+      location.port = port->getPosition();
+
+   const Component *parent = port->getParent();
+   bool moduleFound = false;
+
+   while (parent != nullptr)
+   {
+      int32_t pos = parent->getPosition();
+      if (pos <= 0)  // -1 means unknown per RFC 2737
+      {
+         parent = parent->getParent();
+         continue;
+      }
+
+      switch (parent->getClass())
+      {
+         case COMPONENT_CLASS_MODULE:
+            if (!moduleFound)
+            {
+               location.module = pos;
+               moduleFound = true;
+            }
+            else
+            {
+               // Second module level = pic (e.g., Juniper FPC/PIC)
+               location.pic = location.module;
+               location.module = pos;
+            }
+            break;
+         case COMPONENT_CLASS_CHASSIS:
+         case COMPONENT_CLASS_STACK:
+            location.chassis = pos;
+            break;
+      }
+      parent = parent->getParent();
+   }
+
+   return location;
 }
 
 /**

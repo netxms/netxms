@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, cons
       securityContext.setCommunity(community);
       request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));
    }
-   BYTE *pdu;
+   SNMP_PDUBuffer pdu;
    size_t size = request.encode(&pdu, &securityContext);
 
    struct sockaddr_in saDest;
@@ -100,7 +100,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, cons
       saDest.sin_addr.s_addr = htonl(a);
       status[i].startTime = GetCurrentTimeMs();
       status[i].success = false;
-      sendto(sock, (char *)pdu, static_cast<int>(size), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
+      sendto(sock, (char *)pdu.buffer(), static_cast<int>(size), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
 
       sp.reset();
       sp.add(sock);
@@ -125,7 +125,6 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, cons
    }
 
    closesocket(sock);
-   MemFree(pdu);
 
    for(uint32_t a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {

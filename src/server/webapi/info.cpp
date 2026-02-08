@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ int H_Root(Context *context)
 {
    json_t *response = json_object();
    json_object_set_new(response, "description", json_string("NetXMS web service API"));
-   json_object_set_new(response, "version", json_string(NETXMS_VERSION_STRING_A));
-   json_object_set_new(response, "build", json_string(NETXMS_BUILD_TAG_A));
    json_object_set_new(response, "apiVersion", json_integer(1));
    context->setResponseData(response);
    json_decref(response);
@@ -48,17 +46,17 @@ int H_ServerInfo(Context *context)
    json_object_set_new(response, "build", json_string(NETXMS_BUILD_TAG_A));
    json_object_set_new(response, "id", json_integer(g_serverId));
 
-   TCHAR buffer[MAX_CONFIG_VALUE];
-   ConfigReadStr(_T("Server.Name"), buffer, MAX_CONFIG_VALUE, _T(""));
-   json_object_set_new(response, "name", json_string_t(buffer));
+   wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
+   ConfigReadStr(L"Server.Name", buffer, MAX_CONFIG_VALUE_LENGTH, L"");
+   json_object_set_new(response, "name", json_string_w(buffer));
 
-   ConfigReadStr(_T("Server.Color"), buffer, MAX_CONFIG_VALUE, _T(""));
-   json_object_set_new(response, "color", json_string_t(buffer));
+   ConfigReadStr(L"Server.Color", buffer, MAX_CONFIG_VALUE_LENGTH, L"");
+   json_object_set_new(response, "color", json_string_w(buffer));
 
-   ConfigReadStr(_T("Server.MessageOfTheDay"), buffer, MAX_CONFIG_VALUE, _T(""));
-   json_object_set_new(response, "messageOfTheDay", json_string_t(buffer));
+   ConfigReadStr(L"Server.MessageOfTheDay", buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
+   json_object_set_new(response, "messageOfTheDay", json_string_w(buffer));
 
-   json_object_set_new(response, "tz", json_string_t(GetSystemTimeZone(buffer, MAX_CONFIG_VALUE)));
+   json_object_set_new(response, "tz", json_string_w(GetSystemTimeZone(buffer, MAX_CONFIG_VALUE_LENGTH)));
 
    json_t *options = json_object();
    json_object_set_new(options, "zoningEnabled", json_boolean((g_flags & AF_ENABLE_ZONING) != 0));
@@ -66,21 +64,21 @@ int H_ServerInfo(Context *context)
    json_object_set_new(options, "timedAlarmAckEnabled", json_boolean(ConfigReadBoolean(_T("Alarms.EnableTimedAck"), false)));
    json_object_set_new(options, "helpdeskLinkActive", json_boolean((g_flags & AF_HELPDESK_LINK_ACTIVE) != 0));
 
-   ConfigReadStr(_T("Client.TileServerURL"), buffer, MAX_CONFIG_VALUE, _T("http://tile.netxms.org/osm/"));
-   json_object_set_new(options, "tileServerURL", json_string_t(buffer));
+   ConfigReadStr(L"Client.TileServerURL", buffer, MAX_CONFIG_VALUE_LENGTH, L"http://tile.netxms.org/osm/");
+   json_object_set_new(options, "tileServerURL", json_string_w(buffer));
 
    json_object_set_new(response, "options", options);
 
    json_t *dateTimeFormat = json_object();
 
-   ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), buffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
-   json_object_set_new(dateTimeFormat, "date", json_string_t(buffer));
+   ConfigReadStr(L"Client.DefaultConsoleDateFormat", buffer, MAX_CONFIG_VALUE_LENGTH, L"dd.MM.yyyy");
+   json_object_set_new(dateTimeFormat, "date", json_string_w(buffer));
 
-   ConfigReadStr(_T("Client.DefaultConsoleTimeFormat"), buffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
-   json_object_set_new(dateTimeFormat, "timeLong", json_string_t(buffer));
+   ConfigReadStr(L"Client.DefaultConsoleTimeFormat", buffer, MAX_CONFIG_VALUE_LENGTH, L"HH:mm:ss");
+   json_object_set_new(dateTimeFormat, "timeLong", json_string_w(buffer));
 
-   ConfigReadStr(_T("Client.DefaultConsoleShortTimeFormat"), buffer, MAX_CONFIG_VALUE, _T("HH:mm"));
-   json_object_set_new(dateTimeFormat, "timeShort", json_string_t(buffer));
+   ConfigReadStr(L"Client.DefaultConsoleShortTimeFormat", buffer, MAX_CONFIG_VALUE_LENGTH, L"HH:mm");
+   json_object_set_new(dateTimeFormat, "timeShort", json_string_w(buffer));
 
    json_object_set_new(response, "dateTimeFormat", dateTimeFormat);
    json_object_set_new(response, "components", ComponentsToJson());

@@ -41,9 +41,9 @@ void StopHFCLBackgroundThreads();
  */
 static WirelessControllerBridge *GetWLCBridgeInterface(const wchar_t *bridgeName)
 {
-   if (!_tcsicmp(bridgeName, _T("HFCL")))
+   if (!wcsicmp(bridgeName, L"HFCL"))
       return &g_hfclBridge;
-   if (!_tcsicmp(bridgeName, _T("RUCKUS")))
+   if (!wcsicmp(bridgeName, L"RUCKUS"))
       return &g_ruckusBridge;
    return nullptr;
 }
@@ -62,7 +62,7 @@ static void ProcessServerShutdown()
 extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
-   _tcscpy(module->szName, _T("WLCBRIDGE"));
+   wcscpy(module->name, L"WLCBRIDGE");
    module->pfGetWLCBridgeInterface = GetWLCBridgeInterface;
    module->pfShutdown = ProcessServerShutdown;
    return true;

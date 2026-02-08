@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -995,25 +995,25 @@ static void CheckCollectedData(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"));
 
-	time_t now = time(nullptr);
+	int64_t now = GetCurrentTimeMs();
 	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
 	SetStageWorkTotal(targets->size());
 	for(int i = 0; i < targets->size(); i++)
    {
-      UINT32 objectId = targets->get(i);
+      uint32_t objectId = targets->get(i);
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") TIME_T_FMT,
-               isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
+               isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
       DB_RESULT hResult = SQLSelect(query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetFieldLong(hResult, 0, 0) > 0)
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found collected data for node [%d] with timestamp in the future. Delete invalid records?"), objectId))
+            if (GetYesNoEx(_T("Found collected data for node [%u] with timestamp in the future. Delete invalid records?"), objectId))
             {
-               _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") TIME_T_FMT,
-                        isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+               _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
+                        isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
@@ -1064,10 +1064,10 @@ static void CheckCollectedDataSingleTable(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 2);
 
-   time_t now = time(nullptr);
+   int64_t now = GetCurrentTimeMs();
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") TIME_T_FMT,
-            isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+   _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") INT64_FMT,
+            isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), now);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != nullptr)
    {
@@ -1076,8 +1076,8 @@ static void CheckCollectedDataSingleTable(bool isTable)
          g_dbCheckErrors++;
          if (GetYesNoEx(_T("Found collected data with timestamp in the future. Delete invalid records?")))
          {
-            _sntprintf(query, 1024, _T("DELETE FROM %s WHERE %s_timestamp>") TIME_T_FMT,
-                     isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+            _sntprintf(query, 1024, _T("DELETE FROM %s WHERE %s_timestamp>") INT64_FMT,
+                     isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), now);
             if (SQLQuery(query))
                g_dbCheckFixes++;
          }
@@ -1099,7 +1099,7 @@ static void CheckCollectedDataSingleTable(bool isTable)
          if (!IsDciExists(id, 0, isTable))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d]. Delete invalid records?"), id))
+            if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u]. Delete invalid records?"), id))
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), id);
                if (SQLQuery(query))
@@ -1157,7 +1157,7 @@ static void CheckRawDciValues()
 {
    StartStage(_T("Raw DCI values table"));
 
-   time_t now = time(NULL);
+   int64_t now = GetCurrentTimeMs();
 
    DB_RESULT hResult = SQLSelect(_T("SELECT item_id FROM raw_dci_values"));
    if (hResult != NULL)
@@ -1170,7 +1170,7 @@ static void CheckRawDciValues()
          if (!IsDciExists(id, 0, false))
          {
             g_dbCheckErrors++;
-            if (GetYesNoEx(_T("Found raw value record for non-existing DCI [%d]. Delete it?"), id))
+            if (GetYesNoEx(_T("Found raw value record for non-existing DCI [%u]. Delete it?"), id))
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM raw_dci_values WHERE item_id=%d"), id);
@@ -1185,7 +1185,7 @@ static void CheckRawDciValues()
 
    ResetBulkYesNo();
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now));
+   _sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>") INT64_FMT, now);
    hResult = SQLSelect(query);
    if (hResult != NULL)
    {
@@ -1194,7 +1194,7 @@ static void CheckRawDciValues()
          g_dbCheckErrors++;
          if (GetYesNoEx(_T("Found DCIs with last poll timestamp in the future. Fix it?")))
          {
-            _sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
+            _sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") INT64_FMT _T(" WHERE last_poll_time>") INT64_FMT, now, now);
             if (SQLQuery(query))
                g_dbCheckFixes++;
          }
@@ -1335,6 +1335,71 @@ static void CheckDataCollectionItems()
             if (SQLQuery(query))
             {
                _sntprintf(query, 256, _T("DELETE FROM dc_table_columns WHERE table_id=%u"), dciId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
+ * Check DCI source nodes (proxy_node field)
+ */
+static void CheckDCISourceNodes()
+{
+   StartStage(_T("DCI source nodes"));
+
+   // Check items table
+   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,node_id,proxy_node FROM items WHERE proxy_node<>0"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t proxyNodeId = DBGetFieldULong(hResult, i, 2);
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), proxyNodeId))
+         {
+            g_dbCheckErrors++;
+            uint32_t dciId = DBGetFieldULong(hResult, i, 0);
+            uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+            if (GetYesNoEx(_T("DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to none?"),
+                           dciId, nodeId, proxyNodeId))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("UPDATE items SET proxy_node=0 WHERE item_id=%u"), dciId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Check dc_tables table
+   ResetBulkYesNo();
+   hResult = SQLSelect(_T("SELECT item_id,node_id,proxy_node FROM dc_tables WHERE proxy_node<>0"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t proxyNodeId = DBGetFieldULong(hResult, i, 2);
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), proxyNodeId))
+         {
+            g_dbCheckErrors++;
+            uint32_t dciId = DBGetFieldULong(hResult, i, 0);
+            uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+            if (GetYesNoEx(_T("Table DCI [%u] on node [%u] refers to non-existing source node [%u]. Reset source node to none?"),
+                           dciId, nodeId, proxyNodeId))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("UPDATE dc_tables SET proxy_node=0 WHERE item_id=%u"), dciId);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
@@ -1708,7 +1773,8 @@ static bool LockDatabase()
    DBMgrConfigReadStr(_T("DBLockStatus"), buffer, MAX_DB_STRING, _T("ERROR"));
    if (_tcscmp(buffer, _T("ERROR")))
    {
-      bool locked = _tcscmp(buffer, _T("UNLOCKED"));
+      int32_t lockFlag = DBMgrConfigReadInt32(_T("DBLockFlag"), 0);
+      bool locked = _tcscmp(buffer, _T("UNLOCKED")) || (lockFlag != 0);
 
       if (locked)
       {
@@ -1722,6 +1788,7 @@ static bool LockDatabase()
       if (!locked)
       {
          CreateConfigParam(_T("DBLockStatus"), _T("NXDBMGR Check"), false, true, true);
+         CreateConfigParam(_T("DBLockFlag"), _T("0"), false, true, true);
          GetLocalHostName(buffer, MAX_DB_STRING, false);
          CreateConfigParam(_T("DBLockInfo"), buffer, false, false, true);
          _sntprintf(buffer, 64, _T("%u"), GetCurrentProcessId());
@@ -1815,6 +1882,7 @@ void CheckDatabase()
          CheckMapLinks();
          CheckDataTables();
          CheckDataCollectionItems();
+         CheckDCISourceNodes();
          CheckRawDciValues();
          CheckThresholds();
          CheckTableThresholds();

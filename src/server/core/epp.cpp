@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,12 +21,18 @@
 **/
 
 #include "nxcore.h"
+#include <nms_incident.h>
 #include <nxcore_ps.h>
+#include <nxai.h>
+#include <unordered_map>
+#include <unordered_set>
 
 #define DEBUG_TAG _T("event.policy")
 
 void StartDowntime(uint32_t objectId, String tag);
 void EndDowntime(uint32_t objectId, String tag);
+
+void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object, const wchar_t *instructions);
 
 /**
  * Default event policy rule constructor
@@ -35,6 +41,9 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 {
    m_id = id;
    m_guid = uuid::generate();
+   m_version = 1;
+   m_modified = false;
+   m_modificationTime = 0;
    m_flags = 0;
    m_comments = nullptr;
    m_alarmSeverity = 0;
@@ -49,17 +58,26 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_downtimeTag[0] = 0;
+	m_aiAgentInstructions = nullptr;
+   m_incidentDelay = 0;
+   m_incidentTitle = nullptr;
+   m_incidentDescription = nullptr;
+   m_incidentAIAnalysisDepth = 0;
+   m_incidentAIPrompt = nullptr;
 }
 
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config.getSubEntryValueAsUUID(_T("guid"));
    if (m_guid.isNull())
       m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
+   m_version = 1;
+   m_modified = false;
+   m_modificationTime = 0;
    m_flags = config.getSubEntryValueAsUInt(_T("flags"));
 
 	ConfigEntry *eventsRoot = config.findEntry(_T("events"));
@@ -69,9 +87,16 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       for(int i = 0; i < events->size(); i++)
       {
          shared_ptr<EventTemplate> e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
-         if (e != nullptr)
+         if (e != nullptr && !m_events.contains(e->getCode()))
          {
             m_events.add(e->getCode());
+         }
+         else
+         {
+            context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+               _T("Event processing policy rule import: rule \"%s\" refers to unknown event template \"%s\""),
+               m_guid.toString().cstr(),
+               events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          }
       }
    }
@@ -82,8 +107,8 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       unique_ptr<ObjectArray<ConfigEntry>> frames = timeFrameRoot->getSubEntries(_T("timeFrame#*"));
       for(int i = 0; i < frames->size(); i++)
       {
-         uint32_t time = frames->get(i)->getAttributeAsUInt(_T("time"));
-         uint64_t date = frames->get(i)->getAttributeAsUInt64(_T("date"));
+         uint32_t time = frames->get(i)->getAttributeAsUInt(L"time");
+         uint64_t date = frames->get(i)->getAttributeAsUInt64(L"date");
          m_timeFrames.add(new TimeFrame(time, date));
       }
    }
@@ -95,27 +120,28 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
    m_alarmKey = MemCopyString(config.getSubEntryValue(_T("alarmKey")));
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
-   m_rcaScriptName = MemCopyString(config.getSubEntryValue(_T("rootCauseAnalysisScript")));
+   m_rcaScriptName = MemCopyString(config.getSubEntryValue(L"rootCauseAnalysisScript"));
+   m_aiAgentInstructions = MemCopyString(config.getSubEntryValue(L"aiAgentInstructions"));
 
-   _tcslcpy(m_downtimeTag, config.getSubEntryValue(_T("downtimeTag"), 0, _T("")), MAX_DOWNTIME_TAG_LENGTH);
+   wcslcpy(m_downtimeTag, config.getSubEntryValue(L"downtimeTag", 0, L""), MAX_DOWNTIME_TAG_LENGTH);
 
-   ConfigEntry *pStorageEntry = config.findEntry(_T("pStorageActions"));
+   ConfigEntry *pStorageEntry = config.findEntry(L"pStorageActions");
    if (pStorageEntry != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> tmp = pStorageEntry->getSubEntries(_T("set#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> tmp = pStorageEntry->getSubEntries(L"set#*");
       for(int i = 0; i < tmp->size(); i++)
       {
-         m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
+         m_pstorageSetActions.set(tmp->get(i)->getAttribute(L"key"), tmp->get(i)->getValue());
       }
 
-      tmp = pStorageEntry->getSubEntries(_T("delete#*"));
+      tmp = pStorageEntry->getSubEntries(L"delete#*");
       for(int i = 0; i < tmp->size(); i++)
       {
-         m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
+         m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(L"key"));
       }
    }
 
-   ConfigEntry *customAttributeEntry = config.findEntry(_T("customAttributeActions"));
+   ConfigEntry *customAttributeEntry = config.findEntry(L"customAttributeActions");
    if (customAttributeEntry != nullptr)
    {
       unique_ptr<ObjectArray<ConfigEntry>> tmp = customAttributeEntry->getSubEntries(_T("set#*"));
@@ -139,7 +165,7 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       {
          for (int i = 0; i < categories->size(); i++)
          {
-            const TCHAR *name = categories->get(i)->getAttribute(_T("name"));
+            const TCHAR *name = categories->get(i)->getAttribute(L"name");
             const TCHAR *description = categories->get(i)->getValue();
 
             if ((name != nullptr) && (*name != 0))
@@ -159,7 +185,9 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
    }
 
    if (nxslV5)
+   {
       m_filterScriptSource = MemCopyString(config.getSubEntryValue(_T("script"), 0, _T("")));
+   }
    else
    {
       StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("script"), 0, _T("")));
@@ -198,10 +226,10 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       m_actionScript = nullptr;
    }
 
-   ConfigEntry *actionsRoot = config.findEntry(_T("actions"));
+   ConfigEntry *actionsRoot = config.findEntry(L"actions");
    if (actionsRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(_T("action#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> actions = actionsRoot->getSubEntries(L"action#*");
       for(int i = 0; i < actions->size(); i++)
       {
          uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
@@ -225,10 +253,10 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
       }
    }
 
-   ConfigEntry *timerCancellationsRoot = config.findEntry(_T("timerCancellations"));
+   ConfigEntry *timerCancellationsRoot = config.findEntry(L"timerCancellations");
    if (timerCancellationsRoot != nullptr)
    {
-      ConfigEntry *keys = timerCancellationsRoot->findEntry(_T("timerKey"));
+      ConfigEntry *keys = timerCancellationsRoot->findEntry(L"timerKey");
       if (keys != nullptr)
       {
          for(int i = 0; i < keys->getValueCount(); i++)
@@ -239,18 +267,296 @@ EPRule::EPRule(const ConfigEntry& config, bool nxslV5) : m_timeFrames(0, 16, Own
          }
       }
    }
+
+   // Incident creation settings
+   m_incidentDelay = config.getSubEntryValueAsUInt(_T("incidentDelay"));
+   m_incidentTitle = MemCopyString(config.getSubEntryValue(_T("incidentTitle")));
+   m_incidentDescription = MemCopyString(config.getSubEntryValue(_T("incidentDescription")));
+
+   // AI incident analysis settings
+   m_incidentAIAnalysisDepth = config.getSubEntryValueAsInt(_T("incidentAIAnalysisDepth"));
+   m_incidentAIPrompt = MemCopyString(config.getSubEntryValue(_T("incidentAIPrompt")));
+}
+
+/**
+ * Create rule from JSON object
+ */
+EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+{
+   m_id = 0;
+   m_guid = json_object_get_uuid(json, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
+   m_version = 1;
+   m_modified = false;
+   m_modificationTime = 0;
+   m_flags = json_object_get_uint32(json, "flags");
+
+   // Import events - JSON format uses event objects with name property
+   json_t *eventsArray = json_object_get(json, "events");
+   if (json_is_array(eventsArray))
+   {
+      size_t index;
+      json_t *eventItem;
+      json_array_foreach(eventsArray, index, eventItem)
+      {
+         if (json_is_object(eventItem))
+         {
+            // First try to match by name
+            String eventName = json_object_get_string(eventItem, "name", nullptr);
+            uint32_t eventCode = 0;
+            
+            if (!eventName.isEmpty())
+            {
+               eventCode = EventCodeFromName(eventName, 0);
+            }
+            
+            if (eventCode != 0 && !m_events.contains(eventCode))
+            {
+               m_events.add(eventCode);
+            }
+            else
+            {
+               context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+                  _T("Event processing policy rule import: rule \"%s\" refers to unknown event \"%s\" (ID not provided or invalid)"),
+                  m_guid.toString().cstr(), eventName.isEmpty() ? _T("(unnamed)") : eventName.cstr());
+            }
+         }
+      }
+   }
+
+   //TODO: Import sources 
+   //TODO: Import source exclusions 
+
+   // Import time frames
+   json_t *timeFramesArray = json_object_get(json, "timeFrames");
+   if (json_is_array(timeFramesArray))
+   {
+      size_t index;
+      json_t *timeFrame;
+      json_array_foreach(timeFramesArray, index, timeFrame)
+      {
+         if (json_is_object(timeFrame))
+         {
+            uint32_t time = json_object_get_uint32(timeFrame, "time");
+            uint64_t date = json_object_get_uint64(timeFrame, "date");
+            m_timeFrames.add(new TimeFrame(time, date));
+         }
+      }
+   }
+
+   // Import actions
+   json_t *actionsArray = json_object_get(json, "actions");
+   if (json_is_array(actionsArray))
+   {
+      size_t index;
+      json_t *action;
+      json_array_foreach(actionsArray, index, action)
+      {
+         if (json_is_object(action))
+         {
+            uint32_t actionId = json_object_get_uint32(action, "id");
+            String timerDelay = json_object_get_string(action, "timerDelay", _T(""));
+            String timerKey = json_object_get_string(action, "timerKey", _T(""));
+            String blockingTimerKey = json_object_get_string(action, "blockingTimerKey", _T(""));
+            String snoozeTime = json_object_get_string(action, "snoozeTime", _T(""));
+            bool active = json_object_get_boolean(action, "active", true);
+            if (IsValidActionId(actionId))
+               m_actions.add(new ActionExecutionConfiguration(actionId, 
+                  timerDelay.isEmpty() ? nullptr : MemCopyString(timerDelay),
+                  snoozeTime.isEmpty() ? nullptr : MemCopyString(snoozeTime),
+                  timerKey.isEmpty() ? nullptr : MemCopyString(timerKey),
+                  blockingTimerKey.isEmpty() ? nullptr : MemCopyString(blockingTimerKey),
+                  active));
+         }
+      }
+   }
+
+   // Import timer cancellations
+   json_t *timerCancellationsArray = json_object_get(json, "timerCancellations");
+   if (json_is_array(timerCancellationsArray))
+   {
+      size_t index;
+      json_t *timerKey;
+      json_array_foreach(timerCancellationsArray, index, timerKey)
+      {
+         if (json_is_string(timerKey))
+         {
+            const char *keyStr = json_string_value(timerKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_timerCancellations.add(key);
+               MemFree(key);
+#else
+               m_timerCancellations.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import basic properties
+   m_comments = MemCopyString(json_object_get_string(json, "comments", _T("")));
+   m_alarmSeverity = json_object_get_int32(json, "alarmSeverity");
+   m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
+   
+   // Import alarm timeout event - JSON format uses event name
+   String alarmTimeoutEventName = json_object_get_string(json, "alarmTimeoutEvent", _T("SYS_ALARM_TIMEOUT"));
+   m_alarmTimeoutEvent = EventCodeFromName(alarmTimeoutEventName, EVENT_ALARM_TIMEOUT);
+   
+   m_alarmKey = MemCopyString(json_object_get_string(json, "alarmKey", _T("")));
+   m_alarmMessage = MemCopyString(json_object_get_string(json, "alarmMessage", _T("")));
+   m_alarmImpact = MemCopyString(json_object_get_string(json, "alarmImpact", _T("")));
+   
+   const char *rcaScript = json_object_get_string_utf8(json, "rootCauseAnalysisScript", "");
+#ifdef UNICODE
+   m_rcaScriptName = WideStringFromUTF8String(rcaScript);
+#else
+   m_rcaScriptName = MemCopyStringA(rcaScript);
+#endif
+   
+   m_aiAgentInstructions = MemCopyString(json_object_get_string(json, "aiAgentInstructions", _T("")));
+   
+   String downtimeTag = json_object_get_string(json, "downtimeTag", _T(""));
+   wcslcpy(m_downtimeTag, downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+
+   // Import alarm categories
+   json_t *categoriesArray = json_object_get(json, "alarmCategories");
+   if (json_is_array(categoriesArray))
+   {
+      size_t index;
+      json_t *categoryId;
+      json_array_foreach(categoriesArray, index, categoryId)
+      {
+         if (json_is_integer(categoryId))
+         {
+            m_alarmCategoryList.add(static_cast<uint32_t>(json_integer_value(categoryId)));
+         }
+      }
+   }
+
+   // Import persistent storage actions
+   json_t *pstorageSetActionsObj = json_object_get(json, "pstorageSetActions");
+   if (json_is_object(pstorageSetActionsObj))
+   {
+      m_pstorageSetActions.addAllFromJson(pstorageSetActionsObj);
+   }
+
+   json_t *pstorageDeleteActionsArray = json_object_get(json, "pstorageDeleteActions");
+   if (json_is_array(pstorageDeleteActionsArray))
+   {
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(pstorageDeleteActionsArray, index, deleteKey)
+      {
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_pstorageDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_pstorageDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import custom attribute actions
+   json_t *customAttributeSetActionsObj = json_object_get(json, "customAttributeSetActions");
+   if (json_is_object(customAttributeSetActionsObj))
+   {
+      m_customAttributeSetActions.addAllFromJson(customAttributeSetActionsObj);
+   }
+
+   json_t *customAttributeDeleteActionsArray = json_object_get(json, "customAttributeDeleteActions");
+   if (json_is_array(customAttributeDeleteActionsArray))
+   {
+      size_t index;
+      json_t *deleteKey;
+      json_array_foreach(customAttributeDeleteActionsArray, index, deleteKey)
+      {
+         if (json_is_string(deleteKey))
+         {
+            const char *keyStr = json_string_value(deleteKey);
+            if (keyStr != nullptr && *keyStr != 0)
+            {
+#ifdef UNICODE
+               WCHAR *key = WideStringFromUTF8String(keyStr);
+               m_customAttributeDeleteActions.add(key);
+               MemFree(key);
+#else
+               m_customAttributeDeleteActions.add(keyStr);
+#endif
+            }
+         }
+      }
+   }
+
+   // Import and compile scripts
+   String filterScriptSource = json_object_get_string(json, "filterScript", _T(""));
+   m_filterScriptSource = MemCopyString(filterScriptSource);
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
+   {
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      if (m_filterScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile evaluation script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_filterScript = nullptr;
+   }
+
+   String actionScriptSource = json_object_get_string(json, "actionScript", _T(""));
+   m_actionScriptSource = MemCopyString(actionScriptSource);
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      if (m_actionScript == nullptr)
+      {
+         context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile action script for event processing policy rule %s"), m_guid.toString().cstr());
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
+   }
+
+   // Incident creation settings
+   m_incidentDelay = json_object_get_uint32(json, "incidentDelay");
+   String incidentTitle = json_object_get_string(json, "incidentTitle", nullptr);
+   m_incidentTitle = incidentTitle.isEmpty() ? nullptr : MemCopyString(incidentTitle);
+   String incidentDescription = json_object_get_string(json, "incidentDescription", nullptr);
+   m_incidentDescription = incidentDescription.isEmpty() ? nullptr : MemCopyString(incidentDescription);
+
+   // AI incident analysis settings
+   m_incidentAIAnalysisDepth = json_object_get_int32(json, "incidentAIAnalysisDepth", 0);
+   String incidentAIPrompt = json_object_get_string(json, "incidentAIPrompt", nullptr);
+   m_incidentAIPrompt = incidentAIPrompt.isEmpty() ? nullptr : MemCopyString(incidentAIPrompt);
 }
 
 /**
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
- * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,downtime_tag
+ * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
+ * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,
+ * incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
+   m_version = 1;
+   m_modified = false;
    m_flags = DBGetFieldULong(hResult, row, 2);
    m_comments = DBGetField(hResult, row, 3, nullptr, 0);
    m_alarmMessage = DBGetField(hResult, row, 4, nullptr, 0);
@@ -287,6 +593,15 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
       m_actionScript = nullptr;
    }
    DBGetField(hResult, row, 13, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+   m_aiAgentInstructions = DBGetField(hResult, row, 14, nullptr, 0);
+   m_incidentDelay = DBGetFieldUInt32(hResult, row, 15);
+   m_incidentTitle = DBGetField(hResult, row, 16, nullptr, 0);
+   m_incidentDescription = DBGetField(hResult, row, 17, nullptr, 0);
+   m_incidentAIAnalysisDepth = DBGetFieldInt32(hResult, row, 18);
+   m_incidentAIPrompt = DBGetField(hResult, row, 19, nullptr, 0);
+   m_modifiedByGuid = DBGetFieldGUID(hResult, row, 20);
+   m_modifiedByName = DBGetFieldAsString(hResult, row, 21);
+   m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 22));
 }
 
 /**
@@ -295,8 +610,11 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
 EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-   m_id = msg.getFieldAsUInt32(VID_RULE_ID);
+   m_id = 0;  // ID will be assigned by server based on final rule order after merge
    m_guid = msg.getFieldAsGUID(VID_GUID);
+   m_version = msg.getFieldAsUInt32(VID_RULE_VERSION);
+   m_modified = msg.getFieldAsBoolean(VID_RULE_MODIFIED);
+   m_modificationTime = msg.getFieldAsTime(VID_MODIFICATION_TIME);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
 
    if (msg.isFieldExist(VID_RULE_ACTIONS))
@@ -315,10 +633,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
       for(int i = 0; i < count; i++)
       {
          uint32_t actionId = msg.getFieldAsUInt32(fieldId++);
-         TCHAR *timerDelay = msg.getFieldAsString(fieldId++);
-         TCHAR *timerKey = msg.getFieldAsString(fieldId++);
-         TCHAR *blockingTimerKey = msg.getFieldAsString(fieldId++);
-         TCHAR *snoozeTime = msg.getFieldAsString(fieldId++);
+         wchar_t *timerDelay = msg.getFieldAsString(fieldId++);
+         wchar_t *timerKey = msg.getFieldAsString(fieldId++);
+         wchar_t *blockingTimerKey = msg.getFieldAsString(fieldId++);
+         wchar_t *snoozeTime = msg.getFieldAsString(fieldId++);
          bool active = msg.getFieldAsBoolean(fieldId++);
          fieldId += 4;
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey, active));
@@ -387,6 +705,15 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    {
       m_actionScript = nullptr;
    }
+
+   m_aiAgentInstructions = msg.getFieldAsString(VID_AI_AGENT_INSTRUCTIONS);
+
+   m_incidentDelay = msg.getFieldAsUInt32(VID_INCIDENT_DELAY);
+   m_incidentTitle = msg.getFieldAsString(VID_INCIDENT_TITLE);
+   m_incidentDescription = msg.getFieldAsString(VID_INCIDENT_DESCRIPTION);
+
+   m_incidentAIAnalysisDepth = msg.getFieldAsInt32(VID_INCIDENT_AI_DEPTH);
+   m_incidentAIPrompt = msg.getFieldAsString(VID_INCIDENT_AI_PROMPT);
 }
 
 /**
@@ -403,203 +730,20 @@ EPRule::~EPRule()
    delete m_filterScript;
    MemFree(m_actionScriptSource);
    delete m_actionScript;
+   MemFree(m_aiAgentInstructions);
+   MemFree(m_incidentTitle);
+   MemFree(m_incidentDescription);
+   MemFree(m_incidentAIPrompt);
 }
 
 /**
- * Create rule ordering entry
+ * Set modification info for optimistic concurrency
  */
-void EPRule::createOrderingExportRecord(TextFileWriter& xml) const
+void EPRule::setModificationInfo(const uuid& userGuid, const TCHAR* userName, time_t timestamp)
 {
-   xml.appendUtf8String("\t\t<rule id=\"");
-   xml.append(m_id + 1);
-   xml.appendUtf8String("\">");
-   xml.append(m_guid.toString());
-   xml.appendUtf8String("</rule>\n");
-}
-
-/**
- * Create management pack record
- */
-void EPRule::createExportRecord(TextFileWriter& xml) const
-{
-   xml.appendUtf8String("\t\t<rule id=\"");
-   xml.append(m_id + 1);
-   xml.appendUtf8String("\">\n\t\t\t<guid>");
-   xml.append(m_guid);
-   xml.appendUtf8String("</guid>\n\t\t\t<flags>");
-   xml.append(m_flags);
-   xml.appendUtf8String("</flags>\n\t\t\t<alarmMessage>");
-   xml.append(EscapeStringForXML2(m_alarmMessage));
-   xml.appendUtf8String("</alarmMessage>\n\t\t\t<alarmImpact>");
-   xml.append(EscapeStringForXML2(m_alarmImpact));
-   xml.appendUtf8String("</alarmImpact>\n\t\t\t<alarmKey>");
-   xml.append(EscapeStringForXML2(m_alarmKey));
-   xml.appendUtf8String("</alarmKey>\n\t\t\t<rootCauseAnalysisScript>");
-   xml.append(EscapeStringForXML2(m_rcaScriptName));
-   xml.appendUtf8String("</rootCauseAnalysisScript>\n\t\t\t<alarmSeverity>");
-   xml.append(m_alarmSeverity);
-   xml.appendUtf8String("</alarmSeverity>\n\t\t\t<alarmTimeout>");
-   xml.append(m_alarmTimeout);
-   xml.appendUtf8String("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>");
-   xml.append(m_alarmTimeoutEvent);
-   xml.appendUtf8String("</alarmTimeoutEvent>\n\t\t\t<downtimeTag>");
-   xml.append(EscapeStringForXML2(m_downtimeTag));
-   xml.appendUtf8String("</downtimeTag>\n\t\t\t<script>");
-   xml.append(EscapeStringForXML2(m_filterScriptSource));
-   xml.appendUtf8String("</script>\n\t\t\t<actionScript>");
-   xml.append(EscapeStringForXML2(m_actionScriptSource));
-   xml.appendUtf8String("</actionScript>\n\t\t\t<comments>");
-   xml.append(EscapeStringForXML2(m_comments));
-   xml.appendUtf8String("</comments>\n\t\t\t<sources>\n");
-
-   for(int i = 0; i < m_sources.size(); i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
-      if (object != nullptr)
-      {
-         xml.appendUtf8String("\t\t\t\t<source id=\"");
-         xml.append(object->getId());
-         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-         xml.append(EscapeStringForXML2(object->getName()));
-         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
-         xml.append(object->getGuid());
-         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
-         xml.append(object->getObjectClass());
-         xml.appendUtf8String("</class>\n\t\t\t\t</source>\n");
-      }
-   }
-   xml.appendUtf8String("\t\t\t</sources>\n\t\t\t<sourceExclusions>\n");
-
-   for(int i = 0; i < m_sourceExclusions.size(); i++)
-   {
-      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
-      if (object != nullptr)
-      {
-         xml.appendUtf8String("\t\t\t\t<sourceExclusion id=\"");
-         xml.append(object->getId());
-         xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-         xml.append(EscapeStringForXML2(object->getName()));
-         xml.appendUtf8String("</name>\n\t\t\t\t\t<guid>");
-         xml.append(object->getGuid());
-         xml.appendUtf8String("</guid>\n\t\t\t\t\t<class>");
-         xml.append(object->getObjectClass());
-         xml.appendUtf8String("</class>\n\t\t\t\t</sourceExclusion>\n");
-      }
-   }
-
-   xml.appendUtf8String("\t\t\t</sourceExclusions>\n\t\t\t<events>\n");
-
-   for(int i = 0; i < m_events.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<event id=\"");
-      xml.append(m_events.get(i));
-      xml.appendUtf8String("\">\n\t\t\t\t\t<name>");
-      wchar_t eventName[MAX_EVENT_NAME];
-      EventNameFromCode(m_events.get(i), eventName);
-      xml.append(EscapeStringForXML2(eventName));
-      xml.appendUtf8String("</name>\n\t\t\t\t</event>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</events>\n\t\t\t<timeFrames>\n");
-
-   for(int i = 0; i < m_timeFrames.size(); i++)
-   {
-      TimeFrame *timeFrame = m_timeFrames.get(i);
-      xml.appendUtf8String("\t\t\t\t<timeFrame id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" time=\"");
-      xml.append(timeFrame->getTimeFilter());
-      xml.appendUtf8String("\" date=\"");
-      xml.append(timeFrame->getDateFilter());
-      xml.appendUtf8String("\" />\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</timeFrames>\n\t\t\t<actions>\n");
-   for(int i = 0; i < m_actions.size(); i++)
-   {
-      xml.append(_T("\t\t\t\t<action id=\""));
-      const ActionExecutionConfiguration *a = m_actions.get(i);
-      xml.append(a->actionId);
-      xml.appendUtf8String("\">\n\t\t\t\t\t<guid>");
-      xml.append(GetActionGUID(a->actionId));
-      xml.appendUtf8String("</guid>\n\t\t\t\t\t<timerDelay>");
-      xml.append(EscapeStringForXML2(a->timerDelay));
-      xml.appendUtf8String("</timerDelay>\n\t\t\t\t\t<timerKey>");
-      xml.append(EscapeStringForXML2(a->timerKey));
-      xml.appendUtf8String("</timerKey>\n\t\t\t\t\t<blockingTimerKey>");
-      xml.append(EscapeStringForXML2(a->blockingTimerKey));
-      xml.appendUtf8String("</blockingTimerKey>\n\t\t\t\t\t<snoozeTime>");
-      xml.append(EscapeStringForXML2(a->snoozeTime));
-      xml.appendUtf8String("</snoozeTime>\n\t\t\t\t\t<active>");
-      xml.append(a->active);
-      xml.appendUtf8String("</active>\n\t\t\t\t</action>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</actions>\n\t\t\t<timerCancellations>\n");
-   for(int i = 0; i < m_timerCancellations.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<timerKey>");
-      xml.append(EscapeStringForXML2(m_timerCancellations.get(i)));
-      xml.appendUtf8String("</timerKey>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n");
-   int id = 0;
-   for(KeyValuePair<const wchar_t> *action : m_pstorageSetActions)
-   {
-      xml.appendUtf8String("\t\t\t\t<set id=\"");
-      xml.append(++id);
-      xml.appendUtf8String("\" key=\"");
-      xml.append(EscapeStringForXML2(action->key));
-      xml.appendUtf8String("\">");
-      xml.append(EscapeStringForXML2(action->value));
-      xml.appendUtf8String("</set>\n");
-   }
-   for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<delete id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" key=\"");
-      xml.append(EscapeStringForXML2(m_pstorageDeleteActions.get(i)));
-      xml.appendUtf8String("\"/>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n");
-   id = 0;
-   for(KeyValuePair<const wchar_t> *action : m_customAttributeSetActions)
-   {
-      xml.appendUtf8String("\t\t\t\t<set id=\"");
-      xml.append(++id);
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(action->key));
-      xml.appendUtf8String("\">");
-      xml.append(EscapeStringForXML2(action->value));
-      xml.appendUtf8String("</set>\n");
-   }
-   for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
-   {
-      xml.appendUtf8String("\t\t\t\t<delete id=\"");
-      xml.append(i + 1);
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(m_customAttributeDeleteActions.get(i)));
-      xml.appendUtf8String("\"/>\n");
-   }
-
-   xml.appendUtf8String("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n");
-   for(int i = 0; i < m_alarmCategoryList.size(); i++)
-   {
-      AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
-      xml.appendUtf8String("\t\t\t\t<category id=\"");
-      xml.append(category->getId());
-      xml.appendUtf8String("\" name=\"");
-      xml.append(EscapeStringForXML2(category->getName()));
-      xml.appendUtf8String("\">");
-      xml.append(category->getDescription());
-      xml.appendUtf8String("</category>\n");
-      delete category;
-   }
-
-   xml.appendUtf8String("\t\t\t</alarmCategories>\n\t\t</rule>\n");
+   m_modifiedByGuid = userGuid;
+   m_modifiedByName = userName;
+   m_modificationTime = timestamp;
 }
 
 /**
@@ -1029,7 +1173,85 @@ bool EPRule::processEvent(Event *event) const
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), EndDowntime, event->getSourceId(), tag);
    }
 
+   if ((m_aiAgentInstructions != nullptr) && (m_aiAgentInstructions[0] != 0))
+   {
+      ProcessEventWithAIAssistant(event, object, m_aiAgentInstructions);
+   }
+
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
+}
+
+/**
+ * Create incident from alarm (immediate or delayed)
+ */
+void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
+{
+   if (m_incidentDelay == 0)
+   {
+      // Immediate incident creation
+      String title = (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
+         ? event->expandText(m_incidentTitle)
+         : String(event->getLastAlarmMessage());
+
+      String description = (m_incidentDescription != nullptr)
+         ? event->expandText(m_incidentDescription)
+         : String();
+
+      uint32_t incidentId = 0;
+      uint32_t rcc = CreateIncident(event->getSourceId(), title.cstr(),
+         description.isEmpty() ? nullptr : description.cstr(), alarmId, 0, &incidentId);
+
+      // Trigger AI analysis if enabled and incident was created successfully
+      if ((rcc == RCC_SUCCESS) && (incidentId != 0) && (m_flags & RF_AI_ANALYZE_INCIDENT))
+      {
+         SpawnIncidentAIAnalysis(incidentId, m_incidentAIAnalysisDepth, (m_flags & RF_AI_AUTO_ASSIGN) != 0, m_incidentAIPrompt);
+      }
+   }
+   else
+   {
+      // Schedule delayed incident creation using scheduler
+      StringBuffer persistentData;
+      persistentData.appendFormattedString(_T("alarm=%u;object=%u"), alarmId, event->getSourceId());
+
+      if (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
+      {
+         String title = event->expandText(m_incidentTitle);
+         persistentData.append(_T(";title="));
+         persistentData.append(title);
+      }
+      if (m_incidentDescription != nullptr)
+      {
+         String desc = event->expandText(m_incidentDescription);
+         persistentData.append(_T(";description="));
+         persistentData.append(desc);
+      }
+
+      // Add AI analysis parameters if enabled
+      if (m_flags & RF_AI_ANALYZE_INCIDENT)
+      {
+         persistentData.appendFormattedString(_T(";ai_analyze=1;ai_depth=%d;ai_assign=%d"),
+            m_incidentAIAnalysisDepth, (m_flags & RF_AI_AUTO_ASSIGN) ? 1 : 0);
+         if (m_incidentAIPrompt != nullptr && m_incidentAIPrompt[0] != 0)
+         {
+            persistentData.append(_T(";ai_prompt="));
+            persistentData.append(m_incidentAIPrompt);
+         }
+      }
+
+      wchar_t comments[256];
+      nx_swprintf(comments, 256, L"Delayed incident creation for alarm %u", alarmId);
+
+      AddOneTimeScheduledTask(INCIDENT_CREATE_TASK_ID,
+         time(nullptr) + m_incidentDelay,
+         persistentData.cstr(),
+         nullptr,  // No transient data needed
+         0,        // userId
+         event->getSourceId(),
+         SYSTEM_ACCESS_FULL,
+         comments,
+         nullptr,  // No key needed
+         true);    // System task
+   }
 }
 
 /**
@@ -1080,8 +1302,15 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, m_alarmCategoryList,
-                     ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
+                     (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
 	   event->setLastAlarmMessage(message);
+	   event->setLastAlarmId(alarmId);
+
+      // Create incident if RF_CREATE_INCIDENT flag is set and alarm was created
+      if ((m_flags & RF_CREATE_INCIDENT) && (alarmId != 0))
+      {
+         createIncidentFromAlarm(event, alarmId);
+      }
 	}
 
    event->setLastAlarmKey(key);
@@ -1285,14 +1514,16 @@ static EnumerationCallbackResult SaveEppActions(const TCHAR *key, const void *va
 /**
  * Save rule to database
  */
-bool EPRule::saveToDB(DB_HANDLE hdb) const
+bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* modifiedByName, time_t modificationTime) const
 {
    bool success;
 	TCHAR pszQuery[1024];
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
-                                  _T("action_script,downtime_tag) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,")
+                                  _T("incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1309,6 +1540,15 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
       DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_downtimeTag, DB_BIND_STATIC);
+      DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_aiAgentInstructions, DB_BIND_STATIC);
+      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_incidentDelay);
+      DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_incidentTitle, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_incidentDescription, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_incidentAIAnalysisDepth);
+      DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_incidentAIPrompt, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, modifiedByGuid);
+      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, modifiedByName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(modificationTime));
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1320,7 +1560,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Actions
    if (success && !m_actions.isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active) VALUES (?,?,?,?,?,?,?)"), m_actions.size() > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active,record_id) VALUES (?,?,?,?,?,?,?,?)"), m_actions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1333,6 +1573,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
             DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, a->blockingTimerKey, DB_BIND_STATIC, 127);
             DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, a->snoozeTime, DB_BIND_STATIC, 127);
             DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, a->active ? _T("1") : _T("0"), DB_BIND_STATIC);
+            DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, i);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -1497,6 +1738,10 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_RULE_ID, m_id);
    msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_RULE_VERSION, m_version);
+   msg->setField(VID_MODIFIED_BY_GUID, m_modifiedByGuid);
+   msg->setField(VID_MODIFIED_BY_NAME, m_modifiedByName);
+   msg->setField(VID_MODIFICATION_TIME, static_cast<uint32_t>(m_modificationTime));
    msg->setField(VID_ALARM_SEVERITY, static_cast<int16_t>(m_alarmSeverity));
    msg->setField(VID_ALARM_KEY, m_alarmKey);
    msg->setField(VID_ALARM_MESSAGE, m_alarmMessage);
@@ -1507,6 +1752,7 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_DOWNTIME_TAG, m_downtimeTag);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+   msg->setField(VID_AI_AGENT_INSTRUCTIONS, CHECK_NULL_EX(m_aiAgentInstructions));
    msg->setField(VID_NUM_ACTIONS, static_cast<uint32_t>(m_actions.size()));
    uint32_t fieldId = VID_ACTION_LIST_BASE;
    for(int i = 0; i < m_actions.size(); i++)
@@ -1539,16 +1785,154 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
    m_customAttributeSetActions.fillMessage(msg, VID_CUSTOM_ATTR_SET_LIST_BASE, VID_CUSTOM_ATTR_SET_COUNT);
    m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTR_DEL_LIST_BASE, VID_CUSTOM_ATTR_DEL_COUNT);
+   msg->setField(VID_INCIDENT_DELAY, m_incidentDelay);
+   msg->setField(VID_INCIDENT_TITLE, CHECK_NULL_EX(m_incidentTitle));
+   msg->setField(VID_INCIDENT_DESCRIPTION, CHECK_NULL_EX(m_incidentDescription));
+   msg->setField(VID_INCIDENT_AI_DEPTH, static_cast<int32_t>(m_incidentAIAnalysisDepth));
+   msg->setField(VID_INCIDENT_AI_PROMPT, CHECK_NULL_EX(m_incidentAIPrompt));
 }
 
 /**
- * Serialize rule to JSON
+ * Create configuration export record
  */
-json_t *EPRule::toJson() const
+json_t *EPRule::createExportRecord() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id + 1));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   
+   // Export sources with full object information
+   json_t *sources = json_array();
+   for(int i = 0; i < m_sources.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
+      if (object != nullptr)
+      {
+         json_t *source = json_object();
+         json_object_set_new(source, "id", json_integer(object->getId()));
+         json_object_set_new(source, "name", json_string_w(object->getName()));
+         json_object_set_new(source, "guid", object->getGuid().toJson());
+         json_object_set_new(source, "class", json_integer(object->getObjectClass()));
+         json_array_append_new(sources, source);
+      }
+   }
+   json_object_set_new(root, "sources", sources);
+   
+   // Export source exclusions with full object information  
+   json_t *sourceExclusions = json_array();
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
+      if (object != nullptr)
+      {
+         json_t *sourceExclusion = json_object();
+         json_object_set_new(sourceExclusion, "id", json_integer(object->getId()));
+         json_object_set_new(sourceExclusion, "name", json_string_w(object->getName()));
+         json_object_set_new(sourceExclusion, "guid", object->getGuid().toJson());
+         json_object_set_new(sourceExclusion, "class", json_integer(object->getObjectClass()));
+         json_array_append_new(sourceExclusions, sourceExclusion);
+      }
+   }
+   json_object_set_new(root, "sourceExclusions", sourceExclusions);
+   
+   // Export events with names (XML-compatible structure)
+   json_t *events = json_array();
+   for(int i = 0; i < m_events.size(); i++)
+   {
+      uint32_t eventCode = m_events.get(i);
+      json_t *event = json_object();
+      
+      TCHAR eventName[MAX_EVENT_NAME];
+      if (EventNameFromCode(eventCode, eventName))
+      {
+         json_object_set_new(event, "name", json_string_t(eventName));
+      }
+      else
+      {
+         json_object_set_new(event, "name", json_string("UNKNOWN_EVENT"));
+      }
+      
+      json_object_set_new(event, "id", json_integer(eventCode));
+      json_array_append_new(events, event);
+   }
+   json_object_set_new(root, "events", events);
+   
+   json_t *timeFrames = json_array();
+   for(TimeFrame *frame : m_timeFrames)
+   {
+      json_t *timeFrame = json_object();
+      json_object_set_new(timeFrame, "time", json_integer(frame->getTimeFilter()));
+      json_object_set_new(timeFrame, "date", json_integer(frame->getDateFilter()));
+      json_array_append_new(timeFrames, timeFrame);
+   }
+   json_object_set_new(root, "timeFrames", timeFrames);
+   json_t *actions = json_array();
+   for(int i = 0; i < m_actions.size(); i++)
+   {
+      const ActionExecutionConfiguration *d = m_actions.get(i);
+      json_t *action = json_object();
+      json_object_set_new(action, "id", json_integer(d->actionId));
+      json_object_set_new(action, "guid", GetActionGUID(d->actionId).toJson());
+      json_object_set_new(action, "timerDelay", json_string_t(d->timerDelay));
+      json_object_set_new(action, "timerKey", json_string_t(d->timerKey));
+      json_object_set_new(action, "blockingTimerKey", json_string_t(d->blockingTimerKey));
+      json_object_set_new(action, "snoozeTime", json_string_t(d->snoozeTime));
+      json_object_set_new(action, "active", json_boolean(d->active));
+      json_array_append_new(actions, action);
+   }
+   json_object_set_new(root, "actions", actions);
+   json_t *timerCancellations = json_array();
+   for(int i = 0; i < m_timerCancellations.size(); i++)
+   {
+      json_array_append_new(timerCancellations, json_string_t(m_timerCancellations.get(i)));
+   }
+   json_object_set_new(root, "timerCancellations", timerCancellations);
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
+   json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
+   json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
+   json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+   json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
+   json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+   json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+   
+   // Export alarm timeout event by name
+   TCHAR alarmTimeoutEventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(m_alarmTimeoutEvent, alarmTimeoutEventName))
+   {
+      json_object_set_new(root, "alarmTimeoutEvent", json_string_t(alarmTimeoutEventName));
+   }
+   else
+   {
+      json_object_set_new(root, "alarmTimeoutEvent", json_string("UNKNOWN_EVENT"));
+   }
+   
+   json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
+   json_object_set_new(root, "alarmCategories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
+   json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
+   json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
+   json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
+   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+   json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
+   json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
+   json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
+   json_object_set_new(root, "incidentAIAnalysisDepth", json_integer(m_incidentAIAnalysisDepth));
+   json_object_set_new(root, "incidentAIPrompt", json_string_t(m_incidentAIPrompt));
+
+   return root;
+}
+
+/**
+ * Serialize rule to JSON. If assistantMode is true, output is formed to be more usable by AI assistants.
+ */
+json_t *EPRule::toJson(bool assistantMode) const
 {
    json_t *root = json_object();
    json_object_set_new(root, "guid", m_guid.toJson());
-   json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
@@ -1582,20 +1966,62 @@ json_t *EPRule::toJson() const
    }
    json_object_set_new(root, "timerCancellations", timerCancellations);
    json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
    json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
    json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
-   json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
-   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
-   json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
-   json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
-   json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
-   json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
    json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
+   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+
+   if (assistantMode)
+   {
+      bool generateAlarm = (m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity != SEVERITY_RESOLVE && m_alarmSeverity != SEVERITY_TERMINATE;
+      if (generateAlarm)
+      {
+         json_object_set_new(root, "alarmSeverity", json_string_w((m_alarmSeverity == SEVERITY_FROM_EVENT) ? L"same as event" : GetStatusAsText(m_alarmSeverity, true)));
+         json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+         json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+         json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+         json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+      }
+      if ((m_flags & RF_GENERATE_ALARM) != 0)
+      {
+         json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+      }
+
+      json_t *flags = json_object();
+      json_object_set_new(flags, "disabled", json_boolean((m_flags & RF_DISABLED) != 0));
+      json_object_set_new(flags, "generateAlarm", json_boolean(generateAlarm));
+      json_object_set_new(flags, "resolveAlarm", json_boolean((m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity == SEVERITY_RESOLVE));
+      json_object_set_new(flags, "terminateAlarm", json_boolean((m_flags & RF_GENERATE_ALARM) != 0 && m_alarmSeverity == SEVERITY_TERMINATE));
+      json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
+      json_object_set_new(flags, "createTicket", json_boolean((m_flags & RF_CREATE_TICKET) != 0));
+      json_object_set_new(flags, "terminateByRegexp", json_boolean((m_flags & RF_TERMINATE_BY_REGEXP) != 0));
+      json_object_set_new(flags, "startDowntime", json_boolean((m_flags & RF_START_DOWNTIME) != 0));
+      json_object_set_new(flags, "endDowntime", json_boolean((m_flags & RF_END_DOWNTIME) != 0));
+      json_object_set_new(flags, "requestAIComment", json_boolean((m_flags & RF_REQUEST_AI_COMMENT) != 0));
+      json_object_set_new(flags, "createIncident", json_boolean((m_flags & RF_CREATE_INCIDENT) != 0));
+      json_object_set_new(flags, "aiAnalyzeIncident", json_boolean((m_flags & RF_AI_ANALYZE_INCIDENT) != 0));
+      json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
+      json_object_set_new(flags, "negatedEventMatch", json_boolean((m_flags & RF_NEGATED_EVENTS) != 0));
+      json_object_set_new(flags, "negatedSourceMatch", json_boolean((m_flags & RF_NEGATED_SOURCE) != 0));
+      json_object_set_new(root, "flags", flags);
+   }
+   else
+   {
+      json_object_set_new(root, "flags", json_integer(m_flags));
+      json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
+      json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
+      json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
+      json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
+      json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
+      json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+   }
 
    return root;
 }
@@ -1614,27 +2040,29 @@ bool EPRule::isActionInUse(UINT32 actionId) const
 /**
  * Load event processing policy from database
  */
-bool EventPolicy::loadFromDB()
+bool EventProcessingPolicy::loadFromDB()
 {
    DB_RESULT hResult;
    bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                           _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,")
-                           _T("rca_script_name,alarm_impact,action_script,downtime_tag FROM event_policy ORDER BY rule_id"));
+   hResult = DBSelect(hdb, L"SELECT rule_id,rule_guid,flags,comments,alarm_message,"
+                           L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
+                           L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
+                           L"incident_delay,incident_title,incident_description,"
+                           L"incident_ai_depth,incident_ai_prompt,"
+                           L"modified_by_guid,modified_by_name,modification_time "
+                           L"FROM event_policy ORDER BY rule_id");
    if (hResult != nullptr)
    {
       success = true;
       int count = DBGetNumRows(hResult);
       for(int i = 0; (i < count) && success; i++)
       {
-         EPRule *rule = new EPRule(hResult, i);
+         auto rule = make_shared<EPRule>(hResult, i);
          success = rule->loadFromDB(hdb);
          if (success)
             m_rules.add(rule);
-         else
-            delete rule;
       }
       DBFreeResult(hResult);
    }
@@ -1646,27 +2074,32 @@ bool EventPolicy::loadFromDB()
 /**
  * Save event processing policy to database
  */
-bool EventPolicy::saveToDB() const
+bool EventProcessingPolicy::saveToDB(const uuid& modifiedByGuid, const TCHAR* modifiedByName) const
 {
+   time_t modificationTime = time(nullptr);
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = DBBegin(hdb);
    if (success)
    {
-      success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_time_frame_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_timer_cancellation_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_cattr_actions")) &&
-                DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
+      success = DBQuery(hdb, L"DELETE FROM event_policy") &&
+                DBQuery(hdb, L"DELETE FROM policy_time_frame_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_action_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_timer_cancellation_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_event_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_source_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_pstorage_actions") &&
+                DBQuery(hdb, L"DELETE FROM policy_cattr_actions") &&
+                DBQuery(hdb, L"DELETE FROM alarm_category_map");
 
       if (success)
       {
          readLock();
-         for(int i = 0; (i < m_rules.size()) && success; i++)
-            success = m_rules.get(i)->saveToDB(hdb);
+         for (auto& rule : m_rules)
+         {
+            success = rule->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
+            if (!success)
+               break;
+         }
          unlock();
       }
 
@@ -1680,32 +2113,345 @@ bool EventPolicy::saveToDB() const
 }
 
 /**
+ * Fill NXCP message with conflict information
+ */
+void EPPConflict::fillMessage(NXCPMessage *msg, uint32_t baseId) const
+{
+   msg->setField(baseId, static_cast<uint16_t>(m_type));
+   msg->setField(baseId + 1, m_ruleGuid);
+   if (m_clientRule != nullptr)
+   {
+      msg->setField(baseId + 2, true);  // Has client rule
+      // Client rule data starting at baseId + 3 (use a sub-range)
+   }
+   else
+   {
+      msg->setField(baseId + 2, false);
+   }
+   if (m_serverRule != nullptr)
+   {
+      msg->setField(baseId + 3, true);  // Has server rule
+      msg->setField(baseId + 4, m_serverRule->getModifiedByGuid());
+      msg->setField(baseId + 5, m_serverRule->getModifiedByName());
+      msg->setField(baseId + 6, static_cast<uint32_t>(m_serverRule->getModificationTime()));
+   }
+   else
+   {
+      msg->setField(baseId + 3, false);
+   }
+}
+
+/**
+ * Save event processing policy with optimistic concurrency merge
+ */
+uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
+   uint32_t numDeletedRules, DeletedRuleInfo *deletedRules, const uuid& userGuid, const TCHAR* userName,
+   ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion)
+{
+   writeLock();
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u",
+      baseVersion, m_version, static_cast<uint32_t>(clientRules.size()), numDeletedRules);
+
+   // Fast path: no concurrent changes
+   if (baseVersion == m_version)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: fast path (no concurrent changes)");
+      time_t modTime = time(nullptr);
+      m_rules.clear();
+      for (size_t i = 0; i < clientRules.size(); i++)
+      {
+         shared_ptr<EPRule> rule = clientRules.getShared(i);
+         rule->setId(static_cast<uint32_t>(i));
+         if (rule->isModified())
+         {
+            rule->incrementVersion();
+            rule->setModificationInfo(userGuid, userName, modTime);
+            rule->clearModified();
+         }
+         m_rules.add(rule);
+      }
+      m_version++;
+      *newVersion = m_version;
+      unlock();
+
+      if (!saveToDB(userGuid, userName))
+         return RCC_DB_FAILURE;
+      return RCC_SUCCESS;
+   }
+
+   // Slow path: concurrent changes - perform merge using server order as base
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: slow path (merge required), serverRules=%d"), static_cast<int>(m_rules.size()));
+
+   // Build server rule map for GUID lookup
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> serverRuleMap;
+   for (auto& rule : m_rules)
+      serverRuleMap[rule->getGuid()] = rule;
+
+   // Build client rule map for lookup and collect new client rules with their predecessors
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> clientRuleMap;
+   struct NewClientRuleInfo
+   {
+      shared_ptr<EPRule> rule;
+      uuid predecessorGuid;
+   };
+   std::vector<NewClientRuleInfo> newClientRules;
+
+   for (size_t i = 0; i < clientRules.size(); i++)
+   {
+      shared_ptr<EPRule> rule = clientRules.getShared(i);
+      auto serverIt = serverRuleMap.find(rule->getGuid());
+
+      // Check if this is truly a new rule: version = 0 AND GUID doesn't exist on server
+      // (Client may have version 0 for a rule that was already saved if client didn't reload)
+      if (rule->getVersion() == 0 && serverIt == serverRuleMap.end())
+      {
+         // Truly new rule - find predecessor for position
+         uuid predecessorGuid;
+         for (int j = static_cast<int>(i) - 1; j >= 0; j--)
+         {
+            // Predecessor must be an existing rule (either version > 0 or already on server)
+            const EPRule *pr = clientRules.get(j);
+            if (pr->getVersion() > 0 || serverRuleMap.find(pr->getGuid()) != serverRuleMap.end())
+            {
+               predecessorGuid = pr->getGuid();
+               break;
+            }
+         }
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: new client rule %s (predecessor=%s)"),
+            rule->getGuid().toString().cstr(), predecessorGuid.toString().cstr());
+         newClientRules.push_back({rule, predecessorGuid});
+      }
+      else
+      {
+         clientRuleMap[rule->getGuid()] = rule;
+      }
+   }
+
+   // Build deleted GUIDs set
+   std::unordered_set<uuid, uuid_hash, uuid_equal> deletedGuids;
+   for (uint32_t i = 0; i < numDeletedRules; i++)
+      deletedGuids.insert(deletedRules[i].guid);
+
+   std::vector<shared_ptr<EPRule>> mergedRules;
+
+   // Process server rules in server order (preserves server's rule ordering)
+   for (auto& serverRule : m_rules)
+   {
+      // Check if deleted by client
+      if (deletedGuids.find(serverRule->getGuid()) != deletedGuids.end())
+      {
+         // Find deletion info to check version
+         for (uint32_t j = 0; j < numDeletedRules; j++)
+         {
+            if (deletedRules[j].guid.equals(serverRule->getGuid()))
+            {
+               if (serverRule->getVersion() > deletedRules[j].version)
+               {
+                  // Server modified after client's version - conflict
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: delete conflict for %s (serverVer=%u, clientVer=%u)"),
+                     serverRule->getGuid().toString().cstr(), serverRule->getVersion(), deletedRules[j].version);
+                  conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, serverRule->getGuid(), shared_ptr<EPRule>(), serverRule));
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s deleted by client"), serverRule->getGuid().toString().cstr());
+               }
+               break;
+            }
+         }
+         continue;  // Skip deleted rule
+      }
+
+      auto clientIt = clientRuleMap.find(serverRule->getGuid());
+
+      if (clientIt == clientRuleMap.end())
+      {
+         // Client doesn't have this rule (new on server) - use server version
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s new on server, keeping server version"),
+            serverRule->getGuid().toString().cstr());
+         mergedRules.push_back(serverRule);
+         continue;
+      }
+
+      auto& clientRule = clientIt->second;
+
+      if (serverRule->getVersion() == clientRule->getVersion())
+      {
+         // Versions match - use client version (includes any client modifications)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s versions match (%u), using client version (modified=%s)"),
+            serverRule->getGuid().toString().cstr(), serverRule->getVersion(), BooleanToString(clientRule->isModified()));
+         mergedRules.push_back(clientRule);
+      }
+      else
+      {
+         // Server changed this rule
+         if (clientRule->isModified())
+         {
+            // Both modified - conflict
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: modify conflict for %s (serverVer=%u, clientVer=%u)"),
+               serverRule->getGuid().toString().cstr(), serverRule->getVersion(), clientRule->getVersion());
+            conflicts->add(new EPPConflict(EPPConflict::EPP_CT_MODIFY, clientRule->getGuid(), clientRule, serverRule));
+         }
+         else
+         {
+            // Only server modified - use server version
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s version mismatch (serverVer=%u, clientVer=%u), client not modified, using server version"),
+               serverRule->getGuid().toString().cstr(), serverRule->getVersion(), clientRule->getVersion());
+            mergedRules.push_back(serverRule);
+         }
+      }
+      // Remove from clientRuleMap to track processed rules
+      clientRuleMap.erase(clientIt);
+   }
+
+   // Check for client rules not in server (server deleted them)
+   // Remaining entries in clientRuleMap are rules that server doesn't have
+   for (auto& entry : clientRuleMap)
+   {
+      auto& clientRule = entry.second;
+      // Client has this rule but server doesn't - server deleted it
+      if (clientRule->isModified())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: delete conflict - client modified rule %s that server deleted"),
+            clientRule->getGuid().toString().cstr());
+         conflicts->add(new EPPConflict(EPPConflict::EPP_CT_DELETE, clientRule->getGuid(), clientRule, shared_ptr<EPRule>()));
+      }
+      else
+      {
+         // If client didn't modify, just drop it (server's delete takes precedence)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule %s deleted on server, dropping client's unmodified copy"),
+            clientRule->getGuid().toString().cstr());
+      }
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: after server rules processing, mergedRules=%d, newClientRules=%d"),
+      static_cast<int>(mergedRules.size()), static_cast<int>(newClientRules.size()));
+
+   // Insert new client rules at their correct positions based on predecessors
+   std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> lastInsertedAfter;
+   for (auto& info : newClientRules)
+   {
+      size_t insertPos = 0;
+      auto lastIt = lastInsertedAfter.find(info.predecessorGuid);
+      if (lastIt != lastInsertedAfter.end())
+      {
+         // Find the last rule we inserted after this predecessor
+         for (size_t j = 0; j < mergedRules.size(); j++)
+         {
+            if (mergedRules[j] == lastIt->second)
+            {
+               insertPos = j + 1;
+               break;
+            }
+         }
+      }
+      else if (!info.predecessorGuid.isNull())
+      {
+         // First insertion after this predecessor - find it in merged
+         for (size_t j = 0; j < mergedRules.size(); j++)
+         {
+            if (mergedRules[j]->getGuid().equals(info.predecessorGuid))
+            {
+               insertPos = j + 1;
+               break;
+            }
+         }
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: inserting new rule %s at position %d"),
+         info.rule->getGuid().toString().cstr(), static_cast<int>(insertPos));
+      mergedRules.insert(mergedRules.begin() + insertPos, info.rule);
+      lastInsertedAfter[info.predecessorGuid] = info.rule;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: merge complete, totalRules=%d, conflicts=%d"),
+      static_cast<int>(mergedRules.size()), conflicts->size());
+
+   if (conflicts->isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: no conflicts, applying %d rules"), static_cast<int>(mergedRules.size()));
+      time_t modTime = time(nullptr);
+      m_rules.clear();
+      for (size_t i = 0; i < mergedRules.size(); i++)
+      {
+         auto& rule = mergedRules[i];
+         rule->setId(static_cast<uint32_t>(i));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule[%d] guid=%s version=%u modified=%s"),
+            static_cast<int>(i), rule->getGuid().toString().cstr(), rule->getVersion(), BooleanToString(rule->isModified()));
+         if (rule->isModified())
+         {
+            rule->incrementVersion();
+            rule->setModificationInfo(userGuid, userName, modTime);
+            rule->clearModified();
+         }
+         m_rules.add(rule);
+      }
+      m_version++;
+      *newVersion = m_version;
+      unlock();
+
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: saving to database"));
+      if (!saveToDB(userGuid, userName))
+         return RCC_DB_FAILURE;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: save successful, newVersion=%u"), *newVersion);
+      return RCC_SUCCESS;
+   }
+   else
+   {
+      *newVersion = m_version;
+      unlock();
+      return RCC_EPP_CONFLICT;
+   }
+}
+
+/**
+ * Fill message with current rule GUIDs and versions (for client sync after save)
+ */
+void EventProcessingPolicy::fillRuleVersions(NXCPMessage *msg) const
+{
+   readLock();
+   msg->setField(VID_RULE_VERSION_COUNT, static_cast<uint32_t>(m_rules.size()));
+   uint32_t fieldId = VID_RULE_VERSION_LIST_BASE;
+   for (auto& rule : m_rules)
+   {
+      msg->setField(fieldId++, rule->getGuid());
+      msg->setField(fieldId++, rule->getVersion());
+   }
+   unlock();
+}
+
+/**
  * Pass event through policy
  */
-void EventPolicy::processEvent(Event *pEvent)
+void EventProcessingPolicy::processEvent(Event *pEvent)
 {
-	nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
+	nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: processing event " UINT64_FMT, pEvent->getId());
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->processEvent(pEvent))
-		{
-			nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), i + 1);
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
+   {
+      if (rule->processEvent(pEvent))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), ruleNum);
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
-		}
+      }
+      ruleNum++;
+   }
    unlock();
 }
 
 /**
  * Send event policy to client
  */
-void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
+void EventProcessingPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
 {
    NXCPMessage msg(CMD_EPP_RECORD, requestId);
 
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      m_rules.get(i)->fillMessage(&msg);
+      rule->fillMessage(&msg);
       session->sendMessage(msg);
       msg.deleteAllFields();
    }
@@ -1715,17 +2461,19 @@ void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
 /**
  * Replace policy with new one
  */
-void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
+void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 {
    writeLock();
    m_rules.clear();
    if (ruleList != nullptr)
    {
-      for(int i = 0; i < (int)numRules; i++)
+      for (uint32_t i = 0; i < numRules; i++)
       {
-         EPRule *r = ruleList[i];
-         r->setId(i);
-         m_rules.add(r);
+         // Take ownership via shared_ptr
+         auto rule = shared_ptr<EPRule>(ruleList[i]);
+         rule->setId(i);
+         m_rules.add(rule);
+         ruleList[i] = nullptr;  // Ownership transferred
       }
    }
    unlock();
@@ -1734,32 +2482,30 @@ void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 /**
  * Validate event policy configuration
  */
-void EventPolicy::validateConfig() const
+void EventProcessingPolicy::validateConfig() const
 {
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
-   {
-      m_rules.get(i)->validateConfig();
-   }
+   for (auto& rule : m_rules)
+      rule->validateConfig();
    unlock();
 }
 
 /**
  * Check if given action is used in policy
  */
-bool EventPolicy::isActionInUse(uint32_t actionId) const
+bool EventProcessingPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;
 
    readLock();
-
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->isActionInUse(actionId))
+   for (auto& rule : m_rules)
+   {
+      if (rule->isActionInUse(actionId))
       {
          bResult = true;
          break;
       }
-
+   }
    unlock();
    return bResult;
 }
@@ -1767,64 +2513,83 @@ bool EventPolicy::isActionInUse(uint32_t actionId) const
 /**
  * Check if given category is used in policy
  */
-bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
+bool EventProcessingPolicy::isCategoryInUse(uint32_t categoryId) const
 {
    bool bResult = false;
 
    readLock();
-
-   for(int i = 0; i < m_rules.size(); i++)
-      if (m_rules.get(i)->isCategoryInUse(categoryId))
+   for (auto& rule : m_rules)
+   {
+      if (rule->isCategoryInUse(categoryId))
       {
          bResult = true;
          break;
       }
-
+   }
    unlock();
    return bResult;
 }
 
 /**
- * Export rule
+ * Get rule details as JSON
  */
-void EventPolicy::exportRule(TextFileWriter& xml, const uuid& guid) const
+json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
 {
+   json_t *details = nullptr;
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      if (guid.equals(m_rules.get(i)->getGuid()))
+      if (ruleId.equals(rule->getGuid()))
       {
-         m_rules.get(i)->createExportRecord(xml);
+         details = rule->toJson(true);
          break;
       }
    }
    unlock();
+   return details;
 }
 
 /**
- * Export rules ordering
+ * Export rule to JSON
  */
-void EventPolicy::exportRuleOrgering(TextFileWriter& xml) const
+json_t *EventProcessingPolicy::exportRule(const uuid& guid) const
 {
+   json_t *ruleJson = nullptr;
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   for (auto& rule : m_rules)
    {
-      m_rules.get(i)->createOrderingExportRecord(xml);
+      if (guid.equals(rule->getGuid()))
+      {
+         ruleJson = rule->createExportRecord();
+         break;
+      }
    }
    unlock();
+   return ruleJson;
+}
+
+/**
+ * Export rules ordering to JSON
+ */
+json_t *EventProcessingPolicy::exportRuleOrdering() const
+{
+   json_t *ordering = json_array();
+   readLock();
+   for (auto& rule : m_rules)
+      json_array_append_new(ordering, json_string_t(rule->getGuid().toString()));
+   unlock();
+   return ordering;
 }
 
 /**
  * Finds rule index by guid and adds index shift if found
  */
-int EventPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
+int EventProcessingPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
 {
-   for (int i = 0; i < m_rules.size(); i++)
+   for (size_t i = 0; i < m_rules.size(); i++)
    {
       if (guid.equals(m_rules.get(i)->getGuid()))
-      {
-         return i + shift;
-      }
+         return static_cast<int>(i) + shift;
    }
    return -1;
 }
@@ -1832,9 +2597,12 @@ int EventPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
 /**
  * Import rule
  */
-void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
+void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
 {
    writeLock();
+
+   // Wrap in shared_ptr for ownership management
+   auto rulePtr = shared_ptr<EPRule>(rule);
 
    // Find rule with same GUID and replace it if found
    int ruleIndex = findRuleIndexByGuid(rule->getGuid());
@@ -1842,22 +2610,19 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
    {
       if (overwrite)
       {
-         rule->setId(ruleIndex);
-         m_rules.set(ruleIndex, rule);
+         rulePtr->setId(ruleIndex);
+         m_rules.replace(ruleIndex, rulePtr);
       }
-      else
-      {
-         delete rule;
-      }
+      // If not overwriting, shared_ptr will delete the rule when it goes out of scope
    }
-   else //insert new rule
+   else // insert new rule
    {
       if (ruleOrdering != nullptr)
       {
          int newRulePrevIndex = -1;
          for (int i = 0; i < ruleOrdering->size(); i++)
          {
-            if(ruleOrdering->get(i)->equals(rule->getGuid()))
+            if (ruleOrdering->get(i)->equals(rule->getGuid()))
             {
                newRulePrevIndex = i;
                break;
@@ -1866,19 +2631,19 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
 
          if (newRulePrevIndex != -1)
          {
-            //find rule before this rule
+            // Find rule before this rule
             if (newRulePrevIndex > 0)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex - 1), 1);
 
-            //if rule after this rule if before not found
-            if(ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
+            // If rule after this rule if before not found
+            if (ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex + 1));
 
-            //check if any rule before this rule already exist if before not found
+            // Check if any rule before this rule already exist if before not found
             for (int i = newRulePrevIndex - 2; ruleIndex == -1 && i >= 0; i--)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i), 1);
 
-            //check if any rule after this rule already exist if before not found
+            // Check if any rule after this rule already exist if before not found
             for (int i = newRulePrevIndex + 2; ruleIndex == -1 && i < ruleOrdering->size(); i++)
                ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i));
          }
@@ -1886,17 +2651,15 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
 
       if (ruleIndex == -1) // Add new rule at the end
       {
-         rule->setId(m_rules.size());
-         m_rules.add(rule);
+         rulePtr->setId(static_cast<uint32_t>(m_rules.size()));
+         m_rules.add(rulePtr);
       }
       else
       {
-         rule->setId(ruleIndex);
-         m_rules.insert(ruleIndex, rule);
-         for(int i = ruleIndex + 1; i < m_rules.size(); i++)
-         {
-            m_rules.get(i)->setId(i);
-         }
+         rulePtr->setId(ruleIndex);
+         m_rules.insert(ruleIndex, rulePtr);
+         for (size_t i = ruleIndex + 1; i < m_rules.size(); i++)
+            m_rules.get(i)->setId(static_cast<uint32_t>(i));
       }
    }
 
@@ -1906,33 +2669,61 @@ void EventPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ru
 /**
  * Create JSON representation
  */
-json_t *EventPolicy::toJson() const
+json_t *EventProcessingPolicy::toJson() const
 {
    json_t *root = json_object();
-   json_t *rules = json_array();
+   json_t *rulesJson = json_array();
    readLock();
-   for(int i = 0; i < m_rules.size(); i++)
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
    {
-      json_array_append_new(rules, m_rules.get(i)->toJson());
+      json_t *r = rule->toJson();
+      json_object_set_new(r, "ruleNumber", json_integer(ruleNum++));
+      json_array_append_new(rulesJson, r);
    }
    unlock();
-   json_object_set_new(root, "rules", rules);
+   json_object_set_new(root, "rules", rulesJson);
    return root;
 }
 
 /**
  * Collects information about all EPRules that are using specified event
  */
-void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
+void EventProcessingPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
 {
    readLock();
-   for (int i = 0; i < m_rules.size(); i++)
+   int ruleNum = 1;
+   for (auto& rule : m_rules)
    {
-      EPRule *rule = m_rules.get(i);
       if (rule->isUsingEvent(eventCode))
-      {
-         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, i + 1, rule->getGuid(), rule->getComments()));
-      }
+         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, ruleNum, rule->getGuid(), rule->getComments()));
+      ruleNum++;
    }
+   unlock();
+}
+
+/**
+ * Show rules on server console
+ */
+void EventProcessingPolicy::showRules(ServerConsole *console) const
+{
+   readLock();
+
+   console->printf(_T(" \x1b[1mID\x1b[0m  | \x1b[1mGUID\x1b[0m                                 | \x1b[1mVersion\x1b[0m | \x1b[1mComment\x1b[0m\n"));
+   console->printf(_T("-----+--------------------------------------+---------+------------------------------------------\n"));
+
+   for (auto& rule : m_rules)
+   {
+      TCHAR guidText[64];
+      const wchar_t *comment = rule->getComments();
+      console->printf(_T(" %3d | %s | %7u | %s\n"),
+         rule->getId() + 1,
+         rule->getGuid().toString(guidText),
+         rule->getVersion(),
+         (comment != nullptr && *comment != 0) ? comment : _T(""));
+   }
+
+   console->printf(_T("\n%d rules total\n\n"), static_cast<int>(m_rules.size()));
+
    unlock();
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static const WCHAR *s_classNameW[]=
       L"Cluster", L"BusinessServiceProto", L"Asset",
       L"AssetGroup", L"AssetRoot", L"NetworkMapRoot",
       L"NetworkMapGroup", L"NetworkMap", L"DashboardRoot",
-      L"Dashboard", L"ReportRoot", L"ReportGroup", L"Report",
+      L"Dashboard", L"DashboardTemplate", L"ReportGroup", L"Report",
       L"BusinessServiceRoot", L"BusinessService", L"Collector",
       L"Circuit", L"MobileDevice", L"Rack", L"AccessPoint",
       L"WirelessDomain", L"Chassis", L"DashboardGroup",
@@ -52,7 +52,7 @@ static const char *s_classNameA[]=
       "Cluster", "BusinessServiceProto", "Asset",
       "AssetGroup", "AssetRoot", "NetworkMapRoot",
       "NetworkMapGroup", "NetworkMap", "DashboardRoot",
-      "Dashboard", "ReportRoot", "ReportGroup", "Report",
+      "Dashboard", "DashboardTemplate", "ReportGroup", "Report",
       "BusinessServiceRoot", "BusinessService", "Collector",
       "Circuit", "MobileDevice", "Rack", "AccessPoint",
       "WirelessDomain", "Chassis", "DashboardGroup",
@@ -62,7 +62,7 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
+NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST), m_mutexPortStopList(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
@@ -71,6 +71,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_modified = 0;
    m_isDeleted = false;
    m_isDeleteInitiated = false;
+   m_isUnpublished = false;
    m_isHidden = false;
    m_maintenanceEventId = 0;
    m_maintenanceInitiator = 0;
@@ -99,9 +100,11 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_runtimeFlags = 0;
    m_flags = 0;
    m_responsibleUsers = nullptr;
+   m_portStopList = nullptr;
    m_creationTime = 0;
    m_categoryId = 0;
    m_assetId = 0;
+   m_aiData = nullptr;
    m_asPollable = nullptr;
    m_asDelegate = nullptr;
 }
@@ -116,6 +119,15 @@ NetObj::~NetObj()
    delete m_trustedObjects;
    delete m_moduleData;
    delete m_responsibleUsers;
+   delete m_portStopList;
+   if (m_aiData != nullptr)
+   {
+      for (auto& pair : *m_aiData)
+      {
+         json_decref(pair.second);
+      }
+      delete m_aiData;
+   }
 }
 
 /**
@@ -291,6 +303,38 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       unlockResponsibleUsersList();
    }
 
+   // Save port stop list
+   if (success && (m_modified & MODIFY_PORT_STOP_LIST))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM port_stop_list WHERE object_id=?"));
+      lockPortStopList();
+      if (success && (m_portStopList != nullptr))
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO port_stop_list (object_id,id,port,protocol) VALUES (?,?,?,?)"), m_portStopList->size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for (int i = 0; (i < m_portStopList->size()) && success; i++)
+            {
+               PortStopEntry *e = m_portStopList->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->port);
+               char protocol[2];
+               protocol[0] = e->protocol;
+               protocol[1] = 0;
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, protocol, DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockPortStopList();
+   }
+
    if (success && (m_modified & MODIFY_COMMON_PROPERTIES))
    {
       static const TCHAR *columns[] = {
@@ -300,7 +344,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
          _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
          _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
-         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), nullptr
+         _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), _T("is_hidden"), _T("ai_hint"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -355,7 +399,9 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_categoryId);
          DBBind(hStmt, 37, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
          DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_assetId);
-         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, (LONG)(m_isHidden ? 1 : 0));
+         DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
+         DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -401,10 +447,10 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    // Save URL associations
    if (success && (m_modified & MODIFY_OBJECT_URLS))
    {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
+      success = ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM object_urls WHERE object_id=?");
       if (success && !m_urls.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)", true);
          if (hStmt != nullptr)
          {
             lockProperties();
@@ -425,6 +471,35 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+   }
+
+   // Save AI data
+   if (success && (m_modified & MODIFY_AI_DATA))
+   {
+      success = executeQueryOnObject(hdb, L"DELETE FROM object_ai_data WHERE object_id=?");
+      m_aiDataLock.lock();
+      if (success && (m_aiData != nullptr) && !m_aiData->empty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO object_ai_data (object_id,data_key,data_value) VALUES (?,?,?)", m_aiData->size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for (const auto& pair : *m_aiData)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, pair.first.c_str(), DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_TEXT, pair.second, DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+               if (!success)
+                  break;
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      m_aiDataLock.unlock();
    }
 
    if (success)
@@ -465,7 +540,7 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    bool success;
    if ((m_status != m_savedStatus) || (m_state != m_savedState))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=?,state=? WHERE object_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE object_properties SET status=?,state=? WHERE object_id=?");
       if (hStmt == nullptr)
          return false;
 
@@ -579,7 +654,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
                                   _T("status_thresholds,comments,location_type,latitude,longitude,location_accuracy,")
                                   _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
-                                  _T("name_on_map,category,comments_source,asset_id FROM object_properties WHERE object_id=?"));
+                                  _T("name_on_map,category,comments_source,asset_id,is_hidden,ai_hint FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -641,6 +716,8 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
             m_categoryId = DBGetFieldULong(hResult, 0, 35);
             m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 36);
             m_assetId = DBGetFieldULong(hResult, 0, 37);
+            m_isHidden = DBGetFieldLong(hResult, 0, 38) ? true : false;
+            m_aiHint = DBGetFieldAsSharedString(hResult, 0, 39);
             success = true;
          }
 			else if (ignoreEmptyResults)
@@ -673,6 +750,50 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
 		{
 			success = false;
 		}
+   }
+
+   // Load AI data
+   if (success)
+   {
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_AI_DATA, _T("SELECT data_key,data_value FROM object_ai_data WHERE object_id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               m_aiData = new std::unordered_map<std::string, json_t*>();
+               for (int i = 0; i < count; i++)
+               {
+                  char key[128];
+                  DBGetFieldA(hResult, i, 0, key, sizeof(key));
+                  char *jsonText = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
+                  if (jsonText != nullptr)
+                  {
+                     json_error_t error;
+                     json_t *value = json_loads(jsonText, 0, &error);
+                     if (value != nullptr)
+                     {
+                        (*m_aiData)[key] = value;
+                     }
+                     MemFree(jsonText);
+                  }
+               }
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      else
+      {
+         success = false;
+      }
    }
 
    // Load associated dashboards
@@ -761,6 +882,9 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
 	   }
 	}
 
+   if (success)
+      success = loadPortStopListFromDB(hdb, preparedStatements);
+
 	if (!success)
 		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OBJECT_INIT, _T("NetObj::loadCommonProperties() failed for %s object %s [%u]"), getObjectClassName(), m_name, m_id);
 
@@ -808,7 +932,7 @@ void NetObj::deleteObject(NetObj *initiator)
 	   return;
 	}
 	m_isDeleteInitiated = true;
-   m_isHidden = true;
+   m_isUnpublished = true;
 	unlockProperties();
 
 	// Notify modules about object deletion
@@ -911,7 +1035,7 @@ void NetObj::deleteObject(NetObj *initiator)
    DeleteScheduledTasksByObjectId(m_id);
 
    lockProperties();
-   m_isHidden = false;
+   m_isUnpublished = false;
    m_isDeleted = true;
    setModified(MODIFY_ALL);
    unlockProperties();
@@ -1177,6 +1301,39 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 }
 
 /**
+ * Load port stop list from database
+ */
+bool NetObj::loadPortStopListFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
+{
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_PORT_STOP_LIST,
+      _T("SELECT port,protocol FROM port_stop_list WHERE object_id=? ORDER BY id"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   if (count > 0)
+   {
+      m_portStopList = new StructArray<PortStopEntry>(count);
+      for (int i = 0; i < count; i++)
+      {
+         PortStopEntry *e = m_portStopList->addPlaceholder();
+         e->port = static_cast<uint16_t>(DBGetFieldULong(hResult, i, 0));
+         TCHAR protocol[2];
+         DBGetField(hResult, i, 1, protocol, 2);
+         e->protocol = static_cast<char>(protocol[0]);
+      }
+   }
+   DBFreeResult(hResult);
+
+   return true;
+}
+
+/**
  * Handler for ACL elements enumeration
  */
 static void EnumerationHandler(uint32_t userId, uint32_t accessRights, std::pair<uint32_t, DB_HANDLE> *context)
@@ -1219,6 +1376,7 @@ void NetObj::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_NAME_ON_MAP, m_nameOnMap);
    msg->setField(VID_OBJECT_STATUS, static_cast<uint16_t>(m_status));
    msg->setField(VID_IS_DELETED, m_isDeleted);
+   msg->setField(VID_IS_HIDDEN, m_isHidden);
    msg->setField(VID_MAINTENANCE_MODE, m_maintenanceEventId != 0);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_IMAGE, m_mapImage);
@@ -1253,6 +1411,7 @@ void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_STATUS_THRESHOLD_4, static_cast<uint16_t>(m_statusThresholds[3]));
    msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
    msg->setField(VID_ASSET_ID, m_assetId);
+   msg->setField(VID_AI_HINT, m_aiHint);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
@@ -1394,6 +1553,25 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
    }
    unlockResponsibleUsersList();
 
+   lockPortStopList();
+   if (m_portStopList != nullptr)
+   {
+      msg->setField(VID_PORT_STOP_COUNT, m_portStopList->size());
+      uint32_t fieldId = VID_PORT_STOP_LIST_BASE;
+      for (int i = 0; i < m_portStopList->size(); i++)
+      {
+         PortStopEntry *e = m_portStopList->get(i);
+         msg->setField(fieldId++, e->port);
+         msg->setField(fieldId++, static_cast<int16_t>(e->protocol));
+         fieldId += 8;
+      }
+   }
+   else
+   {
+      msg->setField(VID_PORT_STOP_COUNT, static_cast<uint32_t>(0));
+   }
+   unlockPortStopList();
+
    if (isPollable())
       getAsPollable()->pollStateToMessage(msg);
 }
@@ -1413,7 +1591,7 @@ void NetObj::setModified(uint32_t flags, bool notify)
    }
 
    // Send event to all connected clients
-   if (notify && !m_isHidden)
+   if (notify && !m_isUnpublished)
    {
       nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification for %s [%u] (flags=0x%08X)"), m_name, m_id, flags);
       shared_ptr<NetObj> object = self();
@@ -1474,6 +1652,10 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
    {
       updateFlags(msg.getFieldAsUInt32(VID_FLAGS), msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : UINT_MAX);
    }
+
+   // Change hidden state
+   if (msg.isFieldExist(VID_IS_HIDDEN))
+      m_isHidden = msg.getFieldAsBoolean(VID_IS_HIDDEN);
 
    if (msg.isFieldExist(VID_NAME_ON_MAP))
       m_nameOnMap = msg.getFieldAsSharedString(VID_NAME_ON_MAP);
@@ -1596,6 +1778,9 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
       }
    }
 
+   if (msg.isFieldExist(VID_AI_HINT))
+      m_aiHint = msg.getFieldAsSharedString(VID_AI_HINT);
+
    return RCC_SUCCESS;
 }
 
@@ -1612,6 +1797,9 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientS
 
    if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
       setResponsibleUsersFromMessage(msg, session);
+
+   if (msg.isFieldExist(VID_PORT_STOP_COUNT))
+      setPortStopListFromMessage(msg);
 
    // Change object's ACL
    if (msg.isFieldExist(VID_ACL_SIZE))
@@ -1698,7 +1886,7 @@ void NetObj::dropUserAccess(uint32_t userId)
  */
 bool NetObj::setMgmtStatus(bool isManaged)
 {
-   int oldStatus;
+   int oldStatus = m_status;
 
    lockProperties();
 
@@ -1708,17 +1896,12 @@ bool NetObj::setMgmtStatus(bool isManaged)
       return false;  // Status is already correct
    }
 
-   oldStatus = m_status;
    m_status = (isManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 
-   // Generate event if current object is a node
-   if (getObjectClass() == OBJECT_NODE)
-      EventBuilder(isManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id)
-         .param(_T("previousNodeStatus"), oldStatus)
-         .post();
+   onMgmtStatusChange(isManaged, oldStatus);
 
    // Change status for child objects also
    readLockChildList();
@@ -1731,6 +1914,22 @@ bool NetObj::setMgmtStatus(bool isManaged)
    for(int i = 0; i < getParentList().size(); i++)
       getParentList().get(i)->calculateCompoundStatus();
    unlockParentList();
+   return true;
+}
+
+/**
+ * Hook called after management status change
+ */
+void NetObj::onMgmtStatusChange(bool isManaged, int oldStatus)
+{
+   //Default implementation does nothing
+}
+
+/**
+ * Check if management status change is allowed
+ */
+bool NetObj::isManagementStatusChangeAllowed(bool isManaged)
+{
    return true;
 }
 
@@ -1815,27 +2014,27 @@ void NetObj::addChildDCTargetsToList(SharedObjectArray<DataCollectionTarget> *dc
 }
 
 /**
- * Hide object and all its children
+ * Unpublish object and all its children
  */
-void NetObj::hide()
+void NetObj::unpublish()
 {
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
-      getChildList().get(i)->hide();
+      getChildList().get(i)->unpublish();
    unlockChildList();
 
 	lockProperties();
-   m_isHidden = true;
+   m_isUnpublished = true;
    unlockProperties();
 }
 
 /**
- * Unhide object and all its children
+ * Publish object and all its children
  */
-void NetObj::unhide()
+void NetObj::publish()
 {
    lockProperties();
-   m_isHidden = false;
+   m_isUnpublished = false;
    shared_ptr<NetObj> object = self();
    EnumerateClientSessions(
       [object] (ClientSession *session) -> void
@@ -1846,7 +2045,7 @@ void NetObj::unhide()
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
-      getChildList().get(i)->unhide();
+      getChildList().get(i)->publish();
    unlockChildList();
 
    // Trigger notifications for parent objects
@@ -1854,6 +2053,17 @@ void NetObj::unhide()
    for(int i = 0; i < getParentList().size(); i++)
       getParentList().get(i)->markAsModified(0);
    unlockParentList();
+}
+
+/**
+ * Set hidden state
+ */
+void NetObj::setHidden(bool hidden)
+{
+   lockProperties();
+   m_isHidden = hidden;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
 }
 
 /**
@@ -2358,6 +2568,110 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 }
 
 /**
+ * Get all AI data as JSON object
+ */
+json_t *NetObj::getAllAIData() const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr || m_aiData->empty())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_object();
+   for (const auto& pair : *m_aiData)
+   {
+      json_object_set(result, pair.first.c_str(), pair.second);
+   }
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Get AI data by key
+ */
+json_t *NetObj::getAIData(const char *key) const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   auto it = m_aiData->find(key);
+   if (it == m_aiData->end())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_incref(it->second);
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Get list of AI data keys
+ */
+json_t *NetObj::getAIDataKeys() const
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr || m_aiData->empty())
+   {
+      m_aiDataLock.unlock();
+      return nullptr;
+   }
+   json_t *result = json_array();
+   for (const auto& pair : *m_aiData)
+   {
+      json_array_append_new(result, json_string(pair.first.c_str()));
+   }
+   m_aiDataLock.unlock();
+   return result;
+}
+
+/**
+ * Set AI data
+ */
+void NetObj::setAIData(const char *key, json_t *value)
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+      m_aiData = new std::unordered_map<std::string, json_t*>();
+   auto it = m_aiData->find(key);
+   if (it != m_aiData->end())
+   {
+      json_decref(it->second);
+   }
+   (*m_aiData)[key] = json_incref(value);
+   m_aiDataLock.unlock();
+   setModified(MODIFY_AI_DATA);
+}
+
+/**
+ * Remove AI data by key
+ */
+bool NetObj::removeAIData(const char *key)
+{
+   m_aiDataLock.lock();
+   if (m_aiData == nullptr)
+   {
+      m_aiDataLock.unlock();
+      return false;
+   }
+   auto it = m_aiData->find(key);
+   if (it == m_aiData->end())
+   {
+      m_aiDataLock.unlock();
+      return false;
+   }
+   json_decref(it->second);
+   m_aiData->erase(it);
+   m_aiDataLock.unlock();
+   setModified(MODIFY_AI_DATA);
+   return true;
+}
+
+/**
  * Add new location entry
  */
 void NetObj::updateGeoLocationHistory(GeoLocation location)
@@ -2709,6 +3023,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "trustedObjects", (m_trustedObjects != nullptr) ? m_trustedObjects->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
+   json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
 
    json_t *customAttributes = json_array();
    forEachCustomAttribute(CustomAttributeToJson, customAttributes);
@@ -2811,7 +3126,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             {
                if (event->getDciId() != 0)
                {
-                  dciId = alarm->getDciId();
+                  dciId = event->getDciId();
                   object = FindObjectById(event->getSourceId());
                }
             }
@@ -2831,345 +3146,349 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
    {
+      if (*curr != '%')
+      {
+         output.append(*curr);
+         continue;
+      }
+
+      curr++;
+      if (*curr == 0)
+      {
+         curr--;
+         break;   // Abnormal loop termination
+      }
+
       switch(*curr)
       {
-         case '%':   // Metacharacter
-            curr++;
-            if (*curr == 0)
+         case '%':
+            output.append(_T('%'));
+            break;
+         case 'a':   // IP address of event source
+            output.append(getPrimaryIpAddress().toString(buffer));
+            break;
+         case 'A':   // Associated alarm message
+            if (alarm != nullptr)
             {
-               curr--;
-               break;   // Abnormal loop termination
+               output.append(alarm->getMessage());
             }
-            switch(*curr)
+            else if (event != nullptr)
             {
-               case '%':
-                  output.append(_T('%'));
-                  break;
-               case 'a':   // IP address of event source
-                  output.append(getPrimaryIpAddress().toString(buffer));
-                  break;
-               case 'A':   // Associated alarm message
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getMessage());
-                  }
-                  else if (event != nullptr)
-                  {
-                     output.append(event->getLastAlarmMessage());
-                  }
-                  break;
-               case 'c':   // Event code
-                  output.append((loadEvent()) ? event->getCode() : 0);
-                  break;
-               case 'C':   // Object comments
-                  output.append(getComments().cstr());
-                  break;
-               case 'd':   // DCI description
-                  if (findDCI())
-                     output.append(dci->getDescription());
-                  break;
-               case 'D':   // DCI comments
-                  if (findDCI())
-                     output.append(dci->getComments());
-                  break;
-               case 'E':   // Concatenated event tags
-                  if (loadEvent())
-                  {
-                     event->getTagsAsList(&output);
-                  }
-                  break;
-               case 'g':   // Source object's GUID
-                  output.append(m_guid);
-                  break;
-               case 'i':   // Source object identifier in form 0xhhhhhhhh
-                  output.append(m_id, _T("0x%08X"));
-                  break;
-               case 'I':   // Source object identifier in decimal form
-                  output.append(m_id);
-                  break;
-               case 'K':   // Associated alarm key
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getKey());
-                  }
-                  else if (event != nullptr)
-                  {
-                     output.append(event->getLastAlarmKey());
-                  }
-                  break;
-               case 'L':   // Object alias
-                  output.append(getAlias().cstr());
-                  break;
-               case 'm':
-                  if (loadEvent())
-                  {
-                     output.append(event->getMessage());
-                  }
-                  break;
-               case 'M':   // Custom message (usually set by matching script in EPP)
-                  if (loadEvent())
-                  {
-                     output.append(event->getCustomMessage());
-                  }
-                  break;
-               case 'n':   // Name of event source
-                  output.append((objectName != nullptr) ? objectName : getName());
-                  break;
-               case 'N':   // Event name
-                  if (loadEvent())
-                  {
-                     output.append(event->getName());
-                  }
-                  break;
-               case 's':   // Severity code
-                  if (loadEvent())
-                  {
-                     output.append(static_cast<int32_t>(event->getSeverity()));
-                  }
-                  break;
-               case 'S':   // Severity text
-                  if (loadEvent())
-                  {
-                     output.append(GetStatusAsText(event->getSeverity(), false));
-                  }
-                  break;
-               case 't':   // Event's timestamp
-                  output.append(FormatTimestamp((loadEvent()) ? event->getTimestamp() : time(nullptr), buffer));
-                  break;
-               case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
-                  break;
-               case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
-                  if (getPrimaryIpAddress().getFamily() == AF_INET6)
-                  {
-                     output.append(_T('['));
-                     output.append(getPrimaryIpAddress().toString(buffer));
-                     output.append(_T(']'));
-                  }
-                  else
-                  {
-                     output.append(getPrimaryIpAddress().toString(buffer));
-                  }
-                  break;
-               case 'U':   // User name
-                  output.append(userName);
-                  break;
-               case 'v':   // NetXMS server version
-                  output.append(NETXMS_VERSION_STRING);
-                  break;
-               case 'y': // alarm state
-                  if (alarm != nullptr)
-                  {
-                     output.append(static_cast<int32_t>(alarm->getState()));
-                  }
-                  break;
-               case 'Y': // alarm ID
-                  if (alarm != nullptr)
-                  {
-                     output.append(alarm->getAlarmId());
-                  }
-                  break;
-               case 'z':   // Zone UIN
+               output.append(event->getLastAlarmMessage());
+            }
+            break;
+         case 'c':   // Event code
+            output.append((loadEvent()) ? event->getCode() : 0);
+            break;
+         case 'C':   // Object comments
+            output.append(getComments().cstr());
+            break;
+         case 'd':   // DCI description
+            if (findDCI())
+               output.append(dci->getDescription());
+            break;
+         case 'D':   // DCI comments
+            if (findDCI())
+               output.append(dci->getComments());
+            break;
+         case 'E':   // Concatenated event tags
+            if (loadEvent())
+            {
+               event->getTagsAsList(&output);
+            }
+            break;
+         case 'g':   // Source object's GUID
+            output.append(m_guid);
+            break;
+         case 'i':   // Source object identifier in form 0xhhhhhhhh
+            output.append(m_id, _T("0x%08X"));
+            break;
+         case 'I':   // Source object identifier in decimal form
+            output.append(m_id);
+            break;
+         case 'K':   // Associated alarm key
+            if (alarm != nullptr)
+            {
+               output.append(alarm->getKey());
+            }
+            else if (event != nullptr)
+            {
+               output.append(event->getLastAlarmKey());
+            }
+            break;
+         case 'L':   // Object alias
+            output.append(getAlias().cstr());
+            break;
+         case 'm':
+            if (loadEvent())
+            {
+               output.append(event->getMessage());
+            }
+            break;
+         case 'M':   // Custom message (usually set by matching script in EPP)
+            if (loadEvent())
+            {
+               output.append(event->getCustomMessage());
+            }
+            break;
+         case 'n':   // Name of event source
+            output.append((objectName != nullptr) ? objectName : getName());
+            break;
+         case 'N':   // Event name
+            if (loadEvent())
+            {
+               output.append(event->getName());
+            }
+            break;
+         case 's':   // Severity code
+            if (loadEvent())
+            {
+               output.append(static_cast<int32_t>(event->getSeverity()));
+            }
+            break;
+         case 'S':   // Severity text
+            if (loadEvent())
+            {
+               output.append(GetStatusAsText(event->getSeverity(), false));
+            }
+            break;
+         case 't':   // Event's timestamp
+            output.append(FormatTimestamp((loadEvent()) ? event->getTimestamp() : time(nullptr), buffer));
+            break;
+         case 'T':   // Event's timestamp as number of seconds since epoch
+            output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
+            break;
+         case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
+            if (getPrimaryIpAddress().getFamily() == AF_INET6)
+            {
+               output.append(_T('['));
+               output.append(getPrimaryIpAddress().toString(buffer));
+               output.append(_T(']'));
+            }
+            else
+            {
+               output.append(getPrimaryIpAddress().toString(buffer));
+            }
+            break;
+         case 'U':   // User name
+            output.append(userName);
+            break;
+         case 'v':   // NetXMS server version
+            output.append(NETXMS_VERSION_STRING);
+            break;
+         case 'y': // alarm state
+            if (alarm != nullptr)
+            {
+               output.append(static_cast<int32_t>(alarm->getState()));
+            }
+            break;
+         case 'Y': // alarm ID
+            if (alarm != nullptr)
+            {
+               output.append(alarm->getAlarmId());
+            }
+            break;
+         case 'z':   // Zone UIN
+            output.append(getZoneUIN());
+            break;
+         case 'Z':   // Zone name
+            if (IsZoningEnabled())
+            {
+               shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
+               if (zone != nullptr)
+               {
+                  output.append(zone->getName());
+               }
+               else
+               {
+                  output.append(_T('['));
                   output.append(getZoneUIN());
-                  break;
-               case 'Z':   // Zone name
-                  if (IsZoningEnabled())
-                  {
-                     shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
-                     if (zone != nullptr)
-                     {
-                        output.append(zone->getName());
-                     }
-                     else
-                     {
-                        output.append(_T('['));
-                        output.append(getZoneUIN());
-                        output.append(_T(']'));
-                     }
-                  }
-                  break;
-               case '0':
-               case '1':
-               case '2':
-               case '3':
-               case '4':
-               case '5':
-               case '6':
-               case '7':
-               case '8':
-               case '9':
-                  buffer[0] = *curr;
-                  if (isdigit(*(curr + 1)))
-                  {
-                     curr++;
-                     buffer[1] = *curr;
-                     buffer[2] = 0;
-                  }
-                  else
-                  {
-                     buffer[1] = 0;
-                  }
-                  if (loadEvent())
-                     output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
-                  else if (args != nullptr)
-                     output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
-                  break;
-               case '[':   // Script
-                  for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating ]
-                  {
-                     curr--;
-                  }
-                  else
-                  {
-                     buffer[i] = 0;
-                     loadEvent();
-                     expandScriptMacro(buffer, alarm, event, dci, &output);
-                  }
-                  break;
-               case '{':   // Custom attribute
-                  for(i = 0, curr++; (*curr != '}') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating }
-                  {
-                     curr--;
-                  }
-                  else
-                  {
-                     buffer[i] = 0;
-                     TCHAR *defaultValue = _tcschr(buffer, _T(':'));
-                     if (defaultValue != nullptr)
-                     {
-                        *defaultValue = 0;
-                        defaultValue++;
-                     }
-                     Trim(buffer);
-                     TCHAR *v = nullptr;
-                     if (instance != nullptr)
-                     {
-                        TCHAR tmp[256];
-                        _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
-                        tmp[255] = 0;
-                        v = getCustomAttributeCopy(tmp);
-                     }
-                     else if (loadEvent())
-                     {
-                        const StringList *names = event->getParameterNames();
-                        int index = names->indexOfIgnoreCase(_T("instance"));
-                        if (index != -1)
-                        {
-                           TCHAR tmp[256];
-                           _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
-                           tmp[255] = 0;
-                           v = getCustomAttributeCopy(tmp);
-                        }
-                     }
-                     if (v == nullptr)
-                        v = getCustomAttributeCopy(buffer);
-                     if (v != nullptr)
-                        output.appendPreallocated(v);
-                     else if (defaultValue != nullptr)
-                        output.append(defaultValue);
-                  }
-                  break;
-               case '(':   // Input field
-                  for(i = 0, curr++; (*curr != ')') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating )
-                  {
-                     curr--;
-                  }
-                  else if (inputFields != nullptr)
-                  {
-                     buffer[i] = 0;
-                     Trim(buffer);
-                     output.append(inputFields->get(buffer));
-                  }
-                  break;
-               case '<':   // Named parameter
-                  for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
-                  {
-                     buffer[i++] = *curr;
-                  }
-                  if (*curr == 0)  // no terminating >
-                  {
-                     curr--;
-                  }
-                  else if (loadEvent())
-                  {
-                     buffer[i] = 0;
-                     TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
-                     StringList *list = nullptr;
-                     if (buffer[0] == '{' && modifierEnd != nullptr)
-                     {
-                        *modifierEnd = 0;
-                        list = new StringList(String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true));
-                        memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
-                     }
-                     const TCHAR *defaultValue = _T("");
-                     TCHAR *tmp = _tcschr(buffer, _T(':'));
-                     if (tmp != nullptr)
-                     {
-                        *tmp = 0;
-                        defaultValue = tmp + 1;
-                     }
-                     Trim(buffer);
-
-                     const StringList *names = event->getParameterNames();
-                     shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
-                     if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
-                     {
-                        shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
-                        if (dcObject != nullptr)
-                           formatDci = dcObject->createDescriptor();
-                        else
-                           nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
-                     }
-                     if ((list != nullptr) && (formatDci != nullptr))
-                     {
-                        output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
-                     }
-                     else
-                     {
-                        output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
-                     }
-
-                     delete list;
-                  }
-                  break;
-               default:    // All other characters are invalid, ignore
-                  break;
+                  output.append(_T(']'));
+               }
             }
             break;
-         case '\\':  // Escape character
-            curr++;
-            if (*curr == 0)
+         case '0':
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            buffer[0] = *curr;
+            if (isdigit(*(curr + 1)))
+            {
+               curr++;
+               buffer[1] = *curr;
+               buffer[2] = 0;
+            }
+            else
+            {
+               buffer[1] = 0;
+            }
+            if (loadEvent())
+               output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
+            else if (args != nullptr)
+               output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
+            break;
+         case '[':   // Script
+            for(i = 0, curr++; (*curr != ']') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating ]
             {
                curr--;
-               break;   // Abnormal loop termination
             }
-            switch(*curr)
+            else
             {
-               case 't':
-                  output.append(_T('\t'));
-                  break;
-               case 'n':
-                  output.append(_T("\r\n"));
-                  break;
-               default:
-                  output.append(*curr);
-                  break;
+               buffer[i] = 0;
+               loadEvent();
+               expandScriptMacro(buffer, alarm, event, dci, &output);
             }
             break;
-         default:
-            output.append(*curr);
+         case '{':   // Custom attribute
+            for(i = 0, curr++; (*curr != '}') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating }
+            {
+               curr--;
+            }
+            else
+            {
+               buffer[i] = 0;
+               TCHAR *defaultValue = _tcschr(buffer, _T(':'));
+               if (defaultValue != nullptr)
+               {
+                  *defaultValue = 0;
+                  defaultValue++;
+               }
+               Trim(buffer);
+               TCHAR *v = nullptr;
+               if (instance != nullptr)
+               {
+                  TCHAR tmp[256];
+                  _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
+                  tmp[255] = 0;
+                  v = getCustomAttributeCopy(tmp);
+               }
+               else if (loadEvent())
+               {
+                  const StringList *names = event->getParameterNames();
+                  int index = names->indexOfIgnoreCase(_T("instance"));
+                  if (index != -1)
+                  {
+                     TCHAR tmp[256];
+                     _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
+                     tmp[255] = 0;
+                     v = getCustomAttributeCopy(tmp);
+                  }
+               }
+               if (v == nullptr)
+                  v = getCustomAttributeCopy(buffer);
+               if (v != nullptr)
+                  output.appendPreallocated(v);
+               else if (defaultValue != nullptr)
+                  output.append(defaultValue);
+            }
+            break;
+         case '(':   // Special macros and input fields
+            for(i = 0, curr++; (*curr != ')') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating )
+            {
+               curr--;
+            }
+            else
+            {
+               buffer[i] = 0;
+               Trim(buffer);
+
+               // Built-in special macros
+               if (!wcscmp(buffer, L"nl"))
+               {
+                  output.append(L"\r\n");
+               }
+               else if (!wcscmp(buffer, L"cr"))
+               {
+                  output.append(L'\r');
+               }
+               else if (!wcscmp(buffer, L"lf"))
+               {
+                  output.append(L'\n');
+               }
+               else if (!wcscmp(buffer, L"tab"))
+               {
+                  output.append(L'\t');
+               }
+               else if (!wcsncmp(buffer, L"in:", 3))
+               {
+                  // Input field: %(in:fieldname)
+                  if (inputFields != nullptr)
+                  {
+                     output.append(inputFields->get(buffer + 3));
+                  }
+               }
+            }
+            break;
+         case '<':   // Named parameter
+            for(i = 0, curr++; (*curr != '>') && (*curr != 0) && (i < 255); curr++)
+            {
+               buffer[i++] = *curr;
+            }
+            if (*curr == 0)  // no terminating >
+            {
+               curr--;
+            }
+            else if (loadEvent())
+            {
+               buffer[i] = 0;
+               TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
+               StringList *list = nullptr;
+               if (buffer[0] == '{' && modifierEnd != nullptr)
+               {
+                  *modifierEnd = 0;
+                  list = new StringList(String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true));
+                  memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
+               }
+               const TCHAR *defaultValue = _T("");
+               TCHAR *tmp = _tcschr(buffer, _T(':'));
+               if (tmp != nullptr)
+               {
+                  *tmp = 0;
+                  defaultValue = tmp + 1;
+               }
+               Trim(buffer);
+
+               const StringList *names = event->getParameterNames();
+               shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
+               if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
+               {
+                  shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
+                  if (dcObject != nullptr)
+                     formatDci = dcObject->createDescriptor();
+                  else
+                     nxlog_debug_tag(_T("obj.macro"), 5, _T("DCI ID is set to %u for event %s [") UINT64_FMT _T("] but no such DCI exists"), event->getDciId(), event->getName(), event->getId());
+               }
+               if ((list != nullptr) && (formatDci != nullptr))
+               {
+                  output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
+               }
+               else
+               {
+                  output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
+               }
+
+               delete list;
+            }
+            break;
+         default:    // All other characters are invalid, ignore
             break;
       }
    }
@@ -3179,7 +3498,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 }
 
 /**
- * Expand script macro (intended to be called from expandText)
+ * Expand script macro
  */
 void NetObj::expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
 {
@@ -3474,6 +3793,139 @@ void NetObj::setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSessio
    }
 
    setResponsibleUsers(responsibleUsers, session);
+}
+
+/**
+ * Set port stop list from NXCP message
+ */
+void NetObj::setPortStopListFromMessage(const NXCPMessage& msg)
+{
+   int count = msg.getFieldAsInt32(VID_PORT_STOP_COUNT);
+
+   // Empty list equals null list
+   StructArray<PortStopEntry> *newList = nullptr;
+   if (count > 0)
+   {
+      newList = new StructArray<PortStopEntry>(count);
+      uint32_t fieldId = VID_PORT_STOP_LIST_BASE;
+      for (int i = 0; i < count; i++)
+      {
+         PortStopEntry *e = newList->addPlaceholder();
+         e->port = static_cast<uint16_t>(msg.getFieldAsUInt32(fieldId++));
+         e->protocol = static_cast<char>(msg.getFieldAsInt16(fieldId++));
+         fieldId += 8;
+      }
+   }
+
+   lockPortStopList();
+   delete m_portStopList;
+   m_portStopList = newList;
+   unlockPortStopList();
+
+   markAsModified(MODIFY_PORT_STOP_LIST);
+}
+
+/**
+ * Check if object has its own port stop list configured
+ */
+bool NetObj::hasOwnPortStopList() const
+{
+   lockPortStopList();
+   bool hasOwn = (m_portStopList != nullptr);
+   unlockPortStopList();
+   return hasOwn;
+}
+
+/**
+ * Get effective port stop list with inheritance
+ * If object has its own list, use it. Otherwise, merge from all parents up to Zone.
+ */
+void NetObj::getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts) const
+{
+   // If this object has its own list, use it exclusively (stops inheritance)
+   lockPortStopList();
+   if (m_portStopList != nullptr)
+   {
+      for (int i = 0; i < m_portStopList->size(); i++)
+      {
+         PortStopEntry *e = m_portStopList->get(i);
+         if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+            tcpPorts->add(e->port);
+         if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+            udpPorts->add(e->port);
+      }
+      unlockPortStopList();
+      return;
+   }
+   unlockPortStopList();
+
+   // Collect from parents
+   HashSet<uint32_t> visited;
+   visited.put(m_id);
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = getParents();
+   for (int i = 0; i < parents->size(); i++)
+   {
+      NetObj *parent = parents->get(i);
+      int objClass = parent->getObjectClass();
+      if ((objClass != OBJECT_CONTAINER) && (objClass != OBJECT_COLLECTOR) &&
+          (objClass != OBJECT_CLUSTER) && (objClass != OBJECT_SUBNET))
+         continue;
+      if (visited.contains(parent->getId()))
+         continue;
+      visited.put(parent->getId());
+
+      // Get ports from this parent (only if it has its own list)
+      parent->lockPortStopList();
+      if (parent->m_portStopList != nullptr)
+      {
+         for (int j = 0; j < parent->m_portStopList->size(); j++)
+         {
+            PortStopEntry *e = parent->m_portStopList->get(j);
+            if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+               tcpPorts->add(e->port);
+            if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+               udpPorts->add(e->port);
+         }
+      }
+      parent->unlockPortStopList();
+   }
+
+   // Add zone-level list
+   int32_t zoneUIN = getZoneUIN();
+   if (zoneUIN != 0)
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if ((zone != nullptr) && !visited.contains(zone->getId()))
+      {
+         zone->lockPortStopList();
+         if (zone->m_portStopList != nullptr)
+         {
+            for (int i = 0; i < zone->m_portStopList->size(); i++)
+            {
+               PortStopEntry *e = zone->m_portStopList->get(i);
+               if ((e->protocol == 'T' || e->protocol == 'B') && (tcpPorts != nullptr))
+                  tcpPorts->add(e->port);
+               if ((e->protocol == 'U' || e->protocol == 'B') && (udpPorts != nullptr))
+                  udpPorts->add(e->port);
+            }
+         }
+         zone->unlockPortStopList();
+      }
+   }
+}
+
+/**
+ * Check if specific port is blocked for this object (with inheritance)
+ */
+bool NetObj::isPortBlocked(uint16_t port, bool tcp) const
+{
+   IntegerArray<uint16_t> ports;
+   if (tcp)
+      getEffectivePortStopList(&ports, nullptr);
+   else
+      getEffectivePortStopList(nullptr, &ports);
+   return ports.contains(port);
 }
 
 /**

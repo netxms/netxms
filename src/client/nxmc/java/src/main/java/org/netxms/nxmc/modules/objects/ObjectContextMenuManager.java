@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardBase;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -72,7 +72,9 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
-import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
+import org.netxms.nxmc.modules.dashboards.AssignDashboardAction;
+import org.netxms.nxmc.modules.dashboards.CloneAsDashboardAction;
+import org.netxms.nxmc.modules.dashboards.CloneAsDashboardTemplateAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
 import org.netxms.nxmc.modules.filemanager.UploadFileToAgent;
@@ -81,6 +83,7 @@ import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeInterfaceExpectedStateAction;
+import org.netxms.nxmc.modules.objects.actions.ChangeMacAddressAction;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.ClearInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
@@ -89,14 +92,18 @@ import org.netxms.nxmc.modules.objects.actions.EnableNetworkMapPublicAccess;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
+import org.netxms.nxmc.modules.objects.dialogs.DecommissionNodeDialog;
+import org.netxms.nxmc.modules.objects.dialogs.EffectiveRightsDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.TemplateDeleteDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -118,13 +125,16 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnmanage;
    private Action actionRename;
    private Action actionDelete;
+   private Action actionDecommission;
    private Action actionDeployPackage;
    private Action actionProperties;
+   private Action actionShowEffectiveRights;
    private Action actionTakeScreenshot;
    private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
-   private Action actionOpenMibExprorer;   
+   private Action actionOpenMibExprorer;
+   private Action actionOpenAgentExplorer;
    private Action actionBind;
    private Action actionUnbind;
    private Action actionBindTo;
@@ -151,14 +161,17 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionUnlinkAssetFromObject;
    private ObjectAction<?> actionLinkObjectToAsset;
    private ObjectAction<?> actionUnlinkObjectFromAsset;
-   private ObjectAction<?> actionCloneDashboard;
+   private ObjectAction<?> actionCloneAsDashboard;
+   private ObjectAction<?> actionCloneAsDashboardTemplate;
    private ObjectAction<?> actionChangeZone;
    private ObjectAction<?> actionSendUserAgentNotification;
    private ObjectAction<?> actionExportDashboard;
    private ObjectAction<?> actionImportDashboard;
+   private ObjectAction<?> actionAssignDashboard;
    private ObjectAction<?> actionCloneNetworkMap;
    private ObjectAction<?> actionNetworkMapPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
+   private ObjectAction<?> actionChangeMacAddress;
    private ObjectAction<?> actionUploadFileToAgent;
    private ObjectAction<?> actionSetInterfacePeer;
    private ObjectAction<?> actionClearInterfacePeer;
@@ -248,11 +261,27 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionDecommission = new Action(i18n.tr("Decom&mission...")) {
+         @Override
+         public void run()
+         {
+            decommissionNode();
+         }
+      };
+
       actionProperties = new Action(i18n.tr("&Properties..."), SharedIcons.PROPERTIES) {
          @Override
          public void run()
          {
             ObjectPropertiesManager.openObjectPropertiesDialog(getObjectFromSelection(), getShell(), view);
+         }
+      };
+
+      actionShowEffectiveRights = new Action(i18n.tr("Show effective rights...")) {
+         @Override
+         public void run()
+         {
+            showEffectiveRights();
          }
       };
 
@@ -293,6 +322,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openMibExplorer();
+         }
+      };
+
+      actionOpenAgentExplorer = new Action(i18n.tr("A&gent Explorer"), ResourceManager.getImageDescriptor("icons/object-views/agent-explorer.png")) {
+         @Override
+         public void run()
+         {
+            openAgentExplorer();
          }
       };
 
@@ -463,14 +500,17 @@ public class ObjectContextMenuManager extends MenuManager
       actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
       actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
-      actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
+      actionCloneAsDashboard = new CloneAsDashboardAction(viewPlacement, selectionProvider);
+      actionCloneAsDashboardTemplate = new CloneAsDashboardTemplateAction(viewPlacement, selectionProvider);
       actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
+      actionAssignDashboard = new AssignDashboardAction(viewPlacement, selectionProvider);
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
       actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
+      actionChangeMacAddress = new ChangeMacAddressAction(viewPlacement, selectionProvider);
       actionSetInterfacePeer = new SetInterfacePeerInformation(viewPlacement, selectionProvider);
       actionClearInterfacePeer = new ClearInterfacePeerInformation(viewPlacement, selectionProvider);
       actionUploadFileToAgent = new UploadFileToAgent(viewPlacement, selectionProvider);
@@ -539,9 +579,10 @@ public class ObjectContextMenuManager extends MenuManager
                add(actionUnlinkObjectFromAsset);
             add(new Separator());            
          }
-         if (object instanceof Dashboard)
+         if (object instanceof DashboardBase)
          {
-            add(actionCloneDashboard);
+            add(actionCloneAsDashboard);
+            add(actionCloneAsDashboardTemplate);
             add(actionExportDashboard);
             add(new Separator());           
          }
@@ -571,7 +612,7 @@ public class ObjectContextMenuManager extends MenuManager
             add(new Separator());
          }         
       }
-      
+
       if (isBindToMenuAllowed(selection))
       {
          add(actionBindTo);
@@ -585,6 +626,12 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionAddToCircuit);
          if (singleObject)
             add(actionRemoveFromCircuit);
+         addObjectMoveActions(selection);
+         add(new Separator());
+      }
+      else if (isDashboardOnlySelection(selection))
+      {
+         add(actionAssignDashboard);
          addObjectMoveActions(selection);
          add(new Separator());
       }
@@ -620,6 +667,10 @@ public class ObjectContextMenuManager extends MenuManager
       if (!containsRootObject(selection))
       {
          add(actionDelete);
+      }
+      if (singleObject && (getObjectFromSelection() instanceof Node))
+      {
+         add(actionDecommission);
       }
       if (singleObject && isChangeZoneMenuAllowed(selection))
       {
@@ -670,7 +721,7 @@ public class ObjectContextMenuManager extends MenuManager
       }
       if (nodesWithAgent)
          add(actionDeployPackage);
-      
+
       if (actionUploadFileToAgent.isValidForSelection(selection))
       {
          add(actionUploadFileToAgent);
@@ -695,6 +746,10 @@ public class ObjectContextMenuManager extends MenuManager
             if (((Node)object).hasSnmpAgent())
             {
                add(actionOpenMibExprorer);
+            }
+            if (((Node)object).hasAgent())
+            {
+               add(actionOpenAgentExplorer);
             }
             if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
             {
@@ -787,7 +842,12 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(actionClearInterfacePeer);
       }
-      
+
+      if (actionChangeMacAddress.isValidForSelection(selection))
+      {
+         add(actionChangeMacAddress);
+      }
+
       if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
          add(actionCreateInterfaceDCI);
@@ -813,6 +873,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (singleObject)
       {
          add(new Separator());
+         add(actionShowEffectiveRights);
          add(actionProperties);
       }
    }
@@ -831,7 +892,8 @@ public class ObjectContextMenuManager extends MenuManager
             return false;
          int objectClass = ((AbstractObject)o).getObjectClass();
          if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) ||
-             (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
+             (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) || 
+             (objectClass == AbstractObject.OBJECT_DASHBOARDTEMPLATE) ||
              (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
              (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) ||
              (objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT) ||
@@ -912,6 +974,22 @@ public class ObjectContextMenuManager extends MenuManager
       for(Object o : selection.toList())
       {
          if (!(o instanceof Interface))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if current selection contains only dashboards.
+    *
+    * @param selection current object selection
+    * @return true if only dashboards are selected
+    */
+   private static boolean isDashboardOnlySelection(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof DashboardBase))
             return false;
       }
       return true;
@@ -1086,12 +1164,59 @@ public class ObjectContextMenuManager extends MenuManager
     */
    private void deleteObject()
    {
-      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();  
-      String question = (objects.length == 1) ?
-         String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName()) :
-         String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
-      if (!MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question))
-         return;
+      final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();
+
+      // Check if deleting templates or clusters with member nodes
+      boolean hasTemplates = false;
+      boolean hasClustersWithMembers = false;
+      for(Object obj : objects)
+      {
+         if (obj instanceof Template)
+         {
+            hasTemplates = true;
+         }
+         else if (obj instanceof Cluster)
+         {
+            Cluster cluster = (Cluster)obj;
+            for(AbstractObject child : cluster.getChildrenAsArray())
+            {
+               if (child instanceof DataCollectionTarget)
+               {
+                  hasClustersWithMembers = true;
+                  break;
+               }
+            }
+         }
+         if (hasTemplates && hasClustersWithMembers)
+            break;
+      }
+
+      final boolean removeDci;
+      if (hasTemplates)
+      {
+         String templateName = (objects.length == 1) ? ((AbstractObject)objects[0]).getObjectName() : i18n.tr("multiple templates");
+         TemplateDeleteDialog dlg = new TemplateDeleteDialog(view.getWindow().getShell(), templateName);
+         if (dlg.open() != Window.OK)
+            return;
+         removeDci = dlg.isRemoveDci();
+      }
+      else if (hasClustersWithMembers)
+      {
+         String clusterName = (objects.length == 1) ? ((AbstractObject)objects[0]).getObjectName() : i18n.tr("multiple clusters");
+         TemplateDeleteDialog dlg = new TemplateDeleteDialog(view.getWindow().getShell(), clusterName, true);
+         if (dlg.open() != Window.OK)
+            return;
+         removeDci = dlg.isRemoveDci();
+      }
+      else
+      {
+         String question = (objects.length == 1) ?
+            String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName()) :
+            String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
+         if (!MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question))
+            return;
+         removeDci = true;
+      }
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Delete objects"), view) {
@@ -1099,13 +1224,80 @@ public class ObjectContextMenuManager extends MenuManager
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(int i = 0; i < objects.length; i++)
-               session.deleteObject(((AbstractObject)objects[i]).getObjectId());
+            {
+               AbstractObject obj = (AbstractObject)objects[i];
+               if ((obj instanceof Template) || (obj instanceof Cluster))
+                  session.deleteObject(obj.getObjectId(), removeDci);
+               else
+                  session.deleteObject(obj.getObjectId());
+            }
          }
 
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot delete object");
+         }
+      }.start();
+   }
+
+   /**
+    * Show effective rights dialog
+    */
+   private void showEffectiveRights()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (object == null)
+         return;
+
+      new EffectiveRightsDialog(getShell(), object).open();
+   }
+
+   /**
+    * Decommission selected node
+    */
+   private void decommissionNode()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      final Node node = (Node)object;
+      final NXCSession session = Registry.getSession();
+
+      // Get default expiration time from server config
+      int defaultDays = 30;
+      try
+      {
+         String value = session.getPublicServerVariable("Objects.Nodes.DefaultDecommissionExpirationTime");
+         if (value != null && !value.isEmpty())
+         {
+            defaultDays = Integer.parseInt(value);
+         }
+      }
+      catch(Exception e)
+      {
+         // Use default value
+      }
+
+      DecommissionNodeDialog dlg = new DecommissionNodeDialog(getShell(), defaultDays);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final java.util.Date expirationTime = dlg.getExpirationTime();
+      final boolean clearIpAddresses = dlg.isClearIpAddresses();
+
+      new Job(i18n.tr("Decommission node"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.decommissionNode(node.getObjectId(), expirationTime, clearIpAddresses);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot decommission node");
          }
       }.start();
    }
@@ -1167,6 +1359,16 @@ public class ObjectContextMenuManager extends MenuManager
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new MibExplorer(object.getObjectId(), contextId, false));
+   }
+
+   /**
+    * Open Agent explorer
+    */
+   private void openAgentExplorer()
+   {
+      AbstractObject object = getObjectFromSelection();
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new AgentExplorer(object.getObjectId(), contextId, false));
    }
 
    /**

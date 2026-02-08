@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -770,7 +770,8 @@ void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TC
 /**
  * Add list
  */
-void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg,
+         const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*))
 {
    // Search for existing enum
    NETXMS_SUBAGENT_LIST *p = nullptr;
@@ -785,15 +786,17 @@ void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, Stri
       // Replace existing handler and arg
       p->handler = handler;
       p->arg = arg;
+      _tcslcpy(p->description, CHECK_NULL_EX(description), MAX_DB_STRING);
       p->filter = filter;
    }
    else
    {
       // Add new enum
       NETXMS_SUBAGENT_LIST np;
-      _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
+      _tcslcpy(np.name, name, MAX_PARAM_NAME);
       np.handler = handler;
       np.arg = arg;
+      _tcslcpy(np.description, CHECK_NULL_EX(description), MAX_DB_STRING);
       np.filter = filter;
       s_lists.add(np);
    }
@@ -861,7 +864,7 @@ bool AddExternalMetric(TCHAR *config, bool isList)
 	TCHAR *arg = MemCopyString(cmdLine);
    if (isList)
    {
-      AddList(config, H_ExternalList, arg, nullptr);
+      AddList(config, H_ExternalList, arg, nullptr, nullptr);
    }
    else
    {
@@ -927,10 +930,20 @@ bool AddExternalTable(TCHAR *config)
       }
    }
 
+   TCHAR dataType[16] = _T("");
+   ExtractNamedOptionValue(options, _T("defaultColumnDataType"), dataType, 16);
+
    ExternalTableDefinition *td = new ExternalTableDefinition();
    td->separator = separator[0];
+   td->mergeSeparators = ExtractNamedOptionValueAsBool(options, _T("mergeSeparators"), false);
    td->cmdLine = MemCopyString(cmdLine);
    td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
+   if (dataType[0] != 0)
+   {
+      td->defaultColumnDataType = TextToDataType(dataType);
+      if (td->defaultColumnDataType == -1)
+         td->defaultColumnDataType = DCI_DT_INT;
+   }
    if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
    {
       uint32_t pollingInterval = ExtractNamedOptionValueAsUInt(options, _T("pollingInterval"), 60);
@@ -973,6 +986,12 @@ bool AddExternalTable(ConfigEntry *config)
    }
    td->separator = separator[0];
    MemFree(separator);
+
+   td->defaultColumnDataType = TextToDataType(config->getSubEntryValue(_T("DefaultColumnDataType"), 0, _T("int32")));
+   if (td->defaultColumnDataType == -1)
+      td->defaultColumnDataType = DCI_DT_INT;
+
+   td->mergeSeparators = config->getSubEntryValueAsBoolean(_T("MergeSeparators"), 0, false);
 
    td->cmdLine = MemCopyString(config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")));
    td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
@@ -1041,8 +1060,9 @@ bool AddExternalStructuredDataProvider(ConfigEntry *config)
          _tcscpy(tmp, name);
          _tcscat(tmp, _T(".dataType"));
          int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
+         String cleanedName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
 
-         metricDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, (dataType == -1) ? DCI_DT_STRING : dataType));
+         metricDefenitions->set(cleanedName, new StructuredExtractorParameterDefinition(e->getValue(), description, (dataType == -1) ? DCI_DT_STRING : dataType));
       }
    }
 
@@ -1063,7 +1083,7 @@ bool AddExternalStructuredDataProvider(ConfigEntry *config)
          TCHAR tmp[512];
          _tcscpy(tmp, name);
          _tcscat(tmp, _T(".description"));
-         const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+         const TCHAR *description = listRoot->getSubEntryValue(tmp, 0 , _T(""));
 
          listDefenitions->set(e->getName(), new StructuredExtractorParameterDefinition(e->getValue(), description, DCI_DT_STRING));
       }
@@ -1468,10 +1488,12 @@ void GetParameterList(NXCPMessage *msg)
    count = static_cast<uint32_t>(s_lists.size());
    for(i = 0, fieldId = VID_ENUM_LIST_BASE; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, s_lists.get(i)->name);
+      NETXMS_SUBAGENT_LIST *l = s_lists.get(i);
+      msg->setField(fieldId++, l->name);
+      msg->setField(fieldId++, l->description);
    }
    ListListsFromExtProviders(msg, &fieldId, &count);
-	ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 
 	// Tables
@@ -1516,10 +1538,15 @@ void GetEnumList(NXCPMessage *msg)
    uint32_t fieldId = VID_ENUM_LIST_BASE;
    for(int i = 0; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, s_lists.get(i)->name);
+      NETXMS_SUBAGENT_LIST *l = s_lists.get(i);
+      msg->setField(fieldId++, l->name);
+      msg->setField(fieldId++, l->description);
+      fieldId += 8;
    }
 
    uint32_t count = static_cast<uint32_t>(s_lists.size());
-	ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtProviders(msg, &fieldId, &count);
+   ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
+   msg->setField(VID_TABLE_EXTENDED_FORMAT, true);
 }

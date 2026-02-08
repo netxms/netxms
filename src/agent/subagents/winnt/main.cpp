@@ -66,6 +66,9 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_RegistryKeyList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_RegistryValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_RegistryValueList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 uint32_t H_ServiceControl(const shared_ptr<ActionExecutionContext>& context);
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -85,6 +88,7 @@ uint32_t H_TerminateUserSession(const shared_ptr<ActionExecutionContext>& contex
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_UsbConnectedCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -268,6 +272,10 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Net.Interface.MTU(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
    { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_ERRORS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.InDrops(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_IN_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.InDrops64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_IN_DROPS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OutDrops(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_DROPS, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
+   { _T("Net.Interface.OutDrops64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_DROPS_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsIn64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
@@ -408,13 +416,16 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.OS.Version"), H_SystemVersionInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
    { _T("System.ProcessCount"), H_ProcCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ _T("System.ServiceState(*)"), H_ServiceState, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
+   { _T("System.Registry.Value(*)"), H_RegistryValue, nullptr, DCI_DT_STRING, _T("Value of registry key {instance}") },
+   { _T("System.ServiceState(*)"), H_ServiceState, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
 	{ _T("System.ThreadCount"), H_ThreadCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
    { _T("System.Uname"), H_SystemUname, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { _T("System.Update.LastDetectTime"), H_SysUpdateTime, _T("Detect"), DCI_DT_INT64, _T("System update: last detect time") },
    { _T("System.Update.LastDownloadTime"), H_SysUpdateTime, _T("Download"), DCI_DT_INT64, _T("System update: last download time") },
    { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") },
    { _T("System.Uptime"), H_Uptime, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
+
+   { _T("USB.ConnectedCount(*)"), H_UsbConnectedCount, nullptr, DCI_DT_INT, _T("Number of connected USB devices matching VID/PID") },
 
    { _T("WindowsFirewall.CurrentProfile"), H_WindowsFirewallCurrentProfile, nullptr, DCI_DT_STRING, _T("Windows firewall: current profile") },
    { _T("WindowsFirewall.State"), H_WindowsFirewallState, nullptr, DCI_DT_INT, _T("Windows firewall: state of current profile") },
@@ -440,6 +451,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("System.IO.Devices"), H_IoDeviceList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
    { _T("System.ProcessList"), H_ProcessList, _T("1") },
+   { _T("System.Registry.Keys(*)"), H_RegistryKeyList, nullptr },
+   { _T("System.Registry.Values(*)"), H_RegistryValueList, nullptr },
    { _T("System.Services"), H_ServiceList, nullptr },
 	{ _T("System.WindowStations"), H_WindowStations, nullptr }
 };

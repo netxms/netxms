@@ -106,7 +106,7 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), AutoBindTarget(this), P
    m_linkStylingScript = nullptr;
    m_linkStylingScriptSource = nullptr;
    setLinkStylingScript(src.m_linkStylingScriptSource);
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_updateFailed = false;
    m_displayPriority = src.m_displayPriority;
    setCreationTime();
@@ -145,7 +145,7 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_linkStylingScriptSource = nullptr;
    m_linkStylingScript = nullptr;
    m_updateFailed = false;
-   m_isHidden = true;
+   m_isUnpublished = true;
    m_displayPriority = 0;
    setCreationTime();
 }
@@ -968,13 +968,28 @@ void NetworkMap::updateObjectLocation(const NXCPMessage& msg)
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < numElements; i++)
       {
-         NetworkMapElement newElement(msg, fieldId);
+         uint32_t elementId = msg.getFieldAsUInt32(fieldId);
+         int32_t elementType = msg.getFieldAsInt16(fieldId + 1);
+         int32_t posX = msg.getFieldAsInt32(fieldId + 2);
+         int32_t posY = msg.getFieldAsInt32(fieldId + 3);
          for(int j = 0; j < m_mapContent.m_elements.size(); j++)
          {
             NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
-            if (oldElement->getId() == newElement.getId())
+            if (oldElement->getId() == elementId)
             {
-               oldElement->setPosition(newElement.getPosX(), newElement.getPosY());
+               oldElement->setPosition(posX, posY);
+               if ((elementType == MAP_ELEMENT_OBJECT) && (oldElement->getType() == MAP_ELEMENT_OBJECT))
+               {
+                  uint32_t width = msg.getFieldAsUInt32(fieldId + 11);
+                  uint32_t height = msg.getFieldAsUInt32(fieldId + 12);
+                  static_cast<NetworkMapObject*>(oldElement)->setSize(width, height);
+               }
+               else if ((elementType == MAP_ELEMENT_DECORATION) && (oldElement->getType() == MAP_ELEMENT_DECORATION))
+               {
+                  int32_t width = msg.getFieldAsInt32(fieldId + 13);
+                  int32_t height = msg.getFieldAsInt32(fieldId + 14);
+                  static_cast<NetworkMapDecoration*>(oldElement)->setSize(width, height);
+               }
                break;
             }
          }
@@ -1438,7 +1453,8 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
    }
 
    lockProperties();
-   modified = mergeLinks(&content, objects.getLinks());
+   if (mergeLinks(&content, objects.getLinks()))
+      modified = true;
    unlockProperties();
 
    if (modified)
@@ -1975,7 +1991,7 @@ void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
    auto parentList = getParentList();
    linkObjects(parentList.getShared(0), clonedMap);
    parentList.get(0)->calculateCompoundStatus();
-   clonedMap->unhide();
+   clonedMap->publish();
 }
 
 /**

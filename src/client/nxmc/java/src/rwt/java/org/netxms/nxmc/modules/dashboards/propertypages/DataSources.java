@@ -122,7 +122,7 @@ public class DataSources extends DashboardElementPropertyPage
       config = (AbstractChartConfig)elementConfig;
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
@@ -294,14 +294,14 @@ public class DataSources extends DashboardElementPropertyPage
 		if (dlg.open() == Window.OK)
 		{
 		   List<DciValue> selection = dlg.getSelection();
-		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();		   
+		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();
 			for(DciValue v : selection)
 			{
 			   ChartDciConfig dci = new ChartDciConfig(v);
 			   newSelection.add(dci);
             labelProvider.addCacheEntry(dci.nodeId, dci.dciId, v.getName(), v.getDescription(), v.getUserTag());
             dciList.add(dci);
-			}			
+			}
          viewer.refresh();
          viewer.setSelection(new StructuredSelection(newSelection));
 		}
@@ -313,7 +313,7 @@ public class DataSources extends DashboardElementPropertyPage
    private void addTemplateItem()
    {
       ChartDciConfig dci = new ChartDciConfig();
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true, true);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
       if (dlg.open() == Window.OK)
       {
          dciList.add(dci);
@@ -332,7 +332,7 @@ public class DataSources extends DashboardElementPropertyPage
       if (dci == null)
          return;
 
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, dci.getDciId() == 0);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, dci.getDciId() == 0);
       if (dlg.open() == Window.OK)
       {
          labelProvider.resolveDciNames(dciList);
@@ -352,7 +352,7 @@ public class DataSources extends DashboardElementPropertyPage
 	}
 
 	/**
-	 * Move selected item up 
+	 * Move selected item up
 	 */
 	private void moveUp()
 	{

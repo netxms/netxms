@@ -52,6 +52,7 @@ extern "C" {
 #define UPS_PROTOCOL_MICRODOWELL	4
 #define UPS_PROTOCOL_USB         5
 #define UPS_PROTOCOL_MEGATEC     6
+#define UPS_PROTOCOL_MEC0003     7
 
 #define BCMXCP_BUFFER_SIZE       1024
 #define BCMXCP_MAP_SIZE          128
@@ -217,7 +218,7 @@ public:
 };
 
 /**
- * APC UPS interface
+ * Megatec UPS interface (serial)
  */
 class MegatecInterface : public SerialInterface
 {
@@ -238,6 +239,40 @@ public:
    virtual void queryStaticData() override;
    virtual void queryDynamicData() override;
 };
+
+#ifdef _WIN32
+
+/**
+ * MEC0003 UPS interface (USB via HID string descriptors)
+ */
+class MEC0003Interface : public UPSInterface
+{
+private:
+   HANDLE m_hDev;
+   TCHAR *m_instanceId;
+   double m_packs;
+
+   void calculatePacks(double nominalVoltage, double actualVoltage);
+   bool queryStringDescriptor(UCHAR index, char *buffer, size_t bufferSize);
+
+protected:
+   virtual bool open() override;
+   virtual void close() override;
+   virtual bool validateConnection() override;
+
+public:
+   MEC0003Interface(const TCHAR *device);
+   virtual ~MEC0003Interface();
+
+   virtual const TCHAR *getType() const override { return _T("MEC0003"); }
+
+   virtual void queryStaticData() override;
+   virtual void queryDynamicData() override;
+
+   static void enumerateDevices();
+};
+
+#endif
 
 /**
  * BCMXCP meter map entry

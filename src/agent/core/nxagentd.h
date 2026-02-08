@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,16 +151,20 @@ struct ExternalTableDefinition
 {
    TCHAR *cmdLine;
    TCHAR separator;
+   bool mergeSeparators;
    int instanceColumnCount;
    TCHAR **instanceColumns;
    StringMap columnDataTypes;
+   int defaultColumnDataType;
 
    ExternalTableDefinition()
    {
       cmdLine = nullptr;
       separator = 0;
+      mergeSeparators = false;
       instanceColumnCount = 0;
       instanceColumns = nullptr;
+      defaultColumnDataType = DCI_DT_INT;
    }
 
    ~ExternalTableDefinition()
@@ -172,6 +176,8 @@ struct ExternalTableDefinition
    }
 };
 
+bool IsParametrizedCommand(const TCHAR *command);
+
 /**
  * External table definition
  */
@@ -180,10 +186,12 @@ struct StructuredExtractorParameterDefinition
    String query;
    String description;
    uint16_t dataType;
+   bool isParametrized;
 
    StructuredExtractorParameterDefinition(const TCHAR *q, const TCHAR *d, uint16_t dt) : query(q), description(d)
    {
       dataType = dt;
+      isParametrized = IsParametrizedCommand(q);
    }
 };
 
@@ -378,6 +386,9 @@ private:
    void sendMessageInBackground(NXCP_MESSAGE *msg);
    void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
    uint32_t setComponentToken(NXCPMessage *request);
+   void getAITools(NXCPMessage *request, NXCPMessage *response);
+   void executeAITool(NXCPMessage *request, NXCPMessage *response);
+   void updateEnvironment(NXCPMessage *request);
 
    void processCommand(NXCPMessage *request);
 
@@ -754,7 +765,10 @@ public:
    SNMPTableColumnDefinition(const NXCPMessage& msg, uint32_t baseId);
    SNMPTableColumnDefinition(DB_RESULT hResult, int row);
    SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src);
-   ~SNMPTableColumnDefinition();
+   ~SNMPTableColumnDefinition()
+   {
+      MemFree(m_displayName);
+   }
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDisplayName() const { return (m_displayName != nullptr) ? m_displayName : m_name; }
@@ -813,7 +827,8 @@ bool DownloadConfig(const TCHAR *server);
 void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
          const TCHAR *arg, int dataType, const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));
 void AddPushMetric(const TCHAR *name, int dataType, const TCHAR *description);
-void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg,
+         const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));
 void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns,
          bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));
@@ -834,9 +849,15 @@ void GetActionList(NXCPMessage *msg);
 bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+bool ProcessBinaryMessageBySubAgent(NXCPMessage *msg, AbstractCommSession *session);
 void NotifySubAgents(uint32_t code, void *data);
 bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
+
+void RegisterAIToolsFromSubagent(const NETXMS_SUBAGENT_INFO *info);
+char *GenerateAIToolsSchema();
+uint32_t ExecuteAITool(const char *toolName, const char *jsonParams, char **jsonResult, AbstractCommSession *session);
+int GetAIToolCount();
 
 void StartExternalMetricProviders();
 void StopExternalMetricProviders();
@@ -883,6 +904,8 @@ UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
 
 bool WaitForProcess(const TCHAR *name);
 
+String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param);
+
 uint32_t UpgradeAgent(const TCHAR *pkgFile);
 
 bool IsVNCServerRunning(const InetAddress& addr, uint16_t port);
@@ -893,7 +916,7 @@ void ForwardEvent(NXCPMessage *msg);
 void StartEventConnector();
 
 void StartPushConnector();
-bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp);
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp);
 
 void StartControlConnector();
 bool SendControlMessage(NXCPMessage *msg);
@@ -983,6 +1006,7 @@ extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;
 extern StringSet g_trustedRootCertificates;
+extern StringList g_acceptedEnvVars;
 extern shared_ptr_store<Config> g_config;
 extern bool g_restartPending;
 
