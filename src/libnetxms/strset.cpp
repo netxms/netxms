@@ -45,11 +45,78 @@ StringSet::StringSet(bool counting)
 }
 
 /**
+ * Copy constructor
+ */
+StringSet::StringSet(const StringSet& src)
+{
+   clear();
+   m_counting = src.m_counting;
+
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, src.m_data, entry, tmp)
+   {
+      StringSetEntry *copy = MemAllocStruct<StringSetEntry>();
+      copy->str = MemCopyString(entry->str);
+      copy->count = entry->count;
+      size_t keyLen = _tcslen(copy->str) * sizeof(TCHAR);
+      HASH_ADD_KEYPTR(hh, m_data, copy->str, keyLen, copy);
+   }
+}
+
+/**
+ * Move constructor
+ */
+StringSet::StringSet(StringSet&& src)
+{
+   m_data = src.m_data;
+   m_counting = src.m_counting;
+   src.m_data = nullptr;
+}
+
+/**
  * Destructor
  */
 StringSet::~StringSet()
 {
    clear();
+}
+
+/**
+ * Assignment operator (copy)
+ */
+StringSet& StringSet::operator=(const StringSet& src)
+{
+   if (this != &src)
+   {
+      clear();
+      m_counting = src.m_counting;
+
+      StringSetEntry *entry, *tmp;
+      HASH_ITER(hh, src.m_data, entry, tmp)
+      {
+         StringSetEntry *copy = MemAllocStruct<StringSetEntry>();
+         copy->str = MemCopyString(entry->str);
+         copy->count = entry->count;
+         size_t keyLen = _tcslen(copy->str) * sizeof(TCHAR);
+         HASH_ADD_KEYPTR(hh, m_data, copy->str, keyLen, copy);
+      }
+   }
+   return *this;
+}
+
+/**
+ * Assignment operator (move)
+ */
+StringSet& StringSet::operator=(StringSet&& src)
+{
+   if (this != &src)
+   {
+      clear();
+      m_data = src.m_data;
+      m_counting = src.m_counting;
+      src.m_data = nullptr;
+   }
+   return *this;
 }
 
 /**
