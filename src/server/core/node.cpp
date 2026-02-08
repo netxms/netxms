@@ -7211,6 +7211,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
             m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
          }
       }
+      syncEnvironmentWithAgent(m_agentConnection.get());
       m_agentConnection->enableTraps();
       clearFileUpdateConnection();
       setLastAgentCommTime();
@@ -7227,7 +7228,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
 /**
  * Convert SNMP error code to DC collection error code
  */
-inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
+static inline DataCollectionError DCErrorFromSNMPError(uint32_t snmpError)
 {
    switch(snmpError)
    {
@@ -7295,7 +7296,7 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
                   IntegerToString(ntohq(*reinterpret_cast<uint64_t*>(rawValue)), buffer);
                   break;
                case SNMP_RAWTYPE_DOUBLE:
-                  _sntprintf(buffer, size, _T("%f"), ntohd(*reinterpret_cast<double*>(rawValue)));
+                  nx_swprintf(buffer, size, L"%f", ntohd(*reinterpret_cast<double*>(rawValue)));
                   break;
                case SNMP_RAWTYPE_IP_ADDR:
                   if (length == 4)
@@ -12915,6 +12916,57 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 }
 
 /**
+ * Synchronize environment variables from custom attributes with agent
+ */
+void Node::syncEnvironmentWithAgent(AgentConnectionEx *conn)
+{
+   StringMap envVars;
+   forEachCustomAttribute(
+      [&envVars] (const wchar_t *name, const CustomAttribute *attr) -> EnumerationCallbackResult
+      {
+         if (!wcsncmp(name, L"AgentEnv:", 9) && name[9] != 0)
+         {
+            envVars.set(&name[9], attr->value);
+         }
+         return _CONTINUE;
+      });
+
+   if (envVars.isEmpty())
+      return;
+
+   uint32_t rcc = conn->setEnvironmentVariables(envVars);
+   if (rcc == ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::syncEnvironmentWithAgent(%s [%u]): %d environment variables sent to agent", m_name, m_id, envVars.size());
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::syncEnvironmentWithAgent(%s [%u]): failed to send environment variables (%s)", m_name, m_id, AgentErrorCodeToText(rcc));
+   }
+}
+
+/**
+ * Called when custom attribute changes - sync AgentEnv: attributes with agent
+ */
+void Node::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
+{
+   super::onCustomAttributeChange(name, value);
+   if (!wcsncmp(name, L"AgentEnv:", 9) && name[9] != 0)
+   {
+      shared_ptr<Node> node = self();
+      ThreadPoolExecute(g_mainThreadPool,
+         [node] () -> void
+         {
+            shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+            if (conn != nullptr)
+            {
+               node->syncEnvironmentWithAgent(conn.get());
+            }
+         });
+   }
+}
+
+/**
  * Fully removes all DCI configuration from node
  */
 void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
@@ -12923,7 +12975,7 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::clearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%d]"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, L"Node::clearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%u]", m_name, m_id);
       delete response;
    }
 }
