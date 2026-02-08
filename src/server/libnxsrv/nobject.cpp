@@ -597,6 +597,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
          {
             deletionList.add(pair->key);
          }
+         onCustomAttributeChange(pair->key, nullptr);
          it.remove();
       }
    }
