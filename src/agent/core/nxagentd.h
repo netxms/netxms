@@ -388,6 +388,7 @@ private:
    uint32_t setComponentToken(NXCPMessage *request);
    void getAITools(NXCPMessage *request, NXCPMessage *response);
    void executeAITool(NXCPMessage *request, NXCPMessage *response);
+   void updateEnvironment(NXCPMessage *request);
 
    void processCommand(NXCPMessage *request);
 
@@ -1005,6 +1006,7 @@ extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;
 extern StringSet g_trustedRootCertificates;
+extern StringList g_acceptedEnvVars;
 extern shared_ptr_store<Config> g_config;
 extern bool g_restartPending;
 

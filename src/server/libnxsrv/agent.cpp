@@ -2660,6 +2660,18 @@ uint32_t AgentConnection::enableFileUpdates()
 }
 
 /**
+ * Set environment variables on agent
+ */
+uint32_t AgentConnection::setEnvironmentVariables(const StringMap& variables)
+{
+   NXCPMessage request(CMD_UPDATE_ENVIRONMENT, generateRequestId(), m_nProtocolVersion);
+   variables.fillMessage(&request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   if (!sendMessage(&request))
+      return ERR_CONNECTION_BROKEN;
+   return waitForRCC(request.getId(), m_commandTimeout);
+}
+
+/**
  * Set activation token for agent component
  */
 uint32_t AgentConnection::setComponentToken(const char *component, uint32_t expirationTime, const char *secret)

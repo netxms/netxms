@@ -3910,6 +3910,9 @@ protected:
 
    void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
+   void syncEnvironmentWithAgent(AgentConnectionEx *conn);
+
+   virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value) override;
 
    bool updateInterfaceConfiguration(uint32_t requestId);
    bool deleteDuplicateInterfaces(uint32_t requestId);

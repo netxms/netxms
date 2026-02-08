@@ -830,6 +830,17 @@ void CommSession::processCommand(NXCPMessage *request)
                response.setField(VID_RCC, ERR_ACCESS_DENIED);
             }
             break;
+         case CMD_UPDATE_ENVIRONMENT:
+            if (m_controlServer || m_masterServer)
+            {
+               updateEnvironment(request);
+               response.setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_ACCESS_DENIED);
+            }
+            break;
          case CMD_AI_GET_TOOLS:
             getAITools(request, &response);
             break;
@@ -1281,6 +1292,70 @@ void CommSession::executeAITool(NXCPMessage *request, NXCPMessage *response)
 
    MemFree(toolName);
    MemFree(jsonParams);
+}
+
+/**
+ * Mutex and set for tracking server-pushed environment variables
+ */
+static Mutex s_serverEnvVarsMutex(MutexType::FAST);
+static std::unordered_map<uint64_t, StringSet> s_serverEnvVars;
+
+/**
+ * Update process environment variables from server request
+ */
+void CommSession::updateEnvironment(NXCPMessage *request)
+{
+   int count = request->getFieldAsInt32(VID_NUM_ELEMENTS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+
+   StringSet newVars;
+   for (int i = 0; i < count; i++)
+   {
+      TCHAR *name = request->getFieldAsString(fieldId++);
+      TCHAR *value = request->getFieldAsString(fieldId++);
+      if (name != nullptr && name[0] != 0)
+      {
+         bool accepted = false;
+         for (int j = 0; j < g_acceptedEnvVars.size(); j++)
+         {
+            if (MatchString(g_acceptedEnvVars.get(j), name, false))
+            {
+               accepted = true;
+               break;
+            }
+         }
+         if (accepted)
+         {
+            SetEnvironmentVariable(name, value);
+            newVars.add(name);
+            debugPrintf(5, _T("Environment variable set: %s = %s"), name, CHECK_NULL(value));
+         }
+         else
+         {
+            debugPrintf(5, _T("Environment variable rejected (no matching pattern): %s"), name);
+         }
+      }
+      MemFree(name);
+      MemFree(value);
+   }
+
+   s_serverEnvVarsMutex.lock();
+   if (s_serverEnvVars.find(m_serverId) != s_serverEnvVars.end())
+   {
+      StringSet& oldVars = s_serverEnvVars[m_serverId];
+      oldVars.forEach(
+         [&newVars, this] (const TCHAR *name) -> bool
+         {
+            if (!newVars.contains(name))
+            {
+               SetEnvironmentVariable(name, nullptr);
+               debugPrintf(5, _T("Environment variable removed: %s"), name);
+            }
+            return true;
+         });
+   }
+   s_serverEnvVars[m_serverId] = std::move(newVars);
+   s_serverEnvVarsMutex.unlock();
 }
 
 /**
