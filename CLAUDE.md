@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NetXMS is an enterprise-grade, open-source network and infrastructure monitoring solution. It's a distributed client-server system written primarily in C++ (server, agent, libraries) and Java (management console, client libraries).
 
+## Scope
+
+Do not go beyond the scope of the request. If you notice a bug or improvement opportunity outside the current task, mention it in a comment but do NOT start fixing it unless explicitly asked.
+
+## Project Architecture
+
+This is a large multi-language project (Java, C/C++, JavaScript, Python). The primary codebase is Java and C++. When implementing full-stack features, always check for impacts across: server-side C++, Java client library, SWT UI, RWT (web) UI, NXSL scripting bindings, WebAPI layer, and database schema.
+
+## Design Principles
+
+Do not introduce unnecessary abstraction layers or wrapper functions. Call existing methods directly unless there is a clear architectural reason for indirection. When in doubt, prefer the simpler approach.
+
 ## Component Documentation
 
 This monorepo has component-specific CLAUDE.md files:
@@ -181,6 +193,18 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 - [C++ Developer Guide](doc/CPP_DEVELOPER_GUIDE.md)
 - [Java API](https://www.netxms.org/documentation/javadoc/latest/)
 - [Data Dictionary](https://www.netxms.org/documentation/datadictionary-latest/)
+
+## Code Changes
+
+When implementing changes, ensure ALL call sites and consumers are updated. After making a rename or API change, run a project-wide grep for the old name to catch missed references before attempting a build.
+
+## Implementation Discipline
+
+When implementing a plan that spans multiple files, do NOT skip any files listed in the plan. If a file seems less critical, flag it explicitly rather than silently omitting it. Cross-check your completed changes against the plan before declaring done.
+
+## Translations
+
+When translating PO files or doing text transformations, preserve grammatical structure of the target language. Do not do word-by-word substitution. Process in contextual batches and verify grammar, especially noun/adjective ordering and gendered forms.
 
 ## Contribution Workflow
 
