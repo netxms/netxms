@@ -846,8 +846,9 @@ static void V5DataMigrationThread()
                      int64_t batchStart = maxTs - 86400;
                      nx_swprintf(query, 1024,
                         L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                        L" SELECT item_id,%s,idata_value,raw_value"
-                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT,
+                        L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
+                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
+                        L" GROUP BY item_id,idata_timestamp",
                         id, idataTsExpr, id, batchStart);
                      if (DBQuery(hdb, query))
                      {
@@ -886,11 +887,35 @@ static void V5DataMigrationThread()
                   else
                   {
                      int64_t batchStart = maxTs - 86400;
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                        L" SELECT item_id,%s,tdata_value"
-                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
-                        id, tdataTsExpr, id, batchStart);
+                     switch(g_dbSyntax)
+                     {
+                        case DB_SYNTAX_MYSQL:
+                           nx_swprintf(query, 1024,
+                              L"INSERT IGNORE INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                              L" SELECT item_id,%s,tdata_value"
+                              L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
+                              id, tdataTsExpr, id, batchStart);
+                           break;
+                        case DB_SYNTAX_PGSQL:
+                        case DB_SYNTAX_SQLITE:
+                           nx_swprintf(query, 1024,
+                              L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                              L" SELECT item_id,%s,tdata_value"
+                              L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
+                              L" ON CONFLICT DO NOTHING",
+                              id, tdataTsExpr, id, batchStart);
+                           break;
+                        default:
+                           nx_swprintf(query, 1024,
+                              L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                              L" SELECT item_id,tdata_timestamp,tdata_value FROM ("
+                              L"    SELECT item_id,%s AS tdata_timestamp,tdata_value,"
+                              L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY tdata_timestamp) AS rn"
+                              L"    FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
+                              L" ) sub WHERE rn=1",
+                              id, tdataTsExpr, tdataTsExpr, id, batchStart);
+                           break;
+                     }
                      if (DBQuery(hdb, query))
                      {
                         nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
