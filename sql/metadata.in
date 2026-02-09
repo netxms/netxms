@@ -24,7 +24,7 @@ INSERT INTO metadata (var_name,var_value)
 #endif
 
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp ' CONCAT SQL_INT64_TEXT CONCAT ' not null,tdata_value ' CONCAT SQL_TEXT_TEXT CONCAT ' null, PRIMARY_KEY(item_id,tdata_timestamp))');
+	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp ' CONCAT SQL_INT64_TEXT CONCAT ' not null,tdata_value ' CONCAT SQL_TEXT_TEXT CONCAT ' null, PRIMARY KEY(item_id,tdata_timestamp))');
 
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('LocationHistory','CREATE TABLE gps_history_%d (latitude varchar(20), longitude varchar(20), accuracy integer not null, start_timestamp integer not null, end_timestamp integer not null, PRIMARY KEY(start_timestamp))');
