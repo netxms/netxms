@@ -15,7 +15,7 @@ while(<IN>)
 	$line = $_;
 	if ($line =~ /CREATE TABLE ([A-Za-z0-9_]+).*/)
 	{
-		if ($1 ne "metadata")
+		if ($1 ne "metadata" && $1 ne "dc_storage_class_migrations")
 		{
 			print "\t_T(\"$1\"),\n";
 		}
