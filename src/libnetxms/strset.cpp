@@ -49,7 +49,7 @@ StringSet::StringSet(bool counting)
  */
 StringSet::StringSet(const StringSet& src)
 {
-   clear();
+   m_data = nullptr;
    m_counting = src.m_counting;
 
    StringSetEntry *entry, *tmp;
