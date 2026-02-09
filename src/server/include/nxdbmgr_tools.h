@@ -98,7 +98,7 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t 
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId);
 bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column);
 
-bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column);
+bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column, bool notNull = true);
 
 bool LIBNXDBMGR_EXPORTABLE CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description);
 bool LIBNXDBMGR_EXPORTABLE IsEventPairInUse(UINT32 code1, UINT32 code2);

@@ -458,7 +458,7 @@ void LIBNXDBMGR_EXPORTABLE DecodeSQLString(TCHAR *str)
 /**
  * Convert column to INT64 type
  */
-bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column)
+bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wchar_t *column, bool notNull)
 {
    if ((g_dbSyntax == DB_SYNTAX_SQLITE) || (g_dbSyntax == DB_SYNTAX_ORACLE))
       return true;  // no changes needed
@@ -481,5 +481,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wcha
          break;
    }
    query.append(g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   if (notNull && ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_MYSQL)))
+      query.append(L" NOT NULL");
    return SQLQuery(query);
 }
