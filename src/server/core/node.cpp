@@ -4080,17 +4080,56 @@ void Node::updatePrimaryIpAddr()
       return;
 
    InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
-   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryHostName, _T("0.0.0.0")) || ((m_capabilities & NC_IS_LOCAL_MGMT) && ipAddr.isLoopback())))
+   if (ipAddr.equals(getIpAddress()))
+      return;
+
+   if (ipAddr.isValidUnicast() || !wcscmp(m_primaryHostName, L"0.0.0.0") || ((m_capabilities & NC_IS_LOCAL_MGMT) && ipAddr.isLoopback()))
    {
-      TCHAR buffer1[64], buffer2[64];
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
+      if (ConfigReadBoolean(L"Objects.Nodes.CheckIPConflictOnDNSResolve", false) && ipAddr.isValidUnicast())
+      {
+         shared_ptr<Node> conflictNode = FindNodeByIP(m_zoneUIN, ipAddr);
+         if ((conflictNode != nullptr) && (conflictNode->getId() != m_id))
+         {
+            wchar_t buffer[64];
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"DNS resolved %s to %s for node %s [%u], but this IP is already assigned to node %s [%u]",
+               m_primaryHostName.cstr(), ipAddr.toString(buffer), m_name, m_id, conflictNode->getName(), conflictNode->getId());
+            EventBuilder(EVENT_DNS_RESOLVE_CONFLICT, m_id)
+               .param(L"primaryHostName", m_primaryHostName)
+               .param(L"newIpAddress", ipAddr)
+               .param(L"conflictingNodeName", conflictNode->getName())
+               .param(L"conflictingNodeId", conflictNode->getId())
+               .post();
+            return;
+         }
+      }
+
+      wchar_t buffer1[64], buffer2[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"IP address for node %s [%u] changed from %s to %s", m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
       EventBuilder(EVENT_IP_ADDRESS_CHANGED, m_id)
-         .param(_T("newIpAddress"), ipAddr)
-         .param(_T("oldIpAddress"), m_ipAddress)
+         .param(L"newIpAddress", ipAddr)
+         .param(L"oldIpAddress", m_ipAddress)
          .post();
 
       lockProperties();
       setPrimaryIPAddress(ipAddr);
+      unlockProperties();
+
+      agentLock();
+      deleteAgentConnection();
+      agentUnlock();
+   }
+   else if (ConfigReadBoolean(L"Objects.Nodes.ClearIPAddressOnDNSFailure", false) && m_ipAddress.isValidUnicast() && !ipAddr.isValid())
+   {
+      wchar_t buffer[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"DNS resolution failed for node %s [%u] hostname %s, clearing IP address %s",
+         m_name, m_id, m_primaryHostName.cstr(), m_ipAddress.toString(buffer));
+      EventBuilder(EVENT_DNS_RESOLUTION_FAILED, m_id)
+         .param(L"primaryHostName", m_primaryHostName)
+         .param(L"oldIpAddress", m_ipAddress)
+         .post();
+
+      lockProperties();
+      setPrimaryIPAddress(InetAddress());
       unlockProperties();
 
       agentLock();

@@ -207,6 +207,8 @@
 #define EVENT_INCIDENT_ASSIGNED                     153
 #define EVENT_INCIDENT_ALARM_LINKED                 154
 #define EVENT_INCIDENT_ALARM_UNLINKED               155
+#define EVENT_DNS_RESOLUTION_FAILED                 156
+#define EVENT_DNS_RESOLVE_CONFLICT                  157
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

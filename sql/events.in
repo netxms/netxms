@@ -1920,6 +1920,28 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) alarmId - Alarm ID' CONCAT CRLF CONCAT
 		'   4) userId - User ID who unliked'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DNS_RESOLUTION_FAILED, 'SYS_DNS_RESOLUTION_FAILED', 'f5c34845-2e5a-4638-be44-40e498e3c27a',
+		EVENT_SEVERITY_WARNING, 1,
+		'DNS resolution failed for hostname %<primaryHostName>, IP address cleared (was %<oldIpAddress>)',
+		'Generated when DNS resolution fails for a hostname-based node and its IP address is cleared.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) primaryHostName - Primary host name that failed to resolve' CONCAT CRLF CONCAT
+		'   2) oldIpAddress - Previous IP address that was cleared'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DNS_RESOLVE_CONFLICT, 'SYS_DNS_RESOLVE_CONFLICT', 'a7e3b142-6c1d-4e89-b3f5-71d04a6852c9',
+		EVENT_SEVERITY_WARNING, 1,
+		'DNS resolved %<primaryHostName> to %<newIpAddress> which is already assigned to node %<conflictingNodeName>, IP address not updated',
+		'Generated when DNS resolves a hostname to an IP address already assigned to another node.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) primaryHostName - Primary host name that was resolved' CONCAT CRLF CONCAT
+		'   2) newIpAddress - Resolved IP address that conflicts' CONCAT CRLF CONCAT
+		'   3) conflictingNodeName - Name of the node that already has this IP' CONCAT CRLF CONCAT
+		'   4) conflictingNodeId - ID of the node that already has this IP'
+	);
 
 /*
 ** SNMP traps
