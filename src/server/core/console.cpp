@@ -50,6 +50,8 @@ int64_t GetEventProcessorQueueSize();
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
+void ShowAIProviders(ServerConsole *console);
+void ShowAISlots(ServerConsole *console);
 void ShowAuthenticationTokens(ServerConsole *console);
 void RunHouseKeeper(ServerConsole *console);
 void ShowActiveDiscoveryState(ServerConsole *console);
@@ -947,6 +949,22 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          else
          {
             ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
+         }
+      }
+      else if (IsCommand(_T("AI"), szBuffer, 2))
+      {
+         pArg = ExtractWord(pArg, szBuffer);
+         if (IsCommand(_T("PROVIDERS"), szBuffer, 1))
+         {
+            ShowAIProviders(console);
+         }
+         else if (IsCommand(_T("SLOTS"), szBuffer, 1))
+         {
+            ShowAISlots(console);
+         }
+         else
+         {
+            ConsoleWrite(console, _T("Usage: SHOW AI PROVIDERS | SLOTS\n\n"));
          }
       }
       else if (IsCommand(_T("AUTHTOKENS"), szBuffer, 4))
@@ -1935,6 +1953,8 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
+            _T("   show ai providers                 - Show configured AI providers\n")
+            _T("   show ai slots                     - Show AI provider slots\n")
             _T("   show arp <node>                   - Show ARP cache for node\n")
             _T("   show authtokens                   - Show user authentication tokens\n")
             _T("   show components <node>            - Show physical components of given node\n")

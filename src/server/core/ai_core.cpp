@@ -1647,6 +1647,94 @@ void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, b
 }
 
 /**
+ * Show configured AI providers (debug console command)
+ */
+void ShowAIProviders(ServerConsole *console)
+{
+   if (s_slotProviders.empty())
+   {
+      ConsoleWrite(console, L"No AI providers configured\n\n");
+      return;
+   }
+
+   // Collect unique providers and their slots
+   std::unordered_map<LLMProvider*, StringList*> providerSlots;
+   ObjectArray<LLMProvider> uniqueProviders(8, 8, Ownership::False);
+   for (auto& pair : s_slotProviders)
+   {
+      LLMProvider *p = pair.second.get();
+      auto it = providerSlots.find(p);
+      StringList *slots;
+      if (it == providerSlots.end())
+      {
+         slots = new StringList();
+         providerSlots[p] = slots;
+         uniqueProviders.add(p);
+      }
+      else
+      {
+         slots = it->second;
+      }
+      WCHAR slotName[64];
+      utf8_to_wchar(pair.first.c_str(), -1, slotName, 64);
+      slots->add(slotName);
+   }
+
+   ConsoleWrite(console, L"\n");
+   for (int i = 0; i < uniqueProviders.size(); i++)
+   {
+      LLMProvider *p = uniqueProviders.get(i);
+      const WCHAR *typeName;
+      switch (p->getType())
+      {
+         case LLMProviderType::OPENAI: typeName = L"OpenAI"; break;
+         case LLMProviderType::ANTHROPIC: typeName = L"Anthropic"; break;
+         default: typeName = L"Ollama"; break;
+      }
+      bool isDefault = (s_defaultProvider.get() == p);
+      ConsolePrintf(console, L"Name    : %s%s\n", p->getName(), isDefault ? L" (default)" : L"");
+      ConsolePrintf(console, L"Type    : %s\n", typeName);
+      ConsolePrintf(console, L"Model   : %hs\n", p->getModelName());
+      ConsolePrintf(console, L"URL     : %hs\n", p->getUrl());
+
+      StringList *slots = providerSlots[p];
+      StringBuffer slotList;
+      for (int j = 0; j < slots->size(); j++)
+      {
+         if (j > 0)
+            slotList.append(L", ");
+         slotList.append(slots->get(j));
+      }
+      ConsolePrintf(console, L"Slots   : %s\n", slotList.cstr());
+      ConsoleWrite(console, L"\n");
+   }
+
+   // Clean up
+   for (auto& pair : providerSlots)
+      delete pair.second;
+}
+
+/**
+ * Show configured AI slots (debug console command)
+ */
+void ShowAISlots(ServerConsole *console)
+{
+   static const char *knownSlots[] = { "analytical", "background", "default", "fast", "guard", "interactive", nullptr };
+
+   ConsoleWrite(console, L"\x1b[1m Slot            | Provider\x1b[0m\n"
+                          L"-----------------+----------------------\n");
+   for (int i = 0; knownSlots[i] != nullptr; i++)
+   {
+      auto it = s_slotProviders.find(knownSlots[i]);
+      if (it != s_slotProviders.end())
+         ConsolePrintf(console, L" %-16hs| %s\n", knownSlots[i], it->second->getName());
+      else
+         ConsolePrintf(console, L" %-16hs| \x1b[33mnot defined\x1b[0m\n", knownSlots[i]);
+   }
+   ConsoleWrite(console, L"\n");
+}
+
+/**
  * Initialize AI assistant
  */
 bool InitAIAssistant()
