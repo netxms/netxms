@@ -618,7 +618,6 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
       addMessage("system", p.c_str());
    }
    addMessage("system", std::string("The following skills are available to you: ").append(GetRegisteredSkills()).c_str());
-   m_initialMessageCount = json_array_size(m_messages);
 
    m_userId = userId;
    m_creationTime = m_lastUpdateTime = time(nullptr);
@@ -831,13 +830,8 @@ void Chat::clear()
    json_decref(m_functionDeclarations);
    initializeFunctions();
 
-   json_t *messages = json_array();
-   for(size_t i = 0; i < m_initialMessageCount; i++)
-   {
-      json_array_append(messages, json_array_get(m_messages, i));
-   }
    json_decref(m_messages);
-   m_messages = messages;
+   m_messages = json_array();
    m_lastUpdateTime = time(nullptr);
 }
 
@@ -892,7 +886,7 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
    while(iterations-- > 0)
    {
       // Provider handles request building and response parsing
-      json_t *message = provider->chat(m_messages, m_functionDeclarations);
+      json_t *message = provider->chat(m_systemPrompt.c_str(), m_messages, m_functionDeclarations);
       m_lastUpdateTime = time(nullptr);
 
       if (message == nullptr)
@@ -1675,6 +1669,8 @@ bool InitAIAssistant()
          const TCHAR *typeStr = entry->getSubEntryValue(_T("Type"), 0, _T("openai"));
          if (!_tcsicmp(typeStr, _T("openai")))
             config.type = LLMProviderType::OPENAI;
+         else if (!_tcsicmp(typeStr, _T("anthropic")))
+            config.type = LLMProviderType::ANTHROPIC;
          else
             config.type = LLMProviderType::OLLAMA;
 
@@ -1688,7 +1684,15 @@ bool InitAIAssistant()
          }
          else
          {
-            strlcpy(config.url, "http://127.0.0.1:11434/api/chat", sizeof(config.url));
+            switch(config.type)
+            {
+               case LLMProviderType::ANTHROPIC:
+                  strlcpy(config.url, "https://api.anthropic.com/v1/messages", sizeof(config.url));
+                  break;
+               default:
+                  strlcpy(config.url, "http://127.0.0.1:11434/api/chat", sizeof(config.url));
+                  break;
+            }
          }
 
          const TCHAR *model = entry->getSubEntryValue(_T("Model"), 0, nullptr);
@@ -1700,7 +1704,15 @@ bool InitAIAssistant()
          }
          else
          {
-            strlcpy(config.model, "llama3.2", sizeof(config.model));
+            switch(config.type)
+            {
+               case LLMProviderType::ANTHROPIC:
+                  strlcpy(config.model, "claude-sonnet-4-20250514", sizeof(config.model));
+                  break;
+               default:
+                  strlcpy(config.model, "llama3.2", sizeof(config.model));
+                  break;
+            }
          }
 
          const TCHAR *token = entry->getSubEntryValue(_T("Token"), 0, nullptr);
@@ -1740,10 +1752,15 @@ bool InitAIAssistant()
             SetDefaultProvider(provider);
          }
 
+         const TCHAR *typeName;
+         switch(config.type)
+         {
+            case LLMProviderType::OPENAI: typeName = _T("OpenAI"); break;
+            case LLMProviderType::ANTHROPIC: typeName = _T("Anthropic"); break;
+            default: typeName = _T("Ollama"); break;
+         }
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Configured AI provider \"%s\" (type=%s, model=%hs, slots=%s)"),
-            config.name.cstr(),
-            config.type == LLMProviderType::OPENAI ? _T("OpenAI") : _T("Ollama"),
-            config.model, slotsStr);
+            config.name.cstr(), typeName, config.model, slotsStr);
       }
    }
 

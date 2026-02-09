@@ -60,6 +60,21 @@ json_t *LLMProvider::buildBaseRequest()
 }
 
 /**
+ * Build HTTP headers for the request. Default implementation adds Content-Type and Bearer auth.
+ */
+struct curl_slist *LLMProvider::buildHttpHeaders()
+{
+   struct curl_slist *headers = curl_slist_append(nullptr, "Content-Type: application/json");
+   if (m_config.authToken[0] != 0)
+   {
+      char authHeader[384];
+      snprintf(authHeader, sizeof(authHeader), "Authorization: Bearer %s", m_config.authToken);
+      headers = curl_slist_append(headers, authHeader);
+   }
+   return headers;
+}
+
+/**
  * Send HTTP request to LLM provider
  */
 json_t *LLMProvider::doHttpRequest(json_t *requestData)
@@ -96,13 +111,7 @@ json_t *LLMProvider::doHttpRequest(json_t *requestData)
    char errorBuffer[CURL_ERROR_SIZE];
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
-   struct curl_slist *headers = curl_slist_append(nullptr, "Content-Type: application/json");
-   if (m_config.authToken[0] != 0)
-   {
-      char authHeader[384];
-      snprintf(authHeader, sizeof(authHeader), "Authorization: Bearer %s", m_config.authToken);
-      curl_slist_append(headers, authHeader);
-   }
+   struct curl_slist *headers = buildHttpHeaders();
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
    bool success = true;
@@ -208,6 +217,8 @@ shared_ptr<LLMProvider> CreateLLMProvider(const LLMProviderConfig& config)
          return make_shared<OllamaProvider>(config);
       case LLMProviderType::OPENAI:
          return make_shared<OpenAIProvider>(config);
+      case LLMProviderType::ANTHROPIC:
+         return make_shared<AnthropicProvider>(config);
       default:
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown provider type %d, defaulting to Ollama"), static_cast<int>(config.type));
          return make_shared<OllamaProvider>(config);

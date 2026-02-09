@@ -23,15 +23,14 @@
 #include "nxcore.h"
 #include <ai_provider.h>
 
-#define DEBUG_TAG _T("ai.provider.openai")
+#define DEBUG_TAG _T("ai.prov.openai")
 
 /**
  * OpenAIProvider constructor
  */
 OpenAIProvider::OpenAIProvider(const LLMProviderConfig& config) : LLMProvider(config)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Created OpenAI provider \"%s\" (URL=%hs, model=%hs)"),
-      config.name.cstr(), config.url, config.model);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Created OpenAI provider \"%s\" (URL=%hs, model=%hs)"), config.name.cstr(), config.url, config.model);
 }
 
 /**
@@ -45,16 +44,27 @@ OpenAIProvider::~OpenAIProvider()
  * Send chat request to OpenAI-compatible API
  * OpenAI API returns: { "choices": [{ "message": { "role": ..., "content": ... } }] }
  */
-json_t *OpenAIProvider::chat(json_t *messages, json_t *tools)
+json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools)
 {
    json_t *request = buildBaseRequest();
 
-   // OpenAI-specific: max_tokens for context size (optional)
-   // Note: OpenAI uses max_tokens for response length, not context size
-   // Context size is model-dependent and cannot be set via API
+   // Build messages array with system prompt prepended
+   json_t *fullMessages = json_array();
+   if (systemPrompt != nullptr && systemPrompt[0] != 0)
+   {
+      json_t *sysMsg = json_object();
+      json_object_set_new(sysMsg, "role", json_string("system"));
+      json_object_set_new(sysMsg, "content", json_string(systemPrompt));
+      json_array_append_new(fullMessages, sysMsg);
+   }
+   size_t i;
+   json_t *msg;
+   json_array_foreach(messages, i, msg)
+   {
+      json_array_append(fullMessages, msg);
+   }
 
-   // Add messages and tools
-   json_object_set(request, "messages", messages);
+   json_object_set_new(request, "messages", fullMessages);
    if (tools != nullptr && json_array_size(tools) > 0)
    {
       json_object_set(request, "tools", tools);

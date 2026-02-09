@@ -48,6 +48,9 @@
     <ClCompile Include="ai_provider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ai_provider_anthropic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ai_provider_ollama.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

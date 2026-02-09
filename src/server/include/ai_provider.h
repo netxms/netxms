@@ -31,8 +31,9 @@
  */
 enum class LLMProviderType
 {
-   OLLAMA = 0,  // Ollama API: response has "message" at root level
-   OPENAI = 1   // OpenAI API: response has "choices[0].message" - works for all compatible APIs
+   OLLAMA = 0,     // Ollama API: response has "message" at root level
+   OPENAI = 1,     // OpenAI API: response has "choices[0].message" - works for all compatible APIs
+   ANTHROPIC = 2   // Anthropic Messages API: separate system prompt, content blocks array
 };
 
 /**
@@ -77,12 +78,15 @@ protected:
    // Build base request with model and options
    json_t *buildBaseRequest();
 
+   // Build HTTP headers for the request (can be overridden by subclasses)
+   virtual struct curl_slist *buildHttpHeaders();
+
 public:
    LLMProvider(const LLMProviderConfig& config);
    virtual ~LLMProvider();
 
    // Core API - subclasses implement request/response formatting
-   virtual json_t *chat(json_t *messages, json_t *tools) = 0;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) = 0;
 
    // Capabilities
    virtual bool supportsToolCalling() const { return true; }
@@ -106,7 +110,7 @@ public:
    OllamaProvider(const LLMProviderConfig& config);
    virtual ~OllamaProvider();
 
-   virtual json_t *chat(json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
 };
 
 /**
@@ -118,7 +122,22 @@ public:
    OpenAIProvider(const LLMProviderConfig& config);
    virtual ~OpenAIProvider();
 
-   virtual json_t *chat(json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+};
+
+/**
+ * Anthropic provider implementation
+ */
+class NXCORE_EXPORTABLE AnthropicProvider : public LLMProvider
+{
+protected:
+   virtual struct curl_slist *buildHttpHeaders() override;
+
+public:
+   AnthropicProvider(const LLMProviderConfig& config);
+   virtual ~AnthropicProvider();
+
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
 };
 
 /**

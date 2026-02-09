@@ -433,6 +433,7 @@
     <ClCompile Include="ai_core.cpp" />
     <ClCompile Include="ai_messages.cpp" />
     <ClCompile Include="ai_provider.cpp" />
+    <ClCompile Include="ai_provider_anthropic.cpp" />
     <ClCompile Include="ai_provider_ollama.cpp" />
     <ClCompile Include="ai_provider_openai.cpp" />
     <ClCompile Include="ai_remote.cpp" />

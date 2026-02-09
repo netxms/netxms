@@ -23,15 +23,14 @@
 #include "nxcore.h"
 #include <ai_provider.h>
 
-#define DEBUG_TAG _T("ai.provider.ollama")
+#define DEBUG_TAG _T("ai.prov.ollama")
 
 /**
  * OllamaProvider constructor
  */
 OllamaProvider::OllamaProvider(const LLMProviderConfig& config) : LLMProvider(config)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Created Ollama provider \"%s\" (URL=%hs, model=%hs)"),
-      config.name.cstr(), config.url, config.model);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Created Ollama provider \"%s\" (URL=%hs, model=%hs)"), config.name.cstr(), config.url, config.model);
 }
 
 /**
@@ -45,7 +44,7 @@ OllamaProvider::~OllamaProvider()
  * Send chat request to Ollama
  * Ollama API returns message at root level: { "message": { "role": ..., "content": ... } }
  */
-json_t *OllamaProvider::chat(json_t *messages, json_t *tools)
+json_t *OllamaProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools)
 {
    json_t *request = buildBaseRequest();
 
@@ -57,8 +56,23 @@ json_t *OllamaProvider::chat(json_t *messages, json_t *tools)
       json_object_set_new(request, "options", options);
    }
 
-   // Add messages and tools
-   json_object_set(request, "messages", messages);
+   // Build messages array with system prompt prepended
+   json_t *fullMessages = json_array();
+   if (systemPrompt != nullptr && systemPrompt[0] != 0)
+   {
+      json_t *sysMsg = json_object();
+      json_object_set_new(sysMsg, "role", json_string("system"));
+      json_object_set_new(sysMsg, "content", json_string(systemPrompt));
+      json_array_append_new(fullMessages, sysMsg);
+   }
+   size_t i;
+   json_t *msg;
+   json_array_foreach(messages, i, msg)
+   {
+      json_array_append(fullMessages, msg);
+   }
+
+   json_object_set_new(request, "messages", fullMessages);
    if (tools != nullptr && json_array_size(tools) > 0)
    {
       json_object_set(request, "tools", tools);

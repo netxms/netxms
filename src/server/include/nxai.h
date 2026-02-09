@@ -168,7 +168,7 @@ private:
    uint32_t m_boundIncidentId;  // ID of bound incident (0 if not bound)
    Mutex m_mutex;
    json_t *m_messages;
-   size_t m_initialMessageCount;
+   std::string m_systemPrompt;
    AssistantFunctionSet m_functions;
    json_t *m_functionDeclarations;
    time_t m_creationTime;
@@ -183,11 +183,21 @@ private:
 
    void addMessage(const char *role, const char *content)
    {
-      json_t *message = json_object();
-      json_object_set_new(message, "role", json_string(role));
-      json_object_set_new(message, "content", json_string(content));
-      json_array_append_new(m_messages, message);
-      nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+      if (!strcmp(role, "system"))
+      {
+         if (!m_systemPrompt.empty())
+            m_systemPrompt.append("\n\n");
+         m_systemPrompt.append(content);
+         nxlog_debug_tag(L"llm.chat", 8, L"Appended system prompt to chat (length=%d)", static_cast<int>(m_systemPrompt.length()));
+      }
+      else
+      {
+         json_t *message = json_object();
+         json_object_set_new(message, "role", json_string(role));
+         json_object_set_new(message, "content", json_string(content));
+         json_array_append_new(m_messages, message);
+         nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+      }
    }
 
    void initializeFunctions();
