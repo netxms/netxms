@@ -544,6 +544,10 @@ static bool H_UpgradeFromV23()
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND BITAND(system_access, 4503599627370496)=0"));
    }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(4503599627370496 AS bigint))=0"));
+   }
    else
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (system_access & 4503599627370496)=0"));
@@ -629,6 +633,10 @@ static bool H_UpgradeFromV19()
    if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND BITAND(system_access, 2251799813685248)=0")));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(2251799813685248 AS bigint))=0")));
    }
    else
    {
