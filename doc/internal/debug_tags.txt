@@ -7,6 +7,8 @@ agent.conn	Agent connections (server side)
 agent.policy	Agent policies (server side)
 agent.tunnel	Agent tunnels
 
+ai.assistant	AI assistant core (including prompt injection guard)
+
 aix		AIX platform subagent messages
 
 alarm.*		Alarm management
