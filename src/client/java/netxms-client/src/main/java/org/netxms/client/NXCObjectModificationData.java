@@ -113,8 +113,8 @@ public class NXCObjectModificationData
    private InetAddressEx ipAddress;
    private String request;
    private String response;
-   private Integer objectFlags;
-   private Integer objectFlagsMask;
+   private Long objectFlags;
+   private Long objectFlagsMask;
    private Integer ifXTablePolicy;
    private String reportDefinition;
    private List<ClusterResource> resourceList;
@@ -552,7 +552,7 @@ public class NXCObjectModificationData
 
    /**
     * Set MQTT proxy node ID.
-    * 
+    *
     * @param mqttProxy MQTT proxy node ID
     */
    public void setMqttProxy(long mqttProxy)
@@ -1063,7 +1063,7 @@ public class NXCObjectModificationData
     *
     * @return object flags
     */
-   public Integer getObjectFlags()
+   public Long getObjectFlags()
    {
       return objectFlags;
    }
@@ -1073,7 +1073,7 @@ public class NXCObjectModificationData
     *
     * @return the object flags mask
     */
-   public Integer getObjectFlagsMask()
+   public Long getObjectFlagsMask()
    {
       return objectFlagsMask;
    }
@@ -1083,9 +1083,9 @@ public class NXCObjectModificationData
     *
     * @param objectFlags Object flags
     */
-   public void setObjectFlags(int objectFlags)
+   public void setObjectFlags(long objectFlags)
    {
-      setObjectFlags(objectFlags, 0xFFFFFFFF);
+      setObjectFlags(objectFlags, 0xFFFFFFFFL);
    }
 
    /**
@@ -1094,7 +1094,7 @@ public class NXCObjectModificationData
     * @param objectFlags     new object flags
     * @param objectFlagsMask object flag mask
     */
-   public void setObjectFlags(int objectFlags, int objectFlagsMask)
+   public void setObjectFlags(long objectFlags, long objectFlagsMask)
    {
       this.objectFlags = objectFlags;
       this.objectFlagsMask = objectFlagsMask;
@@ -2074,7 +2074,7 @@ public class NXCObjectModificationData
 
    /**
     * Get ICMP statistic collection mode
-    * 
+    *
     * @return ICMP statistic collection mode
     */
    public IcmpStatCollectionMode getIcmpStatCollectionMode()
@@ -2084,7 +2084,7 @@ public class NXCObjectModificationData
 
    /**
     * Set ICMP statistic collection mode
-    * 
+    *
     * @param mode new ICMP statistic collection mode
     */
    public void setIcmpStatCollectionMode(IcmpStatCollectionMode mode)
@@ -2094,7 +2094,7 @@ public class NXCObjectModificationData
 
    /**
     * Get additional ICMP poll targets
-    * 
+    *
     * @return additional ICMP poll targets
     */
    public List<InetAddress> getIcmpTargets()
@@ -2104,7 +2104,7 @@ public class NXCObjectModificationData
 
    /**
     * Set additional ICMP poll targets
-    * 
+    *
     * @param icmpTargets new list of additional ICMP poll targets
     */
    public void setIcmpTargets(Collection<InetAddress> icmpTargets)
@@ -2115,7 +2115,7 @@ public class NXCObjectModificationData
    /**
     * Set physical container for object
     * Will be set together with CHASSIS_PLACEMENT or RACK_PLACEMENT so no need to set fields
-    * 
+    *
     * @param physicalContainerObjectId bject ID of physical container
     */
    public void setPhysicalContainer(long physicalContainerObjectId)
@@ -2125,7 +2125,7 @@ public class NXCObjectModificationData
 
    /**
     * Set chassis placement information
-    * 
+    *
     * @param placementConfig chassis placement XML config
     */
    public void setChassisPlacement(String placementConfig)
@@ -2257,7 +2257,7 @@ public class NXCObjectModificationData
 
    /**
     * Get category ID.
-    * 
+    *
     * @return category ID
     */
    public Integer getCategoryId()
@@ -2277,7 +2277,7 @@ public class NXCObjectModificationData
 
    /**
     * Get geolocation control mode
-    * 
+    *
     * @return geolocation control mode
     */
    public GeoLocationControlMode getGeoLocationControlMode()
@@ -2493,14 +2493,14 @@ public class NXCObjectModificationData
 
    /**
     * Set map size.
-    * 
+    *
     * @param width map width in logical pixels
     * @param height map height in logical pixels
     */
    public void setMapSize(int width, int height)
    {
       mapWidth = width;
-      mapHeight = height;      
+      mapHeight = height;
    }
 
    /**
@@ -2537,7 +2537,7 @@ public class NXCObjectModificationData
 
    /**
     * Get dashboard name template
-    * 
+    *
     * @return dashboard name template
     */
    public String getDashboardNameTemplate()
@@ -2547,7 +2547,7 @@ public class NXCObjectModificationData
 
    /**
     * Set dashboard name template
-    * 
+    *
     * @param dashboardNameTemplate dashboard name template
     */
    public void setDashboardNameTemplate(String dashboardNameTemplate)

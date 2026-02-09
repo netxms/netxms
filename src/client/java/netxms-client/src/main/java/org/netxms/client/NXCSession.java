@@ -350,7 +350,7 @@ public class NXCSession
    // Communication parameters
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
-   private int connectTimeout = 10000; // Default is 10 seconds  
+   private int connectTimeout = 10000; // Default is 10 seconds
    private int commandTimeout = 30000; // Default is 30 seconds
    private int serverCommandOutputTimeout = 60000;
 
@@ -430,7 +430,7 @@ public class NXCSession
 
    // Message of the day
    private String messageOfTheDay;
-   
+
    // Registered license problems
    private LicenseProblem[] licenseProblems = null;
 
@@ -1428,8 +1428,8 @@ public class NXCSession
                continue;
             }
 
-            // loop must be on listeners set copy to prevent 
-            // possible deadlock when one of the listeners calls 
+            // loop must be on listeners set copy to prevent
+            // possible deadlock when one of the listeners calls
             // syncExec on UI thread while UI thread trying to add
             // new listener and stays locked inside addListener
             for(SessionListener l : cachedListenerList)
@@ -1448,7 +1448,7 @@ public class NXCSession
          logger.debug("Client session notification processor stopped");
       }
    }
-   
+
    /**
     * User synchronization thread
     */
@@ -1514,13 +1514,13 @@ public class NXCSession
             {
                logger.error("Exception while synchronizing user database objects", e);
             }
-         }         
+         }
       }
    }
 
    /**
     * Create session object that will connect to given address on default port (4701) without encryption.
-    * 
+    *
     * @param connAddress server host name or IP address
     */
    public NXCSession(String connAddress)
@@ -1530,7 +1530,7 @@ public class NXCSession
 
    /**
     * Create session object that will connect to given address on given port without encryption.
-    * 
+    *
     * @param connAddress server host name or IP address
     * @param connPort TCP port
     */
@@ -1541,7 +1541,7 @@ public class NXCSession
 
    /**
     * Create session object that will connect to given address on given port.
-    * 
+    *
     * @param connAddress server host name or IP address
     * @param connPort TCP port
     * @param enableCompression enable message compression
@@ -1940,7 +1940,7 @@ public class NXCSession
    {
       if (listener != null)
          listener.setTotalWorkAmount(file.length());
-      
+
       InputStream inputStream;
       try
       {
@@ -2556,7 +2556,7 @@ public class NXCSession
          logger.error("Login failed, server requires minimal client version {} (this client version is {})", minVersion, VersionInfo.version());
          throw new NXCException(rcc, minVersion);
       }
-      
+
       if (rcc != RCC.SUCCESS)
       {
          logger.error("Login failed, RCC=" + rcc);
@@ -2705,7 +2705,7 @@ public class NXCSession
 
    /**
     * Get list of active authentication tokens for given user.
-    * 
+    *
     * @param userId user ID to get token list for (0 to indicate currently logged in user)
     * @return list of tokens
     * @throws IOException if socket I/O error occurs
@@ -3323,7 +3323,7 @@ public class NXCSession
    {
       return messageOfTheDay;
    }
-   
+
    /**
     * Get list of license problems reported by server. This method will always return null for community edition server.
     *
@@ -3650,7 +3650,7 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, options);
       msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, ((Collection<Long>)objects).size());
-      msg.setField(NXCPCodes.VID_OBJECT_LIST, ((Collection<Long>)objects));       
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, ((Collection<Long>)objects));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
@@ -3761,7 +3761,7 @@ public class NXCSession
 
    /**
     * Sync children of given object.
-    * 
+    *
     * @param object parent object
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3789,7 +3789,7 @@ public class NXCSession
 
    /**
     * Returns true if children are already synchronized for given object.
-    * 
+    *
     * @param id object id
     * @return true if children are synchronized
     */
@@ -3800,10 +3800,10 @@ public class NXCSession
          return objectsSynchronized || synchronizedObjectSet.contains(id);
       }
    }
-   
+
    /**
     * Find object by regex
-    * 
+    *
     * @param regex for object name
     * @return list of matching objects
     */
@@ -3823,7 +3823,7 @@ public class NXCSession
       }
 
       return objects;
-   }   
+   }
 
    /**
     * Find NetXMS object by it's identifier.
@@ -3869,8 +3869,8 @@ public class NXCSession
          AbstractObject result = objectList.get(id);
          if (result == null)
          {
-            object = new FutureObject();   
-            addListener(new SessionListener() {               
+            object = new FutureObject();
+            addListener(new SessionListener() {
                @Override
                public void notificationHandler(SessionNotification n)
                {
@@ -3909,7 +3909,7 @@ public class NXCSession
       {
          AbstractObject object = objectList.get(id);
          if (object == null)
-         { 
+         {
             addListener(new SessionListener() {
                @Override
                public void notificationHandler(SessionNotification n)
@@ -5493,7 +5493,7 @@ public class NXCSession
 
    /**
     * Synchronize only objects that were not yet synchronized
-    * 
+    *
     * @param users set of user IDs to sync
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -5579,7 +5579,7 @@ public class NXCSession
             userSyncList.notifyAll();
          }
       }
-      return object;      
+      return object;
    }
 
    /**
@@ -5805,10 +5805,10 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_VALUE);
    }
-   
+
    /**
     * Find all DCIs matching given creteria.
-    * 
+    *
     * @param objectId if specific object needed (set to 0 if match by object name is needed)
     * @param objectName regular expression to match object name (not used if object ID is not 0)
     * @param dciName regular expression to match DCI name
@@ -5820,7 +5820,7 @@ public class NXCSession
    public List<DciValue> findMatchingDCI(long objectId, String objectName, String dciName, int flags) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MATCHING_DCI);
-      
+
       if (objectId != 0)
          msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       else
@@ -5828,18 +5828,18 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_DCI_NAME, dciName);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      
+
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       List<DciValue> result = new ArrayList<DciValue>(count);
-      
+
       Long base = NXCPCodes.VID_DCI_VALUES_BASE;
       for(int i = 0; i < count; i++, base += 50)
       {
          result.add(new SimpleDciValue(response, base));
       }
-      
+
       return result;
    }
 
@@ -5907,10 +5907,10 @@ public class NXCSession
    {
       return getDataCollectionSummary(nodeId, 0, false, false, false);
    }
-   
+
    /**
-    * Get tooltip last values for all objects 
-    * 
+    * Get tooltip last values for all objects
+    *
     * @param nodeList list of node IDs
     * @return map with node id to DCI last values
     * @throws IOException  if socket I/O error occurs
@@ -5942,7 +5942,7 @@ public class NXCSession
             nodeId = v.getNodeId();
          }
          values.add(v);
-         
+
       }
       if (nodeId != 0)
       {
@@ -6224,7 +6224,7 @@ public class NXCSession
     * @param to         End of time range or null for no limit
     * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
     * @param valueType  TODO
-    * @param delegateReadObject delegate object read access should be provided thought 
+    * @param delegateReadObject delegate object read access should be provided thought
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6327,7 +6327,7 @@ public class NXCSession
     * @param to        End of time range or null for no limit
     * @param maxRows   Maximum number of rows to retrieve or 0 for no limit
     * @param valueType TODO
-    * @param delegateReadObject delegate object read access should be provided thought 
+    * @param delegateReadObject delegate object read access should be provided thought
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6369,7 +6369,7 @@ public class NXCSession
     * @param from       Start of time range or null for no limit
     * @param to         End of time range or null for no limit
     * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
-    * @param delegateReadObject delegate object read access should be provided thought 
+    * @param delegateReadObject delegate object read access should be provided thought
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6474,7 +6474,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Get list of thresholds configured for given DCI
     *
@@ -6494,7 +6494,7 @@ public class NXCSession
     *
     * @param nodeId Node object ID
     * @param dciId  DCI ID
-    * @param delegateReadObject delegate object read access should be provided thought 
+    * @param delegateReadObject delegate object read access should be provided thought
     * @return List of configured thresholds
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6826,7 +6826,7 @@ public class NXCSession
    }
 
    /**
-    * Create new NetXMS object in synchronous mode. 
+    * Create new NetXMS object in synchronous mode.
     *
     * @param data Object creation data
     * @return newly created AbstractObject
@@ -6837,7 +6837,7 @@ public class NXCSession
    {
       long id = createObject(data, null);
       FutureObject object = findFutureObjectById(id);
-      synchronized (object) 
+      synchronized (object)
       {
          while (!object.hasObject())
          {
@@ -6856,7 +6856,7 @@ public class NXCSession
 
    /**
     * Create new NetXMS object and run callback once it's created.
-    * 
+    *
     * @param data Object creation data
     * @param callback callback to run on object creation
     * @return ID of new object
@@ -6866,7 +6866,7 @@ public class NXCSession
    public long createObjectAsync(final NXCObjectCreationData data, ObjectCreationListener callback) throws IOException, NXCException
    {
       long id = createObject(data, null);
-      findObjectAsync(id, callback); 
+      findObjectAsync(id, callback);
       return id;
    }
 
@@ -7114,13 +7114,13 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, data.getSnmpVersion().getValue());
       }
 
-      if (data.getSnmpAuthName() != null || data.getSnmpAuthPassword() != null || 
+      if (data.getSnmpAuthName() != null || data.getSnmpAuthPassword() != null ||
             data.getSnmpPrivPassword() != null || data.getSnmpAuthMethod() != null ||
-            data.getSnmpPrivMethod() != null)         
+            data.getSnmpPrivMethod() != null)
       {
-         if (data.getSnmpAuthName() == null || data.getSnmpAuthPassword() == null || 
+         if (data.getSnmpAuthName() == null || data.getSnmpAuthPassword() == null ||
                data.getSnmpPrivPassword() == null || data.getSnmpAuthMethod() == null ||
-               data.getSnmpPrivMethod() == null) 
+               data.getSnmpPrivMethod() == null)
             throw new IllegalArgumentException("All SNMP fields should be set: auth name, auth password, priv password, auth method, priv method");
 
          msg.setField(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
@@ -7167,7 +7167,7 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout().getValue());
       }
-      
+
       if (data.getMapWidth() != null || data.getMapHeight() != null)
       {
          if (data.getMapWidth() == null || data.getMapHeight() == null)
@@ -7199,7 +7199,7 @@ public class NXCSession
       {
          if (data.getMapElements() == null || data.getMapLinks() == null)
             throw new IllegalArgumentException("Both map elements and map links should be set");
-            
+
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
          long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
          for(NetworkMapElement e : data.getMapElements())
@@ -7340,10 +7340,10 @@ public class NXCSession
       }
 
       if (data.getObjectFlags() != null || data.getObjectFlagsMask() != null)
-      {            
-         msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
+      {
+         msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags().intValue());
          if (data.getObjectFlagsMask() != null)
-            msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
+            msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask().intValue());
       }
 
       if (data.getIfXTablePolicy() != null)
@@ -7388,7 +7388,7 @@ public class NXCSession
       if (data.getStatusCalculationMethod() != null || data.getStatusPropagationMethod() != null ||
             data.getFixedPropagatedStatus() != null || data.getStatusShift() != null ||
             data.getStatusTransformation() != null || data.getStatusSingleThreshold() != null ||
-            data.getStatusThresholds() != null)         
+            data.getStatusThresholds() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_STATUS_CALCULATION_ALG, data.getStatusCalculationMethod());
          msg.setFieldInt16(NXCPCodes.VID_STATUS_PROPAGATION_ALG, data.getStatusPropagationMethod());
@@ -7456,7 +7456,7 @@ public class NXCSession
       {
          if (data.getLocalNetworks() == null || data.getRemoteNetworks() == null)
             throw new IllegalArgumentException("Both local and remote networks should be set together");
-         
+
          long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
@@ -7491,7 +7491,7 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
-      
+
       if (data.getFrontRackImage() != null || data.getRearRackImage() != null || data.getRackPosition() != null || data.getRackHeight() != null || data.getRackOrientation() != null)
       {
          if (data.getFrontRackImage() == null || data.getRearRackImage() == null || data.getRackPosition() == null || data.getRackHeight() == null || data.getRackOrientation() == null)
@@ -7647,7 +7647,7 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_ICMP_COLLECTION_MODE, data.getIcmpStatCollectionMode().getValue());
       }
-      
+
       if (data.getIcmpTargets() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_ICMP_TARGET_COUNT, data.getIcmpTargets().size());
@@ -7655,7 +7655,7 @@ public class NXCSession
          for(InetAddress a : data.getIcmpTargets())
             msg.setField(fieldId++, a);
       }
-      
+
       if (data.getEtherNetIPPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIPPort());
@@ -7828,7 +7828,7 @@ public class NXCSession
    /**
     * Enable anonymous access to object. Server will add read access right for user "anonymous" and issue authentication token for
     * that user. Authentication token will be returned by this call and can be used for anonymous login.
-    * 
+    *
     * @param objectId object ID
     * @return authentication token for anonymous access
     * @throws IOException if socket I/O error occurs
@@ -8177,7 +8177,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String executeActionWithExpansion(long nodeId, long alarmId, String action, 
+   public String executeActionWithExpansion(long nodeId, long alarmId, String action,
          final Map<String, String> inputValues, final List<String> maskedFields)
          throws IOException, NXCException
    {
@@ -8902,7 +8902,7 @@ public class NXCSession
     *
     * @param ownerId DCI owner
     * @param items items to change
-    * @param status new status 
+    * @param status new status
     * @return return code for each DCI
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9017,7 +9017,7 @@ public class NXCSession
 
       /**
        * Check if error was reported
-       * 
+       *
        * @return true if error was reported
        */
       public boolean isFailure()
@@ -9243,7 +9243,7 @@ public class NXCSession
     * <li>For array all elements will be returned as values and keys will be element positions starting as 1;
     * <li>For all other types map will consist of single element with key "1" and script return value as value.
     * </ul>
-    * 
+    *
     * @param nodeId ID of the node object to test script on
     * @param script script source code
     * @param parameterList script parameter list can be null
@@ -9940,7 +9940,7 @@ public class NXCSession
 
    /**
     * Get SSH credentials for all zones.
-    * 
+    *
     * @return list of SSH credentials for all zones
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9976,7 +9976,7 @@ public class NXCSession
 
    /**
     * Get SSH credentials for specific zone.
-    * 
+    *
     * @param zoneUIN zone UIN
     * @return list of SSH credentials for specific zone
     * @throws IOException if socket I/O error occurs
@@ -10273,7 +10273,7 @@ public class NXCSession
       {
          msg.setField(varId++, rules[i]);
       }
-      
+
       msg.setFieldInt32(NXCPCodes.VID_SYSLOG_NUM_RECORDS, syslogList.length);
       varId = NXCPCodes.VID_SYSLOG_RULES_LIST_BASE;
       for(int i = 0; i < syslogList.length; i++)
@@ -10283,7 +10283,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_WIN_LOG_NUM_RECORDS, windowsEventList.length);
       varId = NXCPCodes.VID_WIN_EVENT_RULES_LIST_BASE;
       for(int i = 0; i < windowsEventList.length; i++)
-      {  
+      {
          msg.setField(varId++, windowsEventList[i]);
       }
 
@@ -10653,7 +10653,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, long alarmId, String command, Map<String, String> inputFields, List<String> maskedFields, 
+   public void executeServerCommand(long objectId, long alarmId, String command, Map<String, String> inputFields, List<String> maskedFields,
          boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SERVER_COMMAND);
@@ -11170,9 +11170,9 @@ public class NXCSession
 		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for (int i = 0; i < count; i++, base += 10)
          out.add(new ConnectionPoint(response, base));
-      
+
       if (out.size() == 0)
-         out.add(new ConnectionPoint(new MacAddress(pattern)));         
+         out.add(new ConnectionPoint(new MacAddress(pattern)));
 
       return out;
    }
@@ -11460,7 +11460,7 @@ public class NXCSession
       handler.setMessageWaitTimeout(600000); // 10 min timeout
       addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), handler);
 
-      try 
+      try
       {
          sendMessage(msg);
          try
@@ -11472,7 +11472,7 @@ public class NXCSession
             removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
             throw e;
          }
-   
+
          handler.waitForCompletion();
          if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
@@ -11753,7 +11753,7 @@ public class NXCSession
 
    /**
     * Calculate MD5 hash of given file or it's part
-    * 
+    *
     * @param file file to calculate hash for
     * @param size size of file part to calculate hash for
     * @return MD5 hash
@@ -11792,12 +11792,12 @@ public class NXCSession
       // 0 - overwrite
       // 1 - check if resume is possible
       // 2 - resume file transfer (append to existing file part)
-      int resumeMode = 1; 
+      int resumeMode = 1;
       long offset = 0;
       NXCPMessage msg = null;
       NXCPMessage response = null;
       boolean messageResendRequired;
-      do 
+      do
       {
          messageResendRequired = false;
          msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
@@ -12607,7 +12607,7 @@ public class NXCSession
       }
       catch(IOException e)
       {
-         
+
       }
       return id;
    }
@@ -13997,10 +13997,10 @@ public class NXCSession
          tcpProxies.remove(channelId);
       }
    }
-   
+
    /**
     * Get agent policy by template id and GUID
-    * 
+    *
     * @param templateId template id policy is in
     * @param policyGUID policy GUID
     * @return agent policy
@@ -14020,7 +14020,7 @@ public class NXCSession
 
    /**
     * Returns agent policy list
-    * 
+    *
     * @param templateId id of the template where policy are defined
     * @return hash map of policy UUID to policy
     * @throws IOException  if socket I/O error occurs
@@ -14045,10 +14045,10 @@ public class NXCSession
 
    /**
     * Saves new or updated policy
-    * 
+    *
     * @param templateId id of template where policy is defined
     * @param policy policy data to be updated or created. For new policy GUID should be null
-    * @param duplicate if set to true server will make copy of existing policy instead of updating existing one 
+    * @param duplicate if set to true server will make copy of existing policy instead of updating existing one
     * @return UUID of saved policy
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14064,8 +14064,8 @@ public class NXCSession
    }
 
    /**
-    * Delete policy 
-    * 
+    * Delete policy
+    *
     * @param templateId id of template where policy is defined
     * @param guid guid of the policy that should be deleted
     * @throws IOException  if socket I/O error occurs
@@ -14082,7 +14082,7 @@ public class NXCSession
 
    /**
     * Command sent on policyEditor close to send updates to all applied nodes
-    * 
+    *
     * @param templateId id of the closed template
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14096,8 +14096,8 @@ public class NXCSession
    }
 
    /**
-    * Force policy installation on all nodes where template is applied 
-    * 
+    * Force policy installation on all nodes where template is applied
+    *
     * @param templateId template id
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14112,7 +14112,7 @@ public class NXCSession
 
    /**
     * Get user support application notifications list
-    * 
+    *
     * @return list of user support application notifications
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14133,7 +14133,7 @@ public class NXCSession
 
    /**
     * Recall user support application notification
-    * 
+    *
     * @param id recall id
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14145,10 +14145,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Create new user support application notifications
-    * 
+    *
     * @param message notification message
     * @param objects objects to show notifications on
     * @param startTime notification's activation time
@@ -14171,7 +14171,7 @@ public class NXCSession
 
    /**
     * Create new user support application notifications
-    * 
+    *
     * @param message notification message
     * @param objects objects to show notifications on
     * @param startTime notification's activation time
@@ -14191,7 +14191,7 @@ public class NXCSession
 
    /**
     * Get server notification channels
-    * 
+    *
     * @return list of server notifications channels
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14205,13 +14205,13 @@ public class NXCSession
       List<NotificationChannel> channels = new ArrayList<NotificationChannel>(count);
       long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++, base += 20)
-         channels.add(new NotificationChannel(response, base));            
+         channels.add(new NotificationChannel(response, base));
       return channels;
    }
 
    /**
-    * Create notification channel 
-    * 
+    * Create notification channel
+    *
     * @param nc new notification channel
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14220,13 +14220,13 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_NOTIFICATION_CHANNEL);
       nc.fillMessage(msg);
-      sendMessage(msg);  
-      waitForRCC(msg.getMessageId());    
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
-   
+
    /**
-    * Update notification channel 
-    * 
+    * Update notification channel
+    *
     * @param nc update notification channel
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14235,13 +14235,13 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_NOTIFICATION_CHANNEL);
       nc.fillMessage(msg);
-      sendMessage(msg);  
-      waitForRCC(msg.getMessageId());          
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete notification channel
-    * 
+    *
     * @param name name of notification channel to be deleted
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14250,13 +14250,13 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_NOTIFICATION_CHANNEL);
       msg.setField(NXCPCodes.VID_NAME, name);
-      sendMessage(msg);  
-      waitForRCC(msg.getMessageId());    
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Rename notification channel
-    * 
+    *
     * @param oldName old notification channel name
     * @param newName new notification channel name
     * @throws IOException  if socket I/O error occurs
@@ -14288,7 +14288,7 @@ public class NXCSession
 
    /**
     * Get list of available notification channel drivers.
-    * 
+    *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return list of available notification channel drivers
@@ -14304,7 +14304,7 @@ public class NXCSession
 
    /**
     * Start active discovery for provided list manually
-    * 
+    *
     * @param ranges IP address ranges to scan
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14325,7 +14325,7 @@ public class NXCSession
 
    /**
     * Get list of physical links filtered by provided options
-    * 
+    *
     * @param objectId node id or rack id to filter out physical links
     * @param patchPanelId patch panel id to filter out it's physical links (first parameter should be rack id)
     * @return list of physical links
@@ -14339,7 +14339,7 @@ public class NXCSession
       if (objectId > 0)
          msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       if (patchPanelId > 0)
-         msg.setFieldInt32(NXCPCodes.VID_PATCH_PANEL_ID, (int)patchPanelId);      
+         msg.setFieldInt32(NXCPCodes.VID_PATCH_PANEL_ID, (int)patchPanelId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_LINK_COUNT);
@@ -14348,13 +14348,13 @@ public class NXCSession
       {
          links.add(new PhysicalLink(response, base));
          base += 20;
-      }      
+      }
       return links;
    }
-   
+
    /**
     * Create new or update existing physical link
-    * 
+    *
     * @param link link to be created with ID 0 or link to be updated with correct ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14366,10 +14366,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete physical link.
-    * 
+    *
     * @param linkId physical link ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14379,12 +14379,12 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_PHYSICAL_LINK);
       msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_LINK_ID, (int)linkId);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Get configured web service definitions.
-    * 
+    *
     * @return list of configured web service definitions
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14406,7 +14406,7 @@ public class NXCSession
 
    /**
     * Modify (or create new) web service definition. New definition will be created if ID of provided definition object set to 0.
-    * 
+    *
     * @param definition web service definition to create or modify
     * @return assigned ID of web service definition (same as provided if modifying existing definition)
     * @throws IOException if socket I/O error occurs
@@ -14422,7 +14422,7 @@ public class NXCSession
 
    /**
     * Delete web service definition.
-    * 
+    *
     * @param id web service definition ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14437,7 +14437,7 @@ public class NXCSession
 
    /**
     * Get agent shared secret list (global and all zones).
-    * 
+    *
     * @return map with zone UIN and shared secret list (-1 for global secrets).
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14677,7 +14677,7 @@ public class NXCSession
 
    /**
     * Get list of SSH key
-    * 
+    *
     * @param withPublicKey true if ssh data should be returned with public key
     * @return list of SSH keys
     * @throws IOException if socket I/O error occurs
@@ -14686,9 +14686,9 @@ public class NXCSession
    public List<SshKeyPair> getSshKeys(boolean withPublicKey) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_KEYS_LIST);
-      msg.setField(NXCPCodes.VID_INCLUDE_PUBLIC_KEY, withPublicKey);      
+      msg.setField(NXCPCodes.VID_INCLUDE_PUBLIC_KEY, withPublicKey);
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_COUNT);
       List<SshKeyPair> sshKeys = new ArrayList<SshKeyPair>(count);
@@ -14697,13 +14697,13 @@ public class NXCSession
       {
          sshKeys.add(new SshKeyPair(response, fieldId));
       }
-      
+
       return sshKeys;
    }
 
    /**
-    * Delete SSH key. 
-    * 
+    * Delete SSH key.
+    *
     * @param id key ID
     * @param force if set to true key will be deleted even if it is in use
     * @throws IOException if socket I/O error occurs
@@ -14720,7 +14720,7 @@ public class NXCSession
 
    /**
     * Update or import new SSH keys
-    * 
+    *
     * @param sshCertificateData ssh key information
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14735,7 +14735,7 @@ public class NXCSession
 
    /**
     * Generate new SSH keys .
-    * 
+    *
     * @param name for new keys
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14750,7 +14750,7 @@ public class NXCSession
 
    /**
     * Get list of available two-factor authentication drivers.
-    * 
+    *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return list of available two-factor authentication drivers
@@ -14805,7 +14805,7 @@ public class NXCSession
 
    /**
     * Rename two-factor authentication method
-    * 
+    *
     * @param oldName old method name
     * @param newName new method name
     * @throws IOException if socket I/O error occurs
@@ -14835,10 +14835,10 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
-   /**    
+   /**
     * Get list business service checks
-    * 
-    * @param serviceId business service id 
+    *
+    * @param serviceId business service id
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return list of business service checks
@@ -14861,10 +14861,10 @@ public class NXCSession
       return checks;
    }
 
-   /**  
+   /**
     * Delete check form businsess service
-    * 
-    * @param businessServiceid business service id 
+    *
+    * @param businessServiceid business service id
     * @param checkId cehck id
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14878,10 +14878,10 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
-   /**  
+   /**
     * Modify check form businsess service
-    * 
-    * @param businessServiceid business service id 
+    *
+    * @param businessServiceid business service id
     * @param check cehck id
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -14893,14 +14893,14 @@ public class NXCSession
       check.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }  
+   }
 
-   /**  
+   /**
     * Get business service availability
-    * 
-    * @param businessServiceid business service id 
+    *
+    * @param businessServiceid business service id
     * @param timePeriod time period
-    * @return uptime for selected period 
+    * @return uptime for selected period
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -14913,12 +14913,12 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsDouble(NXCPCodes.VID_BUSINESS_SERVICE_UPTIME);
-   }  
+   }
 
-   /**  
+   /**
     * Get business service tickets
-    * 
-    * @param businessServiceid business service id 
+    *
+    * @param businessServiceid business service id
     * @param timePeriod time period
     * @return list of tickets for business service
     * @throws IOException if socket I/O error occurs
@@ -15026,7 +15026,7 @@ public class NXCSession
 
    /**
     * Create new maintenance journal entry for specified object
-    * 
+    *
     * @param objectId journal owner object ID
     * @param description journal entry description
     * @throws IOException if socket I/O error occurs
@@ -15043,7 +15043,7 @@ public class NXCSession
 
    /**
     * Edit specified maintenance journal entry for specified object
-    * 
+    *
     * @param objectId journal owner object ID
     * @param entryId journal entry ID
     * @param description journal entry description
@@ -15059,10 +15059,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Create network map clone
-    * 
+    *
     * @param mapId map id to clone
     * @param newObjectName name of the new object
     * @param alias new object alias
@@ -15118,12 +15118,12 @@ public class NXCSession
       fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         result.put(response.getFieldAsMacAddress(fieldId), response.getFieldAsString(fieldId + 1));         
+         result.put(response.getFieldAsMacAddress(fieldId), response.getFieldAsString(fieldId + 1));
          fieldId += 2;
       }
       return result;
    }
-   
+
    /**
     * Synchronize asset management schema.
     *
@@ -15180,7 +15180,7 @@ public class NXCSession
 
    /**
     * Create asset attribute (definition in asset management schema)..
-    * 
+    *
     * @param attribute attribute to create
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15190,12 +15190,12 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_ASSET_ATTRIBUTE);
       attribute.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Update asset attribute (definition in asset management schema).
-    * 
+    *
     * @param attribute attribute to update
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15205,12 +15205,12 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ASSET_ATTRIBUTE);
       attribute.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Delete asset attribute (definition in asset management schema).
-    * 
+    *
     * @param name name of attribute to be deleted
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15220,14 +15220,14 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_ATTRIBUTE);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Check if asset management attribute name is unique
-    * 
+    *
     * @param newName new attribute name
-    * 
+    *
     * @return true if it is unique
     */
    public boolean isAssetAttributeUnique(String newName)
@@ -15242,7 +15242,7 @@ public class NXCSession
 
    /**
     * Set asset property value.
-    * 
+    *
     * @param objectId object id
     * @param name property name
     * @param value new value
@@ -15256,12 +15256,12 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_VALUE, value);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Delete asset property.
-    * 
+    *
     * @param objectId object id
     * @param name property name
     * @throws IOException if socket I/O error occurs
@@ -15273,12 +15273,12 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());         
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Link asset object to given object. If asset is already linked to another object, that link will be removed.
-    * 
+    *
     * @param assetId asset object ID
     * @param objectId other object ID
     * @param updateIdentification if identification filed (serial or MAC address should be updated on link)
@@ -15297,7 +15297,7 @@ public class NXCSession
 
    /**
     * Unlink asset from object it is currently linked to. Will do nothing if asset is not linked.
-    * 
+    *
     * @param assetId asset object ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15312,8 +15312,8 @@ public class NXCSession
 
 
    /**
-    * Update network map object location 
-    * 
+    * Update network map object location
+    *
     * @param mapId network map id
     * @param elements element list to be updated
     * @param links link list to be updated
@@ -15322,7 +15322,7 @@ public class NXCSession
     */
    public void updateNetworkMapElementPosition(long mapId, Set<NetworkMapElement> elements, Set<NetworkMapLink> links) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MAP_ELEMENT_UPDATE);      
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MAP_ELEMENT_UPDATE);
       msg.setFieldUInt32(NXCPCodes.VID_MAP_ID, mapId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, elements.size());
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -15360,8 +15360,8 @@ public class NXCSession
    }
 
    /**
-    * Compile MIBs 
-    * 
+    * Compile MIBs
+    *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -15369,15 +15369,15 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_COMPILE_MIB_FILES);
       sendMessage(msg);
-      
+
       if (outputCallback != null)
       {
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), new MessageHandler() {
             String buffer = "";
-            
+
             @Override
             public boolean processMessage(NXCPMessage msg)
-            {          
+            {
                buffer = buffer.concat(msg.getFieldAsString(NXCPCodes.VID_MESSAGE));
                String[] lines = buffer.split("\\r?\\n", -1);
                buffer = lines[lines.length - 1];
@@ -15407,7 +15407,7 @@ public class NXCSession
     * <li>For array all elements will be returned as values and keys will be element positions starting as 1;
     * <li>For all other types map will consist of single element with key "1" and script return value as value.
     * </ul>
-    * 
+    *
     * @param dashboardId ID of the dashboard script should be taken from
     * @param elementId index of the dashboard element script should be taken from
     * @param objectId ID of the object to run script on
@@ -15430,7 +15430,7 @@ public class NXCSession
 
    /**
     * Set peer interface for given interface.
-    * 
+    *
     * @param localInterfaceId ID of interface object to set peer information on.
     * @param peerInterfaceId remote interface object to be set as peer.
     * @throws IOException if socket I/O error occurs
@@ -15447,7 +15447,7 @@ public class NXCSession
 
    /**
     * Clear peer interface information.
-    * 
+    *
     * @param interfaceId interface object to clear peer information on
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15512,7 +15512,7 @@ public class NXCSession
 
    /**
     * Clear AI assistant chat history.
-    * 
+    *
     * @param chatId chat ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15527,7 +15527,7 @@ public class NXCSession
 
    /**
     * Delete AI assistant chat.
-    * 
+    *
     * @param chatId chat ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15559,7 +15559,7 @@ public class NXCSession
 
    /**
     * Get list of available AI assistant functions.
-    * 
+    *
     * @return list of available AI assistant functions
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15601,7 +15601,7 @@ public class NXCSession
 
    /**
     * Get list of AI agent tasks.
-    * 
+    *
     * @return list of AI agent tasks
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15624,7 +15624,7 @@ public class NXCSession
 
    /**
     * Delete AI agent task.
-    * 
+    *
     * @param taskId task ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -15772,7 +15772,7 @@ public class NXCSession
 
    /**
     * Get interface traffic DCIs
-    * 
+    *
     * @param interfaceId interface id to find DCIs for
     * @return DCI and it's unit: 4 DCIs - 2 pairs (first are trafic, second utilization).
     * @throws IOException if socket I/O error occurs
@@ -15794,7 +15794,7 @@ public class NXCSession
 
    /**
     * Auto link nodes based on L2 topology information
-    * 
+    *
     * @param mapId network map id
     * @param nodes list of nodes to link
     * @throws IOException if socket I/O error occurs
