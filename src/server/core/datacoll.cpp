@@ -839,6 +839,7 @@ static void V5DataMigrationThread()
                   if (maxTs == 0)
                   {
                      dct->deleteV5DataTable(hdb, false);
+                     success = true;
                   }
                   else
                   {
@@ -880,6 +881,7 @@ static void V5DataMigrationThread()
                   if (maxTs == 0)
                   {
                      dct->deleteV5DataTable(hdb, true);
+                     success = true;
                   }
                   else
                   {
