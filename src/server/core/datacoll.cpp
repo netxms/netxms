@@ -721,56 +721,35 @@ void MigrateRecentV5Data()
 
    // Collect objects that have v5 tables
    SharedObjectArray<NetObj> idataObjects(256, 256);
-   SharedObjectArray<NetObj> tdataObjects(256, 256);
    for(int i = 0; i < objects.size(); i++)
    {
       DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(objects.get(i));
       if (dct->hasV5IdataTable())
          idataObjects.add(objects.getShared(i));
-      if (dct->hasV5TdataTable())
-         tdataObjects.add(objects.getShared(i));
    }
 
-   if (idataObjects.isEmpty() && tdataObjects.isEmpty())
+   if (idataObjects.isEmpty())
       return;
 
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Migrating recent data from v5 tables (%d idata, %d tdata)", idataObjects.size(), tdataObjects.size());
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Migrating recent data from v5 tables (%d tables to process)", idataObjects.size());
 
-   time_t cutoffSeconds = time(nullptr) - 86400;
+   int64_t cutoffSeconds = time(nullptr) - 86400;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   TCHAR query[1024];
+   wchar_t query[1024];
    int migratedCount = 0;
-   const TCHAR *idataTsExpr = V5TimestampToMs(false);
-   const TCHAR *tdataTsExpr = V5TimestampToMs(true);
-
+   const wchar_t *idataTsExpr = V5TimestampToMs(false);
    for(int i = 0; i < idataObjects.size(); i++)
    {
       uint32_t id = idataObjects.get(i)->getId();
-      _sntprintf(query, 1024,
-         _T("INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)")
-         _T(" SELECT item_id,%s,idata_value,raw_value")
-         _T(" FROM idata_v5_%u WHERE idata_timestamp>=") INT64_FMT,
-         id, idataTsExpr, id, static_cast<int64_t>(cutoffSeconds));
+      nx_swprintf(query, 1024,
+         L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+         L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
+         L" FROM idata_v5_%u WHERE idata_timestamp>=" INT64_FMT
+         L" GROUP BY item_id,idata_timestamp",
+         id, idataTsExpr, id, cutoffSeconds);
       if (DBQuery(hdb, query))
       {
-         _sntprintf(query, 1024, _T("DELETE FROM idata_v5_%u WHERE idata_timestamp>=") INT64_FMT,
-            id, static_cast<int64_t>(cutoffSeconds));
-         DBQuery(hdb, query);
-         migratedCount++;
-      }
-   }
-
-   for(int i = 0; i < tdataObjects.size(); i++)
-   {
-      uint32_t id = tdataObjects.get(i)->getId();
-      _sntprintf(query, 1024,
-         _T("INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)")
-         _T(" SELECT item_id,%s,tdata_value")
-         _T(" FROM tdata_v5_%u WHERE tdata_timestamp>=") INT64_FMT,
-         id, tdataTsExpr, id, static_cast<int64_t>(cutoffSeconds));
-      if (DBQuery(hdb, query))
-      {
-         nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>=" INT64_FMT, id, static_cast<int64_t>(cutoffSeconds));
+         nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>=" INT64_FMT, id, cutoffSeconds);
          DBQuery(hdb, query);
          migratedCount++;
       }
