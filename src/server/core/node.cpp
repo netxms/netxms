@@ -12818,7 +12818,7 @@ NXSL_Value *Node::getParentsForNXSL(NXSL_VM *vm)
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
-      if ((object->getObjectClass() != OBJECT_TEMPLATE) && object->isTrustedObject(m_id))
+      if ((object->getObjectClass() != OBJECT_TEMPLATE) && object->isTrustedObject(m_id) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, object))
       {
          parents->set(index++, object->createNXSLObject(vm));
       }
@@ -12840,7 +12840,7 @@ NXSL_Value *Node::getInterfacesForNXSL(NXSL_VM *vm)
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() == OBJECT_INTERFACE)
+      if ((curr->getObjectClass() == OBJECT_INTERFACE) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, curr))
       {
          ifaces->set(index++, curr->createNXSLObject(vm));
       }

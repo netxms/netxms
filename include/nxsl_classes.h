@@ -1006,7 +1006,7 @@ public:
    NXSL_SecurityContext() { }
    virtual ~NXSL_SecurityContext();
 
-   virtual bool validateAccess(int accessType, const void *object);
+   virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr);
 };
 
 class NXSL_Library;
@@ -1574,7 +1574,7 @@ public:
    const StringMap& getMetadata() const { return m_metadata; }
 
    void setSecurityContext(NXSL_SecurityContext *context);
-   bool validateAccess(int accessType, const void *object) { return (m_securityContext != nullptr) ? m_securityContext->validateAccess(accessType, object) : false; }
+   bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr) { return (m_securityContext != nullptr) ? m_securityContext->validateAccess(subsystem, requiredAccess, object) : true; }
 
    void setAssertMessage(const TCHAR *msg) { MemFree(m_assertMessage); m_assertMessage = MemCopyString(msg); }
 

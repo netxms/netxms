@@ -99,6 +99,11 @@ static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **r
 NXSL_METHOD_DEFINITION(NetObj, bind)
 {
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
             (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
@@ -130,6 +135,11 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
 NXSL_METHOD_DEFINITION(NetObj, bindTo)
 {
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
 
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -189,6 +199,11 @@ NXSL_METHOD_DEFINITION(NetObj, calculateDowntime)
  */
 NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setGeoLocation(GeoLocation());
    *result = vm->createValue();
    return 0;
@@ -235,6 +250,11 @@ NXSL_METHOD_DEFINITION(NetObj, createUserAgentNotification)
  */
 NXSL_METHOD_DEFINITION(NetObj, delete)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->deleteObject();
    *result = vm->createValue();
    return 0;
@@ -246,6 +266,12 @@ NXSL_METHOD_DEFINITION(NetObj, delete)
  */
 NXSL_METHOD_DEFINITION(NetObj, deleteCustomAttribute)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -262,6 +288,12 @@ NXSL_METHOD_DEFINITION(NetObj, deleteCustomAttribute)
  */
 NXSL_METHOD_DEFINITION(NetObj, enterMaintenance)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MAINTENANCE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -374,6 +406,11 @@ NXSL_METHOD_DEFINITION(NetObj, isParent)
  */
 NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MAINTENANCE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -384,6 +421,11 @@ NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
  */
 NXSL_METHOD_DEFINITION(NetObj, manage)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -412,6 +454,12 @@ NXSL_METHOD_DEFINITION(NetObj, readMaintenanceJournal)
  */
 NXSL_METHOD_DEFINITION(NetObj, rename)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -425,6 +473,12 @@ NXSL_METHOD_DEFINITION(NetObj, rename)
  */
 NXSL_METHOD_DEFINITION(NetObj, setAlias)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -438,6 +492,12 @@ NXSL_METHOD_DEFINITION(NetObj, setAlias)
  */
 NXSL_METHOD_DEFINITION(NetObj, setCategory)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -462,6 +522,12 @@ NXSL_METHOD_DEFINITION(NetObj, setCategory)
  */
 NXSL_METHOD_DEFINITION(NetObj, setComments)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_EDIT_COMMENTS, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if ((argc < 1) || (argc > 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -507,6 +573,12 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
  */
 NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (argc > 3 || argc < 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -527,6 +599,12 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
  */
 NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -545,6 +623,12 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
  */
 NXSL_METHOD_DEFINITION(NetObj, setMapImage)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString() && !argv[0]->isNull())
       return NXSL_ERR_NOT_STRING;
 
@@ -587,6 +671,12 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
  */
 NXSL_METHOD_DEFINITION(NetObj, setNameOnMap)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -600,6 +690,12 @@ NXSL_METHOD_DEFINITION(NetObj, setNameOnMap)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -645,6 +741,12 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -692,6 +794,11 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 NXSL_METHOD_DEFINITION(NetObj, unbind)
 {
    NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
             (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
@@ -716,6 +823,11 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
 NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
 {
    NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
 
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -740,6 +852,11 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
  */
 NXSL_METHOD_DEFINITION(NetObj, unmanage)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(false);
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -750,6 +867,12 @@ NXSL_METHOD_DEFINITION(NetObj, unmanage)
  */
 NXSL_METHOD_DEFINITION(NetObj, writeMaintenanceJournal)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MAINTENANCE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -867,7 +990,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
       if (assetId != 0)
       {
          shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
-         value = (asset != nullptr) ? asset->createNXSLObject(vm) : vm->createValue();
+         value = (asset != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, asset.get())) ? asset->createNXSLObject(vm) : vm->createValue();
       }
       else
       {
@@ -897,7 +1020,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
       if (id != 0)
       {
          shared_ptr<NetObj> proxy = FindObjectById(id, OBJECT_NODE);
-         value = (proxy != nullptr) ? proxy->createNXSLObject(vm) : vm->createValue();
+         value = (proxy != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, proxy.get())) ? proxy->createNXSLObject(vm) : vm->createValue();
       }
       else
       {
@@ -1009,7 +1132,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
       if (id != 0)
       {
          shared_ptr<NetObj> proxy = FindObjectById(id, OBJECT_NODE);
-         value = (proxy != nullptr) ? proxy->createNXSLObject(vm) : vm->createValue();
+         value = (proxy != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, proxy.get())) ? proxy->createNXSLObject(vm) : vm->createValue();
       }
       else
       {
@@ -1094,7 +1217,7 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const NXSL_Identifier
       if (g_flags & AF_ENABLE_ZONING)
       {
          shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
-         if (zone != nullptr)
+         if (zone != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, zone.get()))
          {
             value = zone->createNXSLObject(vm);
          }
@@ -1238,7 +1361,7 @@ NXSL_Value *NXSL_AssetClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       if (id != 0)
       {
          shared_ptr<NetObj> object = FindObjectById(id);
-         value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+         value = (object != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, object.get())) ? object->createNXSLObject(vm) : vm->createValue();
       }
       else
       {
@@ -1304,6 +1427,11 @@ NXSL_Value *NXSL_AssetPropertiesClass::getAttr(NXSL_Object *_object, const NXSL_
 NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
 {
    shared_ptr<DataCollectionTarget> thisObject = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
 
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -1323,6 +1451,11 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, enableConfigurationPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true);
 }
 
@@ -1331,6 +1464,11 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, enableConfigurationPolling)
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, enableDataCollection)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_DATA_COLLECT, true);
 }
 
@@ -1339,6 +1477,11 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, enableDataCollection)
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, enableStatusPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true);
 }
 
@@ -1363,6 +1506,12 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, removeTemplate)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -1439,7 +1588,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       for(int i = 0; i < proxies.size(); i++)
       {
          shared_ptr<NetObj> node = FindObjectById(proxies.get(i), OBJECT_NODE);
-         if (node != nullptr)
+         if (node != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node.get()))
             array->append(node->createNXSLObject(vm));
       }
       value = vm->createValue(array);
@@ -1464,6 +1613,12 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
  */
 NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_SNMP, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (argc > 4)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -1704,6 +1859,8 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
  */
 NXSL_METHOD_DEFINITION(Node, enable8021xStatusPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_8021X_STATUS_POLL, true);
 }
 
@@ -1712,6 +1869,8 @@ NXSL_METHOD_DEFINITION(Node, enable8021xStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableAgent)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP, true);
 }
 
@@ -1720,6 +1879,8 @@ NXSL_METHOD_DEFINITION(Node, enableAgent)
  */
 NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL, true);
 }
 
@@ -1728,6 +1889,8 @@ NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableEtherNetIP)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ETHERNET_IP, true);
 }
 
@@ -1736,6 +1899,8 @@ NXSL_METHOD_DEFINITION(Node, enableEtherNetIP)
  */
 NXSL_METHOD_DEFINITION(Node, enableIcmp)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP, true);
 }
 
@@ -1744,6 +1909,8 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
  */
 NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_MODBUS_TCP, true);
 }
 
@@ -1752,6 +1919,8 @@ NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
  */
 NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_PING_PRIMARY_IP, false);
 }
 
@@ -1760,6 +1929,8 @@ NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
  */
 NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL, true);
 }
 
@@ -1768,6 +1939,8 @@ NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableSmclpPropertyPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SMCLP_PROPERTIES, true);
 }
 
@@ -1776,6 +1949,8 @@ NXSL_METHOD_DEFINITION(Node, enableSmclpPropertyPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableSnmp)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP, true);
 }
 
@@ -1784,6 +1959,8 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
  */
 NXSL_METHOD_DEFINITION(Node, enableSsh)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SSH, true);
 }
 
@@ -1792,6 +1969,8 @@ NXSL_METHOD_DEFINITION(Node, enableSsh)
  */
 NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL, true);
 }
 
@@ -1800,6 +1979,8 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
  */
 NXSL_METHOD_DEFINITION(Node, enableVnc)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_VNC, true);
 }
 
@@ -1808,6 +1989,8 @@ NXSL_METHOD_DEFINITION(Node, enableVnc)
  */
 NXSL_METHOD_DEFINITION(Node, enableWinPerfCountersCache)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_PERF_COUNT, true);
 }
 
@@ -1816,6 +1999,12 @@ NXSL_METHOD_DEFINITION(Node, enableWinPerfCountersCache)
  */
 NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -1846,6 +2035,12 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
  */
 NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -1882,6 +2077,12 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
  */
 NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -1977,7 +2178,7 @@ NXSL_METHOD_DEFINITION(Node, getInterface)
       else
          iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByName(argv[0]->getValueAsCString());
    }
-   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   *result = (iface != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, iface.get())) ? iface->createNXSLObject(vm) : vm->createValue();
    return 0;
 }
 
@@ -1990,7 +2191,7 @@ NXSL_METHOD_DEFINITION(Node, getInterfaceByIndex)
       return NXSL_ERR_NOT_INTEGER;
 
    shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByIndex(argv[0]->getValueAsUInt32());
-   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   *result = (iface != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, iface.get())) ? iface->createNXSLObject(vm) : vm->createValue();
    return 0;
 }
 
@@ -2004,7 +2205,7 @@ NXSL_METHOD_DEFINITION(Node, getInterfaceByMACAddress)
 
    MacAddress macAddr = MacAddress::parse(argv[0]->getValueAsCString());
    shared_ptr<Interface> iface = macAddr.isValid() ? static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByMAC(macAddr) : shared_ptr<Interface>();
-   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   *result = (iface != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, iface.get())) ? iface->createNXSLObject(vm) : vm->createValue();
    return 0;
 }
 
@@ -2017,7 +2218,7 @@ NXSL_METHOD_DEFINITION(Node, getInterfaceByName)
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByName(argv[0]->getValueAsCString());
-   *result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+   *result = (iface != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, iface.get())) ? iface->createNXSLObject(vm) : vm->createValue();
    return 0;
 }
 
@@ -2061,6 +2262,12 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
  */
 NXSL_METHOD_DEFINITION(Node, openSSHSession)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (argc > 3)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -2122,6 +2329,12 @@ NXSL_METHOD_DEFINITION(Node, openSSHSession)
  */
 NXSL_METHOD_DEFINITION(Node, readAgentParameter)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -2136,6 +2349,12 @@ NXSL_METHOD_DEFINITION(Node, readAgentParameter)
  */
 NXSL_METHOD_DEFINITION(Node, readAgentList)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -2151,6 +2370,12 @@ NXSL_METHOD_DEFINITION(Node, readAgentList)
  */
 NXSL_METHOD_DEFINITION(Node, readAgentTable)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -2236,6 +2461,12 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceList)
  */
 NXSL_METHOD_DEFINITION(Node, setExpectedCapabilities)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
@@ -2251,6 +2482,12 @@ NXSL_METHOD_DEFINITION(Node, setExpectedCapabilities)
  */
 NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
@@ -2268,6 +2505,12 @@ NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
  */
 NXSL_METHOD_DEFINITION(Node, setPollCountForStatusChange)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
@@ -3068,6 +3311,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
  */
 NXSL_METHOD_DEFINITION(Interface, clearPeer)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    if (iface->getPeerInterfaceId() != 0)
    {
@@ -3082,6 +3330,8 @@ NXSL_METHOD_DEFINITION(Interface, clearPeer)
  */
 NXSL_METHOD_DEFINITION(Interface, enableAgentStatusPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_AGENT_STATUS_POLL, true);
 }
 
@@ -3090,6 +3340,8 @@ NXSL_METHOD_DEFINITION(Interface, enableAgentStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Interface, enableICMPStatusPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_ICMP_STATUS_POLL, true);
 }
 
@@ -3098,6 +3350,8 @@ NXSL_METHOD_DEFINITION(Interface, enableICMPStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
    return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_SNMP_STATUS_POLL, true);
 }
 
@@ -3106,6 +3360,11 @@ NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setExcludeFromTopology(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
@@ -3117,6 +3376,12 @@ NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
  */
 NXSL_METHOD_DEFINITION(Interface, setExpectedState)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    int state;
    if (argv[0]->isInteger())
    {
@@ -3147,6 +3412,11 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
  */
 NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setIncludeInIcmpPoll(argv[0]->getValueAsBoolean());
    *result = vm->createValue();
@@ -3158,6 +3428,12 @@ NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
  */
 NXSL_METHOD_DEFINITION(Interface, setPollCountForStatusChange)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
@@ -4236,6 +4512,8 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
  */
 NXSL_METHOD_DEFINITION(Container, createCollector)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateCollectorImpl(object, argc, argv, result, vm);
 }
 
@@ -4244,6 +4522,8 @@ NXSL_METHOD_DEFINITION(Container, createCollector)
  */
 NXSL_METHOD_DEFINITION(Container, createContainer)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateContainerImpl(object, argc, argv, result, vm);
 }
 
@@ -4252,6 +4532,8 @@ NXSL_METHOD_DEFINITION(Container, createContainer)
  */
 NXSL_METHOD_DEFINITION(Container, createNode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateNodeImpl(object, argc, argv, result, vm);
 }
 
@@ -4260,6 +4542,8 @@ NXSL_METHOD_DEFINITION(Container, createNode)
  */
 NXSL_METHOD_DEFINITION(Container, createSensor)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateSensorImpl(object, argc, argv, result, vm);
 }
 
@@ -4268,6 +4552,11 @@ NXSL_METHOD_DEFINITION(Container, createSensor)
  */
 NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
@@ -4278,6 +4567,12 @@ NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
  */
 NXSL_METHOD_DEFINITION(Container, setAutoBindScript)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -4333,6 +4628,8 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const NXSL_Identif
  */
 NXSL_METHOD_DEFINITION(Collector, createCollector)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateCollectorImpl(object, argc, argv, result, vm);
 }
 
@@ -4341,6 +4638,8 @@ NXSL_METHOD_DEFINITION(Collector, createCollector)
  */
 NXSL_METHOD_DEFINITION(Collector, createContainer)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateContainerImpl(object, argc, argv, result, vm);
 }
 
@@ -4349,6 +4648,8 @@ NXSL_METHOD_DEFINITION(Collector, createContainer)
  */
 NXSL_METHOD_DEFINITION(Collector, createNode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateNodeImpl(object, argc, argv, result, vm);
 }
 
@@ -4357,6 +4658,8 @@ NXSL_METHOD_DEFINITION(Collector, createNode)
  */
 NXSL_METHOD_DEFINITION(Collector, createSensor)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateSensorImpl(object, argc, argv, result, vm);
 }
 
@@ -4365,6 +4668,11 @@ NXSL_METHOD_DEFINITION(Collector, createSensor)
  */
 NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<Collector>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
@@ -4375,6 +4683,12 @@ NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
  */
 NXSL_METHOD_DEFINITION(Collector, setAutoBindScript)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
@@ -4469,6 +4783,8 @@ NXSL_Value *NXSL_CircuitClass::getAttr(NXSL_Object *object, const NXSL_Identifie
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createCollector)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateCollectorImpl(object, argc, argv, result, vm);
 }
 
@@ -4477,6 +4793,8 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createCollector)
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateContainerImpl(object, argc, argv, result, vm);
 }
 
@@ -4485,6 +4803,8 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createNode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateNodeImpl(object, argc, argv, result, vm);
 }
 
@@ -4493,6 +4813,8 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createNode)
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createSensor)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
    return CreateSensorImpl(object, argc, argv, result, vm);
 }
 
@@ -4655,6 +4977,11 @@ NXSL_Value *NXSL_BusinessServiceCheckClass::getAttr(NXSL_Object *object, const N
 NXSL_METHOD_DEFINITION(Template, applyTo)
 {
    shared_ptr<Template> thisObject = *static_cast<shared_ptr<Template>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
 
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -4674,6 +5001,12 @@ NXSL_METHOD_DEFINITION(Template, applyTo)
  */
 NXSL_METHOD_DEFINITION(Template, removeFrom)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
@@ -4696,6 +5029,11 @@ NXSL_METHOD_DEFINITION(Template, removeFrom)
  */
 NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
@@ -4706,6 +5044,12 @@ NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
  */
 NXSL_METHOD_DEFINITION(Template, setAutoApplyScript)
 {
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 

@@ -2275,7 +2275,7 @@ NXSL_Value *NetObj::getParentsForNXSL(NXSL_VM *vm)
 	for(int i = 0; i < getParentList().size(); i++)
 	{
 	   NetObj *obj = getParentList().get(i);
-		if (obj->getObjectClass() != OBJECT_TEMPLATE)
+		if ((obj->getObjectClass() != OBJECT_TEMPLATE) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, obj))
 		{
 			parents->set(index++, obj->createNXSLObject(vm));
 		}
@@ -2296,7 +2296,9 @@ NXSL_Value *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 	readLockChildList();
 	for(int i = 0; i < getChildList().size(); i++)
 	{
-      children->set(index++, getChildList().get(i)->createNXSLObject(vm));
+	   NetObj *child = getChildList().get(i);
+	   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, child))
+         children->set(index++, child->createNXSLObject(vm));
 	}
 	unlockChildList();
 

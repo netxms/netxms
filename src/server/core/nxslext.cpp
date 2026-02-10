@@ -58,20 +58,26 @@ static int F_CalculateDowntime(int argc, NXSL_Value **argv, NXSL_Value **result,
    if (!argv[2]->isInteger() || !argv[3]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   uint32_t objectId;
+   shared_ptr<NetObj> netobj;
    if (argv[0]->isObject())
    {
       NXSL_Object *object = argv[0]->getValueAsObject();
       if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
          return NXSL_ERR_BAD_CLASS;
-      objectId = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId();
+      netobj = *static_cast<shared_ptr<NetObj>*>(object->getData());
    }
    else
    {
-      objectId = argv[0]->getValueAsUInt32();
+      netobj = FindObjectById(argv[0]->getValueAsUInt32());
    }
 
-   StructArray<DowntimeInfo> downtimes = CalculateDowntime(objectId, static_cast<time_t>(argv[2]->getValueAsInt64()), static_cast<time_t>(argv[3]->getValueAsInt64()), argv[1]->getValueAsCString());
+   if (netobj == nullptr || !vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, netobj.get()))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
+   StructArray<DowntimeInfo> downtimes = CalculateDowntime(netobj->getId(), static_cast<time_t>(argv[2]->getValueAsInt64()), static_cast<time_t>(argv[3]->getValueAsInt64()), argv[1]->getValueAsCString());
    if (!downtimes.isEmpty())
    {
       NXSL_Array *a = new NXSL_Array(vm);
@@ -104,6 +110,11 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **result
 		return NXSL_ERR_BAD_CLASS;
 
    NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, netxmsObject))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
    *result = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
    return NXSL_ERR_SUCCESS;
@@ -127,6 +138,11 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, netxmsObject))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
    *ppResult = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
 	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString(), StateChange::IGNORE);
@@ -150,6 +166,11 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, netxmsObject))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	netxmsObject->deleteCustomAttribute(argv[1]->getValueAsCString());
    *ppResult = vm->createValue();
 	return 0;
@@ -171,7 +192,13 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **result, 
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByIndex(argv[1]->getValueAsUInt32());
+	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+	shared_ptr<Interface> iface = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	*result = (iface != nullptr) ? vm->createValue(iface->getName()) : vm->createValue();
 	return 0;
 }
@@ -193,7 +220,7 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **result
 		return NXSL_ERR_BAD_CLASS;
 
 	shared_ptr<Interface> iface = static_cast<shared_ptr<Node>*>(object->getData())->get()->findInterfaceByIndex(argv[1]->getValueAsUInt32());
-	*result = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+	*result = (iface != nullptr && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, iface.get())) ? iface->createNXSLObject(vm) : vm->createValue();
 	return 0;
 }
 
@@ -231,7 +258,11 @@ static int F_GetServerNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
    shared_ptr<Node> serverNode = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
    if (serverNode != nullptr)
    {
-      if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
+      if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, serverNode.get()))
+      {
+         *result = vm->createValue();
+      }
+      else if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
       {
          if ((currNode != nullptr) && (serverNode->isTrustedObject(currNode->getId())))
          {
@@ -294,7 +325,11 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	if (node != nullptr)
 	{
-		if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
+      if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node.get()))
+      {
+         *ppResult = vm->createValue();
+      }
+		else if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 		{
 			if ((currNode != nullptr) && (node->isTrustedObject(currNode->getId())))
 			{
@@ -343,7 +378,11 @@ static int F_FindObjectImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NX
    shared_ptr<NetObj> object = finder(argv[0]);
 	if (object != nullptr)
 	{
-		if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
+		if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, object.get()))
+		{
+			*result = vm->createValue();
+		}
+		else if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 		{
 			NetObj *refObject = nullptr;
 			if ((argc == 2) && !argv[1]->isNull())
@@ -535,6 +574,11 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	*result = node->getParentsForNXSL(vm);
 	return 0;
 }
@@ -554,6 +598,11 @@ static int F_GetNodeTemplates(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	*ppResult = vm->createValue(node->getTemplatesForNXSL(vm));
 	return 0;
 }
@@ -573,6 +622,11 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **result, 
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, netobj))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	*result = netobj->getParentsForNXSL(vm);
 	return 0;
 }
@@ -592,6 +646,11 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **result,
 		return NXSL_ERR_BAD_CLASS;
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, netobj))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	*result = netobj->getChildrenForNXSL(vm);
 	return 0;
 }
@@ -611,8 +670,13 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **result,
 		return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	*result = node->getInterfacesForNXSL(vm);
-	return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -627,6 +691,12 @@ static int F_GetAvailablePackages(int argc, NXSL_Value **argv, NXSL_Value **resu
 {
    if (argc > 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_MANAGE_PACKAGES))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 
    const TCHAR *platformFilter = nullptr;
    const TCHAR *typeFilter = nullptr;
@@ -658,10 +728,10 @@ static int F_GetAvailablePackages(int argc, NXSL_Value **argv, NXSL_Value **resu
       PackageDetails *p = packages->get(i);
       PackageDetails *copy = new PackageDetails();
       copy->id = p->id;
-      _tcslcpy(copy->type, p->type, 16);
-      _tcslcpy(copy->name, p->name, MAX_OBJECT_NAME);
-      _tcslcpy(copy->version, p->version, 32);
-      _tcslcpy(copy->platform, p->platform, MAX_PLATFORM_NAME_LEN);
+      wcslcpy(copy->type, p->type, 16);
+      wcslcpy(copy->name, p->name, MAX_OBJECT_NAME);
+      wcslcpy(copy->version, p->version, 32);
+      wcslcpy(copy->platform, p->platform, MAX_PLATFORM_NAME_LEN);
       copy->packageFile = p->packageFile;
       copy->command = p->command;
       copy->description = p->description;
@@ -670,7 +740,7 @@ static int F_GetAvailablePackages(int argc, NXSL_Value **argv, NXSL_Value **resu
    delete packages;
 
    *result = vm->createValue(a);
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -704,7 +774,7 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       for(int i = 0; i < nodes->size(); i++)
       {
          Node *n = static_cast<Node*>(nodes->get(i));
-         if ((contextObject == nullptr) || n->isTrustedObject(contextObject->getId()))
+         if (((contextObject == nullptr) || n->isTrustedObject(contextObject->getId())) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, n))
          {
             a->set(index++, n->createNXSLObject(vm));
          }
@@ -789,6 +859,12 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	if (!object->isEventSource())
 	   return NXSL_ERR_BAD_CLASS;
 
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_SEND_EVENTS, object))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
 	// Event code
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -861,6 +937,12 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_SEND_EVENTS, node))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
 
    // Event code
    if (!argv[1]->isString())
@@ -958,6 +1040,12 @@ static int F_LoadEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
    Event *e = FindEventInLoggerQueue(argv[0]->getValueAsUInt64());
    if (e == nullptr)
       e = LoadEventFromDatabase(argv[0]->getValueAsUInt64());
@@ -994,6 +1082,12 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	         (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
+	if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, parent.get()))
+	{
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+	}
+
 	if (!argv[1]->isString() || ((argc > 2) && !argv[2]->isString()))
 		return NXSL_ERR_NOT_STRING;
 
@@ -1012,7 +1106,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
       pname = argv[1]->getValueAsCString();
 	}
 	NewNodeData newNodeData(InetAddress::resolveHostName(pname));
-	_tcslcpy(newNodeData.name, argv[1]->getValueAsCString(), MAX_OBJECT_NAME);
+	wcslcpy(newNodeData.name, argv[1]->getValueAsCString(), MAX_OBJECT_NAME);
 	newNodeData.zoneUIN = (argc > 3) ? argv[3]->getValueAsUInt32() : 0;
 	newNodeData.doConfPoll = true;
 
@@ -1041,7 +1135,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
  * Return value:
  *     new container object
  */
-static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1055,6 +1149,12 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	         (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, parent.get()))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
@@ -1065,8 +1165,8 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	NetObj::linkObjects(parent, container);
 	container->publish();
 
-	*ppResult = container->createNXSLObject(vm);
-	return 0;
+	*result = container->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -1087,7 +1187,9 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (!obj->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(obj->getData())->get()->deleteObject();
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(obj->getData())->get();
+   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, netobj))
+      netobj->deleteObject();
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1101,7 +1203,7 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  *     parent - container object
  *     child  - either node or container or subnet to be bound to parent
  * Return value:
- *     null
+ *     boolean
  */
 static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1128,10 +1230,16 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
    if (child->isChild(parent->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   NetObj::linkObjects(parent, child);
-   parent->calculateCompoundStatus();
-
-   *ppResult = vm->createValue();
+   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, parent.get()) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, child.get()))
+   {
+      NetObj::linkObjects(parent, child);
+      parent->calculateCompoundStatus();
+      *ppResult = vm->createValue(true);
+   }
+   else
+   {
+      *ppResult = vm->createValue(false);
+   }
    return 0;
 }
 
@@ -1143,7 +1251,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
  *     parent - container object
  *     child  - either node or container or subnet to be removed from container
  * Return value:
- *     null
+ *     boolean
  */
 static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1164,9 +1272,15 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *child = static_cast<shared_ptr<NetObj>*>(nxslChild->getData())->get();
-   NetObj::unlinkObjects(parent, child);
-
-   *ppResult = vm->createValue();
+   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, parent) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, child))
+   {
+      NetObj::unlinkObjects(parent, child);
+      *ppResult = vm->createValue(true);
+   }
+   else
+   {
+      *ppResult = vm->createValue(false);
+   }
    return 0;
 }
 
@@ -1178,7 +1292,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  *     object - NetXMS object (Node, Interface, or NetObj)
  *     name   - new name for object
  * Return value:
- *     null
+ *     boolean
  */
 static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1192,9 +1306,16 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
       return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setName(argv[1]->getValueAsCString());
-
-   *ppResult = vm->createValue();
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
+   {
+      netobj->setName(argv[1]->getValueAsCString());
+      *ppResult = vm->createValue(true);
+   }
+   else
+   {
+      *ppResult = vm->createValue(false);
+   }
    return 0;
 }
 
@@ -1205,7 +1326,7 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * where:
  *     object - NetXMS object (Node, Interface, or NetObj)
  * Return value:
- *     null
+ *     boolean
  */
 static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1216,9 +1337,16 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
-
-	*ppResult = vm->createValue();
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
+   {
+      netobj->setMgmtStatus(true);
+      *ppResult = vm->createValue(true);
+   }
+   else
+   {
+      *ppResult = vm->createValue(false);
+   }
 	return 0;
 }
 
@@ -1229,7 +1357,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * where:
  *     object - NetXMS object (Node, Interface, or NetObj)
  * Return value:
- *     null
+ *     boolean
  */
 static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1240,9 +1368,16 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(false);
-
-	*ppResult = vm->createValue();
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
+   {
+      netobj->setMgmtStatus(false);
+      *ppResult = vm->createValue(true);
+   }
+   else
+   {
+      *ppResult = vm->createValue(false);
+   }
 	return 0;
 }
 
@@ -1270,7 +1405,13 @@ static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode(0, (argc > 1) ? argv[1]->getValueAsCString() : nullptr);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MAINTENANCE, netobj))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+   netobj->enterMaintenanceMode(0, (argc > 1) ? argv[1]->getValueAsCString() : nullptr);
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1294,7 +1435,13 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MAINTENANCE, netobj))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+   netobj->leaveMaintenanceMode(0);
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1338,7 +1485,11 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 	}
 
 	if ((state >= 0) && (state <= 2))
-	   static_cast<shared_ptr<Interface>*>(object->getData())->get()->setExpectedState(state);
+	{
+	   Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
+	   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, iface))
+	      iface->setExpectedState(state);
+	}
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1379,6 +1530,11 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
    Node *node = static_cast<shared_ptr<Node> *>(obj->getData())->get();
    if (node != nullptr)
    {
+      if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_SNMP, node))
+      {
+         *ppResult = vm->createValue();
+         return NXSL_ERR_SUCCESS;
+      }
       uint16_t port = ((argc > 1) && argv[1]->isInteger()) ? static_cast<uint16_t>(argv[1]->getValueAsInt32()) : 0;
       const char *community = ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsMBString() : nullptr;
       const char *context = ((argc > 3) && argv[3]->isString()) ? argv[3]->getValueAsMBString() : nullptr;
@@ -1671,6 +1827,11 @@ static int F_AgentExecuteCommand(int argc, NXSL_Value **argv, NXSL_Value **resul
       return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, node))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
    shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
    if (conn != nullptr)
    {
@@ -1715,6 +1876,11 @@ static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Val
       return NXSL_ERR_BAD_CLASS;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
    if (conn != nullptr)
    {
@@ -1760,8 +1926,14 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **result
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
+	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	TCHAR buffer[MAX_RESULT_LENGTH];
-	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+	DataCollectionError rc = node->getMetricFromAgent(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
 	*result = (rc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
 	return 0;
 }
@@ -1788,8 +1960,14 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
+	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	shared_ptr<Table> table;
-	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+	DataCollectionError rc = node->getTableFromAgent(argv[1]->getValueAsCString(), &table);
    *result = (rc == DCE_SUCCESS) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
 	return 0;
 }
@@ -1816,8 +1994,14 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
+	Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 	StringList *list;
-	DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
+	DataCollectionError rc = node->getListFromAgent(argv[1]->getValueAsCString(), &list);
    *result = (rc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
    delete list;
 	return 0;
@@ -1845,8 +2029,14 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
    if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
       return NXSL_ERR_BAD_CLASS;
 
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, node))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    TCHAR buffer[MAX_RESULT_LENGTH];
-   DataCollectionError rc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   DataCollectionError rc = node->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -1864,6 +2054,12 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
+
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_SERVER_CONFIG))
+   {
+      *result = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 
 	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
 	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE_LENGTH, L""))
@@ -1978,6 +2174,12 @@ static int F_CancelScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value *
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_ALL_SCHEDULED_TASKS))
+   {
+      *result = vm->createValue(0);
+      return NXSL_ERR_SUCCESS;
+   }
+
    *result = vm->createValue(DeleteScheduledTasksByKey(argv[0]->getValueAsCString()));
    return 0;
 }
@@ -2024,6 +2226,12 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
       return NXSL_ERR_BAD_CLASS;
+
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_UA_NOTIFICATIONS))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 
    uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
    const TCHAR *message = argv[1]->getValueAsString(&len);
@@ -2096,6 +2304,12 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 	if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
 		return NXSL_ERR_NOT_STRING;
 
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_SEND_NOTIFICATION))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
 	StringBuffer rcpts(argv[0]->getValueAsCString());
 	rcpts.trim();
 	const TCHAR *subj = argv[1]->getValueAsCString();
@@ -2136,6 +2350,12 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
 
    if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_SEND_NOTIFICATION))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
 
    const TCHAR *channelName = argv[0]->getValueAsCString();
    StringBuffer rcpts(argv[1]->getValueAsCString());
@@ -2211,6 +2431,12 @@ static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_SERVER_CONSOLE))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -2317,8 +2543,15 @@ static int F_RegisterAITask(int argc, NXSL_Value **argv, NXSL_Value **result, NX
    if (!argv[0]->isString() || !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   uint32_t taskId = RegisterAITask(argv[0]->getValueAsCString(), 0, argv[1]->getValueAsCString());
-   *result = vm->createValue(taskId);
+   if (vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_MANAGE_AI_TASKS))
+   {
+      uint32_t taskId = RegisterAITask(argv[0]->getValueAsCString(), 0, argv[1]->getValueAsCString());
+      *result = vm->createValue(taskId);
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
    return NXSL_ERR_SUCCESS;
 }
 

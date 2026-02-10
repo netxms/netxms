@@ -401,6 +401,31 @@ public:
 };
 
 /**
+ * NXSL security context subsystem identifiers
+ */
+#define NXSL_AC_OBJECT    0
+#define NXSL_AC_SYSTEM    1
+
+/**
+ * NXSL security context for user-initiated scripts
+ */
+class NXCORE_EXPORTABLE NXSL_UserSecurityContext : public NXSL_SecurityContext
+{
+private:
+   uint32_t m_userId;
+
+public:
+   NXSL_UserSecurityContext(uint32_t userId)
+   {
+      m_userId = userId;
+   }
+
+   uint32_t getUserId() const { return m_userId; }
+
+   virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr) override;
+};
+
+/**
  * Server's default script environment
  */
 class NXCORE_EXPORTABLE NXSL_ServerEnv : public NXSL_Environment

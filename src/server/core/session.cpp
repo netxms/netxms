@@ -12118,6 +12118,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
                m_scriptExecutorsLock.unlock();
 
                SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+               vm->setSecurityContext(new NXSL_UserSecurityContext(m_userId));
                response.setField(VID_RCC, RCC_SUCCESS);
                response.setField(VID_PROCESS_ID, executorId);
                sendMessage(response);
@@ -12350,6 +12351,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                      m_scriptExecutorsLock.unlock();
 
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+                     vm->setSecurityContext(new NXSL_UserSecurityContext(m_userId));
                      vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, &inputFields)));
                      response.setField(VID_RCC, RCC_SUCCESS);
                      response.setField(VID_PROCESS_ID, executorId);
@@ -12472,6 +12474,7 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
                m_scriptExecutorsLock.unlock();
 
                SetupServerScriptVM(vm, contextObject, shared_ptr<DCObjectInfo>());
+               vm->setSecurityContext(new NXSL_UserSecurityContext(m_userId));
                response.setField(VID_RCC, RCC_SUCCESS);
                success = true;
                writeAuditLogWithValues(AUDIT_OBJECTS, true, contextObject->getId(), nullptr, script, 'T', _T("Executed %s [%u] dashboard element %d script for object %s [%u]"), dashboard->getName(), dashboard->getId(), elementIndex, contextObject->getName(), contextObject->getId());

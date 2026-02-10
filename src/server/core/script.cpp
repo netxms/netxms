@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,12 +21,38 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 
 #define DEBUG_TAG_BASE        _T("scripts")
 #define DEBUG_TAG_SCHEDULED   DEBUG_TAG_BASE _T(".scheduled")
 
 void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runtimeChange);
 void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script);
+
+/**
+ * Validate access for user-initiated NXSL scripts
+ */
+bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAccess, const void *object)
+{
+   switch(subsystem)
+   {
+      case NXSL_AC_OBJECT:
+      {
+         if (object == nullptr)
+            return false;
+         const NetObj *netObj = static_cast<const NetObj*>(object);
+         if (netObj->checkAccessRights(m_userId, static_cast<uint32_t>(requiredAccess)))
+            return true;
+         nxlog_debug_tag(L"nxsl.security", 4, L"Access denied: user %u, object %s [%u], required access 0x%08x",
+            m_userId, netObj->getName(), netObj->getId(), static_cast<uint32_t>(requiredAccess));
+         return false;
+      }
+      case NXSL_AC_SYSTEM:
+         return (GetEffectiveSystemRights(m_userId) & requiredAccess) == requiredAccess;
+      default:
+         return false;
+   }
+}
 
 /**
  * Script error counter

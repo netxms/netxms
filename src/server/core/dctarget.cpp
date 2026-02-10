@@ -3103,7 +3103,7 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
-      if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedObject(m_id))
+      if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedObject(m_id) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, object))
       {
          templates->set(index++, object->createNXSLObject(vm));
       }

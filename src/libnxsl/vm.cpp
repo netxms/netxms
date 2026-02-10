@@ -179,7 +179,7 @@ NXSL_SecurityContext::~NXSL_SecurityContext()
 /**
  * Validate access with security context
  */
-bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
+bool NXSL_SecurityContext::validateAccess(int subsystem, uint64_t requiredAccess, const void *object)
 {
    return true;
 }

@@ -483,6 +483,7 @@ int H_ObjectExecuteScript(Context *context)
    }
 
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script.get(), 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
 
    ObjectRefArray<NXSL_Value> sargs(0, 8);
