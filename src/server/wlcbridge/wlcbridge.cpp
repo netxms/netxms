@@ -33,6 +33,7 @@ DEFINE_MODULE_METADATA("WLCBRIDGE", "Raden Solutions", NETXMS_VERSION_STRING_A, 
  */
 extern WirelessControllerBridge g_hfclBridge;
 extern WirelessControllerBridge g_ruckusBridge;
+extern WirelessControllerBridge g_unifiBridge;
 
 void StopHFCLBackgroundThreads();
 
@@ -45,6 +46,8 @@ static WirelessControllerBridge *GetWLCBridgeInterface(const wchar_t *bridgeName
       return &g_hfclBridge;
    if (!wcsicmp(bridgeName, L"RUCKUS"))
       return &g_ruckusBridge;
+   if (!wcsicmp(bridgeName, L"UNIFI"))
+      return &g_unifiBridge;
    return nullptr;
 }
 
