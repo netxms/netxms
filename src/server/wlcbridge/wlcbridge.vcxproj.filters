@@ -24,6 +24,9 @@
     <ClCompile Include="ruckus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="unifi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="wlcbridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

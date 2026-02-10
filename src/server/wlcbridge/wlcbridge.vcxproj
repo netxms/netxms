@@ -328,6 +328,7 @@
     <ClCompile Include="curl.cpp" />
     <ClCompile Include="hfcl.cpp" />
     <ClCompile Include="ruckus.cpp" />
+    <ClCompile Include="unifi.cpp" />
     <ClCompile Include="wlcbridge.cpp" />
   </ItemGroup>
   <ItemGroup>
