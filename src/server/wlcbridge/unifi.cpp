@@ -49,7 +49,7 @@ static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name
 static size_t OnCurlHeaderReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
    size_t bytes = size * nmemb;
-   if ((bytes > 12) && !strncasecmp(ptr, "Set-Cookie:", 11))
+   if ((bytes > 12) && !strnicmp(ptr, "Set-Cookie:", 11))
    {
       char *p = ptr + 11;
       while ((*p != 0) && isspace(static_cast<unsigned char>(*p)))
