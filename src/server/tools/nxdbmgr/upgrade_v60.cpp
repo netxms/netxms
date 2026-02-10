@@ -1678,7 +1678,7 @@ static bool H_UpgradeFromV7()
    {
       if (IsOnlineUpgradePending())
       {
-         WriteToTerminal(L"Pending online upgrades must be completed before this step\n");
+         WriteToTerminal(L"Pending background upgrades (\"nxdbmgr background-upgrade\") must be completed before this step.\n");
          return false;
       }
 
