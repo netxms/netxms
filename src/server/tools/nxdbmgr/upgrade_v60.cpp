@@ -25,43 +25,6 @@
 #include <netxms-xml.h>
 
 /**
- * Upgrade from 60.31 to 60.32
- */
-static bool H_UpgradeFromV31()
-{
-   CHK_EXEC(CreateConfigParam(L"Objects.Nodes.ClearIPAddressOnDNSFailure",
-         L"0",
-         L"If DNS resolution fails for a hostname-based node, clear its primary IP address and generate an event.",
-         nullptr, 'B', true, false, false, false));
-
-   CHK_EXEC(CreateConfigParam(L"Objects.Nodes.CheckIPConflictOnDNSResolve",
-         L"0",
-         L"If DNS resolves to an IP address already assigned to another node, block the update and generate an event.",
-         nullptr, 'B', true, false, false, false));
-
-   CHK_EXEC(CreateEventTemplate(EVENT_DNS_RESOLUTION_FAILED, _T("SYS_DNS_RESOLUTION_FAILED"),
-      EVENT_SEVERITY_WARNING, EF_LOG, _T("f5c34845-2e5a-4638-be44-40e498e3c27a"),
-      _T("DNS resolution failed for hostname %<primaryHostName>, IP address cleared (was %<oldIpAddress>)"),
-      _T("Generated when DNS resolution fails for a hostname-based node and its IP address is cleared.\r\n")
-      _T("Parameters:\r\n")
-      _T("   1) primaryHostName - Primary host name that failed to resolve\r\n")
-      _T("   2) oldIpAddress - Previous IP address that was cleared")));
-
-   CHK_EXEC(CreateEventTemplate(EVENT_DNS_RESOLVE_CONFLICT, _T("SYS_DNS_RESOLVE_CONFLICT"),
-      EVENT_SEVERITY_WARNING, EF_LOG, _T("a7e3b142-6c1d-4e89-b3f5-71d04a6852c9"),
-      _T("DNS resolved %<primaryHostName> to %<newIpAddress> which is already assigned to node %<conflictingNodeName>, IP address not updated"),
-      _T("Generated when DNS resolves a hostname to an IP address already assigned to another node.\r\n")
-      _T("Parameters:\r\n")
-      _T("   1) primaryHostName - Primary host name that was resolved\r\n")
-      _T("   2) newIpAddress - Resolved IP address that conflicts\r\n")
-      _T("   3) conflictingNodeName - Name of the node that already has this IP\r\n")
-      _T("   4) conflictingNodeId - ID of the node that already has this IP")));
-
-   CHK_EXEC(SetMinorSchemaVersion(32));
-   return true;
-}
-
-/**
  * Upgrade from 60.30 to 60.31
  */
 static bool H_UpgradeFromV30()
@@ -546,7 +509,7 @@ static bool H_UpgradeFromV23()
    }
    else if (g_dbSyntax == DB_SYNTAX_MSSQL)
    {
-      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(4503599627370496 AS bigint))=0"));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+CAST(4503599627370496 AS bigint) WHERE id=1073741825 AND (system_access & CAST(4503599627370496 AS bigint))=0"));
    }
    else
    {
@@ -636,7 +599,7 @@ static bool H_UpgradeFromV19()
    }
    else if (g_dbSyntax == DB_SYNTAX_MSSQL)
    {
-      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(2251799813685248 AS bigint))=0")));
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+CAST(2251799813685248 AS bigint) WHERE id=1073741825 AND (system_access & CAST(2251799813685248 AS bigint))=0")));
    }
    else
    {
@@ -1701,6 +1664,8 @@ static bool H_UpgradeFromV7()
          _T("UPDATE idata SET idata_timestamp = idata_timestamp * 1000\n")
          _T("UPDATE tdata SET tdata_timestamp = tdata_timestamp * 1000\n")
          _T("<END>")));
+      CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, L"idata", L"idata_timestamp"));
+      CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, L"tdata", L"tdata_timestamp"));
       CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, L"idata", L"item_id,idata_timestamp"));
       CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, L"tdata", L"item_id,tdata_timestamp"));
    }
@@ -1951,7 +1916,6 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 31, 60, 32, H_UpgradeFromV31 },
    { 30, 60, 31, H_UpgradeFromV30 },
    { 29, 60, 30, H_UpgradeFromV29 },
    { 28, 60, 29, H_UpgradeFromV28 },
