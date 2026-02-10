@@ -75,6 +75,8 @@ uint16_t LIBNXSRV_EXPORTABLE WirelessFrequencyToChannel(int freq)
       return static_cast<uint16_t>((freq - 5000) / 5);
    if ((freq >= 4915) && (freq <= 4980))
       return static_cast<uint16_t>(freq / 5 - 800);
+   if ((freq >= 5925) && (freq <= 7125))
+      return static_cast<uint16_t>((freq - 5950) / 5);
 
    for(int i = 0; i < 14; i++)
    {
@@ -96,6 +98,8 @@ uint16_t LIBNXSRV_EXPORTABLE WirelessChannelToFrequency(RadioBand band, uint16_t
          return ((channel > 0) && (channel < 15)) ? s_frequencyMap[channel - 1] : 0;
       case RADIO_BAND_5_GHZ:
          return (channel >= 184) ? ((channel + 800) * 5) : (channel * 5 + 5000);
+      case RADIO_BAND_6_GHZ:
+         return ((channel >= 1) && (channel <= 233)) ? (channel * 5 + 5950) : 0;
       default:
          return 0;
    }
