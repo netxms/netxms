@@ -352,7 +352,9 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
          case CMD_PUSH_DCI_DATA:
             if (g_agentConnectionThreadPool != nullptr)
             {
-               ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onDataPushCallback, msg);
+               TCHAR key[64];
+               CreateCallbackKey('P', this, key);
+               ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onDataPushCallback, msg);
             }
             else
             {
