@@ -160,7 +160,9 @@ public class EditBusinessServiceCheckDlg extends Dialog
       gd.horizontalSpan = 2;
       scriptLabel.setLayoutData(gd);
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL,
+            i18n.tr("Variables:\n\t$object\tcurrent object for which the check is executed;\n\t$node\tcurrent node (null if object is not a node);\n\t$service\tparent business service.\n\nReturn value: true to indicate success, false or text string with failure reason to indicate failure."),
+            true);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
