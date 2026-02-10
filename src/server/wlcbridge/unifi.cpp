@@ -27,6 +27,7 @@
 #define DEBUG_TAG WLCBRIDGE_DEBUG_TAG _T(".unifi")
 
 #define MAX_AUTH_TOKEN_SIZE   512
+#define MAX_READER_BATCH_SIZE 64
 #define MAX_COOKIE_SIZE       1024
 
 /**
@@ -49,7 +50,7 @@ static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name
 static size_t OnCurlHeaderReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
    size_t bytes = size * nmemb;
-   if ((bytes > 12) && !strnicmp(ptr, "Set-Cookie:", 11))
+   if ((bytes > 12) && !strncasecmp(ptr, "Set-Cookie:", 11))
    {
       char *p = ptr + 11;
       while ((*p != 0) && isspace(static_cast<unsigned char>(*p)))
@@ -139,7 +140,7 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
          success = false;
       }
    }
@@ -151,13 +152,13 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
 
       if (httpCode != 200)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from controller: HTTP response code is %d"), httpCode);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Error response from controller: HTTP response code is %d"), httpCode);
          success = false;
       }
    }
    if (success && ((cookie == nullptr) || (cookie[0] == 0)))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Login did not return cookie"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Login did not return cookie"));
       success = false;
    }
 
@@ -171,7 +172,7 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
 /**
  * Read JSON document from controller
  */
-static json_t *ReadJsonFromController(const char *url, const char *token, const char *cookie, const char *requestData = nullptr)
+static json_t *ReadJsonFromController(NObject *wirelessDomain, const char *url, const char *token, const char *cookie, const char *requestData = nullptr)
 {
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -217,7 +218,7 @@ static json_t *ReadJsonFromController(const char *url, const char *token, const 
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform(%hs) failed (%d: %hs)"), url, rc, errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Call to curl_easy_perform(%hs) failed (%d: %hs)"), url, rc, errorBuffer);
          success = false;
       }
    }
@@ -230,14 +231,19 @@ static json_t *ReadJsonFromController(const char *url, const char *token, const 
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Response from controller: HTTP response code is %d"), httpCode);
       if (httpCode != 200)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from controller: HTTP response code is %d"), httpCode);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Error response from controller: HTTP response code is %d"), httpCode);
+         if ((httpCode == 401) && (wirelessDomain != nullptr))
+         {
+            wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(), StateChange::CLEAR);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Authorization failed (401), cleared unifi cookie"));
+         }
          success = false;
       }
    }
 
    if (success && responseData.size() <= 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from controller"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty response from controller"));
       success = false;
    }
 
@@ -274,7 +280,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
    std::string baseUrl = GetDomainAttribute(wirelessDomain, _T("unifi.base-url"));
    if (baseUrl.length() == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Controller base URL not provided"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller base URL not provided"));
       return nullptr;
    }
 
@@ -302,24 +308,19 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
 
    bool isAppliance = attrIsTrue(_T("unifi.isAppliance"));
 
-   char token[MAX_AUTH_TOKEN_SIZE + 12] = "";
+   char token[MAX_AUTH_TOKEN_SIZE + 12];
    std::string tk = GetDomainAttribute(wirelessDomain, _T("unifi.token"));
    std::string cookieAttr = GetDomainAttribute(wirelessDomain, _T("$unifi.cookie"));
-   bool usedCachedCookie = false;
    if (tk.length() == 0)
    {
       if (cookieAttr.empty())
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller API token not provided, attempting to login"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller API token not provided. Attempting to login."));
          char cookieBuf[MAX_COOKIE_SIZE];
          cookieBuf[0] = 0;
-         std::string login = GetDomainAttribute(wirelessDomain, _T("unifi.login"));
-         std::string encryptedPassword = GetDomainAttribute(wirelessDomain, _T("unifi.password"));
-         char decryptedPassword[128];
-         DecryptPasswordA(login.c_str(), encryptedPassword.c_str(), decryptedPassword, 128);
-         if (!Login(baseUrl.c_str(), login.c_str(), decryptedPassword, isAppliance, cookieBuf))
+         if (!Login(baseUrl.c_str(), GetDomainAttribute(wirelessDomain, _T("unifi.login")).c_str(), GetDomainAttribute(wirelessDomain, _T("unifi.password")).c_str(), isAppliance, cookieBuf))
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Login to controller at %hs failed"), baseUrl.c_str());
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Login to controller at %hs failed"), baseUrl.c_str());
             return nullptr;
          }
          wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(cookieBuf, "ASCII"), StateChange::CLEAR);
@@ -328,8 +329,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
       }
       else
       {
-         usedCachedCookie = true;
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Using cached cookie for controller authentication"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller API token not provided. Using cached cookie."));
       }
    }
    else
@@ -345,37 +345,16 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller is not an appliance"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller is an not appliance"));
       snprintf(url, 256, "%s/proxy/network/api/s/%s/%s", baseUrl.c_str(), site.c_str(), endpoint);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("UniFi request: url=%hs"), url);
 
    const char *cookie = cookieAttr.empty() ? nullptr : cookieAttr.c_str();
-   json_t *response = ReadJsonFromController(url, tk.length() != 0 ? token : nullptr, cookie, requestData);
-   if (response != nullptr)
-      return response;
-
-   // If request failed while using a cached cookie, it may have expired - clear and retry with fresh login
-   if (usedCachedCookie)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Request failed with cached cookie, attempting re-login"));
-      wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(), StateChange::CLEAR);
-      char cookieBuf[MAX_COOKIE_SIZE];
-      cookieBuf[0] = 0;
-      std::string login = GetDomainAttribute(wirelessDomain, _T("unifi.login"));
-      std::string encryptedPassword = GetDomainAttribute(wirelessDomain, _T("unifi.password"));
-      char decryptedPassword[128];
-      DecryptPasswordA(login.c_str(), encryptedPassword.c_str(), decryptedPassword, 128);
-      if (!Login(baseUrl.c_str(), login.c_str(), decryptedPassword, isAppliance, cookieBuf))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Re-login to controller at %hs failed"), baseUrl.c_str());
-         return nullptr;
-      }
-      wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(cookieBuf, "ASCII"), StateChange::CLEAR);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Re-login to controller at %hs successful"), baseUrl.c_str());
-      response = ReadJsonFromController(url, nullptr, cookieBuf, requestData);
-   }
+   json_t *response = ReadJsonFromController(wirelessDomain, url, tk.length() != 0 ? token : nullptr, cookie, requestData);
+   if (response == nullptr)
+      return nullptr;
 
    return response;
 }
@@ -398,22 +377,6 @@ static uint32_t ParseRadioIndex(const char *name)
 }
 
 /**
- * Determine radio band from UniFi radio type string
- */
-static RadioBand RadioBandFromType(const char *radioType)
-{
-   if (radioType == nullptr)
-      return RADIO_BAND_UNKNOWN;
-   if (!strcmp(radioType, "ng"))
-      return RADIO_BAND_2_4_GHZ;
-   if (!strcmp(radioType, "na"))
-      return RADIO_BAND_5_GHZ;
-   if (!strcmp(radioType, "6e"))
-      return RADIO_BAND_6_GHZ;
-   return RADIO_BAND_UNKNOWN;
-}
-
-/**
  * Build radio interface list from device JSON
  */
 static void AddRadioInterfaces(AccessPointInfo *ap, json_t *device)
@@ -423,7 +386,6 @@ static void AddRadioInterfaces(AccessPointInfo *ap, json_t *device)
 
    std::map<std::string, uint32_t> radioIndex;
    std::map<std::string, uint16_t> radioChannel;
-   std::map<std::string, RadioBand> radioBandMap;
 
    json_t *radioTable = json_object_get(device, "radio_table");
    if (json_is_array(radioTable))
@@ -437,8 +399,6 @@ static void AddRadioInterfaces(AccessPointInfo *ap, json_t *device)
             continue;
          uint16_t channel = static_cast<uint16_t>(json_object_get_int32(radio, "channel", 0));
          radioChannel[name] = channel;
-         const char *radioType = json_object_get_string_utf8(radio, "radio", nullptr);
-         radioBandMap[name] = RadioBandFromType(radioType);
       }
    }
 
@@ -496,11 +456,7 @@ static void AddRadioInterfaces(AccessPointInfo *ap, json_t *device)
       rif.channel = channel;
       if (channel != 0)
       {
-         auto b = radioBandMap.find(radioName);
-         if (b != radioBandMap.end() && b->second != RADIO_BAND_UNKNOWN)
-            rif.band = b->second;
-         else
-            rif.band = (channel <= 14) ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_GHZ;
+         rif.band = (channel < 15) ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_GHZ;
          rif.frequency = WirelessChannelToFrequency(rif.band, rif.channel);
       }
 
@@ -517,7 +473,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
    json_t *devices = DoRequest(wirelessDomain, "stat/device");
    if (devices == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPoints: cannot read device list from controller"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetAccessPoints: cannot read device list from controller"));
       return nullptr;
    }
 
@@ -525,7 +481,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
    if (!json_is_array(data))
    {
       json_decref(devices);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetAccessPoints: invalid device list document"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetAccessPoints: invalid device list document"));
       return nullptr;
    }
 
@@ -634,7 +590,7 @@ static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDo
    if (!json_is_array(data))
    {
       json_decref(clients);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("GetWirelessStations: invalid station list document"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetWirelessStations: invalid station list document"));
       return nullptr;
    }
 
