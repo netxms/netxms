@@ -421,3 +421,14 @@ unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(cons
    filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Sensors.")).append(configurationSuffix), false);
    return g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
 }
+
+/**
+ * Get script dependencies from auto-bind filters
+ */
+void AutoBindTarget::getAutoBindScriptDependencies(StringSet *dependencies) const
+{
+   for (int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
+   {
+      AddScriptDependencies(dependencies, m_autoBindFilters[i]);
+   }
+}

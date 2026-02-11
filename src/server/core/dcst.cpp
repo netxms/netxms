@@ -421,6 +421,37 @@ void SummaryTable::createExportRecord(json_t *array) const
 }
 
 /**
+ * Get script dependencies from summary table filter
+ */
+void SummaryTable::getScriptDependencies(StringSet *dependencies) const
+{
+   if ((m_filterSource != nullptr) && (m_filterSource[0] != 0))
+   {
+      NXSL_CompilationDiagnostic diag;
+      NXSL_Program *program = NXSLCompile(m_filterSource, new NXSL_ServerEnv(), &diag);
+      if (program != nullptr)
+      {
+         AddScriptDependencies(dependencies, program);
+         delete program;
+      }
+   }
+}
+
+/**
+ * Get script dependencies for a summary table identified by ID
+ */
+bool GetSummaryTableScriptDependencies(uint32_t id, StringSet *dependencies)
+{
+   uint32_t rcc;
+   SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);
+   if (t == nullptr)
+      return false;
+   t->getScriptDependencies(dependencies);
+   delete t;
+   return true;
+}
+
+/**
  * Query summary table. If ad-hoc definition is provided it will be deleted by this function.
  */
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc)

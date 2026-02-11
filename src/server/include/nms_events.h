@@ -722,6 +722,8 @@ public:
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
    const wchar_t *getComments() const { return m_comments; }
+
+   void getScriptDependencies(StringSet *dependencies) const;
 };
 
 /**
@@ -898,6 +900,7 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const;
 
    void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
+   void getScriptDependencies(uint32_t count, const uuid *guids, StringSet *dependencies) const;
 
    void showRules(ServerConsole *console) const;
 };

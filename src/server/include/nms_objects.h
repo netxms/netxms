@@ -993,6 +993,7 @@ public:
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
    void createExportRecord(json_t *array) const;
+   void getScriptDependencies(StringSet *dependencies) const;
 };
 
 /**
@@ -1945,6 +1946,8 @@ public:
 
    void setAutoBindFilter(int filterNumber, const TCHAR *filter);
    void setAutoBindMode(int filterNumber, bool doBind, bool doUnbind);
+
+   void getAutoBindScriptDependencies(StringSet *dependencies) const;
 };
 
 /**

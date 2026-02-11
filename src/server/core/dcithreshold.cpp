@@ -1181,4 +1181,5 @@ void Threshold::getScriptDependencies(StringSet *dependencies) const
    {
       FindScriptMacrosInText(m_value.getString(), dependencies);
    }
+   AddScriptDependencies(dependencies, m_script);
 }

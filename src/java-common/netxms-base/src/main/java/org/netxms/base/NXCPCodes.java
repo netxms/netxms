@@ -109,8 +109,8 @@ public class NXCPCodes
 	public static final int CMD_ACTION_DATA = 0x0053;
 	public static final int CMD_SETUP_AGENT_TUNNEL = 0x0054;
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
-   // public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
-   // public static final int CMD_GET_PREDICTED_DATA = 0x0057;
+   public static final int CMD_GET_SUMMARY_TABLE_SCRIPT_LIST = 0x0056;
+   public static final int CMD_GET_SCRIPT_DEPENDENCIES = 0x0057;
 	public static final int CMD_STOP_SERVER_COMMAND = 0x0058;
 	public static final int CMD_POLL_OBJECT = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;
@@ -524,6 +524,9 @@ public class NXCPCodes
    public static final int CMD_GET_LOG_QUERY_SQL = 0x01FA;
    public static final int CMD_GET_LIST_LIST = 0x01FB;
    public static final int CMD_QUERY_LIST = 0x01FC;
+   public static final int CMD_AI_GET_TOOLS = 0x01FD;
+   public static final int CMD_AI_EXECUTE_TOOL = 0x01FE;
+   public static final int CMD_GET_EPP_SCRIPT_LIST = 0x01FF;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

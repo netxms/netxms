@@ -1088,6 +1088,8 @@ void GetAllQueueStatistics(Table *table);
 
 uint64_t GetDCICacheMemoryUsage();
 void FindScriptMacrosInText(const wchar_t *origin, StringSet *dependencies);
+void AddScriptDependencies(StringSet *dependencies, const TCHAR *name);
+void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script);
 
 /**
  * V5 collected data migration

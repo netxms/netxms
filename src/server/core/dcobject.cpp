@@ -1743,7 +1743,7 @@ void DCObject::fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const
 /**
  * Add dependencies from library script with given name (and given script itself)
  */
-static void AddScriptDependencies(StringSet *dependencies, const TCHAR *name)
+void AddScriptDependencies(StringSet *dependencies, const TCHAR *name)
 {
    TCHAR buffer[256];
    const TCHAR *p = _tcschr(name, _T('('));
@@ -1778,7 +1778,7 @@ static void AddScriptDependencies(StringSet *dependencies, const TCHAR *name)
 /**
  * Add dependencies from compiled script
  */
-static void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script)
+void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script)
 {
    if (script != nullptr)
    {
