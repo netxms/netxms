@@ -25,6 +25,16 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.33 to 60.34
+ */
+static bool H_UpgradeFromV33()
+{
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("userdb_custom_attributes"), _T("attr_value")));
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
+
+/**
  * Upgrade from 60.32 to 60.33
  */
 static bool H_UpgradeFromV32()
@@ -1972,6 +1982,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 33, 60, 34, H_UpgradeFromV33 },
    { 32, 60, 33, H_UpgradeFromV32 },
    { 31, 60, 32, H_UpgradeFromV31 },
    { 30, 60, 31, H_UpgradeFromV30 },
