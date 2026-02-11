@@ -18,6 +18,9 @@
     <ClCompile Include="curl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="aruba.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hfcl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
