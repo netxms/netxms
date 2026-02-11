@@ -369,6 +369,7 @@
     <ClCompile Include="dbquery.cpp" />
     <ClCompile Include="direct.cpp" />
     <ClCompile Include="poll.cpp" />
+    <ClCompile Include="table.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />

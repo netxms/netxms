@@ -1,7 +1,7 @@
 SUBAGENT = dbquery
 
 pkglib_LTLIBRARIES = dbquery.la
-dbquery_la_SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp
+dbquery_la_SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp table.cpp
 dbquery_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 dbquery_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 dbquery_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la

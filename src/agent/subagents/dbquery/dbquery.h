@@ -85,6 +85,54 @@ public:
 };
 
 /**
+ * Table definition with column metadata
+ */
+class DBQueryTable
+{
+private:
+   TCHAR *m_name;
+   TCHAR *m_dbid;
+   TCHAR *m_query;
+   TCHAR *m_description;
+   TCHAR *m_instanceColumns;       // Comma-separated, for NETXMS_SUBAGENT_TABLE registration
+   int m_instanceColumnCount;
+   TCHAR **m_instanceColumnList;   // Split array for lookup
+   StringMap m_columnDataTypes;    // Column name -> DCI_DT_* type
+   int m_defaultColumnDataType;
+   int m_pollingInterval;          // 0 = on-demand
+   Mutex m_mutex;
+   DB_RESULT m_cachedResult;       // For polled mode
+   THREAD m_pollerThread;
+   int m_status;
+   TCHAR m_statusText[MAX_RESULT_LENGTH];
+
+public:
+   DBQueryTable(const TCHAR *name, ConfigEntry *config);
+   ~DBQueryTable();
+
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
+
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+   const TCHAR *getInstanceColumns() const { return m_instanceColumns; }
+   bool isPolled() const { return m_pollingInterval > 0; }
+   int getPollingInterval() const { return m_pollingInterval; }
+
+   void poll();
+   void startPollerThread();
+   void joinPollerThread() { if (m_pollerThread != INVALID_THREAD_HANDLE) ThreadJoin(m_pollerThread); }
+
+   LONG fillTable(Table *table);
+   LONG fillTableOnDemand(Table *table);
+
+   bool isInstanceColumn(const TCHAR *name) const;
+   int getColumnDataType(const TCHAR *name) const;
+
+   void fillTableColumns(DB_RESULT hResult, Table *table);
+};
+
+/**
  * Query status codes
  */
 enum QueryStatusCode
@@ -144,6 +192,12 @@ DB_HANDLE GetConnectionHandle(const TCHAR *dbid);
 void StartPollingThreads();
 void StopPollingThreads();
 Query *AcquireQueryObject(const TCHAR *name);
+
+void AddDBQueryTable(DBQueryTable *t);
+DBQueryTable *AcquireDBQueryTable(const TCHAR *name);
+LONG H_DBQueryTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+void StartDBQueryTablePolling();
+void StopDBQueryTablePolling();
 
 /**
  * Shutdown condition
