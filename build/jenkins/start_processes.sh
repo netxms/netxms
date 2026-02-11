@@ -38,13 +38,16 @@ fi
 
 if test -x "$BINDIR/nxdbmgr" -a -x "$BINDIR/netxmsd"; then
 	if $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock | grep 'Unable to determine database syntax'; then
-	   $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG init 
+	   $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG init
 	fi
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG upgrade
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -E check
 	if [ $? -ne 0 ]; then
       echo "Failed to execute nxdbmgr check"
       exit 1
+	fi
+	if [ "$RUN_DB_EXPORT" = "true" ]; then
+	    $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG export test.db
 	fi
 	ulimit -c unlimited
 	$BINDIR/netxmsd$SUFFIX $NETXMSD_CONFIG -d -D6
