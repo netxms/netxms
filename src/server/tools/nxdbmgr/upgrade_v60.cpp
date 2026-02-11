@@ -25,6 +25,27 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.32 to 60.33
+ */
+static bool H_UpgradeFromV32()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.ObjectBrowser.DragAndDropMode",
+         L"0",
+         L"Controls drag and drop behavior in the object browser: Enable allows unrestricted drag and drop, Confirm shows a confirmation dialog, Disable prevents drag and drop entirely.",
+         nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','0','Enable')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','1','Confirm')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','2','Disable')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(33));
+   return true;
+}
+
+/**
  * Upgrade from 60.31 to 60.32
  */
 static bool H_UpgradeFromV31()
@@ -1951,6 +1972,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 32, 60, 33, H_UpgradeFromV32 },
    { 31, 60, 32, H_UpgradeFromV31 },
    { 30, 60, 31, H_UpgradeFromV30 },
    { 29, 60, 30, H_UpgradeFromV29 },
