@@ -66,6 +66,7 @@ int H_ObjectQuery(Context *context);
 int H_ObjectRemoteControl(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
+int H_ObjectStatusExplanation(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
@@ -194,11 +195,14 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/set-managed")
       .POST(H_ObjectSetManaged)
       .build();
-   RouteBuilder("v1/objects/:object-id/take-screenshot")
-      .GET(H_TakeScreenshot)
+   RouteBuilder("v1/objects/:object-id/status-explanation")
+      .GET(H_ObjectStatusExplanation)
       .build();
    RouteBuilder("v1/objects/:object-id/sub-tree")
       .GET(H_ObjectSubTree)
+      .build();
+   RouteBuilder("v1/objects/:object-id/take-screenshot")
+      .GET(H_TakeScreenshot)
       .build();
    RouteBuilder("v1/objects/query")
       .POST(H_ObjectQuery)

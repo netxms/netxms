@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ public class EditThresholdDialog extends Dialog
 	private Combo function;
 	private Combo operation;
 	private Text samples;
+	private Text deactivationSamples;
 	private Text value;
 	private LabeledText script;
 	private Group conditionGroup;
@@ -167,6 +168,10 @@ public class EditThresholdDialog extends Dialog
 		   createScriptGroup();
 		else
          createOperGroup(threshold.getFunction());
+
+      deactivationSamples = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 60, i18n.tr("Deactivation samples"), Integer.toString(threshold.getDeactivationSampleCount()),
+            WidgetHelper.DEFAULT_LAYOUT_DATA);
+      deactivationSamples.setTextLimit(5);
 
 		// Event area
 		Group eventGroup = new Group(dialogArea, SWT.NONE);
@@ -385,6 +390,12 @@ public class EditThresholdDialog extends Dialog
 			return;
       }
 
+      if (!WidgetHelper.validateTextInput(deactivationSamples, new NumericTextFieldValidator(1, 1000)))
+      {
+         WidgetHelper.adjustWindowSize(this);
+			return;
+      }
+
 		int rpt;
 		if (repeatDefault.getSelection())
 		{
@@ -416,6 +427,7 @@ public class EditThresholdDialog extends Dialog
    		threshold.setValue(value.getText());
 		}
 		threshold.setSampleCount(Integer.parseInt(samples.getText()));
+		threshold.setDeactivationSampleCount(Integer.parseInt(deactivationSamples.getText()));
 		threshold.setRepeatInterval(rpt);
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());

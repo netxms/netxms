@@ -46,6 +46,7 @@ public class EditTableThresholdDialog extends Dialog
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;
 	private LabeledSpinner sampleCount;
+	private LabeledSpinner deactivationSampleCount;
 	private TableConditionsEditor conditionsEditor;
    private TableColumnEnumerator columnEnumerator;
 	
@@ -96,7 +97,12 @@ public class EditTableThresholdDialog extends Dialog
 		sampleCount.setLabel("Sample count");
 		sampleCount.setRange(1, 100000);
 		sampleCount.setSelection(threshold.getSampleCount());
-		
+
+		deactivationSampleCount = new LabeledSpinner(dialogArea, SWT.NONE);
+		deactivationSampleCount.setLabel("Deactivation sample count");
+		deactivationSampleCount.setRange(1, 100000);
+		deactivationSampleCount.setSelection(threshold.getDeactivationSampleCount());
+
 		new Label(dialogArea, SWT.NONE).setText(i18n.tr("Conditions"));
 		
 		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnEnumerator);
@@ -118,6 +124,7 @@ public class EditTableThresholdDialog extends Dialog
 		threshold.setActivationEvent((int)activationEvent.getEventCode());
 		threshold.setDeactivationEvent((int)deactivationEvent.getEventCode());
 		threshold.setSampleCount(sampleCount.getSelection());
+		threshold.setDeactivationSampleCount(deactivationSampleCount.getSelection());
 		threshold.setConditions(conditionsEditor.getConditions());
 		super.okPressed();
 	}	

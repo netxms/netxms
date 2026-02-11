@@ -55,6 +55,7 @@ public class Threshold
 	private int fireEvent;
 	private int rearmEvent;
 	private int sampleCount;
+	private int deactivationSampleCount;
 	private int function;
 	private int operation;
 	private String script;
@@ -88,6 +89,9 @@ public class Threshold
       lastEventTimestamp = msg.getFieldAsDate(fieldId++);
       lastEventMessage = msg.getFieldAsString(fieldId++);
       disabled = msg.getFieldAsBoolean(fieldId++);
+      deactivationSampleCount = msg.getFieldAsInt32(fieldId++);
+      if (deactivationSampleCount < 1)
+         deactivationSampleCount = 1;
 	}
 
 	/**
@@ -99,6 +103,7 @@ public class Threshold
 		fireEvent = 17;
 		rearmEvent = 18;
 		sampleCount = 1;
+		deactivationSampleCount = 1;
 		script = null;
 		function = F_LAST;
 		operation = OP_LE;
@@ -122,6 +127,7 @@ public class Threshold
 		fireEvent = src.fireEvent;
 		rearmEvent = src.rearmEvent;
 		sampleCount = src.sampleCount;
+		deactivationSampleCount = src.deactivationSampleCount;
 		script = src.script;
 		function = src.function;
 		operation = src.operation;
@@ -154,6 +160,7 @@ public class Threshold
 		msg.setFieldInt32(fieldId++, repeatInterval);
 		msg.setField(fieldId++, value);
       msg.setField(fieldId++, disabled);
+      msg.setFieldInt32(fieldId++, deactivationSampleCount);
 	}
 
 	/**
@@ -198,12 +205,32 @@ public class Threshold
 
 	/**
 	 * Set sample count for threshold
-	 * 
+	 *
 	 * @param sampleCount sample count
 	 */
 	public void setSampleCount(int sampleCount)
 	{
 		this.sampleCount = sampleCount;
+	}
+
+	/**
+	 * Get deactivation sample count for threshold
+	 *
+	 * @return deactivation sample count
+	 */
+	public int getDeactivationSampleCount()
+	{
+		return deactivationSampleCount;
+	}
+
+	/**
+	 * Set deactivation sample count for threshold
+	 *
+	 * @param deactivationSampleCount deactivation sample count
+	 */
+	public void setDeactivationSampleCount(int deactivationSampleCount)
+	{
+		this.deactivationSampleCount = deactivationSampleCount;
 	}
 
 	/**

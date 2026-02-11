@@ -25,11 +25,20 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.34 to 61.0
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   return true;
+}
+
+/**
  * Upgrade from 60.33 to 60.34
  */
 static bool H_UpgradeFromV33()
 {
-   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("userdb_custom_attributes"), _T("attr_value")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, L"userdb_custom_attributes", L"attr_value"));
    CHK_EXEC(SetMinorSchemaVersion(34));
    return true;
 }
@@ -1982,6 +1991,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 34, 61, 0,  H_UpgradeFromV34 },
    { 33, 60, 34, H_UpgradeFromV33 },
    { 32, 60, 33, H_UpgradeFromV32 },
    { 31, 60, 32, H_UpgradeFromV31 },
@@ -2028,7 +2038,7 @@ bool MajorSchemaUpgrade_V60()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 60) && (minor < DB_SCHEMA_VERSION_V60_MINOR))
+   while (major == 60)
    {
       // Find upgrade procedure
       int i;
@@ -2037,7 +2047,7 @@ bool MajorSchemaUpgrade_V60()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         WriteToTerminalEx(L"Unable to find upgrade procedure for version 53.%d\n", minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 60.%d\n", minor);
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 60.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);

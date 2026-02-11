@@ -158,6 +158,7 @@ private:
    uint8_t m_dataType;          // Related item data type
    uint8_t m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
+   int m_deactivationSampleCount; // Number of consecutive non-matching polls before deactivation
    TCHAR *m_scriptSource;
    NXSL_Program *m_script;
    time_t m_lastScriptErrorReport;
@@ -165,6 +166,7 @@ private:
    bool m_wasReachedBeforeMaint;
    bool m_disabled;
 	int m_numMatches;			// Number of consecutive matches
+	int m_numClearMatches;		// Number of consecutive non-matches (for deactivation counting)
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
 	wchar_t *m_lastEventMessage;
@@ -194,6 +196,7 @@ public:
 	int getFunction() const { return m_function; }
 	int getOperation() const { return m_operation; }
 	int getSampleCount() const { return m_sampleCount; }
+	int getDeactivationSampleCount() const { return m_deactivationSampleCount; }
    const wchar_t *getStringValue() const { return m_value.getString(); }
    bool isReached() const { return m_isReached; }
    bool wasReachedBeforeMaintenance() const { return m_wasReachedBeforeMaint; }
@@ -776,6 +779,7 @@ class NXCORE_EXPORTABLE DCTableThresholdInstance
 private:
    TCHAR *m_name;
    int m_matchCount;
+   int m_clearMatchCount;
    bool m_active;
    int m_row;
 
@@ -786,11 +790,14 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    int getMatchCount() const { return m_matchCount; }
+   int getClearMatchCount() const { return m_clearMatchCount; }
    int getRow() const { return m_row; }
    bool isActive() const { return m_active; }
    void updateRow(int row) { m_row = row; }
 
    void incMatchCount() { m_matchCount++; }
+   void incClearMatchCount() { m_clearMatchCount++; }
+   void resetClearMatchCount() { m_clearMatchCount = 0; }
    void setActive() { m_active = true; }
 };
 
@@ -812,6 +819,7 @@ private:
    uint32_t m_activationEvent;
    uint32_t m_deactivationEvent;
    int m_sampleCount;
+   int m_deactivationSampleCount;
    StringObjectMap<DCTableThresholdInstance> m_instances;
    StringObjectMap<DCTableThresholdInstance> m_instancesBeforeMaint;
 
@@ -852,6 +860,7 @@ public:
    uint32_t getActivationEvent() const { return m_activationEvent; }
    uint32_t getDeactivationEvent() const { return m_deactivationEvent; }
    int getSampleCount() const { return m_sampleCount; }
+   int getDeactivationSampleCount() const { return m_deactivationSampleCount; }
    StringBuffer getConditionAsText() const;
 
    bool isActive() const

@@ -34,6 +34,7 @@ public class TableThreshold
    private int activationEvent;
    private int deactivationEvent;
    private int sampleCount;
+   private int deactivationSampleCount;
    private List<List<TableCondition>> conditions;
    private long nextFieldId;
 
@@ -46,6 +47,7 @@ public class TableThreshold
       activationEvent = 69;
       deactivationEvent = 70;
       sampleCount = 1;
+      deactivationSampleCount = 1;
       conditions = new ArrayList<List<TableCondition>>(0);
    }
 
@@ -60,6 +62,7 @@ public class TableThreshold
       activationEvent = src.activationEvent;
       deactivationEvent = src.deactivationEvent;
       sampleCount = src.sampleCount;
+      deactivationSampleCount = src.deactivationSampleCount;
       conditions = new ArrayList<List<TableCondition>>(src.conditions.size());
       for(List<TableCondition> sl : src.conditions)
       {
@@ -83,6 +86,9 @@ public class TableThreshold
       activationEvent = msg.getFieldAsInt32(fieldId++);
       deactivationEvent = msg.getFieldAsInt32(fieldId++);
       sampleCount = msg.getFieldAsInt32(fieldId++);
+      deactivationSampleCount = msg.getFieldAsInt32(fieldId++);
+      if (deactivationSampleCount < 1)
+         deactivationSampleCount = 1;
 
       int groupCount = msg.getFieldAsInt32(fieldId++);
       conditions = new ArrayList<List<TableCondition>>(groupCount);
@@ -115,6 +121,7 @@ public class TableThreshold
       msg.setFieldInt32(fieldId++, activationEvent);
       msg.setFieldInt32(fieldId++, deactivationEvent);
       msg.setFieldInt32(fieldId++, sampleCount);
+      msg.setFieldInt32(fieldId++, deactivationSampleCount);
       msg.setFieldInt32(fieldId++, conditions.size());
       for(List<TableCondition> l : conditions)
       {
@@ -234,6 +241,26 @@ public class TableThreshold
    public void setSampleCount(int sampleCount)
    {
       this.sampleCount = sampleCount;
+   }
+
+   /**
+    * Get deactivation sample count
+    *
+    * @return deactivation sample count
+    */
+   public int getDeactivationSampleCount()
+   {
+      return deactivationSampleCount;
+   }
+
+   /**
+    * Set deactivation sample count
+    *
+    * @param deactivationSampleCount new deactivation sample count
+    */
+   public void setDeactivationSampleCount(int deactivationSampleCount)
+   {
+      this.deactivationSampleCount = deactivationSampleCount;
    }
 
    /**

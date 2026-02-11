@@ -681,7 +681,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
  */
 bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT id,activation_event,deactivation_event,sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT id,activation_event,deactivation_event,sample_count,deactivation_sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number");
    if (hStmt == nullptr)
       return false;
 

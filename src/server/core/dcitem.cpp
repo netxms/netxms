@@ -503,7 +503,8 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
 				  _T("last_event_timestamp,match_count,state_before_maint,")
-				  _T("last_checked_value,last_event_message,is_disabled FROM thresholds WHERE item_id=? ")
+				  _T("last_checked_value,last_event_message,is_disabled,")
+				  _T("deactivation_sample_count,clear_match_count FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{
@@ -876,7 +877,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    *numMaps = 0;
 
    // Read all new threshold ids from message
-   for(uint32_t i = 0, fieldId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, fieldId += 10)
+   for(uint32_t i = 0, fieldId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, fieldId += 20)
    {
       newThresholdIds[i] = msg.getFieldAsUInt32(fieldId);
    }
@@ -903,7 +904,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    }
 
    // Add or update thresholds
-   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, dwId += 10)
+   for(uint32_t i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < numThresholds; i++, dwId += 20)
    {
       if (newThresholdIds[i] == 0)    // New threshold?
       {
