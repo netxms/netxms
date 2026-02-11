@@ -7926,6 +7926,22 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
+   /**
+    * Get status explanation for an object. Returns JSON string explaining how the object's compound status was calculated.
+    *
+    * @param objectId The object ID
+    * @return JSON string with status explanation
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String getStatusExplanation(final long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_STATUS_EXPLANATION);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsString(NXCPCodes.VID_VALUE);
+   }
+
    public int getEffectiveRights(final long objectId) throws IOException, NXCException
    {
       return getEffectiveRights(objectId, userId);

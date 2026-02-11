@@ -370,9 +370,12 @@ int BusinessService::getMostCriticalCheckStatus()
 /**
  * Returns most critical service check status (interface implementation)
  */
-int BusinessService::getAdditionalMostCriticalStatus()
+int BusinessService::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
-   return getMostCriticalCheckStatus();
+   int status = getMostCriticalCheckStatus();
+   if (explanation != nullptr && status != STATUS_UNKNOWN)
+      explanation->appendFormattedString(L"Most critical business service check status: %d", status);
+   return status;
 }
 
 /**

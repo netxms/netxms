@@ -1745,6 +1745,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_EFFECTIVE_RIGHTS:
          getEffectiveRights(*request);
          break;
+      case CMD_GET_STATUS_EXPLANATION:
+         getStatusExplanation(*request);
+         break;
       case CMD_GET_FOLDER_CONTENT:
       case CMD_GET_FOLDER_SIZE:
       case CMD_FILEMGR_COPY_FILE:
@@ -14790,6 +14793,38 @@ void ClientSession::getEffectiveRights(const NXCPMessage& request)
       }
    }
    else  // No object with given ID
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get status explanation for an object
+ */
+void ClientSession::getStatusExplanation(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         json_t *json = object->buildStatusExplanation();
+         char *jsonString = json_dumps(json, JSON_INDENT(2));
+         response.setFieldFromUtf8String(VID_VALUE, jsonString);
+         MemFree(jsonString);
+         json_decref(json);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }

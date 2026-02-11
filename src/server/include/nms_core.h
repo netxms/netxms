@@ -885,6 +885,7 @@ private:
    void queryAdHocSummaryTable(const NXCPMessage& request);
    void getSubnetAddressMap(const NXCPMessage& request);
    void getEffectiveRights(const NXCPMessage& request);
+   void getStatusExplanation(const NXCPMessage& request);
    void getSwitchForwardingDatabase(const NXCPMessage& request);
    void getRoutingTable(const NXCPMessage& request);
    void getArpCache(const NXCPMessage& request);

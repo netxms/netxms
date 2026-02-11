@@ -1113,9 +1113,297 @@ void NetObj::destroy()
 /**
  * Get most critical additional status from any object specific function or component. Default implementation always return STATUS_UNKNOWN.
  */
-int NetObj::getAdditionalMostCriticalStatus()
+int NetObj::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
    return STATUS_UNKNOWN;
+}
+
+/**
+ * Status name for JSON output
+ */
+static const char *StatusName(int status)
+{
+   switch(status)
+   {
+      case STATUS_NORMAL: return "Normal";
+      case STATUS_WARNING: return "Warning";
+      case STATUS_MINOR: return "Minor";
+      case STATUS_MAJOR: return "Major";
+      case STATUS_CRITICAL: return "Critical";
+      case STATUS_UNKNOWN: return "Unknown";
+      case STATUS_UNMANAGED: return "Unmanaged";
+      default: return "Unknown";
+   }
+}
+
+/**
+ * Status propagation description for JSON output
+ */
+static const char *PropagationDescription(int propAlg, int fixedStatus, int shift, int *translation, char *buffer, size_t bufferSize)
+{
+   switch(propAlg)
+   {
+      case SA_PROPAGATE_DEFAULT:
+         return "Default";
+      case SA_PROPAGATE_UNCHANGED:
+         return "Unchanged";
+      case SA_PROPAGATE_FIXED:
+         snprintf(buffer, bufferSize, "Fixed to %s", StatusName(fixedStatus));
+         return buffer;
+      case SA_PROPAGATE_RELATIVE:
+         snprintf(buffer, bufferSize, "Relative (shift %+d)", shift);
+         return buffer;
+      case SA_PROPAGATE_TRANSLATED:
+         snprintf(buffer, bufferSize, "Translated (%s/%s/%s/%s)",
+            StatusName(translation[0]), StatusName(translation[1]),
+            StatusName(translation[2]), StatusName(translation[3]));
+         return buffer;
+      default:
+         return "Unknown";
+   }
+}
+
+/**
+ * Build JSON explanation of how this object's status was calculated.
+ * Returns caller-owned json_t*.
+ */
+json_t *NetObj::buildStatusExplanation()
+{
+   char propBuffer[256];
+   json_t *root = json_object();
+   json_object_set_new(root, "objectId", json_integer(m_id));
+   json_object_set_new(root, "objectName", json_string_t(m_name));
+   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "statusText", json_string(StatusName(m_status)));
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      json_object_set_new(root, "unmanaged", json_true());
+      return root;
+   }
+
+   // Resolve status calculation algorithm (same logic as calculateCompoundStatus)
+   int iStatusAlg, nSingleThreshold, *pnThresholds, nThresholds[4];
+   lockProperties();
+   if (m_statusCalcAlg == SA_CALCULATE_DEFAULT)
+   {
+      iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
+   }
+   else
+   {
+      iStatusAlg = m_statusCalcAlg;
+      nSingleThreshold = m_statusSingleThreshold;
+      pnThresholds = m_statusThresholds;
+   }
+   if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
+   {
+      for(int i = 0; i < 4; i++)
+         nThresholds[i] = nSingleThreshold;
+      pnThresholds = nThresholds;
+   }
+   unlockProperties();
+
+   const char *algName;
+   switch(iStatusAlg)
+   {
+      case SA_CALCULATE_MOST_CRITICAL: algName = "Most Critical"; break;
+      case SA_CALCULATE_SINGLE_THRESHOLD: algName = "Single Threshold"; break;
+      case SA_CALCULATE_MULTIPLE_THRESHOLDS: algName = "Multiple Thresholds"; break;
+      default: algName = "Unknown"; break;
+   }
+   json_object_set_new(root, "algorithm", json_string(algName));
+
+   // Calculate status from children
+   int statusFromChildren = STATUS_UNKNOWN;
+   json_t *childrenArray = json_array();
+
+   switch(iStatusAlg)
+   {
+      case SA_CALCULATE_MOST_CRITICAL:
+      {
+         int mostCriticalStatus = -1;
+         int count = 0;
+         readLockChildList();
+         for(int i = 0; i < getChildList().size(); i++)
+         {
+            NetObj *child = getChildList().get(i);
+            int childPropagated = child->getPropagatedStatus();
+            if ((childPropagated < STATUS_UNKNOWN) && (childPropagated > mostCriticalStatus))
+            {
+               mostCriticalStatus = childPropagated;
+               count++;
+            }
+         }
+         statusFromChildren = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
+
+         // Collect children that contribute to the most critical status
+         for(int i = 0; i < getChildList().size(); i++)
+         {
+            NetObj *child = getChildList().get(i);
+            int childStatus = child->getStatus();
+            int childPropagated = child->getPropagatedStatus();
+            if (childPropagated < STATUS_UNKNOWN)
+            {
+               json_t *childObj = json_object();
+               json_object_set_new(childObj, "objectId", json_integer(child->getId()));
+               json_object_set_new(childObj, "name", json_string_t(child->getName()));
+               json_object_set_new(childObj, "status", json_integer(childStatus));
+               json_object_set_new(childObj, "statusText", json_string(StatusName(childStatus)));
+               json_object_set_new(childObj, "propagatedStatus", json_integer(childPropagated));
+               json_object_set_new(childObj, "propagatedStatusText", json_string(StatusName(childPropagated)));
+               json_object_set_new(childObj, "propagation", json_string(
+                  PropagationDescription(child->m_statusPropAlg, child->m_fixedStatus, child->m_statusShift, child->m_statusTranslation, propBuffer, sizeof(propBuffer))));
+               json_object_set_new(childObj, "contributor", json_boolean(childPropagated >= mostCriticalStatus));
+               json_array_append_new(childrenArray, childObj);
+            }
+         }
+         unlockChildList();
+         break;
+      }
+      case SA_CALCULATE_SINGLE_THRESHOLD:
+      case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+      {
+         int nRating[5];
+         memset(nRating, 0, sizeof(int) * 5);
+         int count = 0;
+         readLockChildList();
+         for(int i = 0; i < getChildList().size(); i++)
+         {
+            int iChildStatus = getChildList().get(i)->getPropagatedStatus();
+            if (iChildStatus < STATUS_UNKNOWN)
+            {
+               int r = iChildStatus;
+               while(r >= 0)
+                  nRating[r--]++;
+               count++;
+            }
+         }
+
+         if (count > 0)
+         {
+            int severity;
+            for(severity = 4; severity > 0; severity--)
+               if (nRating[severity] * 100 / count >= pnThresholds[severity - 1])
+                  break;
+            statusFromChildren = severity;
+         }
+
+         // Collect all children with valid status
+         for(int i = 0; i < getChildList().size(); i++)
+         {
+            NetObj *child = getChildList().get(i);
+            int childStatus = child->getStatus();
+            int childPropagated = child->getPropagatedStatus();
+            if (childPropagated < STATUS_UNKNOWN)
+            {
+               json_t *childObj = json_object();
+               json_object_set_new(childObj, "objectId", json_integer(child->getId()));
+               json_object_set_new(childObj, "name", json_string_t(child->getName()));
+               json_object_set_new(childObj, "status", json_integer(childStatus));
+               json_object_set_new(childObj, "statusText", json_string(StatusName(childStatus)));
+               json_object_set_new(childObj, "propagatedStatus", json_integer(childPropagated));
+               json_object_set_new(childObj, "propagatedStatusText", json_string(StatusName(childPropagated)));
+               json_object_set_new(childObj, "propagation", json_string(
+                  PropagationDescription(child->m_statusPropAlg, child->m_fixedStatus, child->m_statusShift, child->m_statusTranslation, propBuffer, sizeof(propBuffer))));
+               json_object_set_new(childObj, "contributor", json_boolean(childPropagated >= statusFromChildren));
+               json_array_append_new(childrenArray, childObj);
+            }
+         }
+         unlockChildList();
+
+         // Add threshold info
+         if (count > 0)
+         {
+            json_t *thresholdInfo = json_object();
+            json_object_set_new(thresholdInfo, "totalChildren", json_integer(count));
+            json_t *thresholdArray = json_array();
+            const char *severityNames[] = { "Warning", "Minor", "Major", "Critical" };
+            for(int i = 0; i < 4; i++)
+            {
+               json_t *t = json_object();
+               json_object_set_new(t, "severity", json_string(severityNames[i]));
+               json_object_set_new(t, "threshold", json_integer(pnThresholds[i]));
+               json_object_set_new(t, "count", json_integer(nRating[i + 1]));
+               json_object_set_new(t, "percentage", json_integer(nRating[i + 1] * 100 / count));
+               json_array_append_new(thresholdArray, t);
+            }
+            json_object_set_new(thresholdInfo, "thresholds", thresholdArray);
+            json_object_set_new(root, "thresholdInfo", thresholdInfo);
+         }
+         break;
+      }
+      default:
+         break;
+   }
+
+   json_object_set_new(root, "children", childrenArray);
+   json_object_set_new(root, "statusFromChildren", json_integer(statusFromChildren));
+   json_object_set_new(root, "statusFromChildrenText", json_string(StatusName(statusFromChildren)));
+
+   // Alarm severity
+   int alarmSeverity = GetMostCriticalAlarmForObject(m_id);
+   json_object_set_new(root, "alarmSeverity", json_integer(alarmSeverity));
+   json_object_set_new(root, "alarmSeverityText", json_string(StatusName(alarmSeverity)));
+
+   // Additional status (DCIs, AP state, business service checks, etc.)
+   StringBuffer additionalExplanation;
+   int additionalStatus = getAdditionalMostCriticalStatus(&additionalExplanation);
+   json_object_set_new(root, "additionalStatus", json_integer(additionalStatus));
+   json_object_set_new(root, "additionalStatusText", json_string(StatusName(additionalStatus)));
+   if (!additionalExplanation.isEmpty())
+   {
+      char *utf8 = additionalExplanation.getUTF8String();
+      json_object_set_new(root, "additionalExplanation", json_string(utf8));
+      MemFree(utf8);
+   }
+
+   // Module status
+   json_t *modulesArray = json_array();
+   ENUMERATE_MODULES(pfCalculateObjectStatus)
+   {
+      int moduleStatus = CURRENT_MODULE.pfCalculateObjectStatus(this);
+      if (moduleStatus != STATUS_UNKNOWN)
+      {
+         json_t *moduleObj = json_object();
+         json_object_set_new(moduleObj, "name", json_string_t(CURRENT_MODULE.name));
+         json_object_set_new(moduleObj, "status", json_integer(moduleStatus));
+         json_object_set_new(moduleObj, "statusText", json_string(StatusName(moduleStatus)));
+         json_array_append_new(modulesArray, moduleObj);
+      }
+   }
+   json_object_set_new(root, "modules", modulesArray);
+
+   // Determine which factor drove the final status (same logic as calculateCompoundStatus)
+   int computedStatus = statusFromChildren;
+   const char *decidingFactor = "children";
+
+   if (computedStatus != STATUS_CRITICAL)
+   {
+      if (alarmSeverity != STATUS_UNKNOWN)
+      {
+         if (computedStatus == STATUS_UNKNOWN || alarmSeverity > computedStatus)
+         {
+            computedStatus = alarmSeverity;
+            decidingFactor = "alarms";
+         }
+      }
+   }
+
+   if (computedStatus != STATUS_CRITICAL)
+   {
+      if (additionalStatus != STATUS_UNKNOWN)
+      {
+         if (computedStatus == STATUS_UNKNOWN || additionalStatus > computedStatus)
+         {
+            computedStatus = additionalStatus;
+            decidingFactor = "additional";
+         }
+      }
+   }
+
+   json_object_set_new(root, "decidingFactor", json_string(decidingFactor));
+
+   return root;
 }
 
 /**

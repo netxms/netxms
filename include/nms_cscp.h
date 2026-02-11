@@ -709,6 +709,7 @@ typedef struct
 #define CMD_AI_GET_TOOLS                  0x01FD
 #define CMD_AI_EXECUTE_TOOL               0x01FE
 #define CMD_GET_EPP_SCRIPT_LIST           0x01FF
+#define CMD_GET_STATUS_EXPLANATION        0x0200
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

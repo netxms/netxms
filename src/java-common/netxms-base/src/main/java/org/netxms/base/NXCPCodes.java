@@ -527,6 +527,7 @@ public class NXCPCodes
    public static final int CMD_AI_GET_TOOLS = 0x01FD;
    public static final int CMD_AI_EXECUTE_TOOL = 0x01FE;
    public static final int CMD_GET_EPP_SCRIPT_LIST = 0x01FF;
+   public static final int CMD_GET_STATUS_EXPLANATION = 0x0200;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
