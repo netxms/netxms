@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2026 Raden Solutions
+** Copyright (C) 2023-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ DEFINE_MODULE_METADATA("WLCBRIDGE", "Raden Solutions", NETXMS_VERSION_STRING_A, 
 extern WirelessControllerBridge g_hfclBridge;
 extern WirelessControllerBridge g_ruckusBridge;
 extern WirelessControllerBridge g_unifiBridge;
+extern WirelessControllerBridge g_arubaBridge;
 
 void StopHFCLBackgroundThreads();
 
@@ -46,6 +47,8 @@ static WirelessControllerBridge *GetWLCBridgeInterface(const wchar_t *bridgeName
       return &g_hfclBridge;
    if (!wcsicmp(bridgeName, L"RUCKUS"))
       return &g_ruckusBridge;
+   if (!wcsicmp(bridgeName, L"ARUBA") || !wcsicmp(bridgeName, L"ARUBA-INSTANT"))
+      return &g_arubaBridge;
    if (!wcsicmp(bridgeName, L"UNIFI"))
       return &g_unifiBridge;
    return nullptr;
