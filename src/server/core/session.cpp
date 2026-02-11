@@ -5041,8 +5041,8 @@ void ClientSession::copyDCI(const NXCPMessage& request)
             static_cast<DataCollectionOwner&>(*destinationObject).applyDCIChanges(!m_openDataCollectionConfigurations.contains(destinationObject->getId()));
             response.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
-            // Queue template update
-            if (destinationObject->getObjectClass() == OBJECT_TEMPLATE)
+            // Queue template/cluster update
+            if ((destinationObject->getObjectClass() == OBJECT_TEMPLATE) || (destinationObject->getObjectClass() == OBJECT_CLUSTER))
                static_cast<DataCollectionOwner&>(*destinationObject).queueUpdate();
          }
          else  // User doesn't have enough rights on object(s)
