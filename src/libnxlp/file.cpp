@@ -603,6 +603,7 @@ bool LogParser::monitorFile(off_t startOffset)
       NX_STAT_STRUCT st;
       if (__stat(this, fname, &st) != 0)
       {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("stat(%s) failed (before open), errno=%d"), fname, errno);
          if (errno == ENOENT)
             readFromStart = true;
          setStatus(LPS_NO_FILE);
@@ -682,7 +683,7 @@ bool LogParser::monitorFile(off_t startOffset)
 
 			if (NX_FSTAT(fh, &st) < 0)
 			{
-				nxlog_debug_tag(DEBUG_TAG, 1, _T("fstat(%d) failed, errno=%d"), fh, errno);
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("fstat(%d) failed, errno=%d"), fh, errno);
 				readFromStart = true;
 				break;
 			}
@@ -690,8 +691,9 @@ bool LogParser::monitorFile(off_t startOffset)
          NX_STAT_STRUCT stn;
          if (__stat(this, fname, &stn) < 0)
 			{
-				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
-				readFromStart = true;
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("stat(%s) failed, errno=%d"), fname, errno);
+            if (errno == ENOENT)
+				   readFromStart = true;
 				break;
 			}
 
