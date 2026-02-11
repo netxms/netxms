@@ -67,7 +67,7 @@ name: javadoc-stable
 
 trigger:
   branch:
-    - stable-6.0
+    - stable-*
   event:
     - push
 
@@ -97,8 +97,8 @@ steps:
       - ssh-keyscan -p "$SFTP_PORT" "$SFTP_HOST" >> ~/.ssh/known_hosts 2>/dev/null
       - >-
         LFTP_PASSWORD=dummy lftp --env-password sftp://$SFTP_USER@$SFTP_HOST:$SFTP_PORT -e "
-        rm -rf javadoc/latest-stable javadoc/stable;
-        mirror -R src/target/reports/apidocs/ javadoc/stable/;
+        rm -rf javadoc/$DRONE_BRANCH;
+        mirror -R src/target/reports/apidocs/ javadoc/$DRONE_BRANCH/;
         bye"
 
   - name: notify
@@ -112,9 +112,9 @@ steps:
       disable_web_page_preview: true
       message: >
         {{#success build.status}}
-        ✅ Javadoc Stable [#{{build.number}}]({{build.link}}) succeeded.
+        ✅ Javadoc {{build.branch}} [#{{build.number}}]({{build.link}}) succeeded.
         {{else}}
-        ❌ Javadoc Stable [#{{build.number}}]({{build.link}}) **FAILED**.
+        ❌ Javadoc {{build.branch}} [#{{build.number}}]({{build.link}}) **FAILED**.
         `{{commit.message}}` by {{commit.author}}
         {{/success}}
     when:
@@ -123,6 +123,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: f81c97fdbf54b257530aa39f157d7962629770e970c424f78df141b686eac23c
+hmac: cee35195045958a0c9adb43b4cfe23124590e3e09eebd70f45da81c3caaad9c7
 
 ...
