@@ -2037,7 +2037,7 @@ bool MajorSchemaUpgrade_V60()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         WriteToTerminalEx(L"Unable to find upgrade procedure for version 53.%d\n", minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 60.%d\n", minor);
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 60.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
