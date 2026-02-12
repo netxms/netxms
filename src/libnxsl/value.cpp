@@ -352,16 +352,19 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 NXSL_Value::NXSL_Value(const char *value)
 {
    m_dataType = NXSL_DT_STRING;
-	if (value != nullptr)
+	if ((value != nullptr) && (value[0] != 0))
 	{
-		m_stringPtr = WideStringFromUTF8String(value);
-		m_length = static_cast<uint32_t>(_tcslen(m_stringPtr));
-		if (m_length < NXSL_SHORT_STRING_LENGTH)
-		{
-		   _tcscpy(m_stringValue, m_stringPtr);
-		   MemFree(m_stringPtr);
-		   m_stringPtr = nullptr;
-		}
+	   if (utf8_wcharlen(value, -1) < NXSL_SHORT_STRING_LENGTH)
+	   {
+	      size_t l = utf8_to_wchar(value, -1, m_stringValue, NXSL_SHORT_STRING_LENGTH);
+         m_length = static_cast<uint32_t>(l - 1);  // returned length includes 0 byte
+         m_stringPtr = nullptr;
+	   }
+	   else
+	   {
+         m_stringPtr = WideStringFromUTF8String(value);
+         m_length = static_cast<uint32_t>(wcslen(m_stringPtr));
+	   }
 	}
 	else
 	{
