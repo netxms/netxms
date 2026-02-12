@@ -82,7 +82,15 @@ json_t *OllamaProvider::chat(const char *systemPrompt, json_t *messages, json_t 
    json_decref(request);
 
    if (response == nullptr)
+   {
+      recordFailure();
       return nullptr;
+   }
+
+   // Extract token usage (Ollama uses root-level fields)
+   int64_t inputTokens = json_integer_value(json_object_get(response, "prompt_eval_count"));
+   int64_t outputTokens = json_integer_value(json_object_get(response, "eval_count"));
+   recordUsage(inputTokens, outputTokens);
 
    // Ollama format: message is at root level
    json_t *message = json_object_get(response, "message");
