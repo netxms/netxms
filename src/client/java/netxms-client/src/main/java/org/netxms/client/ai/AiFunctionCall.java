@@ -88,6 +88,8 @@ public class AiFunctionCall
          return "Searching" + readable.substring(6);
       if (lower.startsWith("analyze "))
          return "Analyzing" + readable.substring(7);
+      if (lower.startsWith("explain "))
+         return "Explaining" + readable.substring(7);
       if (lower.startsWith("query "))
          return "Querying" + readable.substring(5);
       if (lower.startsWith("check "))

@@ -520,3 +520,24 @@ std::string F_ListObjectAIDataKeys(json_t *arguments, uint32_t userId)
 
    return JsonToString(keys);
 }
+
+/**
+ * Explain object status
+ */
+std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId)
+{
+   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
+
+   if ((objectName == nullptr) || (objectName[0] == 0))
+      return std::string("Object name or ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      char buffer[256];
+      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
+      return std::string(buffer);
+   }
+
+   return JsonToString(object->buildStatusExplanation());
+}
