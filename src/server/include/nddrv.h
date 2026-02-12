@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           12
+#define NDDRV_API_VERSION           13
 
 /**
  * Begin driver list
@@ -525,6 +525,25 @@ class Component;
 class ComponentTree;
 
 /**
+ * Abstract interface for device configuration backup context.
+ * Provides connection methods that drivers use to retrieve device configuration.
+ * Concrete implementation is provided by the backup module.
+ */
+class LIBNXSRV_EXPORTABLE DeviceBackupContext
+{
+public:
+   virtual ~DeviceBackupContext() {}
+
+   virtual bool isSSHCommandChannelAvailable() = 0;
+   virtual bool isSSHInteractiveChannelAvailable() = 0;
+   virtual bool isSNMPAvailable() = 0;
+
+   virtual SSHInteractiveChannel *getInteractiveSSH() = 0;
+   virtual bool executeSSHCommand(const char *command, ByteStream *output) = 0;
+   virtual SNMP_Transport *getSNMPTransport() = 0;
+};
+
+/**
  * Base class for device drivers
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
@@ -577,6 +596,10 @@ public:
    virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
    virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs);
    virtual void getSSHDriverHints(SSHDriverHints *hints) const;
+
+   virtual bool isConfigBackupSupported();
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output);
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output);
 };
 
 /**

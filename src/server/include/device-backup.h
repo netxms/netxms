@@ -128,6 +128,30 @@ struct DeviceBackupInterface
 };
 
 /**
+ * Concrete DeviceBackupContext implementation backed by a Node object.
+ * Provides SSH and SNMP access using the node's configured credentials.
+ */
+class NodeBackupContext : public DeviceBackupContext
+{
+private:
+   shared_ptr<Node> m_node;
+   shared_ptr<SSHInteractiveChannel> m_sshChannel;
+   SNMP_Transport *m_snmpTransport;
+
+public:
+   NodeBackupContext(const shared_ptr<Node>& node);
+   ~NodeBackupContext();
+
+   bool isSSHCommandChannelAvailable() override;
+   bool isSSHInteractiveChannelAvailable() override;
+   bool isSNMPAvailable() override;
+
+   SSHInteractiveChannel *getInteractiveSSH() override;
+   bool executeSSHCommand(const char *command, ByteStream *output) override;
+   SNMP_Transport *getSNMPTransport() override;
+};
+
+/**
  * Get error message for given status
  */
 const TCHAR *GetDeviceBackupApiErrorMessage(DeviceBackupApiStatus status);

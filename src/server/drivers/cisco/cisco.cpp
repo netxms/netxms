@@ -408,6 +408,36 @@ void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
 }
 
 /**
+ * Check if config backup is supported
+ */
+bool CiscoDeviceDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration via interactive SSH
+ */
+bool CiscoDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show running-config", output);
+}
+
+/**
+ * Get startup configuration via interactive SSH
+ */
+bool CiscoDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show startup-config", output);
+}
+
+/**
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST

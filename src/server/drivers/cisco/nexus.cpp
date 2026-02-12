@@ -356,3 +356,33 @@ void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
+
+/**
+ * Check if config backup is supported
+ */
+bool CiscoNexusDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration via interactive SSH
+ */
+bool CiscoNexusDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show running-config", output);
+}
+
+/**
+ * Get startup configuration via interactive SSH
+ */
+bool CiscoNexusDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show startup-config", output);
+}

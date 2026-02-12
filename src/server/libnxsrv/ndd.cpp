@@ -1583,3 +1583,38 @@ ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(S
 void NetworkDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
 {
 }
+
+/**
+ * Check if device configuration backup is supported by this driver.
+ * Default implementation returns false. Drivers that support config backup should override this.
+ *
+ * @return true if config backup is supported
+ */
+bool NetworkDeviceDriver::isConfigBackupSupported()
+{
+   return false;
+}
+
+/**
+ * Get running configuration from device.
+ *
+ * @param ctx backup context providing connection methods
+ * @param output byte stream to receive configuration data
+ * @return true on success
+ */
+bool NetworkDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   return false;
+}
+
+/**
+ * Get startup configuration from device.
+ *
+ * @param ctx backup context providing connection methods
+ * @param output byte stream to receive configuration data
+ * @return true on success
+ */
+bool NetworkDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   return false;
+}

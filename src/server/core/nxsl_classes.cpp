@@ -30,6 +30,8 @@
 #include <nms_users.h>
 #include <nms_pkg.h>
 #include <nxai.h>
+#include <nddrv.h>
+#include <device-backup.h>
 
 /**
  * Maintenance journal access
@@ -2236,6 +2238,70 @@ NXSL_METHOD_DEFINITION(Node, getInterfaceName)
 }
 
 /**
+ * Node::getRunningConfig() method
+ */
+NXSL_METHOD_DEFINITION(Node, getRunningConfig)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   shared_ptr<Node> node = *static_cast<shared_ptr<Node>*>(object->getData());
+   NetworkDeviceDriver *driver = node->getDriver();
+   if (driver == nullptr || !driver->isConfigBackupSupported())
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   NodeBackupContext ctx(node);
+   ByteStream output;
+   if (!driver->getRunningConfig(&ctx, &output))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   output.write("\0", 1);
+   *result = vm->createValue(reinterpret_cast<const char*>(output.buffer()));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Node::getStartupConfig() method
+ */
+NXSL_METHOD_DEFINITION(Node, getStartupConfig)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   shared_ptr<Node> node = *static_cast<shared_ptr<Node>*>(object->getData());
+   NetworkDeviceDriver *driver = node->getDriver();
+   if (driver == nullptr || !driver->isConfigBackupSupported())
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   NodeBackupContext ctx(node);
+   ByteStream output;
+   if (!driver->getStartupConfig(&ctx, &output))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   output.write("\0", 1);
+   *result = vm->createValue(reinterpret_cast<const char*>(output.buffer()));
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Node::getWebService(name) method
  */
 NXSL_METHOD_DEFINITION(Node, getWebService)
@@ -2615,13 +2681,15 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, openSSHSession, -1);
+   NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
+   NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByMACAddress, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByName, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
-   NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
-   NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
+   NXSL_REGISTER_METHOD(Node, getRunningConfig, 0);
+   NXSL_REGISTER_METHOD(Node, getStartupConfig, 0);
    NXSL_REGISTER_METHOD(Node, getWebService, 1);
    NXSL_REGISTER_METHOD(Node, isPortBlocked, 2);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);

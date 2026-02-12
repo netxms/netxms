@@ -442,6 +442,28 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
 }
 
 /**
+ * Check if config backup is supported
+ */
+bool MikrotikDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration. Prefers SSH command channel, falls back to interactive.
+ */
+bool MikrotikDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   if (ctx->isSSHCommandChannelAvailable())
+      return ctx->executeSSHCommand("/export", output);
+
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("/export", output);
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(MikrotikDriver);
