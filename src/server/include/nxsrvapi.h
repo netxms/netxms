@@ -1513,6 +1513,7 @@ private:
    Condition m_dataReceived;
 
    // Internal methods
+   bool execute(const char *command, uint32_t timeout);
    bool waitForPrompt(uint32_t timeout);
    bool checkPromptMatch();
    void processIncomingData();
@@ -1521,6 +1522,7 @@ private:
    void collapseCharacterByCharacterOutput();
    bool handlePagination();
    StringList *parseOutput(const char *sentCommand);
+   void parseOutput(const char *sentCommand, ByteStream *output);
    bool isCommandEcho(const wchar_t *line, const char *command);
 
 public:
@@ -1535,17 +1537,38 @@ public:
    /**
     * Wait for initial prompt after connection
     */
-   bool waitForInitialPrompt();
+   bool waitForInitialPrompt()
+   {
+      return waitForPrompt(m_hints.connectTimeout);
+   }
 
    /**
     * Disable pagination (best effort)
     */
-   void disablePagination();
+   void disablePagination()
+   {
+      if (m_hints.paginationDisableCmd != nullptr)
+         execute(m_hints.paginationDisableCmd, 5000);
+   }
 
    /**
-    * Execute command and return output
+    * Execute command and return output as string list
     */
-   StringList *execute(const char *command, uint32_t timeout = 0);
+   StringList *executeCommand(const char *command, uint32_t timeout = 0)
+   {
+      return execute(command, timeout) ? parseOutput(command) : nullptr;
+   }
+
+   /**
+    * Execute command and write output into byte stream
+    */
+   bool executeCommand(const char *command, ByteStream *output, uint32_t timeout = 0)
+   {
+      if (!execute(command, timeout))
+         return false;
+      parseOutput(command, output);
+      return true;
+   }
 
    /**
     * Escalate to privileged mode
