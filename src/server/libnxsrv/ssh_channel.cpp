@@ -208,26 +208,6 @@ void SSHInteractiveChannel::onDataReceived(const BYTE *data, size_t size, bool e
 }
 
 /**
- * Wait for initial prompt after connection
- */
-bool SSHInteractiveChannel::waitForInitialPrompt()
-{
-   return waitForPrompt(m_hints.connectTimeout);
-}
-
-/**
- * Disable pagination (best effort)
- */
-void SSHInteractiveChannel::disablePagination()
-{
-   if (m_hints.paginationDisableCmd != nullptr)
-   {
-      StringList *result = execute(m_hints.paginationDisableCmd, 5000);
-      delete result;
-   }
-}
-
-/**
  * Wait for prompt with timeout
  */
 bool SSHInteractiveChannel::waitForPrompt(uint32_t timeout)
@@ -507,15 +487,15 @@ bool SSHInteractiveChannel::handlePagination()
 }
 
 /**
- * Execute command and return output
+ * Internal command execute implementation
  */
-StringList *SSHInteractiveChannel::execute(const char *command, uint32_t timeout)
+bool SSHInteractiveChannel::execute(const char *command, uint32_t timeout)
 {
    if (!m_connected)
    {
       m_lastError = ERR_NOT_CONNECTED;
       m_lastErrorMessage = L"Channel not connected";
-      return nullptr;
+      return false;
    }
 
    size_t len = strlen(command);
@@ -523,7 +503,7 @@ StringList *SSHInteractiveChannel::execute(const char *command, uint32_t timeout
    {
       m_lastError = ERR_MALFORMED_COMMAND;
       m_lastErrorMessage = L"Command is empty";
-      return nullptr;
+      return false;
    }
 
    if (timeout == 0)
@@ -552,17 +532,13 @@ StringList *SSHInteractiveChannel::execute(const char *command, uint32_t timeout
    {
       m_lastError = rcc;
       m_lastErrorMessage = _T("Failed to send command");
-      return nullptr;
+      return false;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHInteractiveChannel %u: sent command '%hs'"), m_channelId, command);
 
    // Wait for prompt
-   if (!waitForPrompt(timeout))
-      return nullptr;
-
-   // Parse output
-   return parseOutput(command);
+   return waitForPrompt(timeout);
 }
 
 /**
@@ -623,6 +599,123 @@ StringList *SSHInteractiveChannel::parseOutput(const char *sentCommand)
    }
 
    return new StringList(std::move(lines));
+}
+
+/**
+ * Parse command output from buffer
+ */
+void SSHInteractiveChannel::parseOutput(const char *sentCommand, ByteStream *output)
+{
+   m_bufferLock.lock();
+
+   // Process any remaining control characters (data may have arrived after last processIncomingData call)
+   removeControlCharacters();
+   collapseCharacterByCharacterOutput();
+
+   const char *data = reinterpret_cast<const char*>(m_buffer.buffer());
+   size_t len = m_buffer.size();
+
+   if (len == 0)
+   {
+      m_bufferLock.unlock();
+      return;
+   }
+
+   // Find start of content (skip command echo - first line)
+   size_t start = 0;
+   if (sentCommand != nullptr)
+   {
+      // Find end of first line
+      size_t firstLineEnd = 0;
+      while(firstLineEnd < len && data[firstLineEnd] != '\n')
+         firstLineEnd++;
+
+      // Check if first line contains the sent command (command echo)
+      size_t cmdLen = strlen(sentCommand);
+      if (cmdLen > 0 && firstLineEnd > 0)
+      {
+         // Strip trailing CR from first line for comparison
+         size_t checkLen = firstLineEnd;
+         if (checkLen > 0 && data[checkLen - 1] == '\r')
+            checkLen--;
+
+         // Search for command within the first line
+         if (checkLen >= cmdLen)
+         {
+            for (size_t i = 0; i <= checkLen - cmdLen; i++)
+            {
+               if (memcmp(data + i, sentCommand, cmdLen) == 0)
+               {
+                  // Skip past the first line (including newline)
+                  start = (firstLineEnd < len) ? firstLineEnd + 1 : firstLineEnd;
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   // Find end of content (strip prompt - last line)
+   size_t end = len;
+
+   // Skip trailing whitespace and newlines
+   size_t trimmedEnd = end;
+   while(trimmedEnd > start && (data[trimmedEnd - 1] == '\n' || data[trimmedEnd - 1] == '\r' || data[trimmedEnd - 1] == ' ' || data[trimmedEnd - 1] == '\t'))
+      trimmedEnd--;
+
+   if (trimmedEnd > start)
+   {
+      // Find start of last line (after trimming)
+      const char *lastLine = data + start;
+      size_t lastLineStart = start;
+      for (size_t i = trimmedEnd; i > start; i--)
+      {
+         if (data[i - 1] == '\n')
+         {
+            lastLine = data + i;
+            lastLineStart = i;
+            break;
+         }
+      }
+
+      size_t lastLineLen = trimmedEnd - (lastLine - data);
+      bool promptMatched = false;
+
+      // If privileged, check enabled prompt first
+      if (m_privileged && m_enabledPromptRegex != nullptr)
+      {
+         promptMatched = pcre_exec(static_cast<pcre*>(m_enabledPromptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0) >= 0;
+      }
+
+      // Check normal prompt if not matched
+      if (!promptMatched && m_promptRegex != nullptr)
+      {
+         promptMatched = pcre_exec(static_cast<pcre*>(m_promptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0) >= 0;
+      }
+
+      if (promptMatched)
+      {
+         // Strip from the start of the last line (including preceding newline)
+         end = lastLineStart;
+      }
+   }
+
+   // Remove trailing empty lines
+   while(end > start)
+   {
+      if (data[end - 1] == '\n' || data[end - 1] == '\r')
+         end--;
+      else
+         break;
+   }
+
+   // Write remaining content to output
+   if (end > start)
+   {
+      output->write(data + start, end - start);
+   }
+
+   m_bufferLock.unlock();
 }
 
 /**

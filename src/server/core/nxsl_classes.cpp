@@ -8262,7 +8262,7 @@ NXSL_METHOD_DEFINITION(SSHSession, execute)
    strlcpy(command, argv[0]->getValueAsCString(), sizeof(command));
 #endif
 
-   StringList *output = session->channel->execute(command, timeout);
+   StringList *output = session->channel->executeCommand(command, timeout);
    if (output != nullptr)
    {
       *result = vm->createValue(new NXSL_Array(vm, *output));
