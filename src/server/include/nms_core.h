@@ -515,19 +515,19 @@ public:
    session_id_t getId() const { return m_id; }
    void setId(session_id_t id) { if (m_id == -1) m_id = id; }
 
-   const TCHAR *getLoginName() const { return m_loginName; }
+   const wchar_t *getLoginName() const { return m_loginName; }
    uint32_t getUserId() const { return m_userId; }
    uint64_t getSystemAccessRights() const { return m_systemAccessRights; }
-   const TCHAR *getWorkstation() const { return m_workstation; }
+   const wchar_t *getWorkstation() const { return m_workstation; }
 
    bool checkSystemAccessRights(uint64_t requiredAccess) const
    {
       return (m_userId == 0) ? true : ((requiredAccess & m_systemAccessRights) == requiredAccess);
    }
 
-   virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const = 0;
-   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const = 0;
-   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const = 0;
+   virtual void writeAuditLog(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *format, ...) const = 0;
+   virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const = 0;
+   virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const wchar_t *format, ...) const = 0;
 };
 
 // Explicit instantiation of template classes
@@ -1047,9 +1047,9 @@ public:
    void sendPollerMsg(uint32_t requestIf, const wchar_t *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
-   virtual void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const override;
-   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const override;
-   virtual void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const override;
+   virtual void writeAuditLog(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *format, ...) const override;
+   virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const override;
+   virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const wchar_t *format, ...) const override;
 
    void setSocketPoller(BackgroundSocketPollerHandle *p) { m_socketPoller = p; }
 
@@ -1639,13 +1639,6 @@ void WatchdogStartSleep(uint32_t id);
 void WatchdogPrintStatus(CONSOLE_CTX console);
 WatchdogState WatchdogGetState(const TCHAR *name);
 void WatchdogGetThreads(StringList *out);
-
-/**
- * NXSL script functions
- */
-uint32_t UpdateScript(const NXCPMessage& request, uint32_t *scriptId, ClientSession *session);
-uint32_t RenameScript(uint32_t scriptId, const TCHAR *newName);
-uint32_t DeleteScript(uint32_t scriptId);
 
 /**
  * Address range scan functions

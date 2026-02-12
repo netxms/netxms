@@ -15,6 +15,8 @@ tags:
     description: TCP proxy for remote access (VNC, SSH, etc.)
   - name: Grafana
     description: Grafana integration endpoints
+  - name: Script Library
+    description: NXSL script library management
   - name: Server
     description: Server information and status
 paths:
@@ -1449,6 +1451,177 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
+  /v1/script-library:
+    get:
+      summary: List all scripts
+      description: Retrieve a list of all scripts in the script library (ID and name only).
+      responses:
+        '200':
+          description: Script list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScriptSummary'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SYSTEM_ACCESS_MANAGE_SCRIPTS permission
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
+    post:
+      summary: Create new script
+      description: Create a new script in the script library.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - code
+              properties:
+                name:
+                  type: string
+                  description: Script name (alphanumeric, underscore, colon; must not start with digit or colon)
+                code:
+                  type: string
+                  description: NXSL source code
+      responses:
+        '201':
+          description: Script created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the newly created script
+        '400':
+          description: Missing or invalid name/code, or invalid script name format
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SYSTEM_ACCESS_MANAGE_SCRIPTS permission
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
+  /v1/script-library/{script-id}:
+    get:
+      summary: Get script details
+      description: Retrieve a script with its full source code.
+      parameters:
+        - name: script-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Script ID
+      responses:
+        '200':
+          description: Script details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptDetails'
+        '400':
+          description: Invalid script ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SYSTEM_ACCESS_MANAGE_SCRIPTS permission
+        '404':
+          description: Script with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
+    put:
+      summary: Update script
+      description: Update an existing script's name and/or code.
+      parameters:
+        - name: script-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Script ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - code
+              properties:
+                name:
+                  type: string
+                  description: Script name (alphanumeric, underscore, colon; must not start with digit or colon)
+                code:
+                  type: string
+                  description: NXSL source code
+      responses:
+        '200':
+          description: Script updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the updated script
+        '400':
+          description: Missing or invalid name/code, or invalid script name format
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SYSTEM_ACCESS_MANAGE_SCRIPTS permission
+        '404':
+          description: Script with given ID does not exist
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
+    delete:
+      summary: Delete script
+      description: Delete a script from the script library.
+      parameters:
+        - name: script-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Script ID
+      responses:
+        '204':
+          description: Script deleted successfully
+        '400':
+          description: Invalid script ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SYSTEM_ACCESS_MANAGE_SCRIPTS permission
+        '404':
+          description: Script with given ID does not exist
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
   /v1/object-tools:
     get:
       summary: List available object tools
@@ -1615,6 +1788,27 @@ components:
           type: string
         severity:
           type: string
+    ScriptSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Script ID
+        name:
+          type: string
+          description: Script name
+    ScriptDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Script ID
+        name:
+          type: string
+          description: Script name
+        code:
+          type: string
+          description: NXSL source code
     ObjectToolType:
       type: string
       enum:

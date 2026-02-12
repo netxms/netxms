@@ -71,6 +71,11 @@ int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
+int H_ScriptLibrary(Context *context);
+int H_ScriptDetails(Context *context);
+int H_ScriptCreate(Context *context);
+int H_ScriptUpdate(Context *context);
+int H_ScriptDelete(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
@@ -209,6 +214,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/search")
       .POST(H_ObjectSearch)
+      .build();
+   RouteBuilder("v1/script-library")
+      .GET(H_ScriptLibrary)
+      .POST(H_ScriptCreate)
+      .build();
+   RouteBuilder("v1/script-library/:script-id")
+      .GET(H_ScriptDetails)
+      .PUT(H_ScriptUpdate)
+      .DELETE(H_ScriptDelete)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)
