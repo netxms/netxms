@@ -36,7 +36,6 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId);
 std::string F_AddThreshold(json_t *arguments, uint32_t userId);
 std::string F_DeleteThreshold(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
-std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
 std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId);
 std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId);
@@ -103,13 +102,6 @@ static void CreateAssistantFunctionList()
          { "channel", "notification channel name (mandatory)" }
       },
       F_ClearNotificationChannelQueue);
-   RegisterAIAssistantFunction(
-      "explain-object-status",
-      "Get detailed list of factors that contributed to the current status of an object (node, device, server, workstation, container, etc.).",
-      {
-         { "object", "mandatory name or ID of an object" }
-      },
-      F_ExplainObjectStatus);
    RegisterAIAssistantFunction(
       "find-objects",
       "Find objects by name, IP address, class, parent object, or zone. At least one search criteria should be set.",
