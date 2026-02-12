@@ -55,6 +55,16 @@ extern VolatileCounter64 g_windowsEventsReceived;
 extern uint32_t g_averageDCIQueuingTime;
 
 /**
+ * AI usage counters
+ */
+extern VolatileCounter64 g_aiTotalRequests;
+extern VolatileCounter64 g_aiTotalInputTokens;
+extern VolatileCounter64 g_aiTotalOutputTokens;
+extern VolatileCounter64 g_aiFailedRequests;
+bool GetAIProviderStats(const TCHAR *providerName, int64_t *totalRequests, int64_t *totalInputTokens, int64_t *totalOutputTokens, int64_t *failedRequests);
+void GetAIProviderTable(Table *table);
+
+/**
  * Poller thread pool
  */
 extern ThreadPool *g_pollerThreadPool;
@@ -8673,7 +8683,13 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(name, _T("Server.EventProcessors")))
+      if (!_tcsicmp(name, _T("Server.AI.Providers")))
+      {
+         auto table = make_shared<Table>();
+         GetAIProviderTable(table.get());
+         *result = table;
+      }
+      else if (!_tcsicmp(name, _T("Server.EventProcessors")))
       {
          auto table = make_shared<Table>();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
@@ -9001,6 +9017,62 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.IsRunning")))
       {
          ret_boolean(buffer, IsActiveDiscoveryRunning());
+      }
+      else if (!_tcsicmp(name, _T("Server.AI.FailedRequests")))
+      {
+         ret_uint64(buffer, g_aiFailedRequests);
+      }
+      else if (MatchString(_T("Server.AI.FailedRequests(*)"), name, false))
+      {
+         TCHAR providerName[256];
+         AgentGetParameterArg(name, 1, providerName, 256);
+         int64_t totalRequests, totalInputTokens, totalOutputTokens, failedRequests;
+         if (GetAIProviderStats(providerName, &totalRequests, &totalInputTokens, &totalOutputTokens, &failedRequests))
+            ret_int64(buffer, failedRequests);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
+      else if (!_tcsicmp(name, _T("Server.AI.TokensIn")))
+      {
+         ret_uint64(buffer, g_aiTotalInputTokens);
+      }
+      else if (MatchString(_T("Server.AI.TokensIn(*)"), name, false))
+      {
+         TCHAR providerName[256];
+         AgentGetParameterArg(name, 1, providerName, 256);
+         int64_t totalRequests, totalInputTokens, totalOutputTokens, failedRequests;
+         if (GetAIProviderStats(providerName, &totalRequests, &totalInputTokens, &totalOutputTokens, &failedRequests))
+            ret_int64(buffer, totalInputTokens);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
+      else if (!_tcsicmp(name, _T("Server.AI.TokensOut")))
+      {
+         ret_uint64(buffer, g_aiTotalOutputTokens);
+      }
+      else if (MatchString(_T("Server.AI.TokensOut(*)"), name, false))
+      {
+         TCHAR providerName[256];
+         AgentGetParameterArg(name, 1, providerName, 256);
+         int64_t totalRequests, totalInputTokens, totalOutputTokens, failedRequests;
+         if (GetAIProviderStats(providerName, &totalRequests, &totalInputTokens, &totalOutputTokens, &failedRequests))
+            ret_int64(buffer, totalOutputTokens);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
+      else if (!_tcsicmp(name, _T("Server.AI.TotalRequests")))
+      {
+         ret_uint64(buffer, g_aiTotalRequests);
+      }
+      else if (MatchString(_T("Server.AI.TotalRequests(*)"), name, false))
+      {
+         TCHAR providerName[256];
+         AgentGetParameterArg(name, 1, providerName, 256);
+         int64_t totalRequests, totalInputTokens, totalOutputTokens, failedRequests;
+         if (GetAIProviderStats(providerName, &totalRequests, &totalInputTokens, &totalOutputTokens, &failedRequests))
+            ret_int64(buffer, totalRequests);
+         else
+            rc = DCE_NOT_SUPPORTED;
       }
       else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.AgentProxy")))
       {

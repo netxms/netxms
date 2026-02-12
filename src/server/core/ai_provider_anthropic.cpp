@@ -348,7 +348,23 @@ json_t *AnthropicProvider::chat(const char *systemPrompt, json_t *messages, json
    json_decref(request);
 
    if (response == nullptr)
+   {
+      recordFailure();
       return nullptr;
+   }
+
+   // Extract token usage
+   json_t *usage = json_object_get(response, "usage");
+   if (json_is_object(usage))
+   {
+      int64_t inputTokens = json_integer_value(json_object_get(usage, "input_tokens"));
+      int64_t outputTokens = json_integer_value(json_object_get(usage, "output_tokens"));
+      recordUsage(inputTokens, outputTokens);
+   }
+   else
+   {
+      recordUsage(0, 0);
+   }
 
    // Convert Anthropic response to OpenAI-normalized format
    json_t *result = ConvertResponseFromAnthropic(response);
