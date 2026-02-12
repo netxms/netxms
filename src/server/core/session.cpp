@@ -344,7 +344,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Write audit log
  */
-void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const
+void ClientSession::writeAuditLog(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -355,7 +355,7 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t ob
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const
+void ClientSession::writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -366,7 +366,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, u
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const
+void ClientSession::writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);

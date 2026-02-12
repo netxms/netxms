@@ -709,15 +709,20 @@ class ImportContext;
  */
 void LoadScripts();
 void ValidateScripts();
-void ReloadScript(uint32_t scriptId);
+void NXCORE_EXPORTABLE ReloadScript(uint32_t scriptId);
 bool IsValidScriptId(uint32_t id);
-uint32_t ResolveScriptName(const TCHAR *name);
-bool GetScriptName(uint32_t scriptId, TCHAR *buffer, size_t size);
+uint32_t NXCORE_EXPORTABLE ResolveScriptName(const wchar_t *name);
+bool NXCORE_EXPORTABLE GetScriptName(uint32_t scriptId, wchar_t *buffer, size_t size);
 json_t *CreateScriptExportRecord(uint32_t id);
+uint32_t NXCORE_EXPORTABLE UpdateScript(const wchar_t *scriptName, const char *scriptSource, uint32_t *scriptId, GenericClientSession *session);
+uint32_t UpdateScript(const NXCPMessage& request, uint32_t *scriptId, GenericClientSession *session);
+uint32_t NXCORE_EXPORTABLE RenameScript(uint32_t scriptId, const TCHAR *newName);
+uint32_t NXCORE_EXPORTABLE DeleteScript(uint32_t scriptId);
 void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 void ImportScript(json_t *script, bool overwrite, ImportContext *context);
 ScriptVMHandle NXCORE_EXPORTABLE FindHookScript(const TCHAR *hookName, shared_ptr<NetObj> object);
 bool NXCORE_EXPORTABLE ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args, bool hasBrackets);
+
 
 /**
  * Global variables

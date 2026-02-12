@@ -45,6 +45,9 @@
     <ClCompile Include="ai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="tcpproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
