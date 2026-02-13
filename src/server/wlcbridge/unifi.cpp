@@ -171,7 +171,7 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
 /**
  * Read JSON document from controller
  */
-static json_t *ReadJsonFromController(const char *url, const char *token, const char *cookie, const char *requestData = nullptr)
+static json_t *ReadJsonFromController(NObject *wirelessDomain, const char *url, const char *token, const char *cookie, const char *requestData = nullptr)
 {
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -231,6 +231,11 @@ static json_t *ReadJsonFromController(const char *url, const char *token, const 
       if (httpCode != 200)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from controller: HTTP response code is %d"), httpCode);
+         if ((httpCode == 401) && (wirelessDomain != nullptr))
+         {
+            wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(), StateChange::CLEAR);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Authorization failed (HTTP 401), cleared cached cookie"));
+         }
          success = false;
       }
    }
@@ -352,7 +357,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
    nxlog_debug_tag(DEBUG_TAG, 7, _T("UniFi request: url=%hs"), url);
 
    const char *cookie = cookieAttr.empty() ? nullptr : cookieAttr.c_str();
-   json_t *response = ReadJsonFromController(url, tk.length() != 0 ? token : nullptr, cookie, requestData);
+   json_t *response = ReadJsonFromController(wirelessDomain, url, tk.length() != 0 ? token : nullptr, cookie, requestData);
    if (response != nullptr)
       return response;
 
@@ -374,7 +379,7 @@ static json_t *DoRequest(NObject *wirelessDomain, const char *endpoint, const ch
       }
       wirelessDomain->setCustomAttribute(_T("$unifi.cookie"), SharedString(cookieBuf, "ASCII"), StateChange::CLEAR);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Re-login to controller at %hs successful"), baseUrl.c_str());
-      response = ReadJsonFromController(url, nullptr, cookieBuf, requestData);
+      response = ReadJsonFromController(wirelessDomain, url, nullptr, cookieBuf, requestData);
    }
 
    return response;
