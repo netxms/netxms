@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ enum class DeviceBackupApiStatus
 /**
  * Single backup data
  */
-struct BackupData
+struct NXCORE_EXPORTABLE BackupData
 {
    int64_t id;
    time_t timestamp;
@@ -131,7 +131,7 @@ struct DeviceBackupInterface
  * Concrete DeviceBackupContext implementation backed by a Node object.
  * Provides SSH and SNMP access using the node's configured credentials.
  */
-class NodeBackupContext : public DeviceBackupContext
+class NXCORE_EXPORTABLE NodeBackupContext : public DeviceBackupContext
 {
 private:
    shared_ptr<Node> m_node;

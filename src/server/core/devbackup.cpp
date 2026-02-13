@@ -157,6 +157,8 @@ NodeBackupContext::NodeBackupContext(const shared_ptr<Node>& node) : m_node(node
  */
 NodeBackupContext::~NodeBackupContext()
 {
+   if (m_sshChannel != nullptr)
+      m_sshChannel->close();
    delete m_snmpTransport;
 }
 

@@ -26,6 +26,7 @@
 #include <nxtask.h>
 #include <netxms-version.h>
 #include <nms_users.h>
+#include <device-backup.h>
 
 struct SnmpTrap;
 
@@ -455,6 +456,143 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       else
       {
          AddRecurrentScheduledTask(_T("Execute.Script"), szBuffer, pArg, nullptr, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+      }
+   }
+   else if (IsCommand(L"BACKUP", szBuffer, 2))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+
+      if (IsCommand(L"STATUS", szBuffer, 2))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (szBuffer[0] != 0)
+         {
+            uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+            shared_ptr<NetObj> object = (nodeId != 0) ? FindObjectById(nodeId, OBJECT_NODE) : FindObjectByName(szBuffer, OBJECT_NODE);
+            if (object != nullptr)
+            {
+               Node& node = static_cast<Node&>(*object);
+               bool registered = DevBackupIsDeviceRegistered(node);
+               ConsolePrintf(console, L"Node:       %s [%u]\n", node.getName(), node.getId());
+               ConsolePrintf(console, L"Registered: %s\n", registered ? L"yes" : L"no");
+               auto jobResult = DevBackupGetLastJobStatus(node);
+               if (jobResult.first == DeviceBackupApiStatus::SUCCESS)
+               {
+                  const wchar_t *statusText;
+                  switch(jobResult.second)
+                  {
+                     case DeviceBackupJobStatus::SUCCESSFUL:
+                        statusText = L"SUCCESSFUL";
+                        break;
+                     case DeviceBackupJobStatus::FAILED:
+                        statusText = L"FAILED";
+                        break;
+                     default:
+                        statusText = L"UNKNOWN";
+                        break;
+                  }
+                  ConsolePrintf(console, L"Last job:   %s\n", statusText);
+               }
+               else
+               {
+                  ConsolePrintf(console, L"Last job:   %s\n", GetDeviceBackupApiErrorMessage(jobResult.first));
+               }
+               ConsoleWrite(console, L"\n");
+            }
+            else
+            {
+               ConsoleWrite(console, L"ERROR: Node not found\n\n");
+            }
+         }
+         else
+         {
+            ConsoleWrite(console, L"ERROR: Missing node ID or name\n\n");
+         }
+      }
+      else if (IsCommand(L"START", szBuffer, 3))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (szBuffer[0] != 0)
+         {
+            uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+            shared_ptr<NetObj> object = (nodeId != 0) ? FindObjectById(nodeId, OBJECT_NODE) : FindObjectByName(szBuffer, OBJECT_NODE);
+            if (object != nullptr)
+            {
+               Node& node = static_cast<Node&>(*object);
+               DeviceBackupApiStatus status = DevBackupStartJob(node);
+               if (status == DeviceBackupApiStatus::SUCCESS)
+               {
+                  ConsolePrintf(console, L"Backup job started for node %s [%u]\n\n", node.getName(), node.getId());
+               }
+               else
+               {
+                  ConsolePrintf(console, L"ERROR: %s\n\n", GetDeviceBackupApiErrorMessage(status));
+               }
+            }
+            else
+            {
+               ConsoleWrite(console, L"ERROR: Node not found\n\n");
+            }
+         }
+         else
+         {
+            ConsoleWrite(console, L"ERROR: Missing node ID or name\n\n");
+         }
+      }
+      else if (IsCommand(L"SHOW", szBuffer, 2))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (szBuffer[0] != 0)
+         {
+            uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+            shared_ptr<NetObj> object = (nodeId != 0) ? FindObjectById(nodeId, OBJECT_NODE) : FindObjectByName(szBuffer, OBJECT_NODE);
+            if (object != nullptr)
+            {
+               Node& node = static_cast<Node&>(*object);
+               auto result = DevBackupGetLatestBackup(node);
+               if (result.first == DeviceBackupApiStatus::SUCCESS)
+               {
+                  TCHAR timeText[64];
+                  _tcsftime(timeText, 64, _T("%Y-%m-%d %H:%M:%S"), localtime(&result.second.timestamp));
+                  ConsolePrintf(console, L"Node:      %s [%u]\n", node.getName(), node.getId());
+                  ConsolePrintf(console, L"Timestamp: %s\n", timeText);
+                  ConsolePrintf(console, L"Size:      %u bytes\n", static_cast<unsigned int>(result.second.size));
+                  ConsolePrintf(console, L"Binary:    %s\n", result.second.isBinary ? L"yes" : L"no");
+                  ConsoleWrite(console, L"\n");
+                  if (!result.second.isBinary && (result.second.data != nullptr) && (result.second.size > 0))
+                  {
+#ifdef UNICODE
+                     WCHAR *text = WideStringFromUTF8String(reinterpret_cast<char*>(result.second.data));
+                     ConsoleWrite(console, text);
+                     MemFree(text);
+#else
+                     ConsoleWrite(console, reinterpret_cast<char*>(result.second.data));
+#endif
+                     ConsoleWrite(console, L"\n");
+                  }
+                  else if (result.second.isBinary)
+                  {
+                     ConsoleWrite(console, L"(binary data not displayed)\n");
+                  }
+               }
+               else
+               {
+                  ConsolePrintf(console, L"ERROR: %s\n\n", GetDeviceBackupApiErrorMessage(result.first));
+               }
+            }
+            else
+            {
+               ConsoleWrite(console, L"ERROR: Node not found\n\n");
+            }
+         }
+         else
+         {
+            ConsoleWrite(console, L"ERROR: Missing node ID or name\n\n");
+         }
+      }
+      else
+      {
+         ConsoleWrite(console, L"ERROR: Invalid BACKUP subcommand\n\n");
       }
    }
    else if (IsCommand(_T("CLEAR"), szBuffer, 5))
@@ -1928,6 +2066,9 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("Valid commands are:\n")
             _T("   at +<sec> <script> [<params>]     - Schedule one time script execution task\n")
             _T("   at <schedule> <script> [<params>] - Schedule repeated script execution task\n")
+            _T("   backup show <node>                - Show latest device configuration backup\n")
+            _T("   backup start <node>               - Start device configuration backup\n")
+            _T("   backup status <node>              - Show device configuration backup status\n")
             _T("   clear                             - Show list of valid component names for clearing\n")
             _T("   clear <component>                 - Clear internal data or queue for given component\n")
             _T("   dbcp reset                        - Reset database connection pool\n")
