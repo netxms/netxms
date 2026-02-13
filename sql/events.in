@@ -1942,6 +1942,26 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) conflictingNodeName - Name of the node that already has this IP' CONCAT CRLF CONCAT
 		'   4) conflictingNodeId - ID of the node that already has this IP'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_RUNNING_CONFIG_CHANGED, 'SYS_RUNNING_CONFIG_CHANGED', 'b3a1e2c4-5d6f-4a8b-9c0e-1f2d3a4b5c6d',
+		EVENT_SEVERITY_WARNING, 1,
+		'Device running configuration changed',
+		'Generated when device running configuration change is detected during backup.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) previousHash - SHA-256 hash of the previous configuration' CONCAT CRLF CONCAT
+		'   2) newHash - SHA-256 hash of the new configuration'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_STARTUP_CONFIG_CHANGED, 'SYS_STARTUP_CONFIG_CHANGED', 'c4b2f3d5-6e7a-4b9c-ad1f-2e3d4a5b6c7e',
+		EVENT_SEVERITY_WARNING, 1,
+		'Device startup configuration changed',
+		'Generated when device startup configuration change is detected during backup.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) previousHash - SHA-256 hash of the previous configuration' CONCAT CRLF CONCAT
+		'   2) newHash - SHA-256 hash of the new configuration'
+	);
 
 /*
 ** SNMP traps

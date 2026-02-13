@@ -21,6 +21,32 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 61.1 to 61.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_RUNNING_CONFIG_CHANGED, _T("SYS_RUNNING_CONFIG_CHANGED"),
+      EVENT_SEVERITY_WARNING, EF_LOG, _T("b3a1e2c4-5d6f-4a8b-9c0e-1f2d3a4b5c6d"),
+      _T("Device running configuration changed"),
+      _T("Generated when device running configuration change is detected during backup.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousHash - SHA-256 hash of the previous configuration\r\n")
+      _T("   2) newHash - SHA-256 hash of the new configuration")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_STARTUP_CONFIG_CHANGED, _T("SYS_STARTUP_CONFIG_CHANGED"),
+      EVENT_SEVERITY_WARNING, EF_LOG, _T("c4b2f3d5-6e7a-4b9c-ad1f-2e3d4a5b6c7e"),
+      _T("Device startup configuration changed"),
+      _T("Generated when device startup configuration change is detected during backup.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) previousHash - SHA-256 hash of the previous configuration\r\n")
+      _T("   2) newHash - SHA-256 hash of the new configuration")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
 
 /**
  * Upgrade from 61.0 to 61.1
@@ -57,6 +83,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  61,  2,  H_UpgradeFromV1 },
    { 0,  61,  1,  H_UpgradeFromV0 },
    { 0,  0,  0,  nullptr }
 };
