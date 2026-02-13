@@ -19,6 +19,14 @@ tags:
     description: NXSL script library management
   - name: Server
     description: Server information and status
+  - name: AI Chat
+    description: AI assistant chat sessions
+  - name: Object Tools
+    description: Object tool management
+  - name: Find
+    description: Network search operations
+  - name: DCI Summary Tables
+    description: DCI summary table operations
 paths:
   /:
     get:
@@ -292,6 +300,281 @@ paths:
       security: []
       tags:
         - TCP Proxy
+  /v1/ai/chat:
+    post:
+      summary: Create AI chat session
+      description: Create a new AI assistant chat session.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                incidentId:
+                  type: integer
+                  description: Optional incident ID to associate with the chat session
+      responses:
+        '201':
+          description: Chat session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chatId:
+                    type: integer
+                    description: ID of the created chat session
+                  created:
+                    type: string
+                    format: date-time
+                    description: Creation timestamp
+        '400':
+          description: Invalid incident ID
+        '401':
+          description: Unauthorized
+        '500':
+          description: Failed to create chat session
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}/message:
+    post:
+      summary: Send message to AI chat
+      description: |
+        Send a message to the AI assistant. Returns 202 Accepted and processes
+        asynchronously. Use GET /v1/ai/chat/{chat-id}/status to poll for result.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: Message text to send to AI assistant
+                context:
+                  type: object
+                  description: Optional context object passed to the AI assistant
+      responses:
+        '202':
+          description: Message accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [processing]
+        '400':
+          description: Invalid chat ID or missing message
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+        '409':
+          description: Another request is already in progress
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}/status:
+    get:
+      summary: Get AI chat processing status
+      description: |
+        Poll for the current processing status of an AI chat session.
+        Returns the status (idle, processing, or completed) along with
+        any pending question or completed response.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [idle, processing, completed]
+                    description: Current processing state
+                  pendingQuestion:
+                    description: Pending question from AI (present when status is processing)
+                    nullable: true
+                  response:
+                    type: string
+                    description: AI response text (present when status is completed)
+                    nullable: true
+        '400':
+          description: Invalid chat ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}/question:
+    get:
+      summary: Poll for pending AI question
+      description: Check if the AI assistant has a pending question that needs user input.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      responses:
+        '200':
+          description: Question status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  question:
+                    description: Pending question object, or null if no question is pending
+                    nullable: true
+        '400':
+          description: Invalid chat ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}/answer:
+    post:
+      summary: Answer pending AI question
+      description: Provide an answer to a pending question from the AI assistant.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionId
+              properties:
+                questionId:
+                  type: integer
+                  format: int64
+                  description: ID of the question being answered
+                positive:
+                  type: boolean
+                  description: Whether the answer is positive (default false)
+                selectedOption:
+                  type: integer
+                  description: Index of selected option (-1 if none)
+      responses:
+        '200':
+          description: Answer accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Invalid chat ID or missing question ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}/clear:
+    post:
+      summary: Clear AI chat history
+      description: Clear the conversation history of an AI chat session.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      responses:
+        '204':
+          description: Chat history cleared successfully
+        '400':
+          description: Invalid chat ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
+  /v1/ai/chat/{chat-id}:
+    delete:
+      summary: Delete AI chat session
+      description: Delete an AI chat session and all its history.
+      parameters:
+        - name: chat-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chat session ID
+      responses:
+        '204':
+          description: Chat session deleted successfully
+        '400':
+          description: Invalid chat ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Chat session not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Chat
   /v1/alarms:
     get:
       summary: List Alarms
@@ -424,19 +707,19 @@ paths:
           required: true
           schema:
             type: string
-            description: Mac address or it's first part for search. 
+            description: Mac address or it's first part for search.
         - name: searchLimit
           in: query
           required: false
           schema:
             type: integer
-            description: Optional. Number of results to be returned, defualt is 100.
+            description: Optional. Number of results to be returned, default is 100.
         - name: includeObjects
           in: query
           required: false
           schema:
             type: boolean
-            description: Optional. If provided, object information is included in respone.
+            description: Optional. If provided, object information is included in response.
       responses:
         '200':
           description: Successful search of MAC address.
@@ -452,7 +735,7 @@ paths:
                       description: Local mac address
                     localNodeId:
                       type: integer
-                      description: Locla node id
+                      description: Local node id
                     localInterfaceId:
                       type: integer
                       description: Local interface ID
@@ -467,7 +750,7 @@ paths:
                           description: IP address
                         prefixLength:
                           type: integer
-                          description: IP address prefix lenght
+                          description: IP address prefix length
                     type:
                       type: string
                       description: Connection type
@@ -486,8 +769,8 @@ paths:
         - BearerAuth: []
   /v1/grafana/infinity/alarms:
     post:
-      summary: Retrieve alarms in format sutable Grafana Infinity
-      description: Retrieve alarms in format sutable Grafana Infinity.
+      summary: Retrieve alarms in format suitable for Grafana Infinity
+      description: Retrieve alarms in format suitable for Grafana Infinity.
       requestBody:
         required: true
         content:
@@ -554,8 +837,8 @@ paths:
         - BearerAuth: []
   /v1/grafana/infinity/summary-table:
     post:
-      summary: Retrieve summary table in format sutable Grafana Infinity
-      description: Retrieve summary table in format sutable Grafana Infinity.
+      summary: Retrieve summary table in format suitable for Grafana Infinity
+      description: Retrieve summary table in format suitable for Grafana Infinity.
       requestBody:
         required: true
         content:
@@ -578,7 +861,7 @@ paths:
                 type: array
                 items:
                   type: object
-                  description: One row of summary table, fileds depend on table definition (First column is always object name)
+                  description: One row of summary table, fields depend on table definition (First column is always object name)
         '401':
           description: Unauthorized.
       security:
@@ -976,7 +1259,7 @@ paths:
                 properties:
                   diagnostic:
                     type: object
-                    description: Additional diaagnostic information, if available
+                    description: Additional diagnostic information, if available
                   reason:
                     type: string
                     description: Failure reason
@@ -1250,7 +1533,7 @@ paths:
                   description: true - if object should enter maintenance mode, false - if leave
                 comments:
                   type: string
-                  description: Optional meintenance comments
+                  description: Optional maintenance comments
       responses:
         '200':
           description: Maintenance mode changed successfully
@@ -1328,6 +1611,69 @@ paths:
           description: Server side error (common reason is failed communication to agent). Response document may contain detailed failure reason.
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/status-explanation:
+    get:
+      summary: Get object status explanation
+      description: Retrieve a detailed explanation of how the object's status was calculated, including the algorithm used, child object statuses, and status propagation details.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: Status explanation retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objectId:
+                    type: integer
+                    description: Object ID
+                  objectName:
+                    type: string
+                    description: Object name
+                  status:
+                    type: integer
+                    description: Current object status
+                  statusText:
+                    type: string
+                    description: Human-readable status name
+                  unmanaged:
+                    type: boolean
+                    description: Present and true if object is unmanaged
+                  algorithm:
+                    type: string
+                    description: Status calculation algorithm name
+                  childStatuses:
+                    type: array
+                    description: Status information for child objects
+                    items:
+                      type: object
+                      properties:
+                        objectId:
+                          type: integer
+                        objectName:
+                          type: string
+                        status:
+                          type: integer
+                        statusText:
+                          type: string
+        '400':
+          description: Invalid object ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/sub-tree:
     get:
       summary: Get object sub-tree
@@ -1691,16 +2037,27 @@ paths:
                     id:
                       type: integer
                       description: Summary table ID
-                    name:
+                    menuPath:
                       type: string
-                      description: Summary table name
-                    description:
+                      description: Menu path for the summary table
+                    title:
                       type: string
-                      description: Summary table description
+                      description: Summary table title
+                    flags:
+                      type: integer
+                      description: Summary table flags
+                    guid:
+                      type: string
+                      format: uuid
+                      description: Summary table GUID
         '401':
           description: Unauthorized
+        '500':
+          description: Database failure
       security:
         - BearerAuth: []
+      tags:
+        - DCI Summary Tables
   /v1/dci-summary-tables/{table-id}/query:
     post:
       summary: Query specific DCI summary table
@@ -1719,12 +2076,9 @@ paths:
             schema:
               type: object
               properties:
-                rootObjectId:
+                objectId:
                   type: integer
                   description: Root object ID for table query
-                filters:
-                  type: object
-                  description: Optional filters to apply to the query
       responses:
         '200':
           description: Summary table query executed successfully
@@ -1735,12 +2089,18 @@ paths:
                 items:
                   type: object
                   description: Summary table row data
+        '400':
+          description: Invalid request or invalid summary table ID
         '401':
           description: Unauthorized
-        '404':
-          description: Summary table with given ID does not exist
+        '403':
+          description: Access denied
+        '500':
+          description: Query execution failed
       security:
         - BearerAuth: []
+      tags:
+        - DCI Summary Tables
   /v1/dci-summary-tables/adhoc-query:
     post:
       summary: Execute ad-hoc DCI summary table query
@@ -1751,16 +2111,15 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - tableDefinition
               properties:
-                query:
-                  type: string
-                  description: Ad-hoc query string
-                rootObjectId:
+                tableDefinition:
+                  type: object
+                  description: Summary table definition object
+                objectId:
                   type: integer
                   description: Root object ID for table query
-                parameters:
-                  type: object
-                  description: Query parameters
       responses:
         '200':
           description: Ad-hoc query executed successfully
@@ -1772,11 +2131,17 @@ paths:
                   type: object
                   description: Query result row data
         '400':
-          description: Invalid query
+          description: Invalid request or missing table definition
         '401':
           description: Unauthorized
+        '403':
+          description: Access denied
+        '500':
+          description: Query execution failed
       security:
         - BearerAuth: []
+      tags:
+        - DCI Summary Tables
 components:
   schemas:
     Alarm:
