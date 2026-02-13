@@ -59,10 +59,9 @@ steps:
         {{/success}}
     when:
       status:
-        - success
         - failure
 ---
 kind: signature
-hmac: cc4d5805f4add38c47ee22f65a553d68ea8a69ac8c091e2cabf2d2f3ceeb5fb2
+hmac: ea130f85553bfd75cff45be6ca8133763b964e64fd75781cc08058d49b4c643b
 
 ...
