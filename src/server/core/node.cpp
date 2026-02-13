@@ -11035,10 +11035,13 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
 
    shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
 
+   weak_ptr<SSHInteractiveChannel> weakChannel(channel);
    agentConn->setSSHChannelDataHandler(channelId,
-      [channel] (const BYTE *data, size_t size, bool errorIndicator)
+      [weakChannel] (const BYTE *data, size_t size, bool errorIndicator)
       {
-         channel->onDataReceived(data, size, errorIndicator);
+         shared_ptr<SSHInteractiveChannel> ch = weakChannel.lock();
+         if (ch != nullptr)
+            ch->onDataReceived(data, size, errorIndicator);
       });
    return channel;
 }
