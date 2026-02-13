@@ -105,12 +105,11 @@ static void DeleteSSHChannelProxy(uint32_t channelId)
 /**
  * SSHChannelProxy constructor
  */
-SSHChannelProxy::SSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSession *sshSession, AbstractCommSession *session)
+SSHChannelProxy::SSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSession *sshSession, AbstractCommSession *session) : m_commSession(session->self())
 {
    m_channelId = channelId;
    m_sshChannel = channel;
    m_sshSession = sshSession;
-   m_commSession = session;
    m_readerThread = INVALID_THREAD_HANDLE;
    m_running = false;
 }
@@ -295,8 +294,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             response->setField(VID_CHANNEL_ID, channelId);
 
             TCHAR ipAddrText[64];
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("CMD_SETUP_SSH_CHANNEL: channel %u opened to %s:%u"),
-                            channelId, addr.toString(ipAddrText), port);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("CMD_SETUP_SSH_CHANNEL: channel %u opened to %s:%u"), channelId, addr.toString(ipAddrText), port);
 
             // Note: We don't release the SSH session - it stays acquired while the channel is open
             // The session will be released when the channel is closed
