@@ -17715,10 +17715,7 @@ void ClientSession::findDci(const NXCPMessage &request)
          {
             targets.add(static_pointer_cast<DataCollectionTarget>(rootObject));
          }
-         else
-         {
-            rootObject->addChildDCTargetsToList(&targets, m_userId);
-         }
+         rootObject->addChildDCTargetsToList(&targets, m_userId);
          for(int i = 0; i < targets.size(); i++)
          {
             if (targets.get(i)->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
