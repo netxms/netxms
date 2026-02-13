@@ -242,6 +242,7 @@ useragent	User support application (server side)
 userdb		User database (server side)
 
 watchdog	Server watchdog
+webapi.tls	WebAPI TLS reverse proxy (reproxy)
 websvc		Web services
 winevt		Windows event collection (server side)
 winnt		WINNT platform subagent messages

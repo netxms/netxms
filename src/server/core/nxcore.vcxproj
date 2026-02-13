@@ -600,6 +600,7 @@
     <ClCompile Include="webapi_auth.cpp" />
     <ClCompile Include="webapi_context.cpp" />
     <ClCompile Include="webapi_router.cpp" />
+    <ClCompile Include="webapi_tls.cpp" />
     <ClCompile Include="websvc.cpp" />
     <ClCompile Include="windll.cpp" />
     <ClCompile Include="winevent.cpp" />

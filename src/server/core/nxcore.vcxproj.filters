@@ -555,6 +555,9 @@
     <ClCompile Include="webapi_router.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="webapi_tls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="skills.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

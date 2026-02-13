@@ -35,6 +35,10 @@ void CheckPendingLoginRequests(const shared_ptr<ScheduledTaskParameters>& parame
 int H_Login(Context *context);
 int H_Logout(Context *context);
 
+bool ReadTLSConfiguration();
+void StartReproxy(uint16_t webApiPort, const InetAddress& webApiAddress);
+void StopReproxy();
+
 /**
  * Loaded server config
  */
@@ -439,6 +443,9 @@ bool InitWebAPI()
       .POST(H_Logout)
       .build();
 
+   if (!ReadTLSConfiguration())
+      return false;
+
    return true;
 }
 
@@ -485,6 +492,8 @@ void StartWebAPI()
 
    RegisterSchedulerTaskHandler(_T("WebAPI.CheckPendingLoginRequests"), CheckPendingLoginRequests, 0); //No access right because it will be used only by server
    AddUniqueRecurrentScheduledTask(_T("WebAPI.CheckPendingLoginRequests"), _T("*/2 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Check for expired login requests"), nullptr, true);
+
+   StartReproxy(s_listenerPort, s_listenerAddr);
 }
 
 /**
@@ -492,6 +501,8 @@ void StartWebAPI()
  */
 void ShutdownWebAPI()
 {
+   StopReproxy();
+
    if (!s_webApiEnabled || (s_daemon == nullptr))
       return;
 
