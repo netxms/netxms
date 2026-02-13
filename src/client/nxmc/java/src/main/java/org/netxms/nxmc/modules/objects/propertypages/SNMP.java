@@ -40,6 +40,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -169,6 +170,7 @@ public class SNMP extends ObjectPropertyPage
       
       snmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       snmpProxy.setLabel(i18n.tr("Proxy"));
+      snmpProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       snmpProxy.setObjectId(node.getSnmpProxyId());
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);

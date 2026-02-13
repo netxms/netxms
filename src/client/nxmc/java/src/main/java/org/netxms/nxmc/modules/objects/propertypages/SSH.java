@@ -37,6 +37,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -132,6 +133,7 @@ public class SSH extends ObjectPropertyPage
       sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxy.setLabel(i18n.tr("Proxy"));
       sshProxy.setEmptySelectionName(i18n.tr("<default>"));
+      sshProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       sshProxy.setObjectId(node.getSshProxyId());
       sshProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       loadSshKeyList();

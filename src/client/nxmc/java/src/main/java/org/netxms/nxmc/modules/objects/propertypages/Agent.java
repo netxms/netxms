@@ -42,6 +42,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -127,6 +128,7 @@ public class Agent extends ObjectPropertyPage
       
       agentProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       agentProxy.setLabel(i18n.tr("Proxy"));
+      agentProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       agentProxy.setObjectId(node.getAgentProxyId());
       fd = new FormData();
       fd.left = new FormAttachment(agentPort, 0, SWT.RIGHT);

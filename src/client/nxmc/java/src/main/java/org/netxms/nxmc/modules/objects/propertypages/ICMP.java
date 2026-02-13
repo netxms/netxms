@@ -52,6 +52,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.ComparatorHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -128,6 +129,7 @@ public class ICMP extends ObjectPropertyPage
       
       icmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       icmpProxy.setLabel(i18n.tr("Proxy"));
+      icmpProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       icmpProxy.setObjectId(node.getIcmpProxyId());
       icmpProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       
