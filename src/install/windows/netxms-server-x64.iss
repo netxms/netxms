@@ -565,6 +565,9 @@ Begin
         dbInitName.Enabled := False;
         dbInitLogin.Enabled := True;
         dbInitPassword.Enabled := True;
+        dbInitCheckCreateDB.Enabled := True;
+        dbInitDBALogin.Enabled := dbInitCheckCreateDB.Checked;
+        dbInitDBAPassword.Enabled := dbInitCheckCreateDB.Checked;
       End;
     5: { SQLite }
       Begin
@@ -572,6 +575,10 @@ Begin
         dbInitName.Enabled := False;
         dbInitLogin.Enabled := False;
         dbInitPassword.Enabled := False;
+        dbInitCheckCreateDB.Checked := False;
+        dbInitCheckCreateDB.Enabled := False;
+        dbInitDBALogin.Enabled := False;
+        dbInitDBAPassword.Enabled := False;
       End;
     Else
       Begin
@@ -579,6 +586,9 @@ Begin
         dbInitName.Enabled := True;
         dbInitLogin.Enabled := True;
         dbInitPassword.Enabled := True;
+        dbInitCheckCreateDB.Enabled := True;
+        dbInitDBALogin.Enabled := dbInitCheckCreateDB.Checked;
+        dbInitDBAPassword.Enabled := dbInitCheckCreateDB.Checked;
       End;
   End;
 End;
