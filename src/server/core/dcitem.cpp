@@ -706,8 +706,7 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 
                // Schedule repeat event if interval is configured
-               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
-                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<uint32_t>(t->getRepeatInterval());
                if (repeatInterval > 0)
                {
                   t->incrementActivationSequence();
@@ -1227,8 +1226,7 @@ void DCItem::processNewError(bool noInstance, Timestamp timestamp)
                   .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 
                // Schedule repeat event if interval is configured
-               time_t repeatInterval = (t->getRepeatInterval() == -1) ?
-                  g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+               uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<uint32_t>(t->getRepeatInterval());
                if (repeatInterval > 0)
                {
                   t->incrementActivationSequence();
