@@ -2174,11 +2174,11 @@ void DCObject::updateFromImport(json_t *json)
    json_t *scheduleTypeObj = json_object_get(json, "scheduleType");
    if (scheduleTypeObj != nullptr)
    {
-      m_pollingScheduleType = json_integer_value(scheduleTypeObj);
+      m_pollingScheduleType = static_cast<BYTE>(json_integer_value(scheduleTypeObj));
    }
    else
    {
-      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !_tcscmp(m_pollingIntervalSrc, _T("0"))) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+      m_pollingScheduleType = (m_pollingIntervalSrc.isEmpty() || !wcscmp(m_pollingIntervalSrc, L"0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
       if (m_flags & 1)  // for compatibility with old format
          m_pollingScheduleType = DC_POLLING_SCHEDULE_ADVANCED;
    }
@@ -2187,18 +2187,18 @@ void DCObject::updateFromImport(json_t *json)
    json_t *retentionTypeObj = json_object_get(json, "retentionType");
    if (retentionTypeObj != nullptr)
    {
-      m_retentionType = json_integer_value(retentionTypeObj);
+      m_retentionType = static_cast<BYTE>(json_integer_value(retentionTypeObj));
    }
    else
    {
-      m_retentionType = (m_retentionTimeSrc.isEmpty() || !_tcscmp(m_retentionTimeSrc, _T("0"))) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
+      m_retentionType = (m_retentionTimeSrc.isEmpty() || !wcscmp(m_retentionTimeSrc, L"0")) ? DC_RETENTION_DEFAULT : DC_RETENTION_CUSTOM;
       if (m_flags & 0x200) // for compatibility with old format
          m_retentionType = DC_RETENTION_NONE;
    }
 
    updateTimeIntervalsInternal();
 
-   String transformation = json_object_get_string(json, "transformation", _T(""));
+   String transformation = json_object_get_string(json, "transformation", L"");
    setTransformationScriptInternal(transformation);
 
    json_t *schedulesArray = json_object_get(json, "schedules");
