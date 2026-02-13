@@ -337,7 +337,7 @@ void NXCORE_EXPORTABLE ReloadScript(uint32_t id)
 /**
  * Check if script ID is valid
  */
-bool IsValidScriptId(uint32_t id)
+bool NXCORE_EXPORTABLE IsValidScriptId(uint32_t id)
 {
    s_scriptLibrary.lock();
    bool valid = (s_scriptLibrary.findScript(id) != nullptr);
@@ -814,10 +814,10 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
    // Can be in form script(arg1, arg2, ... argN)
    if (argListStart != nullptr)
    {
-      TCHAR parameters[4096];
-      _tcslcpy(parameters, argListStart, 4096);
+      wchar_t parameters[4096];
+      wcslcpy(parameters, argListStart, 4096);
 
-      TCHAR *p = parameters;
+      wchar_t *p = parameters;
       if (!ParseValueList(vm, &p, args, true))
       {
          // argument parsing error

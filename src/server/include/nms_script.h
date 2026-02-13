@@ -735,7 +735,7 @@ class ImportContext;
 void LoadScripts();
 void ValidateScripts();
 void NXCORE_EXPORTABLE ReloadScript(uint32_t scriptId);
-bool IsValidScriptId(uint32_t id);
+bool NXCORE_EXPORTABLE IsValidScriptId(uint32_t id);
 uint32_t NXCORE_EXPORTABLE ResolveScriptName(const wchar_t *name);
 bool NXCORE_EXPORTABLE GetScriptName(uint32_t scriptId, wchar_t *buffer, size_t size);
 json_t *CreateScriptExportRecord(uint32_t id);
