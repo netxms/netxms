@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,20 +27,6 @@
 
 #define MAX_AUTH_TOKEN_SIZE   512
 #define MAX_READER_BATCH_SIZE 64
-
-/**
- * Get custom attribute from domain object as UTF-8 sting
- */
-static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name)
-{
-   TCHAR buffer[1024];
-   if (wirelessDomain->getCustomAttribute(name, buffer, 1024) == nullptr)
-      return std::string();
-
-   char utf8buffer[1024];
-   wchar_to_utf8(buffer, -1, utf8buffer, 1024);
-   return std::string(utf8buffer);
-}
 
 /**
  * Callback for processing headers received from cURL
