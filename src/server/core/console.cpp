@@ -556,21 +556,28 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
                   _tcsftime(timeText, 64, _T("%Y-%m-%d %H:%M:%S"), localtime(&result.second.timestamp));
                   ConsolePrintf(console, L"Node:      %s [%u]\n", node.getName(), node.getId());
                   ConsolePrintf(console, L"Timestamp: %s\n", timeText);
-                  ConsolePrintf(console, L"Size:      %u bytes\n", static_cast<unsigned int>(result.second.size));
                   ConsolePrintf(console, L"Binary:    %s\n", result.second.isBinary ? L"yes" : L"no");
                   ConsoleWrite(console, L"\n");
-                  if (!result.second.isBinary && (result.second.data != nullptr) && (result.second.size > 0))
+                  if (!result.second.isBinary)
                   {
-#ifdef UNICODE
-                     WCHAR *text = WideStringFromUTF8String(reinterpret_cast<char*>(result.second.data));
-                     ConsoleWrite(console, text);
-                     MemFree(text);
-#else
-                     ConsoleWrite(console, reinterpret_cast<char*>(result.second.data));
-#endif
-                     ConsoleWrite(console, L"\n");
+                     if (result.second.runningConfig != nullptr && result.second.runningConfigSize > 0)
+                     {
+                        ConsoleWrite(console, L"=== Running Configuration ===\n");
+                        WCHAR *text = WideStringFromUTF8String(reinterpret_cast<char*>(result.second.runningConfig));
+                        ConsoleWrite(console, text);
+                        MemFree(text);
+                        ConsoleWrite(console, L"\n");
+                     }
+                     if (result.second.startupConfig != nullptr && result.second.startupConfigSize > 0)
+                     {
+                        ConsoleWrite(console, L"\n=== Startup Configuration ===\n");
+                        WCHAR *text = WideStringFromUTF8String(reinterpret_cast<char*>(result.second.startupConfig));
+                        ConsoleWrite(console, text);
+                        MemFree(text);
+                        ConsoleWrite(console, L"\n");
+                     }
                   }
-                  else if (result.second.isBinary)
+                  else
                   {
                      ConsoleWrite(console, L"(binary data not displayed)\n");
                   }

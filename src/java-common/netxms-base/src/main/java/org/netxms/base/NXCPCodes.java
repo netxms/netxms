@@ -528,6 +528,8 @@ public class NXCPCodes
    public static final int CMD_AI_EXECUTE_TOOL = 0x01FE;
    public static final int CMD_GET_EPP_SCRIPT_LIST = 0x01FF;
    public static final int CMD_GET_STATUS_EXPLANATION = 0x0200;
+   public static final int CMD_GET_DEVICE_CONFIG_BACKUPS = 0x0201;
+   public static final int CMD_GET_DEVICE_CONFIG_BACKUP = 0x0202;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1464,6 +1466,13 @@ public class NXCPCodes
    public static final long VID_RULE_MODIFIED = 926;
    public static final long VID_DELETED_RULE_COUNT = 927;
    public static final long VID_RULE_VERSION_COUNT = 928;
+   public static final long VID_BACKUP_ID = 934;
+   public static final long VID_IS_BINARY = 935;
+   public static final long VID_RUNNING_CONFIG_SIZE = 936;
+   public static final long VID_STARTUP_CONFIG_SIZE = 937;
+   public static final long VID_RUNNING_CONFIG_HASH = 938;
+   public static final long VID_STARTUP_CONFIG_HASH = 939;
+   public static final long VID_STARTUP_CONFIG = 940;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
    public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
    public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;

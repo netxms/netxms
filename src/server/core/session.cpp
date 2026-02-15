@@ -40,6 +40,7 @@
 #include <netxms-version.h>
 #include <nxai.h>
 #include <ai_messages.h>
+#include <device-backup.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -1747,6 +1748,18 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_STATUS_EXPLANATION:
          getStatusExplanation(*request);
+         break;
+      case CMD_START_CONFIG_BACKUP_JOB:
+         startDeviceConfigBackup(*request);
+         break;
+      case CMD_GET_LAST_CONFIG_BACKUP:
+         getLastDeviceConfigBackup(*request);
+         break;
+      case CMD_GET_DEVICE_CONFIG_BACKUPS:
+         getDeviceConfigBackups(*request);
+         break;
+      case CMD_GET_DEVICE_CONFIG_BACKUP:
+         getDeviceConfigBackup(*request);
          break;
       case CMD_GET_FOLDER_CONTENT:
       case CMD_GET_FOLDER_SIZE:
@@ -19326,6 +19339,188 @@ void ClientSession::autoConnectNetworkMapNodes(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
          writeAuditLog(AUDIT_OBJECTS, false, map->getId(), _T("Access denied on auto-connecting network map nodes"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Convert device backup API status to RCC
+ */
+static uint32_t DeviceBackupApiStatusToRCC(DeviceBackupApiStatus status)
+{
+   switch(status)
+   {
+      case DeviceBackupApiStatus::SUCCESS:
+         return RCC_SUCCESS;
+      case DeviceBackupApiStatus::NOT_IMPLEMENTED:
+         return RCC_NOT_IMPLEMENTED;
+      default:
+         return RCC_INTERNAL_ERROR;
+   }
+}
+
+/**
+ * Fill NXCP message with backup data (full content)
+ */
+static void FillBackupMessage(NXCPMessage *msg, const BackupData& backup)
+{
+   msg->setField(VID_BACKUP_ID, backup.id);
+   msg->setFieldFromTime(VID_TIMESTAMP, backup.timestamp);
+   msg->setField(VID_IS_BINARY, backup.isBinary);
+   msg->setField(VID_RUNNING_CONFIG_SIZE, static_cast<uint64_t>(backup.runningConfigSize));
+   msg->setField(VID_RUNNING_CONFIG_HASH, backup.runningConfigHash, SHA256_DIGEST_SIZE);
+   if (backup.runningConfig != nullptr)
+      msg->setField(VID_CONFIG_FILE_DATA, backup.runningConfig, backup.runningConfigSize);
+   msg->setField(VID_STARTUP_CONFIG_SIZE, static_cast<uint64_t>(backup.startupConfigSize));
+   msg->setField(VID_STARTUP_CONFIG_HASH, backup.startupConfigHash, SHA256_DIGEST_SIZE);
+   if (backup.startupConfig != nullptr)
+      msg->setField(VID_STARTUP_CONFIG, backup.startupConfig, backup.startupConfigSize);
+}
+
+/**
+ * Start device config backup job
+ */
+void ClientSession::startDeviceConfigBackup(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
+      {
+         DeviceBackupApiStatus status = DevBackupStartJob(static_cast<Node&>(*object));
+         response.setField(VID_RCC, DeviceBackupApiStatusToRCC(status));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get last device config backup (full content)
+ */
+void ClientSession::getLastDeviceConfigBackup(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         auto result = DevBackupGetLatestBackup(static_cast<Node&>(*object));
+         if (result.first == DeviceBackupApiStatus::SUCCESS)
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            FillBackupMessage(&response, result.second);
+         }
+         else
+         {
+            response.setField(VID_RCC, DeviceBackupApiStatusToRCC(result.first));
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get device config backup list (metadata only)
+ */
+void ClientSession::getDeviceConfigBackups(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         auto result = DevBackupGetBackupList(static_cast<Node&>(*object));
+         if (result.first == DeviceBackupApiStatus::SUCCESS)
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(result.second.size()));
+            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+            for (const auto& backup : result.second)
+            {
+               response.setField(fieldId++, backup.id);
+               response.setFieldFromTime(fieldId++, backup.timestamp);
+               response.setField(fieldId++, static_cast<uint64_t>(backup.runningConfigSize));
+               response.setField(fieldId++, backup.runningConfigHash, SHA256_DIGEST_SIZE);
+               response.setField(fieldId++, static_cast<uint64_t>(backup.startupConfigSize));
+               response.setField(fieldId++, backup.startupConfigHash, SHA256_DIGEST_SIZE);
+               fieldId += 4; // padding to 10-field stride
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, DeviceBackupApiStatusToRCC(result.first));
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get single device config backup by ID (full content)
+ */
+void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         int64_t backupId = request.getFieldAsInt64(VID_BACKUP_ID);
+         auto result = DevBackupGetBackupById(backupId);
+         if (result.first == DeviceBackupApiStatus::SUCCESS)
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+            FillBackupMessage(&response, result.second);
+         }
+         else
+         {
+            response.setField(VID_RCC, DeviceBackupApiStatusToRCC(result.first));
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else

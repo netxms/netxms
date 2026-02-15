@@ -42,25 +42,37 @@ struct NXCORE_EXPORTABLE BackupData
 {
    int64_t id;
    time_t timestamp;
-   BYTE *data;
-   size_t size;
+   BYTE *runningConfig;
+   size_t runningConfigSize;
+   BYTE runningConfigHash[SHA256_DIGEST_SIZE];
+   BYTE *startupConfig;
+   size_t startupConfigSize;
+   BYTE startupConfigHash[SHA256_DIGEST_SIZE];
    bool isBinary;
-   
+
    BackupData()
    {
       id = -1;
       timestamp = 0;
-      data = nullptr;
-      size = 0;
+      runningConfig = nullptr;
+      runningConfigSize = 0;
+      memset(runningConfigHash, 0, SHA256_DIGEST_SIZE);
+      startupConfig = nullptr;
+      startupConfigSize = 0;
+      memset(startupConfigHash, 0, SHA256_DIGEST_SIZE);
       isBinary = false;
    }
-   
+
    BackupData(const BackupData& src)
    {
       id = src.id;
       timestamp = src.timestamp;
-      data = MemCopyBlock(src.data, src.size);
-      size = src.size;
+      runningConfig = MemCopyBlock(src.runningConfig, src.runningConfigSize);
+      runningConfigSize = src.runningConfigSize;
+      memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
+      startupConfig = MemCopyBlock(src.startupConfig, src.startupConfigSize);
+      startupConfigSize = src.startupConfigSize;
+      memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
       isBinary = src.isBinary;
    }
 
@@ -68,45 +80,68 @@ struct NXCORE_EXPORTABLE BackupData
    {
       id = src.id;
       timestamp = src.timestamp;
-      data = src.data;
-      size = src.size;
+      runningConfig = src.runningConfig;
+      runningConfigSize = src.runningConfigSize;
+      memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
+      startupConfig = src.startupConfig;
+      startupConfigSize = src.startupConfigSize;
+      memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
       isBinary = src.isBinary;
-      
-      src.data = nullptr;
-      src.size = 0;
+
+      src.runningConfig = nullptr;
+      src.runningConfigSize = 0;
+      src.startupConfig = nullptr;
+      src.startupConfigSize = 0;
    }
 
    ~BackupData()
    {
-      MemFree(data);
+      MemFree(runningConfig);
+      MemFree(startupConfig);
    }
-   
+
    BackupData& operator =(const BackupData& src)
    {
-      MemFree(data);
+      if (this != &src)
+      {
+         MemFree(runningConfig);
+         MemFree(startupConfig);
 
-      id = src.id;
-      timestamp = src.timestamp;
-      data = MemCopyBlock(src.data, src.size);
-      size = src.size;
-      isBinary = src.isBinary;
-
+         id = src.id;
+         timestamp = src.timestamp;
+         runningConfig = MemCopyBlock(src.runningConfig, src.runningConfigSize);
+         runningConfigSize = src.runningConfigSize;
+         memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
+         startupConfig = MemCopyBlock(src.startupConfig, src.startupConfigSize);
+         startupConfigSize = src.startupConfigSize;
+         memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
+         isBinary = src.isBinary;
+      }
       return *this;
    }
 
    BackupData& operator =(BackupData&& src)
    {
-      MemFree(data);
+      if (this != &src)
+      {
+         MemFree(runningConfig);
+         MemFree(startupConfig);
 
-      id = src.id;
-      timestamp = src.timestamp;
-      data = MemCopyBlock(src.data, src.size);
-      size = src.size;
-      isBinary = src.isBinary;
+         id = src.id;
+         timestamp = src.timestamp;
+         runningConfig = src.runningConfig;
+         runningConfigSize = src.runningConfigSize;
+         memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
+         startupConfig = src.startupConfig;
+         startupConfigSize = src.startupConfigSize;
+         memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
+         isBinary = src.isBinary;
 
-      src.data = nullptr;
-      src.size = 0;
-
+         src.runningConfig = nullptr;
+         src.runningConfigSize = 0;
+         src.startupConfig = nullptr;
+         src.startupConfigSize = 0;
+      }
       return *this;
    }
 };
@@ -124,7 +159,8 @@ struct DeviceBackupInterface
    DeviceBackupApiStatus (*StartJob)(const Node& node);
    std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> (*GetLastJobStatus)(const Node& node);
    std::pair<DeviceBackupApiStatus, BackupData> (*GetLatestBackup)(const Node& node);
-   std::pair<DeviceBackupApiStatus, std::vector<BackupData>> (*GetBackups)(const Node& node);
+   std::pair<DeviceBackupApiStatus, std::vector<BackupData>> (*GetBackupList)(const Node& node);
+   std::pair<DeviceBackupApiStatus, BackupData> (*GetBackupById)(int64_t id);
 };
 
 /**
@@ -192,8 +228,13 @@ std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> DevBackupGetLastJobStatu
 std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetLatestBackup(const Node& node);
 
 /**
- * Get list of device backups
+ * Get list of device backups (metadata only, config content pointers will be NULL)
  */
-std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackups(const Node& node);
+std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList(const Node& node);
+
+/**
+ * Get device backup by ID (with full config content)
+ */
+std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(int64_t id);
 
 #endif   /* _device_backup_h_ */

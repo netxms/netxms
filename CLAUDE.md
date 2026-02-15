@@ -198,6 +198,8 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 
 When implementing changes, ensure ALL call sites and consumers are updated. After making a rename or API change, run a project-wide grep for the old name to catch missed references before attempting a build.
 
+When adding a new NXCP command code or renaming an existing one, update the `NXCPMessageCodeName()` function in `src/libnetxms/nxcp.cpp` to include the corresponding command code to name mapping.
+
 ## Implementation Discipline
 
 When implementing a plan that spans multiple files, do NOT skip any files listed in the plan. If a file seems less critical, flag it explicitly rather than silently omitting it. Cross-check your completed changes against the plan before declaring done.

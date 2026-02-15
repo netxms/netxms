@@ -8567,6 +8567,82 @@ public class NXCSession
    }
 
    /**
+    * Get list of device configuration backups for given node (metadata only, no config content).
+    *
+    * @param nodeId node object identifier
+    * @return list of device config backups
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DeviceConfigBackup> getDeviceConfigBackups(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEVICE_CONFIG_BACKUPS);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<DeviceConfigBackup> backups = new ArrayList<DeviceConfigBackup>(count);
+      long baseId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         backups.add(new DeviceConfigBackup(response, baseId));
+         baseId += 10;
+      }
+      return backups;
+   }
+
+   /**
+    * Get single device configuration backup by ID (with full config content).
+    *
+    * @param nodeId node object identifier
+    * @param backupId backup identifier
+    * @return device config backup with full content
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DeviceConfigBackup getDeviceConfigBackup(long nodeId, long backupId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEVICE_CONFIG_BACKUP);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldInt64(NXCPCodes.VID_BACKUP_ID, backupId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new DeviceConfigBackup(response);
+   }
+
+   /**
+    * Get last device configuration backup for given node (with full config content).
+    *
+    * @param nodeId node object identifier
+    * @return last device config backup with full content
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DeviceConfigBackup getLastDeviceConfigBackup(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_CONFIG_BACKUP);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new DeviceConfigBackup(response);
+   }
+
+   /**
+    * Start device configuration backup job for given node.
+    *
+    * @param nodeId node object identifier
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void startDeviceConfigBackup(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_CONFIG_BACKUP_JOB);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get list of user sessions on given node as reported by agent.
     *
     * @param nodeId node object identifier

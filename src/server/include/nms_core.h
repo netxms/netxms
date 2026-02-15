@@ -870,6 +870,10 @@ private:
    void getDeviceView(const NXCPMessage& request);
 	void getNodeSoftware(const NXCPMessage& request);
    void getNodeHardware(const NXCPMessage& request);
+   void startDeviceConfigBackup(const NXCPMessage& request);
+   void getLastDeviceConfigBackup(const NXCPMessage& request);
+   void getDeviceConfigBackups(const NXCPMessage& request);
+   void getDeviceConfigBackup(const NXCPMessage& request);
 	void getWinPerfObjects(const NXCPMessage& request);
 	void getUserSessions(const NXCPMessage& request);
 	void listMappingTables(const NXCPMessage& request);

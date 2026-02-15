@@ -710,6 +710,8 @@ typedef struct
 #define CMD_AI_EXECUTE_TOOL               0x01FE
 #define CMD_GET_EPP_SCRIPT_LIST           0x01FF
 #define CMD_GET_STATUS_EXPLANATION        0x0200
+#define CMD_GET_DEVICE_CONFIG_BACKUPS    0x0201
+#define CMD_GET_DEVICE_CONFIG_BACKUP     0x0202
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1655,6 +1657,13 @@ typedef struct
 #define VID_AI_TOOL_OUTPUT          ((uint32_t)931)
 #define VID_AI_TOOL_SCHEMA          ((uint32_t)932)
 #define VID_AI_TOOL_EXEC_TIME       ((uint32_t)933)
+#define VID_BACKUP_ID               ((uint32_t)934)
+#define VID_IS_BINARY               ((uint32_t)935)
+#define VID_RUNNING_CONFIG_SIZE     ((uint32_t)936)
+#define VID_STARTUP_CONFIG_SIZE     ((uint32_t)937)
+#define VID_RUNNING_CONFIG_HASH     ((uint32_t)938)
+#define VID_STARTUP_CONFIG_HASH     ((uint32_t)939)
+#define VID_STARTUP_CONFIG          ((uint32_t)940)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

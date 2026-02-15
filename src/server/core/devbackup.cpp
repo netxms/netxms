@@ -104,11 +104,19 @@ std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetLatestBackup(const Node
 }
 
 /**
- * Get list of device backups
+ * Get list of device backups (metadata only)
  */
-std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackups(const Node& node)
+std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList(const Node& node)
 {
-   return (s_provider != nullptr) ? s_provider->GetBackups(node) : std::pair<DeviceBackupApiStatus, std::vector<BackupData>>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, std::vector<BackupData>());
+   return (s_provider != nullptr) ? s_provider->GetBackupList(node) : std::pair<DeviceBackupApiStatus, std::vector<BackupData>>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, std::vector<BackupData>());
+}
+
+/**
+ * Get device backup by ID (with full config content)
+ */
+std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(int64_t id)
+{
+   return (s_provider != nullptr) ? s_provider->GetBackupById(id) : std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, BackupData());
 }
 
 /**
