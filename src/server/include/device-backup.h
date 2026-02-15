@@ -67,10 +67,10 @@ struct NXCORE_EXPORTABLE BackupData
    {
       id = src.id;
       timestamp = src.timestamp;
-      runningConfig = MemCopyBlock(src.runningConfig, src.runningConfigSize);
+      runningConfig = (src.runningConfig != nullptr) ? MemCopyBlock(src.runningConfig, src.runningConfigSize) : nullptr;
       runningConfigSize = src.runningConfigSize;
       memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
-      startupConfig = MemCopyBlock(src.startupConfig, src.startupConfigSize);
+      startupConfig = (src.startupConfig != nullptr) ? MemCopyBlock(src.startupConfig, src.startupConfigSize) : nullptr;
       startupConfigSize = src.startupConfigSize;
       memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
       isBinary = src.isBinary;
@@ -109,10 +109,10 @@ struct NXCORE_EXPORTABLE BackupData
 
          id = src.id;
          timestamp = src.timestamp;
-         runningConfig = MemCopyBlock(src.runningConfig, src.runningConfigSize);
+         runningConfig = (src.runningConfig != nullptr) ? MemCopyBlock(src.runningConfig, src.runningConfigSize) : nullptr;
          runningConfigSize = src.runningConfigSize;
          memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
-         startupConfig = MemCopyBlock(src.startupConfig, src.startupConfigSize);
+         startupConfig = (src.startupConfig != nullptr) ? MemCopyBlock(src.startupConfig, src.startupConfigSize) : nullptr;
          startupConfigSize = src.startupConfigSize;
          memcpy(startupConfigHash, src.startupConfigHash, SHA256_DIGEST_SIZE);
          isBinary = src.isBinary;
