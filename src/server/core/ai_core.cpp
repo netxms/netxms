@@ -32,6 +32,14 @@
 
 #define DEBUG_TAG _T("ai.assistant")
 
+/**
+ * Global AI usage counters
+ */
+VolatileCounter64 g_aiTotalRequests = 0;
+VolatileCounter64 g_aiTotalInputTokens = 0;
+VolatileCounter64 g_aiTotalOutputTokens = 0;
+VolatileCounter64 g_aiFailedRequests = 0;
+
 void InitAITasks();
 void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool);
 
@@ -269,6 +277,88 @@ static void RegisterProviderForSlots(shared_ptr<LLMProvider> provider, const Str
       wchar_to_utf8(slots.get(i), -1, slotName, sizeof(slotName));
       s_slotProviders[slotName] = provider;
       nxlog_debug_tag(DEBUG_TAG, 4, L"Registered provider \"%s\" for slot \"%hs\"", provider->getName(), slotName);
+   }
+}
+
+/**
+ * Get AI provider statistics by provider name (case-insensitive).
+ * Returns true if provider was found, false otherwise.
+ */
+bool GetAIProviderStats(const TCHAR *providerName, int64_t *totalRequests, int64_t *totalInputTokens, int64_t *totalOutputTokens, int64_t *failedRequests)
+{
+   for (const auto& pair : s_slotProviders)
+   {
+      if (!_tcsicmp(pair.second->getName(), providerName))
+      {
+         *totalRequests = pair.second->getTotalRequests();
+         *totalInputTokens = pair.second->getTotalInputTokens();
+         *totalOutputTokens = pair.second->getTotalOutputTokens();
+         *failedRequests = pair.second->getFailedRequests();
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
+ * Get provider type name
+ */
+static const TCHAR *GetProviderTypeName(LLMProviderType type)
+{
+   switch(type)
+   {
+      case LLMProviderType::OPENAI:
+         return _T("OpenAI");
+      case LLMProviderType::ANTHROPIC:
+         return _T("Anthropic");
+      case LLMProviderType::OLLAMA:
+         return _T("Ollama");
+      default:
+         return _T("Unknown");
+   }
+}
+
+/**
+ * Fill table with AI provider information
+ */
+void GetAIProviderTable(Table *table)
+{
+   table->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   table->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+   table->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
+   table->addColumn(_T("TOTAL_REQUESTS"), DCI_DT_COUNTER64, _T("Total Requests"));
+   table->addColumn(_T("TOKENS_IN"), DCI_DT_COUNTER64, _T("Input Tokens"));
+   table->addColumn(_T("TOKENS_OUT"), DCI_DT_COUNTER64, _T("Output Tokens"));
+   table->addColumn(_T("FAILED_REQUESTS"), DCI_DT_COUNTER64, _T("Failed Requests"));
+
+   // Collect unique providers (multiple slots can point to the same provider)
+   ObjectArray<LLMProvider> seen(8, 8, Ownership::False);
+   for (const auto& pair : s_slotProviders)
+   {
+      LLMProvider *provider = pair.second.get();
+      bool duplicate = false;
+      for (int i = 0; i < seen.size(); i++)
+      {
+         if (seen.get(i) == provider)
+         {
+            duplicate = true;
+            break;
+         }
+      }
+      if (duplicate)
+         continue;
+      seen.add(provider);
+
+      table->addRow();
+      table->set(0, provider->getName());
+      table->set(1, GetProviderTypeName(provider->getType()));
+      WCHAR model[64];
+      mb_to_wchar(provider->getModelName(), -1, model, 64);
+      table->set(2, model);
+      table->set(3, provider->getTotalRequests());
+      table->set(4, provider->getTotalInputTokens());
+      table->set(5, provider->getTotalOutputTokens());
+      table->set(6, provider->getFailedRequests());
    }
 }
 
@@ -1866,15 +1956,21 @@ void ShowAIProviders(ServerConsole *console)
       const WCHAR *typeName;
       switch (p->getType())
       {
-         case LLMProviderType::OPENAI: typeName = L"OpenAI"; break;
-         case LLMProviderType::ANTHROPIC: typeName = L"Anthropic"; break;
-         default: typeName = L"Ollama"; break;
+         case LLMProviderType::OPENAI:
+            typeName = L"OpenAI";
+            break;
+         case LLMProviderType::ANTHROPIC:
+            typeName = L"Anthropic";
+            break;
+         default:
+            typeName = L"Ollama";
+            break;
       }
       bool isDefault = (s_defaultProvider.get() == p);
-      ConsolePrintf(console, L"Name    : %s%s\n", p->getName(), isDefault ? L" (default)" : L"");
-      ConsolePrintf(console, L"Type    : %s\n", typeName);
-      ConsolePrintf(console, L"Model   : %hs\n", p->getModelName());
-      ConsolePrintf(console, L"URL     : %hs\n", p->getUrl());
+      ConsolePrintf(console, L"Name            : %s%s\n", p->getName(), isDefault ? L" (default)" : L"");
+      ConsolePrintf(console, L"Type            : %s\n", typeName);
+      ConsolePrintf(console, L"Model           : %hs\n", p->getModelName());
+      ConsolePrintf(console, L"URL             : %hs\n", p->getUrl());
 
       StringList *slots = providerSlots[p];
       StringBuffer slotList;
@@ -1884,7 +1980,13 @@ void ShowAIProviders(ServerConsole *console)
             slotList.append(L", ");
          slotList.append(slots->get(j));
       }
-      ConsolePrintf(console, L"Slots   : %s\n", slotList.cstr());
+      ConsolePrintf(console, L"Slots           : %s\n", slotList.cstr());
+
+      ConsolePrintf(console, L"Total requests  : " INT64_FMT L"\n", p->getTotalRequests());
+      ConsolePrintf(console, L"Failed requests : " INT64_FMT L"\n", p->getFailedRequests());
+      ConsolePrintf(console, L"Input tokens    : " INT64_FMT L"\n", p->getTotalInputTokens());
+      ConsolePrintf(console, L"Output tokens   : " INT64_FMT L"\n", p->getTotalOutputTokens());
+
       ConsoleWrite(console, L"\n");
    }
 
@@ -1911,6 +2013,46 @@ void ShowAISlots(ServerConsole *console)
          ConsolePrintf(console, L" %-16hs| \x1b[33mnot defined\x1b[0m\n", knownSlots[i]);
    }
    ConsoleWrite(console, L"\n");
+}
+
+/**
+ * Handler for function get-ai-provider-stats
+ */
+static std::string F_GetAIProviderStats(json_t *arguments, uint32_t userId)
+{
+   json_t *output = json_array();
+   ObjectArray<LLMProvider> seen(8, 8, Ownership::False);
+   for (const auto& pair : s_slotProviders)
+   {
+      LLMProvider *provider = pair.second.get();
+      bool duplicate = false;
+      for (int i = 0; i < seen.size(); i++)
+      {
+         if (seen.get(i) == provider)
+         {
+            duplicate = true;
+            break;
+         }
+      }
+      if (duplicate)
+         continue;
+      seen.add(provider);
+
+      json_t *entry = json_object();
+      char name[256];
+      wchar_to_utf8(provider->getName(), -1, name, sizeof(name));
+      json_object_set_new(entry, "name", json_string(name));
+      char typeName[32];
+      wchar_to_utf8(GetProviderTypeName(provider->getType()), -1, typeName, sizeof(typeName));
+      json_object_set_new(entry, "type", json_string(typeName));
+      json_object_set_new(entry, "model", json_string(provider->getModelName()));
+      json_object_set_new(entry, "totalRequests", json_integer(provider->getTotalRequests()));
+      json_object_set_new(entry, "inputTokens", json_integer(provider->getTotalInputTokens()));
+      json_object_set_new(entry, "outputTokens", json_integer(provider->getTotalOutputTokens()));
+      json_object_set_new(entry, "failedRequests", json_integer(provider->getFailedRequests()));
+      json_array_append_new(output, entry);
+   }
+   return JsonToString(output);
 }
 
 /**
@@ -2119,6 +2261,14 @@ bool InitAIAssistant()
       {
          return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
       });
+
+   RegisterAIAssistantFunction(
+      "get-ai-provider-stats",
+      "Get list of configured AI/LLM providers with their real-time usage statistics (requests, input/output tokens, failures). "
+      "Counters are cumulative since server start and change with every API call. "
+      "Always call this function again when the user asks for current or updated numbers - never reuse previous results.",
+      {},
+      F_GetAIProviderStats);
 
    RegisterAIAssistantFunction(
       "write-log-message",

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.FilterText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectOpenListener;
 import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
@@ -89,8 +90,10 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeComparator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeContentProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectViewerFilter;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object tree control
@@ -732,6 +735,19 @@ public class ObjectTree extends Composite
    }
 
    /**
+    * Get effective drag and drop mode. Checks local preference override first, then falls back to server configuration hint.
+    *
+    * @return effective DnD mode (0 = enable, 1 = confirm, 2 = disable)
+    */
+   static int getDragAndDropMode()
+   {
+      int localOverride = PreferenceStore.getInstance().getAsInteger("ObjectBrowser.DragAndDropMode", -1);
+      if (localOverride >= 0 && localOverride <= 2)
+         return localOverride;
+      return Registry.getSession().getClientConfigurationHintAsInt("ObjectBrowser.DragAndDropMode", 0);
+   }
+
+   /**
     * Enable drag support in object tree
     */
    public void enableDragSupport()
@@ -741,6 +757,11 @@ public class ObjectTree extends Composite
          @Override
          public void dragStart(DragSourceEvent event)
          {
+            if (getDragAndDropMode() == 2)
+            {
+               event.doit = false;
+               return;
+            }
             LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
             event.doit = true;
          }
@@ -765,8 +786,36 @@ public class ObjectTree extends Composite
          @Override
          public boolean performDrop(Object data)
          {
+            int dndMode = getDragAndDropMode();
+            if (dndMode == 2)
+               return false;
+
             TreeSelection selection = (TreeSelection)data;
             List<?> movableSelection = selection.toList();
+
+            if (dndMode == 1)
+            {
+               I18n i18n = LocalizationHelper.getI18n(ObjectTree.class);
+               AbstractObject target = (AbstractObject)getCurrentTarget();
+               String targetName = (target != null) ? target.getObjectName() : "?";
+               String message;
+               if (movableSelection.size() == 1)
+               {
+                  AbstractObject obj = (AbstractObject)movableSelection.get(0);
+                  message = String.format(i18n.tr("Do you want to %s object \"%s\" to \"%s\"?"),
+                        (operation == DND.DROP_MOVE) ? i18n.tr("move") : i18n.tr("copy"),
+                        obj.getObjectName(), targetName);
+               }
+               else
+               {
+                  message = String.format(i18n.tr("Do you want to %s %d objects to \"%s\"?"),
+                        (operation == DND.DROP_MOVE) ? i18n.tr("move") : i18n.tr("copy"),
+                        movableSelection.size(), targetName);
+               }
+               if (!MessageDialogHelper.openConfirm(objectTree.getTree().getShell(), i18n.tr("Confirm Object Move"), message))
+                  return false;
+            }
+
             for(int i = 0; i < movableSelection.size(); i++)
             {
                AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
@@ -781,6 +830,10 @@ public class ObjectTree extends Composite
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
             this.operation = operation;
+
+            if (getDragAndDropMode() == 2)
+               return false;
+
             if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 

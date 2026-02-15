@@ -66,10 +66,16 @@ int H_ObjectQuery(Context *context);
 int H_ObjectRemoteControl(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
+int H_ObjectStatusExplanation(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
+int H_ScriptLibrary(Context *context);
+int H_ScriptDetails(Context *context);
+int H_ScriptCreate(Context *context);
+int H_ScriptUpdate(Context *context);
+int H_ScriptDelete(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
@@ -194,17 +200,29 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/set-managed")
       .POST(H_ObjectSetManaged)
       .build();
-   RouteBuilder("v1/objects/:object-id/take-screenshot")
-      .GET(H_TakeScreenshot)
+   RouteBuilder("v1/objects/:object-id/status-explanation")
+      .GET(H_ObjectStatusExplanation)
       .build();
    RouteBuilder("v1/objects/:object-id/sub-tree")
       .GET(H_ObjectSubTree)
+      .build();
+   RouteBuilder("v1/objects/:object-id/take-screenshot")
+      .GET(H_TakeScreenshot)
       .build();
    RouteBuilder("v1/objects/query")
       .POST(H_ObjectQuery)
       .build();
    RouteBuilder("v1/objects/search")
       .POST(H_ObjectSearch)
+      .build();
+   RouteBuilder("v1/script-library")
+      .GET(H_ScriptLibrary)
+      .POST(H_ScriptCreate)
+      .build();
+   RouteBuilder("v1/script-library/:script-id")
+      .GET(H_ScriptDetails)
+      .PUT(H_ScriptUpdate)
+      .DELETE(H_ScriptDelete)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)

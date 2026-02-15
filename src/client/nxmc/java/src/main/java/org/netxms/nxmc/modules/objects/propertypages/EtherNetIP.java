@@ -32,6 +32,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -110,6 +111,7 @@ public class EtherNetIP extends ObjectPropertyPage
       
       proxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       proxy.setLabel(i18n.tr("Proxy"));
+      proxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       proxy.setObjectId(node.getEtherNetIpProxyId());
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;

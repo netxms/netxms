@@ -74,7 +74,23 @@ json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t 
    json_decref(request);
 
    if (response == nullptr)
+   {
+      recordFailure();
       return nullptr;
+   }
+
+   // Extract token usage
+   json_t *usage = json_object_get(response, "usage");
+   if (json_is_object(usage))
+   {
+      int64_t inputTokens = json_integer_value(json_object_get(usage, "prompt_tokens"));
+      int64_t outputTokens = json_integer_value(json_object_get(usage, "completion_tokens"));
+      recordUsage(inputTokens, outputTokens);
+   }
+   else
+   {
+      recordUsage(0, 0);
+   }
 
    // OpenAI format: choices[0].message
    json_t *choices = json_object_get(response, "choices");

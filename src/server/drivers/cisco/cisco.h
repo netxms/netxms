@@ -39,6 +39,9 @@ public:
 	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
 };
 
 /**
@@ -146,6 +149,9 @@ public:
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
 };
 
 /**

@@ -99,6 +99,8 @@ void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId);
 
 bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundTask *task);
 
+bool GetSummaryTableScriptDependencies(uint32_t id, StringSet *dependencies);
+
 void GetAgentTunnels(NXCPMessage *msg);
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
@@ -344,7 +346,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Write audit log
  */
-void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const
+void ClientSession::writeAuditLog(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -355,7 +357,7 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t ob
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const
+void ClientSession::writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -366,7 +368,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, u
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const
+void ClientSession::writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const wchar_t *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -1457,6 +1459,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_SCRIPT_LIST:
          getDCIScriptList(*request);
          break;
+      case CMD_GET_EPP_SCRIPT_LIST:
+         getEPPScriptList(*request);
+         break;
+      case CMD_GET_SUMMARY_TABLE_SCRIPT_LIST:
+         getSummaryTableScriptList(*request);
+         break;
+      case CMD_GET_SCRIPT_DEPENDENCIES:
+         getScriptDependencies(*request);
+         break;
       case CMD_GET_PERFTAB_DCI_LIST:
          getPerfTabDCIList(*request);
          break;
@@ -1733,6 +1744,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_EFFECTIVE_RIGHTS:
          getEffectiveRights(*request);
+         break;
+      case CMD_GET_STATUS_EXPLANATION:
+         getStatusExplanation(*request);
          break;
       case CMD_GET_FOLDER_CONTENT:
       case CMD_GET_FOLDER_SIZE:
@@ -5041,8 +5055,8 @@ void ClientSession::copyDCI(const NXCPMessage& request)
             static_cast<DataCollectionOwner&>(*destinationObject).applyDCIChanges(!m_openDataCollectionConfigurations.contains(destinationObject->getId()));
             response.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
-            // Queue template update
-            if (destinationObject->getObjectClass() == OBJECT_TEMPLATE)
+            // Queue template/cluster update
+            if ((destinationObject->getObjectClass() == OBJECT_TEMPLATE) || (destinationObject->getObjectClass() == OBJECT_CLUSTER))
                static_cast<DataCollectionOwner&>(*destinationObject).queueUpdate();
          }
          else  // User doesn't have enough rights on object(s)
@@ -10922,6 +10936,13 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             unique_ptr<StringSet> scripts = static_cast<DataCollectionOwner&>(*object).getDCIScriptList();
+
+            // Also include auto-bind filter dependencies for templates
+            if (object->getObjectClass() == OBJECT_TEMPLATE)
+            {
+               static_cast<Template&>(*object).getAutoBindScriptDependencies(scripts.get());
+            }
+
             response.setField(VID_NUM_SCRIPTS, static_cast<uint32_t>(scripts->size()));
             uint32_t fieldId = VID_SCRIPT_LIST_BASE;
             scripts->forEach(
@@ -10947,6 +10968,116 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of scripts used by event processing policy rules
+ */
+void ClientSession::getEPPScriptList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      StringSet scripts;
+      uint32_t count = request.getFieldAsUInt32(VID_NUM_RULES);
+      if (count > 0)
+      {
+         auto guids = MemAllocArray<uuid>(count);
+         uint32_t fieldId = VID_RULE_LIST_BASE;
+         for (uint32_t i = 0; i < count; i++)
+         {
+            guids[i] = request.getFieldAsGUID(fieldId++);
+         }
+         GetEventProcessingPolicy()->getScriptDependencies(count, guids, &scripts);
+         MemFree(guids);
+      }
+      response.setField(VID_NUM_SCRIPTS, static_cast<uint32_t>(scripts.size()));
+      uint32_t fieldId = VID_SCRIPT_LIST_BASE;
+      scripts.forEach(
+         [&response, &fieldId](const TCHAR *name) -> bool
+         {
+            response.setField(fieldId++, ResolveScriptName(name));
+            response.setField(fieldId++, name);
+            return true;
+         });
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of scripts used by DCI summary table filters
+ */
+void ClientSession::getSummaryTableScriptList(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+   {
+      StringSet scripts;
+      uint32_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
+      uint32_t fieldId = VID_ITEM_LIST;
+      for (uint32_t i = 0; i < count; i++)
+      {
+         uint32_t tableId = request.getFieldAsUInt32(fieldId++);
+         GetSummaryTableScriptDependencies(tableId, &scripts);
+      }
+      response.setField(VID_NUM_SCRIPTS, static_cast<uint32_t>(scripts.size()));
+      fieldId = VID_SCRIPT_LIST_BASE;
+      scripts.forEach(
+         [&response, &fieldId](const TCHAR *name) -> bool
+         {
+            response.setField(fieldId++, ResolveScriptName(name));
+            response.setField(fieldId++, name);
+            return true;
+         });
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get recursive script dependencies (use/import) for given script IDs
+ */
+void ClientSession::getScriptDependencies(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   StringSet dependencies;
+   uint32_t count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
+   uint32_t fieldId = VID_SCRIPT_LIST_BASE;
+   for (uint32_t i = 0; i < count; i++)
+   {
+      uint32_t scriptId = static_cast<uint32_t>(request.getFieldAsUInt64(fieldId++));
+      TCHAR name[256];
+      if (GetScriptName(scriptId, name, 256))
+      {
+         AddScriptDependencies(&dependencies, name);
+      }
+   }
+   response.setField(VID_NUM_SCRIPTS, static_cast<uint32_t>(dependencies.size()));
+   fieldId = VID_SCRIPT_LIST_BASE;
+   dependencies.forEach(
+      [&response, &fieldId](const TCHAR *name) -> bool
+      {
+         response.setField(fieldId++, ResolveScriptName(name));
+         response.setField(fieldId++, name);
+         return true;
+      });
+   response.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(response);
 }
@@ -14670,6 +14801,38 @@ void ClientSession::getEffectiveRights(const NXCPMessage& request)
 }
 
 /**
+ * Get status explanation for an object
+ */
+void ClientSession::getStatusExplanation(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         json_t *json = object->buildStatusExplanation();
+         char *jsonString = json_dumps(json, JSON_INDENT(2));
+         response.setFieldFromUtf8String(VID_VALUE, jsonString);
+         MemFree(jsonString);
+         json_decref(json);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * File manager control calls
  */
 void ClientSession::fileManagerControl(NXCPMessage *request)
@@ -17718,10 +17881,7 @@ void ClientSession::findDci(const NXCPMessage &request)
          {
             targets.add(static_pointer_cast<DataCollectionTarget>(rootObject));
          }
-         else
-         {
-            rootObject->addChildDCTargetsToList(&targets, m_userId);
-         }
+         rootObject->addChildDCTargetsToList(&targets, m_userId);
          for(int i = 0; i < targets.size(); i++)
          {
             if (targets.get(i)->checkAccessRights(m_userId, OBJECT_ACCESS_READ))

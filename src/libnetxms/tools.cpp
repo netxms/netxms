@@ -4364,7 +4364,19 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
    HANDLE h = FindFirstFile(fn, &fd);
    if (h == INVALID_HANDLE_VALUE)
    {
-      _set_errno((GetLastError() == ERROR_FILE_NOT_FOUND) ? ENOENT : EIO);
+      switch (GetLastError())
+      {
+         case ERROR_FILE_NOT_FOUND:
+         case ERROR_PATH_NOT_FOUND:
+            _set_errno(ENOENT);
+            break;
+         case ERROR_ACCESS_DENIED:
+            _set_errno(EACCES);
+            break;
+         default:
+            _set_errno(EIO);
+            break;
+      }
       return -1;
    }
 

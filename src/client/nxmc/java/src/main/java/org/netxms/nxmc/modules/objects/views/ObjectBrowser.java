@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -107,6 +108,10 @@ public class ObjectBrowser extends NavigationView
    private Action actionMoveMap;
    private Action actionMoveAsset;
    private Action actionShowHiddenObjects;
+   private Action actionDnDControlledByServer;
+   private Action actionDnDEnable;
+   private Action actionDnDConfirm;
+   private Action actionDnDDisable;
 
    /**
     * @param name
@@ -290,6 +295,13 @@ public class ObjectBrowser extends NavigationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionShowHiddenObjects);
+      MenuManager dndMenu = new MenuManager(i18n.tr("&Drag and drop"));
+      dndMenu.add(actionDnDControlledByServer);
+      dndMenu.add(new Separator());
+      dndMenu.add(actionDnDEnable);
+      dndMenu.add(actionDnDConfirm);
+      dndMenu.add(actionDnDDisable);
+      manager.add(dndMenu);
       super.fillLocalMenu(manager);
    }
 
@@ -401,6 +413,64 @@ public class ObjectBrowser extends NavigationView
       };
       actionShowHiddenObjects.setChecked(objectTree.isShowHiddenObjects());
       actionShowHiddenObjects.setImageDescriptor(ResourceManager.getImageDescriptor("icons/hidden-objects.png"));
+
+      actionDnDControlledByServer = new Action(i18n.tr("Controlled by server"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            setDragAndDropOverride(-1);
+         }
+      };
+
+      actionDnDEnable = new Action(i18n.tr("Enable"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            setDragAndDropOverride(0);
+         }
+      };
+
+      actionDnDConfirm = new Action(i18n.tr("Confirm"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            setDragAndDropOverride(1);
+         }
+      };
+
+      actionDnDDisable = new Action(i18n.tr("Disable"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            setDragAndDropOverride(2);
+         }
+      };
+
+      updateDragAndDropActions(PreferenceStore.getInstance().getAsInteger("ObjectBrowser.DragAndDropMode", -1));
+   }
+
+   /**
+    * Set drag and drop local override and update action states.
+    *
+    * @param mode override mode (-1 = controlled by server, 0 = enable, 1 = confirm, 2 = disable)
+    */
+   private void setDragAndDropOverride(int mode)
+   {
+      PreferenceStore.getInstance().set("ObjectBrowser.DragAndDropMode", mode);
+      updateDragAndDropActions(mode);
+   }
+
+   /**
+    * Update checked state of drag and drop radio actions.
+    *
+    * @param mode current override mode
+    */
+   private void updateDragAndDropActions(int mode)
+   {
+      actionDnDControlledByServer.setChecked(mode == -1);
+      actionDnDEnable.setChecked(mode == 0);
+      actionDnDConfirm.setChecked(mode == 1);
+      actionDnDDisable.setChecked(mode == 2);
    }
 
    /**

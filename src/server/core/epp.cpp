@@ -773,6 +773,58 @@ void EPRule::validateConfig() const
 }
 
 /**
+ * Get script dependencies from this rule
+ */
+void EPRule::getScriptDependencies(StringSet *dependencies) const
+{
+   AddScriptDependencies(dependencies, m_filterScript);
+   AddScriptDependencies(dependencies, m_actionScript);
+
+   if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
+      AddScriptDependencies(dependencies, m_rcaScriptName);
+
+   if (m_alarmMessage != nullptr)
+      FindScriptMacrosInText(m_alarmMessage, dependencies);
+   if (m_alarmKey != nullptr)
+      FindScriptMacrosInText(m_alarmKey, dependencies);
+   if (m_alarmImpact != nullptr)
+      FindScriptMacrosInText(m_alarmImpact, dependencies);
+   FindScriptMacrosInText(m_downtimeTag, dependencies);
+
+   m_pstorageSetActions.forEach(
+      [dependencies](const wchar_t *key, const void *value) -> EnumerationCallbackResult
+      {
+         FindScriptMacrosInText(key, dependencies);
+         FindScriptMacrosInText(static_cast<const wchar_t*>(value), dependencies);
+         return _CONTINUE;
+      });
+   for (int i = 0; i < m_pstorageDeleteActions.size(); i++)
+      FindScriptMacrosInText(m_pstorageDeleteActions.get(i), dependencies);
+
+   m_customAttributeSetActions.forEach(
+      [dependencies](const wchar_t *key, const void *value) -> EnumerationCallbackResult
+      {
+         FindScriptMacrosInText(key, dependencies);
+         FindScriptMacrosInText(static_cast<const wchar_t*>(value), dependencies);
+         return _CONTINUE;
+      });
+   for (int i = 0; i < m_customAttributeDeleteActions.size(); i++)
+      FindScriptMacrosInText(m_customAttributeDeleteActions.get(i), dependencies);
+
+   for (int i = 0; i < m_actions.size(); i++)
+   {
+      ActionExecutionConfiguration *a = m_actions.get(i);
+      if (a->timerKey != nullptr)
+         FindScriptMacrosInText(a->timerKey, dependencies);
+      if (a->blockingTimerKey != nullptr)
+         FindScriptMacrosInText(a->blockingTimerKey, dependencies);
+   }
+
+   for (int i = 0; i < m_timerCancellations.size(); i++)
+      FindScriptMacrosInText(m_timerCancellations.get(i), dependencies);
+}
+
+/**
  * Check if source object's id match to the rule
  */
 bool EPRule::matchSource(const shared_ptr<NetObj>& object) const
@@ -2725,5 +2777,25 @@ void EventProcessingPolicy::showRules(ServerConsole *console) const
 
    console->printf(_T("\n%d rules total\n\n"), static_cast<int>(m_rules.size()));
 
+   unlock();
+}
+
+/**
+ * Get script dependencies for rules identified by GUIDs
+ */
+void EventProcessingPolicy::getScriptDependencies(uint32_t count, const uuid *guids, StringSet *dependencies) const
+{
+   readLock();
+   for (uint32_t i = 0; i < count; i++)
+   {
+      for (int j = 0; j < m_rules.size(); j++)
+      {
+         if (guids[i].equals(m_rules.get(j)->getGuid()))
+         {
+            m_rules.get(j)->getScriptDependencies(dependencies);
+            break;
+         }
+      }
+   }
    unlock();
 }

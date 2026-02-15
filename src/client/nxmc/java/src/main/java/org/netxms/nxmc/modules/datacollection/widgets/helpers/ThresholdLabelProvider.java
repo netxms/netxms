@@ -72,7 +72,11 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 		switch(columnIndex)
 		{
 			case Thresholds.COLUMN_OPERATION:
-				return ((Threshold)element).getTextualRepresentation();
+            Threshold t = (Threshold)element;
+            String text = t.getTextualRepresentation();
+            if (t.getDeactivationSampleCount() > 1)
+               text += " [rearm: " + t.getDeactivationSampleCount() + "]";
+				return text;
 			case Thresholds.COLUMN_EVENT:
             return session.getEventName(((Threshold)element).getFireEvent());
          case Thresholds.COLUMN_DEACTIVATION_EVENT:

@@ -1605,6 +1605,9 @@ void NXCORE_EXPORTABLE Shutdown()
    InterlockedOr64(&g_flags, AF_SHUTDOWN);     // Set shutdown flag
    InitiateProcessShutdown();
 
+   NXSL_VM::stopAll();
+   nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All NXSL VMs signalled to stop"));
+
    // Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
    for(int i = 0; i < g_moduleList.size(); i++)
@@ -1730,6 +1733,8 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 
    InterlockedOr64(&g_flags, AF_SHUTDOWN);     // Set shutdown flag
 	InitiateProcessShutdown();
+
+   NXSL_VM::stopAll();
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);

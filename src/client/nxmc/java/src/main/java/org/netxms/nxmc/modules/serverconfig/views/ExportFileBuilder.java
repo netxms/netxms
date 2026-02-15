@@ -1520,20 +1520,49 @@ public class ExportFileBuilder extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<Script> scriptList = session.getScriptLibrary();
+
+            // Find script IDs matching given names
+            final Set<Long> matchedIds = new HashSet<>();
+            for(String scriptName : scriptNames)
+            {
+               for(Script s : scriptList)
+               {
+                  if (s.getName().equalsIgnoreCase(scriptName))
+                  {
+                     matchedIds.add(s.getId());
+                     break;
+                  }
+               }
+            }
+
+            // Resolve recursive use/import dependencies
+            final List<Script> deps;
+            if (!matchedIds.isEmpty())
+            {
+               long[] ids = new long[matchedIds.size()];
+               int idx = 0;
+               for(Long id : matchedIds)
+                  ids[idx++] = id;
+               deps = session.getScriptDependencies(ids);
+            }
+            else
+            {
+               deps = null;
+            }
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  for(String scriptName : scriptNames)
+                  for(Script s : scriptList)
                   {
-                     for(Script s : scriptList)
-                     {
-                        if (s.getName().equalsIgnoreCase(scriptName))
-                        {
-                           scripts.put(s.getId(), s);
-                           break;
-                        }
-                     }
+                     if (matchedIds.contains(s.getId()))
+                        scripts.put(s.getId(), s);
+                  }
+                  if (deps != null)
+                  {
+                     for(Script s : deps)
+                        scripts.put(s.getId(), s);
                   }
                   scriptViewer.setInput(scripts.values().toArray());
                   setModified();
@@ -1824,6 +1853,29 @@ public class ExportFileBuilder extends ConfigurationView
             actionViewer.setInput(actions.values().toArray());
          }
          addReferencedScripts(allMatches);
+
+         // Get script dependencies from EPP rule filter/action/RCA scripts
+         final Set<UUID> ruleGuids = new HashSet<>();
+         for(EventProcessingPolicyRule r : dlg.getSelectedRules())
+            ruleGuids.add(r.getGuid());
+         new Job(i18n.tr("Resolving EPP script dependencies"), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               final List<Script> eppScripts = session.getEPPScripts(ruleGuids);
+               runInUIThread(() -> {
+                  for(Script s : eppScripts)
+                     scripts.put(s.getId(), s);
+                  scriptViewer.setInput(scripts.values().toArray());
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot resolve EPP script dependencies");
+            }
+         }.start();
 		}
 	}
 
@@ -1836,10 +1888,36 @@ public class ExportFileBuilder extends ConfigurationView
       dlg.setMultiSelection(true);
       if (dlg.open() == Window.OK)
       {
-         for(Script s : dlg.getSelection())
+         List<Script> selected = dlg.getSelection();
+         final long[] selectedIds = new long[selected.size()];
+         int idx = 0;
+         for(Script s : selected)
+         {
             scripts.put(s.getId(), s);
+            selectedIds[idx++] = s.getId();
+         }
          scriptViewer.setInput(scripts.values().toArray());
          setModified();
+
+         // Resolve recursive use/import dependencies
+         new Job(i18n.tr("Resolving script dependencies"), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               final List<Script> deps = session.getScriptDependencies(selectedIds);
+               runInUIThread(() -> {
+                  for(Script s : deps)
+                     scripts.put(s.getId(), s);
+                  scriptViewer.setInput(scripts.values().toArray());
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot resolve script dependencies");
+            }
+         }.start();
       }
    }
 
@@ -1866,10 +1944,36 @@ public class ExportFileBuilder extends ConfigurationView
       SummaryTableSelectionDialog dlg = new SummaryTableSelectionDialog(getWindow().getShell());
       if (dlg.open() == Window.OK)
       {
-         for(DciSummaryTableDescriptor t : dlg.getSelection())
+         final List<DciSummaryTableDescriptor> selection = dlg.getSelection();
+         final long[] tableIds = new long[selection.size()];
+         int idx = 0;
+         for(DciSummaryTableDescriptor t : selection)
+         {
             summaryTables.put(t.getId(), t);
+            tableIds[idx++] = t.getId();
+         }
          summaryTableViewer.setInput(summaryTables.values().toArray());
          setModified();
+
+         // Resolve filter script dependencies
+         new Job(i18n.tr("Resolving summary table script dependencies"), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               final List<Script> stScripts = session.getSummaryTableScripts(tableIds);
+               runInUIThread(() -> {
+                  for(Script s : stScripts)
+                     scripts.put(s.getId(), s);
+                  scriptViewer.setInput(scripts.values().toArray());
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot resolve summary table script dependencies");
+            }
+         }.start();
       }
    }
 

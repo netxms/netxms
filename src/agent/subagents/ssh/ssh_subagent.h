@@ -158,7 +158,7 @@ private:
    uint32_t m_channelId;
    ssh_channel m_sshChannel;
    SSHSession *m_sshSession;
-   AbstractCommSession *m_commSession;
+   shared_ptr<AbstractCommSession> m_commSession;
    THREAD m_readerThread;
    bool m_running;
 

@@ -1761,6 +1761,8 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
+   if (vm->isStopRequested())
+      return SNMP_ERR_ABORTED;
    static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(std::move(*var)))));
    return SNMP_ERR_SUCCESS;
 }

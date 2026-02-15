@@ -110,7 +110,7 @@ void Collector::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Return STATUS_NORMAL as additional status so that empty collector will have NORMAL status instead of UNKNOWN.
  */
-int Collector::getAdditionalMostCriticalStatus()
+int Collector::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
    return STATUS_NORMAL;
 }

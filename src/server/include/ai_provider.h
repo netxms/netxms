@@ -72,6 +72,12 @@ class NXCORE_EXPORTABLE LLMProvider
 protected:
    LLMProviderConfig m_config;
 
+   // Usage counters
+   VolatileCounter64 m_totalRequests;
+   VolatileCounter64 m_totalInputTokens;
+   VolatileCounter64 m_totalOutputTokens;
+   VolatileCounter64 m_failedRequests;
+
    // Shared HTTP handling
    json_t *doHttpRequest(json_t *requestData);
 
@@ -80,6 +86,12 @@ protected:
 
    // Build HTTP headers for the request (can be overridden by subclasses)
    virtual struct curl_slist *buildHttpHeaders();
+
+   // Record token usage from a successful API call
+   void recordUsage(int64_t inputTokens, int64_t outputTokens);
+
+   // Record a failed API call
+   void recordFailure();
 
 public:
    LLMProvider(const LLMProviderConfig& config);
@@ -99,6 +111,10 @@ public:
    double getTemperature() const { return m_config.temperature; }
    double getTopP() const { return m_config.topP; }
    LLMProviderType getType() const { return m_config.type; }
+   int64_t getTotalRequests() const { return m_totalRequests; }
+   int64_t getTotalInputTokens() const { return m_totalInputTokens; }
+   int64_t getTotalOutputTokens() const { return m_totalOutputTokens; }
+   int64_t getFailedRequests() const { return m_failedRequests; }
 };
 
 /**

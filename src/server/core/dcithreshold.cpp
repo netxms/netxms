@@ -37,6 +37,7 @@ Threshold::Threshold(DCItem *relatedItem)
    m_operation = OP_EQ;
    m_dataType = relatedItem->getTransformedDataType();
    m_sampleCount = 1;
+   m_deactivationSampleCount = 1;
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
@@ -48,6 +49,7 @@ Threshold::Threshold(DCItem *relatedItem)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+	m_numClearMatches = 0;
    m_activationSequence = 0;
 }
 
@@ -66,6 +68,7 @@ Threshold::Threshold()
    m_operation = OP_EQ;
    m_dataType = 0;
    m_sampleCount = 1;
+   m_deactivationSampleCount = 1;
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
@@ -77,6 +80,7 @@ Threshold::Threshold()
 	m_lastEventTimestamp = 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+	m_numClearMatches = 0;
    m_activationSequence = 0;
 }
 
@@ -95,6 +99,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
    m_operation = src.m_operation;
    m_dataType = src.m_dataType;
    m_sampleCount = src.m_sampleCount;
+   m_deactivationSampleCount = src.m_deactivationSampleCount;
    m_scriptSource = nullptr;
    m_script = nullptr;
    setScript(MemCopyString(src.m_scriptSource));
@@ -107,6 +112,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
 	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
    m_lastEventMessage = nullptr;
 	m_numMatches = shadowCopy ? src.m_numMatches : 0;
+	m_numClearMatches = shadowCopy ? src.m_numClearMatches : 0;
    m_activationSequence = shadowCopy ? src.m_activationSequence : 0;
 }
 
@@ -116,7 +122,8 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
- *        state_before_maint,last_checked_value,last_event_message,is_disabled FROM thresholds
+ *        state_before_maint,last_checked_value,last_event_message,is_disabled,
+ *        deactivation_sample_count,clear_match_count FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, Timestamp::fromMilliseconds(0), true)
 {
@@ -142,6 +149,8 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
    DBGetField(hResult, row, 16, textBuffer, MAX_EVENT_MSG_LENGTH);
    m_lastEventMessage = (textBuffer[0] != 0) ? MemCopyString(textBuffer) : nullptr;
    m_disabled = DBGetFieldLong(hResult, row, 17) ? true : false;
+   m_deactivationSampleCount = DBGetFieldLong(hResult, row, 18);
+   m_numClearMatches = DBGetFieldLong(hResult, row, 19);
 
    m_lastScriptErrorReport = 0;
    m_itemId = relatedItem->getId();
@@ -151,6 +160,8 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
 
 	if ((m_function == F_LAST) && (m_sampleCount < 1))
 		m_sampleCount = 1;
+   if (m_deactivationSampleCount < 1)
+      m_deactivationSampleCount = 1;
    m_activationSequence = 0;
 }
 
@@ -170,6 +181,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 	m_value.set(config->getSubEntryValue(_T("value"), 0, _T("")), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
    m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != nullptr) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
+   m_deactivationSampleCount = config->getSubEntryValueAsInt(_T("deactivationSampleCount"), 0, 1);
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
@@ -191,6 +203,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
 	m_lastEventTimestamp = 0;
 	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
+	m_numClearMatches = 0;
    m_activationSequence = 0;
 }
 
@@ -224,6 +237,8 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    else
       m_sampleCount = json_object_get_int32(json, "param1", 1);
 
+   m_deactivationSampleCount = json_object_get_int32(json, "deactivationSampleCount", 1);
+
    m_scriptSource = nullptr;
    m_script = nullptr;
    m_lastScriptErrorReport = 0;
@@ -239,6 +254,7 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    m_lastEventTimestamp = 0;
    m_lastEventMessage = nullptr;
    m_numMatches = 0;
+   m_numClearMatches = 0;
    m_activationSequence = 0;
 }
 
@@ -269,7 +285,7 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
       _T("item_id"), _T("fire_value"), _T("rearm_value"), _T("check_function"), _T("check_operation"), _T("sample_count"),
       _T("script"), _T("event_code"), _T("sequence_number"), _T("current_state"), _T("state_before_maint"), _T("rearm_event_code"),
       _T("repeat_interval"), _T("current_severity"), _T("last_event_timestamp"), _T("match_count"), _T("last_checked_value"),
-      _T("last_event_message"), _T("is_disabled"), nullptr
+      _T("last_event_message"), _T("is_disabled"), _T("deactivation_sample_count"), _T("clear_match_count"), nullptr
    };
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("thresholds"), _T("threshold_id"), m_id, columns);
 	if (hStmt == nullptr)
@@ -294,7 +310,9 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_lastCheckValue.getString(), DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_lastEventMessage, DB_BIND_STATIC);
    DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, (m_disabled ? _T("1") : _T("0")), DB_BIND_STATIC);
-	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_deactivationSampleCount);
+   DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_numClearMatches);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
 	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -631,6 +649,18 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 		}
 	}
 
+   // Check for number of consecutive non-matches before deactivation
+   if (match)
+   {
+      m_numClearMatches = 0;
+   }
+   else if (m_isReached && (m_deactivationSampleCount > 1))
+   {
+      m_numClearMatches++;
+      if (m_numClearMatches < m_deactivationSampleCount)
+         match = true;   // Suppress deactivation
+   }
+
    ThresholdCheckResult result = (match && !m_isReached) ?
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
@@ -678,6 +708,19 @@ ThresholdCheckResult Threshold::checkError(uint32_t errorCount)
       return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
 
    bool match = m_disabled ? false : (static_cast<uint32_t>(m_sampleCount) <= errorCount);
+
+   // Check for number of consecutive non-matches before deactivation
+   if (match)
+   {
+      m_numClearMatches = 0;
+   }
+   else if (m_isReached && (m_deactivationSampleCount > 1))
+   {
+      m_numClearMatches++;
+      if (m_numClearMatches < m_deactivationSampleCount)
+         match = true;   // Suppress deactivation
+   }
+
    ThresholdCheckResult result = (match && !m_isReached) ?
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
@@ -713,6 +756,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
    msg->setField(fieldId++, m_disabled);
+   msg->setField(fieldId++, static_cast<uint32_t>(m_deactivationSampleCount));
 }
 
 /**
@@ -738,6 +782,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) cons
    msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
    msg->setField(fieldId++, m_disabled);
+   msg->setField(fieldId++, static_cast<uint32_t>(m_deactivationSampleCount));
 }
 
 /**
@@ -758,6 +803,9 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 	m_value.set(msg.getFieldAsString(fieldId++, buffer, MAX_DCI_STRING_VALUE), true);
    m_expandValue = (NumChars(m_value, '%') > 0);
    m_disabled = msg.getFieldAsBoolean(fieldId++);
+   m_deactivationSampleCount = msg.getFieldAsInt32(fieldId++);
+   if (m_deactivationSampleCount < 1)
+      m_deactivationSampleCount = 1;
 }
 
 /**
@@ -1022,6 +1070,7 @@ bool Threshold::equals(const Threshold& t) const
           (t.m_function == m_function) &&
           (t.m_operation == m_operation) &&
           (t.m_sampleCount == m_sampleCount) &&
+          (t.m_deactivationSampleCount == m_deactivationSampleCount) &&
           (t.m_repeatInterval == m_repeatInterval) &&
           !_tcscmp(CHECK_NULL_EX(t.m_scriptSource), CHECK_NULL_EX(m_scriptSource));
 }
@@ -1059,6 +1108,7 @@ json_t *Threshold::createExportRecord() const
    }
 
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
 
@@ -1081,10 +1131,12 @@ json_t *Threshold::toJson() const
    json_object_set_new(root, "dataType", json_integer(m_dataType));
    json_object_set_new(root, "currentSeverity", json_integer(m_currentSeverity));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
    json_object_set_new(root, "isReached", json_boolean(m_isReached));
    json_object_set_new(root, "disabled", json_boolean(m_disabled));
    json_object_set_new(root, "numMatches", json_integer(m_numMatches));
+   json_object_set_new(root, "numClearMatches", json_integer(m_numClearMatches));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "lastEventTimestamp", json_integer(m_lastEventTimestamp));
    json_object_set_new(root, "lastEventMessage", json_string_t(m_lastEventMessage));
@@ -1143,6 +1195,8 @@ void Threshold::setScript(TCHAR *script)
 void Threshold::reconcile(const Threshold& src)
 {
    m_numMatches = src.m_numMatches;
+   m_numClearMatches = src.m_numClearMatches;
+   m_deactivationSampleCount = src.m_deactivationSampleCount;
    m_isReached = src.m_isReached;
    m_wasReachedBeforeMaint = src.m_wasReachedBeforeMaint;
    m_disabled = src.m_disabled;
@@ -1169,6 +1223,12 @@ String Threshold::getTextualDefinition() const
       text.append(_T(' '));
       text.append(m_value.getString());
    }
+   if (m_deactivationSampleCount > 1)
+   {
+      text.append(_T(" [rearm: "));
+      text.append(m_deactivationSampleCount);
+      text.append(_T(']'));
+   }
    return text;
 }
 
@@ -1181,4 +1241,5 @@ void Threshold::getScriptDependencies(StringSet *dependencies) const
    {
       FindScriptMacrosInText(m_value.getString(), dependencies);
    }
+   AddScriptDependencies(dependencies, m_script);
 }

@@ -993,6 +993,7 @@ public:
    bool isTableDciSource() const { return is_bit_set(m_flags, SUMMARY_TABLE_TABLE_DCI_SOURCE); }
 
    void createExportRecord(json_t *array) const;
+   void getScriptDependencies(StringSet *dependencies) const;
 };
 
 /**
@@ -1460,7 +1461,7 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(const NetObj& object);
 
-   virtual int getAdditionalMostCriticalStatus();
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr);
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId);
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId);
@@ -1585,6 +1586,8 @@ public:
    virtual void onMgmtStatusChange(bool isManaged, int oldStatus);
    virtual bool isManagementStatusChangeAllowed(bool isManaged);
    virtual void calculateCompoundStatus(bool forcedRecalc = false);
+
+   json_t *buildStatusExplanation();
 
    uint32_t getUserRights(uint32_t userId) const;
    bool checkAccessRights(uint32_t userId, uint32_t requiredRights) const;
@@ -1945,6 +1948,8 @@ public:
 
    void setAutoBindFilter(int filterNumber, const TCHAR *filter);
    void setAutoBindMode(int filterNumber, bool doBind, bool doUnbind);
+
+   void getAutoBindScriptDependencies(StringSet *dependencies) const;
 };
 
 /**
@@ -2825,7 +2830,7 @@ protected:
    virtual void onInstanceDiscoveryChange() override;
    virtual bool isDataCollectionDisabled();
 
-   virtual int getAdditionalMostCriticalStatus() override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
    virtual void populateInternalCommunicationTopologyMap(NetworkMapObjectList *map, uint32_t currentObjectId, bool agentConnectionOnly, bool checkAllProxies);
 
@@ -3101,7 +3106,7 @@ protected:
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
-   virtual int getAdditionalMostCriticalStatus() override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
 public:
    AccessPoint();
@@ -5141,7 +5146,7 @@ public:
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
 
-   virtual int getAdditionalMostCriticalStatus() override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
 
@@ -5701,7 +5706,7 @@ protected:
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
-   virtual int getAdditionalMostCriticalStatus() override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
    virtual void prepareForDeletion() override;
 

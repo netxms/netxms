@@ -488,19 +488,30 @@ void AccessPoint::updateState(AccessPointState state)
 /**
  * Additional status information based on state
  */
-int AccessPoint::getAdditionalMostCriticalStatus()
+int AccessPoint::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
+   int status;
+   const TCHAR *stateText;
    switch(m_apState)
    {
       case AP_UP:
-         return STATUS_NORMAL;
+         status = STATUS_NORMAL;
+         stateText = L"UP";
+         break;
       case AP_UNPROVISIONED:
-         return STATUS_MAJOR;
+         status = STATUS_MAJOR;
+         stateText = L"UNPROVISIONED";
+         break;
       case AP_DOWN:
-         return STATUS_CRITICAL;
+         status = STATUS_CRITICAL;
+         stateText = L"DOWN";
+         break;
       default:
          return STATUS_UNKNOWN;
    }
+   if (explanation != nullptr)
+      explanation->appendFormattedString(L"Access point state: %s", stateText);
+   return status;
 }
 
 /**

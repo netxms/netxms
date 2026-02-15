@@ -29,6 +29,7 @@ DCTableThresholdInstance::DCTableThresholdInstance(const TCHAR *name, int matchC
 {
    m_name = MemCopyString(name);
    m_matchCount = matchCount;
+   m_clearMatchCount = 0;
    m_active = active;
    m_row = row;
 }
@@ -40,6 +41,7 @@ DCTableThresholdInstance::DCTableThresholdInstance(const DCTableThresholdInstanc
 {
    m_name = MemCopyString(src->m_name);
    m_matchCount = src->m_matchCount;
+   m_clearMatchCount = src->m_clearMatchCount;
    m_active = src->m_active;
    m_row = src->m_row;
 }
@@ -456,6 +458,7 @@ DCTableThreshold::DCTableThreshold() : m_groups(0, 8, Ownership::True), m_instan
    m_activationEvent = EVENT_TABLE_THRESHOLD_ACTIVATED;
    m_deactivationEvent = EVENT_TABLE_THRESHOLD_DEACTIVATED;
    m_sampleCount = 1;
+   m_deactivationSampleCount = 1;
 }
 
 /**
@@ -469,6 +472,7 @@ DCTableThreshold::DCTableThreshold(const DCTableThreshold *src, bool shadowCopy)
    m_activationEvent = src->m_activationEvent;
    m_deactivationEvent = src->m_deactivationEvent;
    m_sampleCount = src->m_sampleCount;
+   m_deactivationSampleCount = src->m_deactivationSampleCount;
    if (shadowCopy)
    {
       StringList keys = src->m_instances.keys();
@@ -491,7 +495,7 @@ DCTableThreshold::DCTableThreshold(const DCTableThreshold *src, bool shadowCopy)
 
 /**
  * Create table threshold from database
- * Expected column order: id,activation_event,deactivation_event,sample_count
+ * Expected column order: id,activation_event,deactivation_event,sample_count,deactivation_sample_count
  */
 DCTableThreshold::DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_groups(0, 8, Ownership::True), m_instances(Ownership::True), m_instancesBeforeMaint(Ownership::True)
 {
@@ -499,6 +503,9 @@ DCTableThreshold::DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row) : 
    m_activationEvent = DBGetFieldULong(hResult, row, 1);
    m_deactivationEvent = DBGetFieldULong(hResult, row, 2);
    m_sampleCount = DBGetFieldLong(hResult, row, 3);
+   m_deactivationSampleCount = DBGetFieldLong(hResult, row, 4);
+   if (m_deactivationSampleCount < 1)
+      m_deactivationSampleCount = 1;
    loadConditions(hdb);
    loadInstances(hdb);
 }
@@ -515,6 +522,9 @@ DCTableThreshold::DCTableThreshold(const NXCPMessage& msg, uint32_t *baseId) : m
    m_activationEvent = msg.getFieldAsUInt32(fieldId++);
    m_deactivationEvent = msg.getFieldAsUInt32(fieldId++);
    m_sampleCount = msg.getFieldAsUInt32(fieldId++);
+   m_deactivationSampleCount = msg.getFieldAsUInt32(fieldId++);
+   if (m_deactivationSampleCount < 1)
+      m_deactivationSampleCount = 1;
    int count = (int)msg.getFieldAsUInt32(fieldId++);
    *baseId = fieldId;
    for(int i = 0; i < count; i++)
@@ -530,6 +540,7 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e) : m_groups(0, 8, Ownership::T
    m_activationEvent = EventCodeFromName(e->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_TABLE_THRESHOLD_ACTIVATED")));
    m_deactivationEvent = EventCodeFromName(e->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_TABLE_THRESHOLD_DEACTIVATED")));
    m_sampleCount = e->getSubEntryValueAsInt(_T("sampleCount"), 0, 1);
+   m_deactivationSampleCount = e->getSubEntryValueAsInt(_T("deactivationSampleCount"), 0, 1);
 
 	ConfigEntry *groupsRoot = e->findEntry(_T("groups"));
 	if (groupsRoot != nullptr)
@@ -560,6 +571,7 @@ DCTableThreshold::DCTableThreshold(json_t *json) : m_groups(0, 8, Ownership::Tru
    m_deactivationEvent = EventCodeFromName(deactivationEvent);
    
    m_sampleCount = json_object_get_int32(json, "sampleCount", 1);
+   m_deactivationSampleCount = json_object_get_int32(json, "deactivationSampleCount", 1);
 
    json_t *groupsArray = json_object_get(json, "groups");
    if (json_is_array(groupsArray))
@@ -617,7 +629,7 @@ void DCTableThreshold::loadConditions(DB_HANDLE hdb)
  */
 void DCTableThreshold::loadInstances(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='0'"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number,clear_match_count FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='0'"));
    if (hStmt == nullptr)
       return;
 
@@ -630,13 +642,17 @@ void DCTableThreshold::loadInstances(DB_HANDLE hdb)
       {
          TCHAR name[1024];
          DBGetField(hResult, i, 0, name, 1024);
-         m_instances.set(name, new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3)));
+         auto instance = new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3));
+         int clearCount = DBGetFieldLong(hResult, i, 4);
+         for(int c = 0; c < clearCount; c++)
+            instance->incClearMatchCount();
+         m_instances.set(name, instance);
       }
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='1'"));
+   hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number,clear_match_count FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='1'"));
    if (hStmt == nullptr)
       return;
 
@@ -649,7 +665,11 @@ void DCTableThreshold::loadInstances(DB_HANDLE hdb)
       {
          TCHAR name[1024];
          DBGetField(hResult, i, 0, name, 1024);
-         m_instancesBeforeMaint.set(name, new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3)));
+         auto instance = new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3));
+         int clearCount = DBGetFieldLong(hResult, i, 4);
+         for(int c = 0; c < clearCount; c++)
+            instance->incClearMatchCount();
+         m_instancesBeforeMaint.set(name, instance);
       }
       DBFreeResult(hResult);
    }
@@ -676,6 +696,7 @@ static EnumerationCallbackResult SaveThresholdInstancesCallback(const TCHAR *key
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, instance->getMatchCount());
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, instance->isActive() ? _T("1") : _T("0"), DB_BIND_STATIC);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, instance->getRow());
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, instance->getClearMatchCount());
    DBExecute(hStmt);
    return _CONTINUE;
 }
@@ -685,7 +706,7 @@ static EnumerationCallbackResult SaveThresholdInstancesCallback(const TCHAR *key
  */
 bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_thresholds (id,table_id,sequence_number,activation_event,deactivation_event,sample_count) VALUES (?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_thresholds (id,table_id,sequence_number,activation_event,deactivation_event,sample_count,deactivation_sample_count) VALUES (?,?,?,?,?,?,?)"));
    if (hStmt == nullptr)
       return false;
 
@@ -695,6 +716,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) 
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_activationEvent);
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_deactivationEvent);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sampleCount);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_deactivationSampleCount);
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
@@ -724,7 +746,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) 
 
    if ((m_instances.size() > 0) || (m_instancesBeforeMaint.size() > 0))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt == nullptr)
          return false;
 
@@ -734,10 +756,10 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) 
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
       m_instances.forEach(SaveThresholdInstancesCallback, &data);
 
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
       m_instancesBeforeMaint.forEach(SaveThresholdInstancesCallback, &data);
 
       DBFreeStatement(hStmt);
@@ -756,6 +778,7 @@ uint32_t DCTableThreshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(fieldId++, m_activationEvent);
    msg->setField(fieldId++, m_deactivationEvent);
    msg->setField(fieldId++, m_sampleCount);
+   msg->setField(fieldId++, static_cast<uint32_t>(m_deactivationSampleCount));
    msg->setField(fieldId++, static_cast<uint32_t>(m_groups.size()));
    for(int i = 0; i < m_groups.size(); i++)
    {
@@ -821,6 +844,7 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
          {
             instance->updateRow(row);
             instance->incMatchCount();
+            instance->resetClearMatchCount();
             if (instance->isActive())
                return ThresholdCheckResult::ALREADY_ACTIVE;
          }
@@ -842,9 +866,18 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
    DCTableThresholdInstance *instance = m_instances.get(instanceString);
    if (instance != nullptr)
    {
-      bool deactivated = instance->isActive();
+      if (instance->isActive())
+      {
+         instance->incClearMatchCount();
+         if (instance->getClearMatchCount() >= m_deactivationSampleCount)
+         {
+            m_instances.remove(instanceString);
+            return ThresholdCheckResult::DEACTIVATED;
+         }
+         return ThresholdCheckResult::ALREADY_ACTIVE;
+      }
       m_instances.remove(instanceString);
-      return deactivated ? ThresholdCheckResult::DEACTIVATED : ThresholdCheckResult::ALREADY_INACTIVE;
+      return ThresholdCheckResult::ALREADY_INACTIVE;
    }
    return ThresholdCheckResult::ALREADY_INACTIVE;
 }
@@ -992,6 +1025,7 @@ json_t *DCTableThreshold::createExportRecord() const
    }
    
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    return root;
 }
 
@@ -1006,6 +1040,7 @@ json_t *DCTableThreshold::toJson() const
    json_object_set_new(root, "activationEvent", json_integer(m_activationEvent));
    json_object_set_new(root, "deactivationEvent", json_integer(m_deactivationEvent));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    return root;
 }
 
@@ -1026,6 +1061,7 @@ bool DCTableThreshold::equals(const DCTableThreshold *t) const
    if ((m_activationEvent != t->m_activationEvent) ||
        (m_deactivationEvent != t->m_deactivationEvent) ||
        (m_sampleCount != t->m_sampleCount) ||
+       (m_deactivationSampleCount != t->m_deactivationSampleCount) ||
        (m_groups.size() != t->m_groups.size()))
       return false;
 

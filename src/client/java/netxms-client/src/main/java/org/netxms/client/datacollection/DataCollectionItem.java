@@ -200,7 +200,7 @@ public class DataCollectionItem extends DataCollectionObject
 
 		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-		for(int i = 0; i < thresholds.size(); i++, varId +=10)
+		for(int i = 0; i < thresholds.size(); i++, varId += 20)
 		{
 			thresholds.get(i).fillMessage(msg, varId);
 		}

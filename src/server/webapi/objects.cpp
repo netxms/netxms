@@ -225,6 +225,28 @@ int H_ObjectDetails(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/status-explanation
+ */
+int H_ObjectStatusExplanation(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   json_t *output = object->buildStatusExplanation();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Check if an object has any descendants matching the class filter
  */
 static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)

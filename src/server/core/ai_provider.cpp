@@ -28,9 +28,17 @@
 #define DEBUG_TAG _T("ai.provider")
 
 /**
+ * Global AI usage counters
+ */
+extern VolatileCounter64 g_aiTotalRequests;
+extern VolatileCounter64 g_aiTotalInputTokens;
+extern VolatileCounter64 g_aiTotalOutputTokens;
+extern VolatileCounter64 g_aiFailedRequests;
+
+/**
  * LLMProvider constructor
  */
-LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config)
+LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config), m_totalRequests(0), m_totalInputTokens(0), m_totalOutputTokens(0), m_failedRequests(0)
 {
 }
 
@@ -39,6 +47,30 @@ LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config)
  */
 LLMProvider::~LLMProvider()
 {
+}
+
+/**
+ * Record token usage from a successful API call
+ */
+void LLMProvider::recordUsage(int64_t inputTokens, int64_t outputTokens)
+{
+   InterlockedIncrement64(&m_totalRequests);
+   InterlockedAdd64(&m_totalInputTokens, inputTokens);
+   InterlockedAdd64(&m_totalOutputTokens, outputTokens);
+   InterlockedIncrement64(&g_aiTotalRequests);
+   InterlockedAdd64(&g_aiTotalInputTokens, inputTokens);
+   InterlockedAdd64(&g_aiTotalOutputTokens, outputTokens);
+}
+
+/**
+ * Record a failed API call
+ */
+void LLMProvider::recordFailure()
+{
+   InterlockedIncrement64(&m_totalRequests);
+   InterlockedIncrement64(&m_failedRequests);
+   InterlockedIncrement64(&g_aiTotalRequests);
+   InterlockedIncrement64(&g_aiFailedRequests);
 }
 
 /**

@@ -1,0 +1,67 @@
+---
+kind: pipeline
+type: docker
+name: javadoc
+
+trigger:
+  branch:
+    - master
+    - stable-*
+  event:
+    - push
+
+steps:
+  - name: build
+    image: maven:3-eclipse-temurin-21
+    commands:
+      - cd src
+      - mvn --projects client/java/netxms-client,java-common/netxms-base,./ --also-make clean javadoc:aggregate
+
+  - name: deploy
+    image: alpine:3.23
+    environment:
+      SFTP_KEY:
+        from_secret: sftp_key
+      SFTP_HOST:
+        from_secret: sftp_host
+      SFTP_USER:
+        from_secret: sftp_user
+      SFTP_PORT:
+        from_secret: sftp_port
+    commands:
+      - apk add --no-cache lftp openssh-client
+      - mkdir -p ~/.ssh
+      - printf '%s\n' "$SFTP_KEY" > ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
+      - ssh-keyscan -p "$SFTP_PORT" "$SFTP_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+      - if [ "$DRONE_BRANCH" = "master" ]; then DEPLOY_DIR="latest"; else DEPLOY_DIR="$DRONE_BRANCH"; fi
+      - >-
+        LFTP_PASSWORD=dummy lftp --env-password sftp://$SFTP_USER@$SFTP_HOST:$SFTP_PORT -e "
+        rm -rf javadoc/$DEPLOY_DIR;
+        mirror -R src/target/reports/apidocs/ javadoc/$DEPLOY_DIR/;
+        bye"
+
+  - name: notify
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram_bot_token
+      to:
+        from_secret: telegram_channel_id
+      format: markdown
+      disable_web_page_preview: true
+      message: >
+        {{#success build.status}}
+        ✅ Javadoc {{build.branch}} [#{{build.number}}]({{build.link}}) succeeded.
+        {{else}}
+        ❌ Javadoc {{build.branch}} [#{{build.number}}]({{build.link}}) **FAILED**.
+        `{{commit.message}}` by {{commit.author}}
+        {{/success}}
+    when:
+      status:
+        - failure
+---
+kind: signature
+hmac: 12f3bc19a9b239095e16a905ff0031acbdfbf627e2fce619c4677338f6941bb8
+
+...

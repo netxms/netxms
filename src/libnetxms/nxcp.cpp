@@ -129,8 +129,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_ACTION_DATA"),
       _T("CMD_SETUP_AGENT_TUNNEL"),
       _T("CMD_EXECUTE_LIBRARY_SCRIPT"),
-      _T("CMD_0x0056"), // was CMD_GET_PREDICTION_ENGINES
-      _T("CMD_0x0057"), // was CMD_GET_PREDICTED_DATA
+      _T("CMD_GET_SUMMARY_TABLE_SCRIPT_LIST"),
+      _T("CMD_GET_SCRIPT_DEPENDENCIES"),
       _T("CMD_STOP_SERVER_COMMAND"),
       _T("CMD_POLL_OBJECT"),
       _T("CMD_POLLING_INFO"),
@@ -551,7 +551,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_AI_MESSAGE"),
       _T("CMD_GET_LOG_QUERY_SQL"),
       _T("CMD_GET_LIST_LIST"),
-      _T("CMD_QUERY_LIST")
+      _T("CMD_QUERY_LIST"),
+      _T("CMD_AI_GET_TOOLS"),
+      _T("CMD_AI_EXECUTE_TOOL"),
+      _T("CMD_GET_EPP_SCRIPT_LIST"),
+      _T("CMD_GET_STATUS_EXPLANATION")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -564,7 +568,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_LIST))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_STATUS_EXPLANATION))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

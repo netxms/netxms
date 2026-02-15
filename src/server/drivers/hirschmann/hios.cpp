@@ -181,3 +181,33 @@ void HirschmannHiOSDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
 }
+
+/**
+ * Check if config backup is supported
+ */
+bool HirschmannHiOSDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration
+ */
+bool HirschmannHiOSDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show running-config", output);
+}
+
+/**
+ * Get startup configuration
+ */
+bool HirschmannHiOSDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show startup-config", output);
+}

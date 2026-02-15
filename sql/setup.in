@@ -70,6 +70,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectBrowser.AutoApplyFilter','1','1',1,0,'B','Enable or disable object browser''s filter applying as user types (if disabled, user has to press ENTER to apply filter).','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectBrowser.FilterDelay','300','300',1,0,'I','Delay between typing in object browser''s filter and applying it to object tree.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectBrowser.MinFilterStringLength','1','1',1,0,'I','Minimal length of filter string in object browser required for automatic apply.','characters');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectBrowser.DragAndDropMode','0','0',1,0,'C','Controls drag and drop behavior in the object browser: Enable allows unrestricted drag and drop, Confirm shows a confirmation dialog, Disable prevents drag and drop entirely.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectBrowser.ShowTargetsUnderTemplates','0','0',1,0,'B','If enabled, template target objects (nodes, access points, etc.) will be shown under templates applied to those objects.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.ObjectOverview.ShowCommentsOnlyIfPresent','1','1',1,0,'B','If enabled, comments section in object overview will only be shown when object comments are not empty.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Client.TileServerURL','https://tile.netxms.org/osm/','http://tile.netxms.org/osm/',1,0,'S','The base URL for the tile server.','');
@@ -384,6 +385,9 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Business
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('BusinessServices.Check.Threshold.Objects','2','Minor');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('BusinessServices.Check.Threshold.Objects','3','Major');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('BusinessServices.Check.Threshold.Objects','4','Critical');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','0','Enable');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','1','Confirm');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','2','Disable');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','0','Auto');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','1','Off');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','2','On');

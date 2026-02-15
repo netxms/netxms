@@ -40,6 +40,7 @@ static bool SubAgentInit(Config *config)
 {
    g_allowEmptyResultSet = config->getValueAsBoolean(_T("/DBQuery/AllowEmptyResultSet"), true);
    StartPollingThreads();
+   StartDBQueryTablePolling();
    return true;
 }
 
@@ -93,6 +94,7 @@ static void SubAgentShutdown()
    MemFree(s_info.tables);
    g_condShutdown.set();
    StopPollingThreads();
+   StopDBQueryTablePolling();
    ShutdownConnections();
 }
 
@@ -216,6 +218,39 @@ static void AddMetrics(StructArray<NETXMS_SUBAGENT_PARAM> *metrics, StructArray<
 			}
 		}
 	}
+
+   // Add table definitions with column metadata
+   unique_ptr<ObjectArray<ConfigEntry>> tableConfigs = config->getSubEntries(_T("/DBQuery/Tables"));
+   if (tableConfigs != nullptr)
+   {
+      for(int i = 0; i < tableConfigs->size(); i++)
+      {
+         ConfigEntry *ce = tableConfigs->get(i);
+         DBQueryTable *t = new DBQueryTable(ce->getName(), ce);
+         if ((t->getName() != nullptr) && (t->getName()[0] != 0))
+         {
+            AddDBQueryTable(t);
+
+            NETXMS_SUBAGENT_TABLE table;
+            memset(&table, 0, sizeof(table));
+            _tcslcpy(table.name, t->getName(), MAX_PARAM_NAME);
+            table.handler = H_DBQueryTable;
+            table.arg = t->getName();
+            _tcslcpy(table.instanceColumns, t->getInstanceColumns(), MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+            if (t->getDescription() != nullptr)
+               _tcslcpy(table.description, t->getDescription(), MAX_DB_STRING);
+            tables->add(table);
+
+            nxlog_debug_tag(DBQUERY_DEBUG_TAG, 3,
+               _T("Table \"%s\" registered with instance columns \"%s\""),
+               t->getName(), t->getInstanceColumns());
+         }
+         else
+         {
+            delete t;
+         }
+      }
+   }
 }
 
 /**

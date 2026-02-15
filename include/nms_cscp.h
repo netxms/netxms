@@ -283,8 +283,8 @@ typedef struct
 #define CMD_ACTION_DATA                   0x0053
 #define CMD_SETUP_AGENT_TUNNEL            0x0054
 #define CMD_EXECUTE_LIBRARY_SCRIPT        0x0055
-//#define CMD_GET_PREDICTION_ENGINES        0x0056
-//#define CMD_GET_PREDICTED_DATA            0x0057
+#define CMD_GET_SUMMARY_TABLE_SCRIPT_LIST 0x0056
+#define CMD_GET_SCRIPT_DEPENDENCIES       0x0057
 #define CMD_STOP_SERVER_COMMAND           0x0058
 #define CMD_POLL_OBJECT                   0x0059
 #define CMD_POLLING_INFO                  0x005A
@@ -708,6 +708,8 @@ typedef struct
 #define CMD_QUERY_LIST                    0x01FC
 #define CMD_AI_GET_TOOLS                  0x01FD
 #define CMD_AI_EXECUTE_TOOL               0x01FE
+#define CMD_GET_EPP_SCRIPT_LIST           0x01FF
+#define CMD_GET_STATUS_EXPLANATION        0x0200
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

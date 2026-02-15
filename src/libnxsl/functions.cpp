@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -613,13 +613,15 @@ int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 /**
  * Suspend execution for given number of milliseconds
  */
-int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   ThreadSleepMs(argv[0]->getValueAsUInt32());
-   *ppResult = vm->createValue();
+   if (!vm->sleep(argv[0]->getValueAsUInt32()))
+      return NXSL_ERR_EXECUTION_ABORTED;
+
+   *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
 

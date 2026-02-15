@@ -154,7 +154,7 @@ CREATE TABLE userdb_custom_attributes
 (
   object_id integer not null,
   attr_name varchar(127) not null,
-  attr_value SQL_TEXT not null,
+  attr_value SQL_TEXT null,
   PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
@@ -968,6 +968,8 @@ CREATE TABLE thresholds
   last_event_message varchar(2000) null,
   state_before_maint char(1) not null,
   is_disabled char(1) not null,
+  deactivation_sample_count integer not null,
+  clear_match_count integer not null,
   PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 
@@ -1044,6 +1046,7 @@ CREATE TABLE dct_thresholds
   activation_event integer not null,
   deactivation_event integer not null,
   sample_count integer not null,
+  deactivation_sample_count integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1073,6 +1076,7 @@ CREATE TABLE dct_threshold_instances
   is_active char(1) not null,
   tt_row_number integer not null,
   maint_copy char(1) not null,
+  clear_match_count integer not null,
   PRIMARY KEY(threshold_id,instance_id)
 ) TABLE_TYPE;
 

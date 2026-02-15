@@ -25,6 +25,46 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.34 to 61.0
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 60.33 to 60.34
+ */
+static bool H_UpgradeFromV33()
+{
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, L"userdb_custom_attributes", L"attr_value"));
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
+
+/**
+ * Upgrade from 60.32 to 60.33
+ */
+static bool H_UpgradeFromV32()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.ObjectBrowser.DragAndDropMode",
+         L"0",
+         L"Controls drag and drop behavior in the object browser: Enable allows unrestricted drag and drop, Confirm shows a confirmation dialog, Disable prevents drag and drop entirely.",
+         nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','0','Enable')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','1','Confirm')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Client.ObjectBrowser.DragAndDropMode','2','Disable')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(33));
+   return true;
+}
+
+/**
  * Upgrade from 60.31 to 60.32
  */
 static bool H_UpgradeFromV31()
@@ -1951,6 +1991,9 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 34, 61, 0,  H_UpgradeFromV34 },
+   { 33, 60, 34, H_UpgradeFromV33 },
+   { 32, 60, 33, H_UpgradeFromV32 },
    { 31, 60, 32, H_UpgradeFromV31 },
    { 30, 60, 31, H_UpgradeFromV30 },
    { 29, 60, 30, H_UpgradeFromV29 },
@@ -1995,7 +2038,7 @@ bool MajorSchemaUpgrade_V60()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 60) && (minor < DB_SCHEMA_VERSION_V60_MINOR))
+   while (major == 60)
    {
       // Find upgrade procedure
       int i;
@@ -2004,7 +2047,7 @@ bool MajorSchemaUpgrade_V60()
             break;
       if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
-         WriteToTerminalEx(L"Unable to find upgrade procedure for version 53.%d\n", minor);
+         WriteToTerminalEx(L"Unable to find upgrade procedure for version 60.%d\n", minor);
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 60.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);

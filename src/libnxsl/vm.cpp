@@ -40,6 +40,27 @@ extern NXSL_ClassRegistry g_nxslClassRegistry;
 static thread_local uint32_t s_recursionCounter = 0;
 
 /**
+ * VM instance registry
+ */
+static Mutex s_vmRegistryLock(MutexType::FAST);
+static HashSet<NXSL_VM*> s_vmRegistry;
+
+/**
+ * Stop all registered VM instances
+ */
+void NXSL_VM::stopAll()
+{
+   s_vmRegistryLock.lock();
+   s_vmRegistry.forEach(
+      [] (NXSL_VM* const& vm) -> EnumerationCallbackResult
+      {
+         vm->stop();
+         return _CONTINUE;
+      });
+   s_vmRegistryLock.unlock();
+}
+
+/**
  * Error texts
  */
 static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
@@ -188,7 +209,7 @@ bool NXSL_SecurityContext::validateAccess(int subsystem, uint64_t requiredAccess
  * Constructor
  */
 NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_objectClassData(64), m_objects(64),
-         m_instructionSet(256, 256), m_functions(0, 16), m_modules(0, 16, Ownership::True)
+         m_instructionSet(256, 256), m_stopCondition(true), m_functions(0, 16), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;
    m_stopFlag = false;
@@ -222,6 +243,10 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
       m_localStorage = new NXSL_LocalStorage(this);
       m_storage = m_localStorage;
 	}
+
+   s_vmRegistryLock.lock();
+   s_vmRegistry.put(this);
+   s_vmRegistryLock.unlock();
 }
 
 /**
@@ -229,6 +254,10 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
  */
 NXSL_VM::~NXSL_VM()
 {
+   s_vmRegistryLock.lock();
+   s_vmRegistry.remove(this);
+   s_vmRegistryLock.unlock();
+
    for(int i = 0; i < m_instructionSet.size(); i++)
       m_instructionSet.get(i)->dispose(this);
 
@@ -426,6 +455,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
       {
          m_cp = entryAddr;
          m_stopFlag = false;
+         m_stopCondition.reset();
 resume:
          while((m_cp < static_cast<uint32_t>(m_instructionSet.size())) && !m_stopFlag)
             execute();

@@ -1424,6 +1424,7 @@ protected:
    StructArray<NXSL_Instruction> m_instructionSet;
    uint32_t m_cp;
    bool m_stopFlag;
+   Condition m_stopCondition;
    FILE *m_instructionTraceFile;
 
    uint32_t m_subLevel;
@@ -1533,13 +1534,13 @@ public:
 	bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);
 
 	void setStorage(NXSL_Storage *storage);
-
 	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
 	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name, this); }
 
 	void setContextObject(NXSL_Value *value);
 
    bool load(const NXSL_Program *program);
+   void setInstructionTraceFile(FILE *fp) { m_instructionTraceFile = fp; }
    bool run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **globals = nullptr,
             NXSL_VariableSystem **expressionVariables = nullptr,
             NXSL_VariableSystem *constants = nullptr, const char *entryPoint = nullptr);
@@ -1555,15 +1556,31 @@ public:
    {
       return run(args, nullptr, nullptr, nullptr, entryPoint);
    }
-   void stop() { m_stopFlag = true; }
-   void setInstructionTraceFile(FILE *fp) { m_instructionTraceFile = fp; }
+   void stop()
+   {
+      m_stopFlag = true;
+      m_stopCondition.set();
+   }
+   static void stopAll();
 
-   uint32_t getCodeSize() const { return m_instructionSet.size(); }
+   /**
+    * Sleep for given number of milliseconds or until VM is stopped.
+    * Returns true if sleep completed normally, false if interrupted by stop.
+    */
+   bool sleep(uint32_t millis)
+   {
+      return !m_stopCondition.wait(millis);
+   }
 
    void print(const TCHAR *text) { m_env->print(text); }
    void printf(const TCHAR *format, ...);
-	void trace(int level, const TCHAR *text);
+
+   void trace(int level, const TCHAR *text);
+
+   uint32_t getCodeSize() const { return m_instructionSet.size(); }
    void dump(FILE *fp) const;
+
+   bool isStopRequested() const { return m_stopFlag; }
    int getErrorCode() const { return m_errorCode; }
    int getErrorLine() const { return m_errorLine; }
    const TCHAR *getErrorText() const { return CHECK_NULL_EX(m_errorText); }

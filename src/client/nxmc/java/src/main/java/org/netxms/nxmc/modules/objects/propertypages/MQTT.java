@@ -31,6 +31,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.xnap.commons.i18n.I18n;
 
@@ -102,6 +103,7 @@ public class MQTT extends ObjectPropertyPage
       mqttProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       mqttProxy.setLabel(i18n.tr("Proxy"));
       mqttProxy.setEmptySelectionName("<default>");
+      mqttProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
       mqttProxy.setObjectId(node.getMqttProxyId());
       mqttProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 

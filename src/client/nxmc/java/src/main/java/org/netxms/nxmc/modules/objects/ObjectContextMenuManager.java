@@ -94,6 +94,7 @@ import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.dialogs.DecommissionNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.EffectiveRightsDialog;
+import org.netxms.nxmc.modules.objects.dialogs.StatusExplanationDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
@@ -129,6 +130,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionDeployPackage;
    private Action actionProperties;
    private Action actionShowEffectiveRights;
+   private Action actionExplainStatus;
    private Action actionTakeScreenshot;
    private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
@@ -282,6 +284,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             showEffectiveRights();
+         }
+      };
+
+      actionExplainStatus = new Action(i18n.tr("Explain status...")) {
+         @Override
+         public void run()
+         {
+            showStatusExplanation();
          }
       };
 
@@ -873,6 +883,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (singleObject)
       {
          add(new Separator());
+         add(actionExplainStatus);
          add(actionShowEffectiveRights);
          add(actionProperties);
       }
@@ -1251,6 +1262,18 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       new EffectiveRightsDialog(getShell(), object).open();
+   }
+
+   /**
+    * Show status explanation dialog for selected object
+    */
+   private void showStatusExplanation()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (object == null)
+         return;
+
+      new StatusExplanationDialog(getShell(), object).open();
    }
 
    /**

@@ -188,7 +188,7 @@ private:
          if (!m_systemPrompt.empty())
             m_systemPrompt.append("\n\n");
          m_systemPrompt.append(content);
-         nxlog_debug_tag(L"llm.chat", 8, L"Appended system prompt to chat (length=%d)", static_cast<int>(m_systemPrompt.length()));
+         nxlog_debug_tag(L"ai.chat", 8, L"Appended system prompt to chat (length=%d)", static_cast<int>(m_systemPrompt.length()));
       }
       else
       {
@@ -196,7 +196,7 @@ private:
          json_object_set_new(message, "role", json_string(role));
          json_object_set_new(message, "content", json_string(content));
          json_array_append_new(m_messages, message);
-         nxlog_debug_tag(L"llm.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
+         nxlog_debug_tag(L"ai.chat", 8, L"Added message to chat: role=\"%hs\", content=\"%hs\"", role, content);
       }
    }
 

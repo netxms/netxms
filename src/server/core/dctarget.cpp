@@ -2022,7 +2022,7 @@ bool DataCollectionTarget::isEventSource() const
 /**
  * Returns most critical status of DCI used for status calculation
  */
-int DataCollectionTarget::getAdditionalMostCriticalStatus()
+int DataCollectionTarget::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
    int status = -1;
    readLockDciAccess();
@@ -2037,7 +2037,15 @@ int DataCollectionTarget::getAdditionalMostCriticalStatus()
 
          ItemValue *value = static_cast<DCItem*>(curr)->getInternalLastValue();
          if (value != nullptr && value->getInt32() >= STATUS_NORMAL && value->getInt32() <= STATUS_CRITICAL)
+         {
+            if (explanation != nullptr)
+            {
+               if (!explanation->isEmpty())
+                  explanation->append(L", ");
+               explanation->appendFormattedString(L"DCI %u \"%s\" = %d", curr->getId(), curr->getName().cstr(), value->getInt32());
+            }
             status = std::max(status, value->getInt32());
+         }
          delete value;
       }
 	}

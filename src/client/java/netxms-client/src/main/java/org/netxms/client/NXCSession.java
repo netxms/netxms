@@ -7926,6 +7926,22 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
+   /**
+    * Get status explanation for an object. Returns JSON string explaining how the object's compound status was calculated.
+    *
+    * @param objectId The object ID
+    * @return JSON string with status explanation
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String getStatusExplanation(final long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_STATUS_EXPLANATION);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsString(NXCPCodes.VID_VALUE);
+   }
+
    public int getEffectiveRights(final long objectId) throws IOException, NXCException
    {
       return getEffectiveRights(objectId, userId);
@@ -10214,6 +10230,93 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
       List<Script> scripts = new ArrayList<Script>(count);
       long fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         long id = response.getFieldAsInt64(fieldId++);
+         String name = response.getFieldAsString(fieldId++);
+         scripts.add(new Script(id, name, null));
+      }
+      return scripts;
+   }
+
+   /**
+    * Get names of all scripts used in event processing policy rules identified by GUIDs.
+    *
+    * @param ruleGuids collection of EPP rule GUIDs
+    * @return list of used library scripts
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<Script> getEPPScripts(Collection<UUID> ruleGuids) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EPP_SCRIPT_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, ruleGuids.size());
+      long fieldId = NXCPCodes.VID_RULE_LIST_BASE;
+      for(UUID guid : ruleGuids)
+         msg.setField(fieldId++, guid);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
+      List<Script> scripts = new ArrayList<Script>(count);
+      fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         long id = response.getFieldAsInt64(fieldId++);
+         String name = response.getFieldAsString(fieldId++);
+         scripts.add(new Script(id, name, null));
+      }
+      return scripts;
+   }
+
+   /**
+    * Get names of all scripts used in DCI summary table filters.
+    *
+    * @param tableIds array of summary table IDs
+    * @return list of used library scripts
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<Script> getSummaryTableScripts(long[] tableIds) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SUMMARY_TABLE_SCRIPT_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, tableIds.length);
+      long fieldId = NXCPCodes.VID_ITEM_LIST;
+      for(long id : tableIds)
+         msg.setFieldInt32(fieldId++, (int)id);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
+      List<Script> scripts = new ArrayList<Script>(count);
+      fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         long id = response.getFieldAsInt64(fieldId++);
+         String name = response.getFieldAsString(fieldId++);
+         scripts.add(new Script(id, name, null));
+      }
+      return scripts;
+   }
+
+   /**
+    * Get recursive script dependencies (use/import) for given script IDs.
+    *
+    * @param scriptIds array of script IDs to resolve dependencies for
+    * @return list of dependent library scripts
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<Script> getScriptDependencies(long[] scriptIds) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT_DEPENDENCIES);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_SCRIPTS, scriptIds.length);
+      long fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+      for(long id : scriptIds)
+         msg.setFieldInt64(fieldId++, id);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
+      List<Script> scripts = new ArrayList<Script>(count);
+      fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          long id = response.getFieldAsInt64(fieldId++);

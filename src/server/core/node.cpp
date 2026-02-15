@@ -27,13 +27,8 @@
 #include <ethernet_ip.h>
 #include <netxms_maps.h>
 #include <asset_management.h>
-#include <ncdrv.h>
 #include <device-backup.h>
 #include <netxms_maps.h>
-
-#ifndef _WIN32
-#include <sys/resource.h>
-#endif
 
 #define ROUTING_TABLE_CACHE_TIMEOUT  120  // Routing table cache timeout in seconds
 
@@ -47,12 +42,14 @@
 #define DEBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
 
 /**
- * Performance counters
+ * AI provider table (used by getInternalTable)
  */
-extern VolatileCounter64 g_snmpTrapsReceived;
-extern VolatileCounter64 g_syslogMessagesReceived;
-extern VolatileCounter64 g_windowsEventsReceived;
-extern uint32_t g_averageDCIQueuingTime;
+void GetAIProviderTable(Table *table);
+
+/**
+ * Get local management server metric (defined in server_stats.cpp)
+ */
+DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t *buffer, size_t size);
 
 /**
  * Poller thread pool
@@ -77,30 +74,9 @@ int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComp
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet);
 
 /**
- * Get syncer run time statistic
- */
-int64_t GetSyncerRunTime(StatisticType statType);
-
-/**
- * Get internal metric from performance data storage driver
- */
-DataCollectionError GetPerfDataStorageDriverMetric(const wchar_t *driver, const wchar_t *metric, wchar_t *value);
-
-/**
  * Get attribute via EtherNet/IP
  */
 DataCollectionError GetEtherNetIPAttribute(const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, uint32_t timeout, TCHAR *buffer, size_t size);
-
-/**
- * Get status of notification channel
- */
-bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *status);
-
-/**
- * Get active discovery state
- */
-bool IsActiveDiscoveryRunning();
-String GetCurrentActiveDiscoveryRange();
 
 /**
  * Poll cancellation checkpoint
@@ -8673,7 +8649,13 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(name, _T("Server.EventProcessors")))
+      if (!_tcsicmp(name, _T("Server.AI.Providers")))
+      {
+         auto table = make_shared<Table>();
+         GetAIProviderTable(table.get());
+         *result = table;
+      }
+      else if (!_tcsicmp(name, _T("Server.EventProcessors")))
       {
          auto table = make_shared<Table>();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
@@ -8722,62 +8704,6 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    }
 
    return rc;
-}
-
-/**
- * Get statistic for specific event processor
- */
-static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int type, TCHAR *value)
-{
-   TCHAR pidText[64];
-   if (!AgentGetParameterArg(param, 1, pidText, 64))
-      return DCE_NOT_SUPPORTED;
-   int pid = _tcstol(pidText, nullptr, 0);
-   if (pid < 1)
-      return DCE_NOT_SUPPORTED;
-
-   StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
-   if (pid > stats->size())
-   {
-      delete stats;
-      return DCE_NOT_SUPPORTED;
-   }
-
-   auto s = stats->get(pid - 1);
-   switch(type)
-   {
-      case 'B':
-         ret_uint(value, s->bindings);
-         break;
-      case 'P':
-         ret_uint64(value, s->processedEvents);
-         break;
-      case 'Q':
-         ret_uint(value, s->queueSize);
-         break;
-      case 'W':
-         ret_uint(value, s->averageWaitTime);
-         break;
-   }
-
-   delete stats;
-   return DCE_SUCCESS;
-}
-
-/**
- * Get notification channel status and execute provided callback
- */
-static DataCollectionError GetNotificationChannelStatus(const TCHAR *metric, std::function<void (const NotificationChannelStatus&)> callback)
-{
-   wchar_t channel[64];
-   AgentGetParameterArg(metric, 1, channel, 64);
-
-   NotificationChannelStatus status;
-   if (!GetNotificationChannelStatus(channel, &status))
-      return DCE_NO_SUCH_INSTANCE;
-
-   callback(status);
-   return DCE_SUCCESS;
 }
 
 /**
@@ -8990,426 +8916,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(name, _T("Server.ActiveAlarms")))
-      {
-         ret_uint(buffer, GetAlarmCount());
-      }
-      else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.CurrentRange")))
-      {
-         ret_string(buffer, GetCurrentActiveDiscoveryRange());
-      }
-      else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.IsRunning")))
-      {
-         ret_boolean(buffer, IsActiveDiscoveryRunning());
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.AgentProxy")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::AGENT_PROXY, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SnmpProxy")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_PROXY, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SnmpTrapProxy")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_TRAP_PROXY, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SyslogProxy")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SYSLOG_PROXY, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.Total")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.UserAgent")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::USER_AGENT, true));
-      }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Unbound.Total")))
-      {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY, false));
-      }
-      else if (!_tcsicmp(name, _T("Server.AverageDCIQueuingTime")))
-      {
-         _sntprintf(buffer, size, _T("%u"), g_averageDCIQueuingTime);
-      }
-      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationDate")))
-      {
-         ret_string(buffer, GetServerCertificateExpirationDate());
-      }
-      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationTime")))
-      {
-         ret_int64(buffer, GetServerCertificateExpirationTime());
-      }
-      else if (!_tcsicmp(name, _T("Server.Certificate.ExpiresIn")))
-      {
-         ret_int(buffer, GetServerCertificateDaysUntilExpiration());
-      }
-      else if (!_tcsicmp(name, _T("Server.ClientSessions.Authenticated")))
-      {
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, -1, nullptr));
-      }
-      else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), name, false))
-      {
-         wchar_t loginName[256];
-         AgentGetParameterArg(name, 1, loginName, 256);
-         IntegerToString(GetSessionCount(true, false, -1, loginName), buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.ClientSessions.Desktop")))
-      {
-         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, nullptr), buffer);
-      }
-      else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), name, false))
-      {
-         wchar_t loginName[256];
-         AgentGetParameterArg(name, 1, loginName, 256);
-         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName), buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.ClientSessions.Mobile")))
-      {
-         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_MOBILE, nullptr), buffer);
-      }
-      else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), name, false))
-      {
-         wchar_t loginName[256];
-         AgentGetParameterArg(name, 1, loginName, 256);
-         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName), buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.ClientSessions.Total")))
-      {
-         IntegerToString(GetSessionCount(true, true, -1, nullptr), buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.ClientSessions.Web")))
-      {
-         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_WEB, nullptr), buffer);
-      }
-      else if (MatchString(_T("Server.ClientSessions.Web(*)"), name, false))
-      {
-         TCHAR loginName[256];
-         AgentGetParameterArg(name, 1, loginName, 256);
-         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName), buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DataCollectionItems")))
-      {
-         int dciCount = 0;
-         g_idxObjectById.forEach([&dciCount](NetObj *object) -> EnumerationCallbackResult
-            {
-               if (object->isDataCollectionTarget())
-                  dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
-               return _CONTINUE;
-            });
-         ret_int(buffer, dciCount);
-      }
-      else if (!_tcsicmp(name, _T("Server.DB.Queries.Failed")))
-      {
-         LIBNXDB_PERF_COUNTERS counters;
-         DBGetPerfCounters(&counters);
-         IntegerToString(counters.failedQueries, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DB.Queries.LongRunning")))
-      {
-         LIBNXDB_PERF_COUNTERS counters;
-         DBGetPerfCounters(&counters);
-         IntegerToString(counters.longRunningQueries, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DB.Queries.NonSelect")))
-      {
-         LIBNXDB_PERF_COUNTERS counters;
-         DBGetPerfCounters(&counters);
-         IntegerToString(counters.nonSelectQueries, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DB.Queries.Select")))
-      {
-         LIBNXDB_PERF_COUNTERS counters;
-         DBGetPerfCounters(&counters);
-         IntegerToString(counters.selectQueries, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DB.Queries.Total")))
-      {
-         LIBNXDB_PERF_COUNTERS counters;
-         DBGetPerfCounters(&counters);
-         IntegerToString(counters.totalQueries, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.IData")))
-      {
-         IntegerToString(g_idataWriteRequests, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.Other")))
-      {
-         IntegerToString(g_otherWriteRequests, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.RawData")))
-      {
-         IntegerToString(g_rawDataWriteRequests, buffer);
-      }
-      else if (MatchString(_T("Server.EventProcessor.AverageWaitTime(*)"), name, false))
-      {
-         rc = GetEventProcessorStatistic(name, 'W', buffer);
-      }
-      else if (MatchString(_T("Server.EventProcessor.Bindings(*)"), name, false))
-      {
-         rc = GetEventProcessorStatistic(name, 'B', buffer);
-      }
-      else if (MatchString(_T("Server.EventProcessor.ProcessedEvents(*)"), name, false))
-      {
-         rc = GetEventProcessorStatistic(name, 'P', buffer);
-      }
-      else if (MatchString(_T("Server.EventProcessor.QueueSize(*)"), name, false))
-      {
-         rc = GetEventProcessorStatistic(name, 'Q', buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.FileHandleLimit")))
-      {
-#ifdef _WIN32
-         rc = DCE_NOT_SUPPORTED;
-#else
-         struct rlimit rl;
-         if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
-            IntegerToString(static_cast<uint64_t>(rl.rlim_cur), buffer);
-         else
-            rc = DCE_COLLECTION_ERROR;
-#endif
-      }
-      else if (!_tcsicmp(name, _T("Server.Heap.Active")))
-      {
-         int64_t bytes = GetActiveHeapMemory();
-         if (bytes != -1)
-            IntegerToString(bytes, buffer);
-         else
-            rc = DCE_NOT_SUPPORTED;
-      }
-      else if (!_tcsicmp(name, _T("Server.Heap.Allocated")))
-      {
-         int64_t bytes = GetAllocatedHeapMemory();
-         if (bytes != -1)
-            IntegerToString(bytes, buffer);
-         else
-            rc = DCE_NOT_SUPPORTED;
-      }
-      else if (!_tcsicmp(name, _T("Server.Heap.Mapped")))
-      {
-         int64_t bytes = GetMappedHeapMemory();
-         if (bytes != -1)
-            IntegerToString(bytes, buffer);
-         else
-            rc = DCE_NOT_SUPPORTED;
-      }
-      else if (!_tcsicmp(name, _T("Server.MemoryUsage.Alarms")))
-      {
-         ret_uint64(buffer, GetAlarmMemoryUsage());
-      }
-      else if (!_tcsicmp(name, _T("Server.MemoryUsage.DataCollectionCache")))
-      {
-         ret_uint64(buffer, GetDCICacheMemoryUsage());
-      }
-      else if (!_tcsicmp(name, _T("Server.MemoryUsage.RawDataWriter")))
-      {
-         ret_uint64(buffer, GetRawDataWriterMemoryUsage());
-      }
-      else if (MatchString(_T("Server.NotificationChannel.HealthCheckStatus(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_boolean(buffer, status.healthCheckStatus); });
-      }
-      else if (MatchString(_T("Server.NotificationChannel.LastMessageTimestamp(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint64(buffer, status.lastMessageTime); });
-      }
-      else if (MatchString(_T("Server.NotificationChannel.MessageCount(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.messageCount); });
-      }
-      else if (MatchString(_T("Server.NotificationChannel.QueueSize(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.queueSize); });
-      }
-      else if (MatchString(_T("Server.NotificationChannel.SendFailureCount(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_uint(buffer, status.failedSendCount); });
-      }
-      else if (MatchString(_T("Server.NotificationChannel.SendStatus(*)"), name, false))
-      {
-         rc = GetNotificationChannelStatus(name, [buffer](const NotificationChannelStatus& status) { ret_boolean(buffer, status.sendStatus); });
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.AccessPoints")))
-      {
-         ret_uint(buffer, static_cast<uint32_t>(g_idxAccessPointById.size()));
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.Clusters")))
-      {
-         ret_uint(buffer, static_cast<uint32_t>(g_idxClusterById.size()));
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.Interfaces")))
-      {
-         uint32_t count = 0;
-         g_idxObjectById.forEach(
-            [&count] (NetObj *object) -> EnumerationCallbackResult
-            {
-               if (object->getObjectClass() == OBJECT_INTERFACE)
-                  count++;
-               return _CONTINUE;
-            });
-         ret_uint(buffer, count);
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.Nodes")))
-      {
-         ret_uint(buffer, static_cast<uint32_t>(g_idxNodeById.size()));
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.Sensors")))
-      {
-         ret_uint(buffer, static_cast<uint32_t>(g_idxSensorById.size()));
-      }
-      else if (!_tcsicmp(name, _T("Server.ObjectCount.Total")))
-      {
-         ret_uint(buffer, static_cast<uint32_t>(g_idxObjectById.size()));
-      }
-      else if (MatchString(_T("Server.PDS.DriverStat(*)"), name, false))
-      {
-         wchar_t driver[64], metric[64];
-         AgentGetParameterArg(name, 1, driver, 64);
-         AgentGetParameterArg(name, 2, metric, 64);
-         rc = GetPerfDataStorageDriverMetric(driver, metric, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Autobind")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::AUTOBIND));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Configuration")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::CONFIGURATION));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Discovery")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::DISCOVERY));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.ICMP")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::ICMP));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.InstanceDiscovery")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::INSTANCE_DISCOVERY));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.MapUpdate")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::MAP_UPDATE));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.RoutingTable")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::ROUTING_TABLE));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Status")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::STATUS));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Topology")))
-      {
-         ret_int(buffer, GetPollerCount(PollerType::TOPOLOGY));
-      }
-      else if (!_tcsicmp(name, _T("Server.Pollers.Total")))
-      {
-         ret_int(buffer, GetTotalPollerCount());
-      }
-      else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
-      {
-         rc = GetQueueStatistics(name, StatisticType::AVERAGE, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Current(*)"), name, false))
-      {
-         rc = GetQueueStatistics(name, StatisticType::CURRENT, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Max(*)"), name, false))
-      {
-         rc = GetQueueStatistics(name, StatisticType::MAX, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Min(*)"), name, false))
-      {
-         rc = GetQueueStatistics(name, StatisticType::MIN, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.ReceivedSNMPTraps")))
-      {
-         ret_uint64(buffer, g_snmpTrapsReceived);
-      }
-      else if (!_tcsicmp(name, _T("Server.ReceivedSyslogMessages")))
-      {
-         ret_uint64(buffer, g_syslogMessagesReceived);
-      }
-      else if (!_tcsicmp(name, _T("Server.ReceivedWindowsEvents")))
-      {
-         ret_uint64(buffer, g_windowsEventsReceived);
-      }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), name))
-      {
-         ret_int64(buffer, GetSyncerRunTime(StatisticType::AVERAGE));
-      }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Last"), name))
-      {
-         ret_int64(buffer, GetSyncerRunTime(StatisticType::CURRENT));
-      }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Max"), name))
-      {
-         ret_int64(buffer, GetSyncerRunTime(StatisticType::MAX));
-      }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Min"), name))
-      {
-         ret_int64(buffer, GetSyncerRunTime(StatisticType::MIN));
-      }
-      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.AverageWaitTime(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_AVERAGE_WAIT_TIME, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.Load(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_LOAD, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_1, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_5, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_15, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_MAX_SIZE, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_SCHEDULED_REQUESTS, name, buffer);
-      }
-      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), name, false))
-      {
-         rc = GetThreadPoolStat(THREAD_POOL_USAGE, name, buffer);
-      }
-      else if (!_tcsicmp(name, _T("Server.TotalEventsProcessed")))
-      {
-         ret_uint64(buffer, g_totalEventsProcessed);
-      }
-      else if (!_tcsicmp(name, _T("Server.Uptime")))
-      {
-         ret_int64(buffer, static_cast<int64_t>(time(nullptr) - g_serverStartTime));
-      }
-      else
-      {
-         rc = DCE_NOT_SUPPORTED;
-      }
+      rc = GetLocalManagementServerMetric(name, buffer, size);
    }
    else
    {
@@ -11528,10 +11035,13 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
 
    shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
 
+   weak_ptr<SSHInteractiveChannel> weakChannel(channel);
    agentConn->setSSHChannelDataHandler(channelId,
-      [channel] (const BYTE *data, size_t size, bool errorIndicator)
+      [weakChannel] (const BYTE *data, size_t size, bool errorIndicator)
       {
-         channel->onDataReceived(data, size, errorIndicator);
+         shared_ptr<SSHInteractiveChannel> ch = weakChannel.lock();
+         if (ch != nullptr)
+            ch->onDataReceived(data, size, errorIndicator);
       });
    return channel;
 }
