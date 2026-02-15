@@ -22,32 +22,12 @@
 
 #include "wlcbridge.h"
 #include <nddrv.h>
-#include <map>
-#include <regex>
-#include <array>
-#include <set>
-#include <sstream>
-#include <vector>
 
 #define DEBUG_TAG WLCBRIDGE_DEBUG_TAG _T(".aruba")
 static const time_t COMMAND_CACHE_TTL = 5; // seconds
 static const char *CMD_SHOW_SUMMARY = "show summary";
 static const char *CMD_SHOW_APS = "show aps";
 static const char *CMD_SHOW_CLIENTS = "show clients";
-
-/**
- * Get custom attribute from domain object as UTF-8 string
- */
-static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name)
-{
-   TCHAR buffer[1024];
-   if (wirelessDomain->getCustomAttribute(name, buffer, 1024) == nullptr)
-      return std::string();
-
-   char utf8buffer[1024];
-   wchar_to_utf8(buffer, -1, utf8buffer, 1024);
-   return std::string(utf8buffer);
-}
 
 /**
  * Trim and normalize base URL (ensure scheme, remove trailing slash)
@@ -176,8 +156,11 @@ static bool Login(const std::string& baseUrl, const std::string& login, const st
 /**
  * Read JSON document from controller
  */
-static json_t *ReadJsonFromController(const char *url)
+static json_t *ReadJsonFromController(const char *url, long *httpStatus)
 {
+   if (httpStatus != nullptr)
+      *httpStatus = 0;
+
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
 
@@ -211,6 +194,8 @@ static json_t *ReadJsonFromController(const char *url)
    {
       long httpCode = 0;
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+      if (httpStatus != nullptr)
+         *httpStatus = httpCode;
       if (httpCode != 200)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Error response from controller: HTTP response code is %d"), httpCode);
@@ -242,8 +227,11 @@ static json_t *ReadJsonFromController(const char *url)
 /**
  * Send show-cmd request and return JSON
  */
-static json_t *DoShowCommand(NObject *wirelessDomain, const char *command)
+static json_t *DoShowCommand(NObject *wirelessDomain, const char *command, long *httpStatus)
 {
+   if (httpStatus != nullptr)
+      *httpStatus = 0;
+
    if (IsShutdownInProgress())
       return nullptr;
 
@@ -289,7 +277,7 @@ static json_t *DoShowCommand(NObject *wirelessDomain, const char *command)
    curl_easy_cleanup(curl);
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Show command: %hs"), url.c_str());
-   json_t *json = ReadJsonFromController(url.c_str());
+   json_t *json = ReadJsonFromController(url.c_str(), httpStatus);
    if (json == nullptr)
       return nullptr;
 
@@ -314,9 +302,32 @@ static json_t *DoShowCommand(NObject *wirelessDomain, const char *command)
    return json;
 }
 
-static bool ParseSummaryMacs(const char *output, std::map<std::string, MacAddress>& apNameToMac);
-static bool ParseSummaryClientApMap(const char *output, std::map<std::string, std::string>& clientMacToApName);
-static bool ParseApRadioChannels(const char *output, std::map<std::string, std::array<int, 3>>& apRadioChannels);
+struct ApMacMapping
+{
+   char name[MAX_OBJECT_NAME];
+   MacAddress mac;
+};
+
+struct ClientApMapping
+{
+   MacAddress clientMac;
+   char apName[MAX_OBJECT_NAME];
+};
+
+struct ApRadioMapping
+{
+   char apName[MAX_OBJECT_NAME];
+   int32_t channels[3];
+};
+
+struct SsidEntry
+{
+   char ssid[MAX_SSID_LENGTH];
+};
+
+static bool ParseSummaryMacs(const char *output, StructArray<ApMacMapping> *apNameToMac);
+static bool ParseSummaryClientApMap(const char *output, StructArray<ClientApMapping> *clientMacToApName);
+static bool ParseApRadioChannels(const char *output, StructArray<ApRadioMapping> *apRadioChannels);
 
 enum ApColumns
 {
@@ -332,22 +343,37 @@ enum ApColumns
    AP_COL_RADIO2_POWER = 19
 };
 
-struct CommandCacheEntry
+class CommandCacheEntry
 {
+public:
+   uint32_t domainId;
    time_t summaryTimestamp;
    time_t apsTimestamp;
    time_t clientsTimestamp;
    std::string summaryOutput;
    std::string apsOutput;
    std::string clientsOutput;
+
+   CommandCacheEntry(uint32_t _domainId) : domainId(_domainId), summaryTimestamp(0), apsTimestamp(0), clientsTimestamp(0) { }
 };
 
-static std::map<uint32_t, CommandCacheEntry> s_commandCache;
+static ObjectArray<CommandCacheEntry> s_commandCache(0, 16, Ownership::True);
 static Mutex s_commandCacheLock(MutexType::FAST);
 
-static bool GetCommandOutput(NObject *wirelessDomain, const char *command, std::string& output)
+static CommandCacheEntry *FindCommandCacheEntry(uint32_t domainId)
 {
-   json_t *response = DoShowCommand(wirelessDomain, command);
+   for(int i = 0; i < s_commandCache.size(); i++)
+   {
+      CommandCacheEntry *entry = s_commandCache.get(i);
+      if (entry->domainId == domainId)
+         return entry;
+   }
+   return nullptr;
+}
+
+static bool GetCommandOutput(NObject *wirelessDomain, const char *command, std::string& output, long *httpStatus)
+{
+   json_t *response = DoShowCommand(wirelessDomain, command, httpStatus);
    if (response == nullptr)
       return false;
 
@@ -382,444 +408,548 @@ static bool GetCommandOutput(NObject *wirelessDomain, const char *command, std::
 static bool GetCachedCommandOutput(NObject *wirelessDomain, const char *command, std::string& output)
 {
    time_t now = time(nullptr);
-   uint32_t id = wirelessDomain->getId();
+   uint32_t domainId = wirelessDomain->getId();
 
    {
       LockGuard lock(s_commandCacheLock);
-      auto it = s_commandCache.find(id);
-      if (it != s_commandCache.end())
+      CommandCacheEntry *entry = FindCommandCacheEntry(domainId);
+      if (entry != nullptr)
       {
-         CommandCacheEntry& entry = it->second;
-      if (!strcmp(command, CMD_SHOW_SUMMARY) && (entry.summaryTimestamp > 0) && (now - entry.summaryTimestamp <= COMMAND_CACHE_TTL))
-      {
-         output = entry.summaryOutput;
-         return true;
-      }
-      if (!strcmp(command, CMD_SHOW_APS) && (entry.apsTimestamp > 0) && (now - entry.apsTimestamp <= COMMAND_CACHE_TTL))
-      {
-         output = entry.apsOutput;
-         return true;
-      }
-      if (!strcmp(command, CMD_SHOW_CLIENTS) && (entry.clientsTimestamp > 0) && (now - entry.clientsTimestamp <= COMMAND_CACHE_TTL))
-      {
-         output = entry.clientsOutput;
-         return true;
-      }
+         if (!strcmp(command, CMD_SHOW_SUMMARY) && (entry->summaryTimestamp > 0) && (now - entry->summaryTimestamp <= COMMAND_CACHE_TTL))
+         {
+            output = entry->summaryOutput;
+            return true;
+         }
+         if (!strcmp(command, CMD_SHOW_APS) && (entry->apsTimestamp > 0) && (now - entry->apsTimestamp <= COMMAND_CACHE_TTL))
+         {
+            output = entry->apsOutput;
+            return true;
+         }
+         if (!strcmp(command, CMD_SHOW_CLIENTS) && (entry->clientsTimestamp > 0) && (now - entry->clientsTimestamp <= COMMAND_CACHE_TTL))
+         {
+            output = entry->clientsOutput;
+            return true;
+         }
       }
    }
 
-   if (!GetCommandOutput(wirelessDomain, command, output))
+   long httpStatus = 0;
+   if (!GetCommandOutput(wirelessDomain, command, output, &httpStatus))
+   {
+      if ((httpStatus == 501) || (httpStatus == 502) || (httpStatus == 503))
+      {
+         LockGuard lock(s_commandCacheLock);
+         CommandCacheEntry *entry = FindCommandCacheEntry(domainId);
+         if (entry != nullptr)
+         {
+            if (!strcmp(command, CMD_SHOW_SUMMARY) && !entry->summaryOutput.empty())
+            {
+               output = entry->summaryOutput;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Using cached output for %hs due to HTTP %d"), command, httpStatus);
+               return true;
+            }
+            if (!strcmp(command, CMD_SHOW_APS) && !entry->apsOutput.empty())
+            {
+               output = entry->apsOutput;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Using cached output for %hs due to HTTP %d"), command, httpStatus);
+               return true;
+            }
+            if (!strcmp(command, CMD_SHOW_CLIENTS) && !entry->clientsOutput.empty())
+            {
+               output = entry->clientsOutput;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Using cached output for %hs due to HTTP %d"), command, httpStatus);
+               return true;
+            }
+         }
+      }
       return false;
+   }
 
    {
       LockGuard lock(s_commandCacheLock);
-      CommandCacheEntry& entry = s_commandCache[id];
+      CommandCacheEntry *entry = FindCommandCacheEntry(domainId);
+      if (entry == nullptr)
+      {
+         entry = new CommandCacheEntry(domainId);
+         s_commandCache.add(entry);
+      }
       if (!strcmp(command, CMD_SHOW_SUMMARY))
       {
-         entry.summaryTimestamp = now;
-         entry.summaryOutput = output;
+         entry->summaryTimestamp = now;
+         entry->summaryOutput = output;
       }
       else if (!strcmp(command, CMD_SHOW_APS))
       {
-         entry.apsTimestamp = now;
-         entry.apsOutput = output;
+         entry->apsTimestamp = now;
+         entry->apsOutput = output;
       }
       else if (!strcmp(command, CMD_SHOW_CLIENTS))
       {
-         entry.clientsTimestamp = now;
-         entry.clientsOutput = output;
+         entry->clientsTimestamp = now;
+         entry->clientsOutput = output;
       }
    }
 
    return true;
 }
 
-static void BuildApNameToMac(NObject *wirelessDomain, std::map<std::string, MacAddress>& apNameToMac)
+static void BuildApNameToMac(NObject *wirelessDomain, StructArray<ApMacMapping> *apNameToMac)
 {
    std::string summary;
    if (GetCachedCommandOutput(wirelessDomain, CMD_SHOW_SUMMARY, summary))
       ParseSummaryMacs(summary.c_str(), apNameToMac);
 }
 
-static void BuildClientMacToApName(NObject *wirelessDomain, std::map<std::string, std::string>& clientMacToApName)
+static void BuildClientMacToApName(NObject *wirelessDomain, StructArray<ClientApMapping> *clientMacToApName)
 {
    std::string summary;
    if (GetCachedCommandOutput(wirelessDomain, CMD_SHOW_SUMMARY, summary))
       ParseSummaryClientApMap(summary.c_str(), clientMacToApName);
 }
 
-static void BuildApRadioChannels(NObject *wirelessDomain, std::map<std::string, std::array<int, 3>>& apRadioChannels)
+static void BuildApRadioChannels(NObject *wirelessDomain, StructArray<ApRadioMapping> *apRadioChannels)
 {
    std::string output;
    if (GetCachedCommandOutput(wirelessDomain, CMD_SHOW_APS, output))
       ParseApRadioChannels(output.c_str(), apRadioChannels);
 }
 
-static std::string Trim(const std::string& s)
+static const char *ReadLine(const char *text, char *line, size_t size)
 {
-   size_t start = s.find_first_not_of(" \t\r\n");
-   if (start == std::string::npos)
-      return std::string();
-   size_t end = s.find_last_not_of(" \t\r\n");
-   return s.substr(start, end - start + 1);
+   if ((text == nullptr) || (*text == 0))
+      return nullptr;
+
+   size_t pos = 0;
+   while((*text != 0) && (*text != '\n'))
+   {
+      if ((*text != '\r') && (pos < size - 1))
+         line[pos++] = *text;
+      text++;
+   }
+   line[pos] = 0;
+
+   if (*text == '\n')
+      text++;
+   return text;
 }
 
-static void SplitLines(const char *text, std::vector<std::string>& lines)
+static int SplitColumns(char *line, char **columns, int maxColumns)
 {
-   if (text == nullptr)
-      return;
-   const char *p = text;
-   const char *lineStart = p;
-   while (*p != 0)
+   int count = 0;
+   char *p = line;
+   while((*p != 0) && (count < maxColumns))
    {
-      if (*p == '\n')
+      while((*p != 0) && isspace(*p))
+         p++;
+      if (*p == 0)
+         break;
+
+      columns[count++] = p;
+      int spaces = 0;
+      while(*p != 0)
       {
-         std::string line(lineStart, p - lineStart);
-         if (!line.empty() && (line.back() == '\r'))
-            line.pop_back();
-         lines.push_back(line);
-         lineStart = p + 1;
+         if (isspace(*p))
+         {
+            spaces++;
+            if (spaces >= 2)
+               break;
+         }
+         else
+         {
+            spaces = 0;
+         }
+         p++;
       }
-      p++;
+
+      if (*p == 0)
+         break;
+
+      char *end = p - 1;
+      while((end >= columns[count - 1]) && isspace(*end))
+         end--;
+      *(end + 1) = 0;
+
+      while((*p != 0) && isspace(*p))
+         p++;
    }
-   if (p != lineStart)
-   {
-      std::string line(lineStart, p - lineStart);
-      if (!line.empty() && (line.back() == '\r'))
-         line.pop_back();
-      lines.push_back(line);
-   }
+   return count;
 }
 
-static void SplitColumns(const std::string& line, std::vector<std::string>& columns)
+static int32_t ParseLeadingInt(const char *s)
 {
-   static const std::regex sep(R"(\s{2,})");
-   std::sregex_token_iterator it(line.begin(), line.end(), sep, -1);
-   std::sregex_token_iterator end;
-   for (; it != end; ++it)
-   {
-      if (!it->str().empty())
-         columns.push_back(it->str());
-   }
+   if (s == nullptr)
+      return 0;
+
+   while((*s != 0) && !isdigit(static_cast<unsigned char>(*s)))
+      s++;
+   if (*s == 0)
+      return 0;
+
+   long v = strtol(s, nullptr, 10);
+   if (v < INT32_MIN)
+      return INT32_MIN;
+   if (v > INT32_MAX)
+      return INT32_MAX;
+   return static_cast<int32_t>(v);
 }
 
-static int32_t ParseLeadingInt(const std::string& s)
+static bool IsNumber(const char *s)
 {
-   size_t i = 0;
-   while ((i < s.size()) && !isdigit(static_cast<unsigned char>(s[i])))
-      i++;
-   int32_t v = 0;
-   while ((i < s.size()) && isdigit(static_cast<unsigned char>(s[i])))
-   {
-      v = (v * 10) + (s[i] - '0');
-      i++;
-   }
-   return v;
-}
-
-static bool IsNumber(const std::string& s)
-{
-   if (s.empty())
+   if ((s == nullptr) || (*s == 0))
       return false;
-   for (char c : s)
+   while(*s != 0)
    {
-      if (!isdigit(static_cast<unsigned char>(c)))
+      if (!isdigit(static_cast<unsigned char>(*s)))
          return false;
+      s++;
    }
    return true;
 }
 
-static void AddRadioInterfaces(AccessPointInfo *ap, uint32_t& index, const char *name, const std::string& channelText, const std::string& powerText, const MacAddress& bssid, const std::vector<std::string> *ssids)
+/**
+ * Determine radio band from channel number
+ */
+static RadioBand RadioBandFromChannel(uint16_t channel)
+{
+   if (channel <= 14)
+      return RADIO_BAND_2_4_GHZ;
+
+   // 6 GHz channels are above standard 5 GHz set in Aruba show output.
+   if (channel > 177)
+      return RADIO_BAND_6_GHZ;
+
+   return RADIO_BAND_5_GHZ;
+}
+
+static const MacAddress *FindApMac(const StructArray<ApMacMapping> *apNameToMac, const char *name)
+{
+   for(int i = 0; i < apNameToMac->size(); i++)
+   {
+      ApMacMapping *m = apNameToMac->get(i);
+      if (!strcmp(m->name, name))
+         return &m->mac;
+   }
+   return nullptr;
+}
+
+static const char *FindApNameByClientMac(const StructArray<ClientApMapping> *clientMacToApName, const MacAddress& clientMac)
+{
+   for(int i = 0; i < clientMacToApName->size(); i++)
+   {
+      ClientApMapping *m = clientMacToApName->get(i);
+      if (m->clientMac.equals(clientMac))
+         return m->apName;
+   }
+   return nullptr;
+}
+
+static const ApRadioMapping *FindApRadioChannels(const StructArray<ApRadioMapping> *apRadioChannels, const char *apName)
+{
+   for(int i = 0; i < apRadioChannels->size(); i++)
+   {
+      ApRadioMapping *m = apRadioChannels->get(i);
+      if (!strcmp(m->apName, apName))
+         return m;
+   }
+   return nullptr;
+}
+
+static void AddRadioInterfaces(AccessPointInfo *ap, uint32_t *index, const char *name, const char *channelText, const char *powerText, const MacAddress& bssid, const StructArray<SsidEntry> *ssids)
 {
    uint16_t channel = static_cast<uint16_t>(ParseLeadingInt(channelText));
    if (channel == 0)
       return;
 
-   auto addOne = [&](const char *ssid)
+   int ssidCount = (ssids != nullptr) ? ssids->size() : 0;
+   if (ssidCount == 0)
    {
       RadioInterfaceInfo rif;
       memset(&rif, 0, sizeof(rif));
-      rif.index = index;
-      rif.ifIndex = index;
+      rif.index = *index;
+      rif.ifIndex = *index;
       utf8_to_tchar(name, -1, rif.name, MAX_OBJECT_NAME);
       if (bssid.isValid())
          memcpy(rif.bssid, bssid.value(), MAC_ADDR_LENGTH);
-      utf8_to_tchar(ssid, -1, rif.ssid, MAX_SSID_LENGTH);
+      utf8_to_tchar("multiple", -1, rif.ssid, MAX_SSID_LENGTH);
       rif.channel = channel;
-      rif.band = (channel < 15) ? RADIO_BAND_2_4_GHZ : RADIO_BAND_5_GHZ;
+      rif.band = RadioBandFromChannel(channel);
       rif.frequency = WirelessChannelToFrequency(rif.band, rif.channel);
       rif.powerDBm = ParseLeadingInt(powerText);
       ap->addRadioInterface(rif);
-      index++;
-   };
-
-   if ((ssids != nullptr) && !ssids->empty())
-   {
-      for (const auto& s : *ssids)
-         addOne(s.c_str());
+      (*index)++;
+      return;
    }
-   else
+
+   for(int i = 0; i < ssidCount; i++)
    {
-      addOne("multiple");
+      RadioInterfaceInfo rif;
+      memset(&rif, 0, sizeof(rif));
+      rif.index = *index;
+      rif.ifIndex = *index;
+      utf8_to_tchar(name, -1, rif.name, MAX_OBJECT_NAME);
+      if (bssid.isValid())
+         memcpy(rif.bssid, bssid.value(), MAC_ADDR_LENGTH);
+      utf8_to_tchar(ssids->get(i)->ssid, -1, rif.ssid, MAX_SSID_LENGTH);
+      rif.channel = channel;
+      rif.band = RadioBandFromChannel(channel);
+      rif.frequency = WirelessChannelToFrequency(rif.band, rif.channel);
+      rif.powerDBm = ParseLeadingInt(powerText);
+      ap->addRadioInterface(rif);
+      (*index)++;
    }
 }
 
-static bool ParseSummaryMacs(const char *output, std::map<std::string, MacAddress>& apNameToMac)
+static bool ParseSummaryMacs(const char *output, StructArray<ApMacMapping> *apNameToMac)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
-   static const std::regex summaryRegex(
-      R"(^([0-9A-Fa-f:]{17})\s{2}(\d+.\d+.\d+.\d+)\s+(.{10}).*$)");
-
    int matches = 0;
-   for (const auto& line : lines)
+   bool accessPointSection = false;
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.empty())
+      p = ReadLine(p, line, sizeof(line));
+      if (line[0] == 0)
          continue;
-      if (line.find("Restricted Management Access Subnets") != std::string::npos)
+
+      if (strstr(line, "Access Points") != nullptr)
+      {
+         accessPointSection = true;
+         continue;
+      }
+      if (!accessPointSection)
+         continue;
+      if (strstr(line, "Restricted Management Access Subnets") != nullptr)
          break;
-
-      std::smatch m;
-      if (!std::regex_match(line, m, summaryRegex))
+      if (!strncmp(line, "MAC", 3) || !strncmp(line, "---", 3))
          continue;
 
-      std::string macText = m[1].str();
-      std::string nameText = m[3].str();
-      nameText = Trim(nameText);
+      char *columns[16];
+      int columnCount = SplitColumns(line, columns, 16);
+      if (columnCount < 3)
+         continue;
 
-      MacAddress macAddr = MacAddress::parse(macText.c_str());
+      MacAddress macAddr = MacAddress::parse(columns[0]);
       if (!macAddr.isValid())
          continue;
 
-      apNameToMac[nameText] = macAddr;
+      TrimA(columns[2]);
+      ApMacMapping *entry = apNameToMac->addPlaceholder();
+      strlcpy(entry->name, columns[2], MAX_OBJECT_NAME);
+      entry->mac = macAddr;
       matches++;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Parsed %d AP MAC mappings from show summary"), matches);
-   return !apNameToMac.empty();
+   return (apNameToMac->size() > 0);
 }
 
-static bool ParseSummaryClientApMap(const char *output, std::map<std::string, std::string>& clientMacToApName)
+static bool ParseSummaryClientApMap(const char *output, StructArray<ClientApMapping> *clientMacToApName)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
-   static const std::regex clientApRegex(
-      R"(^([0-9A-Fa-f:]{17})\s{2}(.{25})\s(\d+.\d+.\d+.\d+)\s+(.{10})\s(.+)$)");
-
    int matches = 0;
-   for (const auto& line : lines)
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.empty())
+      p = ReadLine(p, line, sizeof(line));
+      if (line[0] == 0)
          continue;
-      if (line.find("Networks") != std::string::npos)
+      if (strstr(line, "Networks") != nullptr)
          break;
-
-      std::smatch m;
-      if (!std::regex_match(line, m, clientApRegex))
+      if (!strncmp(line, "---", 3))
          continue;
 
-      std::string clientMac = m[1].str();
-      std::string apName = Trim(m[5].str());
-      if (!clientMac.empty() && !apName.empty())
-      {
-         clientMacToApName[clientMac] = apName;
-         matches++;
-      }
+      char *columns[24];
+      int columnCount = SplitColumns(line, columns, 24);
+      if (columnCount < 5)
+         continue;
+
+      MacAddress clientMac = MacAddress::parse(columns[0]);
+      if (!clientMac.isValid())
+         continue;
+      InetAddress clientIp = InetAddress::parse(columns[2]);
+      if (!clientIp.isValid())
+         continue;
+
+      TrimA(columns[4]);
+      ClientApMapping *entry = clientMacToApName->addPlaceholder();
+      entry->clientMac = clientMac;
+      strlcpy(entry->apName, columns[4], MAX_OBJECT_NAME);
+      matches++;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Parsed %d client->AP mappings from show summary"), matches);
-   return !clientMacToApName.empty();
+   return (clientMacToApName->size() > 0);
 }
 
-static bool ParseApRadioChannels(const char *output, std::map<std::string, std::array<int, 3>>& apRadioChannels)
+static bool ParseApRadioChannels(const char *output, StructArray<ApRadioMapping> *apRadioChannels)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
-   for (const auto& line : lines)
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.empty())
+      p = ReadLine(p, line, sizeof(line));
+      if (line[0] == 0)
          continue;
-      if (!line.compare(0, 4, "Name") || !line.compare(0, 4, "----") || line.find("Access Points") != std::string::npos)
-         continue;
-
-      std::vector<std::string> cols;
-      SplitColumns(line, cols);
-      if (cols.size() <= AP_COL_RADIO2_CHANNEL)
+      if (!strncmp(line, "Name", 4) || !strncmp(line, "----", 4) || (strstr(line, "Access Points") != nullptr))
          continue;
 
-      std::string nameText = cols[AP_COL_NAME];
-      std::array<int, 3> channels = {0, 0, 0};
-      channels[0] = ParseLeadingInt(cols[AP_COL_RADIO0_CHANNEL]);
-      channels[1] = ParseLeadingInt(cols[AP_COL_RADIO1_CHANNEL]);
-      channels[2] = ParseLeadingInt(cols[AP_COL_RADIO2_CHANNEL]);
-      apRadioChannels[nameText] = channels;
+      char *columns[40];
+      int columnCount = SplitColumns(line, columns, 40);
+      if (columnCount <= AP_COL_RADIO2_CHANNEL)
+         continue;
+
+      ApRadioMapping *entry = apRadioChannels->addPlaceholder();
+      strlcpy(entry->apName, columns[AP_COL_NAME], MAX_OBJECT_NAME);
+      entry->channels[0] = ParseLeadingInt(columns[AP_COL_RADIO0_CHANNEL]);
+      entry->channels[1] = ParseLeadingInt(columns[AP_COL_RADIO1_CHANNEL]);
+      entry->channels[2] = ParseLeadingInt(columns[AP_COL_RADIO2_CHANNEL]);
    }
-
-   return !apRadioChannels.empty();
+   return (apRadioChannels->size() > 0);
 }
 
-static bool ParseAps(const char *output, std::vector<AccessPointInfo*>& apList, const std::map<std::string, MacAddress>* apNameToMac, const std::vector<std::string> *ssids)
+static ObjectArray<AccessPointInfo> *ParseAps(const char *output, const StructArray<ApMacMapping> *apNameToMac, const StructArray<SsidEntry> *ssids)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
+   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(32, 32, Ownership::True);
    uint32_t index = 1;
    int matches = 0;
-   for (const auto& line : lines)
+
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.empty())
+      p = ReadLine(p, line, sizeof(line));
+      if (line[0] == 0)
+         continue;
+      if (!strncmp(line, "Name", 4) || !strncmp(line, "----", 4) || (strstr(line, "Access Points") != nullptr))
          continue;
 
-      if (!line.compare(0, 4, "Name") || !line.compare(0, 4, "----") || line.find("Access Points") != std::string::npos)
+      char *columns[40];
+      int columnCount = SplitColumns(line, columns, 40);
+      if (columnCount <= AP_COL_SERIAL)
          continue;
 
-      std::vector<std::string> cols;
-      SplitColumns(line, cols);
-      if (cols.size() <= AP_COL_SERIAL)
-         continue;
+      if (columns[AP_COL_IP][0] != 0)
+      {
+         size_t len = strlen(columns[AP_COL_IP]);
+         if (columns[AP_COL_IP][len - 1] == '*')
+            columns[AP_COL_IP][len - 1] = 0;
+      }
 
-      std::string nameText = cols[AP_COL_NAME];
-      std::string ipText = cols[AP_COL_IP];
-      std::string modelText = cols[AP_COL_MODEL];
-      std::string serialText = cols[AP_COL_SERIAL];
-
-      if (!ipText.empty() && (ipText.back() == '*'))
-         ipText.pop_back();
-
-      InetAddress ipAddr = InetAddress::parse(ipText.c_str());
+      InetAddress ipAddr = InetAddress::parse(columns[AP_COL_IP]);
       if (!ipAddr.isValid())
          ipAddr = InetAddress::parse("0.0.0.0");
-
-      TCHAR name[MAX_OBJECT_NAME];
-      utf8_to_tchar(nameText.c_str(), -1, name, MAX_OBJECT_NAME);
-
-      TCHAR model[MAX_OBJECT_NAME];
-      if (!modelText.empty())
-         utf8_to_tchar(modelText.c_str(), -1, model, MAX_OBJECT_NAME);
-
-      TCHAR serial[MAX_OBJECT_NAME];
-      utf8_to_tchar(serialText.c_str(), -1, serial, MAX_OBJECT_NAME);
 
       MacAddress macAddr = MacAddress::parse("00:00:00:00:00:00");
       if (apNameToMac != nullptr)
       {
-         auto it = apNameToMac->find(nameText);
-         if (it != apNameToMac->end())
-            macAddr = it->second;
+         const MacAddress *m = FindApMac(apNameToMac, columns[AP_COL_NAME]);
+         if (m != nullptr)
+            macAddr = *m;
       }
 
-      auto ap = new AccessPointInfo(index++, macAddr, ipAddr, AP_UP,
-         name, _T("Aruba Networks"), modelText.empty() ? nullptr : model, serialText.empty() ? nullptr : serial);
+      TCHAR name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
+      utf8_to_tchar(columns[AP_COL_NAME], -1, name, MAX_OBJECT_NAME);
+      utf8_to_tchar(columns[AP_COL_MODEL], -1, model, MAX_OBJECT_NAME);
+      utf8_to_tchar(columns[AP_COL_SERIAL], -1, serial, MAX_OBJECT_NAME);
+      AccessPointInfo *ap = new AccessPointInfo(index++, macAddr, ipAddr, AP_UP, name, _T("Aruba Networks"), model, serial);
 
       uint32_t radioIndex = 1;
-      if (cols.size() > AP_COL_RADIO0_POWER)
-         AddRadioInterfaces(ap, radioIndex, "radio0", cols[AP_COL_RADIO0_CHANNEL], cols[AP_COL_RADIO0_POWER], macAddr, ssids);
-      if (cols.size() > AP_COL_RADIO1_POWER)
-         AddRadioInterfaces(ap, radioIndex, "radio1", cols[AP_COL_RADIO1_CHANNEL], cols[AP_COL_RADIO1_POWER], macAddr, ssids);
-      if (cols.size() > AP_COL_RADIO2_POWER)
-         AddRadioInterfaces(ap, radioIndex, "radio2", cols[AP_COL_RADIO2_CHANNEL], cols[AP_COL_RADIO2_POWER], macAddr, ssids);
+      if (columnCount > AP_COL_RADIO0_POWER)
+         AddRadioInterfaces(ap, &radioIndex, "radio0", columns[AP_COL_RADIO0_CHANNEL], columns[AP_COL_RADIO0_POWER], macAddr, ssids);
+      if (columnCount > AP_COL_RADIO1_POWER)
+         AddRadioInterfaces(ap, &radioIndex, "radio1", columns[AP_COL_RADIO1_CHANNEL], columns[AP_COL_RADIO1_POWER], macAddr, ssids);
+      if (columnCount > AP_COL_RADIO2_POWER)
+         AddRadioInterfaces(ap, &radioIndex, "radio2", columns[AP_COL_RADIO2_CHANNEL], columns[AP_COL_RADIO2_POWER], macAddr, ssids);
 
-      apList.push_back(ap);
+      apList->add(ap);
       matches++;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Parsed %d access points from show aps"), matches);
-   return !apList.empty();
+   if (apList->isEmpty())
+   {
+      delete apList;
+      return nullptr;
+   }
+   return apList;
 }
 
-static bool ParseClients(const char *output, std::vector<WirelessStationInfo*>& wsList, const std::map<std::string, MacAddress>& apNameToMac, const std::map<std::string, std::string>& clientMacToApName, const std::map<std::string, std::array<int, 3>>& apRadioChannels)
+static ObjectArray<WirelessStationInfo> *ParseClients(const char *output, const StructArray<ApMacMapping> *apNameToMac, const StructArray<ClientApMapping> *clientMacToApName, const StructArray<ApRadioMapping> *apRadioChannels)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
-   static const std::regex clientRegex(
-      R"(^\s*(.*?)\s{2,}(\S+)\s{2,}([0-9A-Fa-f:]{17})\s{2,}(\S+(?:\s+\S+)?)\s{2,}(\S+)\s{2,}(\S+)\s{2,}(\S+)\s{2,}(\S+)\s{2,}(\S+)\s{2,}(\S+)\s{2,}([0-9]+)\([^)]*\)\s{2,}(\S+)\([^)]*\)\s*$)");
+   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(32, 32, Ownership::True);
+   enum { CLIENT_COL_IP = 1, CLIENT_COL_MAC = 2, CLIENT_COL_SSID = 4, CLIENT_COL_AP_NAME = 5, CLIENT_COL_CHANNEL = 6, CLIENT_COL_SIGNAL = 10 };
 
    int matches = 0;
-   for (const auto& line : lines)
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.find("Number of Clients") != std::string::npos)
+      p = ReadLine(p, line, sizeof(line));
+      if (strstr(line, "Number of Clients") != nullptr)
          break;
-
-      std::smatch m;
-      if (!std::regex_match(line, m, clientRegex))
+      if (line[0] == 0 || !strncmp(line, "---", 3))
          continue;
 
-      std::string ipText = m[2].str();
-      std::string macText = m[3].str();
-      std::string ssidText = m[5].str();
-      std::string apName = m[6].str();
-      std::string channelText = m[7].str();
-      std::string signalText = m[11].str();
+      char *columns[40];
+      int columnCount = SplitColumns(line, columns, 40);
+      if (columnCount <= CLIENT_COL_SIGNAL)
+         continue;
 
-      int channel = ParseLeadingInt(channelText);
+      MacAddress clientMac = MacAddress::parse(columns[CLIENT_COL_MAC]);
+      if (!clientMac.isValid())
+         continue;
 
-      auto ws = new WirelessStationInfo;
+      int channel = ParseLeadingInt(columns[CLIENT_COL_CHANNEL]);
+
+      WirelessStationInfo *ws = new WirelessStationInfo;
       memset(ws, 0, sizeof(WirelessStationInfo));
+      memcpy(ws->macAddr, clientMac.value(), MAC_ADDR_LENGTH);
+      ws->ipAddr = InetAddress::parse(columns[CLIENT_COL_IP]);
+      utf8_to_wchar(columns[CLIENT_COL_SSID], -1, ws->ssid, MAX_SSID_LENGTH);
 
-      memcpy(ws->macAddr, MacAddress::parse(macText.c_str()).value(), MAC_ADDR_LENGTH);
-      ws->ipAddr = InetAddress::parse(ipText.c_str());
-      utf8_to_wchar(ssidText.c_str(), -1, ws->ssid, MAX_SSID_LENGTH);
-
-      auto it = apNameToMac.find(apName);
-      if (it != apNameToMac.end())
+      const MacAddress *apMac = FindApMac(apNameToMac, columns[CLIENT_COL_AP_NAME]);
+      if (apMac == nullptr)
       {
-         memcpy(ws->bssid, it->second.value(), MAC_ADDR_LENGTH);
+         const char *apName = FindApNameByClientMac(clientMacToApName, clientMac);
+         if (apName != nullptr)
+            apMac = FindApMac(apNameToMac, apName);
       }
-      else
-      {
-         auto cm = clientMacToApName.find(macText);
-         if (cm != clientMacToApName.end())
-         {
-            auto it2 = apNameToMac.find(cm->second);
-            if (it2 != apNameToMac.end())
-               memcpy(ws->bssid, it2->second.value(), MAC_ADDR_LENGTH);
-         }
-      }
+      if (apMac != nullptr)
+         memcpy(ws->bssid, apMac->value(), MAC_ADDR_LENGTH);
 
-      ws->rssi = ParseLeadingInt(signalText);
+      ws->rssi = ParseLeadingInt(columns[CLIENT_COL_SIGNAL]);
       ws->rfIndex = 0;
-      auto rc = apRadioChannels.find(apName);
-      if (rc != apRadioChannels.end())
+      const ApRadioMapping *channels = FindApRadioChannels(apRadioChannels, columns[CLIENT_COL_AP_NAME]);
+      if ((channels != nullptr) && (channel != 0))
       {
-         const auto& c = rc->second;
-         if (channel != 0)
-         {
-            if (c[0] == channel)
-               ws->rfIndex = 1;
-            else if (c[1] == channel)
-               ws->rfIndex = 2;
-            else if (c[2] == channel)
-               ws->rfIndex = 3;
-         }
+         if (channels->channels[0] == channel)
+            ws->rfIndex = 1;
+         else if (channels->channels[1] == channel)
+            ws->rfIndex = 2;
+         else if (channels->channels[2] == channel)
+            ws->rfIndex = 3;
       }
       if (ws->rfIndex == 0)
          ws->rfIndex = channel;
 
       ws->apMatchPolicy = AP_MATCH_BY_BSSID;
-      wsList.push_back(ws);
+      wsList->add(ws);
       matches++;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Parsed %d wireless stations from show clients"), matches);
-   return !wsList.empty();
+   if (wsList->isEmpty())
+   {
+      delete wsList;
+      return nullptr;
+   }
+   return wsList;
 }
 
-static std::vector<std::string> BuildSsidsFromSummary(const char *output)
+static void BuildSsidsFromSummary(const char *output, StructArray<SsidEntry> *ssids)
 {
-   std::vector<std::string> lines;
-   SplitLines(output, lines);
-
    bool inNetworks = false;
    bool inTable = false;
-   std::vector<std::string> ssids;
-   std::set<std::string> seen;
-   for (const auto& line : lines)
+   char line[8192];
+   for(const char *p = output; p != nullptr; )
    {
-      if (line.find("Networks") != std::string::npos)
+      p = ReadLine(p, line, sizeof(line));
+      if (strstr(line, "Networks") != nullptr)
       {
          inNetworks = true;
          continue;
@@ -827,40 +957,50 @@ static std::vector<std::string> BuildSsidsFromSummary(const char *output)
       if (!inNetworks)
          continue;
 
-      if (line.empty())
+      if (line[0] == 0)
          break;
-      if (line.find("Access Points") != std::string::npos)
+      if (strstr(line, "Access Points") != nullptr)
          break;
-      if (line.find("Profile Name") != std::string::npos)
+      if (strstr(line, "Profile Name") != nullptr)
       {
          inTable = true;
          continue;
       }
       if (!inTable)
          continue;
-      if (!line.compare(0, 12, "------------"))
+      if (!strncmp(line, "------------", 12))
          continue;
 
-      std::vector<std::string> cols;
-      SplitColumns(line, cols);
-      if (cols.size() < 5)
+      char *columns[12];
+      int columnCount = SplitColumns(line, columns, 12);
+      if (columnCount < 5)
          continue;
-      if (!IsNumber(cols[2]))
+      if (!IsNumber(columns[2]))
          continue;
-      if (cols[3] != "Enabled" && cols[3] != "Disabled")
+      if (strcmp(columns[3], "Enabled") && strcmp(columns[3], "Disabled"))
          continue;
 
-      std::string essid = Trim(cols[1]);
-      if (!essid.empty() && (seen.insert(essid).second))
-         ssids.push_back(essid);
+      TrimA(columns[1]);
+      bool exists = false;
+      for(int i = 0; i < ssids->size(); i++)
+      {
+         if (!strcmp(ssids->get(i)->ssid, columns[1]))
+         {
+            exists = true;
+            break;
+         }
+      }
+      if (!exists && (columns[1][0] != 0))
+      {
+         SsidEntry *entry = ssids->addPlaceholder();
+         strlcpy(entry->ssid, columns[1], MAX_SSID_LENGTH);
+      }
    }
 
-   if (ssids.empty())
+   if (ssids->isEmpty())
       nxlog_debug_tag(DEBUG_TAG, 7, _T("No SSIDs found in show summary Networks section"));
    else
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("SSIDs from summary: %d"), static_cast<int>(ssids.size()));
-
-   return ssids;
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("SSIDs from summary: %d"), ssids->size());
 }
 
 /**
@@ -868,27 +1008,19 @@ static std::vector<std::string> BuildSsidsFromSummary(const char *output)
  */
 static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
 {
-   std::map<std::string, MacAddress> apNameToMac;
-   BuildApNameToMac(wirelessDomain, apNameToMac);
+   StructArray<ApMacMapping> apNameToMac(0, 32);
+   BuildApNameToMac(wirelessDomain, &apNameToMac);
 
-   std::vector<std::string> ssids;
+   StructArray<SsidEntry> ssids(0, 16);
    std::string summary;
    if (GetCachedCommandOutput(wirelessDomain, CMD_SHOW_SUMMARY, summary))
-      ssids = BuildSsidsFromSummary(summary.c_str());
+      BuildSsidsFromSummary(summary.c_str(), &ssids);
 
    std::string output;
    if (!GetCachedCommandOutput(wirelessDomain, CMD_SHOW_APS, output))
       return nullptr;
 
-   std::vector<AccessPointInfo*> aps;
-   if (!ParseAps(output.c_str(), aps, apNameToMac.empty() ? nullptr : &apNameToMac, ssids.empty() ? nullptr : &ssids))
-      return nullptr;
-
-   auto apList = new ObjectArray<AccessPointInfo>(static_cast<int>(aps.size()), 16, Ownership::True);
-   for (auto ap : aps)
-      apList->add(ap);
-
-   return apList;
+   return ParseAps(output.c_str(), apNameToMac.isEmpty() ? nullptr : &apNameToMac, ssids.isEmpty() ? nullptr : &ssids);
 }
 
 /**
@@ -896,26 +1028,18 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
  */
 static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDomain)
 {
-   std::map<std::string, MacAddress> apNameToMac;
-   BuildApNameToMac(wirelessDomain, apNameToMac);
-   std::map<std::string, std::string> clientMacToApName;
-   BuildClientMacToApName(wirelessDomain, clientMacToApName);
-   std::map<std::string, std::array<int, 3>> apRadioChannels;
-   BuildApRadioChannels(wirelessDomain, apRadioChannels);
+   StructArray<ApMacMapping> apNameToMac(0, 32);
+   BuildApNameToMac(wirelessDomain, &apNameToMac);
+   StructArray<ClientApMapping> clientMacToApName(0, 64);
+   BuildClientMacToApName(wirelessDomain, &clientMacToApName);
+   StructArray<ApRadioMapping> apRadioChannels(0, 32);
+   BuildApRadioChannels(wirelessDomain, &apRadioChannels);
 
    std::string output;
    if (!GetCachedCommandOutput(wirelessDomain, CMD_SHOW_CLIENTS, output))
       return nullptr;
 
-   std::vector<WirelessStationInfo*> stations;
-   if (!ParseClients(output.c_str(), stations, apNameToMac, clientMacToApName, apRadioChannels))
-      return nullptr;
-
-   auto wsList = new ObjectArray<WirelessStationInfo>(static_cast<int>(stations.size()), 16, Ownership::True);
-   for (auto ws : stations)
-      wsList->add(ws);
-
-   return wsList;
+   return ParseClients(output.c_str(), &apNameToMac, &clientMacToApName, &apRadioChannels);
 }
 
 /**
@@ -923,29 +1047,28 @@ static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDo
  */
 static AccessPointState GetAccessPointState(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
-   std::map<std::string, MacAddress> apNameToMac;
-   BuildApNameToMac(wirelessDomain, apNameToMac);
+   StructArray<ApMacMapping> apNameToMac(0, 32);
+   BuildApNameToMac(wirelessDomain, &apNameToMac);
 
    std::string output;
    if (!GetCachedCommandOutput(wirelessDomain, CMD_SHOW_APS, output))
       return AP_UNKNOWN;
 
-   std::vector<AccessPointInfo*> aps;
-   if (!ParseAps(output.c_str(), aps, apNameToMac.empty() ? nullptr : &apNameToMac, nullptr))
+   ObjectArray<AccessPointInfo> *aps = ParseAps(output.c_str(), apNameToMac.isEmpty() ? nullptr : &apNameToMac, nullptr);
+   if (aps == nullptr)
       return AP_UNKNOWN;
 
    AccessPointState state = AP_UNKNOWN;
-   for (auto ap : aps)
+   for(int i = 0; i < aps->size(); i++)
    {
+      AccessPointInfo *ap = aps->get(i);
       if (ap->getMacAddr().equals(macAddr))
       {
          state = ap->getState();
          break;
       }
    }
-
-   for (auto ap : aps)
-      delete ap;
+   delete aps;
 
    return state;
 }
@@ -963,29 +1086,29 @@ static DataCollectionError GetAccessPointMetric(NObject *wirelessDomain, uint32_
  */
 static ObjectArray<WirelessStationInfo> *GetAccessPointWirelessStations(NObject *wirelessDomain, uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const TCHAR *serial)
 {
-   std::map<std::string, MacAddress> apNameToMac;
-   BuildApNameToMac(wirelessDomain, apNameToMac);
-   std::map<std::string, std::string> clientMacToApName;
-   BuildClientMacToApName(wirelessDomain, clientMacToApName);
-   std::map<std::string, std::array<int, 3>> apRadioChannels;
-   BuildApRadioChannels(wirelessDomain, apRadioChannels);
+   StructArray<ApMacMapping> apNameToMac(0, 32);
+   BuildApNameToMac(wirelessDomain, &apNameToMac);
+   StructArray<ClientApMapping> clientMacToApName(0, 64);
+   BuildClientMacToApName(wirelessDomain, &clientMacToApName);
+   StructArray<ApRadioMapping> apRadioChannels(0, 32);
+   BuildApRadioChannels(wirelessDomain, &apRadioChannels);
 
    std::string output;
    if (!GetCachedCommandOutput(wirelessDomain, CMD_SHOW_CLIENTS, output))
       return nullptr;
 
-   std::vector<WirelessStationInfo*> stations;
-   if (!ParseClients(output.c_str(), stations, apNameToMac, clientMacToApName, apRadioChannels))
+   ObjectArray<WirelessStationInfo> *stations = ParseClients(output.c_str(), &apNameToMac, &clientMacToApName, &apRadioChannels);
+   if (stations == nullptr)
       return nullptr;
 
-   auto wsList = new ObjectArray<WirelessStationInfo>(0, 128, Ownership::True);
-   for (auto ws : stations)
+   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(stations->size(), 16, Ownership::True);
+   for(int i = 0; i < stations->size(); i++)
    {
+      WirelessStationInfo *ws = stations->get(i);
       if (!memcmp(ws->bssid, macAddr.value(), MAC_ADDR_LENGTH))
-         wsList->add(ws);
-      else
-         delete ws;
+         wsList->add(MemCopyBlock(ws, sizeof(WirelessStationInfo)));
    }
+   delete stations;
 
    return wsList;
 }
