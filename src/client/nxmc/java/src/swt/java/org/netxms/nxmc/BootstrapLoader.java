@@ -103,14 +103,14 @@ public class BootstrapLoader
          }
          else if (os.equals("linux"))
          {
-            if (arch.equals("amd64"))
+            if (arch.equals("amd64") || arch.equals("x86_64"))
                swtVariant = "gtk.linux.x86_64";
             else if (arch.equals("aarch64"))
                swtVariant = "gtk.linux.aarch64";
          }
          else if (os.contains("mac"))
          {
-            if (arch.equals("amd64"))
+            if (arch.equals("amd64") || arch.equals("x86_64"))
                swtVariant = "cocoa.macosx.x86_64";
             else if (arch.equals("aarch64"))
                swtVariant = "cocoa.macosx.aarch64";
