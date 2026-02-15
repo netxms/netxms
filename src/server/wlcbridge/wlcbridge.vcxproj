@@ -325,6 +325,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aruba.cpp" />
     <ClCompile Include="curl.cpp" />
     <ClCompile Include="hfcl.cpp" />
     <ClCompile Include="ruckus.cpp" />

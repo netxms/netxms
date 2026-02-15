@@ -30,20 +30,6 @@
 #define MAX_COOKIE_SIZE       1024
 
 /**
- * Get custom attribute from domain object as UTF-8 sting
- */
-static std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name)
-{
-   TCHAR buffer[1024];
-   if (wirelessDomain->getCustomAttribute(name, buffer, 1024) == nullptr)
-      return std::string();
-
-   char utf8buffer[1024];
-   wchar_to_utf8(buffer, -1, utf8buffer, 1024);
-   return std::string(utf8buffer);
-}
-
-/**
  * Callback for processing headers received from cURL
  */
 static size_t OnCurlHeaderReceived(char *ptr, size_t size, size_t nmemb, void *context)

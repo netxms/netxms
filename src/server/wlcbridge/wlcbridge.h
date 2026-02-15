@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include <nms_core.h>
 #include <nxmodule.h>
 #include <nxlibcurl.h>
+#include <string>
 
 #define WLCBRIDGE_DEBUG_TAG   _T("wlcbridge")
 
@@ -93,5 +94,19 @@ static inline DataCollectionError GetValueFromJson(json_t *document, const TCHAR
  * Create CURL handle with default configuration
  */
 CURL *CreateCurlHandle(ByteStream *responseData, char *errorBuffer);
+
+/**
+ * Read custom attribute from wireless domain and return UTF-8 string
+ */
+static inline std::string GetDomainAttribute(NObject *wirelessDomain, const TCHAR *name)
+{
+   TCHAR buffer[1024];
+   if (wirelessDomain->getCustomAttribute(name, buffer, 1024) == nullptr)
+      return std::string();
+
+   char utf8buffer[1024];
+   wchar_to_utf8(buffer, -1, utf8buffer, 1024);
+   return std::string(utf8buffer);
+}
 
 #endif   /* _wlcbridge_h_ */
