@@ -120,6 +120,52 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, NObject *
 }
 
 /**
+ * Get SSH driver hints for Dell PowerConnect devices
+ */
+void PowerConnectDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // Dell PowerConnect SSH drops directly into privileged mode (hostname#)
+   // No user mode or enable command needed
+   hints->promptPattern = "^[\\w.-]+#\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+#\\s*$";
+
+   // No enable command needed - already in privileged mode
+   hints->enableCommand = nullptr;
+   hints->enablePromptPattern = nullptr;
+
+   // No pagination disable command on this platform
+   hints->paginationDisableCmd = nullptr;
+   hints->paginationPrompt = "More:.*Quit:";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
+
+/**
+ * Check if config backup is supported
+ */
+bool PowerConnectDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration via interactive SSH
+ */
+bool PowerConnectDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show running-config", output);
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(PowerConnectDriver);

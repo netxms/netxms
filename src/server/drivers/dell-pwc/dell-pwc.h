@@ -41,6 +41,9 @@ public:
    virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
 };
 
 #endif
