@@ -699,11 +699,31 @@ public:
 
    json_t *getCustomAttributesAsJson(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
 
-   void setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable);
-   void setCustomAttribute(const TCHAR *key, int32_t value);
-   void setCustomAttribute(const TCHAR *key, uint32_t value);
-   void setCustomAttribute(const TCHAR *key, int64_t value);
-   void setCustomAttribute(const TCHAR *key, uint64_t value);
+   void setCustomAttribute(const wchar_t *name, SharedString value, StateChange inheritable);
+   void setCustomAttribute(const wchar_t *key, const wchar_t *value)
+   {
+      setCustomAttribute(key, SharedString(value), StateChange::IGNORE);
+   }
+   void setCustomAttribute(const wchar_t *key, int32_t value)
+   {
+      wchar_t buffer[32];
+      setCustomAttribute(key, IntegerToString(value, buffer), StateChange::IGNORE);
+   }
+   void setCustomAttribute(const wchar_t *key, uint32_t value)
+   {
+      wchar_t buffer[32];
+      setCustomAttribute(key, IntegerToString(value, buffer), StateChange::IGNORE);
+   }
+   void setCustomAttribute(const wchar_t *key, int64_t value)
+   {
+      wchar_t buffer[32];
+      setCustomAttribute(key, IntegerToString(value, buffer), StateChange::IGNORE);
+   }
+   void setCustomAttribute(const wchar_t *key, uint64_t value)
+   {
+      wchar_t buffer[32];
+      setCustomAttribute(key, IntegerToString(value, buffer), StateChange::IGNORE);
+   }
 
    void setCustomAttributesFromMessage(const NXCPMessage& msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);

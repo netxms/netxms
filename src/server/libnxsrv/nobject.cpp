@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -387,7 +387,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 /**
  * Set custom attribute
  */
-void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent, bool conflict)
+void NObject::setCustomAttribute(const wchar_t *name, SharedString value, uint32_t parent, bool conflict)
 {
    lockCustomAttributes();
 
@@ -440,47 +440,6 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
 
    if (propagateChanges)
       propagateCustomAttributeChange(name, value, source);
-}
-
-/**
- * Set custom attribute value from INT32
- */
-void NObject::setCustomAttribute(const TCHAR *key, int32_t value)
-{
-   TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%d"), (int)value);
-   setCustomAttribute(key, buffer, StateChange::IGNORE);
-}
-
-/**
- * Set custom attribute value from UINT32
- */
-void NObject::setCustomAttribute(const TCHAR *key, uint32_t value)
-{
-   TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
-   setCustomAttribute(key, buffer, StateChange::IGNORE);
-
-}
-
-/**
- * Set custom attribute value from INT64
- */
-void NObject::setCustomAttribute(const TCHAR *key, int64_t value)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, INT64_FMT, value);
-   setCustomAttribute(key, buffer, StateChange::IGNORE);
-}
-
-/**
- * Set custom attribute value from UINT64
- */
-void NObject::setCustomAttribute(const TCHAR *key, uint64_t value)
-{
-   TCHAR buffer[64];
-   _sntprintf(buffer, 64, UINT64_FMT, value);
-   setCustomAttribute(key, buffer, StateChange::IGNORE);
 }
 
 /**
