@@ -44,6 +44,7 @@ Threshold::Threshold(DCItem *relatedItem)
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
    m_disabled = false;
+   m_regenerateOnValueChange = false;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -75,6 +76,7 @@ Threshold::Threshold()
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
    m_disabled = false;
+   m_regenerateOnValueChange = false;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -107,6 +109,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
    m_isReached = shadowCopy ? src.m_isReached : false;
    m_wasReachedBeforeMaint = shadowCopy ? src.m_wasReachedBeforeMaint : false;
    m_disabled = src.m_disabled;
+   m_regenerateOnValueChange = src.m_regenerateOnValueChange;
 	m_currentSeverity = shadowCopy ? src.m_currentSeverity : SEVERITY_NORMAL;
 	m_repeatInterval = src.m_repeatInterval;
 	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
@@ -123,7 +126,7 @@ Threshold::Threshold(const Threshold& src, bool shadowCopy) : m_value(src.m_valu
  *        sample_count,script,event_code,current_state,rearm_event_code,
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
  *        state_before_maint,last_checked_value,last_event_message,is_disabled,
- *        deactivation_sample_count,clear_match_count FROM thresholds
+ *        deactivation_sample_count,clear_match_count,regenerate_on_value_change FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(hResult, row, 1, Timestamp::fromMilliseconds(0), true)
 {
@@ -151,6 +154,7 @@ Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem) : m_value(
    m_disabled = DBGetFieldLong(hResult, row, 17) ? true : false;
    m_deactivationSampleCount = DBGetFieldLong(hResult, row, 18);
    m_numClearMatches = DBGetFieldLong(hResult, row, 19);
+   m_regenerateOnValueChange = DBGetFieldLong(hResult, row, 20) ? true : false;
 
    m_lastScriptErrorReport = 0;
    m_itemId = relatedItem->getId();
@@ -198,6 +202,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
    m_disabled = false;
+   m_regenerateOnValueChange = config->getSubEntryValueAsBoolean(_T("regenerateOnValueChange"), 0, false);
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
@@ -249,6 +254,7 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
    m_disabled = false;
+   m_regenerateOnValueChange = json_object_get_boolean(json, "regenerateOnValueChange", false);
    m_currentSeverity = SEVERITY_NORMAL;
    m_repeatInterval = json_object_get_int32(json, "repeatInterval", -1);
    m_lastEventTimestamp = 0;
@@ -285,7 +291,7 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
       _T("item_id"), _T("fire_value"), _T("rearm_value"), _T("check_function"), _T("check_operation"), _T("sample_count"),
       _T("script"), _T("event_code"), _T("sequence_number"), _T("current_state"), _T("state_before_maint"), _T("rearm_event_code"),
       _T("repeat_interval"), _T("current_severity"), _T("last_event_timestamp"), _T("match_count"), _T("last_checked_value"),
-      _T("last_event_message"), _T("is_disabled"), _T("deactivation_sample_count"), _T("clear_match_count"), nullptr
+      _T("last_event_message"), _T("is_disabled"), _T("deactivation_sample_count"), _T("clear_match_count"), _T("regenerate_on_value_change"), nullptr
    };
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("thresholds"), _T("threshold_id"), m_id, columns);
 	if (hStmt == nullptr)
@@ -312,7 +318,8 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
    DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, (m_disabled ? _T("1") : _T("0")), DB_BIND_STATIC);
    DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_deactivationSampleCount);
    DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_numClearMatches);
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, (m_regenerateOnValueChange ? _T("1") : _T("0")), DB_BIND_STATIC);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
 	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -665,6 +672,11 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             ThresholdCheckResult::ACTIVATED :
                   ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
                         (m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE));
+   if (result == ThresholdCheckResult::ALREADY_ACTIVE && m_regenerateOnValueChange)
+   {
+      if (_tcscmp(fvalue.getString(), m_lastCheckValue.getString()) != 0)
+         result = ThresholdCheckResult::VALUE_CHANGED;
+   }
    m_isReached = match;
    if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
@@ -757,6 +769,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
    msg->setField(fieldId++, m_disabled);
    msg->setField(fieldId++, static_cast<uint32_t>(m_deactivationSampleCount));
+   msg->setField(fieldId++, m_regenerateOnValueChange);
 }
 
 /**
@@ -783,6 +796,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) cons
    msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
    msg->setField(fieldId++, m_disabled);
    msg->setField(fieldId++, static_cast<uint32_t>(m_deactivationSampleCount));
+   msg->setField(fieldId++, m_regenerateOnValueChange);
 }
 
 /**
@@ -806,6 +820,7 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
    m_deactivationSampleCount = msg.getFieldAsInt32(fieldId++);
    if (m_deactivationSampleCount < 1)
       m_deactivationSampleCount = 1;
+   m_regenerateOnValueChange = msg.getFieldAsBoolean(fieldId++);
 }
 
 /**
@@ -1072,6 +1087,7 @@ bool Threshold::equals(const Threshold& t) const
           (t.m_sampleCount == m_sampleCount) &&
           (t.m_deactivationSampleCount == m_deactivationSampleCount) &&
           (t.m_repeatInterval == m_repeatInterval) &&
+          (t.m_regenerateOnValueChange == m_regenerateOnValueChange) &&
           !_tcscmp(CHECK_NULL_EX(t.m_scriptSource), CHECK_NULL_EX(m_scriptSource));
 }
 
@@ -1111,6 +1127,7 @@ json_t *Threshold::createExportRecord() const
    json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
+   json_object_set_new(root, "regenerateOnValueChange", json_boolean(m_regenerateOnValueChange));
 
    return root;
 }
@@ -1140,6 +1157,7 @@ json_t *Threshold::toJson() const
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "lastEventTimestamp", json_integer(m_lastEventTimestamp));
    json_object_set_new(root, "lastEventMessage", json_string_t(m_lastEventMessage));
+   json_object_set_new(root, "regenerateOnValueChange", json_boolean(m_regenerateOnValueChange));
    return root;
 }
 

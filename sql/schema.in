@@ -970,6 +970,7 @@ CREATE TABLE thresholds
   is_disabled char(1) not null,
   deactivation_sample_count integer not null,
   clear_match_count integer not null,
+  regenerate_on_value_change char(1) not null,
   PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 

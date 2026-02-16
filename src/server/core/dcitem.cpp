@@ -504,7 +504,7 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
               _T("rearm_event_code,repeat_interval,current_severity,")
 				  _T("last_event_timestamp,match_count,state_before_maint,")
 				  _T("last_checked_value,last_event_message,is_disabled,")
-				  _T("deactivation_sample_count,clear_match_count FROM thresholds WHERE item_id=? ")
+				  _T("deactivation_sample_count,clear_match_count,regenerate_on_value_change FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{
@@ -683,6 +683,7 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
       t->setLastCheckedValue(checkValue);
       switch(result)
       {
+         case ThresholdCheckResult::VALUE_CHANGED:
          case ThresholdCheckResult::ACTIVATED:
             {
                shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());

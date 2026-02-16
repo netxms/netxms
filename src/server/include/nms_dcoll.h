@@ -72,7 +72,8 @@ enum class ThresholdCheckResult
    ACTIVATED = 0,
    DEACTIVATED = 1,
    ALREADY_ACTIVE = 2,
-   ALREADY_INACTIVE = 3
+   ALREADY_INACTIVE = 3,
+   VALUE_CHANGED = 4
 };
 
 /**
@@ -165,6 +166,7 @@ private:
    bool m_isReached;
    bool m_wasReachedBeforeMaint;
    bool m_disabled;
+   bool m_regenerateOnValueChange;
 	int m_numMatches;			// Number of consecutive matches
 	int m_numClearMatches;		// Number of consecutive non-matches (for deactivation counting)
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -201,6 +203,7 @@ public:
    bool isReached() const { return m_isReached; }
    bool wasReachedBeforeMaintenance() const { return m_wasReachedBeforeMaint; }
    bool isDisabled() const { return m_disabled; }
+   bool isRegenerateOnValueChange() const { return m_regenerateOnValueChange; }
    const ItemValue& getLastCheckValue() const { return m_lastCheckValue; }
 	int getRepeatInterval() const { return m_repeatInterval; }
 	time_t getLastEventTimestamp() const { return m_lastEventTimestamp; }

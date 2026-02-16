@@ -63,6 +63,7 @@ public class Threshold
 	private String value;
 	private boolean active;
    private boolean disabled;
+   private boolean regenerateOnValueChange;
 	private Severity currentSeverity;
 	private Date lastEventTimestamp;
    private String lastEventMessage;
@@ -92,6 +93,7 @@ public class Threshold
       deactivationSampleCount = msg.getFieldAsInt32(fieldId++);
       if (deactivationSampleCount < 1)
          deactivationSampleCount = 1;
+      regenerateOnValueChange = msg.getFieldAsBoolean(fieldId++);
 	}
 
 	/**
@@ -111,6 +113,7 @@ public class Threshold
 		value = "0";
 		active = false;
       disabled = false;
+      regenerateOnValueChange = false;
 		currentSeverity = Severity.NORMAL;
 		lastEventTimestamp = new Date(0);
       lastEventMessage = null;
@@ -135,6 +138,7 @@ public class Threshold
 		value = src.value;
 		active = src.active;
       disabled = src.disabled;
+      regenerateOnValueChange = src.regenerateOnValueChange;
 		currentSeverity = src.currentSeverity;
 		lastEventTimestamp = src.lastEventTimestamp;
       lastEventMessage = src.lastEventMessage;
@@ -161,6 +165,7 @@ public class Threshold
 		msg.setField(fieldId++, value);
       msg.setField(fieldId++, disabled);
       msg.setFieldInt32(fieldId++, deactivationSampleCount);
+      msg.setField(fieldId++, regenerateOnValueChange);
 	}
 
 	/**
@@ -406,5 +411,25 @@ public class Threshold
       Threshold tr = new Threshold(this);
       tr.id = 0;
       return tr;
+   }
+
+   /**
+    * Check if threshold should regenerate event on value change while active.
+    *
+    * @return true if event should be regenerated on value change
+    */
+   public boolean isRegenerateOnValueChange()
+   {
+      return regenerateOnValueChange;
+   }
+
+   /**
+    * Set regenerate event on value change flag.
+    *
+    * @param regenerateOnValueChange true to regenerate event on value change while active
+    */
+   public void setRegenerateOnValueChange(boolean regenerateOnValueChange)
+   {
+      this.regenerateOnValueChange = regenerateOnValueChange;
    }
 }

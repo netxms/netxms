@@ -70,6 +70,7 @@ public class EditThresholdDialog extends Dialog
 	private Button repeatNever;
 	private Button repeatCustom;
    private Button checkDisabled;
+   private Button checkRegenerateOnValueChange;
 	private int selectedFunction;
 	private String savedScript = null;
 	private int savedOperation = -1;
@@ -246,6 +247,10 @@ public class EditThresholdDialog extends Dialog
       checkDisabled = new Button(dialogArea, SWT.CHECK);
       checkDisabled.setText(i18n.tr("This threshold is &disabled"));
       checkDisabled.setSelection(threshold.isDisabled());
+
+      checkRegenerateOnValueChange = new Button(dialogArea, SWT.CHECK);
+      checkRegenerateOnValueChange.setText(i18n.tr("Re&generate event if value changes while active"));
+      checkRegenerateOnValueChange.setSelection(threshold.isRegenerateOnValueChange());
 
       dialogArea.layout(true, true); // Fix for NX-2493
 
@@ -432,6 +437,7 @@ public class EditThresholdDialog extends Dialog
 		threshold.setFireEvent((int)activationEvent.getEventCode());
 		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
       threshold.setDisabled(checkDisabled.getSelection());
+      threshold.setRegenerateOnValueChange(checkRegenerateOnValueChange.getSelection());
 
 		super.okPressed();
 	}

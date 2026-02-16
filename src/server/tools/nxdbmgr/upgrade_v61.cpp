@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.2 to 61.3
+ */
+static bool H_UpgradeFromV2()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE thresholds ADD regenerate_on_value_change char(1)\n"
+      L"UPDATE thresholds SET regenerate_on_value_change='0'\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"thresholds", L"regenerate_on_value_change"));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 61.1 to 61.2
  */
 static bool H_UpgradeFromV1()
@@ -83,6 +98,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  61,  3,  H_UpgradeFromV2 },
    { 1,  61,  2,  H_UpgradeFromV1 },
    { 0,  61,  1,  H_UpgradeFromV0 },
    { 0,  0,  0,  nullptr }

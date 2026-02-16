@@ -495,7 +495,7 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
    msg.setField(VID_DCI_ID, dciId);
    msg.setField(VID_THRESHOLD_ID, thresholdId);
    msg.setField(VID_INSTANCE, instance);
-   msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
+   msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED || change == ThresholdCheckResult::VALUE_CHANGED);
 
    s_sessionListLock.readLock();
    auto it = s_sessions.begin();
