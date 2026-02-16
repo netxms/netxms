@@ -1664,6 +1664,8 @@ typedef struct
 #define VID_RUNNING_CONFIG_HASH     ((uint32_t)938)
 #define VID_STARTUP_CONFIG_HASH     ((uint32_t)939)
 #define VID_STARTUP_CONFIG          ((uint32_t)940)
+#define VID_LAST_BACKUP_JOB_TIME    ((uint32_t)941)
+#define VID_LAST_BACKUP_JOB_MESSAGE ((uint32_t)942)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

@@ -226,6 +226,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_modbusUnitId = 255;
    m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
+   m_lastConfigBackupJobTime = 0;
 }
 
 /**
@@ -364,6 +365,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_topologyDepth = -1;
    m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
+   m_lastConfigBackupJobTime = 0;
 }
 
 /**
@@ -1113,7 +1115,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
                break;
          }
 
-         TCHAR oidText[256];
+         wchar_t oidText[256];
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
@@ -3973,7 +3975,7 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
    if (result.rootCauseFound)
       return result;
 
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): will do second pass"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Node::checkNetworkPath(%s [%u]): will do second pass", m_name, m_id);
 
    result = checkNetworkPathLayer2(requestId, true);
    if (result.rootCauseFound)
@@ -4014,7 +4016,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 
          if (!found)
          {
-            sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
+            sendPollerMsg(L"      Removing policy %s from agent\r\n", guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
             nx_swprintf(data->debugId, 256, L"%s [%u] from %s/%s", getName(), getId(), L"unknown", guid.toString().cstr());
 
@@ -4901,21 +4903,32 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          DeviceBackupApiStatus status = DevBackupValidateDeviceRegistration(this);
          if (status == DeviceBackupApiStatus::SUCCESS)
          {
-            std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> jobStatus = DevBackupGetLastJobStatus(*this);
-            m_lastConfigBackupJobStatus = (jobStatus.first == DeviceBackupApiStatus::SUCCESS) ? jobStatus.second : DeviceBackupJobStatus::UNKNOWN;
+            lockProperties();
+            if (!(m_capabilities & NC_REGISTERED_FOR_BACKUP))
+            {
+               m_capabilities |= NC_REGISTERED_FOR_BACKUP;
+               modified |= MODIFY_NODE_PROPERTIES;
+            }
+            unlockProperties();
+            updateConfigBackupStatus();
          }
          else
          {
             sendPollerMsg(POLLER_ERROR _T("Cannot validate registration for device configuration backup (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
+            lockProperties();
             if (status == DeviceBackupApiStatus::DEVICE_NOT_REGISTERED)
+            {
                m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+               modified |= MODIFY_NODE_PROPERTIES;
+            }
+            unlockProperties();
          }
       }
       else
       {
          bool pass;
-         ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::RegisterForConfigurationBackup"), self());
+         ScriptVMHandle vm = CreateServerScriptVM(L"Hook::RegisterForConfigurationBackup", self());
          if (vm.isValid())
          {
             vm->setUserData(this);
@@ -4943,21 +4956,40 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
             DeviceBackupApiStatus status = DevBackupRegisterDevice(this);
             if (status == DeviceBackupApiStatus::SUCCESS)
             {
-               m_capabilities |= NC_REGISTERED_FOR_BACKUP;
+               lockProperties();
+               if (!(m_capabilities & NC_REGISTERED_FOR_BACKUP))
+               {
+                  m_capabilities |= NC_REGISTERED_FOR_BACKUP;
+                  modified |= MODIFY_NODE_PROPERTIES;
+               }
+               unlockProperties();
                sendPollerMsg(POLLER_INFO _T("Successfully registered for device configuration backup\r\n"));
+               updateConfigBackupStatus();
             }
             else
             {
-               m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
-               sendPollerMsg(_T("Registration for device configuration backup failed (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
+               lockProperties();
+               if (m_capabilities & NC_REGISTERED_FOR_BACKUP)
+               {
+                  m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+                  modified |= MODIFY_NODE_PROPERTIES;
+               }
+               unlockProperties();
+               sendPollerMsg(L"Registration for device configuration backup failed (%s)\r\n", GetDeviceBackupApiErrorMessage(status));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)", m_name, m_id, GetDeviceBackupApiErrorMessage(status));
             }
          }
          else
          {
-            m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
-            sendPollerMsg(_T("Registration for device configuration backup blocked by hook script\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup blocked by hook script"), m_name, m_id);
+            lockProperties();
+            if (m_capabilities & NC_REGISTERED_FOR_BACKUP)
+            {
+               m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+               modified |= MODIFY_NODE_PROPERTIES;
+            }
+            unlockProperties();
+            sendPollerMsg(L"Registration for device configuration backup blocked by hook script\r\n");
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfigurationPoll(%s [%u]): registration for device configuration backup blocked by hook script", m_name, m_id);
          }
       }
    }
@@ -4973,18 +5005,18 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    POLL_CANCELLATION_CHECKPOINT();
 
    // Execute hook script
-   poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"));
+   poller->setStatus(L"hook");
+   executeHookScript(L"ConfigurationPoll");
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   poller->setStatus(_T("autobind"));
+   poller->setStatus(L"autobind");
    applyTemplates();
    updateContainerMembership();
    updateClusterMembership();
 
-   sendPollerMsg(_T("Finished configuration poll of node %s\r\n"), m_name);
-   sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
+   sendPollerMsg(L"Finished configuration poll of node %s\r\n", m_name);
+   sendPollerMsg(L"Node configuration was%schanged after poll\r\n", (modified != 0) ? L" " : L" not ");
 
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
@@ -9150,6 +9182,8 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_MODBUS_UNIT_ID, m_modbusUnitId);
 
    msg->setField(VID_LAST_BACKUP_JOB_STATUS, static_cast<int16_t>(m_lastConfigBackupJobStatus));
+   msg->setFieldFromTime(VID_LAST_BACKUP_JOB_TIME, m_lastConfigBackupJobTime);
+   msg->setField(VID_LAST_BACKUP_JOB_MESSAGE, m_lastConfigBackupJobMessage);
 
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
@@ -14143,6 +14177,39 @@ ModbusTransport *Node::createModbusTransport()
 #else
    return nullptr;
 #endif
+}
+
+/**
+ * Update cached config backup status from backup provider
+ */
+void Node::updateConfigBackupStatus()
+{
+   auto result = DevBackupGetLastJobStatus(*this);
+   if (result.first != DeviceBackupApiStatus::SUCCESS)
+      return;
+
+   const DeviceBackupJobInfo& info = result.second;
+
+   lockProperties();
+   bool changed = false;
+   if (m_lastConfigBackupJobStatus != info.status)
+   {
+      m_lastConfigBackupJobStatus = info.status;
+      changed = true;
+   }
+   if (m_lastConfigBackupJobTime != info.timestamp)
+   {
+      m_lastConfigBackupJobTime = info.timestamp;
+      changed = true;
+   }
+   if (_tcscmp(m_lastConfigBackupJobMessage.cstr(), info.message))
+   {
+      m_lastConfigBackupJobMessage = info.message;
+      changed = true;
+   }
+   if (changed)
+      setModified(MODIFY_RUNTIME);
+   unlockProperties();
 }
 
 /**

@@ -1780,6 +1780,15 @@ bool LoadObjects()
          return _CONTINUE;
       });
 
+   // Update device configuration backup state
+   g_idxNodeById.forEach(
+      [] (NetObj *object) -> EnumerationCallbackResult
+      {
+         if (static_cast<Node*>(object)->isRegisteredForBackup())
+            static_cast<Node*>(object)->updateConfigBackupStatus();
+         return _CONTINUE;
+      });
+
    return true;
 }
 

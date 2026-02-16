@@ -230,6 +230,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected RadioInterface[] radios;
    protected NetworkPathCheckResult networkPathCheckResult;
    protected DeviceBackupJobStatus lastConfigBackupJobStatus;
+   protected Date lastConfigBackupJobTime;
+   protected String lastConfigBackupJobMessage;
    protected Date decommissionTime;
 
 	/**
@@ -348,6 +350,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       vpnConnectorCount = msg.getFieldAsInt32(NXCPCodes.VID_VPN_CONNECTOR_COUNT);
       networkPathCheckResult = new NetworkPathCheckResult(msg);
       lastConfigBackupJobStatus = DeviceBackupJobStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_BACKUP_JOB_STATUS));
+      long lastBackupTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_LAST_BACKUP_JOB_TIME);
+      lastConfigBackupJobTime = (lastBackupTimeSeconds > 0) ? new Date(lastBackupTimeSeconds * 1000) : null;
+      lastConfigBackupJobMessage = msg.getFieldAsString(NXCPCodes.VID_LAST_BACKUP_JOB_MESSAGE);
 
       long decommissionTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_DECOMMISSION_TIME);
       decommissionTime = (decommissionTimeSeconds > 0) ? new Date(decommissionTimeSeconds * 1000) : null;
@@ -1579,5 +1584,21 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public DeviceBackupJobStatus getLastConfigBackupJobStatus()
    {
       return lastConfigBackupJobStatus;
+   }
+
+   /**
+    * @return the lastConfigBackupJobTime
+    */
+   public Date getLastConfigBackupJobTime()
+   {
+      return lastConfigBackupJobTime;
+   }
+
+   /**
+    * @return the lastConfigBackupJobMessage
+    */
+   public String getLastConfigBackupJobMessage()
+   {
+      return lastConfigBackupJobMessage;
    }
 }

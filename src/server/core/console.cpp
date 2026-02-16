@@ -479,7 +479,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
                if (jobResult.first == DeviceBackupApiStatus::SUCCESS)
                {
                   const wchar_t *statusText;
-                  switch(jobResult.second)
+                  switch(jobResult.second.status)
                   {
                      case DeviceBackupJobStatus::SUCCESSFUL:
                         statusText = L"SUCCESSFUL";

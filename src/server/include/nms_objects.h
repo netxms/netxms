@@ -3838,6 +3838,8 @@ protected:
    uint16_t m_modbusUnitId;
    time_t m_decommissionTime;
    DeviceBackupJobStatus m_lastConfigBackupJobStatus;
+   time_t m_lastConfigBackupJobTime;
+   SharedString m_lastConfigBackupJobMessage;
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -4050,6 +4052,7 @@ public:
    bool isWirelessController() const { return is_bit_set(m_capabilities, NC_IS_WIFI_CONTROLLER); }
    bool isWirelessAccessPoint() const { return is_bit_set(m_capabilities, NC_IS_WIFI_AP); }
    bool isNewPolicyTypeFormatSupported() const { return is_bit_set(m_capabilities, NC_IS_NEW_POLICY_TYPES); }
+   bool isRegisteredForBackup() const { return is_bit_set(m_capabilities, NC_REGISTERED_FOR_BACKUP); }
 
    bool isIcmpStatCollectionEnabled() const
    {
@@ -4114,6 +4117,9 @@ public:
    StructArray<OSPFNeighbor> getOSPFNeighbors() const { return GetAttributeWithLock(m_ospfNeighbors, m_mutexProperties); }
    NetworkPathCheckResult getNetworkPathCheckResult() const { return GetAttributeWithLock(m_pathCheckResult, m_mutexProperties); }
    DeviceBackupJobStatus getLastConfigBackupJobStatus() const { return m_lastConfigBackupJobStatus; }
+   time_t getLastConfigBackupJobTime() const { return m_lastConfigBackupJobTime; }
+   SharedString getLastConfigBackupJobMessage() const { return GetAttributeWithLock(m_lastConfigBackupJobMessage, m_mutexProperties); }
+   void updateConfigBackupStatus();
 
    bool isDown() { return is_bit_set(m_state, DCSF_UNREACHABLE); }
    time_t getDownSince() const { return m_downSince; }

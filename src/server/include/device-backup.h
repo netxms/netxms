@@ -147,6 +147,23 @@ struct NXCORE_EXPORTABLE BackupData
 };
 
 /**
+ * Last backup job info
+ */
+struct DeviceBackupJobInfo
+{
+   DeviceBackupJobStatus status;
+   time_t timestamp;
+   TCHAR message[256];
+
+   DeviceBackupJobInfo()
+   {
+      status = DeviceBackupJobStatus::UNKNOWN;
+      timestamp = 0;
+      message[0] = 0;
+   }
+};
+
+/**
  * Module interface for network device backup system
  */
 struct DeviceBackupInterface
@@ -157,7 +174,7 @@ struct DeviceBackupInterface
    bool (*IsDeviceRegistered)(const Node& node);
    DeviceBackupApiStatus (*ValidateDeviceRegistration)(Node *node);
    DeviceBackupApiStatus (*StartJob)(const Node& node);
-   std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> (*GetLastJobStatus)(const Node& node);
+   std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> (*GetLastJobStatus)(const Node& node);
    std::pair<DeviceBackupApiStatus, BackupData> (*GetLatestBackup)(const Node& node);
    std::pair<DeviceBackupApiStatus, std::vector<BackupData>> (*GetBackupList)(const Node& node);
    std::pair<DeviceBackupApiStatus, BackupData> (*GetBackupById)(int64_t id);
@@ -220,7 +237,7 @@ DeviceBackupApiStatus DevBackupStartJob(const Node& node);
 /**
  * Get status of last backup job
  */
-std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> DevBackupGetLastJobStatus(const Node& node);
+std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> DevBackupGetLastJobStatus(const Node& node);
 
 /**
  * Get latest device backup

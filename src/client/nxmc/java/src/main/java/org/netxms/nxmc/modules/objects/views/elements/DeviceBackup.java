@@ -23,6 +23,7 @@ import org.netxms.client.constants.DeviceBackupJobStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.xnap.commons.i18n.I18n;
@@ -67,6 +68,11 @@ public class DeviceBackup extends TableElement
 		AbstractNode node = (AbstractNode)getObject();
       addPair(i18n.tr("Registered"), node.isRegisteredForConfigBackup() ? i18n.tr("Yes") : i18n.tr("No"));
       addPair(i18n.tr("Last job status"), jobStatusToText(node.getLastConfigBackupJobStatus()));
+      if (node.getLastConfigBackupJobTime() != null)
+         addPair(i18n.tr("Last job time"), DateFormatFactory.getDateTimeFormat().format(node.getLastConfigBackupJobTime()));
+      String message = node.getLastConfigBackupJobMessage();
+      if (message != null && !message.isEmpty())
+         addPair(i18n.tr("Failure reason"), message);
 	}
 
    /**

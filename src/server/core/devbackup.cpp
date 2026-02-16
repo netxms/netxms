@@ -90,9 +90,9 @@ DeviceBackupApiStatus DevBackupStartJob(const Node& node)
 /**
  * Get status of last backup job
  */
-std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus> DevBackupGetLastJobStatus(const Node& node)
+std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> DevBackupGetLastJobStatus(const Node& node)
 {
-   return (s_provider != nullptr) ? s_provider->GetLastJobStatus(node) : std::pair<DeviceBackupApiStatus, DeviceBackupJobStatus>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, DeviceBackupJobStatus::UNKNOWN);
+   return (s_provider != nullptr) ? s_provider->GetLastJobStatus(node) : std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, DeviceBackupJobInfo());
 }
 
 /**
