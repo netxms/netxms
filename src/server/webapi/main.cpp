@@ -69,6 +69,7 @@ int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
+int H_ObjectToolExecute(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
 int H_ScriptLibrary(Context *context);
@@ -229,6 +230,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/object-tools/:tool-id")
       .GET(H_ObjectToolDetails)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id/execute")
+      .POST(H_ObjectToolExecute)
       .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)
