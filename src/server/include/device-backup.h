@@ -177,7 +177,7 @@ struct DeviceBackupInterface
    std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> (*GetLastJobStatus)(const Node& node);
    std::pair<DeviceBackupApiStatus, BackupData> (*GetLatestBackup)(const Node& node);
    std::pair<DeviceBackupApiStatus, std::vector<BackupData>> (*GetBackupList)(const Node& node);
-   std::pair<DeviceBackupApiStatus, BackupData> (*GetBackupById)(int64_t id);
+   std::pair<DeviceBackupApiStatus, BackupData> (*GetBackupById)(const Node& node, int64_t id);
 };
 
 /**
@@ -252,6 +252,6 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList
 /**
  * Get device backup by ID (with full config content)
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(int64_t id);
+std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(const Node& node, int64_t id);
 
 #endif   /* _device_backup_h_ */

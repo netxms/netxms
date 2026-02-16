@@ -114,9 +114,9 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList
 /**
  * Get device backup by ID (with full config content)
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(int64_t id)
+std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(const Node& node, int64_t id)
 {
-   return (s_provider != nullptr) ? s_provider->GetBackupById(id) : std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, BackupData());
+   return (s_provider != nullptr) ? s_provider->GetBackupById(node, id) : std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, BackupData());
 }
 
 /**

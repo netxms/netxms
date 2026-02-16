@@ -19501,13 +19501,13 @@ void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
-   if (object != nullptr)
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
+   if (node != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
          int64_t backupId = request.getFieldAsInt64(VID_BACKUP_ID);
-         auto result = DevBackupGetBackupById(backupId);
+         auto result = DevBackupGetBackupById(*node, backupId);
          if (result.first == DeviceBackupApiStatus::SUCCESS)
          {
             response.setField(VID_RCC, RCC_SUCCESS);
