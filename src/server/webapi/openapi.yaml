@@ -2020,6 +2020,93 @@ paths:
           description: Database failure.
       security:
         - BearerAuth: []
+  /v1/object-tools/{tool-id}/execute:
+    post:
+      summary: Execute an object tool
+      description: |
+        Execute a server-capable object tool on the specified object.
+        Supported tool types: action (agent action), server-command, server-script,
+        snmp-table, agent-table, agent-list, ssh-command.
+        Client-only tool types (internal, url, command, file-download) are rejected with 400.
+      tags:
+        - Object Tools
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - objectId
+              properties:
+                objectId:
+                  type: integer
+                  description: ID of the target object to execute the tool on
+                alarmId:
+                  type: integer
+                  description: Optional alarm ID for macro expansion context
+                  default: 0
+                inputFields:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Optional input field values for macro expansion
+      responses:
+        '200':
+          description: Tool executed successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ObjectToolTextResult'
+                  - $ref: '#/components/schemas/ObjectToolTableResult'
+                  - $ref: '#/components/schemas/ObjectToolNoResult'
+                discriminator:
+                  propertyName: type
+                  mapping:
+                    text: '#/components/schemas/ObjectToolTextResult'
+                    table: '#/components/schemas/ObjectToolTableResult'
+                    none: '#/components/schemas/ObjectToolNoResult'
+        '400':
+          description: |
+            Invalid request. Possible reasons:
+            - Invalid or missing tool-id
+            - Missing or invalid objectId
+            - Tool type is client-only (internal, url, command, file-download)
+            - Incompatible object class for the tool type
+            - Object is not a node (for tools requiring a node target)
+        '403':
+          description: |
+            Access denied. Possible reasons:
+            - User does not have access to the tool (tool ACL)
+            - User does not have OBJECT_ACCESS_CONTROL on the target object
+            - User does not have access to the specified alarm
+        '404':
+          description: |
+            Not found. Possible reasons:
+            - Object tool with the given ID does not exist
+            - Target object with the given objectId does not exist
+            - Script not found in library (for server-script tools)
+        '500':
+          description: |
+            Execution failed. Possible reasons:
+            - Database failure loading tool metadata
+            - Cannot connect to agent
+            - Command execution failed
+            - Script execution failed
+            - Table tool execution failed
+            - SSH proxy not available
+        '504':
+          description: Server command execution timed out.
+      security:
+        - BearerAuth: []
   /v1/dci-summary-tables:
     get:
       summary: List DCI summary tables
@@ -2187,6 +2274,7 @@ components:
         - file-download
         - server-script
         - agent-table
+        - ssh-command
       description: Type of object tool
     ObjectToolInputField:
       type: object
@@ -2275,6 +2363,89 @@ components:
             remotePort:
               type: integer
               description: Remote port for TCP tunnel
+    ObjectToolTextResult:
+      type: object
+      required:
+        - type
+        - output
+      properties:
+        type:
+          type: string
+          enum: [text]
+        output:
+          type: string
+          description: Text output from tool execution (agent action output, server command output, or script output with result)
+    ObjectToolTableResult:
+      type: object
+      required:
+        - type
+        - table
+      properties:
+        type:
+          type: string
+          enum: [table]
+        table:
+          type: object
+          description: Table result from SNMP table, agent table, or agent list tool execution
+          properties:
+            extendedFormat:
+              type: boolean
+            source:
+              type: integer
+            title:
+              type: string
+              description: Table title
+            columns:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Column name
+                  dataType:
+                    type: integer
+                    description: Column data type code
+                  displayName:
+                    type: string
+                    description: Column display name
+                  instanceColumn:
+                    type: boolean
+                  unitName:
+                    type: string
+                  multiplier:
+                    type: integer
+                  useMultiplier:
+                    type: integer
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  objectId:
+                    type: integer
+                  baseRow:
+                    type: integer
+                  values:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        status:
+                          type: integer
+                          description: Cell status code
+                        value:
+                          type: string
+                          description: Cell value
+    ObjectToolNoResult:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [none]
+          description: Indicates tool executed successfully but produced no output
     ObjectClass:
       type: string
       enum:

@@ -36,6 +36,7 @@
 #define TOOL_TYPE_FILE_DOWNLOAD     7
 #define TOOL_TYPE_SERVER_SCRIPT     8
 #define TOOL_TYPE_AGENT_TABLE       9
+#define TOOL_TYPE_SSH_COMMAND      10
 
 /**
  * Object tool flags

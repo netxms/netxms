@@ -609,6 +609,355 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
    return rcc;
 }
 
+/**
+ * Execute SNMP table tool and collect result into Table object
+ */
+static uint32_t ExecuteSNMPTableTool(uint32_t toolId, uint32_t flags, TCHAR *toolData, const shared_ptr<Node>& node, Table *table)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int numColumns = DBGetNumRows(hResult);
+      if (numColumns > 0)
+      {
+         TCHAR buffer[256];
+         SNMP_ENUM_ARGS args;
+         args.dwNumCols = numColumns;
+         args.ppszOidList = MemAllocArrayNoInit<TCHAR*>(numColumns);
+         args.pnFormatList = MemAllocArrayNoInit<int32_t>(numColumns);
+         args.dwFlags = flags;
+         args.pNode = node;
+         args.table = table;
+         for(int i = 0; i < numColumns; i++)
+         {
+            DBGetField(hResult, i, 0, buffer, 256);
+            args.ppszOidList[i] = DBGetField(hResult, i, 1, nullptr, 0);
+            args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
+            table->addColumn(buffer, args.pnFormatList[i]);
+         }
+
+         if (node->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
+         {
+            table->setTitle(toolData);
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_SNMP_ERROR;
+         }
+
+         for(int i = 0; i < numColumns; i++)
+            MemFree(args.ppszOidList[i]);
+         MemFree(args.ppszOidList);
+         MemFree(args.pnFormatList);
+      }
+      else
+      {
+         rcc = RCC_INTERNAL_ERROR;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Execute agent table tool and return result as Table
+ */
+static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& node, Table **result)
+{
+   TCHAR *tableName = _tcschr(toolData, _T('\x7F'));
+   if (tableName == nullptr)
+      return RCC_INVALID_ARGUMENT;
+
+   *tableName = 0;
+   tableName++;
+
+   shared_ptr<AgentConnectionEx> pConn = node->createAgentConnection();
+   if (pConn == nullptr)
+      return RCC_COMM_FAILURE;
+
+   Table *agentTable;
+   uint32_t err = pConn->getTable(tableName, &agentTable);
+   if (err != ERR_SUCCESS)
+      return AgentErrorToRCC(err);
+
+   for(int i = 0; i < agentTable->getNumColumns(); i++)
+   {
+      switch(agentTable->getColumnDefinition(i)->getDataType())
+      {
+         case DCI_DT_INT:
+         case DCI_DT_UINT:
+         case DCI_DT_INT64:
+         case DCI_DT_UINT64:
+         case DCI_DT_COUNTER32:
+         case DCI_DT_COUNTER64:
+            agentTable->setColumnDataType(i, CFMT_INTEGER);
+            break;
+         case DCI_DT_FLOAT:
+            agentTable->setColumnDataType(i, CFMT_FLOAT);
+            break;
+         default:
+            agentTable->setColumnDataType(i, CFMT_STRING);
+            break;
+      }
+   }
+   agentTable->setTitle(toolData);
+   *result = agentTable;
+   return RCC_SUCCESS;
+}
+
+/**
+ * Execute agent list tool and collect result into Table object
+ */
+static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const shared_ptr<Node>& node, Table *table)
+{
+   TCHAR *listName = _tcschr(toolData, _T('\x7F'));
+   TCHAR *regex = nullptr;
+   if (listName != nullptr)
+   {
+      *listName = 0;
+      listName++;
+      regex = _tcschr(listName, _T('\x7F'));
+      if (regex != nullptr)
+      {
+         *regex = 0;
+         regex++;
+      }
+   }
+
+   table->setTitle(toolData);
+
+   if ((listName == nullptr) || (regex == nullptr))
+      return RCC_INVALID_ARGUMENT;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int numCols = DBGetNumRows(hResult);
+      if (numCols > 0)
+      {
+         TCHAR buffer[1024];
+         int *pnSubstrPos = MemAllocArray<int>(numCols);
+         for(int i = 0; i < numCols; i++)
+         {
+            DBGetField(hResult, i, 0, buffer, 256);
+            table->addColumn(buffer, DBGetFieldULong(hResult, i, 1));
+            pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
+         }
+
+         const char *eptr;
+         int eoffset;
+         PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         if (preg != nullptr)
+         {
+            shared_ptr<AgentConnectionEx> pConn = node->createAgentConnection();
+            if (pConn != nullptr)
+            {
+               StringList *values;
+               uint32_t agentRcc = pConn->getList(listName, &values);
+               if (agentRcc == ERR_SUCCESS)
+               {
+                  Buffer<int, 64> offsets((numCols + 1) * 3);
+                  for(int i = 0; i < values->size(); i++)
+                  {
+                     const TCHAR *line = values->get(i);
+                     if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, offsets, (numCols + 1) * 3) >= 0)
+                     {
+                        table->addRow();
+                        for(int j = 0; j < numCols; j++)
+                        {
+                           int pos = pnSubstrPos[j];
+                           if (offsets[pos * 2] != -1)
+                           {
+                              size_t len = std::min(static_cast<size_t>(offsets[pos * 2 + 1] - offsets[pos * 2]), sizeof(buffer) / sizeof(TCHAR) - 1);
+                              memcpy(buffer, &line[offsets[pos * 2]], len * sizeof(TCHAR));
+                              buffer[len] = 0;
+                           }
+                           else
+                           {
+                              buffer[0] = 0;
+                           }
+                           table->set(j, buffer);
+                        }
+                     }
+                  }
+                  delete values;
+                  rcc = RCC_SUCCESS;
+               }
+               else
+               {
+                  rcc = AgentErrorToRCC(agentRcc);
+               }
+            }
+            else
+            {
+               rcc = RCC_COMM_FAILURE;
+            }
+            _pcre_free_t(preg);
+         }
+         else
+         {
+            rcc = RCC_BAD_REGEXP;
+         }
+         MemFree(pnSubstrPos);
+      }
+      else
+      {
+         rcc = RCC_INTERNAL_ERROR;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Execute table tool and return result as JSON (synchronous, for WebAPI)
+ */
+uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_ptr<Node>& node, json_t **result)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=?"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         int32_t toolType = DBGetFieldLong(hResult, 0, 0);
+         if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+         {
+            TCHAR *toolData = DBGetField(hResult, 0, 1, nullptr, 0);
+            uint32_t flags = DBGetFieldULong(hResult, 0, 2);
+
+            DBFreeResult(hResult);
+            DBFreeStatement(hStmt);
+            DBConnectionPoolReleaseConnection(hdb);
+
+            if (toolType == TOOL_TYPE_AGENT_TABLE)
+            {
+               Table *agentTable = nullptr;
+               rcc = ExecuteAgentTableTool(toolData, node, &agentTable);
+               if (rcc == RCC_SUCCESS)
+               {
+                  *result = agentTable->toJson();
+                  delete agentTable;
+               }
+            }
+            else
+            {
+               Table table;
+               if (toolType == TOOL_TYPE_SNMP_TABLE)
+                  rcc = ExecuteSNMPTableTool(toolId, flags, toolData, node, &table);
+               else
+                  rcc = ExecuteAgentListTool(toolId, toolData, node, &table);
+               if (rcc == RCC_SUCCESS)
+                  *result = table.toJson();
+            }
+
+            MemFree(toolData);
+            return rcc;
+         }
+         else
+         {
+            rcc = RCC_INCOMPATIBLE_OPERATION;
+         }
+      }
+      else
+      {
+         rcc = RCC_INVALID_TOOL_ID;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Load object tool type and metadata from database
+ */
+uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCHAR **toolData, uint32_t *flags)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=?"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   uint32_t rcc;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         *toolType = DBGetFieldLong(hResult, 0, 0);
+         *toolData = DBGetField(hResult, 0, 1, nullptr, 0);
+         *flags = DBGetFieldULong(hResult, 0, 2);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_INVALID_TOOL_ID;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
 
 /**
  * Delete object tool from database
@@ -1310,7 +1659,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
 static json_t *CreateObjectToolColumnExportRecords(DB_HANDLE hdb, uint32_t id)
 {
    json_t *columns = json_array();
-   
+
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_number,col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=?"));
    if (hStmt == nullptr)
       return columns;
@@ -1324,15 +1673,15 @@ static json_t *CreateObjectToolColumnExportRecords(DB_HANDLE hdb, uint32_t id)
       {
          json_t *column = json_object();
          json_object_set_new(column, "id", json_integer(DBGetFieldLong(hResult, i, 0) + 1));
-         
+
          TCHAR *name = DBGetField(hResult, i, 1, nullptr, 0);
          json_object_set_new(column, "name", json_string_t(name));
          MemFree(name);
-         
+
          TCHAR *oid = DBGetField(hResult, i, 2, nullptr, 0);
          json_object_set_new(column, "oid", json_string_t(oid));
          MemFree(oid);
-         
+
          json_object_set_new(column, "format", json_integer(DBGetFieldLong(hResult, i, 3)));
          json_object_set_new(column, "captureGroup", json_integer(DBGetFieldLong(hResult, i, 4)));
          json_array_append_new(columns, column);
@@ -1350,7 +1699,7 @@ static json_t *CreateObjectToolColumnExportRecords(DB_HANDLE hdb, uint32_t id)
 static json_t *CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, uint32_t id)
 {
    json_t *inputFields = json_array();
-   
+
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
       return inputFields;
@@ -1363,17 +1712,17 @@ static json_t *CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, uint32_t i
       for(int i = 0; i < count; i++)
       {
          json_t *inputField = json_object();
-         
+
          TCHAR *name = DBGetField(hResult, i, 0, nullptr, 0);
          json_object_set_new(inputField, "name", json_string_t(name));
          MemFree(name);
-         
+
          json_object_set_new(inputField, "type", json_integer(DBGetFieldLong(hResult, i, 1)));
-         
+
          TCHAR *displayName = DBGetField(hResult, i, 2, nullptr, 0);
          json_object_set_new(inputField, "displayName", json_string_t(displayName));
          MemFree(displayName);
-         
+
          json_object_set_new(inputField, "flags", json_integer(DBGetFieldLong(hResult, i, 3)));
          json_array_append_new(inputFields, inputField);
       }
@@ -1390,7 +1739,7 @@ static json_t *CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, uint32_t i
 json_t *CreateObjectToolExportRecord(uint32_t id)
 {
    json_t *tool = nullptr;
-   
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,guid,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
@@ -1408,50 +1757,50 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
       {
          tool = json_object();
          json_object_set_new(tool, "id", json_integer(id));
-         
+
          // Get string fields and ensure proper memory cleanup
          TCHAR *name = DBGetField(hResult, 0, 0, nullptr, 0);
          json_object_set_new(tool, "name", json_string_t(name));
          MemFree(name);
-         
+
          TCHAR *guid = DBGetField(hResult, 0, 1, nullptr, 0);
          json_object_set_new(tool, "guid", json_string_t(guid));
          MemFree(guid);
-         
+
          json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, 0, 2)));
-         
+
          TCHAR *data = DBGetField(hResult, 0, 3, nullptr, 0);
          json_object_set_new(tool, "data", json_string_t(data));
          MemFree(data);
-         
+
          TCHAR *description = DBGetField(hResult, 0, 4, nullptr, 0);
          json_object_set_new(tool, "description", json_string_t(description));
          MemFree(description);
-         
+
          json_object_set_new(tool, "flags", json_integer(DBGetFieldLong(hResult, 0, 5)));
-         
+
          TCHAR *filter = DBGetField(hResult, 0, 6, nullptr, 0);
          json_object_set_new(tool, "filter", json_string_t(filter));
          MemFree(filter);
-         
+
          TCHAR *confirmation = DBGetField(hResult, 0, 7, nullptr, 0);
          json_object_set_new(tool, "confirmation", json_string_t(confirmation));
          MemFree(confirmation);
-         
+
          TCHAR *commandName = DBGetField(hResult, 0, 8, nullptr, 0);
          json_object_set_new(tool, "commandName", json_string_t(commandName));
          MemFree(commandName);
-         
+
          TCHAR *commandShortName = DBGetField(hResult, 0, 9, nullptr, 0);
          json_object_set_new(tool, "commandShortName", json_string_t(commandShortName));
          MemFree(commandShortName);
-         
+
          TCHAR *image = DBGetField(hResult, 0, 10, nullptr, 0);
          json_object_set_new(tool, "image", json_string_t(image));
          MemFree(image);
-         
+
          json_object_set_new(tool, "remotePort", json_integer(DBGetFieldLong(hResult, 0, 11)));
-         
+
          json_object_set_new(tool, "columns", CreateObjectToolColumnExportRecords(hdb, id));
          json_object_set_new(tool, "inputFields", CreateObjectToolInputFieldExportRecords(hdb, id));
       }
@@ -1460,7 +1809,7 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
 
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
-   
+
    return tool;
 }
 
@@ -1661,6 +2010,8 @@ static const char *ToolTypeToString(int type)
          return "snmp-table";
       case TOOL_TYPE_URL:
          return "url";
+      case TOOL_TYPE_SSH_COMMAND:
+         return "ssh-command";
       default:
          return "unknown";
    }
@@ -1691,6 +2042,8 @@ static const int ToolTypeFromString(const char *type)
       return TOOL_TYPE_SNMP_TABLE;
    if (!strcmp(type, "url"))
       return TOOL_TYPE_URL;
+   if (!strcmp(type, "ssh-command"))
+      return TOOL_TYPE_SSH_COMMAND;
    return -1;
 }
 

@@ -352,3 +352,8 @@ venv/
 *.ncd
 *.ndd
 .depend
+
+# ralphex progress logs
+.ralphex/progress/
+
+ **/.claude/settings.local.json
