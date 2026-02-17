@@ -983,6 +983,12 @@ public:
    bool filter(const shared_ptr<DataCollectionTarget>& node);
    Table *createEmptyResultTable() const;
 
+   uint32_t getId() const { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
+   const TCHAR *getTitle() const { return m_title; }
+   uint32_t getFlags() const { return m_flags; }
+   const TCHAR *getMenuPath() const { return m_menuPath; }
+   const TCHAR *getFilterSource() const { return m_filterSource; }
    int getNumColumns() const { return m_columns.size(); }
    SummaryTableColumn *getColumn(int index) const { return m_columns.get(index); }
    AggregationFunction getAggregationFunction() const { return m_aggregationFunction; }

@@ -83,6 +83,10 @@ int H_QuerySummaryTable(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_SummaryTables(Context *context);
+int H_SummaryTableDetails(Context *context);
+int H_SummaryTableCreate(Context *context);
+int H_SummaryTableUpdate(Context *context);
+int H_SummaryTableDelete(Context *context);
 int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
 int H_TcpProxyCreate(Context *context);
@@ -137,6 +141,12 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/dci-summary-tables")
       .GET(H_SummaryTables)
+      .POST(H_SummaryTableCreate)
+      .build();
+   RouteBuilder("v1/dci-summary-tables/:table-id")
+      .GET(H_SummaryTableDetails)
+      .PUT(H_SummaryTableUpdate)
+      .DELETE(H_SummaryTableDelete)
       .build();
    RouteBuilder("v1/dci-summary-tables/:table-id/query")
       .POST(H_QuerySummaryTable)

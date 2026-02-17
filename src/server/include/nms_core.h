@@ -1525,12 +1525,14 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
 uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCHAR **toolData, uint32_t *flags);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
+uint32_t ModifySummaryTable(uint32_t id, const TCHAR *menuPath, const TCHAR *title, const TCHAR *nodeFilter, uint32_t flags, const TCHAR *columns, const TCHAR *tableDciName, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, json_t *array);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context);
 json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
+json_t NXCORE_EXPORTABLE *GetSummaryTableDetails(uint32_t id, uint32_t *rcc);
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
 void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg);
