@@ -354,7 +354,7 @@ NXSL_Value::NXSL_Value(const char *value)
    m_dataType = NXSL_DT_STRING;
 	if ((value != nullptr) && (value[0] != 0))
 	{
-	   if (utf8_wcharlen(value, -1) < NXSL_SHORT_STRING_LENGTH)
+	   if (utf8_wcharlen(value, -1) <= NXSL_SHORT_STRING_LENGTH)
 	   {
 	      size_t l = utf8_to_wchar(value, -1, m_stringValue, NXSL_SHORT_STRING_LENGTH);
          m_length = static_cast<uint32_t>(l - 1);  // returned length includes 0 byte
