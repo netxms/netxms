@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,16 @@ public class ReportingPerspective extends Perspective
     */
    public ReportingPerspective()
    {
-      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getImage("icons/perspective-reporting.png"));
+      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getSVGImage("icons/perspectives/reporting.svg"));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(ReportingPerspective.class).tr("Business");
    }
 
    /**

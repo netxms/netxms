@@ -32,7 +32,16 @@ public class MapsPerspective extends ObjectsPerspective
 
    public MapsPerspective()
    {
-      super("objects.maps", i18n.tr("Maps"), ResourceManager.getImage("icons/perspective-maps.png"), SubtreeType.MAPS, null);
+      super("objects.maps", i18n.tr("Maps"), ResourceManager.getSVGImage("icons/perspectives/maps.svg"), SubtreeType.MAPS, null);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(MapsPerspective.class).tr("Monitoring");
    }
 
    /**

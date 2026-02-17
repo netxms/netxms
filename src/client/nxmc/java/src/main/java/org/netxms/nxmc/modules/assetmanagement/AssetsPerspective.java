@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,16 @@ public class AssetsPerspective extends ObjectsPerspective
 
    public AssetsPerspective()
    {
-      super("objects.assets", i18n.tr("Assets"), ResourceManager.getImage("icons/perspective-assets.png"), SubtreeType.ASSETS, null);
+      super("objects.assets", i18n.tr("Assets"), ResourceManager.getSVGImage("icons/perspectives/assets.svg"), SubtreeType.ASSETS, null);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(AssetsPerspective.class).tr("Objects");
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,16 @@ public class DashboardsPerspective extends ObjectsPerspective
 
    public DashboardsPerspective()
    {
-      super("objects.dashboards", i18n.tr("Dashboards"), ResourceManager.getImage("icons/perspective-dashboards.png"), SubtreeType.DASHBOARDS, null);
+      super("objects.dashboards", i18n.tr("Dashboards"), ResourceManager.getSVGImage("icons/perspectives/dashboards.svg"), SubtreeType.DASHBOARDS, null);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(DashboardsPerspective.class).tr("Monitoring");
    }
 
    /**

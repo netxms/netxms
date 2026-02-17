@@ -107,5 +107,8 @@ public class DefaultDarkTheme extends Theme
       elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 13));
       elements.put("Window.Header.Highlight", new ThemeElement(new RGB(71, 113, 134), new RGB(192, 192, 192)));
       elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0, 54, 77), new RGB(240, 240, 240), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 14));
+      elements.put("Window.PerspectiveSwitcher.Selection", new ThemeElement(new RGB(0, 90, 130), new RGB(255, 255, 255)));
+      elements.put("Window.PerspectiveSwitcher.Hover", new ThemeElement(new RGB(0, 72, 104), null));
+      elements.put("Window.PerspectiveSwitcher.SectionHeader", new ThemeElement(null, new RGB(150, 180, 200), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 9));
    }
 }

@@ -43,7 +43,7 @@ public class ToolsPerspective extends Perspective
     */
    public ToolsPerspective()
    {
-      super("tools", LocalizationHelper.getI18n(ToolsPerspective.class).tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
+      super("tools", LocalizationHelper.getI18n(ToolsPerspective.class).tr("Tools"), ResourceManager.getSVGImage("icons/perspectives/tools.svg"));
 
       ServiceLoader<ToolDescriptor> loader = ServiceLoader.load(ToolDescriptor.class, getClass().getClassLoader());
       for(ToolDescriptor e : loader)
@@ -52,6 +52,15 @@ public class ToolsPerspective extends Perspective
          elements.add(e);
       }
       elements.sort((e1, e2) -> e1.getName().compareToIgnoreCase(e2.getName()));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(ToolsPerspective.class).tr("Administration");
    }
 
    /**

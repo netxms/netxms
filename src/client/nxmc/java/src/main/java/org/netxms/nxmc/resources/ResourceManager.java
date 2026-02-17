@@ -18,16 +18,23 @@
  */
 package org.netxms.nxmc.resources;
 
+import java.io.InputStream;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.svg.SVGImage;
+import org.netxms.ui.svg.SVGParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resource manager
  */
 public final class ResourceManager
 {
+   private static final Logger logger = LoggerFactory.getLogger(ResourceManager.class);
+
    /**
     * Prevent construction
     */
@@ -80,5 +87,28 @@ public final class ResourceManager
    {
       ImageDescriptor d = getImageDescriptor(path);
       return (d != null) ? d.getImageData(100) : null;
+   }
+
+   /**
+    * Get SVG image from resources.
+    * 
+    * @param path image path
+    * @return SVG image object
+    */
+   public static SVGImage getSVGImage(String path)
+   {
+      InputStream stream = ResourceManager.class.getResourceAsStream(path.startsWith("/") ? path : "/" + path);
+      if (stream == null)
+         return null;
+
+      try
+      {
+         return SVGImage.createFromStream(stream);
+      }
+      catch(SVGParseException e)
+      {
+         logger.warn("Cannot load SVG image from resource " + path, e);
+         return null;
+      }
    }
 }

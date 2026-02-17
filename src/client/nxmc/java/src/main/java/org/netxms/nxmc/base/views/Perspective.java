@@ -30,7 +30,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -47,6 +46,7 @@ import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.tools.ImageCache;
+import org.netxms.ui.svg.SVGImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public abstract class Perspective
 
    private String id;
    private String name;
-   private Image image;
+   private SVGImage image;
    private PerspectiveConfiguration configuration = new PerspectiveConfiguration();
    private Window window;
    private Composite content;
@@ -85,7 +85,7 @@ public abstract class Perspective
     * @param name perspective display name
     * @param image perspective image
     */
-   protected Perspective(String id, String name, Image image)
+   protected Perspective(String id, String name, SVGImage image)
    {
       this.id = id;
       this.name = name;
@@ -476,6 +476,17 @@ public abstract class Perspective
    }
 
    /**
+    * Get section name for perspective switcher grouping. Perspectives with the same section name are grouped together. Override in
+    * subclasses to provide section name.
+    *
+    * @return section name or null if perspective should not be placed in any section
+    */
+   public String getSectionName()
+   {
+      return null;
+   }
+
+   /**
     * Get this perspective's priority
     *
     * @return this perspective's priority
@@ -510,7 +521,7 @@ public abstract class Perspective
     * 
     * @return perspective image
     */
-   public Image getImage()
+   public SVGImage getImage()
    {
       return image;
    }

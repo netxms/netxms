@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,16 @@ public class BusinessServicesPerspective extends ObjectsPerspective
 
    public BusinessServicesPerspective()
    {
-      super("objects.business-services", i18n.tr("Business Services"), ResourceManager.getImage("icons/perspective-business-services.png"), SubtreeType.BUSINESS_SERVICES, null);
+      super("objects.business-services", i18n.tr("Business Services"), ResourceManager.getSVGImage("icons/perspectives/business-services.svg"), SubtreeType.BUSINESS_SERVICES, null);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(BusinessServicesPerspective.class).tr("Business");
    }
 
    /**

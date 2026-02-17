@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public class TemplatesPerspective extends ObjectsPerspective
     */
    public TemplatesPerspective()
    {
-      super("objects.templates", i18n.tr("Templates"), ResourceManager.getImage("icons/perspective-templates.png"), SubtreeType.TEMPLATES, 
+      super("objects.templates", i18n.tr("Templates"), ResourceManager.getSVGImage("icons/perspectives/templates.svg"), SubtreeType.TEMPLATES, 
             (o) -> {
                if ((o.getObjectClass() == AbstractObject.OBJECT_INTERFACE) || (o.getObjectClass() == AbstractObject.OBJECT_NETWORKSERVICE) ||
                      (o.getObjectClass() == AbstractObject.OBJECT_VPNCONNECTOR))
@@ -57,6 +57,15 @@ public class TemplatesPerspective extends ObjectsPerspective
                return (o.getObjectClass() == AbstractObject.OBJECT_TEMPLATE) || (o.getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
                      (o.getObjectClass() == AbstractObject.OBJECT_TEMPLATEROOT) || o.hasAccessibleParents(classFilterTemplate);
             });
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(TemplatesPerspective.class).tr("Objects");
    }
 
    /**

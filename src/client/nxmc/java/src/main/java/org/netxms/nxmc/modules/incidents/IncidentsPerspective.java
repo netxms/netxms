@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,16 @@ public class IncidentsPerspective extends Perspective
     */
    public IncidentsPerspective()
    {
-      super("incidents", LocalizationHelper.getI18n(IncidentsPerspective.class).tr("Incidents"), ResourceManager.getImage("icons/perspective-incidents.png"));
+      super("incidents", LocalizationHelper.getI18n(IncidentsPerspective.class).tr("Incidents"), ResourceManager.getSVGImage("icons/perspectives/incidents.svg"));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(IncidentsPerspective.class).tr("Monitoring");
    }
 
    /**

@@ -35,7 +35,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
-import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.views.ToolsPerspective;
@@ -395,12 +394,6 @@ public final class Registry
       perspectives.add(new ReportingPerspective());
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
-
-      perspectives.add(new PerspectiveSeparator(19));
-      perspectives.add(new PerspectiveSeparator(29));
-      perspectives.add(new PerspectiveSeparator(99));
-      perspectives.add(new PerspectiveSeparator(149));
-      perspectives.add(new PerspectiveSeparator(254));
 
       ServiceLoader<PerspectiveDescriptor> loader = ServiceLoader.load(PerspectiveDescriptor.class, Registry.class.getClassLoader());
       for(PerspectiveDescriptor p : loader)

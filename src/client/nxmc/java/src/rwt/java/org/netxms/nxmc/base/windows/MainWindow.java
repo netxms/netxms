@@ -87,6 +87,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewFolder;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.widgets.PerspectiveSwitcher;
 import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.base.widgets.Spacer;
@@ -121,7 +122,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private final I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
 
    private Composite windowContent;
-   private ToolBar mainMenu;
+   private PerspectiveSwitcher perspectiveSwitcher;
    private Composite headerArea;
    private MessageArea messageArea;
    private Composite mainArea;
@@ -134,7 +135,6 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ViewFolder leftPinArea;
    private ViewFolder rightPinArea;
    private ViewFolder bottomPinArea;
-   private boolean verticalLayout;
    private AiAssistantChatWidget aiChatWidget;
    private boolean showServerClock;
    private Composite serverClockArea;
@@ -153,7 +153,6 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       super((Shell)null);
       PreferenceStore ps = PreferenceStore.getInstance();
-      verticalLayout = ps.getAsBoolean("Appearance.VerticalLayout", true);
       showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);
       userMenuManager = new UserMenuManager();
       helpMenuManager = new HelpMenuManager();
@@ -407,8 +406,6 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       boolean withAiAssistant = session.isServerComponentRegistered("AI-ASSISTANT");
 
-      Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
-
       windowContent = new Composite(parent, SWT.NONE);
 
       GridLayout windowContentLayout = new GridLayout();
@@ -540,44 +537,27 @@ public class MainWindow extends Window implements MessageAreaHolder
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       layout.verticalSpacing = 0;
-      layout.numColumns = verticalLayout ? 2 : 1;
+      layout.horizontalSpacing = 0;
+      layout.numColumns = 2;
       mainAreaInner.setLayout(layout);
 
-      // Perspective switcher
-      Composite menuArea = new Composite(mainAreaInner, SWT.NONE);
-      layout = new GridLayout();
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      layout.numColumns = verticalLayout ? 1 : 2;
-      menuArea.setLayout(layout);
-      gd = new GridData();
-      if (verticalLayout)
+      // Filter and bind perspectives
+      UIElementFilter filter = Registry.getSingleton(UIElementFilter.class);
+      perspectives = Registry.getPerspectives().stream()
+            .filter((p) -> !(p instanceof PerspectiveSeparator) && p.isValidForSession(session) && filter.isVisible(ElementType.PERSPECTIVE, p.getId()))
+            .toList();
+      for(Perspective p : perspectives)
       {
-         gd.grabExcessVerticalSpace = true;
-         gd.verticalAlignment = SWT.FILL;
-         gd.verticalSpan = 2;
+         p.bindToWindow(this);
+         if (p.getId().equals("pinboard"))
+            pinboardPerspective = p;
       }
-      else
-      {
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalAlignment = SWT.FILL;
-      }
-      menuArea.setLayoutData(gd);
 
-      mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
-      mainMenu.setFont(perspectiveSwitcherFont);
-      gd = new GridData();
-      if (verticalLayout)
-      {
-         gd.grabExcessVerticalSpace = true;
-         gd.verticalAlignment = SWT.FILL;
-      }
-      else
-      {
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalAlignment = SWT.FILL;
-      }
-      mainMenu.setLayoutData(gd);
+      // Perspective switcher
+      perspectiveSwitcher = new PerspectiveSwitcher(mainAreaInner, SWT.NONE, perspectives, (p) -> switchToPerspective(p));
+      gd = new GridData(SWT.LEFT, SWT.FILL, false, true);
+      gd.verticalSpan = 2;
+      perspectiveSwitcher.setLayoutData(gd);
 
       messageArea = new MessageArea(mainAreaInner, SWT.NONE);
       gd = new GridData();
@@ -603,8 +583,6 @@ public class MainWindow extends Window implements MessageAreaHolder
             resizePerspectiveAreaContent();
          }
       });
-
-      setupPerspectiveSwitcher();
 
       final Display display = parent.getDisplay();
       display.addFilter(SWT.KeyDown, new Listener() {
@@ -711,67 +689,6 @@ public class MainWindow extends Window implements MessageAreaHolder
    }
 
    /**
-    * Setup perspective switcher
-    */
-   private void setupPerspectiveSwitcher()
-   {
-      boolean darkTheme = WidgetHelper.isSystemDarkTheme();
-      final List<Image> perspectiveIcons = darkTheme ? new ArrayList<>() : null;
-
-      UIElementFilter filter = Registry.getSingleton(UIElementFilter.class);
-
-      final NXCSession session = Registry.getSession();
-      perspectives = Registry.getPerspectives().stream().filter((p) -> p.isValidForSession(session) && filter.isVisible(ElementType.PERSPECTIVE, p.getId())).toList();
-      for(final Perspective p : perspectives)
-      {
-         if (p instanceof PerspectiveSeparator)
-         {
-            new ToolItem(mainMenu, SWT.SEPARATOR);
-            continue;
-         }
-
-         p.bindToWindow(this);
-         ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
-         item.setData("PerspectiveId", p.getId());
-         if (darkTheme)
-         {
-            Image image = new Image(getShell().getDisplay(), ColorConverter.invertImageColors(p.getImage().getImageData()));
-            item.setImage(image);
-            perspectiveIcons.add(image);
-         }
-         else
-         {
-            item.setImage(p.getImage());
-         }
-         if (!verticalLayout)
-            item.setText(p.getName());
-         KeyStroke shortcut = p.getKeyboardShortcut();
-         item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
-         item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               switchToPerspective(p);
-            }
-         });
-         if (p.getId().equals("pinboard"))
-            pinboardPerspective = p;
-      }
-
-      if (darkTheme)
-      {
-         getShell().addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e)
-            {
-               for(Image i : perspectiveIcons)
-                  i.dispose();
-            }
-         });
-      }
-   }
-
-   /**
     * Switch to given perspective.
     *
     * @param p perspective to switch to
@@ -784,15 +701,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       currentPerspective = p;
       currentPerspective.show(perspectiveArea);
       resizePerspectiveAreaContent();
-      for(ToolItem item : mainMenu.getItems())
-      {
-         Object id = item.getData("PerspectiveId");
-         if (id != null)
-         {
-            // This is perspective switcher item, set selection according to current perspective
-            item.setSelection(p.getId().equals(id));
-         }
-      }
+      perspectiveSwitcher.setSelectedPerspective(p);
    }
 
    /**

@@ -152,6 +152,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.netxms.ui.svg.SVGImage;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -196,7 +197,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     * @param subtreeType object subtree type
     * @param objectFilter additional filter for top level objects (optional, can be null)
     */
-   protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType, ObjectFilter objectFilter)
+   protected ObjectsPerspective(String id, String name, SVGImage image, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
       super(id, name, image);
       this.subtreeType = subtreeType;

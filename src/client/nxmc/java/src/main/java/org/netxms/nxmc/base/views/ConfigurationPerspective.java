@@ -63,7 +63,7 @@ public class ConfigurationPerspective extends Perspective
     */
    public ConfigurationPerspective()
    {
-      super("configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), ResourceManager.getImage("icons/perspective-configuration.png"));
+      super("configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), ResourceManager.getSVGImage("icons/perspectives/configuration.svg"));
 
       ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class, getClass().getClassLoader());
       for(ConfigurationPerspectiveElement e : loader)
@@ -78,6 +78,15 @@ public class ConfigurationPerspective extends Perspective
             return e1.getName().compareToIgnoreCase(e2.getName());
          }
       });
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Administration");
    }
 
    /**

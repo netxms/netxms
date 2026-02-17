@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,20 @@ import org.netxms.nxmc.resources.ResourceManager;
 public class AlarmsPerspective extends Perspective
 {
    /**
-    * @param name
+    * Create alarm browser perspective
     */
    public AlarmsPerspective()
    {
-      super("alarms", LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Alarms"), ResourceManager.getImage("icons/perspective-alarms.png"));
+      super("alarms", LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Alarms"), ResourceManager.getSVGImage("icons/perspectives/alarms.svg"));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Monitoring");
    }
 
    /**

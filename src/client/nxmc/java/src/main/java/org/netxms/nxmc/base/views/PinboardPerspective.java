@@ -44,7 +44,7 @@ public class PinboardPerspective extends Perspective
     */
    public PinboardPerspective()
    {
-      super("pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), ResourceManager.getImage("icons/perspective-pinboard.png"));
+      super("pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), ResourceManager.getSVGImage("icons/perspectives/pinboard.svg"));
    }
 
    /**

@@ -43,13 +43,22 @@ public class MonitorPerspective extends Perspective
     */
    public MonitorPerspective()
    {
-      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
+      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), ResourceManager.getSVGImage("icons/perspectives/monitor.svg"));
 
       ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
       for(MonitorDescriptor e : loader)
          monitors.add(e);
 
       monitors.sort((MonitorDescriptor m1, MonitorDescriptor m2) -> m1.getDisplayName().compareToIgnoreCase(m2.getDisplayName()));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#getSectionName()
+    */
+   @Override
+   public String getSectionName()
+   {
+      return LocalizationHelper.getI18n(MonitorPerspective.class).tr("Analysis");
    }
 
    /**

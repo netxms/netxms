@@ -37,7 +37,6 @@ public class AppearancePage extends PropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(AppearancePage.class);
 
-   private Button checkVerticalLayout;
    private Button checkShowServerClock;
    private Button checkShowTrayIcon;
 
@@ -61,10 +60,6 @@ public class AppearancePage extends PropertyPage
       layout.marginWidth = 0;
       dialogArea.setLayout(layout);
 
-      checkVerticalLayout = new Button(dialogArea, SWT.CHECK);
-      checkVerticalLayout.setText(i18n.tr("&Vertical layout of perspective switcher"));
-      checkVerticalLayout.setSelection(settings.getAsBoolean("Appearance.VerticalLayout", true));
-
       checkShowServerClock = new Button(dialogArea, SWT.CHECK);
       checkShowServerClock.setText(i18n.tr("Show server &clock"));
       checkShowServerClock.setSelection(settings.getAsBoolean("Appearance.ShowServerClock", false));
@@ -86,7 +81,6 @@ public class AppearancePage extends PropertyPage
    protected boolean applyChanges(boolean isApply)
    {
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
       if (!Registry.IS_WEB_CLIENT)
       {
