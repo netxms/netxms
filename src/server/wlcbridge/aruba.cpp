@@ -130,7 +130,7 @@ static bool Login(const std::string& baseUrl, const std::string& login, const st
       else
       {
          const char *status = json_object_get_string_utf8(json, "Status", nullptr);
-         if ((status == nullptr) || strcasecmp(status, "Success"))
+         if ((status == nullptr) || stricmp(status, "Success"))
          {
             nxlog_debug_tag(DEBUG_TAG, 7, _T("Login failed: %hs"), json_object_get_string_utf8(json, "Error message", "Unknown error"));
             success = false;
@@ -284,7 +284,7 @@ static json_t *DoShowCommand(NObject *wirelessDomain, const char *command, long 
    const char *status = json_object_get_string_utf8(json, "Status", nullptr);
    int statusCode = json_object_get_int32(json, "Status-code", 0);
    const char *message = json_object_get_string_utf8(json, "message", nullptr);
-   if ((status != nullptr) && strcasecmp(status, "Success"))
+   if ((status != nullptr) && stricmp(status, "Success"))
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Controller error: %hs"), json_object_get_string_utf8(json, "Error message", "Unknown error"));
       json_decref(json);
