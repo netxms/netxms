@@ -62,6 +62,206 @@ int H_SummaryTables(Context *context)
 }
 
 /**
+ * Build serialized column string from JSON columns array
+ * Format: name^#^dciName^#^flags^#^separator separated by ^~^
+ */
+static StringBuffer BuildColumnListFromJson(json_t *columns)
+{
+   StringBuffer result;
+   if (!json_is_array(columns))
+      return result;
+
+   size_t index;
+   json_t *column;
+   json_array_foreach(columns, index, column)
+   {
+      if (!json_is_object(column))
+         continue;
+
+      if (index > 0)
+         result.append(_T("^~^"));
+
+      TCHAR name[MAX_DB_STRING], dciName[MAX_PARAM_NAME], separator[16];
+      utf8_to_tchar(json_object_get_string_utf8(column, "name", ""), -1, name, MAX_DB_STRING);
+      utf8_to_tchar(json_object_get_string_utf8(column, "dciName", ""), -1, dciName, MAX_PARAM_NAME);
+      utf8_to_tchar(json_object_get_string_utf8(column, "separator", ";"), -1, separator, 16);
+      uint32_t flags = json_object_get_uint32(column, "flags");
+
+      result.appendFormattedString(_T("%s^#^%s^#^%u^#^%s"), name, dciName, flags, separator);
+   }
+   return result;
+}
+
+/**
+ * Get summary table details
+ */
+int H_SummaryTableDetails(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+      return 403;
+
+   uint32_t tableId = context->getPlaceholderValueAsUInt32(L"table-id");
+   if (tableId == 0)
+   {
+      context->setErrorResponse("Invalid summary table ID");
+      return 400;
+   }
+
+   uint32_t rcc;
+   json_t *details = GetSummaryTableDetails(tableId, &rcc);
+   if (details == nullptr)
+   {
+      if (rcc == RCC_INVALID_SUMMARY_TABLE_ID)
+         return 404;
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   context->setResponseData(details);
+   json_decref(details);
+   return 200;
+}
+
+/**
+ * Create summary table
+ */
+int H_SummaryTableCreate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+      return 400;
+
+   json_t *jsonTitle = json_object_get(request, "title");
+   if (!json_is_string(jsonTitle))
+   {
+      context->setErrorResponse("Missing or invalid title field");
+      return 400;
+   }
+
+   TCHAR title[MAX_DB_STRING];
+   utf8_to_tchar(json_string_value(jsonTitle), -1, title, MAX_DB_STRING);
+
+   TCHAR menuPath[MAX_DB_STRING];
+   utf8_to_tchar(json_object_get_string_utf8(request, "menuPath", ""), -1, menuPath, MAX_DB_STRING);
+
+   TCHAR *nodeFilter = json_object_get_string_t(request, "nodeFilter", _T(""));
+
+   uint32_t flags = json_object_get_uint32(request, "flags");
+
+   TCHAR tableDciName[MAX_PARAM_NAME];
+   utf8_to_tchar(json_object_get_string_utf8(request, "tableDciName", ""), -1, tableDciName, MAX_PARAM_NAME);
+
+   StringBuffer columnList = BuildColumnListFromJson(json_object_get(request, "columns"));
+
+   uint32_t newId;
+   uint32_t rcc = ModifySummaryTable(0, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, &newId);
+   MemFree(nodeFilter);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"DCI summary table %u created", newId);
+      json_t *output = json_object();
+      json_object_set_new(output, "id", json_integer(newId));
+      context->setResponseData(output);
+      json_decref(output);
+      return 201;
+   }
+
+   context->setErrorResponse("Database failure");
+   return 500;
+}
+
+/**
+ * Update summary table
+ */
+int H_SummaryTableUpdate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+      return 403;
+
+   uint32_t tableId = context->getPlaceholderValueAsUInt32(L"table-id");
+   if (tableId == 0)
+   {
+      context->setErrorResponse("Invalid summary table ID");
+      return 400;
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool exists = IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), tableId);
+   DBConnectionPoolReleaseConnection(hdb);
+   if (!exists)
+      return 404;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+      return 400;
+
+   json_t *jsonTitle = json_object_get(request, "title");
+   if (!json_is_string(jsonTitle))
+   {
+      context->setErrorResponse("Missing or invalid title field");
+      return 400;
+   }
+
+   TCHAR title[MAX_DB_STRING];
+   utf8_to_tchar(json_string_value(jsonTitle), -1, title, MAX_DB_STRING);
+
+   TCHAR menuPath[MAX_DB_STRING];
+   utf8_to_tchar(json_object_get_string_utf8(request, "menuPath", ""), -1, menuPath, MAX_DB_STRING);
+
+   TCHAR *nodeFilter = json_object_get_string_t(request, "nodeFilter", _T(""));
+
+   uint32_t flags = json_object_get_uint32(request, "flags");
+
+   TCHAR tableDciName[MAX_PARAM_NAME];
+   utf8_to_tchar(json_object_get_string_utf8(request, "tableDciName", ""), -1, tableDciName, MAX_PARAM_NAME);
+
+   StringBuffer columnList = BuildColumnListFromJson(json_object_get(request, "columns"));
+
+   uint32_t newId;
+   uint32_t rcc = ModifySummaryTable(tableId, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, &newId);
+   MemFree(nodeFilter);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"DCI summary table %u updated", tableId);
+      return 200;
+   }
+
+   context->setErrorResponse("Database failure");
+   return 500;
+}
+
+/**
+ * Delete summary table
+ */
+int H_SummaryTableDelete(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
+      return 403;
+
+   uint32_t tableId = context->getPlaceholderValueAsUInt32(L"table-id");
+   if (tableId == 0)
+   {
+      context->setErrorResponse("Invalid summary table ID");
+      return 400;
+   }
+
+   uint32_t rcc = DeleteSummaryTable(tableId);
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"DCI summary table %u deleted", tableId);
+      return 204;
+   }
+
+   context->setErrorResponse("Database failure");
+   return 500;
+}
+
+/**
  * Common implementation for query execution
  */
 static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, SummaryTable *tableDefinition)

@@ -83,6 +83,65 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
 }
 
 /**
+ * Modify DCI summary table from direct parameters. Will create new table if id is 0.
+ *
+ * @return RCC ready to be sent to client
+ */
+uint32_t ModifySummaryTable(uint32_t id, const TCHAR *menuPath, const TCHAR *title,
+   const TCHAR *nodeFilter, uint32_t flags, const TCHAR *columns,
+   const TCHAR *tableDciName, uint32_t *newId)
+{
+   if (id == 0)
+   {
+      id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
+   }
+   *newId = id;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool isNew = !IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), id);
+   DB_STATEMENT hStmt;
+   if (isNew)
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,table_dci_name,id,guid) VALUES (?,?,?,?,?,?,?,?)"));
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?"));
+   }
+
+   uint32_t rcc;
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, menuPath, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, title, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, nodeFilter, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, flags);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, columns, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, tableDciName, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, id);
+
+      if (isNew)
+      {
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid::generate());
+      }
+
+      rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+      if (rcc == RCC_SUCCESS)
+         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
+
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
  * Delete DCI summary table
  */
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId)
@@ -760,4 +819,39 @@ json_t *GetSummaryTablesList()
    }
    DBConnectionPoolReleaseConnection(hdb);
    return result;
+}
+
+/**
+ * Get summary table details as JSON
+ */
+json_t NXCORE_EXPORTABLE *GetSummaryTableDetails(uint32_t id, uint32_t *rcc)
+{
+   SummaryTable *table = SummaryTable::loadFromDB(id, rcc);
+   if (table == nullptr)
+      return nullptr;
+
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(table->getId()));
+   json_object_set_new(root, "guid", json_string_t(table->getGuid().toString()));
+   json_object_set_new(root, "menuPath", json_string_t(table->getMenuPath()));
+   json_object_set_new(root, "title", json_string_t(table->getTitle()));
+   json_object_set_new(root, "flags", json_integer(table->getFlags()));
+   json_object_set_new(root, "nodeFilter", json_string_t(CHECK_NULL_EX(table->getFilterSource())));
+   json_object_set_new(root, "tableDciName", json_string_t(table->getTableDciName()));
+
+   json_t *columnsArray = json_array();
+   for(int i = 0; i < table->getNumColumns(); i++)
+   {
+      SummaryTableColumn *col = table->getColumn(i);
+      json_t *colObj = json_object();
+      json_object_set_new(colObj, "name", json_string_t(col->m_name));
+      json_object_set_new(colObj, "dciName", json_string_t(col->m_dciName));
+      json_object_set_new(colObj, "flags", json_integer(col->m_flags));
+      json_object_set_new(colObj, "separator", json_string_t(col->m_separator));
+      json_array_append_new(columnsArray, colObj);
+   }
+   json_object_set_new(root, "columns", columnsArray);
+
+   delete table;
+   return root;
 }
