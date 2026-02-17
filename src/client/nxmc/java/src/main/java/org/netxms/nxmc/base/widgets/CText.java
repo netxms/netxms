@@ -136,6 +136,7 @@ public class CText extends Composite
    public void setText(String text)
    {
       textControl.setText(text);
+      layout(true, true);
    }
 
    /**
