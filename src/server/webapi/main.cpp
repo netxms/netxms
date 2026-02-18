@@ -94,6 +94,17 @@ int H_SummaryTableDelete(Context *context);
 int H_GrafanaSummaryTablesList(Context *context);
 int H_TakeScreenshot(Context *context);
 int H_TcpProxyCreate(Context *context);
+int H_Users(Context *context);
+int H_UserDetails(Context *context);
+int H_UserCreate(Context *context);
+int H_UserUpdate(Context *context);
+int H_UserDelete(Context *context);
+int H_UserSetPassword(Context *context);
+int H_UserGroups(Context *context);
+int H_UserGroupDetails(Context *context);
+int H_UserGroupCreate(Context *context);
+int H_UserGroupUpdate(Context *context);
+int H_UserGroupDelete(Context *context);
 
 /**
  * WebSocket upgrade handlers
@@ -259,6 +270,27 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/status")
       .GET(H_Status)
+      .build();
+   RouteBuilder("v1/user-groups")
+      .GET(H_UserGroups)
+      .POST(H_UserGroupCreate)
+      .build();
+   RouteBuilder("v1/user-groups/:group-id")
+      .GET(H_UserGroupDetails)
+      .PUT(H_UserGroupUpdate)
+      .DELETE(H_UserGroupDelete)
+      .build();
+   RouteBuilder("v1/users")
+      .GET(H_Users)
+      .POST(H_UserCreate)
+      .build();
+   RouteBuilder("v1/users/:user-id")
+      .GET(H_UserDetails)
+      .PUT(H_UserUpdate)
+      .DELETE(H_UserDelete)
+      .build();
+   RouteBuilder("v1/users/:user-id/password")
+      .POST(H_UserSetPassword)
       .build();
    RouteBuilder("v1/tcp-proxy")
       .POST(H_TcpProxyCreate)  // Create session, get token

@@ -977,6 +977,8 @@ json_t *User::toJson() const
    json_object_set_new(root, "lastLogin", json_integer(m_lastLogin));
    json_object_set_new(root, "minPasswordLength", json_integer(m_minPasswordLength));
    json_object_set_new(root, "authFailures", json_integer(m_authFailures));
+   json_object_set_new(root, "email", json_string_t(m_email));
+   json_object_set_new(root, "phoneNumber", json_string_t(m_phoneNumber));
    return root;
 }
 

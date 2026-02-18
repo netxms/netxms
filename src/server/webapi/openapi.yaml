@@ -29,6 +29,10 @@ tags:
     description: DCI summary table operations
   - name: Event Templates
     description: Event template management
+  - name: Users
+    description: User management
+  - name: User Groups
+    description: User group management
 paths:
   /:
     get:
@@ -2492,6 +2496,347 @@ paths:
         - BearerAuth: []
       tags:
         - DCI Summary Tables
+  /v1/users:
+    get:
+      summary: List users
+      description: Retrieve a list of all users defined in the system. Requires MANAGE_USERS access right.
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+    post:
+      summary: Create user
+      description: Create a new user. Requires MANAGE_USERS access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateInput'
+            example:
+              name: jdoe
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid or missing name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '409':
+          description: User with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+  /v1/users/{user-id}:
+    get:
+      summary: Get user details
+      description: Retrieve details of a specific user by ID. Requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+    put:
+      summary: Update user
+      description: Update an existing user. Only the fields provided in the request body will be modified. Requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user ID or invalid user name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User not found
+        '409':
+          description: User with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+    delete:
+      summary: Delete user
+      description: |
+        Delete a user. The system user (ID 0) cannot be deleted.
+        Users that are currently logged in cannot be deleted.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '204':
+          description: User deleted successfully
+        '400':
+          description: Invalid user ID or attempt to delete system user
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User not found
+        '409':
+          description: User is currently logged in
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+  /v1/users/{user-id}/password:
+    post:
+      summary: Set user password
+      description: |
+        Set or change a user's password. If `oldPassword` is provided, it is treated as a
+        self-change (user changing their own password). If `oldPassword` is omitted, it is
+        treated as an administrative password reset.
+
+        Users can change their own password without MANAGE_USERS access right.
+        Administrative password reset requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordInput'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Missing newPassword, weak password, or recently used password
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied (wrong old password or insufficient rights)
+        '404':
+          description: User not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+  /v1/user-groups:
+    get:
+      summary: List user groups
+      description: Retrieve a list of all user groups defined in the system. Requires MANAGE_USERS access right.
+      responses:
+        '200':
+          description: User groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserGroup'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+      security:
+        - BearerAuth: []
+      tags:
+        - User Groups
+    post:
+      summary: Create user group
+      description: Create a new user group. Requires MANAGE_USERS access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateInput'
+            example:
+              name: operators
+      responses:
+        '201':
+          description: User group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroup'
+        '400':
+          description: Invalid or missing name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '409':
+          description: Group with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - User Groups
+  /v1/user-groups/{group-id}:
+    get:
+      summary: Get user group details
+      description: Retrieve details of a specific user group by ID. Group IDs include the GROUP_FLAG bit (0x40000000). Requires MANAGE_USERS access right.
+      parameters:
+        - name: group-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Group ID (includes GROUP_FLAG bit, e.g. 1073741824 for Everyone)
+      responses:
+        '200':
+          description: User group retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroup'
+        '400':
+          description: Invalid group ID (missing GROUP_FLAG bit)
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User group not found
+      security:
+        - BearerAuth: []
+      tags:
+        - User Groups
+    put:
+      summary: Update user group
+      description: Update an existing user group. Only the fields provided in the request body will be modified. Requires MANAGE_USERS access right.
+      parameters:
+        - name: group-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Group ID (includes GROUP_FLAG bit)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserGroupUpdateInput'
+      responses:
+        '200':
+          description: User group updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroup'
+        '400':
+          description: Invalid group ID or invalid group name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User group not found
+        '409':
+          description: Group with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - User Groups
+    delete:
+      summary: Delete user group
+      description: |
+        Delete a user group. The "Everyone" group (ID 1073741824) cannot be deleted.
+      parameters:
+        - name: group-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Group ID (includes GROUP_FLAG bit)
+      responses:
+        '204':
+          description: User group deleted successfully
+        '400':
+          description: Invalid group ID or attempt to delete Everyone group
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_USERS access right
+        '404':
+          description: User group not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - User Groups
 components:
   schemas:
     Alarm:
@@ -2503,6 +2848,235 @@ components:
           type: string
         severity:
           type: string
+    User:
+      type: object
+      description: User account
+      properties:
+        id:
+          type: integer
+          description: User ID
+        guid:
+          type: string
+          format: uuid
+          description: User GUID
+        name:
+          type: string
+          description: Login name
+        description:
+          type: string
+          description: User description
+        systemRights:
+          type: integer
+          description: System access rights bitmask
+        uiAccessRules:
+          type: string
+          description: UI access rules
+        flags:
+          type: integer
+          description: User flags bitmask
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom attributes
+        ldapDn:
+          type: string
+          nullable: true
+          description: LDAP distinguished name
+        ldapId:
+          type: string
+          nullable: true
+          description: LDAP unique ID
+        created:
+          type: integer
+          description: Account creation time (Unix timestamp)
+        fullName:
+          type: string
+          description: Full name
+        graceLogins:
+          type: integer
+          description: Remaining grace logins
+        authMethod:
+          type: integer
+          description: "Authentication method (0=Local, 1=RADIUS, 2=Certificate, 3=Certificate or Local, 4=Certificate or RADIUS, 5=LDAP)"
+        certMappingMethod:
+          type: integer
+          description: Certificate mapping method
+        certMappingData:
+          type: string
+          nullable: true
+          description: Certificate mapping data
+        disabledUntil:
+          type: integer
+          description: Disabled until time (Unix timestamp, 0 if not temporarily disabled)
+        lastPasswordChange:
+          type: integer
+          description: Last password change time (Unix timestamp)
+        lastLogin:
+          type: integer
+          description: Last login time (Unix timestamp)
+        minPasswordLength:
+          type: integer
+          description: Minimum password length (-1 for system default)
+        authFailures:
+          type: integer
+          description: Consecutive authentication failure count
+        email:
+          type: string
+          description: Email address
+        phoneNumber:
+          type: string
+          description: Phone number
+    UserGroup:
+      type: object
+      description: User group
+      properties:
+        id:
+          type: integer
+          description: Group ID (includes GROUP_FLAG bit 0x40000000)
+        guid:
+          type: string
+          format: uuid
+          description: Group GUID
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        systemRights:
+          type: integer
+          description: System access rights bitmask
+        uiAccessRules:
+          type: string
+          description: UI access rules
+        flags:
+          type: integer
+          description: Group flags bitmask
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom attributes
+        ldapDn:
+          type: string
+          nullable: true
+          description: LDAP distinguished name
+        ldapId:
+          type: string
+          nullable: true
+          description: LDAP unique ID
+        created:
+          type: integer
+          description: Group creation time (Unix timestamp)
+        members:
+          type: array
+          items:
+            type: integer
+          description: List of member user IDs
+    UserCreateInput:
+      type: object
+      description: User or group creation request
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Login name (must be a valid object name)
+    UserUpdateInput:
+      type: object
+      description: User update request. All fields are optional - only provided fields are modified.
+      properties:
+        name:
+          type: string
+          description: New login name
+        description:
+          type: string
+          description: User description
+        fullName:
+          type: string
+          description: Full name
+        flags:
+          type: integer
+          description: User flags bitmask
+        systemRights:
+          type: integer
+          description: System access rights bitmask
+        uiAccessRules:
+          type: string
+          description: UI access rules
+        authMethod:
+          type: integer
+          description: Authentication method
+        minPasswordLength:
+          type: integer
+          description: Minimum password length
+        disabledUntil:
+          type: integer
+          description: Disabled until time (Unix timestamp)
+        certMappingMethod:
+          type: integer
+          description: Certificate mapping method
+        certMappingData:
+          type: string
+          description: Certificate mapping data
+        email:
+          type: string
+          description: Email address
+        phoneNumber:
+          type: string
+          description: Phone number
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom attributes (replaces all existing attributes)
+        groupMembership:
+          type: array
+          items:
+            type: integer
+          description: List of group IDs the user should belong to (replaces current membership)
+    UserGroupUpdateInput:
+      type: object
+      description: User group update request. All fields are optional - only provided fields are modified.
+      properties:
+        name:
+          type: string
+          description: New group name
+        description:
+          type: string
+          description: Group description
+        flags:
+          type: integer
+          description: Group flags bitmask
+        systemRights:
+          type: integer
+          description: System access rights bitmask
+        uiAccessRules:
+          type: string
+          description: UI access rules
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom attributes (replaces all existing attributes)
+        members:
+          type: array
+          items:
+            type: integer
+          description: List of member user IDs (replaces current members)
+    PasswordInput:
+      type: object
+      description: Password change request
+      required:
+        - newPassword
+      properties:
+        newPassword:
+          type: string
+          description: The new password
+        oldPassword:
+          type: string
+          description: Current password (required for self-change, omit for admin reset)
     EventTemplate:
       type: object
       description: Event template definition
