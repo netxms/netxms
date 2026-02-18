@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -392,6 +392,9 @@ struct FileInfo
  */
 static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, ObjectArray<FileInfo> *files, bool updateGuid, bool includeDirectories)
 {
+   if (currEntry->getSubEntryValueAsBoolean(_T("pendingDelete")))
+      return;
+
    ConfigEntry *children = currEntry->findEntry(_T("children"));
    if (children == nullptr)
       return;
@@ -414,6 +417,8 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
       for(int i = 0; i < elements->size(); i++)
       {
          ConfigEntry *e = elements->get(i);
+         if (e->getSubEntryValueAsBoolean(_T("pendingDelete")))
+            continue;
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
          if (!guid.isNull())
          {
@@ -459,6 +464,27 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
       }
    }
    return files;
+}
+
+/**
+ * Get list of files to delete from file delivery policy configuration
+ */
+static StringList GetFilesToDeleteFromConfig(const char *content)
+{
+   StringList paths;
+   Config data;
+   data.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "FileDeliveryPolicy", false);
+   unique_ptr<ObjectArray<ConfigEntry>> entries = data.getSubEntries(_T("/filesToDelete"), _T("path"));
+   if (entries != nullptr)
+   {
+      for(int i = 0; i < entries->size(); i++)
+      {
+         const TCHAR *path = entries->get(i)->getValue();
+         if ((path != nullptr) && (*path != 0))
+            paths.add(path);
+      }
+   }
+   return paths;
 }
 
 /**
@@ -925,7 +951,32 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::deploy(%s): preparing file list"), data->debugId);
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
+   StringList filesToDelete = GetFilesToDeleteFromConfig(m_content);
    m_contentLock.unlock();
+
+   // Delete files from agent before uploading new ones
+   for(int i = 0; i < filesToDelete.size(); i++)
+   {
+      const TCHAR *path = filesToDelete.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): deleting file %s from agent"), data->debugId, path);
+      NXCPMessage request(CMD_FILEMGR_DELETE_FILE, conn->generateRequestId(), conn->getProtocolVersion());
+      request.setField(VID_FILE_NAME, path);
+      request.setField(VID_ALLOW_PATH_EXPANSION, true);
+      NXCPMessage *response = conn->customRequest(&request);
+      if (response != nullptr)
+      {
+         uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+         if (rcc == ERR_SUCCESS)
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): file %s deleted from agent"), data->debugId, path);
+         else
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot delete file %s from agent (%s)"), data->debugId, path, AgentErrorCodeToText(rcc));
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): timeout waiting for agent response while deleting file %s"), data->debugId, path);
+      }
+   }
 
    StringList fileRequest;
    for (int i = 0; i < files->size(); i++)

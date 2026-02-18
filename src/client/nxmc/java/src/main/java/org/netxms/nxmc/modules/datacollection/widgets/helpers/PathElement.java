@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,6 +67,9 @@ public class PathElement
 
    @Element(required = false)
    private String ownerGroup;
+
+   @Element(required = false)
+   private Boolean pendingDelete;
 
    private File localFile = null;
 
@@ -258,6 +262,52 @@ public class PathElement
    }
 
    /**
+    * Get full remote path by walking up the parent chain. Produces paths matching the C++ BuildFileList() format
+    * (e.g., "//etc/config.txt" for root "/" -> dir "etc" -> file "config.txt").
+    *
+    * @return full path string
+    */
+   public String getFullPath()
+   {
+      StringBuilder sb = new StringBuilder();
+      buildPath(sb);
+      return sb.toString();
+   }
+
+   /**
+    * Build path by recursively prepending parent path segments.
+    *
+    * @param sb string builder to append to
+    */
+   private void buildPath(StringBuilder sb)
+   {
+      if (parent != null)
+      {
+         parent.buildPath(sb);
+         sb.append('/');
+      }
+      sb.append(name);
+   }
+
+   /**
+    * Recursively collect full paths of all files under this element.
+    *
+    * @param paths collection to add file paths to
+    */
+   public void collectFilePaths(Collection<String> paths)
+   {
+      if (isFile())
+      {
+         paths.add(getFullPath());
+      }
+      else
+      {
+         for(PathElement child : children)
+            child.collectFilePaths(paths);
+      }
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -369,5 +419,27 @@ public class PathElement
    public String getOwnerGroup()
    {
       return ownerGroup;
+   }
+
+   /**
+    * Check if this element is scheduled for deletion from agents.
+    *
+    * @return true if scheduled for deletion
+    */
+   public boolean isScheduledForDeletion()
+   {
+      return pendingDelete != null && pendingDelete;
+   }
+
+   /**
+    * Set scheduled for deletion flag on this element and all its children recursively.
+    *
+    * @param scheduled true to mark as scheduled for deletion
+    */
+   public void setScheduledForDeletion(boolean scheduled)
+   {
+      this.pendingDelete = scheduled ? Boolean.TRUE : null;
+      for(PathElement child : children)
+         child.setScheduledForDeletion(scheduled);
    }
 }

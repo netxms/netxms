@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,13 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.datacollection.widgets.FileDeliveryPolicyEditor;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -28,18 +32,20 @@ import org.netxms.nxmc.resources.ResourceManager;
 /**
  * Label provider for file delivery policy tree
  */
-public class FileDeliveryPolicyLabelProvider extends LabelProvider implements ITableLabelProvider
+public class FileDeliveryPolicyLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private Image imageFolder;
    private Image imageFile;
-   
+   private Image imageDeletedFile;
+
    /**
     * Constructor 
     */
    public FileDeliveryPolicyLabelProvider()
    {
-      imageFolder = ResourceManager.getImageDescriptor("icons/folder.gif").createImage();
-      imageFile = ResourceManager.getImageDescriptor("icons/file.png").createImage();
+      imageFolder = ResourceManager.getImage("icons/folder.gif");
+      imageFile = ResourceManager.getImage("icons/file.png");
+      imageDeletedFile = ResourceManager.getImage("icons/deleted-file.png");
    }
 
    /**
@@ -49,7 +55,7 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
    public Image getColumnImage(Object element, int columnIndex)
    {
       if (columnIndex == 0)
-         return ((PathElement)element).isFile() ? imageFile : imageFolder;
+         return ((PathElement)element).isFile() ? (((PathElement)element).isScheduledForDeletion() ? imageDeletedFile : imageFile) : imageFolder;
       return null;
    }
 
@@ -59,6 +65,7 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
    @Override
    public void dispose()
    {
+      imageDeletedFile.dispose();
       imageFile.dispose();
       imageFolder.dispose();
       super.dispose();
@@ -87,6 +94,26 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
          case FileDeliveryPolicyEditor.COLUMN_PERMISSIONS:
              return ((PathElement)element).getPermissionsAsString();
       }
+      return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (((PathElement)element).isScheduledForDeletion())
+         return Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+      return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
       return null;
    }
 }

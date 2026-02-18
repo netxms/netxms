@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019-2023 Raden Solutions
+ * Copyright (C) 2019-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.dialogs.FileDeleteConfirmationDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.FilePermissionDialog;
 import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicy;
@@ -90,6 +91,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionRename;
    private Action actionUpdate;
    private Action actionEditPermissions;
+   private Action actionRestore;
+   private Action actionPurge;
    private Set<String> filesForDeletion = new HashSet<String>();
    private Set<String> notSavedFiles = new HashSet<String>();
    private boolean fileTransferInProgress = false;
@@ -193,6 +196,22 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             changePermissions();
          }
       };
+
+      actionRestore = new Action(i18n.tr("Res&tore"), SharedIcons.RESTORE) {
+         @Override
+         public void run()
+         {
+            restoreElements();
+         }
+      };
+
+      actionPurge = new Action(i18n.tr("P&urge"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            purgeElements();
+         }
+      };
    }
 
    /**
@@ -219,8 +238,31 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (selection.isEmpty())
       {
          manager.add(actionAddRoot);
+         return;
       }
-      else if (selection.size() == 1)
+
+      boolean hasScheduled = false;
+      boolean hasNonScheduled = false;
+      for(Object o : selection.toList())
+      {
+         if (((PathElement)o).isScheduledForDeletion())
+            hasScheduled = true;
+         else
+            hasNonScheduled = true;
+      }
+
+      if (hasScheduled && hasNonScheduled)
+         return;
+
+      if (hasScheduled)
+      {
+         if (canRestoreAll(selection))
+            manager.add(actionRestore);
+         manager.add(actionPurge);
+         return;
+      }
+
+      if (selection.size() == 1)
       {
          PathElement e = (PathElement)selection.getFirstElement();
          if (e.isFile())
@@ -234,12 +276,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
          manager.add(actionRename);
          manager.add(actionEditPermissions);
-         manager.add(actionDelete);
       }
-      else
-      {
-         manager.add(actionDelete);
-      }
+      manager.add(actionDelete);
    }
 
    /**
@@ -330,6 +368,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    {
       FileDeliveryPolicy data = new FileDeliveryPolicy();
       data.elements = rootElements.toArray(new PathElement[rootElements.size()]);
+      data.filesToDelete = collectScheduledFilePaths();
       try
       {
          policy.setContent(data.createXml());
@@ -337,6 +376,36 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       catch(Exception e)
       {
          logger.error("Error serializing file delivery policy", e);
+      }
+   }
+
+   /**
+    * Collect file paths from all elements scheduled for deletion.
+    *
+    * @return list of file paths scheduled for deletion
+    */
+   private ArrayList<String> collectScheduledFilePaths()
+   {
+      ArrayList<String> paths = new ArrayList<>();
+      collectScheduledFilePaths(rootElements, paths);
+      return paths;
+   }
+
+   /**
+    * Recursively collect file paths from scheduled elements.
+    */
+   private void collectScheduledFilePaths(Set<PathElement> elements, ArrayList<String> paths)
+   {
+      for(PathElement e : elements)
+      {
+         if (e.isScheduledForDeletion())
+         {
+            e.collectFilePaths(paths);
+         }
+         else if (!e.isFile())
+         {
+            collectScheduledFilePaths(e.getChildrenSet(), paths);
+         }
       }
    }
 
@@ -378,6 +447,11 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
                if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("File overwrite confirmation"),
                      i18n.tr("File named {0} already exists. Do you want to overwrite it?", f.getName())))
                   continue;
+               if (e.isScheduledForDeletion())
+               {
+                  e.setScheduledForDeletion(false);
+                  filesForDeletion.remove(e.getGuid().toString());
+               }
                e.setFile(f);
             }
             else
@@ -651,23 +725,29 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Delete Files"), i18n.tr("Delete selected files?")))
+      FileDeleteConfirmationDialog dialog = new FileDeleteConfirmationDialog(getShell());
+      if (dialog.open() != Window.OK)
          return;
+
+      boolean deleteFromAgents = dialog.isDeleteFromAgents();
 
       for(Object o : selection.toList())
       {
          PathElement element = (PathElement)o;
-         
-         if (element.isFile())
-            deleteFiles(element);
-         
-         if (element.getParent() == null)
+
+         if (deleteFromAgents)
          {
-            rootElements.remove(o);
+            element.setScheduledForDeletion(true);
+            deleteFiles(element);
          }
          else
          {
-            element.remove();
+            if (element.isFile())
+               deleteFiles(element);
+            if (element.getParent() == null)
+               rootElements.remove(o);
+            else
+               element.remove();
          }
       }
 
@@ -691,6 +771,96 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             deleteFiles(el);
          }
       }
+   }
+
+   /**
+    * Restore selected elements that are scheduled for deletion.
+    */
+   private void restoreElements()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      for(Object o : selection.toList())
+      {
+         PathElement element = (PathElement)o;
+         element.setScheduledForDeletion(false);
+         undeleteFiles(element);
+      }
+
+      fileTree.refresh(true);
+      fireModifyListeners();
+   }
+
+   /**
+    * Remove file GUIDs from deletion queue (reverse of deleteFiles).
+    */
+   private void undeleteFiles(PathElement element)
+   {
+      if (element.isFile())
+      {
+         filesForDeletion.remove(element.getGuid().toString());
+      }
+      else
+      {
+         for(PathElement el : element.getChildren())
+            undeleteFiles(el);
+      }
+   }
+
+   /**
+    * Check if all elements in a selection can be restored (file content still exists on server).
+    */
+   private boolean canRestoreAll(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!canRestore((PathElement)o))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if an element can be restored. A file can be restored if its server blob hasn't been deleted yet
+    * (GUID is still in filesForDeletion queue). A directory can be restored if all its descendant files can be restored.
+    */
+   private boolean canRestore(PathElement element)
+   {
+      if (element.isFile())
+         return filesForDeletion.contains(element.getGuid().toString());
+      for(PathElement child : element.getChildren())
+      {
+         if (!canRestore(child))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Purge selected elements that are scheduled for deletion (permanently remove from the tree).
+    */
+   private void purgeElements()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Purge"), i18n.tr("Permanently remove selected entries?")))
+         return;
+
+      for(Object o : selection.toList())
+      {
+         PathElement element = (PathElement)o;
+         if (element.getParent() == null)
+            rootElements.remove(o);
+         else
+            element.remove();
+      }
+
+      fileTree.refresh(true);
+      fireModifyListeners();
    }
 
    /**
@@ -738,10 +908,27 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     */
    public void onDiscard()
    {
+      clearScheduledFlags(rootElements);
+      fileTree.refresh(true);
+
       for (String name : notSavedFiles)
       {
          deleteFile(name);
       }
       notSavedFiles.clear();
+   }
+
+   /**
+    * Recursively clear scheduled-for-deletion flags on all elements.
+    */
+   private void clearScheduledFlags(Set<PathElement> elements)
+   {
+      for(PathElement e : elements)
+      {
+         if (e.isScheduledForDeletion())
+            e.setScheduledForDeletion(false);
+         else if (!e.isFile())
+            clearScheduledFlags(e.getChildrenSet());
+      }
    }
 }

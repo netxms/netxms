@@ -20,8 +20,10 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.ElementArray;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 
@@ -33,6 +35,9 @@ public class FileDeliveryPolicy
 {
    @ElementArray(required = false)
    public PathElement[] elements = new PathElement[0];
+
+   @ElementList(required = false, entry = "path")
+   public ArrayList<String> filesToDelete = new ArrayList<String>();
 
    /**
     * Create support application policy from XML
