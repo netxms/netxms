@@ -5151,6 +5151,7 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/ntcb/Makefile
+	src/server/oxidized/Makefile
 	src/server/nxreportd/Makefile
 	src/server/nxreportd/java/Makefile
 	src/server/pdsdrv/Makefile

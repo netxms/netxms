@@ -4900,29 +4900,52 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       poller->setStatus(_T("backup"));
       if (DevBackupIsDeviceRegistered(*this))
       {
-         DeviceBackupApiStatus status = DevBackupValidateDeviceRegistration(this);
-         if (status == DeviceBackupApiStatus::SUCCESS)
+         // Re-evaluate hook script - if it now rejects the node, unregister it
+         bool hookPass = true;
+         ScriptVMHandle hookVm = CreateServerScriptVM(L"Hook::RegisterForConfigurationBackup", self());
+         if (hookVm.isValid())
          {
+            hookVm->setUserData(this);
+            if (hookVm->run())
+               hookPass = hookVm->getResult()->getValueAsBoolean();
+            hookVm.destroy();
+         }
+
+         if (!hookPass)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): hook script rejected previously registered node, unregistering"), m_name, m_id);
+            DevBackupDeleteDevice(this);
             lockProperties();
-            if (!(m_capabilities & NC_REGISTERED_FOR_BACKUP))
-            {
-               m_capabilities |= NC_REGISTERED_FOR_BACKUP;
-               modified |= MODIFY_NODE_PROPERTIES;
-            }
+            m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+            modified |= MODIFY_NODE_PROPERTIES;
             unlockProperties();
-            updateConfigBackupStatus();
          }
          else
          {
-            sendPollerMsg(POLLER_ERROR _T("Cannot validate registration for device configuration backup (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
-            lockProperties();
-            if (status == DeviceBackupApiStatus::DEVICE_NOT_REGISTERED)
+            DeviceBackupApiStatus status = DevBackupValidateDeviceRegistration(this);
+            if (status == DeviceBackupApiStatus::SUCCESS)
             {
-               m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
-               modified |= MODIFY_NODE_PROPERTIES;
+               lockProperties();
+               if (!(m_capabilities & NC_REGISTERED_FOR_BACKUP))
+               {
+                  m_capabilities |= NC_REGISTERED_FOR_BACKUP;
+                  modified |= MODIFY_NODE_PROPERTIES;
+               }
+               unlockProperties();
+               updateConfigBackupStatus();
             }
-            unlockProperties();
+            else
+            {
+               sendPollerMsg(POLLER_ERROR _T("Cannot validate registration for device configuration backup (%s)\r\n"), GetDeviceBackupApiErrorMessage(status));
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%u]): registration for device configuration backup failed (%s)"), m_name, m_id, GetDeviceBackupApiErrorMessage(status));
+               lockProperties();
+               if (status == DeviceBackupApiStatus::DEVICE_NOT_REGISTERED)
+               {
+                  m_capabilities &= ~NC_REGISTERED_FOR_BACKUP;
+                  modified |= MODIFY_NODE_PROPERTIES;
+               }
+               unlockProperties();
+            }
          }
       }
       else

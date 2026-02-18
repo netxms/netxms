@@ -143,6 +143,8 @@ nxsl.ssh	NXSL SSH session operations
 
 nxcp.streamcomp	NXCP stream compression
 
+oxidized	Oxidized integration module
+
 obj.*		Object related
 obj.condition   Condition objects
 obj.dc.*	Data collection related
