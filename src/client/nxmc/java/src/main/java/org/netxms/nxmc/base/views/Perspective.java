@@ -361,6 +361,8 @@ public abstract class Perspective
          mainFolder = new ViewFolder(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false, configuration.enableViewHide);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
+         if (configuration.enableTabDragAndDrop)
+            mainFolder.setEnableTabDragAndDrop(true);
          if (configuration.hasHeaderArea)
             mainFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }
@@ -606,6 +608,19 @@ public abstract class Perspective
     */
    public void addMainView(View view, boolean activate, boolean ignoreContext)
    {
+      addMainView(view, activate, ignoreContext, false);
+   }
+
+   /**
+    * Add view to main folder or replace view for single-view perspectives.
+    *
+    * @param view view to add
+    * @param activate if true, view will be activated
+    * @param ignoreContext set to true to ignore current context
+    * @param appendToEnd if true, append tab at the end instead of using priority-based ordering
+    */
+   public void addMainView(View view, boolean activate, boolean ignoreContext, boolean appendToEnd)
+   {
       if (!elementFilter.isVisible(ElementType.VIEW, view.getBaseId()))
       {
          logger.debug("View {} in perspective {} blocked by UI element filter", view.getBaseId(), id);
@@ -613,7 +628,7 @@ public abstract class Perspective
       }
 
       if (mainFolder != null)
-         mainFolder.addView(view, activate, ignoreContext);
+         mainFolder.addView(view, activate, ignoreContext, appendToEnd);
       else
          mainArea.pushView(view, activate);
    }
@@ -679,6 +694,16 @@ public abstract class Perspective
    protected View[] getAllMainViews()
    {
       return (mainFolder != null) ? mainFolder.getAllViews() : mainArea.getAllViews();
+   }
+
+   /**
+    * Get main views in current tab display order.
+    *
+    * @return main views in tab order
+    */
+   protected View[] getMainViewsInTabOrder()
+   {
+      return (mainFolder != null) ? mainFolder.getViewsInTabOrder() : mainArea.getAllViews();
    }
 
    /**

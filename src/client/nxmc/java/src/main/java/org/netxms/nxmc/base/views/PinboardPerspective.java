@@ -62,6 +62,7 @@ public class PinboardPerspective extends Perspective
       configuration.useGlobalViewId = true;
       configuration.ignoreViewContext = true;
       configuration.enableViewHide = false;
+      configuration.enableTabDragAndDrop = true;
       configuration.keyboardShortcut = new KeyStroke(SWT.F12);
    }
 
@@ -72,14 +73,14 @@ public class PinboardPerspective extends Perspective
    public void saveState(Memento memento)
    {
       List<String> views = new ArrayList<String>();
-      for(View v : getAllMainViews())
+      for(View v : getMainViewsInTabOrder())
       {
-         String id = v.getGlobalId();        
-         views.add(id);         
+         String id = v.getGlobalId();
+         views.add(id);
          Memento viewConfig = new Memento();
          v.saveState(viewConfig);
          memento.set(id + ".state", viewConfig);
-      }  
+      }
       memento.set("PinboardPerspective.Views", views);
    }
 

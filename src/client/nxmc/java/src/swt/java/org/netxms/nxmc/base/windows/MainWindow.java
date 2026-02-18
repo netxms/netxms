@@ -816,7 +816,7 @@ public class MainWindow extends Window implements MessageAreaHolder
             leftPinArea = pinViewToArea(view, leftPinArea, horizontalSplitArea, true);
             break;
          case PINBOARD:
-            pinboardPerspective.addMainView(view, true, true);
+            pinboardPerspective.addMainView(view, true, true, true);
             break;
          case RIGHT:
             rightPinArea = pinViewToArea(view, rightPinArea, horizontalSplitArea, false);
@@ -842,6 +842,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          pinArea.setAllViewsAsCloseable(true);
          pinArea.setUseGlobalViewId(true);
          pinArea.setDisposeWhenEmpty(true);
+         pinArea.setEnableTabDragAndDrop(true);
          if (moveToTop)
          {
             pinArea.moveAbove(null);
@@ -864,7 +865,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          splitter.setWeights(weights);
          windowContent.layout(true, true);
       }
-      pinArea.addView(view, true, true);
+      pinArea.addView(view, true, true, true);
       return pinArea;
    }
 

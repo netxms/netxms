@@ -30,12 +30,23 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabFolder2Adapter;
 import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSource;
+import org.eclipse.swt.dnd.DragSourceAdapter;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
@@ -57,6 +68,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.helpers.ViewDragData;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -86,6 +98,7 @@ public class ViewFolder extends ViewContainer
    private String lastViewId = null;
    private View activeView = null;
    private CTabItem contextMenuTabItem = null;
+   private CTabItem dragStartTab = null;
    private boolean contextChange = false;
    private Map<String, View> views = new HashMap<>();
    private Map<String, CTabItem> tabs = new HashMap<>();
@@ -512,6 +525,20 @@ public class ViewFolder extends ViewContainer
     */
    public void addView(View view, boolean activate, boolean ignoreContext)
    {
+      addView(view, activate, ignoreContext, false);
+   }
+
+   /**
+    * Add view to folder. View will be created immediately if it is context-insensitive or is allowed in current context, otherwise
+    * it's creation will be delayed until valid context change.
+    *
+    * @param view view to add
+    * @param activate if set to true, view will be activated
+    * @param ignoreContext set to true to ignore current context
+    * @param appendToEnd if true, append tab at the end instead of using priority-based ordering
+    */
+   public void addView(View view, boolean activate, boolean ignoreContext, boolean appendToEnd)
+   {
       String viewId = getViewId(view);
       View currentView = views.get(viewId);
       if (currentView == view)
@@ -535,7 +562,7 @@ public class ViewFolder extends ViewContainer
       if (ignoreContext || !(view instanceof ViewWithContext) || (((ViewWithContext)view).isValidForContext(context) && !((ViewWithContext)view).isHidden()))
       {
          view.create(this, tabFolder, onFilterCloseCallback);
-         CTabItem tabItem = createViewTab(view, ignoreContext);
+         CTabItem tabItem = createViewTab(view, ignoreContext, appendToEnd ? tabFolder.getItemCount() : -1);
          if (activate || (activeView == null))
          {
             tabFolder.setSelection(tabItem);
@@ -577,6 +604,20 @@ public class ViewFolder extends ViewContainer
    public View[] getAllViews()
    {
       return views.values().toArray(View[]::new);
+   }
+
+   /**
+    * Get views in current tab display order.
+    *
+    * @return views in tab order
+    */
+   public View[] getViewsInTabOrder()
+   {
+      CTabItem[] items = tabFolder.getItems();
+      View[] result = new View[items.length];
+      for(int i = 0; i < items.length; i++)
+         result[i] = (View)items[i].getData("view");
+      return result;
    }
 
    /**
@@ -709,14 +750,35 @@ public class ViewFolder extends ViewContainer
     */
    private CTabItem createViewTab(View view, boolean ignoreContext)
    {
-      int index = 0;
-      int priority = view.getPriority();
-      for(CTabItem i : tabFolder.getItems())
+      return createViewTab(view, ignoreContext, -1);
+   }
+
+   /**
+    * Create tab for view at given insertion index.
+    *
+    * @param view view to add
+    * @param ignoreContext set to true to ignore current context
+    * @param insertionIndex index to insert at, or -1 for priority-based insertion
+    * @return created tab item
+    */
+   private CTabItem createViewTab(View view, boolean ignoreContext, int insertionIndex)
+   {
+      int index;
+      if (insertionIndex >= 0)
       {
-         View v = (View)i.getData("view");
-         if (v.getPriority() > priority)
-            break;
-         index++;
+         index = Math.min(insertionIndex, tabFolder.getItemCount());
+      }
+      else
+      {
+         index = 0;
+         int priority = view.getPriority();
+         for(CTabItem i : tabFolder.getItems())
+         {
+            View v = (View)i.getData("view");
+            if (v.getPriority() > priority)
+               break;
+            index++;
+         }
       }
 
       CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE, index);
@@ -726,7 +788,19 @@ public class ViewFolder extends ViewContainer
       tabItem.setData("view", view);
       tabItem.setData("ignoreContext", Boolean.valueOf(ignoreContext));
       tabItem.setShowClose(allViewsAreCloseable || view.isCloseable());
-      tabItem.addDisposeListener(new DisposeListener() {
+      tabItem.addDisposeListener(createTabDisposeListener());
+      tabs.put(getViewId(view), tabItem);
+      return tabItem;
+   }
+
+   /**
+    * Create dispose listener for tab items.
+    *
+    * @return dispose listener
+    */
+   private DisposeListener createTabDisposeListener()
+   {
+      return new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
@@ -745,9 +819,7 @@ public class ViewFolder extends ViewContainer
                parent.layout(true, true);
             }
          }
-      });
-      tabs.put(getViewId(view), tabItem);
-      return tabItem;
+      };
    }
 
    /**
@@ -1065,21 +1137,268 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
+    * Enable or disable tab drag-and-drop on this folder.
+    *
+    * @param enable true to enable drag-and-drop
+    */
+   public void setEnableTabDragAndDrop(boolean enable)
+   {
+      if (enable)
+         setupDragAndDrop();
+   }
+
+   /**
+    * Set up drag-and-drop support on the tab folder.
+    */
+   private void setupDragAndDrop()
+   {
+      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+
+      // Track which tab the user pressed the mouse on (mouseDown fires before dragStart
+      // and has reliable control-relative coordinates on all platforms)
+      tabFolder.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            dragStartTab = null;
+            Point pt = new Point(e.x, e.y);
+            for(CTabItem item : tabFolder.getItems())
+            {
+               if (item.getBounds().contains(pt))
+               {
+                  dragStartTab = item;
+                  break;
+               }
+            }
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+         }
+      });
+
+      DragSource dragSource = new DragSource(tabFolder, DND.DROP_MOVE);
+      dragSource.setTransfer(transfers);
+      dragSource.addDragListener(new DragSourceAdapter() {
+         @Override
+         public void dragStart(DragSourceEvent event)
+         {
+            if (dragStartTab == null || dragStartTab.isDisposed())
+            {
+               event.doit = false;
+               return;
+            }
+            View view = (View)dragStartTab.getData("view");
+            LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(new ViewDragData(ViewFolder.this, view)));
+            event.doit = true;
+         }
+
+         @Override
+         public void dragSetData(DragSourceEvent event)
+         {
+            event.data = LocalSelectionTransfer.getTransfer().getSelection();
+         }
+
+         @Override
+         public void dragFinished(DragSourceEvent event)
+         {
+            LocalSelectionTransfer.getTransfer().setSelection(null);
+            dragStartTab = null;
+         }
+      });
+
+      DropTarget dropTarget = new DropTarget(tabFolder, DND.DROP_MOVE);
+      dropTarget.setTransfer(transfers);
+      dropTarget.addDropListener(new DropTargetAdapter() {
+         @Override
+         public void dragOver(DropTargetEvent event)
+         {
+            event.detail = DND.DROP_MOVE;
+         }
+
+         @Override
+         public void drop(DropTargetEvent event)
+         {
+            if (!(event.data instanceof IStructuredSelection))
+               return;
+
+            Object object = ((IStructuredSelection)event.data).getFirstElement();
+            if (!(object instanceof ViewDragData))
+               return;
+
+            ViewDragData dragData = (ViewDragData)object;
+            Point pt = tabFolder.toControl(event.x, event.y);
+            int targetIndex = calculateInsertionIndex(pt);
+
+            if (dragData.sourceFolder == ViewFolder.this)
+            {
+               reorderTab(dragData.view, targetIndex);
+            }
+            else
+            {
+               receiveView(dragData.view, dragData.sourceFolder, targetIndex);
+            }
+         }
+      });
+   }
+
+   /**
+    * Calculate insertion index for a drop at the given point.
+    *
+    * @param point point in tab folder coordinates
+    * @return insertion index
+    */
+   private int calculateInsertionIndex(Point point)
+   {
+      CTabItem[] items = tabFolder.getItems();
+      for(int i = 0; i < items.length; i++)
+      {
+         Rectangle bounds = items[i].getBounds();
+         if (point.x < bounds.x + bounds.width / 2)
+            return i;
+      }
+      return items.length;
+   }
+
+   /**
+    * Reorder a tab within this folder by moving it to a new index.
+    *
+    * @param view view to reorder
+    * @param newIndex target index
+    */
+   private void reorderTab(View view, int newIndex)
+   {
+      String viewId = getViewId(view);
+      CTabItem oldTab = tabs.get(viewId);
+      if (oldTab == null)
+         return;
+
+      int oldIndex = tabFolder.indexOf(oldTab);
+      if (oldIndex == newIndex || oldIndex == newIndex - 1)
+         return; // No move needed
+
+      boolean wasSelected = (tabFolder.getSelection() == oldTab);
+      boolean ignoreContext = ignoreContextForView(oldTab);
+
+      // Adjust target index if moving forward (since old tab will be removed first)
+      if (oldIndex < newIndex)
+         newIndex--;
+
+      oldTab.setData("keepView", Boolean.TRUE);
+      boolean originalDisposeWhenEmpty = disposeWhenEmpty;
+      disposeWhenEmpty = false;
+      oldTab.dispose();
+      disposeWhenEmpty = originalDisposeWhenEmpty;
+
+      CTabItem newTab = createViewTab(view, ignoreContext, newIndex);
+      if (wasSelected)
+      {
+         tabFolder.setSelection(newTab);
+         activateView(view, newTab);
+      }
+   }
+
+   /**
+    * Receive a view from another folder via drag-and-drop.
+    *
+    * @param sourceView view being dragged
+    * @param sourceFolder folder the view is coming from
+    * @param insertionIndex index to insert at
+    */
+   private void receiveView(View sourceView, ViewFolder sourceFolder, int insertionIndex)
+   {
+      View clone = sourceView.cloneView();
+      if (clone == null)
+         return;
+
+      String cloneId = getViewId(clone);
+      if (views.containsKey(cloneId))
+         return; // Duplicate view
+
+      views.put(cloneId, clone);
+      clone.create(this, tabFolder, onFilterCloseCallback);
+      CTabItem tabItem = createViewTab(clone, true, insertionIndex);
+      tabFolder.setSelection(tabItem);
+      activateView(clone, tabItem);
+
+      // Remove from source folder
+      sourceFolder.detachAndDisposeView(sourceView);
+   }
+
+   /**
+    * Detach a view from this folder (for cross-folder drag-and-drop) and dispose the original.
+    *
+    * @param view view to detach
+    */
+   void detachAndDisposeView(View view)
+   {
+      String viewId = getViewId(view);
+      views.remove(viewId);
+      CTabItem tabItem = tabs.remove(viewId);
+      if (tabItem != null)
+      {
+         tabItem.setData("keepView", Boolean.TRUE);
+         boolean originalDisposeWhenEmpty = disposeWhenEmpty;
+         disposeWhenEmpty = false;
+         tabItem.dispose();
+         disposeWhenEmpty = originalDisposeWhenEmpty;
+      }
+      view.dispose();
+
+      // Activate next tab if detached view was active
+      if (view == activeView)
+      {
+         activeView = null;
+         CTabItem selection = tabFolder.getSelection();
+         if (selection != null)
+         {
+            View nextView = (View)selection.getData("view");
+            activateView(nextView, selection);
+         }
+      }
+
+      // Handle empty folder disposal
+      if (disposeWhenEmpty && (tabFolder.getItemCount() == 0))
+      {
+         Composite parent = getParent();
+         dispose();
+         parent.layout(true, true);
+      }
+   }
+
+   /**
+    * Get the underlying tab folder.
+    *
+    * @return tab folder
+    */
+   CTabFolder getTabFolder()
+   {
+      return tabFolder;
+   }
+
+   /**
     * Save view state
-    * 
+    *
     * @param memento memento to save state
     */
    public void saveState(Memento memento)
    {
       List<String> viewList = new ArrayList<String>();
-      for(View v : views.values())
+      for(CTabItem item : tabFolder.getItems())
       {
-         String id = v.getGlobalId();        
-         viewList.add(id);         
+         View v = (View)item.getData("view");
+         String id = v.getGlobalId();
+         viewList.add(id);
          Memento viewConfig = new Memento();
          v.saveState(viewConfig);
          memento.set(id + ".state", viewConfig);
-      }  
+      }
       memento.set("ViewFolder.Views", viewList);
    }
 }
