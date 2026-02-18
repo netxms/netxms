@@ -772,6 +772,26 @@ ssize_t ByteStream::writeStringU(const WCHAR* str, size_t length, const char* co
 }
 
 /**
+ * Remove specified number of bytes from the beginning of the stream
+ */
+void ByteStream::truncateLeft(size_t offset)
+{
+   if (offset >= m_size)
+   {
+      m_size = 0;
+      m_pos = 0;
+      return;
+   }
+
+   memmove(m_data, &m_data[offset], m_size - offset);
+   m_size -= offset;
+   if (m_pos > offset)
+      m_pos -= offset;
+   else
+      m_pos = 0;
+}
+
+/**
  * Load from file
  */
 ByteStream *ByteStream::load(const TCHAR *file)

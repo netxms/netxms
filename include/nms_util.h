@@ -4169,6 +4169,7 @@ public:
 
    void clear() { m_size = 0; m_pos = 0; }
    void truncate(size_t newSize) { if (newSize < m_size) { m_size = newSize; if (m_pos > m_size) m_pos = m_size; } }
+   void truncateLeft(size_t offset);
 
    void removeTerminalControlCharacters();
 
