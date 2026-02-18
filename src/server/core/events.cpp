@@ -1282,6 +1282,22 @@ uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode)
 }
 
 /**
+ * Get all event templates as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetEventTemplatesAsJson()
+{
+   json_t *array = json_array();
+   s_eventTemplatesLock.readLock();
+   auto it = s_eventTemplates.begin();
+   while(it.hasNext())
+   {
+      json_array_append_new(array, it.next()->toJson());
+   }
+   s_eventTemplatesLock.unlock();
+   return array;
+}
+
+/**
  * Get event configuration
  */
 void GetEventConfiguration(NXCPMessage *msg)

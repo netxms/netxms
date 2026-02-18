@@ -82,6 +82,11 @@ int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
+int H_EventTemplates(Context *context);
+int H_EventTemplateDetails(Context *context);
+int H_EventTemplateCreate(Context *context);
+int H_EventTemplateUpdate(Context *context);
+int H_EventTemplateDelete(Context *context);
 int H_SummaryTables(Context *context);
 int H_SummaryTableDetails(Context *context);
 int H_SummaryTableCreate(Context *context);
@@ -138,6 +143,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/terminate")
       .POST(H_AlarmTerminate)
+      .build();
+   RouteBuilder("v1/event-templates")
+      .GET(H_EventTemplates)
+      .POST(H_EventTemplateCreate)
+      .build();
+   RouteBuilder("v1/event-templates/:event-code")
+      .GET(H_EventTemplateDetails)
+      .PUT(H_EventTemplateUpdate)
+      .DELETE(H_EventTemplateDelete)
       .build();
    RouteBuilder("v1/dci-summary-tables")
       .GET(H_SummaryTables)

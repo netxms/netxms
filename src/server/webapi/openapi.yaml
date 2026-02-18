@@ -27,6 +27,8 @@ tags:
     description: Network search operations
   - name: DCI Summary Tables
     description: DCI summary table operations
+  - name: Event Templates
+    description: Event template management
 paths:
   /:
     get:
@@ -2107,6 +2109,162 @@ paths:
           description: Server command execution timed out.
       security:
         - BearerAuth: []
+  /v1/event-templates:
+    get:
+      summary: List event templates
+      description: Retrieve a list of all event templates defined in the system.
+      responses:
+        '200':
+          description: Event templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventTemplate'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have VIEW_EVENT_DB, EDIT_EVENT_DB, or EPP access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Templates
+    post:
+      summary: Create event template
+      description: Create a new event template. The server assigns a unique event code automatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTemplateInput'
+            example:
+              name: MY_CUSTOM_EVENT
+              severity: 2
+              flags: 1
+              message: "Custom event: %1"
+              description: "Custom event template for testing"
+              tags: "tag1,tag2"
+      responses:
+        '201':
+          description: Event template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTemplate'
+        '400':
+          description: Invalid event name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EDIT_EVENT_DB access right
+        '409':
+          description: Event with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Templates
+  /v1/event-templates/{event-code}:
+    get:
+      summary: Get event template details
+      description: Retrieve details of a specific event template by its event code.
+      parameters:
+        - name: event-code
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Event code
+      responses:
+        '200':
+          description: Event template retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTemplate'
+        '400':
+          description: Invalid event code
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have VIEW_EVENT_DB, EDIT_EVENT_DB, or EPP access rights
+        '404':
+          description: Event template not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Templates
+    put:
+      summary: Update event template
+      description: Update an existing event template. Only the fields provided in the request body will be modified.
+      parameters:
+        - name: event-code
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Event code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTemplateInput'
+      responses:
+        '200':
+          description: Event template updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTemplate'
+        '400':
+          description: Invalid event code or invalid event name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EDIT_EVENT_DB access right
+        '404':
+          description: Event template not found
+        '409':
+          description: Event with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Templates
+    delete:
+      summary: Delete event template
+      description: |
+        Delete an event template. Only user-defined event templates (event code >= 100000) can be deleted.
+        System event templates cannot be deleted.
+      parameters:
+        - name: event-code
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Event code (must be >= 100000)
+      responses:
+        '204':
+          description: Event template deleted successfully
+        '400':
+          description: Invalid event code or attempt to delete a system event template
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EDIT_EVENT_DB access right
+        '404':
+          description: Event template not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Templates
   /v1/dci-summary-tables:
     get:
       summary: List DCI summary tables
@@ -2119,26 +2277,131 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      description: Summary table ID
-                    menuPath:
-                      type: string
-                      description: Menu path for the summary table
-                    title:
-                      type: string
-                      description: Summary table title
-                    flags:
-                      type: integer
-                      description: Summary table flags
-                    guid:
-                      type: string
-                      format: uuid
-                      description: Summary table GUID
+                  $ref: '#/components/schemas/SummaryTableListEntry'
         '401':
           description: Unauthorized
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - DCI Summary Tables
+    post:
+      summary: Create DCI summary table
+      description: Create a new DCI summary table. Requires MANAGE_SUMMARY_TBLS access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummaryTableInput'
+      responses:
+        '201':
+          description: Summary table created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the newly created summary table
+        '400':
+          description: Invalid request or missing title field
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_SUMMARY_TBLS access right
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - DCI Summary Tables
+  /v1/dci-summary-tables/{table-id}:
+    get:
+      summary: Get DCI summary table details
+      description: Retrieve full details of a specific DCI summary table including columns and filter. Requires MANAGE_SUMMARY_TBLS access right.
+      parameters:
+        - name: table-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Summary table ID
+      responses:
+        '200':
+          description: Summary table details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryTableDetails'
+        '400':
+          description: Invalid summary table ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_SUMMARY_TBLS access right
+        '404':
+          description: Summary table not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - DCI Summary Tables
+    put:
+      summary: Update DCI summary table
+      description: Update an existing DCI summary table. Requires MANAGE_SUMMARY_TBLS access right.
+      parameters:
+        - name: table-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Summary table ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummaryTableInput'
+      responses:
+        '200':
+          description: Summary table updated successfully
+        '400':
+          description: Invalid summary table ID or missing title field
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_SUMMARY_TBLS access right
+        '404':
+          description: Summary table not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - DCI Summary Tables
+    delete:
+      summary: Delete DCI summary table
+      description: Delete a DCI summary table. Requires MANAGE_SUMMARY_TBLS access right.
+      parameters:
+        - name: table-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Summary table ID
+      responses:
+        '204':
+          description: Summary table deleted successfully
+        '400':
+          description: Invalid summary table ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_SUMMARY_TBLS access right
         '500':
           description: Database failure
       security:
@@ -2240,6 +2503,152 @@ components:
           type: string
         severity:
           type: string
+    EventTemplate:
+      type: object
+      description: Event template definition
+      properties:
+        code:
+          type: integer
+          description: Unique event code
+        name:
+          type: string
+          description: Event name (unique identifier)
+        guid:
+          type: string
+          format: uuid
+          description: Event template GUID
+        severity:
+          type: integer
+          description: "Default event severity (0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical)"
+        flags:
+          type: integer
+          description: Event flags bitmask (1=write to log)
+        message:
+          type: string
+          description: Message template with %1..%n parameter placeholders
+        description:
+          type: string
+          description: Detailed event description
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of event tags
+    EventTemplateInput:
+      type: object
+      description: Event template create/update request body
+      properties:
+        name:
+          type: string
+          description: Event name (must be a valid object name, unique across all event templates)
+        severity:
+          type: integer
+          description: "Default event severity (0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical)"
+        flags:
+          type: integer
+          description: Event flags bitmask (1=write to log)
+        message:
+          type: string
+          description: Message template with %1..%n parameter placeholders
+        description:
+          type: string
+          description: Detailed event description
+        tags:
+          type: string
+          description: Comma-separated list of event tags
+    SummaryTableListEntry:
+      type: object
+      description: DCI summary table list entry
+      properties:
+        id:
+          type: integer
+          description: Summary table ID
+        menuPath:
+          type: string
+          description: Menu path for the summary table
+        title:
+          type: string
+          description: Summary table title
+        flags:
+          type: integer
+          description: Summary table flags
+        guid:
+          type: string
+          format: uuid
+          description: Summary table GUID
+    SummaryTableDetails:
+      type: object
+      description: Full DCI summary table definition
+      properties:
+        id:
+          type: integer
+          description: Summary table ID
+        guid:
+          type: string
+          format: uuid
+          description: Summary table GUID
+        menuPath:
+          type: string
+          description: Menu path for the summary table
+        title:
+          type: string
+          description: Summary table title
+        flags:
+          type: integer
+          description: Summary table flags
+        nodeFilter:
+          type: string
+          description: NXSL filter script source
+        tableDciName:
+          type: string
+          description: Table DCI name (for table-based summary tables)
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummaryTableColumn'
+          description: Column definitions
+    SummaryTableColumn:
+      type: object
+      description: DCI summary table column definition
+      properties:
+        name:
+          type: string
+          description: Column display name
+        dciName:
+          type: string
+          description: DCI name to collect data from
+        flags:
+          type: integer
+          description: Column flags
+        separator:
+          type: string
+          description: Multi-value separator (default ";")
+    SummaryTableInput:
+      type: object
+      description: DCI summary table create/update request body
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Summary table title
+        menuPath:
+          type: string
+          description: Menu path for the summary table
+        nodeFilter:
+          type: string
+          description: NXSL filter script source
+        flags:
+          type: integer
+          description: Summary table flags
+        tableDciName:
+          type: string
+          description: Table DCI name (for table-based summary tables)
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummaryTableColumn'
+          description: Column definitions
     ScriptSummary:
       type: object
       properties:

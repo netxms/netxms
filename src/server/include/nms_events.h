@@ -916,6 +916,7 @@ uint32_t NXCORE_EXPORTABLE CreateEventTemplateFromJson(const json_t *json, json_
 uint32_t NXCORE_EXPORTABLE ModifyEventTemplateFromJson(uint32_t eventCode, const json_t *json, json_t **oldValue, json_t **newValue);
 uint32_t NXCORE_EXPORTABLE DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetEventTemplatesAsJson();
 void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode);
 
 void CorrelateEvent(Event *event);

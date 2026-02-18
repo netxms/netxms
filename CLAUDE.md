@@ -32,6 +32,7 @@ This monorepo has component-specific CLAUDE.md files:
 | Database | [src/db/CLAUDE.md](src/db/CLAUDE.md) | Database abstraction layer (libnxdb) |
 | SNMP | [src/snmp/CLAUDE.md](src/snmp/CLAUDE.md) | SNMP protocol library and tools |
 | Notification Channels | [src/ncdrivers/CLAUDE.md](src/ncdrivers/CLAUDE.md) | Notification channel drivers |
+| WebAPI | [src/server/webapi/CLAUDE.md](src/server/webapi/CLAUDE.md) | REST API endpoints |
 
 ## Quick Start
 
