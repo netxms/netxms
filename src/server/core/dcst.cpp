@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,27 +87,24 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
  *
  * @return RCC ready to be sent to client
  */
-uint32_t ModifySummaryTable(uint32_t id, const TCHAR *menuPath, const TCHAR *title,
-   const TCHAR *nodeFilter, uint32_t flags, const TCHAR *columns,
-   const TCHAR *tableDciName, uint32_t *newId)
+uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title,
+   const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, uint32_t *newId)
 {
    if (id == 0)
-   {
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
-   }
    *newId = id;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   bool isNew = !IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), id);
+   bool isNew = !IsDatabaseRecordExist(hdb, L"dci_summary_tables", L"id", id);
    DB_STATEMENT hStmt;
    if (isNew)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,table_dci_name,id,guid) VALUES (?,?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, L"INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,table_dci_name,id,guid) VALUES (?,?,?,?,?,?,?,?)");
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, L"UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?");
    }
 
    uint32_t rcc;
@@ -148,7 +145,7 @@ uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId)
 {
    uint32_t rcc;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   if (ExecuteQueryOnObject(hdb, tableId, _T("DELETE FROM dci_summary_tables WHERE id=?")))
+   if (ExecuteQueryOnObject(hdb, tableId, L"DELETE FROM dci_summary_tables WHERE id=?"))
    {
       rcc = RCC_SUCCESS;
       NotifyClientSessions(NX_NOTIFY_DCISUMTBL_DELETED, tableId);

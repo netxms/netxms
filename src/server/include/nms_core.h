@@ -1517,7 +1517,7 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
 uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCHAR **toolData, uint32_t *flags);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
-uint32_t ModifySummaryTable(uint32_t id, const TCHAR *menuPath, const TCHAR *title, const TCHAR *nodeFilter, uint32_t flags, const TCHAR *columns, const TCHAR *tableDciName, uint32_t *newId);
+uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title, const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, json_t *array);
