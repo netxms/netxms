@@ -373,7 +373,10 @@ bool CiscoNexusDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *ou
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
       return false;
-   return ssh->executeCommand("show running-config", output);
+   if (!ssh->executeCommand("show running-config", output))
+      return false;
+   StripCiscoConfigPreamble(output);
+   return true;
 }
 
 /**
@@ -384,5 +387,8 @@ bool CiscoNexusDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *ou
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
       return false;
-   return ssh->executeCommand("show startup-config", output);
+   if (!ssh->executeCommand("show startup-config", output))
+      return false;
+   StripCiscoConfigPreamble(output);
+   return true;
 }

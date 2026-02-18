@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers Cisco devices
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,33 @@
 #include <nddrv.h>
 
 #define DEBUG_TAG_CISCO _T("ndd.cisco")
+
+/**
+ * Strip diagnostic preamble from Cisco configuration output.
+ * Removes lines like "Building configuration..." that appear before the actual config
+ * which always starts with a comment line (!)
+ */
+static inline void StripCiscoConfigPreamble(ByteStream *output)
+{
+   const char *data = reinterpret_cast<const char*>(output->buffer());
+   size_t len = output->size();
+
+   // Find first line starting with '!' which marks the beginning of actual configuration
+   size_t pos = 0;
+   while (pos < len)
+   {
+      if (data[pos] == '!')
+         break;
+      // Skip to next line
+      while (pos < len && data[pos] != '\n')
+         pos++;
+      if (pos < len)
+         pos++;
+   }
+
+   if (pos > 0 && pos < len)
+      output->truncateLeft(pos);
+}
 
 /**
  * Generic Cisco driver
