@@ -2,6 +2,17 @@
 
 > Shared guidelines: See [root CLAUDE.md](../../CLAUDE.md) for C++ development guidelines, build commands, and contribution workflow.
 
+## Exporting Functions for Modules
+
+Server core is a shared library. External modules (e.g., `webapi/`, `hdlink/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module **must** be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`). For exported variables, use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol will not be visible to modules and linking will fail at runtime.
+
+```cpp
+// In include/nms_core.h or other server header
+void NXCORE_EXPORTABLE MyFunction();
+class NXCORE_EXPORTABLE MyClass { ... };
+extern NXCORE_EXPORTABLE_VAR(int) g_myGlobal;
+```
+
 ## String Handling
 
 Server code is always built in Unicode mode. Use `L"..."` string literals and wide-character functions (`wcsncmp`, `wcslen`, etc.) directly. Do **not** use `_T()` / `TCHAR` / `_tcsncmp` wrappers in new server code — those are remnants from older versions that supported non-Unicode builds. The `_T()` abstraction is only needed in agent code and shared libraries that may be built in either mode.
