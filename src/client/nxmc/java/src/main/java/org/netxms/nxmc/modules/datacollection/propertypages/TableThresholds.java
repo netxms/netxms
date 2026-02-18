@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ import org.xnap.commons.i18n.I18n;
 public class TableThresholds extends AbstractDCIPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(TableThresholds.class);
-	private static final String COLUMN_SETTINGS_PREFIX = "TableThresholds.ColumnList"; //$NON-NLS-1$
-	
+   private static final String COLUMN_SETTINGS_PREFIX = "TableThresholds.ColumnList";
+
 	private DataCollectionTable dci;
 	private List<TableThreshold> thresholds;
 	private TableViewer thresholdList;
@@ -72,7 +72,7 @@ public class TableThresholds extends AbstractDCIPropertyPage
 	private Button upButton;
 	private Button downButton;
    private Button duplicateButton;
-   
+
    /**
     * Constructor
     * 
@@ -91,24 +91,21 @@ public class TableThresholds extends AbstractDCIPropertyPage
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
-		
+
 		if (editor.getTableColumnEnumerator() == null)
 		{
-   	   final List<ColumnDefinition> columns = new ArrayList<ColumnDefinition>();
+         final List<String> columns = new ArrayList<String>();
          for(ColumnDefinition c : dci.getColumns())
-            columns.add(new ColumnDefinition(c));
+            columns.add(c.getName());
          editor.setTableColumnEnumerator(new TableColumnEnumerator() {
             @Override
             public List<String> getColumns()
             {
-               List<String> list = new ArrayList<String>();
-               for(int i = 0; i < columns.size(); i++)
-                  list.add(columns.get(i).getName());
-               return list;
+               return columns;
             }
          });
 		}
-		
+
 		thresholds = new ArrayList<TableThreshold>();
 		for(TableThreshold t : dci.getThresholds())
 			thresholds.add(new TableThreshold(t));
