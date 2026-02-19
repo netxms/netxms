@@ -457,6 +457,23 @@ static LONG H_VNCServerState(const TCHAR *param, const TCHAR *arg, TCHAR *value,
 }
 
 /**
+ * Handler for ExternalDataProvider.State(*)
+ */
+static LONG H_ExternalDataProviderState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[MAX_PARAM_NAME];
+   if (!AgentGetParameterArg(param, 1, name, MAX_PARAM_NAME))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   int state = GetExternalDataProviderState(name);
+   if (state < 0)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   ret_int(value, state);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Forward declarations for handlers
  */
 static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -538,6 +555,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.UserAgentCount"), H_SessionAgentCount, _T("U"), DCI_DT_UINT, DCIDESC_AGENT_USER_AGENTS_COUNT },
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("Agent.WebServiceProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_WEBSVC_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_WEBSVCPROXY_ISENABLED },
+   { _T("ExternalDataProvider.State(*)"), H_ExternalDataProviderState, nullptr, DCI_DT_INT, _T("State of external data provider {instance} (0 = disabled, 1 = enabled)") },
    { _T("File.Content(*)"), H_FileContent, nullptr, DCI_DT_STRING, _T("Content of file {instance}") },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
    { _T("File.FolderCount(*)"), H_DirInfo, (TCHAR *)DIRINFO_FOLDER_COUNT, DCI_DT_UINT, DCIDESC_FILE_FOLDERCOUNT },

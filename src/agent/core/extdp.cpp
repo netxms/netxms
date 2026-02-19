@@ -42,6 +42,7 @@ protected:
    TCHAR *m_command;
    ProcessExecutor *m_executor;
    Mutex m_mutex;
+   bool m_disabled;
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
@@ -68,6 +69,10 @@ public:
    void poll();
    void abort();
 
+   virtual const TCHAR *getName() const { return m_command; }
+   bool isDisabled() const { return m_disabled; }
+   void setDisabled(bool disabled);
+
    time_t getLastPollTime() const { return m_lastPollTime; }
    uint32_t getPollingInterval() const { return m_pollingInterval; }
 };
@@ -82,6 +87,7 @@ ExternalDataProvider::ExternalDataProvider(const TCHAR *command, uint32_t pollin
    m_lastPollTime = 0;
    m_command = MemCopyString(command);
    m_executor = nullptr;
+   m_disabled = false;
 }
 
 /**
@@ -91,6 +97,15 @@ ExternalDataProvider::~ExternalDataProvider()
 {
    MemFree(m_command);
    delete m_executor;
+}
+
+/**
+ * Set disabled state
+ */
+void ExternalDataProvider::setDisabled(bool disabled)
+{
+   m_disabled = disabled;
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("External data provider \"%s\" %s"), getName(), disabled ? _T("disabled") : _T("enabled"));
 }
 
 /**
@@ -108,6 +123,14 @@ void ExternalDataProvider::poll()
 {
    if (g_dwFlags & AF_SHUTDOWN)
       return;
+
+   if (m_disabled)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ExternalDataProvider::poll(): provider \"%s\" is disabled, skipping execution"), getName());
+      if (!(g_dwFlags & AF_SHUTDOWN))
+         ThreadPoolScheduleRelative(g_executorThreadPool, m_pollingInterval * 1000, this, &ExternalDataProvider::poll);
+      return;
+   }
 
    if (m_executor->execute())
    {
@@ -207,6 +230,9 @@ void MetricProvider::processPollResults()
  */
 LONG MetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
 {
+   if (m_disabled)
+      return SYSINFO_RC_UNKNOWN;
+
 	LONG rc = SYSINFO_RC_UNKNOWN;
 
 	lock();
@@ -276,6 +302,7 @@ public:
    virtual void listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
    virtual void listTables(StringList *list) override;
 
+   virtual const TCHAR *getName() const override { return m_name; }
    virtual LONG getTableValue(const TCHAR *name, Table *table) override;
 };
 
@@ -365,6 +392,9 @@ void TableProvider::listTables(StringList *list)
  */
 LONG TableProvider::getTableValue(const TCHAR *name, Table *table)
 {
+   if (m_disabled)
+      return SYSINFO_RC_UNKNOWN;
+
    if (_tcsicmp(name, m_name))
       return SYSINFO_RC_UNKNOWN;
 
@@ -412,6 +442,7 @@ public:
    virtual void listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count) override;
    virtual void listLists(StringList *list) override;
 
+   virtual const TCHAR *getName() const override { return m_name.cstr(); }
    virtual LONG getValue(const TCHAR *name, TCHAR *buffer) override;
    virtual LONG getList(const TCHAR *name, StringList *value) override;
 };
@@ -466,6 +497,9 @@ void StructuredMetricProvider::processPollResults()
  */
 LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
 {
+   if (m_disabled)
+      return SYSINFO_RC_UNKNOWN;
+
    LONG rc = SYSINFO_RC_UNKNOWN;
 
    lock();
@@ -500,6 +534,9 @@ LONG StructuredMetricProvider::getValue(const TCHAR *name, TCHAR *buffer)
  */
 LONG StructuredMetricProvider::getList(const TCHAR *name, StringList *value)
 {
+   if (m_disabled)
+      return SYSINFO_RC_UNKNOWN;
+
    lock();
 
    LONG rc = SYSINFO_RC_UNKNOWN;
@@ -827,4 +864,55 @@ void ListTablesFromExtProviders(StringList *list)
 int GetExternalDataProviderCount()
 {
    return s_providers.size();
+}
+
+/**
+ * Find external data provider by name (case-insensitive)
+ */
+static ExternalDataProvider *FindExternalDataProvider(const TCHAR *name)
+{
+   for(int i = 0; i < s_providers.size(); i++)
+   {
+      ExternalDataProvider *p = s_providers.get(i);
+      if (!_tcsicmp(p->getName(), name))
+         return p;
+   }
+   return nullptr;
+}
+
+/**
+ * Enable external data provider
+ */
+bool EnableExternalDataProvider(const TCHAR *name)
+{
+   ExternalDataProvider *p = FindExternalDataProvider(name);
+   if (p == nullptr)
+      return false;
+   p->setDisabled(false);
+   return true;
+}
+
+/**
+ * Disable external data provider
+ */
+bool DisableExternalDataProvider(const TCHAR *name)
+{
+   ExternalDataProvider *p = FindExternalDataProvider(name);
+   if (p == nullptr)
+      return false;
+   p->setDisabled(true);
+   return true;
+}
+
+/**
+ * Get external data provider state
+ *
+ * @return 1 if enabled, 0 if disabled, -1 if not found
+ */
+int GetExternalDataProviderState(const TCHAR *name)
+{
+   ExternalDataProvider *p = FindExternalDataProvider(name);
+   if (p == nullptr)
+      return -1;
+   return p->isDisabled() ? 0 : 1;
 }
