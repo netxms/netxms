@@ -89,6 +89,7 @@ CREATE TABLE users
   ldap_dn SQL_TEXT null,
   ldap_unique_id varchar(64) null,
   created integer not null,
+  tfa_grace_logins integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

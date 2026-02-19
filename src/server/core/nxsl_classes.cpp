@@ -7034,6 +7034,14 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(user->getGraceLogins());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("is2FAExempt"))
+   {
+      value = vm->createValue((user->getFlags() & UF_2FA_EXEMPT) != 0);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("twoFAGraceLogins"))
+   {
+      value = vm->createValue(user->get2FAGraceLogins());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastLogin"))
    {
       value = vm->createValue(static_cast<UINT32>(user->getLastLoginTime()));

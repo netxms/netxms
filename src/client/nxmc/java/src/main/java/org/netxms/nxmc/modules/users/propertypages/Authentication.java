@@ -79,6 +79,7 @@ public class Authentication extends PropertyPage
 	private Button checkFixedPassword;
    private Button checkTokenOnlyAuth;
    private Button checkCloseSessions;
+   private Button check2FAExempt;
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
 	private Text textMappingData;
@@ -133,6 +134,10 @@ public class Authentication extends PropertyPage
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
       checkCloseSessions.setText(i18n.tr("Close other &sessions after login"));
       checkCloseSessions.setSelection((user.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
+
+      check2FAExempt = new Button(groupFlags, SWT.CHECK);
+      check2FAExempt.setText(i18n.tr("Exempt from two-factor authentication &enforcement"));
+      check2FAExempt.setSelection((user.getFlags() & User.TWO_FA_EXEMPT) != 0);
 
       Group groupMethod = new Group(dialogArea, SWT.NONE);
       groupMethod.setText(i18n.tr("Authentication Method"));
@@ -347,6 +352,8 @@ public class Authentication extends PropertyPage
          flags |= AbstractUserObject.TOKEN_AUTH_ONLY;
 		if (checkCloseSessions.getSelection())
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
+      if (check2FAExempt.getSelection())
+         flags |= AbstractUserObject.TWO_FA_EXEMPT;
 		flags |= user.getFlags() & AbstractUserObject.LDAP_USER;
 		user.setFlags(flags);
 

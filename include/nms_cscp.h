@@ -1666,6 +1666,8 @@ typedef struct
 #define VID_STARTUP_CONFIG          ((uint32_t)940)
 #define VID_LAST_BACKUP_JOB_TIME    ((uint32_t)941)
 #define VID_LAST_BACKUP_JOB_MESSAGE ((uint32_t)942)
+#define VID_2FA_SETUP_REQUIRED      ((uint32_t)943)
+#define VID_2FA_GRACE_LOGINS        ((uint32_t)944)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

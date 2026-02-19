@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -227,15 +227,15 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
-		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
+		// Modify only specific flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
 		if (m_id == 0)
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
 		else if (m_id == GROUP_EVERYONE)
          m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
 	}
 
 	m_flags |= UF_MODIFIED;
@@ -267,15 +267,15 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
    if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
    {
       uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
-      // Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags
+      // Modify only specific flags from JSON
       // Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-      m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+      m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
       if (m_id == 0)
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
       else if (m_id == GROUP_EVERYONE)
          m_flags |= flags & UF_CHANGE_PASSWORD;
       else
-         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
    }
 
    json_t *attributes = json_object_get(const_cast<json_t*>(json), "attributes");
@@ -501,7 +501,7 @@ NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
  *    id,name,system_access,flags,description,guid,ldap_dn,ui_access_rules,password,full_name,
  *    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
  *    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
- *    last_login,email,phone_number
+ *    last_login,email,phone_number,tfa_grace_logins
  */
 User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, hResult, row)
 {
@@ -554,6 +554,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 20);
    m_email = DBGetField(hResult, row, 21, nullptr, 0);
    m_phoneNumber = DBGetField(hResult, row, 22, nullptr, 0);
+   m_2FAGraceLogins = DBGetFieldLong(hResult, row, 23);
 
    m_enableTime = 0;
 
@@ -589,6 +590,7 @@ User::User() : UserDatabaseObject()
 	m_enableTime = 0;
    m_email = nullptr;
    m_phoneNumber = nullptr;
+   m_2FAGraceLogins = ConfigReadInt(L"Server.Security.2FA.GraceLoginCount", 5);
 }
 
 /**
@@ -610,6 +612,7 @@ User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) 
    m_enableTime = 0;
    m_email = nullptr;
    m_phoneNumber = nullptr;
+   m_2FAGraceLogins = ConfigReadInt(L"Server.Security.2FA.GraceLoginCount", 5);
 }
 
 /**
@@ -643,6 +646,7 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_authFailures = src->m_authFailures;
    m_email = MemCopyString(src->m_email);
    m_phoneNumber = MemCopyString(src->m_phoneNumber);
+   m_2FAGraceLogins = src->m_2FAGraceLogins;
 
    src->m_2FABindings.forEach(User2FAMethodsCopyCallback, &m_2FABindings);
 }
@@ -689,15 +693,15 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
 			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
          _T("  min_passwd_length=?,disabled_until=?,last_login=?,ldap_dn=?,ldap_unique_id=?,created=?,")
-         _T("  email=?,phone_number=?,ui_access_rules=? WHERE id=?"));
+         _T("  email=?,phone_number=?,ui_access_rules=?,tfa_grace_logins=? WHERE id=?"));
    }
    else
    {
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,ui_access_rules,id) ")
-         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("  disabled_until,last_login,ldap_dn,ldap_unique_id,created,email,phone_number,ui_access_rules,tfa_grace_logins,id) ")
+         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return false;
@@ -724,7 +728,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_email, DB_BIND_STATIC);
    DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_phoneNumber, DB_BIND_STATIC);
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_uiAccessRules, DB_BIND_STATIC);
-   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_2FAGraceLogins);
+   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
    if (success)
@@ -850,6 +855,7 @@ void User::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_AUTH_FAILURES, m_authFailures);
    msg->setField(VID_EMAIL, CHECK_NULL_EX(m_email));
    msg->setField(VID_PHONE_NUMBER, CHECK_NULL_EX(m_phoneNumber));
+   msg->setField(VID_2FA_GRACE_LOGINS, static_cast<int32_t>(m_2FAGraceLogins));
 
    FillGroupMembershipInfo(msg, m_id);
 
@@ -1095,6 +1101,7 @@ json_t *User::toJson() const
    json_t *root = UserDatabaseObject::toJson();
    json_object_set_new(root, "fullName", json_string_t(m_fullName));
    json_object_set_new(root, "graceLogins", json_integer(m_graceLogins));
+   json_object_set_new(root, "twoFAGraceLogins", json_integer(m_2FAGraceLogins));
    json_object_set_new(root, "authMethod", json_integer(static_cast<int>(m_authMethod)));
    json_object_set_new(root, "certMappingMethod", json_integer(m_certMappingMethod));
    json_object_set_new(root, "certMappingData", json_string_t(m_certMappingData));
@@ -1121,7 +1128,7 @@ NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
  */
 void User::load2FABindings(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM two_factor_auth_bindings WHERE user_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT name,configuration FROM two_factor_auth_bindings WHERE user_id=?");
    if (hStmt == nullptr)
       return;
 
@@ -1198,6 +1205,7 @@ uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const StringMap& 
 {
    uint32_t rcc;
    bool newBinding = false;
+   bool wasEmpty = m_2FABindings.isEmpty();
    shared_ptr<Config> binding = m_2FABindings.getShared(methodName);
    if (binding == nullptr)
    {
@@ -1208,6 +1216,9 @@ uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const StringMap& 
    {
       if (newBinding)
          m_2FABindings.set(methodName, binding);
+      // Reset 2FA grace logins when first binding is added
+      if (wasEmpty && newBinding)
+         m_2FAGraceLogins = ConfigReadInt(L"Server.Security.2FA.GraceLoginCount", 5);
       m_flags |= UF_MODIFIED;
       rcc = RCC_SUCCESS;
    }

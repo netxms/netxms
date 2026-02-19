@@ -482,6 +482,13 @@ public class Startup implements EntryPoint, StartupParameters
          requestPasswordChange(credentials.getPassword(), session);
       }
 
+      // Warn user if 2FA setup is required
+      if (session.isTwoFASetupRequired())
+      {
+         MessageDialog.openWarning(null, i18n.tr("Two-Factor Authentication Required"),
+               i18n.tr("Your account requires two-factor authentication to be configured. You have {0} grace login(s) remaining. Please configure a two-factor authentication method in your user profile.", session.getTwoFAGraceLogins()));
+      }
+
       if (appProperties.getPropertyAsBoolean("autoLoginOnReload", true))
       {
          try

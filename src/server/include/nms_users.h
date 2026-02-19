@@ -367,6 +367,7 @@ protected:
    int m_authFailures;
    TCHAR *m_phoneNumber;
    TCHAR *m_email;
+   int m_2FAGraceLogins;
    SharedStringObjectMap<Config> m_2FABindings;
 
    void load2FABindings(DB_HANDLE hdb);
@@ -389,6 +390,9 @@ public:
 
 	const TCHAR *getFullName() const { return m_fullName; }
 	int getGraceLogins() const { return m_graceLogins; }
+	int get2FAGraceLogins() const { return m_2FAGraceLogins; }
+	void decrease2FAGraceLogins() { if (m_2FAGraceLogins > 0) m_2FAGraceLogins--; m_flags |= UF_MODIFIED; }
+	void reset2FAGraceLogins() { m_2FAGraceLogins = ConfigReadInt(L"Server.Security.2FA.GraceLoginCount", 5); m_flags |= UF_MODIFIED; }
 	UserAuthenticationMethod getAuthMethod() const { return m_authMethod; }
 	CertificateMappingMethod getCertMappingMethod() const { return m_certMappingMethod; }
 	time_t getLastLoginTime() const { return m_lastLogin; }
@@ -584,6 +588,11 @@ shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
 uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration);
 uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
+
+bool NXCORE_EXPORTABLE Is2FAEnforcedForUser(uint32_t userId);
+int NXCORE_EXPORTABLE Get2FAGraceLogins(uint32_t userId);
+void NXCORE_EXPORTABLE Decrease2FAGraceLogins(uint32_t userId);
+void NXCORE_EXPORTABLE Reset2FAGraceLogins(uint32_t userId);
 
 /**
  * Template wrapper for EnumerateUserDbObjectAttributes

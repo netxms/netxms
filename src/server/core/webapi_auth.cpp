@@ -244,6 +244,26 @@ int H_Login(Context *context)
 
          MemFree(selectedMethod);
       }
+      else if (Is2FAEnforcedForUser(loginRequest.userId))
+      {
+         // 2FA required but not configured - check grace logins
+         int graceLogins = Get2FAGraceLogins(loginRequest.userId);
+         if (graceLogins > 0)
+         {
+            Decrease2FAGraceLogins(loginRequest.userId);
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Two-factor authentication enforcement active but not configured, allowing grace login (%d remaining)"), graceLogins - 1);
+            CompleteLogin(response, loginRequest);
+            json_object_set_new(response, "twoFASetupRequired", json_true());
+            json_object_set_new(response, "twoFAGraceLogins", json_integer(graceLogins - 1));
+            responseCode = 201;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Two-factor authentication enforcement active, no 2FA configured, and no grace logins remaining - denying login"));
+            json_object_set_new(response, "errorCode", json_integer(RCC_2FA_SETUP_MANDATORY));
+            responseCode = 403;
+         }
+      }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Two-factor authentication is not required (not configured)"));

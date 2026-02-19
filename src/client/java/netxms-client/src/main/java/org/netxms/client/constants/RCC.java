@@ -219,6 +219,7 @@ public final class RCC
    public static final int COMMENT_REQUIRED = 184;
    public static final int INVALID_MESSAGE_ID = 185;
    public static final int EPP_CONFLICT = 186;
+   public static final int NEED_2FA_SETUP = 187;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

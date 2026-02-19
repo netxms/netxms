@@ -2551,14 +2551,9 @@ void ClientSession::login(const NXCPMessage& request)
       if (rcc == RCC_SUCCESS)
       {
          unique_ptr<StringList> methods = GetUserConfigured2FAMethods(m_userId);
-         if (methods->isEmpty())
+         if (!methods->isEmpty())
          {
-            debugPrintf(4, _T("Two-factor authentication is not required (not configured)"));
-            rcc = finalizeLogin(request, &response);
-            delete_and_null(m_loginInfo);
-         }
-         else
-         {
+            // User has 2FA configured - existing flow
             size_t tokenSize;
             const BYTE *token = request.getBinaryFieldPtr(VID_TRUSTED_DEVICE_TOKEN, &tokenSize);
             if (Validate2FATrustedDeviceToken(token, tokenSize, m_userId))
@@ -2574,6 +2569,31 @@ void ClientSession::login(const NXCPMessage& request)
                methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
                response.setField(VID_TRUSTED_DEVICES_ALLOWED, ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0) > 0);
             }
+         }
+         else if (Is2FAEnforcedForUser(m_userId))
+         {
+            // 2FA required but not configured - check grace logins
+            int graceLogins = Get2FAGraceLogins(m_userId);
+            if (graceLogins > 0)
+            {
+               Decrease2FAGraceLogins(m_userId);
+               debugPrintf(4, _T("Two-factor authentication enforcement active but not configured, allowing grace login (%d remaining)"), graceLogins - 1);
+               rcc = finalizeLogin(request, &response);
+               delete_and_null(m_loginInfo);
+               response.setField(VID_2FA_SETUP_REQUIRED, true);
+               response.setField(VID_2FA_GRACE_LOGINS, static_cast<int32_t>(graceLogins - 1));
+            }
+            else
+            {
+               debugPrintf(4, _T("Two-factor authentication enforcement active, no 2FA configured, and no grace logins remaining - denying login"));
+               rcc = RCC_2FA_SETUP_MANDATORY;
+            }
+         }
+         else
+         {
+            debugPrintf(4, _T("Two-factor authentication is not required (not configured)"));
+            rcc = finalizeLogin(request, &response);
+            delete_and_null(m_loginInfo);
          }
       }
       else

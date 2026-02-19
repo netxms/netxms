@@ -46,6 +46,8 @@ public abstract class AbstractUserObject
    public static final int SYNC_EXCEPTION = 0x0100;
    public static final int CLOSE_OTHER_SESSIONS = 0x0200;
    public static final int TOKEN_AUTH_ONLY = 0x0400;
+   public static final int TWO_FA_EXEMPT = 0x0800;
+   public static final int TWO_FA_ENFORCE = 0x1000;
 
    // User object fields
    public static final int MODIFY_LOGIN_NAME        = 0x00000001;

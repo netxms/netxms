@@ -328,6 +328,8 @@ public class NXCSession
    private String uiAccessRules;
    private boolean passwordExpired;
    private int graceLogins;
+   private boolean twoFASetupRequired;
+   private int twoFAGraceLogins;
    private String authenticationToken = null;
 
    // Internal communication data
@@ -2569,6 +2571,8 @@ public class NXCSession
       userSystemRights = response.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
       passwordExpired = response.getFieldAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
       graceLogins = response.getFieldAsInt32(NXCPCodes.VID_GRACE_LOGINS);
+      twoFASetupRequired = response.getFieldAsBoolean(NXCPCodes.VID_2FA_SETUP_REQUIRED);
+      twoFAGraceLogins = response.getFieldAsInt32(NXCPCodes.VID_2FA_GRACE_LOGINS);
       zoningEnabled = response.getFieldAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
       clientAssignedTcpProxyId = response.getFieldAsBoolean(NXCPCodes.VID_TCP_PROXY_CLIENT_CID);
@@ -3362,6 +3366,26 @@ public class NXCSession
    public int getGraceLogins()
    {
       return graceLogins;
+   }
+
+   /**
+    * Check if two-factor authentication setup is required for current user
+    *
+    * @return true if 2FA setup is required
+    */
+   public boolean isTwoFASetupRequired()
+   {
+      return twoFASetupRequired;
+   }
+
+   /**
+    * Get number of remaining 2FA grace logins
+    *
+    * @return number of remaining 2FA grace logins
+    */
+   public int getTwoFAGraceLogins()
+   {
+      return twoFAGraceLogins;
    }
 
    /**

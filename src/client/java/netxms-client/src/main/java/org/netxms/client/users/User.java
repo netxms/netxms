@@ -46,6 +46,7 @@ public class User extends AbstractUserObject
    private String phoneNumber;
    private int[] groups;
    private Map<String, Map<String, String>> twoFactorAuthMethodBindings;
+   private int twoFAGraceLogins;
 
 	/**
 	 * Default constructor
@@ -85,6 +86,7 @@ public class User extends AbstractUserObject
       twoFactorAuthMethodBindings = new HashMap<String, Map<String, String>>(src.twoFactorAuthMethodBindings.size());
       for(Entry<String, Map<String, String>> e : src.twoFactorAuthMethodBindings.entrySet())
          twoFactorAuthMethodBindings.put(e.getKey(), new HashMap<String, String>(e.getValue()));
+      twoFAGraceLogins = src.twoFAGraceLogins;
 	}
 
 	/**
@@ -119,6 +121,7 @@ public class User extends AbstractUserObject
          twoFactorAuthMethodBindings.put(name, msg.getStringMapFromFields(fieldId + 10, fieldId + 9));
          fieldId += 1000;
       }
+      twoFAGraceLogins = msg.getFieldAsInt32(NXCPCodes.VID_2FA_GRACE_LOGINS);
 	}
 
 	/**
@@ -367,5 +370,13 @@ public class User extends AbstractUserObject
    public void setTwoFactorAuthMethodBindings(Map<String, Map<String, String>> twoFactorAuthMethodBindings)
    {
       this.twoFactorAuthMethodBindings = twoFactorAuthMethodBindings;
+   }
+
+   /**
+    * @return number of remaining 2FA grace logins
+    */
+   public int getTwoFAGraceLogins()
+   {
+      return twoFAGraceLogins;
    }
 }

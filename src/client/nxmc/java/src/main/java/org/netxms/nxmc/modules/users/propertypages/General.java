@@ -20,9 +20,12 @@ package org.netxms.nxmc.modules.users.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
@@ -52,6 +55,7 @@ public class General extends PropertyPage
 	private String initialDescription;
    private String initialEmail;
    private String initialPhoneNumber;
+	private Button checkEnforce2FA;
 	private AbstractUserObject object;
 	private NXCSession session;
 
@@ -112,6 +116,22 @@ public class General extends PropertyPage
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
             i18n.tr("Description"), initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
+      if (!(object instanceof User))
+      {
+         Group groupOptions = new Group(dialogArea, SWT.NONE);
+         groupOptions.setText(i18n.tr("Options"));
+         GridLayout optionsLayout = new GridLayout();
+         groupOptions.setLayout(optionsLayout);
+         GridData gd = new GridData();
+         gd.horizontalAlignment = GridData.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         groupOptions.setLayoutData(gd);
+
+         checkEnforce2FA = new Button(groupOptions, SWT.CHECK);
+         checkEnforce2FA.setText(i18n.tr("Enforce two-factor authentication for group members"));
+         checkEnforce2FA.setSelection((object.getFlags() & AbstractUserObject.TWO_FA_ENFORCE) != 0);
+      }
+
 		return dialogArea;
 	}
 
@@ -128,12 +148,15 @@ public class General extends PropertyPage
       final String newFullName = (object instanceof User) ? textFullName.getText() : "";
       final String newEmail = (object instanceof User) ? textEmail.getText() : "";
       final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : "";
-		
-		if (newName.equals(initialName) && 
+      final boolean enforce2FA = (checkEnforce2FA != null) && checkEnforce2FA.getSelection();
+      final boolean currentEnforce2FA = (object.getFlags() & AbstractUserObject.TWO_FA_ENFORCE) != 0;
+
+		if (newName.equals(initialName) &&
 		    newDescription.equals(initialDescription) &&
 		    newFullName.equals(initialFullName) &&
           newEmail.equals(initialEmail) &&
-          newPhoneNumber.equals(initialPhoneNumber))
+          newPhoneNumber.equals(initialPhoneNumber) &&
+          (enforce2FA == currentEnforce2FA))
 			return true;		// Nothing to apply
 
       if (isApply)
@@ -163,6 +186,16 @@ public class General extends PropertyPage
                fields |= AbstractUserObject.MODIFY_FULL_NAME | AbstractUserObject.MODIFY_EMAIL |
                      AbstractUserObject.MODIFY_PHONE_NUMBER;
 				}
+            if (checkEnforce2FA != null)
+            {
+               int flags = object.getFlags();
+               if (enforce2FA)
+                  flags |= AbstractUserObject.TWO_FA_ENFORCE;
+               else
+                  flags &= ~AbstractUserObject.TWO_FA_ENFORCE;
+               object.setFlags(flags);
+               fields |= AbstractUserObject.MODIFY_FLAGS;
+            }
 				session.modifyUserDBObject(object, fields);
 			}
 

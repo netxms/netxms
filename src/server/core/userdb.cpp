@@ -316,7 +316,7 @@ bool LoadUsers()
 							 _T("ldap_unique_id,created,ui_access_rules,password,full_name,grace_logins,")
 							 _T("auth_method,cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
-							 _T("last_login,email,phone_number FROM users"));
+							 _T("last_login,email,phone_number,tfa_grace_logins FROM users"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1946,6 +1946,99 @@ uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName)
    }
    s_userDatabaseLock.unlock();
    return rcc;
+}
+
+/**
+ * Check if two-factor authentication is enforced for given user
+ */
+bool NXCORE_EXPORTABLE Is2FAEnforcedForUser(uint32_t userId)
+{
+   if (userId == 0)
+      return false;
+
+   s_userDatabaseLock.readLock();
+
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object == nullptr) || object->isGroup())
+   {
+      s_userDatabaseLock.unlock();
+      return false;
+   }
+
+   if (object->getFlags() & UF_2FA_EXEMPT)
+   {
+      s_userDatabaseLock.unlock();
+      return false;
+   }
+
+   if (ConfigReadBoolean(L"Server.Security.2FA.EnforceForAll", false))
+   {
+      s_userDatabaseLock.unlock();
+      return true;
+   }
+
+   // Check if any group with UF_2FA_ENFORCE flag contains this user
+   bool enforced = false;
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *dbObject = it.next();
+      if (dbObject->isGroup() && (dbObject->getFlags() & UF_2FA_ENFORCE))
+      {
+         if (static_cast<Group*>(dbObject)->isMember(userId, nullptr))
+         {
+            enforced = true;
+            break;
+         }
+      }
+   }
+
+   s_userDatabaseLock.unlock();
+   return enforced;
+}
+
+/**
+ * Get number of remaining 2FA grace logins for given user
+ */
+int NXCORE_EXPORTABLE Get2FAGraceLogins(uint32_t userId)
+{
+   int graceLogins = 0;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      graceLogins = static_cast<User*>(object)->get2FAGraceLogins();
+   }
+   s_userDatabaseLock.unlock();
+   return graceLogins;
+}
+
+/**
+ * Decrease 2FA grace login counter for given user
+ */
+void NXCORE_EXPORTABLE Decrease2FAGraceLogins(uint32_t userId)
+{
+   s_userDatabaseLock.writeLock();
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      static_cast<User*>(object)->decrease2FAGraceLogins();
+   }
+   s_userDatabaseLock.unlock();
+}
+
+/**
+ * Reset 2FA grace login counter for given user to configured default
+ */
+void NXCORE_EXPORTABLE Reset2FAGraceLogins(uint32_t userId)
+{
+   s_userDatabaseLock.writeLock();
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      static_cast<User*>(object)->reset2FAGraceLogins();
+   }
+   s_userDatabaseLock.unlock();
 }
 
 /**

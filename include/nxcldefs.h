@@ -794,6 +794,7 @@ enum SessionState
 #define RCC_COMMENT_REQUIRED              ((uint32_t)184)
 #define RCC_INVALID_MESSAGE_ID            ((uint32_t)185)
 #define RCC_EPP_CONFLICT                  ((uint32_t)186)
+#define RCC_2FA_SETUP_MANDATORY           ((uint32_t)187)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -961,6 +962,8 @@ enum SessionState
 #define UF_SYNC_EXCEPTION           0x0100
 #define UF_CLOSE_OTHER_SESSIONS     0x0200
 #define UF_TOKEN_AUTH_ONLY          0x0400
+#define UF_2FA_EXEMPT               0x0800
+#define UF_2FA_ENFORCE              0x1000
 
 /**
  * Fields for NXCModifyUserEx

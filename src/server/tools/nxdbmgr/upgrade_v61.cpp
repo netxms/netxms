@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.3 to 61.4
+ */
+static bool H_UpgradeFromV3()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE users ADD tfa_grace_logins integer\n"
+      L"UPDATE users SET tfa_grace_logins=5\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"users", L"tfa_grace_logins"));
+   CHK_EXEC(CreateConfigParam(L"Server.Security.2FA.EnforceForAll", L"0", L"Enforce two-factor authentication for all users", nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"Server.Security.2FA.GraceLoginCount", L"5", L"Number of grace logins allowed for users who have not configured two-factor authentication when enforcement is active", nullptr, 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 61.2 to 61.3
  */
 static bool H_UpgradeFromV2()
@@ -98,6 +115,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  61,  4,  H_UpgradeFromV3 },
    { 2,  61,  3,  H_UpgradeFromV2 },
    { 1,  61,  2,  H_UpgradeFromV1 },
    { 0,  61,  1,  H_UpgradeFromV0 },
