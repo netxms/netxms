@@ -265,3 +265,36 @@ int H_DataCollectionCurrentValues(Context *context)
    json_decref(response);
    return 200;
 }
+
+/**
+ * Handler for /v1/objects/:object-id/data-collection/performance-view
+ * Returns list of DCIs configured for performance view
+ */
+int H_PerformanceViewDCIs(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+
+   json_t *response = json_object();
+   json_t *dcis = json_array();
+   static_cast<DataCollectionTarget&>(*object).getPerfTabDCIList(dcis, context->getUserId());
+   json_object_set_new(response, "dcis", dcis);
+
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}

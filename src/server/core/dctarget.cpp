@@ -1020,6 +1020,106 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
 }
 
 /**
+ * Parse performance tab settings XML into JSON object
+ */
+static json_t *ParsePerfTabSettings(const TCHAR *xml)
+{
+   char *utf8xml = UTF8StringFromWideString(xml);
+   Config config(false);
+   if (!config.loadXmlConfigFromMemory(utf8xml, strlen(utf8xml), nullptr, "config", false))
+   {
+      MemFree(utf8xml);
+      return nullptr;
+   }
+   MemFree(utf8xml);
+
+   json_t *settings = json_object();
+   json_object_set_new(settings, "enabled", json_boolean(config.getValueAsBoolean(L"/enabled", false)));
+   json_object_set_new(settings, "type", json_integer(config.getValueAsInt(L"/type", 1)));
+
+   const TCHAR *title = config.getValue(L"/title", L"");
+   json_object_set_new(settings, "title", json_string_t(title));
+
+   const TCHAR *name = config.getValue(L"/name", L"");
+   json_object_set_new(settings, "name", json_string_t(name));
+
+   const TCHAR *groupName = config.getValue(L"/groupName");
+   json_object_set_new(settings, "groupName", (groupName != nullptr) ? json_string_t(groupName) : json_null());
+
+   json_object_set_new(settings, "order", json_integer(config.getValueAsInt(L"/order", 100)));
+
+   const TCHAR *color = config.getValue(L"/color", L"0x00C000");
+   json_object_set_new(settings, "color", json_string_t(color));
+
+   json_object_set_new(settings, "automaticColor", json_boolean(config.getValueAsBoolean(L"/automaticColor", true)));
+   json_object_set_new(settings, "autoScale", json_boolean(config.getValueAsBoolean(L"/autoScale", true)));
+
+   const TCHAR *minY = config.getValue(L"/minYScaleValue", L"0");
+   json_object_set_new(settings, "minYScaleValue", json_real(_tcstod(minY, nullptr)));
+
+   const TCHAR *maxY = config.getValue(L"/maxYScaleValue", L"100");
+   json_object_set_new(settings, "maxYScaleValue", json_real(_tcstod(maxY, nullptr)));
+
+   json_object_set_new(settings, "logScaleEnabled", json_boolean(config.getValueAsBoolean(L"/logScaleEnabled", false)));
+   json_object_set_new(settings, "stacked", json_boolean(config.getValueAsBoolean(L"/stacked", false)));
+   json_object_set_new(settings, "showLegendAlways", json_boolean(config.getValueAsBoolean(L"/showLegendAlways", false)));
+   json_object_set_new(settings, "extendedLegend", json_boolean(config.getValueAsBoolean(L"/extendedLegend", true)));
+   json_object_set_new(settings, "useMultipliers", json_boolean(config.getValueAsBoolean(L"/useMultipliers", true)));
+   json_object_set_new(settings, "showThresholds", json_boolean(config.getValueAsBoolean(L"/showThresholds", false)));
+   json_object_set_new(settings, "timeRange", json_integer(config.getValueAsInt(L"/timeRange", 1)));
+   json_object_set_new(settings, "timeUnits", json_integer(config.getValueAsInt(L"/timeUnits", 1)));
+
+   const TCHAR *yAxisLabel = config.getValue(L"/yAxisLabel");
+   json_object_set_new(settings, "yAxisLabel", (yAxisLabel != nullptr) ? json_string_t(yAxisLabel) : json_string(""));
+
+   json_object_set_new(settings, "invertedValues", json_boolean(config.getValueAsBoolean(L"/invertedValues", false)));
+   json_object_set_new(settings, "translucent", json_boolean(config.getValueAsBoolean(L"/translucent", true)));
+   json_object_set_new(settings, "modifyYBase", json_boolean(config.getValueAsBoolean(L"/modifyYBase", false)));
+   json_object_set_new(settings, "parentDciId", json_integer(config.getValueAsInt(L"/parentDciId", 0)));
+
+   return settings;
+}
+
+/**
+ * Get list of DCIs to be shown on performance tab (JSON output)
+ */
+uint32_t DataCollectionTarget::getPerfTabDCIList(json_t *output, uint32_t userId)
+{
+   readLockDciAccess();
+
+   for (int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *object = m_dcObjects.get(i);
+      if ((object->getPerfTabSettings() != nullptr) &&
+          object->hasValue() &&
+          (object->getStatus() == ITEM_STATUS_ACTIVE) &&
+          object->matchClusterResource() &&
+          object->hasAccess(userId))
+      {
+         json_t *dci = json_object();
+         json_object_set_new(dci, "id", json_integer(object->getId()));
+         json_object_set_new(dci, "name", json_string_t(object->getName()));
+         json_object_set_new(dci, "description", json_string_t(object->getDescription()));
+         json_object_set_new(dci, "instance", json_string_t(object->getInstanceDiscoveryData()));
+         json_object_set_new(dci, "instanceName", json_string_t(object->getInstanceName()));
+         json_object_set_new(dci, "dataType", json_integer((object->getType() == DCO_TYPE_ITEM) ? static_cast<DCItem*>(object)->getDataType() : 0));
+         json_object_set_new(dci, "templateDciId", json_integer(object->getTemplateItemId()));
+
+         shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
+         json_object_set_new(dci, "rootTemplateDciId", json_integer((src != nullptr) ? src->getTemplateItemId() : 0));
+
+         json_t *chartConfig = ParsePerfTabSettings(object->getPerfTabSettings());
+         json_object_set_new(dci, "chartConfig", (chartConfig != nullptr) ? chartConfig : json_object());
+
+         json_array_append_new(output, dci);
+      }
+   }
+
+   unlockDciAccess();
+   return RCC_SUCCESS;
+}
+
+/**
  * Get threshold violation summary into NXCP message
  */
 uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId)

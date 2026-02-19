@@ -50,6 +50,7 @@ int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
+int H_PerformanceViewDCIs(Context *context);
 int H_GrafanaDciList(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
@@ -217,6 +218,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/:dci-id/history")
       .GET(H_DataCollectionHistory)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/performance-view")
+      .GET(H_PerformanceViewDCIs)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
