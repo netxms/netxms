@@ -977,6 +977,80 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 }
 
 /**
+ * Modify user database object from JSON
+ */
+uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const json_t *json, json_t **oldData, json_t **newData)
+{
+   uint32_t rcc = RCC_INVALID_USER_ID;
+   bool updateAccessRights = false;
+
+   s_userDatabaseLock.writeLock();
+
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != nullptr)
+   {
+      TCHAR prevName[MAX_USER_NAME];
+      bool nameChanged = false;
+
+      const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+      if (nameUtf8 != nullptr)
+      {
+         wchar_t name[MAX_USER_NAME];
+         utf8_to_wchar(nameUtf8, -1, name, MAX_USER_NAME);
+         if (IsValidObjectName(name))
+         {
+            _tcslcpy(prevName, object->getName(), MAX_USER_NAME);
+            nameChanged = true;
+         }
+         else
+         {
+            rcc = RCC_INVALID_OBJECT_NAME;
+         }
+      }
+
+      if (rcc != RCC_INVALID_OBJECT_NAME)
+      {
+         *oldData = object->toJson();
+         object->modifyFromJson(json);
+         *newData = object->toJson();
+         SendUserDBUpdate(USER_DB_MODIFY, id, object);
+         rcc = RCC_SUCCESS;
+         updateAccessRights = (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr) ||
+                              (json_object_get(const_cast<json_t*>(json), "groupMembership") != nullptr) ||
+                              (json_object_get(const_cast<json_t*>(json), "members") != nullptr);
+      }
+
+      if ((rcc == RCC_SUCCESS) && nameChanged)
+      {
+         // update login names hash map if login name was modified
+         if (_tcscmp(prevName, object->getName()))
+         {
+            if (object->isGroup())
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, L"Group rename: %s -> %s", prevName, object->getName());
+               s_groups.remove(prevName);
+               s_groups.set(object->getName(), static_cast<Group*>(object));
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, L"User rename: %s -> %s", prevName, object->getName());
+               s_users.remove(prevName);
+               s_users.set(object->getName(), static_cast<User*>(object));
+            }
+         }
+      }
+   }
+
+   s_userDatabaseLock.unlock();
+
+   // Use separate thread to avoid deadlocks
+   if (updateAccessRights)
+      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
+
+   return rcc;
+}
+
+/**
  * Mark user database object as modified.
  * Executed in background thread to avoid possible deadlocks if called from code that is within low-level lock on user data.
  */

@@ -24,139 +24,6 @@
 #include <nms_users.h>
 
 /**
- * Build NXCPMessage for user modify from JSON request
- */
-static void BuildUserModifyMessage(NXCPMessage *msg, uint32_t userId, json_t *request)
-{
-   msg->setField(VID_USER_ID, userId);
-
-   uint32_t fields = 0;
-
-   json_t *v;
-   if ((v = json_object_get(request, "name")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "name", nullptr);
-      msg->setField(VID_USER_NAME, s);
-      MemFree(s);
-      fields |= USER_MODIFY_LOGIN_NAME;
-   }
-   if ((v = json_object_get(request, "description")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "description", nullptr);
-      msg->setField(VID_USER_DESCRIPTION, s);
-      MemFree(s);
-      fields |= USER_MODIFY_DESCRIPTION;
-   }
-   if ((v = json_object_get(request, "fullName")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "fullName", nullptr);
-      msg->setField(VID_USER_FULL_NAME, s);
-      MemFree(s);
-      fields |= USER_MODIFY_FULL_NAME;
-   }
-   if ((v = json_object_get(request, "flags")) != nullptr && json_is_integer(v))
-   {
-      msg->setField(VID_USER_FLAGS, static_cast<uint16_t>(json_integer_value(v)));
-      fields |= USER_MODIFY_FLAGS;
-   }
-   if ((v = json_object_get(request, "systemRights")) != nullptr && json_is_integer(v))
-   {
-      msg->setField(VID_USER_SYS_RIGHTS, static_cast<uint64_t>(json_integer_value(v)));
-      fields |= USER_MODIFY_ACCESS_RIGHTS;
-   }
-   if ((v = json_object_get(request, "uiAccessRules")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "uiAccessRules", nullptr);
-      msg->setField(VID_UI_ACCESS_RULES, s);
-      MemFree(s);
-      fields |= USER_MODIFY_UI_ACCESS_RULES;
-   }
-   if ((v = json_object_get(request, "authMethod")) != nullptr && json_is_integer(v))
-   {
-      msg->setField(VID_AUTH_METHOD, static_cast<uint16_t>(json_integer_value(v)));
-      fields |= USER_MODIFY_AUTH_METHOD;
-   }
-   if ((v = json_object_get(request, "minPasswordLength")) != nullptr && json_is_integer(v))
-   {
-      msg->setField(VID_MIN_PASSWORD_LENGTH, static_cast<uint16_t>(json_integer_value(v)));
-      fields |= USER_MODIFY_PASSWD_LENGTH;
-   }
-   if ((v = json_object_get(request, "disabledUntil")) != nullptr && json_is_integer(v))
-   {
-      msg->setField(VID_DISABLED_UNTIL, static_cast<uint32_t>(json_integer_value(v)));
-      fields |= USER_MODIFY_TEMP_DISABLE;
-   }
-   if ((v = json_object_get(request, "certMappingMethod")) != nullptr && json_is_integer(v))
-   {
-      json_t *dataField = json_object_get(request, "certMappingData");
-      TCHAR *data = (dataField != nullptr && json_is_string(dataField)) ? json_object_get_string_t(request, "certMappingData", nullptr) : MemCopyString(_T(""));
-      msg->setField(VID_CERT_MAPPING_METHOD, static_cast<uint16_t>(json_integer_value(v)));
-      msg->setField(VID_CERT_MAPPING_DATA, data);
-      MemFree(data);
-      fields |= USER_MODIFY_CERT_MAPPING;
-   }
-   if ((v = json_object_get(request, "email")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "email", nullptr);
-      msg->setField(VID_EMAIL, s);
-      MemFree(s);
-      fields |= USER_MODIFY_EMAIL;
-   }
-   if ((v = json_object_get(request, "phoneNumber")) != nullptr && json_is_string(v))
-   {
-      TCHAR *s = json_object_get_string_t(request, "phoneNumber", nullptr);
-      msg->setField(VID_PHONE_NUMBER, s);
-      MemFree(s);
-      fields |= USER_MODIFY_PHONE_NUMBER;
-   }
-
-   // Custom attributes
-   if ((v = json_object_get(request, "attributes")) != nullptr && json_is_object(v))
-   {
-      uint32_t count = static_cast<uint32_t>(json_object_size(v));
-      msg->setField(VID_NUM_CUSTOM_ATTRIBUTES, count);
-      uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
-      const char *key;
-      json_t *val;
-      json_object_foreach(v, key, val)
-      {
-         TCHAR *wkey = WideStringFromUTF8String(key);
-         TCHAR *wval = json_is_string(val) ? WideStringFromUTF8String(json_string_value(val)) : MemCopyString(_T(""));
-         msg->setField(fieldId++, wkey);
-         msg->setField(fieldId++, wval);
-         MemFree(wkey);
-         MemFree(wval);
-      }
-      fields |= USER_MODIFY_CUSTOM_ATTRIBUTES;
-   }
-
-   // Group membership (for users only)
-   if ((v = json_object_get(request, "groupMembership")) != nullptr && json_is_array(v))
-   {
-      size_t count = json_array_size(v);
-      IntegerArray<uint32_t> groups(static_cast<int>(count));
-      for(size_t i = 0; i < count; i++)
-         groups.add(static_cast<uint32_t>(json_integer_value(json_array_get(v, i))));
-      msg->setField(VID_NUM_GROUPS, static_cast<uint32_t>(count));
-      msg->setFieldFromInt32Array(VID_GROUPS, groups);
-      fields |= USER_MODIFY_GROUP_MEMBERSHIP;
-   }
-
-   // Group members (for groups only)
-   if ((v = json_object_get(request, "members")) != nullptr && json_is_array(v))
-   {
-      size_t count = json_array_size(v);
-      msg->setField(VID_NUM_MEMBERS, static_cast<int32_t>(count));
-      uint32_t fieldId = VID_GROUP_MEMBER_BASE;
-      for(size_t i = 0; i < count; i++)
-         msg->setField(fieldId++, static_cast<uint32_t>(json_integer_value(json_array_get(v, i))));
-      fields |= USER_MODIFY_MEMBERS;
-   }
-
-   msg->setField(VID_FIELDS, fields);
-}
-
-/**
  * Handler for GET /v1/users
  */
 int H_Users(Context *context)
@@ -280,11 +147,8 @@ int H_UserUpdate(Context *context)
    if (request == nullptr)
       return 400;
 
-   NXCPMessage msg;
-   BuildUserModifyMessage(&msg, userId, request);
-
    json_t *oldValue = nullptr, *newValue = nullptr;
-   uint32_t rcc = ModifyUserDatabaseObject(msg, &oldValue, &newValue);
+   uint32_t rcc = ModifyUserDatabaseObjectFromJson(userId, request, &oldValue, &newValue);
    if (rcc == RCC_SUCCESS)
    {
       context->writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldValue, newValue, L"User [%u] updated", userId);
@@ -563,11 +427,8 @@ int H_UserGroupUpdate(Context *context)
    if (request == nullptr)
       return 400;
 
-   NXCPMessage msg;
-   BuildUserModifyMessage(&msg, groupId, request);
-
    json_t *oldValue = nullptr, *newValue = nullptr;
-   uint32_t rcc = ModifyUserDatabaseObject(msg, &oldValue, &newValue);
+   uint32_t rcc = ModifyUserDatabaseObjectFromJson(groupId, request, &oldValue, &newValue);
    if (rcc == RCC_SUCCESS)
    {
       context->writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldValue, newValue, L"User group [%u] updated", groupId);

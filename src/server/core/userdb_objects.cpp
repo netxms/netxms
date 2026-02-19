@@ -242,6 +242,60 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Modify object from JSON (only updates fields that are present in JSON)
+ */
+void UserDatabaseObject::modifyFromJson(const json_t *json)
+{
+   const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
+   if (name != nullptr)
+      utf8_to_wchar(name, -1, m_name, MAX_USER_NAME);
+
+   const char *description = json_object_get_string_utf8(const_cast<json_t*>(json), "description", nullptr);
+   if (description != nullptr)
+      utf8_to_wchar(description, -1, m_description, MAX_USER_DESCR);
+
+   if ((m_id != 0) && (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr))
+      m_systemRights = static_cast<uint64_t>(json_object_get_int64(const_cast<json_t*>(json), "systemRights", m_systemRights));
+
+   const char *uiAccessRules = json_object_get_string_utf8(const_cast<json_t*>(json), "uiAccessRules", nullptr);
+   if (uiAccessRules != nullptr)
+   {
+      MemFree(m_uiAccessRules);
+      m_uiAccessRules = WideStringFromUTF8String(uiAccessRules);
+   }
+
+   if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
+   {
+      uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
+      // Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags
+      // Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
+      m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+      if (m_id == 0)
+         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+      else if (m_id == GROUP_EVERYONE)
+         m_flags |= flags & UF_CHANGE_PASSWORD;
+      else
+         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
+   }
+
+   json_t *attributes = json_object_get(const_cast<json_t*>(json), "attributes");
+   if ((attributes != nullptr) && json_is_object(attributes))
+   {
+      m_attributes.clear();
+      const char *key;
+      json_t *val;
+      json_object_foreach(attributes, key, val)
+      {
+         TCHAR *wkey = WideStringFromUTF8String(key);
+         TCHAR *wval = json_is_string(val) ? WideStringFromUTF8String(json_string_value(val)) : MemCopyString(L"");
+         m_attributes.setPreallocated(wkey, wval);
+      }
+   }
+
+   m_flags |= UF_MODIFIED;
+}
+
+/**
  * Detach user from LDAP user
  */
 void UserDatabaseObject::detachLdapUser()
@@ -893,6 +947,78 @@ void User::modifyFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Modify user object from JSON (only updates fields that are present in JSON)
+ */
+void User::modifyFromJson(const json_t *json)
+{
+   if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
+   {
+      uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
+      if (((m_flags & UF_DISABLED) != 0) && ((flags & UF_DISABLED) == 0))
+      {
+         // user is being enabled, update enable time so it will not be disabled again immediately by inactivity timer
+         m_enableTime = time(nullptr);
+      }
+   }
+
+   UserDatabaseObject::modifyFromJson(json);
+
+   const char *fullName = json_object_get_string_utf8(const_cast<json_t*>(json), "fullName", nullptr);
+   if (fullName != nullptr)
+      utf8_to_wchar(fullName, -1, m_fullName, MAX_USER_FULLNAME);
+
+   if (json_object_get(const_cast<json_t*>(json), "authMethod") != nullptr)
+      m_authMethod = UserAuthenticationMethodFromInt(json_object_get_int32(const_cast<json_t*>(json), "authMethod", static_cast<int>(m_authMethod)));
+
+   if (json_object_get(const_cast<json_t*>(json), "minPasswordLength") != nullptr)
+      m_minPasswordLength = json_object_get_int32(const_cast<json_t*>(json), "minPasswordLength", m_minPasswordLength);
+
+   if (json_object_get(const_cast<json_t*>(json), "disabledUntil") != nullptr)
+      m_disabledUntil = static_cast<time_t>(json_object_get_int64(const_cast<json_t*>(json), "disabledUntil", static_cast<int64_t>(m_disabledUntil)));
+
+   if (json_object_get(const_cast<json_t*>(json), "certMappingMethod") != nullptr)
+   {
+      m_certMappingMethod = static_cast<CertificateMappingMethod>(json_object_get_int32(const_cast<json_t*>(json), "certMappingMethod", static_cast<int>(m_certMappingMethod)));
+      MemFree(m_certMappingData);
+      const char *certMappingData = json_object_get_string_utf8(const_cast<json_t*>(json), "certMappingData", nullptr);
+      m_certMappingData = (certMappingData != nullptr) ? WideStringFromUTF8String(certMappingData) : nullptr;
+   }
+
+   const char *email = json_object_get_string_utf8(const_cast<json_t*>(json), "email", nullptr);
+   if (email != nullptr)
+   {
+      MemFree(m_email);
+      m_email = WideStringFromUTF8String(email);
+   }
+
+   const char *phoneNumber = json_object_get_string_utf8(const_cast<json_t*>(json), "phoneNumber", nullptr);
+   if (phoneNumber != nullptr)
+   {
+      MemFree(m_phoneNumber);
+      m_phoneNumber = WideStringFromUTF8String(phoneNumber);
+   }
+
+   json_t *groupMembership = json_object_get(const_cast<json_t*>(json), "groupMembership");
+   if ((groupMembership != nullptr) && json_is_array(groupMembership))
+   {
+      size_t count = json_array_size(groupMembership);
+      uint32_t *groups = nullptr;
+      if (count > 0)
+      {
+         groups = MemAllocArrayNoInit<uint32_t>(count);
+         for(size_t i = 0; i < count; i++)
+            groups[i] = static_cast<uint32_t>(json_integer_value(json_array_get(groupMembership, i)));
+      }
+      UpdateGroupMembership(m_id, count, groups);
+      MemFree(groups);
+   }
+
+   // Clear intruder lockout flag if user is not disabled anymore
+   if (!(m_flags & UF_DISABLED))
+      m_flags &= ~UF_INTRUDER_LOCKOUT;
+}
+
+/**
  * Increase auth failures and lockout account if threshold reached
  */
 void User::increaseAuthFailures()
@@ -1388,6 +1514,50 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
             SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
 		}
 	}
+}
+
+/**
+ * Modify group object from JSON (only updates fields that are present in JSON)
+ */
+void Group::modifyFromJson(const json_t *json)
+{
+   UserDatabaseObject::modifyFromJson(json);
+
+   json_t *membersJson = json_object_get(const_cast<json_t*>(json), "members");
+   if ((membersJson != nullptr) && json_is_array(membersJson))
+   {
+      IntegerArray<uint32_t> members = std::move(m_members);
+      size_t count = json_array_size(membersJson);
+      if (count > 0)
+      {
+         for(size_t i = 0; i < count; i++)
+         {
+            uint32_t userId = static_cast<uint32_t>(json_integer_value(json_array_get(membersJson, i)));
+            m_members.add(userId);
+
+            // check if new member
+            uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members.getBuffer(), members.size(), sizeof(uint32_t), CompareUserId));
+            if (e != nullptr)
+            {
+               *e = 0xFFFFFFFF;    // mark as found
+            }
+            else
+            {
+               SendUserDBUpdate(USER_DB_MODIFY, userId);  // new member added
+            }
+         }
+         for(int i = 0; i < members.size(); i++)
+            if (members.get(i) != 0xFFFFFFFF)  // not present in new list
+               SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
+         m_members.sort(CompareUserId);
+      }
+      else
+      {
+         // notify change for all old members
+         for(int i = 0; i < members.size(); i++)
+            SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
+      }
+   }
 }
 
 /**

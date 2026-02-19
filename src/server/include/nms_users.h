@@ -259,6 +259,7 @@ public:
 
    virtual void fillMessage(NXCPMessage *msg);
    virtual void modifyFromMessage(const NXCPMessage& msg);
+   virtual void modifyFromJson(const json_t *json);
 
    virtual json_t *toJson() const;
 
@@ -382,6 +383,7 @@ public:
 
 	virtual void fillMessage(NXCPMessage *msg) override;
 	virtual void modifyFromMessage(const NXCPMessage& msg) override;
+	virtual void modifyFromJson(const json_t *json) override;
 
    virtual json_t *toJson() const override;
 
@@ -509,6 +511,7 @@ public:
 
    virtual void fillMessage(NXCPMessage *msg) override;
    virtual void modifyFromMessage(const NXCPMessage& msg) override;
+   virtual void modifyFromJson(const json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -543,6 +546,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId);
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
 uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData);
+uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const json_t *json, json_t **oldData, json_t **newData);
 void MarkUserDatabaseObjectAsModified(uint32_t id);
 uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase();
