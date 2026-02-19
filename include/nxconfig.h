@@ -117,6 +117,7 @@ public:
 
 	void print(FILE *file, StringList *slist, int level, TCHAR *prefix) const;
 	void createXml(StringBuffer &xml, int level = 0) const;
+	void createJson(json_t *parent) const;
 };
 
 /**
@@ -200,6 +201,8 @@ public:
 	void print(FILE *file) const;
    void print(StringList *slist) const;
 	String createXml() const;
+	json_t *createJson(const TCHAR *topLevelTag = nullptr) const;
+	bool loadJsonConfigFromMemory(const char *json, size_t jsonSize, const TCHAR *defaultSectionName, bool merge = true);
 
    void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != nullptr) m_aliases.set(alias, value); else m_aliases.remove(alias); }
    const TCHAR *getAlias(const TCHAR *alias) const { return m_aliases.get(alias); }

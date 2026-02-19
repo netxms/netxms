@@ -750,9 +750,9 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
          {
-            String xml = binding->value->get()->createXml();
+            json_t *json = binding->value->get()->createJson(L"MethodBinding");
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, binding->key, DB_BIND_STATIC);
-            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, xml, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, json, DB_BIND_DYNAMIC);
             success = DBExecute(hStmt);
             if (!success)
                break;

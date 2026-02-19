@@ -19,10 +19,12 @@
 package org.netxms.nxmc.modules.serverconfig.dialogs;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -65,7 +67,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    private Combo comboChannelName;
    private boolean isNameChanged;
    private String newName;
-   private Properties driverConfiguration = new Properties();
+   private JsonObject driverConfiguration = new JsonObject();
    private List<NotificationChannel> notificationChannels = null;
 
    /**
@@ -137,13 +139,29 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       {
          textName.setText(method.getName());
          textDescription.setText(method.getDescription());
-         try (ByteArrayInputStream in = new ByteArrayInputStream(method.getConfiguration().getBytes("UTF-8")))
+         String config = method.getConfiguration();
+         if ((config != null) && !config.isEmpty())
          {
-            driverConfiguration.load(in);
-         }
-         catch(Exception e)
-         {
-            logger.error("Cannot parse 2FA driver configuration", e);
+            try
+            {
+               driverConfiguration = JsonParser.parseString(config).getAsJsonObject();
+            }
+            catch(JsonSyntaxException e)
+            {
+               // Fall back to legacy Properties (INI) format
+               try (ByteArrayInputStream in = new ByteArrayInputStream(config.getBytes("UTF-8")))
+               {
+                  Properties props = new Properties();
+                  props.load(in);
+                  driverConfiguration = new JsonObject();
+                  for (String key : props.stringPropertyNames())
+                     driverConfiguration.addProperty(key, props.getProperty(key));
+               }
+               catch(Exception e2)
+               {
+                  logger.error("Cannot parse 2FA driver configuration", e2);
+               }
+            }
          }
       }
 
@@ -224,7 +242,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          for(NotificationChannel n : notificationChannels)
          {
             comboChannelName.add(n.getName());
-            if (n.getName().equals(driverConfiguration.getProperty("ChannelName", "")))
+            if (n.getName().equals(driverConfiguration.has("ChannelName") ? driverConfiguration.get("ChannelName").getAsString() : ""))
                comboChannelName.select(comboChannelName.getItemCount() - 1);
          }
 
@@ -262,19 +280,10 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       // Process driver-specific configuration
       if (driverName.equals("Message"))
       {
-         driverConfiguration.setProperty("ChannelName", comboChannelName.getText());
+         driverConfiguration.addProperty("ChannelName", comboChannelName.getText());
       }
 
-      String configuration = "";
-      try (ByteArrayOutputStream out = new ByteArrayOutputStream())
-      {
-         driverConfiguration.store(out, null);
-         configuration = new String(out.toByteArray(), "UTF-8");
-      }
-      catch(Exception e)
-      {
-         logger.error("Error serializing 2FA driver configuration", e);
-      }
+      String configuration = driverConfiguration.toString();
 
       if (method == null)
       {

@@ -741,6 +741,34 @@ void ConfigEntry::createXml(StringBuffer &xml, int level) const
 }
 
 /**
+ * Create JSON element(s) from config entry
+ */
+void ConfigEntry::createJson(json_t *parent) const
+{
+   TCHAR *name = MemCopyString(m_name);
+   TCHAR *ptr = _tcschr(name, _T('#'));
+   if (ptr != nullptr)
+      *ptr = 0;
+
+   char *utf8Name = UTF8StringFromTString(name);
+   MemFree(name);
+
+   if (m_first != nullptr)
+   {
+      json_t *obj = json_object();
+      for (ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
+         e->createJson(obj);
+      json_object_set_new(parent, utf8Name, obj);
+   }
+   else if (!m_values.isEmpty())
+   {
+      json_object_set_new(parent, utf8Name, json_string_t(m_values.get(0)));
+   }
+
+   MemFree(utf8Name);
+}
+
+/**
  * Constructor for config
  */
 Config::Config(bool allowMacroExpansion)
@@ -1598,7 +1626,93 @@ static void CharData(void *userData, const XML_Char *s, int len)
 }
 
 /**
- * Load config from XML or INI in memory
+ * Recursively load JSON object into config entry
+ */
+static void LoadJsonObject(ConfigEntry *parent, json_t *obj, const Config *owner, bool merge)
+{
+   const char *key;
+   json_t *value;
+   json_object_foreach(obj, key, value)
+   {
+      TCHAR *tkey = TStringFromUTF8String(key);
+
+      ConfigEntry *entry = merge ? parent->findEntry(tkey) : nullptr;
+      if (entry == nullptr)
+         entry = new ConfigEntry(tkey, parent, owner, _T("<memory>"), 0, 0);
+
+      if (json_is_object(value))
+      {
+         LoadJsonObject(entry, value, owner, merge);
+      }
+      else if (json_is_string(value))
+      {
+         TCHAR *tvalue = TStringFromUTF8String(json_string_value(value));
+         entry->addValue(tvalue);
+         MemFree(tvalue);
+      }
+      else if (json_is_integer(value))
+      {
+         TCHAR buffer[64];
+         _sntprintf(buffer, 64, INT64_FMT, json_integer_value(value));
+         entry->addValue(buffer);
+      }
+      else if (json_is_real(value))
+      {
+         TCHAR buffer[64];
+         _sntprintf(buffer, 64, _T("%f"), json_real_value(value));
+         entry->addValue(buffer);
+      }
+      else if (json_is_boolean(value))
+      {
+         entry->addValue(json_is_true(value) ? _T("true") : _T("false"));
+      }
+
+      MemFree(tkey);
+   }
+}
+
+/**
+ * Load config from JSON in memory
+ */
+bool Config::loadJsonConfigFromMemory(const char *json, size_t jsonSize, const TCHAR *defaultSectionName, bool merge)
+{
+   json_error_t error;
+   json_t *root = json_loadb(json, jsonSize, 0, &error);
+   if (root == nullptr)
+   {
+      this->error(_T("JSON parse error at line %d: %hs"), error.line, error.text);
+      return false;
+   }
+
+   if (!json_is_object(root))
+   {
+      json_decref(root);
+      this->error(_T("JSON config must be an object"));
+      return false;
+   }
+
+   ConfigEntry *section;
+   if (defaultSectionName != nullptr)
+   {
+      section = m_root->findEntry(defaultSectionName);
+      if ((section == nullptr) || !merge)
+      {
+         section = new ConfigEntry(defaultSectionName, m_root, this, _T("<memory>"), 0, 0);
+      }
+   }
+   else
+   {
+      section = m_root;
+   }
+
+   LoadJsonObject(section, root, this, merge);
+
+   json_decref(root);
+   return true;
+}
+
+/**
+ * Load config from XML or INI or JSON in memory
  */
 bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
@@ -1615,6 +1729,10 @@ bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *
    if (ch == '<')
    {
       success = loadXmlConfigFromMemory(xml, xmlSize, nullptr, topLevelTag, merge);
+   }
+   else if (ch == '{')
+   {
+      success = loadJsonConfigFromMemory(xml, xmlSize, defaultIniSection, merge);
    }
    else
    {
@@ -1809,4 +1927,36 @@ String Config::createXml() const
    StringBuffer xml;
    m_root->createXml(xml);
    return xml;
+}
+
+/**
+ * Create JSON from config. Caller is responsible for calling json_decref() on the returned object.
+ */
+json_t *Config::createJson(const TCHAR *topLevelTag) const
+{
+   json_t *root = json_object();
+
+   ConfigEntry *entry;
+   if (topLevelTag != nullptr)
+   {
+      TCHAR path[256];
+      _sntprintf(path, 256, _T("/%s"), topLevelTag);
+      entry = getEntry(path);
+   }
+   else
+   {
+      entry = m_root;
+   }
+
+   if (entry != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> children = entry->getSubEntries(nullptr);
+      if (children != nullptr)
+      {
+         for (int i = 0; i < children->size(); i++)
+            children->get(i)->createJson(root);
+      }
+   }
+
+   return root;
 }
