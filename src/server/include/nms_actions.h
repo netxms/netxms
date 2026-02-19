@@ -63,6 +63,7 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
 uint32_t CreateAction(const TCHAR *name, uint32_t *id);
 uint32_t DeleteAction(uint32_t actionId);
 uint32_t ModifyActionFromMessage(const NXCPMessage& msg);
+uint32_t NXCORE_EXPORTABLE ModifyActionFromJson(uint32_t actionId, json_t *json, json_t **oldValue, json_t **newValue);
 void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);

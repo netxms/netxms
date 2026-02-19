@@ -17,6 +17,8 @@ tags:
     description: Grafana integration endpoints
   - name: Script Library
     description: NXSL script library management
+  - name: Server Actions
+    description: Server action management
   - name: Server
     description: Server information and status
   - name: AI Chat
@@ -2091,6 +2093,161 @@ paths:
         - BearerAuth: []
       tags:
         - Script Library
+  /v1/server-actions:
+    get:
+      summary: List server actions
+      description: Retrieve a list of all server actions defined in the system.
+      responses:
+        '200':
+          description: Server actions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServerAction'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_ACTIONS or EPP access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Actions
+    post:
+      summary: Create server action
+      description: |
+        Create a new server action. Only the name field is required.
+        Additional fields (type, data, etc.) can optionally be included to configure the action immediately after creation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerActionCreate'
+            example:
+              name: "Send email notification"
+      responses:
+        '201':
+          description: Server action created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerAction'
+        '400':
+          description: Missing or invalid name field
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_ACTIONS access right
+        '409':
+          description: Action with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Actions
+  /v1/server-actions/{action-id}:
+    get:
+      summary: Get server action details
+      description: Retrieve details of a specific server action by its ID.
+      parameters:
+        - name: action-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Action ID
+      responses:
+        '200':
+          description: Server action retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerAction'
+        '400':
+          description: Invalid action ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_ACTIONS or EPP access rights
+        '404':
+          description: Server action not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Actions
+    put:
+      summary: Update server action
+      description: Update an existing server action. Only the fields provided in the request body will be modified.
+      parameters:
+        - name: action-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Action ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerActionUpdate'
+      responses:
+        '200':
+          description: Server action updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerAction'
+        '400':
+          description: Invalid action ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_ACTIONS access right
+        '404':
+          description: Server action not found
+        '409':
+          description: Action with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Actions
+    delete:
+      summary: Delete server action
+      description: |
+        Delete a server action. The action cannot be deleted if it is currently
+        used in any event processing policy rule.
+      parameters:
+        - name: action-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Action ID
+      responses:
+        '204':
+          description: Server action deleted successfully
+        '400':
+          description: Invalid action ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have MANAGE_ACTIONS access right
+        '404':
+          description: Server action not found
+        '409':
+          description: Action is used in event processing policy
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Actions
   /v1/object-tools:
     get:
       summary: List available object tools
@@ -3809,6 +3966,88 @@ components:
             - normal: Connection closed normally by remote end
             - error: Connection closed due to an error
             - agent_disconnect: Agent connection was lost
+    ServerAction:
+      type: object
+      description: Server action configuration
+      properties:
+        id:
+          type: integer
+          description: Action ID
+        guid:
+          type: string
+          format: uuid
+          description: Action GUID
+        name:
+          type: string
+          description: Action name
+        type:
+          type: integer
+          description: "Action type: 0=execute command on server, 1=execute command on remote node via agent, 3=send notification, 4=forward event, 5=execute server-side script, 7=execute command via SSH"
+        typeDescription:
+          type: string
+          description: Human-readable action type description
+        isDisabled:
+          type: boolean
+          description: Whether the action is disabled
+        recipientAddress:
+          type: string
+          description: Recipient address (supports macros)
+        emailSubject:
+          type: string
+          description: Email subject (supports macros)
+        notificationChannelName:
+          type: string
+          description: Notification channel name
+    ServerActionCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Action name
+        type:
+          type: integer
+          description: Action type
+        isDisabled:
+          type: boolean
+          description: Whether the action is disabled
+        data:
+          type: string
+          description: Action data (command, message, or script name depending on type)
+        recipientAddress:
+          type: string
+          description: Recipient address
+        emailSubject:
+          type: string
+          description: Email subject
+        notificationChannelName:
+          type: string
+          description: Notification channel name
+    ServerActionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Action name
+        type:
+          type: integer
+          description: Action type
+        isDisabled:
+          type: boolean
+          description: Whether the action is disabled
+        data:
+          type: string
+          description: Action data (command, message, or script name depending on type)
+        recipientAddress:
+          type: string
+          description: Recipient address
+        emailSubject:
+          type: string
+          description: Email subject
+        notificationChannelName:
+          type: string
+          description: Notification channel name
   securitySchemes:
     BearerAuth:
       type: http
