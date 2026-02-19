@@ -807,6 +807,73 @@ uint32_t ModifyActionFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Modify action from JSON document
+ */
+uint32_t NXCORE_EXPORTABLE ModifyActionFromJson(uint32_t actionId, json_t *json, json_t **oldValue, json_t **newValue)
+{
+   shared_ptr<Action> tmp = s_actions.getShared(actionId);
+   if (tmp == nullptr)
+      return RCC_INVALID_ACTION_ID;
+
+   *oldValue = tmp->toJson();
+   auto action = make_shared<Action>(*tmp);
+
+   json_t *v;
+   v = json_object_get(json, "name");
+   if (json_is_string(v))
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      utf8_to_wchar(json_string_value(v), -1, name, MAX_OBJECT_NAME);
+      if (wcscmp(action->name, name) != 0)
+      {
+         if (s_actions.findElement(ActionNameComparator, static_cast<const TCHAR*>(name)) != nullptr)
+         {
+            json_decref(*oldValue);
+            *oldValue = nullptr;
+            return RCC_OBJECT_ALREADY_EXISTS;
+         }
+         wcslcpy(action->name, name, MAX_OBJECT_NAME);
+      }
+   }
+
+   v = json_object_get(json, "type");
+   if (json_is_integer(v))
+      action->type = static_cast<ServerActionType>(json_integer_value(v));
+
+   v = json_object_get(json, "isDisabled");
+   if (json_is_boolean(v))
+      action->isDisabled = json_boolean_value(v);
+
+   v = json_object_get(json, "recipientAddress");
+   if (json_is_string(v))
+      utf8_to_wchar(json_string_value(v), -1, action->rcptAddr, MAX_RCPT_ADDR_LEN);
+
+   v = json_object_get(json, "emailSubject");
+   if (json_is_string(v))
+      utf8_to_wchar(json_string_value(v), -1, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
+
+   v = json_object_get(json, "data");
+   if (json_is_string(v))
+   {
+      MemFree(action->data);
+      action->data = WideStringFromUTF8String(json_string_value(v));
+   }
+
+   v = json_object_get(json, "notificationChannelName");
+   if (json_is_string(v))
+      utf8_to_wchar(json_string_value(v), -1, action->channelName, MAX_OBJECT_NAME);
+
+   action->saveToDatabase();
+
+   s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
+   EnumerateClientSessions(SendActionDBUpdate, action.get());
+   s_actions.set(actionId, action);
+
+   *newValue = action->toJson();
+   return RCC_SUCCESS;
+}
+
+/**
  * Send action to client
  * first - old name
  * second - new name

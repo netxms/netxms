@@ -43,6 +43,11 @@ int H_AiChatDelete(Context *context);
 int H_AiChatGetStatus(Context *context);
 int H_AiChatSendMessage(Context *context);
 int H_AiCharPollQuestion(Context *context);
+int H_ServerActions(Context *context);
+int H_ServerActionDetails(Context *context);
+int H_ServerActionCreate(Context *context);
+int H_ServerActionUpdate(Context *context);
+int H_ServerActionDelete(Context *context);
 int H_AlarmAcknowledge(Context *context);
 int H_AlarmDetails(Context *context);
 int H_AlarmResolve(Context *context);
@@ -263,6 +268,15 @@ static bool InitModule(Config *config)
       .GET(H_ScriptDetails)
       .PUT(H_ScriptUpdate)
       .DELETE(H_ScriptDelete)
+      .build();
+   RouteBuilder("v1/server-actions")
+      .GET(H_ServerActions)
+      .POST(H_ServerActionCreate)
+      .build();
+   RouteBuilder("v1/server-actions/:action-id")
+      .GET(H_ServerActionDetails)
+      .PUT(H_ServerActionUpdate)
+      .DELETE(H_ServerActionDelete)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)
