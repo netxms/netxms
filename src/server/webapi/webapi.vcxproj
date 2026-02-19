@@ -329,6 +329,7 @@
     <ClCompile Include="alarms.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
+    <ClCompile Include="events.cpp" />
     <ClCompile Include="find.cpp" />
     <ClCompile Include="grafana.cpp" />
     <ClCompile Include="info.cpp" />
@@ -337,6 +338,7 @@
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="scripts.cpp" />
     <ClCompile Include="tcpproxy.cpp" />
+    <ClCompile Include="users.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />

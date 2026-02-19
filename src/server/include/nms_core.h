@@ -1476,7 +1476,7 @@ void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t 
 void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object);
 void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change);
 int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter);
-bool IsLoggedIn(uint32_t userId);
+bool NXCORE_EXPORTABLE IsLoggedIn(uint32_t userId);
 bool NXCORE_EXPORTABLE KillClientSession(session_id_t id);
 void NXCORE_EXPORTABLE CloseOtherSessions(uint32_t userId, session_id_t thisSession);
 

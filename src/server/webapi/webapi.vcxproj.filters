@@ -51,6 +51,12 @@
     <ClCompile Include="tcpproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="users.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="webapi.h">
