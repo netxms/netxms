@@ -436,6 +436,9 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = ":put netxms_test";
    hints->testCommandPattern = "netxms_test";
 
+   // RouterOS echoes each character on a separate line
+   hints->charByCharEcho = true;
+
    // Timeouts (RouterOS is generally responsive)
    hints->commandTimeout = 30000;
    hints->connectTimeout = 10000;

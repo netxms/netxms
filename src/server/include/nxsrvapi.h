@@ -1477,6 +1477,7 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
    const char *testCommand;             // Command for testing command/exec mode
    const char *testCommandPattern;      // Expected pattern in test command output
    const char *terminalType;            // Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
+   bool charByCharEcho;                 // Device echoes each character on a separate line (e.g., MikroTik)
    uint32_t commandTimeout;             // Default timeout (ms)
    uint32_t connectTimeout;             // Connection timeout (ms)
 
@@ -1493,6 +1494,7 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
       testCommand = "echo netxms_test_12345";
       testCommandPattern = "netxms_test_12345";
       terminalType = "vt100";
+      charByCharEcho = false;
       commandTimeout = 30000;
       connectTimeout = 10000;
    }

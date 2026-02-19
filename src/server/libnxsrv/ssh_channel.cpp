@@ -328,7 +328,8 @@ void SSHInteractiveChannel::processIncomingData()
 {
    m_bufferLock.lock();
    removeControlCharacters();
-   collapseCharacterByCharacterOutput();
+   if (m_hints.charByCharEcho)
+      collapseCharacterByCharacterOutput();
    m_bufferLock.unlock();
 
    // Check for pagination prompt and handle it
@@ -338,7 +339,8 @@ void SSHInteractiveChannel::processIncomingData()
       m_dataReceived.wait(200);
       m_bufferLock.lock();
       removeControlCharacters();
-      collapseCharacterByCharacterOutput();
+      if (m_hints.charByCharEcho)
+         collapseCharacterByCharacterOutput();
       m_bufferLock.unlock();
    }
 }
@@ -550,7 +552,8 @@ StringList *SSHInteractiveChannel::parseOutput(const char *sentCommand)
 
    // Process any remaining control characters (data may have arrived after last processIncomingData call)
    removeControlCharacters();
-   collapseCharacterByCharacterOutput();
+   if (m_hints.charByCharEcho)
+      collapseCharacterByCharacterOutput();
 
    // Convert buffer to string
    String output(reinterpret_cast<const char*>(m_buffer.buffer()), m_buffer.size(), "UTF-8");
@@ -610,7 +613,8 @@ void SSHInteractiveChannel::parseOutput(const char *sentCommand, ByteStream *out
 
    // Process any remaining control characters (data may have arrived after last processIncomingData call)
    removeControlCharacters();
-   collapseCharacterByCharacterOutput();
+   if (m_hints.charByCharEcho)
+      collapseCharacterByCharacterOutput();
 
    const char *data = reinterpret_cast<const char*>(m_buffer.buffer());
    size_t len = m_buffer.size();
