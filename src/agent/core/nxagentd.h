@@ -863,6 +863,9 @@ void StartExternalMetricProviders();
 void StopExternalMetricProviders();
 void StartBackgroundMetricCollection();
 int GetExternalDataProviderCount();
+bool EnableExternalDataProvider(const TCHAR *name);
+bool DisableExternalDataProvider(const TCHAR *name);
+int GetExternalDataProviderState(const TCHAR *name);
 int GetBackgroundMetricCount();
 bool AddMetricProvider(const TCHAR *line);
 void AddStructuredMetricProvider(const TCHAR *name, const TCHAR *command, StringObjectMap<StructuredExtractorParameterDefinition> *metricDefenitions,

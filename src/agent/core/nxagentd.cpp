@@ -833,6 +833,26 @@ static uint32_t H_TerminateProcess(const shared_ptr<ActionExecutionContext>& con
 #endif
 
 /**
+ * Handler for ExternalDataProvider.Enable action
+ */
+static uint32_t H_EnableExternalDataProvider(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+   return EnableExternalDataProvider(context->getArg(0)) ? ERR_SUCCESS : ERR_UNKNOWN_METRIC;
+}
+
+/**
+ * Handler for ExternalDataProvider.Disable action
+ */
+static uint32_t H_DisableExternalDataProvider(const shared_ptr<ActionExecutionContext>& context)
+{
+   if (!context->hasArgs())
+      return ERR_BAD_ARGUMENTS;
+   return DisableExternalDataProvider(context->getArg(0)) ? ERR_SUCCESS : ERR_UNKNOWN_METRIC;
+}
+
+/**
  * Signal handler for UNIX platforms
  */
 #if !defined(_WIN32)
@@ -1332,6 +1352,8 @@ BOOL Initialize()
 #ifndef _WIN32
       AddAction(_T("Process.Terminate"), false, nullptr, H_TerminateProcess, _T("CORE"), _T("Terminate process"));
 #endif
+      AddAction(_T("ExternalDataProvider.Enable"), false, nullptr, H_EnableExternalDataProvider, _T("CORE"), _T("Enable external data provider"));
+      AddAction(_T("ExternalDataProvider.Disable"), false, nullptr, H_DisableExternalDataProvider, _T("CORE"), _T("Disable external data provider"));
       AddAction(_T("TFTP.Put"), false, nullptr, H_TFTPPut, _T("CORE"), _T("Transfer file to remote system via TFTP"));
       if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
