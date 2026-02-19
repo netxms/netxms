@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -725,7 +725,7 @@ static bool ActionNameComparator(const uint32_t& id, const Action& action, const
 /**
  * Create new action
  */
-uint32_t CreateAction(const TCHAR *name, uint32_t *id)
+uint32_t NXCORE_EXPORTABLE CreateAction(const TCHAR *name, uint32_t *id)
 {
    // Check for duplicate name
    if (s_actions.findElement(ActionNameComparator, name) != nullptr)
@@ -745,7 +745,7 @@ uint32_t CreateAction(const TCHAR *name, uint32_t *id)
 /**
  * Delete action
  */
-uint32_t DeleteAction(uint32_t actionId)
+uint32_t NXCORE_EXPORTABLE DeleteAction(uint32_t actionId)
 {
    uint32_t dwResult = RCC_SUCCESS;
 
@@ -894,7 +894,7 @@ static EnumerationCallbackResult RenameChannel(const uint32_t& id, const shared_
  * first - old name
  * second - new name
  */
-void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names)
+void NXCORE_EXPORTABLE UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names)
 {
    s_actions.forEach(RenameChannel, names);
 }
@@ -910,7 +910,7 @@ static bool CheckChannelUsage(const uint32_t& id, const Action& action, TCHAR *n
 /**
  * Check if notification channel with given name is used in actions
  */
-bool CheckChannelIsUsedInAction(TCHAR *name)
+bool NXCORE_EXPORTABLE CheckChannelIsUsedInAction(TCHAR *name)
 {
    return s_actions.findElement(CheckChannelUsage, name) != nullptr;
 }
@@ -965,8 +965,6 @@ json_t NXCORE_EXPORTABLE *GetActions()
       });
    return actions;
 }
-
-
 
 /**
  * Create export record for action as JSON object
