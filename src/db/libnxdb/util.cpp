@@ -659,6 +659,10 @@ static bool GetColumnDataType_MSSQL_PGSQL(DB_HANDLE hdb, const TCHAR *table, con
             {
                _sntprintf(definition, len, _T("%s(%d)"), type, ch);
             }
+            else if (ch == -1)  // varchar(max) / nvarchar(max) in MSSQL
+            {
+               _sntprintf(definition, len, _T("%s(max)"), type);
+            }
             else
             {
                _tcslcpy(definition, type, len);
