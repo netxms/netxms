@@ -41,7 +41,7 @@ import org.xnap.commons.i18n.I18n;
 public class EditTableThresholdDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(EditTableThresholdDialog.class);
-   
+
 	private TableThreshold threshold;
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;
@@ -49,7 +49,7 @@ public class EditTableThresholdDialog extends Dialog
 	private LabeledSpinner deactivationSampleCount;
 	private TableConditionsEditor conditionsEditor;
    private TableColumnEnumerator columnEnumerator;
-	
+
 	/**
 	 * @param parentShell
 	 * @param threshold
@@ -60,6 +60,15 @@ public class EditTableThresholdDialog extends Dialog
 		this.threshold = threshold;
       this.columnEnumerator = columnEnumerator;
 	}
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#isResizable()
+    */
+   @Override
+   protected boolean isResizable()
+   {
+      return true;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
@@ -78,21 +87,21 @@ public class EditTableThresholdDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
-		
+
 		activationEvent = new EventSelector(dialogArea, SWT.NONE);
 		activationEvent.setLabel(i18n.tr("Activation event"));
 		activationEvent.setEventCode(threshold.getActivationEvent());
 		activationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		
+
 		deactivationEvent = new EventSelector(dialogArea, SWT.NONE);
 		deactivationEvent.setLabel(i18n.tr("Deactivation event"));
 		deactivationEvent.setEventCode(threshold.getDeactivationEvent());
 		deactivationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		
+
 		sampleCount = new LabeledSpinner(dialogArea, SWT.NONE);
 		sampleCount.setLabel("Sample count");
 		sampleCount.setRange(1, 100000);
@@ -104,7 +113,7 @@ public class EditTableThresholdDialog extends Dialog
 		deactivationSampleCount.setSelection(threshold.getDeactivationSampleCount());
 
 		new Label(dialogArea, SWT.NONE).setText(i18n.tr("Conditions"));
-		
+
 		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnEnumerator);
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.widthHint = 700;
@@ -112,6 +121,7 @@ public class EditTableThresholdDialog extends Dialog
 		conditionsEditor.setLayoutData(gd);
 		conditionsEditor.setConditions(threshold.getConditions());
 
+		dialogArea.layout(true, true);
 		return dialogArea;
 	}
 
@@ -127,5 +137,5 @@ public class EditTableThresholdDialog extends Dialog
 		threshold.setDeactivationSampleCount(deactivationSampleCount.getSelection());
 		threshold.setConditions(conditionsEditor.getConditions());
 		super.okPressed();
-	}	
+	}
 }
