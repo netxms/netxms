@@ -4344,6 +4344,10 @@ public:
    static const TCHAR *typeName(NodeType type);
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<Node>;
+#endif
+
 /**
  * Subnet
  */

@@ -611,7 +611,7 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
 /**
  * Check if given user is currenly logged in
  */
-bool IsLoggedIn(uint32_t userId)
+bool NXCORE_EXPORTABLE IsLoggedIn(uint32_t userId)
 {
    bool result = false;
    s_sessionListLock.readLock();
