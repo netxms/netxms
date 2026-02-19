@@ -1384,6 +1384,123 @@ paths:
           description: Database failure
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/data-collection/performance-view:
+    get:
+      summary: Get performance view DCIs
+      description: Retrieve data collection items configured for the performance view tab, including parsed chart configuration settings.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: Performance view DCIs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dcis:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: DCI ID
+                        name:
+                          type: string
+                          description: DCI name
+                        description:
+                          type: string
+                          description: DCI description
+                        instance:
+                          type: string
+                          description: Instance value
+                        instanceName:
+                          type: string
+                          description: Instance display name
+                        dataType:
+                          type: integer
+                          description: Data type (0=integer, 1=unsigned integer, 2=int64, 3=unsigned int64, 4=string, 5=float, 6=null, 7=counter32, 8=counter64)
+                        templateDciId:
+                          type: integer
+                          description: Template DCI ID (0 if not from template)
+                        rootTemplateDciId:
+                          type: integer
+                          description: Root template DCI ID for instance discovery
+                        chartConfig:
+                          type: object
+                          description: Chart configuration parsed from perfTabSettings XML
+                          properties:
+                            enabled:
+                              type: boolean
+                            type:
+                              type: integer
+                              description: Chart type
+                            title:
+                              type: string
+                            name:
+                              type: string
+                              description: Legend name
+                            groupName:
+                              type: string
+                              nullable: true
+                              description: Chart group name
+                            order:
+                              type: integer
+                              description: Display order within group
+                            color:
+                              type: string
+                              description: Line color (e.g. "0x00C000")
+                            automaticColor:
+                              type: boolean
+                            autoScale:
+                              type: boolean
+                            minYScaleValue:
+                              type: number
+                            maxYScaleValue:
+                              type: number
+                            logScaleEnabled:
+                              type: boolean
+                            stacked:
+                              type: boolean
+                            showLegendAlways:
+                              type: boolean
+                            extendedLegend:
+                              type: boolean
+                            useMultipliers:
+                              type: boolean
+                            showThresholds:
+                              type: boolean
+                            timeRange:
+                              type: integer
+                            timeUnits:
+                              type: integer
+                              description: Time units (0=minutes, 1=hours, 2=days)
+                            yAxisLabel:
+                              type: string
+                            invertedValues:
+                              type: boolean
+                            translucent:
+                              type: boolean
+                            modifyYBase:
+                              type: boolean
+                            parentDciId:
+                              type: integer
+        '400':
+          description: Object is not data collection target
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/expand-text:
     post:
       summary: Expand text macros

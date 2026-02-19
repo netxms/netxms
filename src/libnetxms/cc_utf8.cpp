@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2021 Raden Solutions
+ ** Copyright (C) 2003-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -26,7 +26,7 @@
 /**
  * Convert UTF-8 character to UNICODE code point
  */
-inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
+static inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
 {
    BYTE b = *s++;
    if ((b & 0x80) == 0)

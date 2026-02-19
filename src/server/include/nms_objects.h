@@ -2927,6 +2927,7 @@ public:
    virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr) override;
 
    uint32_t getPerfTabDCIList(NXCPMessage *msg, uint32_t userId);
+   uint32_t NXCORE_EXPORTABLE getPerfTabDCIList(json_t *output, uint32_t userId);
    uint32_t getTableLastValue(uint32_t dciId, NXCPMessage *msg);
    uint32_t getDciLastValue(uint32_t dciId, NXCPMessage *msg);
    uint32_t getThresholdSummary(NXCPMessage *msg, uint32_t baseId, uint32_t userId);
