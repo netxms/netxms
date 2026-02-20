@@ -36,7 +36,7 @@ public class BaseUserLabelProvider extends LabelProvider
    @Override
    public Image getImage(Object element)
    {
-      return (element instanceof User) ? SharedIcons.IMG_USER : ((element instanceof UserGroup) ? SharedIcons.IMG_GROUP : null);
+      return (element instanceof User) ? (((User)element).isServiceAccount() ? SharedIcons.IMG_SERVICE : SharedIcons.IMG_USER) : ((element instanceof UserGroup) ? SharedIcons.IMG_GROUP : null);
    }
 
    /**

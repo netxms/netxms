@@ -80,6 +80,7 @@ public class Authentication extends PropertyPage
    private Button checkTokenOnlyAuth;
    private Button checkCloseSessions;
    private Button check2FAExempt;
+   private Button checkServiceAccount;
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
 	private Text textMappingData;
@@ -138,6 +139,31 @@ public class Authentication extends PropertyPage
       check2FAExempt = new Button(groupFlags, SWT.CHECK);
       check2FAExempt.setText(i18n.tr("Exempt from two-factor authentication &enforcement"));
       check2FAExempt.setSelection((user.getFlags() & User.TWO_FA_EXEMPT) != 0);
+
+      checkServiceAccount = new Button(groupFlags, SWT.CHECK);
+      checkServiceAccount.setText(i18n.tr("&Service account (token-only, no interactive login)"));
+      checkServiceAccount.setSelection((user.getFlags() & AbstractUserObject.SERVICE_ACCOUNT) != 0);
+      checkServiceAccount.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            boolean svc = checkServiceAccount.getSelection();
+            checkChangePassword.setEnabled(!svc);
+            checkFixedPassword.setEnabled(!svc);
+            checkTokenOnlyAuth.setEnabled(!svc);
+            checkCloseSessions.setEnabled(!svc);
+            check2FAExempt.setEnabled(!svc);
+         }
+      });
+
+      if (user.isServiceAccount())
+      {
+         checkChangePassword.setEnabled(false);
+         checkFixedPassword.setEnabled(false);
+         checkTokenOnlyAuth.setEnabled(false);
+         checkCloseSessions.setEnabled(false);
+         check2FAExempt.setEnabled(false);
+      }
 
       Group groupMethod = new Group(dialogArea, SWT.NONE);
       groupMethod.setText(i18n.tr("Authentication Method"));
@@ -354,6 +380,8 @@ public class Authentication extends PropertyPage
          flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
       if (check2FAExempt.getSelection())
          flags |= AbstractUserObject.TWO_FA_EXEMPT;
+      if (checkServiceAccount.getSelection())
+         flags |= AbstractUserObject.SERVICE_ACCOUNT;
 		flags |= user.getFlags() & AbstractUserObject.LDAP_USER;
 		user.setFlags(flags);
 

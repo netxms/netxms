@@ -81,6 +81,7 @@ public class SharedIcons
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
    public static ImageDescriptor SEND;
+   public static ImageDescriptor SERVICE;
    public static ImageDescriptor SHOW;
    public static ImageDescriptor SOUND;
 	public static ImageDescriptor TERMINATE;
@@ -151,6 +152,7 @@ public class SharedIcons
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
    public static Image IMG_SEND;
+   public static Image IMG_SERVICE;
    public static Image IMG_SHOW;
    public static Image IMG_SOUND;
 	public static Image IMG_TERMINATE;
@@ -226,6 +228,7 @@ public class SharedIcons
       SAVE_AS = ResourceManager.getImageDescriptor("icons/save-as.png");
       SAVE_AS_IMAGE = ResourceManager.getImageDescriptor("icons/image_obj.png");
       SEND = ResourceManager.getImageDescriptor("icons/send.png");
+      SERVICE = ResourceManager.getImageDescriptor("icons/service.png");
       SHOW = ResourceManager.getImageDescriptor("icons/show.png");
       SOUND = ResourceManager.getImageDescriptor("icons/sound.png");
       TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.png");
@@ -296,6 +299,7 @@ public class SharedIcons
       IMG_SAVE_AS = SAVE_AS.createImage();
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
       IMG_SEND = SEND.createImage();
+      IMG_SERVICE = SERVICE.createImage();
       IMG_SHOW = SHOW.createImage();
       IMG_SOUND = SOUND.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();

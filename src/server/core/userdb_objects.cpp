@@ -209,9 +209,9 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 		m_attributes.clear();
 		for(uint32_t i = 0, fieldId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
 		{
-			TCHAR *name = msg.getFieldAsString(fieldId++);
-			TCHAR *value = msg.getFieldAsString(fieldId++);
-			m_attributes.setPreallocated((name != nullptr) ? name : MemCopyString(_T("")), (value != nullptr) ? value : MemCopyString(_T("")));
+		   wchar_t *name = msg.getFieldAsString(fieldId++);
+		   wchar_t *value = msg.getFieldAsString(fieldId++);
+			m_attributes.setPreallocated((name != nullptr) ? name : MemCopyString(L""), (value != nullptr) ? value : MemCopyString(L""));
 		}
 	}
 
@@ -229,13 +229,13 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 	   uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
 		// Modify only specific flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
 		if (m_id == 0)
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
 		else if (m_id == GROUP_EVERYONE)
          m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
 	}
 
 	m_flags |= UF_MODIFIED;
@@ -269,13 +269,13 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
       uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
       // Modify only specific flags from JSON
       // Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-      m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
+      m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
       if (m_id == 0)
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
       else if (m_id == GROUP_EVERYONE)
          m_flags |= flags & UF_CHANGE_PASSWORD;
       else
-         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE);
+         m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
    }
 
    json_t *attributes = json_object_get(const_cast<json_t*>(json), "attributes");
@@ -286,8 +286,8 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
       json_t *val;
       json_object_foreach(attributes, key, val)
       {
-         TCHAR *wkey = WideStringFromUTF8String(key);
-         TCHAR *wval = json_is_string(val) ? WideStringFromUTF8String(json_string_value(val)) : MemCopyString(L"");
+         wchar_t *wkey = WideStringFromUTF8String(key);
+         wchar_t *wval = json_is_string(val) ? WideStringFromUTF8String(json_string_value(val)) : MemCopyString(L"");
          m_attributes.setPreallocated(wkey, wval);
       }
    }

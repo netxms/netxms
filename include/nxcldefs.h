@@ -964,6 +964,7 @@ enum SessionState
 #define UF_TOKEN_AUTH_ONLY          0x0400
 #define UF_2FA_EXEMPT               0x0800
 #define UF_2FA_ENFORCE              0x1000
+#define UF_SERVICE_ACCOUNT          0x2000
 
 /**
  * Fields for NXCModifyUserEx

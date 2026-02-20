@@ -279,6 +279,7 @@ public:
    bool isDisabled() const { return (m_flags & UF_DISABLED) != 0; }
    bool isModified() const { return (m_flags & UF_MODIFIED) != 0; }
    bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) != 0; }
+   bool isServiceAccount() const { return (m_flags & UF_SERVICE_ACCOUNT) != 0; }
 
    void setModified() { m_flags |= UF_MODIFIED; }
    void setDeleted() { m_flags |= UF_DELETED; }

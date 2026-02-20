@@ -48,6 +48,7 @@ public abstract class AbstractUserObject
    public static final int TOKEN_AUTH_ONLY = 0x0400;
    public static final int TWO_FA_EXEMPT = 0x0800;
    public static final int TWO_FA_ENFORCE = 0x1000;
+   public static final int SERVICE_ACCOUNT = 0x2000;
 
    // User object fields
    public static final int MODIFY_LOGIN_NAME        = 0x00000001;
@@ -341,6 +342,16 @@ public abstract class AbstractUserObject
 	{
 		return ((flags & DISABLED) == DISABLED);
 	}
+
+   /**
+    * Check if this is a service account (token-only, no interactive login).
+    *
+    * @return true if this is a service account
+    */
+   public boolean isServiceAccount()
+   {
+      return (flags & SERVICE_ACCOUNT) != 0;
+   }
 	
 	/**
 	 * Check if password should be changed at next logon

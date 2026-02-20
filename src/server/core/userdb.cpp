@@ -436,6 +436,13 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    user = new User(user);  // create copy for authentication
    s_userDatabaseLock.unlock();
 
+   if (user->isServiceAccount())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" is a service account (interactive login not allowed)"), user->getName());
+      delete user;
+      return RCC_ACCESS_DENIED;
+   }
+
    *closeOtherSessions = false;
    *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
