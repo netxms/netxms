@@ -35,6 +35,8 @@ tags:
     description: User management
   - name: User Groups
     description: User group management
+  - name: Two-Factor Authentication
+    description: Two-factor authentication method management and user bindings
 paths:
   /:
     get:
@@ -2344,8 +2346,8 @@ paths:
       description: |
         Execute a server-capable object tool on the specified object.
         Supported tool types: action (agent action), server-command, server-script,
-        snmp-table, agent-table, agent-list, ssh-command.
-        Client-only tool types (internal, url, command, file-download) are rejected with 400.
+        snmp-table, agent-table, agent-list, ssh-command, url.
+        Client-only tool types (internal, command, file-download) are rejected with 400.
       tags:
         - Object Tools
       parameters:
@@ -2386,18 +2388,21 @@ paths:
                   - $ref: '#/components/schemas/ObjectToolTextResult'
                   - $ref: '#/components/schemas/ObjectToolTableResult'
                   - $ref: '#/components/schemas/ObjectToolNoResult'
+                  - $ref: '#/components/schemas/ObjectToolUrlResult'
                 discriminator:
                   propertyName: type
                   mapping:
                     text: '#/components/schemas/ObjectToolTextResult'
                     table: '#/components/schemas/ObjectToolTableResult'
                     none: '#/components/schemas/ObjectToolNoResult'
+                    url: '#/components/schemas/ObjectToolUrlResult'
         '400':
           description: |
             Invalid request. Possible reasons:
             - Invalid or missing tool-id
             - Missing or invalid objectId
-            - Tool type is client-only (internal, url, command, file-download)
+            - Tool type is client-only (internal, command, file-download)
+            - Tool is disabled
             - Incompatible object class for the tool type
             - Object is not a node (for tools requiring a node target)
         '403':
@@ -3149,6 +3154,269 @@ paths:
         - BearerAuth: []
       tags:
         - User Groups
+  /v1/users/{user-id}/2fa-bindings:
+    get:
+      summary: List user's 2FA bindings
+      description: |
+        Retrieve the list of two-factor authentication method bindings for a specific user.
+        Users can view their own bindings; viewing other users' bindings requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: 2FA bindings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TwoFactorBinding'
+        '400':
+          description: Invalid user ID
+        '403':
+          description: Access denied (not own user and no MANAGE_USERS right)
+        '404':
+          description: User not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+  /v1/users/{user-id}/2fa-bindings/{method-name}:
+    put:
+      summary: Create or update user 2FA binding
+      description: |
+        Create or update a two-factor authentication method binding for a specific user.
+        Users can manage their own bindings; managing other users' bindings requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: method-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 2FA method name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+              description: Method-specific configuration as key-value pairs
+      responses:
+        '200':
+          description: 2FA binding updated successfully
+        '400':
+          description: Invalid user ID or missing method name
+        '403':
+          description: Access denied (not own user and no MANAGE_USERS right)
+        '404':
+          description: User not found or unknown 2FA method
+        '500':
+          description: Internal error
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+    delete:
+      summary: Delete user 2FA binding
+      description: |
+        Delete a two-factor authentication method binding for a specific user.
+        Users can manage their own bindings; managing other users' bindings requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: method-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 2FA method name
+      responses:
+        '204':
+          description: 2FA binding deleted successfully
+        '400':
+          description: Invalid user ID or missing method name
+        '403':
+          description: Access denied (not own user and no MANAGE_USERS right)
+        '404':
+          description: User not found or binding not found
+        '500':
+          description: Internal error
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+  /v1/2fa/drivers:
+    get:
+      summary: List available 2FA drivers
+      description: Retrieve the list of available two-factor authentication drivers. Requires MANAGE_2FA_METHODS access right.
+      responses:
+        '200':
+          description: 2FA drivers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["TOTP", "Message"]
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+  /v1/2fa/methods:
+    get:
+      summary: List 2FA methods
+      description: Retrieve the list of configured two-factor authentication methods. Requires MANAGE_2FA_METHODS access right.
+      responses:
+        '200':
+          description: 2FA methods retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TwoFactorMethod'
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+    post:
+      summary: Create 2FA method
+      description: Create a new two-factor authentication method. Requires MANAGE_2FA_METHODS access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwoFactorMethodInput'
+      responses:
+        '201':
+          description: 2FA method created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwoFactorMethod'
+        '400':
+          description: Missing or invalid required fields, or unknown driver
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+        '409':
+          description: Method with this name already exists
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+  /v1/2fa/methods/{method-name}:
+    get:
+      summary: Get 2FA method details
+      description: Retrieve details of a specific two-factor authentication method. Requires MANAGE_2FA_METHODS access right.
+      parameters:
+        - name: method-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 2FA method name
+      responses:
+        '200':
+          description: 2FA method retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwoFactorMethod'
+        '400':
+          description: Missing method name
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+        '404':
+          description: Method not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+    put:
+      summary: Update 2FA method
+      description: |
+        Update an existing two-factor authentication method. Only the fields provided
+        in the request body will be modified. Requires MANAGE_2FA_METHODS access right.
+      parameters:
+        - name: method-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 2FA method name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwoFactorMethodInput'
+      responses:
+        '200':
+          description: 2FA method updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwoFactorMethod'
+        '400':
+          description: Unknown driver
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+        '404':
+          description: Method not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
+    delete:
+      summary: Delete 2FA method
+      description: Delete a two-factor authentication method. Requires MANAGE_2FA_METHODS access right.
+      parameters:
+        - name: method-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 2FA method name
+      responses:
+        '204':
+          description: 2FA method deleted successfully
+        '400':
+          description: Missing method name
+        '403':
+          description: User does not have MANAGE_2FA_METHODS access right
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Two-Factor Authentication
 components:
   schemas:
     Alarm:
@@ -3184,8 +3452,7 @@ components:
           type: string
           description: UI access rules
         flags:
-          type: integer
-          description: User flags bitmask
+          $ref: '#/components/schemas/UserFlags'
         attributes:
           type: object
           additionalProperties:
@@ -3263,8 +3530,7 @@ components:
           type: string
           description: UI access rules
         flags:
-          type: integer
-          description: Group flags bitmask
+          $ref: '#/components/schemas/UserFlags'
         attributes:
           type: object
           additionalProperties:
@@ -3309,8 +3575,7 @@ components:
           type: string
           description: Full name
         flags:
-          type: integer
-          description: User flags bitmask
+          $ref: '#/components/schemas/UserFlags'
         systemRights:
           type: integer
           description: System access rights bitmask
@@ -3359,8 +3624,7 @@ components:
           type: string
           description: Group description
         flags:
-          type: integer
-          description: Group flags bitmask
+          $ref: '#/components/schemas/UserFlags'
         systemRights:
           type: integer
           description: System access rights bitmask
@@ -3377,6 +3641,96 @@ components:
           items:
             type: integer
           description: List of member user IDs (replaces current members)
+    UserFlags:
+      type: object
+      description: User or group flags. When used in update requests, only the specified boolean fields are modified (PATCH semantics).
+      properties:
+        disabled:
+          type: boolean
+          description: Whether the account is disabled
+        changePassword:
+          type: boolean
+          description: Must change password at next login
+        cannotChangePassword:
+          type: boolean
+          description: Cannot change own password
+        intruderLockout:
+          type: boolean
+          description: Account locked out due to repeated authentication failures
+        passwordNeverExpires:
+          type: boolean
+          description: Password never expires
+        ldapUser:
+          type: boolean
+          description: Synchronized from LDAP
+        syncException:
+          type: boolean
+          description: Excluded from LDAP synchronization
+        closeOtherSessions:
+          type: boolean
+          description: Close other sessions on login
+        tokenAuthOnly:
+          type: boolean
+          description: Can only authenticate using API tokens
+        twoFAExempt:
+          type: boolean
+          description: Exempt from two-factor authentication
+        twoFAEnforce:
+          type: boolean
+          description: Two-factor authentication is enforced
+        serviceAccount:
+          type: boolean
+          description: Service account (can only authenticate via API tokens, interactive login rejected)
+    TwoFactorMethod:
+      type: object
+      description: Two-factor authentication method
+      properties:
+        name:
+          type: string
+          description: Method name (unique identifier)
+        driver:
+          type: string
+          description: Driver name (e.g., "TOTP", "Message")
+        description:
+          type: string
+          description: Method description
+        isValid:
+          type: boolean
+          description: Whether the method configuration is valid
+        configuration:
+          type: object
+          description: Driver-specific configuration (structure depends on the driver)
+    TwoFactorMethodInput:
+      type: object
+      description: Two-factor authentication method create/update request
+      required:
+        - name
+        - driver
+      properties:
+        name:
+          type: string
+          description: Method name
+        driver:
+          type: string
+          description: Driver name (e.g., "TOTP", "Message")
+        description:
+          type: string
+          description: Method description
+        configuration:
+          type: object
+          description: Driver-specific configuration
+    TwoFactorBinding:
+      type: object
+      description: User's two-factor authentication method binding
+      properties:
+        methodName:
+          type: string
+          description: Name of the 2FA method
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: Method-specific binding configuration as key-value pairs
     PasswordInput:
       type: object
       description: Password change request
@@ -3600,30 +3954,34 @@ components:
           description: Tool name
         type:
           $ref: '#/components/schemas/ObjectToolType'
-        askConfirmation:
-          type: boolean
-          description: Whether to ask for user confirmation before execution
-        generatesOutput:
-          type: boolean
-          description: Whether the tool generates output
-        disabled:
-          type: boolean
-          description: Whether the tool is disabled
-        showInCommands:
-          type: boolean
-          description: Whether to show in commands menu
-        snmpIndexedByValue:
-          type: boolean
-          description: Whether SNMP is indexed by value
-        runInContainerContext:
-          type: boolean
-          description: Whether to run in container context
-        suppressSuccessMessage:
-          type: boolean
-          description: Whether to suppress success message
-        setupTcpTunnel:
-          type: boolean
-          description: Whether to setup TCP tunnel
+        flags:
+          type: object
+          description: Tool flags
+          properties:
+            askConfirmation:
+              type: boolean
+              description: Whether to ask for user confirmation before execution
+            generatesOutput:
+              type: boolean
+              description: Whether the tool generates output
+            disabled:
+              type: boolean
+              description: Whether the tool is disabled
+            showInCommands:
+              type: boolean
+              description: Whether to show in commands menu
+            snmpIndexedByValue:
+              type: boolean
+              description: Whether SNMP is indexed by value
+            runInContainerContext:
+              type: boolean
+              description: Whether to run in container context
+            suppressSuccessMessage:
+              type: boolean
+              description: Whether to suppress success message
+            setupTcpTunnel:
+              type: boolean
+              description: Whether to setup TCP tunnel
         confirmationMessage:
           type: string
           description: Confirmation message shown to user
@@ -3741,6 +4099,18 @@ components:
           type: string
           enum: [none]
           description: Indicates tool executed successfully but produced no output
+    ObjectToolUrlResult:
+      type: object
+      required:
+        - type
+        - url
+      properties:
+        type:
+          type: string
+          enum: [url]
+        url:
+          type: string
+          description: Expanded URL with all macros resolved
     ObjectClass:
       type: string
       enum:
