@@ -19392,6 +19392,7 @@ static void FillBackupMessage(NXCPMessage *msg, const BackupData& backup)
 {
    msg->setField(VID_BACKUP_ID, backup.id);
    msg->setFieldFromTime(VID_TIMESTAMP, backup.timestamp);
+   msg->setFieldFromTime(VID_LAST_CHECK_TIME, backup.lastCheckTime);
    msg->setField(VID_IS_BINARY, backup.isBinary);
    msg->setField(VID_RUNNING_CONFIG_SIZE, static_cast<uint64_t>(backup.runningConfigSize));
    msg->setField(VID_RUNNING_CONFIG_HASH, backup.runningConfigHash, SHA256_DIGEST_SIZE);
@@ -19493,7 +19494,8 @@ void ClientSession::getDeviceConfigBackups(const NXCPMessage& request)
                response.setField(fieldId++, backup.runningConfigHash, SHA256_DIGEST_SIZE);
                response.setField(fieldId++, static_cast<uint64_t>(backup.startupConfigSize));
                response.setField(fieldId++, backup.startupConfigHash, SHA256_DIGEST_SIZE);
-               fieldId += 4; // padding to 10-field stride
+               response.setFieldFromTime(fieldId++, backup.lastCheckTime);
+               fieldId += 3; // padding to 10-field stride
             }
          }
          else

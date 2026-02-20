@@ -64,6 +64,8 @@ public class DeviceConfigBackupLabelProvider extends LabelProvider implements IT
       {
          case DeviceConfigBackupView.COLUMN_TIMESTAMP:
             return DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp());
+         case DeviceConfigBackupView.COLUMN_LAST_CHECK:
+            return (backup.getLastCheckTime() != null) ? DateFormatFactory.getDateTimeFormat().format(backup.getLastCheckTime()) : "";
          case DeviceConfigBackupView.COLUMN_RUNNING_CONFIG:
             return (backup.getRunningConfigSize() > 0) ? getSizeString(backup.getRunningConfigSize()) : "\u2014";
          case DeviceConfigBackupView.COLUMN_STARTUP_CONFIG:

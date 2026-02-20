@@ -78,9 +78,10 @@ import org.xnap.commons.i18n.I18n;
 public class DeviceConfigBackupView extends ObjectView
 {
    public static final int COLUMN_TIMESTAMP = 0;
-   public static final int COLUMN_RUNNING_CONFIG = 1;
-   public static final int COLUMN_STARTUP_CONFIG = 2;
-   public static final int COLUMN_STATUS = 3;
+   public static final int COLUMN_LAST_CHECK = 1;
+   public static final int COLUMN_RUNNING_CONFIG = 2;
+   public static final int COLUMN_STARTUP_CONFIG = 3;
+   public static final int COLUMN_STATUS = 4;
 
    private static final int TAB_RUNNING = 0;
    private static final int TAB_STARTUP = 1;
@@ -140,8 +141,8 @@ public class DeviceConfigBackupView extends ObjectView
    {
       SashForm sashForm = new SashForm(parent, SWT.VERTICAL);
 
-      String[] columnNames = { i18n.tr("Timestamp"), i18n.tr("Running Config"), i18n.tr("Startup Config"), i18n.tr("Status") };
-      int[] columnWidths = { 200, 120, 120, 150 };
+      String[] columnNames = { i18n.tr("Timestamp"), i18n.tr("Last Check"), i18n.tr("Running Config"), i18n.tr("Startup Config"), i18n.tr("Status") };
+      int[] columnWidths = { 200, 200, 120, 120, 150 };
       viewer = new SortableTableViewer(sashForm, columnNames, columnWidths, COLUMN_TIMESTAMP, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new DeviceConfigBackupLabelProvider(backupList));

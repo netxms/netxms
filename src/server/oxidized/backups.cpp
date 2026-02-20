@@ -276,6 +276,7 @@ std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetLatestBackup(const Node&
    {
       json_t *latest = json_array_get(versions, 0);
       backup.timestamp = ParseOxidizedTimestamp(json_object_get_string_utf8(latest, "time", nullptr));
+      backup.lastCheckTime = backup.timestamp;
    }
    if (versions != nullptr)
       json_decref(versions);
@@ -313,6 +314,7 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> OxidizedGetBackupList(
       BackupData backup;
       backup.id = static_cast<int64_t>(index);
       backup.timestamp = ParseOxidizedTimestamp(json_object_get_string_utf8(entry, "time", nullptr));
+      backup.lastCheckTime = backup.timestamp;
       backup.isBinary = false;
       backups.push_back(std::move(backup));
    }
@@ -380,6 +382,7 @@ std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetBackupById(const Node& n
    BackupData backup;
    backup.id = id;
    backup.timestamp = vi.timestamp;
+   backup.lastCheckTime = vi.timestamp;
    backup.isBinary = false;
    backup.runningConfig = configStream.takeBuffer();
    backup.runningConfigSize = configSize;

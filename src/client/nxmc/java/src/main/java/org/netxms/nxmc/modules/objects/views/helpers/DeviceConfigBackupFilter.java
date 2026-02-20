@@ -41,7 +41,11 @@ public class DeviceConfigBackupFilter extends ViewerFilter implements AbstractVi
          return true;
 
       DeviceConfigBackup backup = (DeviceConfigBackup)element;
-      return DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()).toLowerCase().contains(filterString);
+      if (DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()).toLowerCase().contains(filterString))
+         return true;
+      if ((backup.getLastCheckTime() != null) && DateFormatFactory.getDateTimeFormat().format(backup.getLastCheckTime()).toLowerCase().contains(filterString))
+         return true;
+      return false;
    }
 
    /**

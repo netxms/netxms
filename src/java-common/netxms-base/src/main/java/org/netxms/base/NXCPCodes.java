@@ -1477,6 +1477,7 @@ public class NXCPCodes
    public static final long VID_LAST_BACKUP_JOB_MESSAGE = 942;
    public static final long VID_2FA_SETUP_REQUIRED = 943;
    public static final long VID_2FA_GRACE_LOGINS = 944;
+   public static final long VID_LAST_CHECK_TIME = 945;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
    public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
    public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;

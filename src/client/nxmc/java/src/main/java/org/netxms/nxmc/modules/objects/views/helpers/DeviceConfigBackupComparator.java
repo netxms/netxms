@@ -46,6 +46,9 @@ public class DeviceConfigBackupComparator extends ViewerComparator
          case DeviceConfigBackupView.COLUMN_TIMESTAMP:
             result = b1.getTimestamp().compareTo(b2.getTimestamp());
             break;
+         case DeviceConfigBackupView.COLUMN_LAST_CHECK:
+            result = b1.getLastCheckTime().compareTo(b2.getLastCheckTime());
+            break;
          case DeviceConfigBackupView.COLUMN_RUNNING_CONFIG:
             result = Long.compare(b1.getRunningConfigSize(), b2.getRunningConfigSize());
             break;

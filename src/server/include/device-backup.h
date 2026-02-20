@@ -42,6 +42,7 @@ struct NXCORE_EXPORTABLE BackupData
 {
    int64_t id;
    time_t timestamp;
+   time_t lastCheckTime;
    BYTE *runningConfig;
    size_t runningConfigSize;
    BYTE runningConfigHash[SHA256_DIGEST_SIZE];
@@ -54,6 +55,7 @@ struct NXCORE_EXPORTABLE BackupData
    {
       id = -1;
       timestamp = 0;
+      lastCheckTime = 0;
       runningConfig = nullptr;
       runningConfigSize = 0;
       memset(runningConfigHash, 0, SHA256_DIGEST_SIZE);
@@ -67,6 +69,7 @@ struct NXCORE_EXPORTABLE BackupData
    {
       id = src.id;
       timestamp = src.timestamp;
+      lastCheckTime = src.lastCheckTime;
       runningConfig = (src.runningConfig != nullptr) ? MemCopyBlock(src.runningConfig, src.runningConfigSize) : nullptr;
       runningConfigSize = src.runningConfigSize;
       memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
@@ -80,6 +83,7 @@ struct NXCORE_EXPORTABLE BackupData
    {
       id = src.id;
       timestamp = src.timestamp;
+      lastCheckTime = src.lastCheckTime;
       runningConfig = src.runningConfig;
       runningConfigSize = src.runningConfigSize;
       memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
@@ -109,6 +113,7 @@ struct NXCORE_EXPORTABLE BackupData
 
          id = src.id;
          timestamp = src.timestamp;
+         lastCheckTime = src.lastCheckTime;
          runningConfig = (src.runningConfig != nullptr) ? MemCopyBlock(src.runningConfig, src.runningConfigSize) : nullptr;
          runningConfigSize = src.runningConfigSize;
          memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);
@@ -129,6 +134,7 @@ struct NXCORE_EXPORTABLE BackupData
 
          id = src.id;
          timestamp = src.timestamp;
+         lastCheckTime = src.lastCheckTime;
          runningConfig = src.runningConfig;
          runningConfigSize = src.runningConfigSize;
          memcpy(runningConfigHash, src.runningConfigHash, SHA256_DIGEST_SIZE);

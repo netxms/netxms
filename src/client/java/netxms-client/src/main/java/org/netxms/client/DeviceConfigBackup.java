@@ -29,6 +29,7 @@ public class DeviceConfigBackup
 {
    private long id;
    private Date timestamp;
+   private Date lastCheckTime;
    private byte[] runningConfig;
    private long runningConfigSize;
    private byte[] runningConfigHash;
@@ -51,6 +52,7 @@ public class DeviceConfigBackup
       runningConfigHash = msg.getFieldAsBinary(baseId + 3);
       startupConfigSize = msg.getFieldAsInt64(baseId + 4);
       startupConfigHash = msg.getFieldAsBinary(baseId + 5);
+      lastCheckTime = msg.getFieldAsDate(baseId + 6);
       runningConfig = null;
       startupConfig = null;
       isBinary = false;
@@ -65,6 +67,7 @@ public class DeviceConfigBackup
    {
       id = msg.getFieldAsInt64(NXCPCodes.VID_BACKUP_ID);
       timestamp = msg.getFieldAsDate(NXCPCodes.VID_TIMESTAMP);
+      lastCheckTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_CHECK_TIME);
       isBinary = msg.getFieldAsBoolean(NXCPCodes.VID_IS_BINARY);
       runningConfigSize = msg.getFieldAsInt64(NXCPCodes.VID_RUNNING_CONFIG_SIZE);
       runningConfigHash = msg.getFieldAsBinary(NXCPCodes.VID_RUNNING_CONFIG_HASH);
@@ -88,6 +91,14 @@ public class DeviceConfigBackup
    public Date getTimestamp()
    {
       return timestamp;
+   }
+
+   /**
+    * @return last check time (when configuration was last verified)
+    */
+   public Date getLastCheckTime()
+   {
+      return lastCheckTime;
    }
 
    /**
