@@ -40,6 +40,7 @@ if test -x "$BINDIR/nxdbmgr" -a -x "$BINDIR/netxmsd"; then
 	if $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -f unlock | grep 'Unable to determine database syntax'; then
 	   $BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG init
 	fi
+	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG background-upgrade
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG upgrade
 	$BINDIR/nxdbmgr$SUFFIX $NETXMSD_CONFIG -E check
 	if [ $? -ne 0 ]; then
