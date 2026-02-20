@@ -98,6 +98,273 @@ int H_ObjectToolDetails(Context *context)
 }
 
 /**
+ * Execute agent action tool
+ */
+static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+{
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Object is not a node");
+      return 400;
+   }
+
+   shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
+   if (conn == nullptr)
+   {
+      context->setErrorResponse("Cannot connect to agent");
+      return 500;
+   }
+
+   StringList args = SplitCommandLine(object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr));
+   TCHAR actionName[MAX_PARAM_NAME];
+   _tcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
+   args.remove(0);
+
+   uint32_t rcc;
+   if (toolFlags & TF_GENERATES_OUTPUT)
+   {
+      StringBuffer output;
+      rcc = conn->executeCommand(actionName, args, true, ActionOutputCallback, &output, true);
+      if (rcc == ERR_SUCCESS)
+      {
+         json_object_set_new(response, "type", json_string("text"));
+         json_object_set_new(response, "output", json_string_t(output.cstr()));
+      }
+   }
+   else
+   {
+      rcc = conn->executeCommand(actionName, args);
+      if (rcc == ERR_SUCCESS)
+      {
+         json_object_set_new(response, "type", json_string("none"));
+      }
+   }
+
+   if (rcc != ERR_SUCCESS)
+   {
+      context->setAgentErrorResponse(rcc);
+      return 500;
+   }
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action \"%s\" on object %s [%u]"), actionName, object->getName(), object->getId());
+   return 200;
+}
+
+/**
+ * Execute server command tool
+ */
+static int ExecuteServerCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+{
+   if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_CONTAINER) &&
+         (object->getObjectClass() != OBJECT_COLLECTOR) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
+         (object->getObjectClass() != OBJECT_SUBNET) && (object->getObjectClass() != OBJECT_CLUSTER) &&
+         (object->getObjectClass() != OBJECT_ZONE))
+   {
+      context->setErrorResponse("Incompatible object class for server command");
+      return 400;
+   }
+
+   StringBuffer expandedCommand = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+
+   OutputCapturingProcessExecutor executor(expandedCommand);
+   if (!executor.execute())
+   {
+      context->setErrorResponse("Failed to execute server command");
+      return 500;
+   }
+
+   if (!executor.waitForCompletion(60000))
+   {
+      context->setErrorResponse("Server command execution timed out");
+      return 504;
+   }
+
+   if (toolFlags & TF_GENERATES_OUTPUT)
+   {
+      json_object_set_new(response, "type", json_string("text"));
+      const char *output = executor.getOutput();
+      json_object_set_new(response, "output", (output != nullptr) ? json_string(output) : json_string(""));
+   }
+   else
+   {
+      json_object_set_new(response, "type", json_string("none"));
+   }
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server command %s", expandedCommand.cstr());
+   return 200;
+}
+
+/**
+ * Execute server script tool
+ */
+static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, Alarm *alarm, const StringMap *inputFields, json_t *response)
+{
+   StringBuffer expandedScript = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+   StringList *scriptArgs = ParseCommandLine(expandedScript);
+
+   if (scriptArgs->size() == 0)
+   {
+      delete scriptArgs;
+      context->setErrorResponse("Empty script name");
+      return 400;
+   }
+
+   NXSL_WebAPIEnv *env = new NXSL_WebAPIEnv();
+   NXSL_VM *vm = GetServerScriptLibrary()->createVM(scriptArgs->get(0), env);
+   if (vm == nullptr)
+   {
+      delete scriptArgs;
+      context->setErrorResponse("Script not found in library");
+      return 404;
+   }
+
+   SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
+   vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, inputFields)));
+
+   ObjectRefArray<NXSL_Value> sargs(scriptArgs->size() - 1, 1);
+   for(int i = 1; i < scriptArgs->size(); i++)
+      sargs.add(vm->createValue(scriptArgs->get(i)));
+
+   if (!vm->run(sargs))
+   {
+      json_t *errorResponse = json_object();
+      json_object_set_new(errorResponse, "reason", json_string("Script execution failed"));
+      json_object_set_new(errorResponse, "diagnostic", vm->getErrorJson());
+      context->setResponseData(errorResponse);
+      json_decref(errorResponse);
+      delete vm;
+      delete scriptArgs;
+      return 500;
+   }
+
+   json_object_set_new(response, "type", json_string("text"));
+   StringBuffer output;
+   if (!env->getOutput().isEmpty())
+   {
+      output.append(env->getOutput());
+      output.append(_T("\n"));
+   }
+   const TCHAR *result = vm->getResult()->getValueAsCString();
+   if (result != nullptr)
+   {
+      output.append(_T("Result: "));
+      output.append(result);
+   }
+   json_object_set_new(response, "output", json_string_t(output.cstr()));
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server script tool \"%s\" on object %s [%u]", scriptArgs->get(0), object->getName(), object->getId());
+
+   delete vm;
+   delete scriptArgs;
+   return 200;
+}
+
+/**
+ * Execute table tool (SNMP table, agent table, or agent list)
+ */
+static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, uint32_t toolId, json_t *response)
+{
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Object is not a node");
+      return 400;
+   }
+
+   json_t *tableResult = nullptr;
+   uint32_t rcc = ExecuteTableToolToJSON(toolId, static_pointer_cast<Node>(object), &tableResult);
+   if (rcc != RCC_SUCCESS)
+   {
+      context->setErrorResponse("Table tool execution failed");
+      return 500;
+   }
+
+   json_object_set_new(response, "type", json_string("table"));
+   json_object_set_new(response, "table", tableResult);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed table tool [%u] on object %s [%u]", toolId, object->getName(), object->getId());
+   return 200;
+}
+
+/**
+ * Execute SSH command tool
+ */
+static int ExecuteSSHCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+{
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Object is not a node");
+      return 400;
+   }
+   Node& node = static_cast<Node&>(*object);
+
+   StringBuffer command = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+
+   uint32_t proxyId = node.getEffectiveSshProxy();
+   shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxy == nullptr)
+   {
+      context->setErrorResponse("SSH proxy not available");
+      return 500;
+   }
+
+   shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
+   if (conn == nullptr)
+   {
+      context->setErrorResponse("Cannot connect to SSH proxy agent");
+      return 500;
+   }
+
+   StringList sshArgs;
+   TCHAR ipAddr[64];
+   sshArgs.add(node.getIpAddress().toString(ipAddr));
+   sshArgs.add(node.getSshPort());
+   sshArgs.add(node.getSshLogin());
+   sshArgs.add(node.getSshPassword());
+   sshArgs.add(command);
+   sshArgs.add(node.getSshKeyId());
+
+   uint32_t rcc;
+   if (toolFlags & TF_GENERATES_OUTPUT)
+   {
+      StringBuffer output;
+      rcc = conn->executeCommand(_T("SSH.Command"), sshArgs, true, ActionOutputCallback, &output, true);
+      if (rcc == ERR_SUCCESS)
+      {
+         json_object_set_new(response, "type", json_string("text"));
+         json_object_set_new(response, "output", json_string_t(output.cstr()));
+      }
+   }
+   else
+   {
+      rcc = conn->executeCommand(_T("SSH.Command"), sshArgs);
+      if (rcc == ERR_SUCCESS)
+      {
+         json_object_set_new(response, "type", json_string("none"));
+      }
+   }
+
+   if (rcc != ERR_SUCCESS)
+   {
+      context->setAgentErrorResponse(rcc);
+      return 500;
+   }
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed SSH command on object %s [%u]"), object->getName(), object->getId());
+   return 200;
+}
+
+/**
+ * Expand URL tool
+ */
+static int ExpandURL(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, Alarm *alarm, const StringMap *inputFields, json_t *response)
+{
+   StringBuffer expandedUrl = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+   json_object_set_new(response, "type", json_string("url"));
+   json_object_set_new(response, "url", json_string_t(expandedUrl));
+   return 200;
+}
+
+/**
  * Handler for POST /v1/object-tools/:tool-id/execute
  */
 int H_ObjectToolExecute(Context *context)
@@ -155,7 +422,6 @@ int H_ObjectToolExecute(Context *context)
    switch(toolType)
    {
       case TOOL_TYPE_INTERNAL:
-      case TOOL_TYPE_URL:
       case TOOL_TYPE_COMMAND:
       case TOOL_TYPE_FILE_DOWNLOAD:
          MemFree(toolData);
@@ -193,304 +459,41 @@ int H_ObjectToolExecute(Context *context)
 
    json_t *response = json_object();
 
+   int httpCode;
    switch(toolType)
    {
       case TOOL_TYPE_ACTION:
-      {
-         if (object->getObjectClass() != OBJECT_NODE)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Object is not a node");
-            return 400;
-         }
-
-         shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
-         if (conn == nullptr)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Cannot connect to agent");
-            return 500;
-         }
-
-         StringList args = SplitCommandLine(object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr));
-         TCHAR actionName[MAX_PARAM_NAME];
-         _tcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
-         args.remove(0);
-
-         if (toolFlags & TF_GENERATES_OUTPUT)
-         {
-            StringBuffer output;
-            rcc = conn->executeCommand(actionName, args, true, ActionOutputCallback, &output, true);
-            if (rcc == ERR_SUCCESS)
-            {
-               json_object_set_new(response, "type", json_string("text"));
-               json_object_set_new(response, "output", json_string_t(output.cstr()));
-            }
-         }
-         else
-         {
-            rcc = conn->executeCommand(actionName, args);
-            if (rcc == ERR_SUCCESS)
-            {
-               json_object_set_new(response, "type", json_string("none"));
-            }
-         }
-
-         if (rcc != ERR_SUCCESS)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setAgentErrorResponse(rcc);
-            return 500;
-         }
-
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Executed agent action \"%s\" on object %s [%u]"), actionName, object->getName(), objectId);
+         httpCode = ExecuteAgentAction(context, object, toolData, toolFlags, alarm, &inputFields, response);
          break;
-      }
-
       case TOOL_TYPE_SERVER_COMMAND:
-      {
-         if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_CONTAINER) &&
-               (object->getObjectClass() != OBJECT_COLLECTOR) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
-               (object->getObjectClass() != OBJECT_SUBNET) && (object->getObjectClass() != OBJECT_CLUSTER) &&
-               (object->getObjectClass() != OBJECT_ZONE))
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Incompatible object class for server command");
-            return 400;
-         }
-
-         StringBuffer expandedCommand = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr);
-
-         OutputCapturingProcessExecutor executor(expandedCommand);
-         if (!executor.execute())
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Failed to execute server command");
-            return 500;
-         }
-
-         if (!executor.waitForCompletion(60000))
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Server command execution timed out");
-            return 504;
-         }
-         if (toolFlags & TF_GENERATES_OUTPUT)
-         {
-            json_object_set_new(response, "type", json_string("text"));
-            const char *output = executor.getOutput();
-            json_object_set_new(response, "output", (output != nullptr) ? json_string(output) : json_string(""));
-         }
-         else
-         {
-            json_object_set_new(response, "type", json_string("none"));
-         }
-
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Executed server command on object %s [%u]"), object->getName(), objectId);
+         httpCode = ExecuteServerCommand(context, object, toolData, toolFlags, alarm, &inputFields, response);
          break;
-      }
-
       case TOOL_TYPE_SERVER_SCRIPT:
-      {
-         StringBuffer expandedScript = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr);
-         StringList *scriptArgs = ParseCommandLine(expandedScript);
-
-         if (scriptArgs->size() == 0)
-         {
-            delete scriptArgs;
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Empty script name");
-            return 400;
-         }
-
-         NXSL_WebAPIEnv *env = new NXSL_WebAPIEnv();
-         NXSL_VM *vm = GetServerScriptLibrary()->createVM(scriptArgs->get(0), env);
-         if (vm == nullptr)
-         {
-            delete scriptArgs;
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Script not found in library");
-            return 404;
-         }
-
-         SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-         vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
-         vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, &inputFields)));
-
-         ObjectRefArray<NXSL_Value> sargs(scriptArgs->size() - 1, 1);
-         for(int i = 1; i < scriptArgs->size(); i++)
-            sargs.add(vm->createValue(scriptArgs->get(i)));
-         delete scriptArgs;
-
-         if (vm->run(sargs))
-         {
-            json_object_set_new(response, "type", json_string("text"));
-            StringBuffer output;
-            if (!env->getOutput().isEmpty())
-            {
-               output.append(env->getOutput());
-               output.append(_T("\n"));
-            }
-            const TCHAR *result = vm->getResult()->getValueAsCString();
-            if (result != nullptr)
-            {
-               output.append(_T("Result: "));
-               output.append(result);
-            }
-            json_object_set_new(response, "output", json_string_t(output.cstr()));
-         }
-         else
-         {
-            json_decref(response);
-            json_t *errorResponse = json_object();
-            json_object_set_new(errorResponse, "reason", json_string("Script execution failed"));
-            json_object_set_new(errorResponse, "diagnostic", vm->getErrorJson());
-            context->setResponseData(errorResponse);
-            json_decref(errorResponse);
-            delete vm;
-            delete alarm;
-            MemFree(toolData);
-            return 500;
-         }
-
-         delete vm;
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Executed server script tool on object %s [%u]"), object->getName(), objectId);
+         httpCode = ExecuteServerScript(context, object, toolData, alarm, &inputFields, response);
          break;
-      }
-
       case TOOL_TYPE_SNMP_TABLE:
       case TOOL_TYPE_AGENT_TABLE:
       case TOOL_TYPE_AGENT_LIST:
-      {
-         if (object->getObjectClass() != OBJECT_NODE)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Object is not a node");
-            return 400;
-         }
-
-         json_t *tableResult = nullptr;
-         rcc = ExecuteTableToolToJSON(toolId, static_pointer_cast<Node>(object), &tableResult);
-         if (rcc != RCC_SUCCESS)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Table tool execution failed");
-            return 500;
-         }
-
-         json_object_set_new(response, "type", json_string("table"));
-         json_object_set_new(response, "table", tableResult);
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Executed table tool on object %s [%u]"), object->getName(), objectId);
+         httpCode = ExecuteTableTool(context, object, toolId, response);
          break;
-      }
-
       case TOOL_TYPE_SSH_COMMAND:
-      {
-         if (object->getObjectClass() != OBJECT_NODE)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Object is not a node");
-            return 400;
-         }
-         Node& node = static_cast<Node&>(*object);
-
-         StringBuffer command = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, &inputFields, nullptr);
-
-         uint32_t proxyId = node.getEffectiveSshProxy();
-         shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
-         if (proxy == nullptr)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("SSH proxy not available");
-            return 500;
-         }
-
-         shared_ptr<AgentConnectionEx> conn = proxy->createAgentConnection();
-         if (conn == nullptr)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setErrorResponse("Cannot connect to SSH proxy agent");
-            return 500;
-         }
-
-         StringList sshArgs;
-         TCHAR ipAddr[64];
-         sshArgs.add(node.getIpAddress().toString(ipAddr));
-         sshArgs.add(node.getSshPort());
-         sshArgs.add(node.getSshLogin());
-         sshArgs.add(node.getSshPassword());
-         sshArgs.add(command);
-         sshArgs.add(node.getSshKeyId());
-
-         if (toolFlags & TF_GENERATES_OUTPUT)
-         {
-            StringBuffer output;
-            rcc = conn->executeCommand(_T("SSH.Command"), sshArgs, true, ActionOutputCallback, &output, true);
-            if (rcc == ERR_SUCCESS)
-            {
-               json_object_set_new(response, "type", json_string("text"));
-               json_object_set_new(response, "output", json_string_t(output.cstr()));
-            }
-         }
-         else
-         {
-            rcc = conn->executeCommand(_T("SSH.Command"), sshArgs);
-            if (rcc == ERR_SUCCESS)
-            {
-               json_object_set_new(response, "type", json_string("none"));
-            }
-         }
-
-         if (rcc != ERR_SUCCESS)
-         {
-            json_decref(response);
-            delete alarm;
-            MemFree(toolData);
-            context->setAgentErrorResponse(rcc);
-            return 500;
-         }
-
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Executed SSH command on object %s [%u]"), object->getName(), objectId);
+         httpCode = ExecuteSSHCommand(context, object, toolData, toolFlags, alarm, &inputFields, response);
          break;
-      }
-
+      case TOOL_TYPE_URL:
+         httpCode = ExpandURL(context, object, toolData, alarm, &inputFields, response);
+         break;
       default:
-         json_decref(response);
-         delete alarm;
-         MemFree(toolData);
          context->setErrorResponse("Unsupported tool type");
-         return 400;
+         httpCode = 400;
+         break;
    }
 
    delete alarm;
    MemFree(toolData);
-   context->setResponseData(response);
+   if (httpCode == 200)
+   {
+      context->setResponseData(response);
+   }
    json_decref(response);
-   return 200;
+   return httpCode;
 }
