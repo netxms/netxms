@@ -13551,6 +13551,70 @@ static const char *s_nodeTypeNames[] =
 };
 
 /**
+ * Node capability flag to JSON field name mapping
+ */
+static FlagNameMapping s_capabilityMapping[] =
+{
+   { NC_IS_SNMP, "isSnmp" },
+   { NC_IS_NATIVE_AGENT, "isNativeAgent" },
+   { NC_IS_BRIDGE, "isBridge" },
+   { NC_IS_ROUTER, "isRouter" },
+   { NC_IS_LOCAL_MGMT, "isLocalMgmt" },
+   { NC_IS_PRINTER, "isPrinter" },
+   { NC_IS_OSPF, "isOspf" },
+   { NC_IS_SSH, "isSsh" },
+   { NC_IS_CDP, "isCdp" },
+   { NC_IS_NDP, "isNdp" },
+   { NC_IS_LLDP, "isLldp" },
+   { NC_IS_VRRP, "isVrrp" },
+   { NC_HAS_VLANS, "hasVlans" },
+   { NC_IS_8021X, "is8021x" },
+   { NC_IS_STP, "isStp" },
+   { NC_HAS_ENTITY_MIB, "hasEntityMib" },
+   { NC_HAS_IFXTABLE, "hasIfxTable" },
+   { NC_HAS_AGENT_IFXCOUNTERS, "hasAgentIfxCounters" },
+   { NC_HAS_WINPDH, "hasWinPdh" },
+   { NC_IS_WIFI_CONTROLLER, "isWifiController" },
+   { NC_IS_SMCLP, "isSmclp" },
+   { NC_IS_NEW_POLICY_TYPES, "isNewPolicyTypes" },
+   { NC_HAS_USER_AGENT, "hasUserAgent" },
+   { NC_IS_ETHERNET_IP, "isEthernetIp" },
+   { NC_IS_MODBUS_TCP, "isModbusTcp" },
+   { NC_IS_PROFINET, "isProfinet" },
+   { NC_HAS_FILE_MANAGER, "hasFileManager" },
+   { NC_LLDP_V2_MIB, "lldpV2Mib" },
+   { NC_EMULATED_ENTITY_MIB, "emulatedEntityMib" },
+   { NC_DEVICE_VIEW, "deviceView" },
+   { NC_IS_WIFI_AP, "isWifiAp" },
+   { NC_IS_VNC, "isVnc" },
+   { NC_IS_LOCAL_VNC, "isLocalVnc" },
+   { NC_REGISTERED_FOR_BACKUP, "registeredForBackup" },
+   { NC_HAS_SERVICE_MANAGER, "hasServiceManager" },
+   { NC_SSH_INTERACTIVE_CHANNEL, "sshInteractiveChannel" },
+   { NC_SSH_COMMAND_CHANNEL, "sshCommandChannel" },
+   { 0, nullptr }
+};
+
+/**
+ * Node state flag to JSON field name mapping
+ */
+static FlagNameMapping s_stateMapping[] =
+{
+   { DCSF_UNREACHABLE, "unreachable" },
+   { DCSF_NETWORK_PATH_PROBLEM, "networkPathProblem" },
+   { NSF_AGENT_UNREACHABLE, "agentUnreachable" },
+   { NSF_SNMP_UNREACHABLE, "snmpUnreachable" },
+   { NSF_ETHERNET_IP_UNREACHABLE, "ethernetIpUnreachable" },
+   { NSF_CACHE_MODE_NOT_SUPPORTED, "cacheModeNotSupported" },
+   { NSF_SNMP_TRAP_FLOOD, "snmpTrapFlood" },
+   { NSF_ICMP_UNREACHABLE, "icmpUnreachable" },
+   { NSF_SSH_UNREACHABLE, "sshUnreachable" },
+   { NSF_MODBUS_UNREACHABLE, "modbusUnreachable" },
+   { NSF_DECOMMISSIONED, "decommissioned" },
+   { 0, nullptr }
+};
+
+/**
  * Serialize object to JSON
  */
 json_t *Node::toJson()
@@ -13561,58 +13625,8 @@ json_t *Node::toJson()
    json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
 
-   // Capability flags JSON object with boolean attributes
-   json_t *capabilities = json_object();
-   json_object_set_new(capabilities, "isSnmp", json_boolean(m_capabilities & NC_IS_SNMP));
-   json_object_set_new(capabilities, "isNativeAgent", json_boolean(m_capabilities & NC_IS_NATIVE_AGENT));
-   json_object_set_new(capabilities, "isBridge", json_boolean(m_capabilities & NC_IS_BRIDGE));
-   json_object_set_new(capabilities, "isRouter", json_boolean(m_capabilities & NC_IS_ROUTER));
-   json_object_set_new(capabilities, "isLocalMgmt", json_boolean(m_capabilities & NC_IS_LOCAL_MGMT));
-   json_object_set_new(capabilities, "isPrinter", json_boolean(m_capabilities & NC_IS_PRINTER));
-   json_object_set_new(capabilities, "isOspf", json_boolean(m_capabilities & NC_IS_OSPF));
-   json_object_set_new(capabilities, "isSsh", json_boolean(m_capabilities & NC_IS_SSH));
-   json_object_set_new(capabilities, "isCdp", json_boolean(m_capabilities & NC_IS_CDP));
-   json_object_set_new(capabilities, "isNdp", json_boolean(m_capabilities & NC_IS_NDP));
-   json_object_set_new(capabilities, "isLldp", json_boolean(m_capabilities & NC_IS_LLDP));
-   json_object_set_new(capabilities, "isVrrp", json_boolean(m_capabilities & NC_IS_VRRP));
-   json_object_set_new(capabilities, "hasVlans", json_boolean(m_capabilities & NC_HAS_VLANS));
-   json_object_set_new(capabilities, "is8021x", json_boolean(m_capabilities & NC_IS_8021X));
-   json_object_set_new(capabilities, "isStp", json_boolean(m_capabilities & NC_IS_STP));
-   json_object_set_new(capabilities, "hasEntityMib", json_boolean(m_capabilities & NC_HAS_ENTITY_MIB));
-   json_object_set_new(capabilities, "hasIfxTable", json_boolean(m_capabilities & NC_HAS_IFXTABLE));
-   json_object_set_new(capabilities, "hasAgentIfxCounters", json_boolean(m_capabilities & NC_HAS_AGENT_IFXCOUNTERS));
-   json_object_set_new(capabilities, "hasWinPdh", json_boolean(m_capabilities & NC_HAS_WINPDH));
-   json_object_set_new(capabilities, "isWifiController", json_boolean(m_capabilities & NC_IS_WIFI_CONTROLLER));
-   json_object_set_new(capabilities, "isSmclp", json_boolean(m_capabilities & NC_IS_SMCLP));
-   json_object_set_new(capabilities, "isNewPolicyTypes", json_boolean(m_capabilities & NC_IS_NEW_POLICY_TYPES));
-   json_object_set_new(capabilities, "hasUserAgent", json_boolean(m_capabilities & NC_HAS_USER_AGENT));
-   json_object_set_new(capabilities, "isEthernetIp", json_boolean(m_capabilities & NC_IS_ETHERNET_IP));
-   json_object_set_new(capabilities, "isModbusTcp", json_boolean(m_capabilities & NC_IS_MODBUS_TCP));
-   json_object_set_new(capabilities, "isProfinet", json_boolean(m_capabilities & NC_IS_PROFINET));
-   json_object_set_new(capabilities, "hasFileManager", json_boolean(m_capabilities & NC_HAS_FILE_MANAGER));
-   json_object_set_new(capabilities, "lldpV2Mib", json_boolean(m_capabilities & NC_LLDP_V2_MIB));
-   json_object_set_new(capabilities, "emulatedEntityMib", json_boolean(m_capabilities & NC_EMULATED_ENTITY_MIB));
-   json_object_set_new(capabilities, "deviceView", json_boolean(m_capabilities & NC_DEVICE_VIEW));
-   json_object_set_new(capabilities, "isWifiAp", json_boolean(m_capabilities & NC_IS_WIFI_AP));
-   json_object_set_new(capabilities, "isVnc", json_boolean(m_capabilities & NC_IS_VNC));
-   json_object_set_new(capabilities, "isLocalVnc", json_boolean(m_capabilities & NC_IS_LOCAL_VNC));
-   json_object_set_new(capabilities, "registeredForBackup", json_boolean(m_capabilities & NC_REGISTERED_FOR_BACKUP));
-   json_object_set_new(capabilities, "hasServiceManager", json_boolean(m_capabilities & NC_HAS_SERVICE_MANAGER));
-   json_object_set_new(root, "capabilities", capabilities);
-
-   // State flags JSON object with boolean attributes
-   json_t *state = json_object();
-   json_object_set_new(state, "agentUnreachable", json_boolean(m_state & NSF_AGENT_UNREACHABLE));
-   json_object_set_new(state, "snmpUnreachable", json_boolean(m_state & NSF_SNMP_UNREACHABLE));
-   json_object_set_new(state, "ethernetIpUnreachable", json_boolean(m_state & NSF_ETHERNET_IP_UNREACHABLE));
-   json_object_set_new(state, "cacheModeNotSupported", json_boolean(m_state & NSF_CACHE_MODE_NOT_SUPPORTED));
-   json_object_set_new(state, "snmpTrapFlood", json_boolean(m_state & NSF_SNMP_TRAP_FLOOD));
-   json_object_set_new(state, "icmpUnreachable", json_boolean(m_state & NSF_ICMP_UNREACHABLE));
-   json_object_set_new(state, "sshUnreachable", json_boolean(m_state & NSF_SSH_UNREACHABLE));
-   json_object_set_new(state, "modbusUnreachable", json_boolean(m_state & NSF_MODBUS_UNREACHABLE));
-   json_object_set_new(state, "unreachable", json_boolean(m_state & DCSF_UNREACHABLE));
-   json_object_set_new(state, "networkPathProblem", json_boolean(m_state & DCSF_NETWORK_PATH_PROBLEM));
-   json_object_set_new(root, "state", state);
+   json_object_set_new(root, "capabilities", json_boolean_object(m_capabilities, s_capabilityMapping));
+   json_object_set_new(root, "state", json_boolean_object(m_state, s_stateMapping));
 
    json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    json_object_set_new(root, "stateFlags", json_integer(m_state));

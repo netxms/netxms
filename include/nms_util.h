@@ -4896,6 +4896,60 @@ static inline int json_object_update_new(json_t *object, json_t *other)
 #endif /* HAVE_DECL_JSON_OBJECT_UPDATE_NEW */
 
 /**
+ * Mapping between bitmask flag values and JSON field names
+ */
+struct FlagNameMapping
+{
+   uint64_t bit;        // Bit flag value
+   const char *name;    // JSON field name (nullptr = end sentinel)
+};
+
+/**
+ * Expand bitmask flags into JSON object with boolean attributes
+ */
+static inline json_t *json_boolean_object(uint64_t flags, const FlagNameMapping *mapping)
+{
+   json_t *object = json_object();
+   for (int i = 0; mapping[i].name != nullptr; i++)
+      json_object_set_new(object, mapping[i].name, json_boolean(flags & mapping[i].bit));
+   return object;
+}
+
+/**
+ * Compact JSON object with boolean attributes into bitmask flags
+ */
+static inline uint64_t json_object_get_flags(json_t *object, const FlagNameMapping *mapping)
+{
+   uint64_t flags = 0;
+   for (int i = 0; mapping[i].name != nullptr; i++)
+   {
+      if (json_is_true(json_object_get(object, mapping[i].name)))
+         flags |= mapping[i].bit;
+   }
+   return flags;
+}
+
+/**
+ * Update bitmask flags from JSON object (PATCH semantics - only modifies bits present in JSON)
+ */
+static inline uint64_t json_object_update_flags(json_t *object, uint64_t currentFlags, const FlagNameMapping *mapping)
+{
+   uint64_t flags = currentFlags;
+   for (int i = 0; mapping[i].name != nullptr; i++)
+   {
+      json_t *value = json_object_get(object, mapping[i].name);
+      if (value != nullptr)
+      {
+         if (json_is_true(value))
+            flags |= mapping[i].bit;
+         else
+            flags &= ~mapping[i].bit;
+      }
+   }
+   return flags;
+}
+
+/**
  * sockaddr buffer
  */
 union SockAddrBuffer
