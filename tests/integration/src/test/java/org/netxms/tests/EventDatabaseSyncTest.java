@@ -32,11 +32,9 @@ public class EventDatabaseSyncTest extends AbstractSessionTest
 	public void testSyncEventDatabase() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
       assertNull(session.findEventTemplateByCode(1));
 		session.syncEventTemplates();
       assertNotNull(session.findEventTemplateByCode(1));
-		
-		session.disconnect();
 	}
 }

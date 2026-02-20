@@ -437,8 +437,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
-      session.disconnect();
-
    }
 
    // +------------------------------+
@@ -487,7 +485,6 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       //to run next tests
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
-      session.disconnect();
 
    }
 

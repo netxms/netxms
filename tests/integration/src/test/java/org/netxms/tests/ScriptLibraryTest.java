@@ -58,8 +58,6 @@ public class ScriptLibraryTest extends AbstractSessionTest
       assertEquals(libScript.getId(), script.getId());
       assertEquals(libScript.getName(), script.getName());
       assertFalse(script.getSource().isEmpty());
-
-      session.disconnect();
    }
 
    @Test
@@ -87,7 +85,6 @@ public class ScriptLibraryTest extends AbstractSessionTest
       finally
       {
          session.deleteScript(scriptId);
-         session.disconnect();
       }
    }
 

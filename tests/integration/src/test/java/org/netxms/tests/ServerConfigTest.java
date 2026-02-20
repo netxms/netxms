@@ -40,7 +40,7 @@ public class ServerConfigTest extends AbstractSessionTest
 
 		// Create test variable
 		session.setServerVariable("TestVariable", "TestValue");
-		
+
 		// Get full list
 		Map<String, ServerVariable> varList = session.getServerVariables();
       assertTrue(varList.size() > 0); // Normally server should have at least one variable
@@ -52,13 +52,12 @@ public class ServerConfigTest extends AbstractSessionTest
 
 		// Delete test variable
 		session.deleteServerVariable("TestVariable");
-		
+
 		// Get variable list again and check that test variable was deleted
 		varList = session.getServerVariables();
 		var = varList.get("TestVariable");
       assertNull(var);
 
-		session.disconnect();
 	}
 
    @Test
@@ -68,8 +67,7 @@ public class ServerConfigTest extends AbstractSessionTest
 
       String value = session.getPublicServerVariable("Client.DashboardDataExport.EnableInterpolation");
       assertNotNull(value);
-      System.out.println("value=" + value); 
+      System.out.println("value=" + value);
 
-      session.disconnect();
 	}
 }

@@ -52,9 +52,8 @@ public class ObjectTest extends AbstractSessionTest
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
 
-		session.disconnect();
 	}
-	
+
    @Test
 	public void testPartialObjectSync() throws Exception
 	{
@@ -70,60 +69,57 @@ public class ObjectTest extends AbstractSessionTest
 
 		assertNull(session.findObjectById(4));
 
-		session.disconnect();
 	}
 
    @Test
 	public void testObjectIsParent() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		session.syncObjects();
-		
+
 		AbstractObject object = session.findObjectById(2);
 		assertFalse(object.isChildOf(1));
-		
+
 		object = TestHelper.findManagementServer(session);
 		assertTrue(object.isChildOf(1));
-		
-		session.disconnect();
+
 	}
-	
+
    @Test
 	public void testSetObjectName() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		session.syncObjects();
-		
+
 		AbstractObject object = session.findObjectById(1);
 		assertNotNull(object);
-		
+
 		session.setObjectName(1, "test name");
 		Thread.sleep(1000);	// Object update should be received from server
 		object = session.findObjectById(1);
 		assertNotNull(object);
 		assertEquals("test name", object.getObjectName());
-		
+
 		session.setObjectName(1, "Entire Network");
 		Thread.sleep(1000);	// Object update should be received from server
 		object = session.findObjectById(1);
 		assertNotNull(object);
 		assertEquals("Entire Network", object.getObjectName());
-		
-		session.disconnect();
+
 	}
-	
+
    @Test
 	public void testObjectCreateAndDelete() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		session.syncObjects();
-		
+
 		AbstractObject object = session.findObjectById(2);
 		assertNotNull(object);
-		
+
 		long id = 0;
 		try
 		{
@@ -132,15 +128,15 @@ public class ObjectTest extends AbstractSessionTest
    		cd.setIpAddress(new InetAddressEx(InetAddress.getByName("192.168.10.1"), 0));
    		id = session.createObject(cd);
    		assertFalse(id == 0);
-   
+
    		Thread.sleep(1000);	// Object update should be received from server
-   
+
    		object = session.findObjectById(id);
    		assertNotNull(object);
    		assertEquals("TestNode", object.getObjectName());
-   		
+
    		session.deleteObject(id);
-   
+
    		Thread.sleep(1000);	// Object update should be received from server
    		object = session.findObjectById(id);
    		assertNull(object);
@@ -151,9 +147,8 @@ public class ObjectTest extends AbstractSessionTest
 		   {
 	         object = session.findObjectById(id);
 		      if (object != null)
-	            session.deleteObject(id);  		      
-		   }			   
-	      session.disconnect();   
+	            session.deleteObject(id);
+		   }
       }
 	}
 
@@ -161,34 +156,33 @@ public class ObjectTest extends AbstractSessionTest
 	public void testObjectFind() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		session.syncObjects();
 
 		AbstractObject object = session.findObjectById(1, EntireNetwork.class);
 		assertNotNull(object);
 		assertEquals(1, object.getObjectId());
-		
+
 		object = session.findObjectById(1, Node.class);
 		assertNull(object);
-		
-		session.disconnect();
+
 	}
-	
+
 	private void printObject(AbstractObject object, int level)
 	{
 		for(int i = 0; i < level; i++)
 			System.out.print(' ');
 		System.out.println(object.getObjectName());
-		
+
 		for(AbstractObject o : object.getChildrenAsArray())
 			printObject(o, level + 2);
 	}
-	
+
 	@Test
 	public void testObjectTree() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		session.syncObjects();
 
 		AbstractObject object = session.findObjectById(1, EntireNetwork.class);
@@ -196,15 +190,14 @@ public class ObjectTest extends AbstractSessionTest
 		assertEquals(1, object.getObjectId());
 
 		printObject(object, 0);
-		
-		session.disconnect();
+
 	}
-	
+
 	@Test
 	public void testSubnetMaskBits() throws Exception
 	{
       final NXCSession session = connectAndLogin();
-      
+
       session.syncObjects();
 
       AbstractObject object = session.findObjectById(1, EntireNetwork.class);
@@ -216,7 +209,6 @@ public class ObjectTest extends AbstractSessionTest
       {
          System.out.println(s.getObjectName() + ": " + ((Subnet)s).getNetworkAddress().toString());
       }
-      
-      session.disconnect();
+
 	}
 }

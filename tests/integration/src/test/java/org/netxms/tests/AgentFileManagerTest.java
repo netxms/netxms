@@ -35,7 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.server.AgentFile;
 import org.netxms.utilities.TestHelper;
- 
+
 /**
   * Agent file manager functionality
   */
@@ -137,7 +137,5 @@ public class AgentFileManagerTest extends AbstractSessionTest
          }
       }
       assertFalse(found);
-      
-      session.disconnect();
    }
 }

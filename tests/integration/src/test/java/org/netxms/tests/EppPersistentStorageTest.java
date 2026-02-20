@@ -123,7 +123,6 @@ public class EppPersistentStorageTest extends AbstractSessionTest
          testRule.setPStorageSet(new HashMap<String, String>());
          session.deletePersistentStorageValue(pStoragekey);
          session.saveEventProcessingPolicy(policy);
-         session.disconnect();
       }
    }
 }

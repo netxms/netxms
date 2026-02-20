@@ -50,8 +50,6 @@ public class ImageLibraryTest extends AbstractSessionTest
 
 		for(LibraryImage i : library)
 			System.out.println(i.toString());
-		
-		session.disconnect();
 	}
    @Test
 	public void testGetLibraryCategory() throws Exception
@@ -60,8 +58,6 @@ public class ImageLibraryTest extends AbstractSessionTest
 
 		final List<LibraryImage> library = session.getImageLibrary("Network Objects");
 		assertTrue(library.size() > 1);
-		
-		session.disconnect();
 	}
    @Test
 	public void testGetImage() throws Exception
@@ -76,8 +72,6 @@ public class ImageLibraryTest extends AbstractSessionTest
       assertTrue(image.isComplete());
 		assertEquals("image/png", image.getMimeType());
 		assertEquals(860, image.getBinaryData().length);
-
-		session.disconnect();
 	}
    @Test
 	public void testGetImageParallel() throws Exception
@@ -90,7 +84,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 				{
 					final NXCSession session = connectAndLogin();
 					System.out.println(Thread.currentThread().getName() + ": connected");
-	
+
 					final LibraryImage image = session.getImage(UUID.fromString("1ddb76a3-a05f-4a42-acda-22021768feaf")); // ATM
 					assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid().toString());
 					assertEquals("ATM", image.getName());
@@ -145,8 +139,6 @@ public class ImageLibraryTest extends AbstractSessionTest
       assertTrue(image.isComplete());
 		assertEquals("image/png", image.getMimeType());
 		assertEquals(860, image.getBinaryData().length);
-
-		session.disconnect();
 	}
 
    @Test
@@ -164,8 +156,6 @@ public class ImageLibraryTest extends AbstractSessionTest
 		System.out.println("Assigned GUID: " + createdImage.getGuid().toString());
 
 		session.deleteImage(createdImage);
-		
-		session.disconnect();
 	}
 
    @Test
@@ -178,7 +168,5 @@ public class ImageLibraryTest extends AbstractSessionTest
 		session.modifyImage(image, null);
 
 		session.deleteImage(image);
-		
-		session.disconnect();
 	}
 }

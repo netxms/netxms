@@ -35,12 +35,10 @@ public class UserTest extends AbstractSessionTest
    public void testValidatePassword() throws Exception
    {
       final NXCSession session = connectAndLogin();
-      
+
       assertTrue(session.validateUserPassword(TestConstants.SERVER_PASSWORD));
-      
-      session.disconnect();
    }
-   
+
    @Test
 	public void testUserAttributes() throws Exception
 	{
@@ -48,11 +46,11 @@ public class UserTest extends AbstractSessionTest
 
 		String value = session.getAttributeForCurrentUser(".testAttribute");
 		assertEquals("", value);
-		
+
 		session.setAttributeForCurrentUser(".testAttribute", "test value");
 		value = session.getAttributeForCurrentUser(".testAttribute");
 		assertEquals("test value", value);
-	
+
 		session.setAttributeForCurrentUser(".testAttribute", "");
 
 		boolean accessDenied = false;
@@ -66,7 +64,5 @@ public class UserTest extends AbstractSessionTest
 			accessDenied = true;
 		}
       assertTrue(accessDenied);
-
-		session.disconnect();
 	}
 }

@@ -74,7 +74,6 @@ public class TopologyTest extends AbstractSessionTest
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
 
-      session.disconnect();
    }
 
    @Test
@@ -90,7 +89,6 @@ public class TopologyTest extends AbstractSessionTest
       for(NetworkMapLink l : page.getLinks())
          System.out.println(l.toString());
 
-      session.disconnect();
    }
 
    @Test
@@ -104,7 +102,6 @@ public class TopologyTest extends AbstractSessionTest
       for(Route r : rt)
          System.out.println(r.toString());
 
-      session.disconnect();
    }
 
    @Test
@@ -118,7 +115,6 @@ public class TopologyTest extends AbstractSessionTest
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
 
-      session.disconnect();
    }
 
    @Test
@@ -154,7 +150,6 @@ public class TopologyTest extends AbstractSessionTest
          }
       }
 
-      session.disconnect();
       assertFalse(duplicatesFound, "Duplicate subnets found");
    }
 }

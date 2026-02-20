@@ -40,7 +40,6 @@ public class ServerFilesTest extends AbstractSessionTest
       for(ServerFile f : files)
          System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModificationTime());
 
-      session.disconnect();
    }
 
    @Test
@@ -66,7 +65,7 @@ public class ServerFilesTest extends AbstractSessionTest
       }
       System.out.println("Downloaded content is: \n" + content);
       System.out.println("*** Downloaded file: " + file.getFile().getAbsolutePath());
-      
+
       // get tails of provided file
       int i = 3;
       while(i > 0)
@@ -76,6 +75,5 @@ public class ServerFilesTest extends AbstractSessionTest
       }
       session.cancelFileMonitoring(file.getMonitorId());
       System.out.println("Monitoring have been canceled.\n");
-      session.disconnect();
    }
 }

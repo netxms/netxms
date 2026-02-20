@@ -61,7 +61,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    private NXCSession session;
    private Boolean scriptFailed;
    private String currentScriptName = "<unset>";
-   
+
    @Test
    public void testAddressMap() throws Exception
    {
@@ -71,7 +71,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertTrue(r.success);
       assertNotNull(r.code);
       assertNull(r.errorMessage);
-      
+
       r = session.compileScript("a = 1; b = 2; return a / b;", false);
       assertTrue(r.success);
       assertNull(r.code);
@@ -82,8 +82,6 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertNull(r.code);
       assertNotNull(r.errorMessage);
       System.out.println("ScriptTest::testAddressMap(): Expected compilation error message: \"" + r.errorMessage + "\"");
-
-      session.disconnect();
    }
 
    @Test
@@ -100,9 +98,9 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
 
       scriptFailed = false;
       session.executeScript(2, script, params, ScriptTest.this);
-      assertFalse(scriptFailed);         
+      assertFalse(scriptFailed);
    }
-   
+
    @Test
    public void testNXSLObjectFunctions() throws Exception
    {
@@ -176,8 +174,6 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          o = session.findObjectByName("Integration Test Container");
          if (o != null)
             session.deleteObject(o.getObjectId());
-
-         session.disconnect();
       }
    }
 
@@ -188,15 +184,15 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
 
       session.syncObjects();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode);    
+      assertNotNull(managementNode);
 
       String dciName = "Test.DCI" + Long.toString((new Date()).getTime());
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
       params.add(dciName);
-      
+
       executeScript("/dataCollectionFunctions.nxsl", params);
-      
+
       DataCollectionConfiguration config = session.openDataCollectionConfiguration(managementNode.getObjectId());
       for (DataCollectionObject dc : config.getItems())
       {
@@ -206,16 +202,14 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          }
       }
       config.close();
-            
-      session.disconnect();
    }
-      
+
    @Test
    public void testNXSLAgentFunctions() throws Exception
    {
-      session = connectAndLogin();      
+      session = connectAndLogin();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode);      
+      assertNotNull(managementNode);
 
       String actionName = TestConstants.ACTION;
       String actionName2 = "testEcho";
@@ -238,7 +232,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          session.applyTemplate(templateId, managementNode.getObjectId());
          session.executeAction(managementNode.getObjectId(), "Agent.Restart", null);
 
-         Thread.sleep(10000); // Wait for agent restart         
+         Thread.sleep(10000); // Wait for agent restart
          session.pollObject(managementNode.getObjectId(), ObjectPollType.STATUS, null);
 
          List<String> params = new ArrayList<String>();
@@ -250,18 +244,17 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       finally
       {
          session.deleteObject(templateId);
-         session.disconnect();
       }
    }
-   
+
    @Test
    public void testNXSLAlarmFunctions() throws Exception
    {
       session = connectAndLogin();
-      
+
       HashMap<Long, Alarm> alarms = session.getAlarms();
       assertTrue(alarms.size() > 0);
-      
+
       List<String> params = new ArrayList<String>();
       for(Alarm alarm : alarms.values())
       {
@@ -278,20 +271,20 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       assertTrue(params.size() == 3);
       executeScript("/alarmFunctions.nxsl", params);
    }
-   
+
    @Test
    public void testNXSLEventFunctions() throws Exception
    {
       session = connectAndLogin();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode); 
-      
+      assertNotNull(managementNode);
+
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
-      
+
       executeScript("/eventFunctions.nxsl", params);
    }
-   
+
    @Test
    public void testNXSLMiscellaneousFunctions() throws Exception
    {
@@ -301,8 +294,8 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       //Find Object
       session.syncObjects();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode);  
-      
+      assertNotNull(managementNode);
+
       //Create scheduled task
       Set<Long> objectSet = new HashSet<Long>();
       objectSet.add(managementNode.getObjectId());
@@ -313,7 +306,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session.addScheduledTask(task);
 
       //Create user support application notification
-      session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);      
+      session.createUserAgentNotification("Message", objectSet, new Date(), new Date(), true);
       List<UserAgentNotification> notificaitons = session.getUserAgentNotifications();
       notificaitons.sort(new Comparator<UserAgentNotification>() {
 
@@ -324,7 +317,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          }
       });
       long nextNotificationId = notificaitons.get(0).getId();
-      
+
       //Create map for tests
       String mappingTableName = "TestMap" + Long.toString((new Date()).getTime());
       int id = session.createMappingTable(mappingTableName, "NXSLMiscelanious test map description", 0);
@@ -332,12 +325,12 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       String mappingTableKey1 = "TestMapKey1" + Long.toString((new Date()).getTime());
       String mappingTableValue1 = "TestMapKeyValue1";
       MappingTableEntry e = new MappingTableEntry(mappingTableKey1, mappingTableValue1, "NXSLMiscelanious test"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      mappingTable.getData().add(e);      
+      mappingTable.getData().add(e);
       String mappingTableKey2 = "TestMapKey2" + Long.toString((new Date()).getTime());
       String mappingTableValue2 = "TestMapKeyValue2";
       MappingTableEntry e2 = new MappingTableEntry(mappingTableKey2, mappingTableValue2, "NXSLMiscelanious test"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       mappingTable.getData().add(e2);
-      session.updateMappingTable(mappingTable);      
+      session.updateMappingTable(mappingTable);
 
       params.add(Long.toString(managementNode.getObjectId()));
       params.add(scheduledTaskKey);
@@ -347,7 +340,7 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       params.add(mappingTableValue1);
       params.add(mappingTableKey2);
       params.add(mappingTableValue2);
-      
+
       try
       {
          executeScript("/miscellaneousFunctions.nxsl", params);
@@ -362,23 +355,23 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
             }
          });
 
-         assertEquals(nextNotificationId + 1, notificaitons.get(0).getId());    
+         assertEquals(nextNotificationId + 1, notificaitons.get(0).getId());
       }
       finally
       {
          session.deleteMappingTable(id);
       }
    }
-   
+
    @Test
    public void testNXSLWebService() throws Exception
    {
       session = connectAndLogin();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
-      assertNotNull(managementNode); 
+      assertNotNull(managementNode);
       String webServiceId = "neste";
       String webServiceUrl = "https://www.neste.lv/lv/content/degvielas-cenas";
-      
+
       List<WebServiceDefinition> definition = session.getWebServiceDefinitions();
       boolean found = false;
       for (WebServiceDefinition ws : definition)
@@ -395,11 +388,11 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
          ws.setUrl(webServiceUrl);
          session.modifyWebServiceDefinition(ws);
       }
-      
+
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
       params.add(webServiceId);
-      
+
       executeScript("/webService.nxsl", params);
    }
 

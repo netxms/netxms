@@ -44,7 +44,7 @@ public class AgentDataCollectionTest extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       Node testNode = TestHelper.findManagementServer(session);
-      
+
       assertNotNull(testNode);
       assertTrue(testNode.hasAgent());
 
@@ -58,7 +58,7 @@ public class AgentDataCollectionTest extends AbstractSessionTest
       long id = dcc.modifyObject(dci);
       Thread.sleep(1000);
 
-      DciValue testDCiValue = null;  
+      DciValue testDCiValue = null;
       DciValue[]list = session.getLastValues(testNode.getObjectId());
       for(DciValue value : list)
       {
@@ -66,13 +66,13 @@ public class AgentDataCollectionTest extends AbstractSessionTest
          {
             testDCiValue = value;
          }
-      }      
+      }
       Date currentDate = new Date();
       long oneMinuteAgoMillis = currentDate.getTime() - (1 * 60 * 1000);
       Date oneMinuteAgoDate = new Date(oneMinuteAgoMillis);
-      assertTrue(testDCiValue.getTimestamp().after(oneMinuteAgoDate)); 
-      assertNotEquals(testDCiValue.getValue(), ""); 
-      
+      assertTrue(testDCiValue.getTimestamp().after(oneMinuteAgoDate));
+      assertNotEquals(testDCiValue.getValue(), "");
+
       final DataCollectionTable dct = new DataCollectionTable(dcc, 0);
       dct.setOrigin(DataOrigin.AGENT);
       dct.setDescription("Test agent table");
@@ -99,13 +99,12 @@ public class AgentDataCollectionTest extends AbstractSessionTest
             }
          }
       }
-      
+
       for (Boolean f : foundItems)
          assertTrue(f);
-      
+
       dcc.deleteObject(id);
       dcc.deleteObject(dctId);
       dcc.close();
-      session.disconnect();
    }
 }
