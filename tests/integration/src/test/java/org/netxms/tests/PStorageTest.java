@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.tests;
 
@@ -20,33 +20,31 @@ public class PStorageTest extends AbstractSessionTest
 		NXCSession session = connectAndLogin();
 		String key = "PStorageTestKey";
 		String value = "PStorageTestValue";
-		
+
 		try
 		{
    		//check that there is no entry with "PStorageTestKey" key
-   		HashMap<String, String> map = session.getPersistentStorageList();		
+   		HashMap<String, String> map = session.getPersistentStorageList();
    		assertFalse(map.containsKey(key));
-   		
+
    		//add enry with "PStorageTestKey" key
-   		session.setPersistentStorageValue(key, value);	
-   		
+   		session.setPersistentStorageValue(key, value);
+
    		//check that entry with "PStorageTestKey" key was added and contains "PStorageTestValue" value
-         map = session.getPersistentStorageList();    
+         map = session.getPersistentStorageList();
          assertTrue(map.containsKey(key));
          assertTrue(map.get(key).equals(value));
-        
+
          //delete entry with "PStorageTestKey" key
    		session.deletePersistentStorageValue(key);
-         
+
    		//check that there is no entry with "PStorageTestKey" key
-         map = session.getPersistentStorageList();    
+         map = session.getPersistentStorageList();
          assertFalse(map.containsKey(key));
 		}
 		finally
 		{
-         session.deletePersistentStorageValue(key);		   
+         session.deletePersistentStorageValue(key);
 		}
-		
-		session.disconnect();
 	}
 }

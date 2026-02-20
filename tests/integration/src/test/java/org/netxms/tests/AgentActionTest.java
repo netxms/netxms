@@ -56,7 +56,5 @@ public class AgentActionTest extends AbstractSessionTest
          {
          }
       }, null);
-
-      session.disconnect();
    }
 }

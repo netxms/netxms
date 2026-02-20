@@ -60,7 +60,7 @@ public class CollectorTest extends AbstractSessionTest
 
    /**
     * Checks if a collector with specified name exists. If it doesn't exist, creates a new one.
-    * 
+    *
     * @param session
     * @param collectorName
     * @throws IOException
@@ -118,7 +118,6 @@ public class CollectorTest extends AbstractSessionTest
       assertTrue(list.length > 0); // Checking that DCI has been created
 
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -175,7 +174,6 @@ public class CollectorTest extends AbstractSessionTest
       assertNotNull(testAlarm);
 
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -207,7 +205,6 @@ public class CollectorTest extends AbstractSessionTest
       assertFalse(perfTabList.isEmpty());
 
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -269,7 +266,6 @@ public class CollectorTest extends AbstractSessionTest
          }
       }
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -294,7 +290,7 @@ public class CollectorTest extends AbstractSessionTest
       dci.setPollingInterval(Integer.toString(1));
       dci.setTransformationScript(TRANSORMATION_SCRIPT);
       dcc.modifyObject(dci);
-      
+
       Thread.sleep(1000);
 
       DciValue[] list = session.getLastValues(testCollector.getObjectId());
@@ -325,6 +321,5 @@ public class CollectorTest extends AbstractSessionTest
       assertTrue(found);
 
       dcc.close();
-      session.disconnect();
    }
 }

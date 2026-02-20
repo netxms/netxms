@@ -289,7 +289,6 @@ public class ExpansionTest extends AbstractSessionTest
       assertEquals(node.getCustomAttributeValue("name1"), expandedStrings2.get(31));
 
       dcc.close();
-      session.disconnect();
    }
 
 }

@@ -35,7 +35,7 @@ public class SendEventTest extends AbstractSessionTest
 
 		session.sendEvent(1, new String[0], new String[0]);
 		session.sendEvent("SYS_NODE_ADDED", new String[0], new String[0]);
-		
+
 		session.syncObjects();
 		for(AbstractObject o : session.getAllObjects())
 		{
@@ -45,7 +45,5 @@ public class SendEventTest extends AbstractSessionTest
 				break;
 			}
 		}
-
-		session.disconnect();
 	}
 }

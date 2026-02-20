@@ -160,7 +160,5 @@ public class EppAlarmTest extends AbstractSessionTest
       Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
       assertNull(alarm); // checking that cannot find the alarm in the list of alarms, indicating that it is terminated
-
-      session.disconnect();
    }
 }

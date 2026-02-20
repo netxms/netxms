@@ -54,7 +54,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    private final static String CONTAINER_I = "I-container";
    private final static String CONTAINER_J = "J-container";
    private final String[] containers = { CONTAINER_A, CONTAINER_B, CONTAINER_C, CONTAINER_V };
-   
+
    private final static String TEMPLATE_GROUP = "Test template group";
    private final static String TEMPLATE_A = "Test template A";
    private final static String TEMPLATE_B = "Test template B";
@@ -72,10 +72,10 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    private final static String CA_VALUE_I = "I";
    private final static String CA_VALUE_TG = "TG";
    private final static String CA_VALUE_T = "T";
-   
+
    /**
     * Checks if a template or template group with the given name exists; if it doesn't exist, creates one.
-    * 
+    *
     * @param session
     * @param objectName
     * @param objectType
@@ -108,7 +108,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    /**
     * Checks if a folder hierarchy exists within the given directory. If it doesn't exist, it creates the hierarchy and assigns the
     * necessary custom attributes.
-    * 
+    *
     * @param session
     * @param containerName
     * @throws IOException
@@ -165,7 +165,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
          session.bindObject(containerI.getObjectId(), containerJ.getObjectId());
          Thread.sleep(MILLIS_300);
       }
-   } 
+   }
    // 1.Creates containers:
    // A (custom attribute: 1 A,Inheritable),
    // B,
@@ -177,7 +177,7 @@ public class CustomAttributeInheritance extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      
+
       TestHelper.findAndDeleteContainer(session, containers);
 
       TestHelper.createContainer(session, CONTAINER_A);
@@ -187,11 +187,11 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       Container containerA = (Container)session.findObjectByName(CONTAINER_A);
       Container containerB = (Container)session.findObjectByName(CONTAINER_B);
       Container containerC = (Container)session.findObjectByName(CONTAINER_C);
-      
+
       assertNull(containerA.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-      
+
       Thread.sleep(MILLIS_300);
 
       TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId()); // sets the inheritable flag for the A
@@ -219,8 +219,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -278,8 +276,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNotNull(containerB.getCustomAttributeValue("1"));
       assertNotNull(containerC.getCustomAttributeValue("1"));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -334,8 +330,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -392,8 +386,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNotNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNotNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -448,8 +440,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -506,8 +496,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNotNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNotNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-     session.disconnect();
    }
 
    // 1.Creates containers:
@@ -562,8 +550,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -620,10 +606,8 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertNotNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNotNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
-   
+
    // 1.Creates containers:
    // A(custom attribute: 1 A,Inheritable),
    // B,
@@ -671,15 +655,13 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       TestHelper.changeCustomAttributes(session, CA_NAME_1, "H", 1, containerA.getObjectId());// changes CA value
                                                                                                      // for the A container
       Thread.sleep(MILLIS_300);
-      
+
       containerA = (Container)session.findObjectByName(CONTAINER_A);
       containerB = (Container)session.findObjectByName(CONTAINER_B);
       containerC = (Container)session.findObjectByName(CONTAINER_C);
 
       assertTrue(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerB.getCustomAttributeValue(CA_NAME_1)));
       assertTrue(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -732,8 +714,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
       assertFalse(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
       assertEquals(containerB.getCustomAttributeValue(CA_NAME_1), containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -789,8 +769,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
       assertFalse(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -849,8 +827,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertTrue(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
       assertFalse(containerB.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -911,8 +887,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
 
       assertTrue(containerA.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
       assertFalse(containerB.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -982,8 +956,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       containerV = (Container)session.findObjectByName(CONTAINER_V);
 
       assertNull(containerV.getCustomAttribute(CA_NAME_2));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -1048,8 +1020,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       containerV = (Container)session.findObjectByName(CONTAINER_V);
 
       assertTrue(containerV.getCustomAttributeValue(CA_NAME_1).equals(containerC.getCustomAttributeValue(CA_NAME_1)));
-
-      session.disconnect();
    }
 
    // 1.Creates objects:
@@ -1123,8 +1093,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       session.deleteObject(testTemplateA.getObjectId());
       session.deleteObject(testTemplateB.getObjectId());
       session.deleteObject(testNode.getObjectId());
-
-      session.disconnect();
    }
 
    // Verifies that upon restart, the container hierarchy is preserved and custom attributes are correctly inherited.
@@ -1182,8 +1150,6 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       assertTrue(containerJ.getCustomAttribute(CA_NAME_1).isInherited());
       assertTrue(containerJ.getCustomAttributeValue(CA_NAME_2).equals(CA_VALUE_F));
       assertTrue(containerJ.getCustomAttribute(CA_NAME_2).isInherited());
-
-      session.disconnect();
    }
-  
+
 }

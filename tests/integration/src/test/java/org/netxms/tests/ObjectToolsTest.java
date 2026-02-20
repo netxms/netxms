@@ -28,7 +28,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 
 /**
- * 
+ *
  * Test object tools functionality
  *
  */
@@ -44,8 +44,6 @@ public class ObjectToolsTest extends AbstractSessionTest
       {
          System.out.println(" >>Tool>> " + tool.getId() + " " + tool.getName());
       }
-
-      session.disconnect();
    }
 
    @Test
@@ -65,8 +63,6 @@ public class ObjectToolsTest extends AbstractSessionTest
       System.out.println("   OID = " + td.getSnmpOid());
       System.out.println("   confirmation = " + td.getConfirmationText());
       System.out.println("   columnCount = " + td.getColumns().size());
-
-      session.disconnect();
    }
 
    @Test
@@ -78,8 +74,6 @@ public class ObjectToolsTest extends AbstractSessionTest
       assertFalse(id == 0);
 
       System.out.println("Object tool ID generated: " + id);
-
-      session.disconnect();
    }
 
    @Test
@@ -102,7 +96,5 @@ public class ObjectToolsTest extends AbstractSessionTest
          System.out.println(f);
 
       session.deleteObjectTool(id);
-
-      session.disconnect();
    }
 }

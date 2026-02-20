@@ -301,8 +301,6 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       //to run next test
       session.deletePersistentStorageValue("Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
-
-      session.disconnect();
    }
 
    //           RULE A                                         RULE B
@@ -657,8 +655,6 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set B");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
-
-      session.disconnect();
    }
 
    //           RULE A                                         RULE B
@@ -716,8 +712,6 @@ public class EppServerActionTestMultipleRules extends AbstractSessionTest
       session.deletePersistentStorageValue("Key to set B");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set B"));
-
-      session.disconnect();
    }
    //           RULE A                                         RULE B
    // +------------------------------+             +------------------------------+

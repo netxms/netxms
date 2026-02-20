@@ -42,11 +42,11 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    String[] containers = { CONTAINER_A, CONTAINER_B, CONTAINER_C, CONTAINER_V, CONTAINER_X };
 
    private final static String CA_NAME_1 = "1";
-   
+
    private final static String CA_VALUE_A = "A";
    private final static String CA_VALUE_B = "B";
    private final static String CA_VALUE_V = "V";
-   
+
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   V(custom attribute: 1 A, Inheritable),
@@ -110,10 +110,8 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
-   
+
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   V(custom attribute: 1 A, Inheritable),
@@ -124,7 +122,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    //                                  |
    // 2.Creates a folder hierarchy A-> B <-V.
    //
-   // 3.Unbinds A and V from B 
+   // 3.Unbinds A and V from B
    @Test
    public void testCaInheritanceConflict2() throws Exception
    {
@@ -177,8 +175,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -245,8 +241,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -312,8 +306,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -326,7 +318,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    //                                  |
    // 2.Creates a folder hierarchy A-> B <-V.
    //
-   // 3.Unbinds A and V from B 
+   // 3.Unbinds A and V from B
    @Test
    public void testCaInheritanceConflict5() throws Exception
    {
@@ -381,8 +373,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -450,8 +440,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
       assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -531,8 +519,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertTrue(containerB.getCustomAttribute(CA_NAME_1).isConflict()); // ZDESJ PADAJET
       assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
@@ -612,18 +598,16 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
 
       assertTrue(containerB.getCustomAttribute(CA_NAME_1).isConflict());
       assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   B,
    //   C.
-   //                                   
+   //
    //                                 -> C <-
    //                               /         \
-   // 2.Creates a folder hierarchy A --------> B 
+   // 2.Creates a folder hierarchy A --------> B
    @Test
    public void testCaInheritanceConflict9() throws Exception
    {
@@ -658,18 +642,16 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       containerC = (Container)session.findObjectByName(CONTAINER_C);
 
       assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
-   
+
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   B(custom attribute: 1 A),
    //   C.
-   //                                   
+   //
    //                                 -> C <-
    //                               /         \
-   // 2.Creates a folder hierarchy A --------> B 
+   // 2.Creates a folder hierarchy A --------> B
    @Test
    public void testCaInheritanceConflict10() throws Exception
    {
@@ -706,18 +688,16 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       containerC = (Container)session.findObjectByName(CONTAINER_C);
 
       assertTrue(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   B,
    //   C,
-   //   V.                           
+   //   V.
    //                               ->B---> C <-
    //                              |           |
-   // 2.Creates a folder hierarchy A --------> V 
+   // 2.Creates a folder hierarchy A --------> V
    @Test
    public void testCaInheritanceConflict11() throws Exception
    {
@@ -756,18 +736,16 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       containerV = (Container)session.findObjectByName(CONTAINER_V);
 
       assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
 
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   B(custom attribute: 1 B),
    //   C,
-   //   V(custom attribute: 1 V).                           
+   //   V(custom attribute: 1 V).
    //                               ->B---> C <-
    //                              |           |
-   // 2.Creates a folder hierarchy A --------> V 
+   // 2.Creates a folder hierarchy A --------> V
    @Test
    public void testCaInheritanceConflict12() throws Exception // WORKS
    {
@@ -810,10 +788,8 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       containerV = (Container)session.findObjectByName(CONTAINER_V);
 
       assertTrue(containerC.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
-   
+
    // 1.Creates containers:
    //   A(custom attribute: 1 A,Inheritable),
    //   B,
@@ -824,7 +800,7 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
    //                                  /         \
    //                               ->B           C <-
    //                              |                 |
-   // 2.Creates a folder hierarchy A --------------> V 
+   // 2.Creates a folder hierarchy A --------------> V
    @Test
    public void testCaInheritanceConflict13() throws Exception
    {
@@ -851,8 +827,8 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       assertNull(containerV.getCustomAttributeValue(CA_NAME_1));
 
       TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId()); // sets the inheritable flag
-                                                                                                      // for the A 
-      
+                                                                                                      // for the A
+
       TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_V, 1, containerV.getObjectId()); // sets the inheritable flag
                                                                                                       // for the V container
 
@@ -870,8 +846,6 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       containerX = (Container)session.findObjectByName(CONTAINER_X);
 
       assertTrue(containerX.getCustomAttribute(CA_NAME_1).isConflict());
-
-      session.disconnect();
    }
 
    // Reproduces the reported bug: conflict not resolved when a relay container is deleted.

@@ -104,7 +104,5 @@ public class EppCustomAtributesTest extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
 
-      session.disconnect();
-
    }
 }

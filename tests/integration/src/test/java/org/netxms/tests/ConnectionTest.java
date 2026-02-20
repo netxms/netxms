@@ -47,13 +47,12 @@ public class ConnectionTest extends AbstractSessionTest
 
       assertEquals(TestConstants.USER_ID, session.getUserId());
       assertTrue(session.isServerComponentRegistered("CORE"));
-      
+
       System.out.println("Server components:");
       for(String c : session.getRegisteredServerComponents())
          System.out.println("   " + c);
-      
+
       Thread.sleep(2000);
-      session.disconnect();
    }
 
    @Test
@@ -69,7 +68,7 @@ public class ConnectionTest extends AbstractSessionTest
       {
          System.out.println("IllegalStateException thrown (" + e.getMessage() + ")");
       }
-      
+
       session.disconnect();
       try
       {
@@ -110,7 +109,7 @@ public class ConnectionTest extends AbstractSessionTest
 	      t[i].start();
          System.out.println("Thread #" + (i + 1) + " started");
 	   }
-	   
+
       for(int i = 0; i < t.length; i++)
       {
          t[i].join();
@@ -207,38 +206,29 @@ public class ConnectionTest extends AbstractSessionTest
             count++;
       }
       assertEquals(1, count);
-
-      session.disconnect();
    }
 
    private void prepare2FATests() throws Exception
    {
       NXCSession session = connectAndLogin();
-      try
+      List<TwoFactorAuthenticationMethod> methods = session.get2FAMethods();
+      if (methods.isEmpty())
       {
-         List<TwoFactorAuthenticationMethod> methods = session.get2FAMethods();
-         if (methods.isEmpty())
-         {
-            TwoFactorAuthenticationMethod m = new TwoFactorAuthenticationMethod("EMAIL", "Test Email Method", "Message", "ChannelName=SMTP-Text\n");
-            session.modify2FAMethod(m);
-            methods.add(m);
-         }
-
-         User user = TestHelper.findOrCreateUser(session, TestConstants.SERVER_LOGIN_2FA, TestConstants.SERVER_PASSWORD_2FA);
-         if (user.getTwoFactorAuthMethodBindings().isEmpty())
-         {
-            Map<String, Map<String, String>> bindings = new HashMap<>();
-            Map<String, String> config = new HashMap<>();
-            config.put("Recipient", "noreply@netxms.org");
-            config.put("Subject", "Access code");
-            bindings.put(methods.get(0).getName(), config);
-            user.setTwoFactorAuthMethodBindings(bindings);
-            session.modifyUserDBObject(user);
-         }
+         TwoFactorAuthenticationMethod m = new TwoFactorAuthenticationMethod("EMAIL", "Test Email Method", "Message", "ChannelName=SMTP-Text\n");
+         session.modify2FAMethod(m);
+         methods.add(m);
       }
-      finally
+
+      User user = TestHelper.findOrCreateUser(session, TestConstants.SERVER_LOGIN_2FA, TestConstants.SERVER_PASSWORD_2FA);
+      if (user.getTwoFactorAuthMethodBindings().isEmpty())
       {
-         session.disconnect();
+         Map<String, Map<String, String>> bindings = new HashMap<>();
+         Map<String, String> config = new HashMap<>();
+         config.put("Recipient", "noreply@netxms.org");
+         config.put("Subject", "Access code");
+         bindings.put(methods.get(0).getName(), config);
+         user.setTwoFactorAuthMethodBindings(bindings);
+         session.modifyUserDBObject(user);
       }
    }
 
@@ -270,7 +260,5 @@ public class ConnectionTest extends AbstractSessionTest
             count++;
       }
       assertEquals(0, count);
-
-      session.disconnect();
    }
 }

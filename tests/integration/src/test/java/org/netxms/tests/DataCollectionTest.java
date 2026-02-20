@@ -87,7 +87,6 @@ public class DataCollectionTest extends AbstractSessionTest
 
       dcc.deleteObject(id);
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -122,7 +121,6 @@ public class DataCollectionTest extends AbstractSessionTest
 
       dcc.deleteObject(id);
       dcc.close();
-      session.disconnect();
    }
 
    @Test
@@ -179,7 +177,6 @@ public class DataCollectionTest extends AbstractSessionTest
 
       dc.deleteObject(dciId);
       dc.close();
-      session.disconnect();
    }
 
    @Test
@@ -206,8 +203,6 @@ public class DataCollectionTest extends AbstractSessionTest
             System.out.println("   --- no threshold violations");
          }
       }
-
-      session.disconnect();
    }
 
    @Test
@@ -225,8 +220,6 @@ public class DataCollectionTest extends AbstractSessionTest
       {
          System.out.println("id=" + p.getId() + " descr='" + p.getDescription() + "' settings='" + p.getPerfTabSettings() + "'");
       }
-
-      session.disconnect();
    }
 
    @Test
@@ -262,8 +255,6 @@ public class DataCollectionTest extends AbstractSessionTest
          if (e.getErrorCode() != RCC.INVALID_SUMMARY_TABLE_ID)
             throw e;
       }
-
-      session.disconnect();
    }
 
    private void printTable(Table t)
@@ -300,7 +291,5 @@ public class DataCollectionTest extends AbstractSessionTest
 
       result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.LAST, null, null, true);
       printTable(result);
-
-      session.disconnect();
    }
 }

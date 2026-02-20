@@ -36,8 +36,6 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
 		EventProcessingPolicy p = session.getEventProcessingPolicy();
 		for(EventProcessingPolicyRule r : p.getRules())
 			System.out.println("  " + r.getGuid() + " " + r.getComments());
-		
-		session.disconnect();
 	}
 	@Test
 	public void testSendEvent() throws Exception
@@ -45,7 +43,5 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
 
       session.sendEvent(TestConstants.EVENT_CODE, new String[] { "test message\nline #2\nline #3" }, new String[] { "event_name" });
-      
-      session.disconnect();
 	}
 }

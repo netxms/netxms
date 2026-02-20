@@ -52,7 +52,6 @@ public class AlarmTest extends AbstractSessionTest
 			System.out.println(e.getKey() + ": " + e.getValue().getMessage());
 		}
 
-		session.disconnect();
 	}
 
 	// NOTE: server must have at least 1 active alarm for this test.
@@ -60,7 +59,7 @@ public class AlarmTest extends AbstractSessionTest
 	public void testGetEvents() throws Exception
 	{
 		final NXCSession session = connectAndLogin();
-		
+
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
 		{
@@ -71,8 +70,7 @@ public class AlarmTest extends AbstractSessionTest
 				System.out.println(e.getTimeStamp() + " " + e.getName() + " " + e.getMessage());
 			}
 		}
-		
-		session.disconnect();
+
 	}
 
 	// NOTE: server must have at least 1 active alarm for this test.
@@ -84,8 +82,8 @@ public class AlarmTest extends AbstractSessionTest
 
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
-		{		   
-			final Semaphore s = new Semaphore(0);			
+		{
+			final Semaphore s = new Semaphore(0);
 			final List<Long> alarmIds = new ArrayList<Long>(2);
 			alarmIds.add(list.keySet().iterator().next());
 			alarmIds.add(123456789L); // Made up alarm ID to check if it is returned
@@ -109,6 +107,5 @@ public class AlarmTest extends AbstractSessionTest
          assertTrue(success[0]);
 		}
 
-		session.disconnect();
 	}
 }

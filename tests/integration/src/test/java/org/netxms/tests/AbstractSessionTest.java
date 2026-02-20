@@ -107,7 +107,7 @@ public abstract class AbstractSessionTest
    public void cleanup()
    {
       // SQL error check
-      if (session != null)
+      if (session != null && session.isConnected())
       {
          try
          {
