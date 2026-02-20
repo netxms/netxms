@@ -420,6 +420,7 @@ public:
 
    unique_ptr<StringList> getConfigured2FAMethods() const;
    void fill2FAMethodBindingInfo(NXCPMessage *msg) const;
+   json_t *get2FABindingsAsJson() const;
    shared_ptr<Config> get2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.getShared(methodName); }
    bool has2FAMethodBinding(const TCHAR* methodName) const { return m_2FABindings.contains(methodName); }
    uint32_t modify2FAMethodBinding(const TCHAR* methodName, const StringMap& configuration);
@@ -584,10 +585,11 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
 
 unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId);
+json_t NXCORE_EXPORTABLE *GetUser2FABindingsAsJson(uint32_t userId);
 shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR *method);
 void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg);
-uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration);
-uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName);
+uint32_t NXCORE_EXPORTABLE ModifyUser2FAMethodBinding(uint32_t userId, const wchar_t *methodName, const StringMap& configuration);
+uint32_t NXCORE_EXPORTABLE DeleteUser2FAMethodBinding(uint32_t userId, const wchar_t *methodName);
 
 bool NXCORE_EXPORTABLE Is2FAEnforcedForUser(uint32_t userId);
 int NXCORE_EXPORTABLE Get2FAGraceLogins(uint32_t userId);

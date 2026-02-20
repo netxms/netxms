@@ -1805,7 +1805,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase()
 /**
  * Find a list of UserDatabaseObjects of specific id`s
  */
-unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray<uint32_t>& ids)
+unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const IntegerArray<uint32_t>& ids)
 {
    auto userDB = make_unique<ObjectArray<UserDatabaseObject>>(ids.size(), 16, Ownership::True);
    s_userDatabaseLock.readLock();
@@ -1827,7 +1827,7 @@ unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const IntegerArray
 /**
  * Find a list of UserDatabaseObjects of specific id`s
  */
-unique_ptr<ObjectArray<UserDatabaseObject>> FindUserDBObjects(const StructArray<ResponsibleUser>& ids)
+unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const StructArray<ResponsibleUser>& ids)
 {
    auto userDB = make_unique<ObjectArray<UserDatabaseObject>>(ids.size(), 16, Ownership::True);
    s_userDatabaseLock.readLock();
@@ -1885,6 +1885,22 @@ void FillUser2FAMethodBindingInfo(uint32_t userId, NXCPMessage *msg)
 }
 
 /**
+ * Get user 2FA bindings as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetUser2FABindingsAsJson(uint32_t userId)
+{
+   json_t *bindings = nullptr;
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if ((object != nullptr) && !object->isGroup())
+   {
+      bindings = static_cast<User*>(object)->get2FABindingsAsJson();
+   }
+   s_userDatabaseLock.unlock();
+   return bindings;
+}
+
+/**
  * Get 2FA method binding names for specific user
  */
 unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId)
@@ -1919,7 +1935,7 @@ shared_ptr<Config> GetUser2FAMethodBinding(int userId, const TCHAR* methodName)
 /**
  * Create/Modify 2FA method binding for specific user
  */
-uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, const StringMap& configuration)
+uint32_t NXCORE_EXPORTABLE ModifyUser2FAMethodBinding(uint32_t userId, const wchar_t *methodName, const StringMap& configuration)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    s_userDatabaseLock.writeLock();
@@ -1935,7 +1951,7 @@ uint32_t ModifyUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName, co
 /**
  * Delete 2FA method binding for specific user
  */
-uint32_t DeleteUser2FAMethodBinding(uint32_t userId, const TCHAR* methodName)
+uint32_t NXCORE_EXPORTABLE DeleteUser2FAMethodBinding(uint32_t userId, const wchar_t *methodName)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
    s_userDatabaseLock.writeLock();

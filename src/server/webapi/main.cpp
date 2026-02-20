@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023-2025 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,12 @@ void CleanupExpiredTcpProxySessions();
 /**
  * Handlers
  */
+int H_2FADrivers(Context *context);
+int H_2FAMethodCreate(Context *context);
+int H_2FAMethodDelete(Context *context);
+int H_2FAMethodDetails(Context *context);
+int H_2FAMethods(Context *context);
+int H_2FAMethodUpdate(Context *context);
 int H_AiChatAnswerQuestion(Context *context);
 int H_AiChatClear(Context *context);
 int H_AiChatCreate(Context *context);
@@ -112,6 +118,9 @@ int H_UserGroupDetails(Context *context);
 int H_UserGroupCreate(Context *context);
 int H_UserGroupUpdate(Context *context);
 int H_UserGroupDelete(Context *context);
+int H_User2FABindingDelete(Context *context);
+int H_User2FABindings(Context *context);
+int H_User2FABindingUpdate(Context *context);
 
 /**
  * WebSocket upgrade handlers
@@ -125,6 +134,18 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
  */
 static bool InitModule(Config *config)
 {
+   RouteBuilder("v1/2fa/drivers")
+      .GET(H_2FADrivers)
+      .build();
+   RouteBuilder("v1/2fa/methods")
+      .GET(H_2FAMethods)
+      .POST(H_2FAMethodCreate)
+      .build();
+   RouteBuilder("v1/2fa/methods/:method-name")
+      .GET(H_2FAMethodDetails)
+      .PUT(H_2FAMethodUpdate)
+      .DELETE(H_2FAMethodDelete)
+      .build();
    RouteBuilder("v1/ai/chat")
       .POST(H_AiChatCreate)
       .build();
@@ -313,6 +334,13 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/users/:user-id/password")
       .POST(H_UserSetPassword)
+      .build();
+   RouteBuilder("v1/users/:user-id/2fa-bindings")
+      .GET(H_User2FABindings)
+      .build();
+   RouteBuilder("v1/users/:user-id/2fa-bindings/:method-name")
+      .PUT(H_User2FABindingUpdate)
+      .DELETE(H_User2FABindingDelete)
       .build();
    RouteBuilder("v1/tcp-proxy")
       .POST(H_TcpProxyCreate)  // Create session, get token

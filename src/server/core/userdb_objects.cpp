@@ -1199,6 +1199,30 @@ void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
 }
 
 /**
+ * Get 2FA method bindings as JSON array
+ */
+json_t *User::get2FABindingsAsJson() const
+{
+   json_t *bindings = json_array();
+   for (const KeyValuePair<shared_ptr<Config>>* binding : m_2FABindings)
+   {
+      json_t *entry = json_object();
+      json_object_set_new(entry, "methodName", json_string_w(binding->key));
+      unique_ptr<StringMap> configuration = Extract2FAMethodBindingConfiguration(binding->key, **binding->value);
+      if (configuration != nullptr)
+      {
+         json_object_set_new(entry, "configuration", configuration->toJson());
+      }
+      else
+      {
+         json_object_set_new(entry, "configuration", json_object());
+      }
+      json_array_append_new(bindings, entry);
+   }
+   return bindings;
+}
+
+/**
  * Create/modify 2FA method binding for user
  */
 uint32_t User::modify2FAMethodBinding(const TCHAR* methodName, const StringMap& configuration)

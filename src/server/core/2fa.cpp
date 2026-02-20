@@ -115,6 +115,7 @@ public:
    const TCHAR *getDescription() const { return m_description; };
    const char *getConfiguration() const { return m_configuration; }
 
+   json_t *toJson() const;
    bool saveToDatabase() const;
 };
 
@@ -168,6 +169,35 @@ bool TwoFactorAuthenticationMethod::saveToDatabase() const
 
    DBConnectionPoolReleaseConnection(hdb);
    return success;
+}
+
+/**
+ * Convert two-factor authentication method to JSON
+ */
+json_t *TwoFactorAuthenticationMethod::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_w(m_methodName));
+   json_object_set_new(json, "driver", json_string_w(getDriverName()));
+   json_object_set_new(json, "description", json_string_w(m_description));
+   json_object_set_new(json, "isValid", json_boolean(m_isValid));
+
+   json_t *configuration = nullptr;
+   if ((m_configuration != nullptr) && (*m_configuration != 0))
+   {
+      json_error_t error;
+      configuration = json_loads(m_configuration, 0, &error);
+      if (configuration == nullptr)
+      {
+         Config config;
+         if (config.loadConfigFromMemory(m_configuration, strlen(m_configuration), L"MethodConfiguration", nullptr, true, false))
+         {
+            configuration = config.createJson(L"MethodConfiguration");
+         }
+      }
+   }
+   json_object_set_new(json, "configuration", (configuration != nullptr) ? configuration : json_object());
+   return json;
 }
 
 /**
@@ -557,7 +587,7 @@ void Get2FAMethods(NXCPMessage *msg)
 /**
  * Updates or creates new authentication method
  */
-uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration)
+uint32_t Modify2FAMethod(const wchar_t *name, const wchar_t *driver, const wchar_t *description, char *configuration)
 {
    uint32_t rcc;
    TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(name, driver, description, configuration);
@@ -588,7 +618,7 @@ uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *de
 /**
  * Rename 2FA method
  */
-uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName)
+uint32_t Rename2FAMethod(const wchar_t *oldName, const wchar_t *newName)
 {
    return RCC_NOT_IMPLEMENTED;
 }
@@ -596,7 +626,7 @@ uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName)
 /**
  * Deletes 2FA method
  */
-uint32_t Delete2FAMethod(const TCHAR* name)
+uint32_t Delete2FAMethod(const wchar_t *name)
 {
    uint32_t rcc = RCC_DB_FAILURE;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -621,7 +651,7 @@ uint32_t Delete2FAMethod(const TCHAR* name)
 /**
  * Check if 2FA method with given name exists
  */
-bool Is2FAMethodExists(const TCHAR* name)
+bool Is2FAMethodExists(const wchar_t *name)
 {
    s_authMethodListLock.lock();
    bool result = s_methods.contains(name);
@@ -632,7 +662,7 @@ bool Is2FAMethodExists(const TCHAR* name)
 /**
  * Extract 2FA method binding configuration prepared for sending to client
  */
-unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const TCHAR* methodName, const Config& binding)
+unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const wchar_t *methodName, const Config& binding)
 {
    unique_ptr<StringMap> configuration;
    s_authMethodListLock.lock();
@@ -648,7 +678,7 @@ unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const TCHAR* methodNa
 /**
  * Update 2FA method binding configuration
  */
-bool Update2FAMethodBindingConfiguration(const TCHAR* methodName, Config *binding, const StringMap& updates)
+bool Update2FAMethodBindingConfiguration(const wchar_t *methodName, Config *binding, const StringMap& updates)
 {
    s_authMethodListLock.lock();
    TwoFactorAuthenticationMethod *am = s_methods.get(methodName);
@@ -670,4 +700,48 @@ void Get2FADrivers(NXCPMessage *msg)
    msg->setField(fieldId++, _T("TOTP"));
    msg->setField(fieldId++, _T("Message"));
    msg->setField(VID_DRIVER_COUNT, 2);
+}
+
+/**
+ * Get 2FA drivers as JSON array
+ */
+json_t NXCORE_EXPORTABLE *Get2FADriversAsJson()
+{
+   json_t *drivers = json_array();
+   json_array_append_new(drivers, json_string("TOTP"));
+   json_array_append_new(drivers, json_string("Message"));
+   return drivers;
+}
+
+/**
+ * Get all 2FA methods as JSON array
+ */
+json_t NXCORE_EXPORTABLE *Get2FAMethodsAsJson()
+{
+   json_t *methods = json_array();
+   s_authMethodListLock.lock();
+   s_methods.forEach(
+      [methods](const TCHAR *name, const TwoFactorAuthenticationMethod *method) -> EnumerationCallbackResult
+      {
+         json_array_append_new(methods, method->toJson());
+         return _CONTINUE;
+      });
+   s_authMethodListLock.unlock();
+   return methods;
+}
+
+/**
+ * Get single 2FA method as JSON object (returns nullptr if not found)
+ */
+json_t NXCORE_EXPORTABLE *Get2FAMethodAsJson(const wchar_t *name)
+{
+   json_t *json = nullptr;
+   s_authMethodListLock.lock();
+   TwoFactorAuthenticationMethod *method = s_methods.get(name);
+   if (method != nullptr)
+   {
+      json = method->toJson();
+   }
+   s_authMethodListLock.unlock();
+   return json;
 }

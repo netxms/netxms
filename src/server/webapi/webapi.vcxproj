@@ -325,6 +325,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="2fa.cpp" />
     <ClCompile Include="actions.cpp" />
     <ClCompile Include="ai.cpp" />
     <ClCompile Include="alarms.cpp" />

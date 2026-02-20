@@ -1,7 +1,7 @@
 MODULE = webapi
 
 pkglib_LTLIBRARIES = webapi.la
-webapi_la_SOURCES = actions.cpp ai.cpp alarms.cpp datacoll.cpp dcst.cpp events.cpp find.cpp grafana.cpp info.cpp main.cpp objects.cpp objtools.cpp scripts.cpp tcpproxy.cpp users.cpp
+webapi_la_SOURCES = 2fa.cpp actions.cpp ai.cpp alarms.cpp datacoll.cpp dcst.cpp events.cpp find.cpp grafana.cpp info.cpp main.cpp objects.cpp objtools.cpp scripts.cpp tcpproxy.cpp users.cpp
 webapi_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
 webapi_la_LDFLAGS = -module -avoid-version @MICROHTTPD_LDFLAGS@
 webapi_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la @MICROHTTPD_LIBS@

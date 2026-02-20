@@ -93,12 +93,15 @@ TwoFactorAuthenticationToken NXCORE_EXPORTABLE *Prepare2FAChallenge(const TCHAR 
 bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize);
 bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId);
 void Get2FADrivers(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *Get2FADriversAsJson();
 void Get2FAMethods(NXCPMessage *msg);
-uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration);
-uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName);
-uint32_t Delete2FAMethod(const TCHAR *name);
-bool Is2FAMethodExists(const TCHAR *name);
-unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const TCHAR* methodName, const Config& binding);
-bool Update2FAMethodBindingConfiguration(const TCHAR* methodName, Config *binding, const StringMap& updates);
+json_t NXCORE_EXPORTABLE *Get2FAMethodsAsJson();
+json_t NXCORE_EXPORTABLE *Get2FAMethodAsJson(const wchar_t *name);
+uint32_t NXCORE_EXPORTABLE Modify2FAMethod(const wchar_t *name, const wchar_t *driver, const wchar_t *description, char *configuration);
+uint32_t NXCORE_EXPORTABLE Rename2FAMethod(const wchar_t *oldName, const wchar_t *newName);
+uint32_t NXCORE_EXPORTABLE Delete2FAMethod(const wchar_t *name);
+bool NXCORE_EXPORTABLE Is2FAMethodExists(const wchar_t *name);
+unique_ptr<StringMap> Extract2FAMethodBindingConfiguration(const wchar_t *methodName, const Config& binding);
+bool Update2FAMethodBindingConfiguration(const wchar_t *methodName, Config *binding, const StringMap& updates);
 
 #endif   /* _nxcore_2fa_h_ */
