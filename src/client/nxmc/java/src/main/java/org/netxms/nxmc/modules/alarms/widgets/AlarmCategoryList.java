@@ -101,7 +101,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
    /**
     * Create alarm category widget
-    * 
+    *
     * @param viewPart owning view part
     * @param parent parent widget
     * @param style style
@@ -125,6 +125,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       filter = new AlarmCategoryListFilter();
       viewer.addFilter(filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       addListener(SWT.Resize, new Listener() {
@@ -260,7 +261,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -291,7 +292,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
    /**
     * Show Alarm category properties dialog
-    * 
+    *
     * @param alarmCategory Alarm category to edit
     * @return true if OK was pressed
     */
@@ -299,7 +300,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
    {
       AlarmCategoryEditor editor = new AlarmCategoryEditor(alarmCategory);
       PreferenceManager pm = new PreferenceManager();
-      pm.addToRoot(new PreferenceNode("general", new General(editor)));    
+      pm.addToRoot(new PreferenceNode("general", new General(editor)));
       pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(editor)));
 
       PreferenceDialog dlg = new PreferenceDialog(viewPart.getWindow().getShell(), pm) {
@@ -370,7 +371,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
    /**
     * Get selection provider of alarm list
-    * 
+    *
     * @return
     */
    public IStructuredSelection getSelection()
@@ -380,14 +381,14 @@ public class AlarmCategoryList extends Composite implements SessionListener
 
    /**
     * Get underlying table viewer.
-    * 
+    *
     * @return
     */
    public TableViewer getViewer()
    {
       return viewer;
    }
-   
+
    /**
     * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
@@ -441,5 +442,15 @@ public class AlarmCategoryList extends Composite implements SessionListener
    public AbstractViewerFilter getFilter()
    {
       return filter;
+   }
+
+   /**
+    * Get action for resetting column order
+    *
+    * @return reset column order action
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return viewer.getResetColumnOrderAction();
    }
 }

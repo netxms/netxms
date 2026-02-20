@@ -26,7 +26,11 @@ import java.io.OutputStream;
 import java.text.BreakIterator;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +79,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Scrollable;
@@ -148,7 +153,7 @@ public class WidgetHelper
 
    /**
     * Redo window layout and resize it to accommodate possible layout changes.
-    * 
+    *
     * @param window window to resize
     */
    public static void adjustWindowSize(Window window)
@@ -160,7 +165,7 @@ public class WidgetHelper
 
    /**
     * Redo property dialog layout and resize it to accommodate possible layout changes.
-    * 
+    *
     * @param window window to resize
     */
    public static void adjustWindowSize(PreferencePage page)
@@ -172,7 +177,7 @@ public class WidgetHelper
 
 	/**
     * Create pair of label and input field, with label above
-	 * 
+	 *
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
 	 * @param widthHint Width hint for text control
@@ -204,7 +209,7 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 
@@ -217,14 +222,14 @@ public class WidgetHelper
 		gridData.verticalAlignment = GridData.FILL;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.widthHint = widthHint;
-		text.setLayoutData(gridData);		
-		
+		text.setLayoutData(gridData);
+
 		return text;
 	}
 
 	/**
     * Create pair of label and StyledText widget, with label above
-	 * 
+	 *
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
@@ -256,7 +261,7 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 
@@ -264,13 +269,13 @@ public class WidgetHelper
 		if (initialText != null)
 			text.setText(initialText);
       text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		return text;
 	}
 
 	/**
     * Create pair of label and combo box, with label above
-	 * 
+	 *
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
@@ -284,7 +289,7 @@ public class WidgetHelper
 
 	/**
     * Create pair of label and combo box, with label above
-    * 
+    *
     * @param parent Parent composite
     * @param flags Flags for Text creation
     * @param labelText Label's text
@@ -318,7 +323,7 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
       Label label = new Label(group, SWT.NONE);
       label.setText(labelText);
       if (backgroundColor != null)
@@ -335,7 +340,7 @@ public class WidgetHelper
 
 	/**
     * Create pair of label and spinner, with label above
-	 * 
+	 *
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
@@ -367,7 +372,7 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 		label.setBackground(parent.getBackground());
@@ -377,16 +382,16 @@ public class WidgetHelper
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		spinner.setLayoutData(gridData);
-		
+
 		spinner.setMinimum(minVal);
 		spinner.setMaximum(maxVal);
-		
+
 		return spinner;
 	}
 
 	/**
     * Create pair of label and color selector, with label above
-	 * 
+	 *
 	 * @param parent Parent composite
 	 * @param labelText Label's text
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
@@ -414,7 +419,7 @@ public class WidgetHelper
 			gridData.horizontalAlignment = GridData.FILL;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 
@@ -422,14 +427,14 @@ public class WidgetHelper
 		GridData gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
-		cs.getButton().setLayoutData(gridData);		
+		cs.getButton().setLayoutData(gridData);
 
 		return cs;
 	}
 
 	/**
 	 * Create labeled control using factory.
-	 * 
+	 *
 	 * @param parent parent composite
 	 * @param flags flags for control being created
 	 * @param factory control factory
@@ -470,9 +475,76 @@ public class WidgetHelper
 		return widget;
 	}
 
+   /**
+    * Build comma-separated column order string from column order array and column items.
+    *
+    * @param order column order array
+    * @param columns column items
+    * @return comma-separated column order string
+    */
+   private static String buildColumnOrderString(int[] order, Item[] columns)
+   {
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < order.length; i++)
+      {
+         if (i > 0)
+            sb.append(',');
+         Object id = columns[order[i]].getData("ID");
+         sb.append((id instanceof Integer) ? id : order[i]);
+      }
+      return sb.toString();
+   }
+
+   /**
+    * Parse column order string and return int[] order array, or null if parsing fails.
+    *
+    * @param orderStr comma-separated column order string
+    * @param columns column items
+    * @return column order array or null if parsing fails
+    */
+   private static int[] parseColumnOrder(String orderStr, Item[] columns)
+   {
+      if (orderStr == null || orderStr.isEmpty())
+         return null;
+
+      try
+      {
+         String[] ids = orderStr.split(",");
+         Map<Integer, Integer> idToIndex = new HashMap<>();
+         for(int i = 0; i < columns.length; i++)
+         {
+            Object id = columns[i].getData("ID");
+            idToIndex.put((id instanceof Integer) ? (Integer)id : i, i);
+         }
+         int[] order = new int[columns.length];
+         int pos = 0;
+         Set<Integer> used = new HashSet<>();
+         for(String idStr : ids)
+         {
+            Integer index = idToIndex.get(Integer.parseInt(idStr.trim()));
+            if (index != null && !used.contains(index))
+            {
+               order[pos++] = index;
+               used.add(index);
+            }
+         }
+         for(int i = 0; i < columns.length; i++)
+         {
+            if (!used.contains(i))
+               order[pos++] = i;
+         }
+         if (pos == columns.length)
+            return order;
+      }
+      catch(NumberFormatException e)
+      {
+      }
+      return null;
+   }
+
 	/**
 	 * Save settings of table viewer columns
-	 * 
+	 *
 	 * @param table Table control
 	 * @param prefix Prefix for properties
 	 */
@@ -505,6 +577,11 @@ public class WidgetHelper
          }
          settings.set(prefix + "." + id + ".width", width); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+
+      if (Boolean.TRUE.equals(table.getData("persistColumnOrder")))
+      {
+         settings.set(prefix + ".columnOrder", buildColumnOrderString(table.getColumnOrder(), columns));
+      }
 	}
 
 	/**
@@ -532,11 +609,18 @@ public class WidgetHelper
 			{
 			}
 		}
+
+      if (Boolean.TRUE.equals(table.getData("persistColumnOrder")))
+      {
+         int[] order = parseColumnOrder(settings.getAsString(prefix + ".columnOrder", ""), columns);
+         if (order != null)
+            table.setColumnOrder(order);
+      }
 	}
 
 	/**
 	 * Save settings of tree viewer columns
-	 * 
+	 *
 	 * @param table Table control
 	 * @param prefix Prefix for properties
 	 */
@@ -551,11 +635,16 @@ public class WidgetHelper
             id = Integer.valueOf(i);
          settings.set(prefix + "." + id + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+
+      if (Boolean.TRUE.equals(tree.getData("persistColumnOrder")))
+      {
+         settings.set(prefix + ".columnOrder", buildColumnOrderString(tree.getColumnOrder(), columns));
+      }
 	}
-	
+
 	/**
 	 * Restore settings of tree viewer columns previously saved by call to WidgetHelper.saveColumnSettings
-	 * 
+	 *
 	 * @param table Table control
 	 * @param prefix Prefix for properties
 	 */
@@ -578,6 +667,13 @@ public class WidgetHelper
 			{
 			}
 		}
+
+      if (Boolean.TRUE.equals(tree.getData("persistColumnOrder")))
+      {
+         int[] order = parseColumnOrder(settings.getAsString(prefix + ".columnOrder", ""), columns);
+         if (order != null)
+            tree.setColumnOrder(order);
+      }
 	}
 
 	/**
@@ -594,7 +690,7 @@ public class WidgetHelper
       settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
       settings.set(prefix + ".sortDirection", table.getSortDirection());
 	}
-	
+
 	/**
 	 * Restore settings for sortable table viewer
 	 * @param viewer Viewer
@@ -633,7 +729,7 @@ public class WidgetHelper
       settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
       settings.set(prefix + ".sortDirection", tree.getSortDirection());
 	}
-	
+
 	/**
 	 * Restore settings for sortable table viewer
 	 * @param viewer Viewer
@@ -654,7 +750,7 @@ public class WidgetHelper
 
 	/**
     * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
-    * 
+    *
     * @param viewer Viewer
     * @param prefix Prefix for properties
     */
@@ -669,10 +765,10 @@ public class WidgetHelper
          saveTreeViewerSettings((SortableTreeViewer)viewer, prefix);
 		}
 	}
-	
+
 	/**
     * Wrapper for restoreTableViewerSettings/restoreTreeViewerSettings
-    * 
+    *
     * @param viewer table or tree viewer
     * @param prefix Prefix for properties
     */
@@ -688,10 +784,68 @@ public class WidgetHelper
 		}
 	}
 
+   /**
+    * Save only column order for sortable table viewer (does not save widths or sort settings).
+    * Use this for views that use packColumns() and do not need width persistence.
+    *
+    * @param viewer table viewer
+    * @param prefix prefix for properties
+    */
+   public static void saveColumnOrder(SortableTableViewer viewer, String prefix)
+   {
+      Table table = viewer.getTable();
+      PreferenceStore.getInstance().set(prefix + ".columnOrder",
+         buildColumnOrderString(table.getColumnOrder(), table.getColumns()));
+   }
+
+   /**
+    * Restore only column order for sortable table viewer (does not restore widths or sort settings).
+    * Use this for views that use packColumns() and do not need width persistence.
+    *
+    * @param viewer table viewer
+    * @param prefix prefix for properties
+    */
+   public static void restoreColumnOrder(SortableTableViewer viewer, String prefix)
+   {
+      Table table = viewer.getTable();
+      int[] order = parseColumnOrder(PreferenceStore.getInstance().getAsString(prefix + ".columnOrder", ""), table.getColumns());
+      if (order != null)
+         table.setColumnOrder(order);
+   }
+
+   /**
+    * Save only column order for sortable tree viewer (does not save widths or sort settings).
+    * Use this for views that use packColumns() and do not need width persistence.
+    *
+    * @param viewer tree viewer
+    * @param prefix prefix for properties
+    */
+   public static void saveColumnOrder(SortableTreeViewer viewer, String prefix)
+   {
+      Tree tree = viewer.getTree();
+      PreferenceStore.getInstance().set(prefix + ".columnOrder",
+         buildColumnOrderString(tree.getColumnOrder(), tree.getColumns()));
+   }
+
+   /**
+    * Restore only column order for sortable tree viewer (does not restore widths or sort settings).
+    * Use this for views that use packColumns() and do not need width persistence.
+    *
+    * @param viewer tree viewer
+    * @param prefix prefix for properties
+    */
+   public static void restoreColumnOrder(SortableTreeViewer viewer, String prefix)
+   {
+      Tree tree = viewer.getTree();
+      int[] order = parseColumnOrder(PreferenceStore.getInstance().getAsString(prefix + ".columnOrder", ""), tree.getColumns());
+      if (order != null)
+         tree.setColumnOrder(order);
+   }
+
 	/**
 	 * Copy given text to clipboard
-	 * 
-	 * @param text 
+	 *
+	 * @param text
 	 */
 	public static void copyToClipboard(final String text)
 	{
@@ -703,7 +857,7 @@ public class WidgetHelper
 
    /**
     * Copy given image to clipboard
-    * 
+    *
     * @param text
     */
    public static void copyToClipboard(final Image image)
@@ -733,7 +887,7 @@ public class WidgetHelper
 			cut.setImageDescriptor(SharedIcons.CUT);
 			manager.add(cut);
 		}
-		
+
       final Action copy = new Action("&Copy") {
 			@Override
 			public void run()
@@ -755,7 +909,7 @@ public class WidgetHelper
 			};
 			paste.setImageDescriptor(SharedIcons.PASTE);
 			manager.add(paste);
-			
+
          final Action delete = new Action("&Delete") {
 				@Override
 				public void run()
@@ -767,7 +921,7 @@ public class WidgetHelper
 
 			manager.add(new Separator());
 		}
-		
+
       final Action selectAll = new Action("Select &all") {
 			@Override
 			public void run()
@@ -782,7 +936,7 @@ public class WidgetHelper
     * Get best fitting font from given font list for given string and bounding rectangle.
     * String should fit using multiline.
     * Fonts in the list must be ordered from smaller to larger.
-    * 
+    *
     * @param gc GC
     * @param fonts list of available fonts
     * @param text text to fit
@@ -818,10 +972,10 @@ public class WidgetHelper
       gc.setFont(originalFont);
       return font;
    }
-   
+
    /**
     * Checks if string fits to given rectangle using font set already set in GC
-    * 
+    *
     * @param gc GC
     * @param text text to fit
     * @param width width of bounding rectangle
@@ -838,12 +992,12 @@ public class WidgetHelper
          return true;
 
       FittedString newString = fitStringToArea(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
-      return newString.isCutted(); 
+      return newString.isCutted();
    }
 
    /**
     * Calculate substring for string to fit into the given area defined by width in pixels and number of lines of text
-    * 
+    *
     * @param gc gc object
     * @param text object name
     * @param maxLineCount number of lines that can be used to display text
@@ -906,7 +1060,7 @@ public class WidgetHelper
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
 	 * Fonts in the list must be ordered from smaller to larger.
-	 * 
+	 *
 	 * @param gc GC
 	 * @param fonts list of available fonts
 	 * @param text text to fit
@@ -949,7 +1103,7 @@ public class WidgetHelper
 
 	/**
 	 * Find font with matching size in font array.
-	 * 
+	 *
 	 * @param fonts fonts to select from
 	 * @param sourceFont font to match
 	 * @return matching font or null
@@ -965,7 +1119,7 @@ public class WidgetHelper
 
 	/**
 	 * Validate text input
-	 * 
+	 *
 	 * @param text text control
 	 * @param validator validator
 	 * @return true if text is valid
@@ -986,7 +1140,7 @@ public class WidgetHelper
 		{
          if (parentControl != null)
             parentControl.setErrorMessage(validator.getErrorMessage(text));
-			else	
+			else
             MessageDialogHelper.openError(control.getShell(),
                   LocalizationHelper.getI18n(WidgetHelper.class).tr("Input Validation Error"),
                   validator.getErrorMessage(text));
@@ -996,7 +1150,7 @@ public class WidgetHelper
 
 	/**
 	 * Validate text input
-	 * 
+	 *
 	 * @param text text control
 	 * @param validator validator
 	 * @return true if text is valid
@@ -1008,7 +1162,7 @@ public class WidgetHelper
 
 	/**
 	 * Validate text input
-	 * 
+	 *
 	 * @param text text control
 	 * @param validator validator
 	 * @return true if text is valid
@@ -1031,7 +1185,7 @@ public class WidgetHelper
 
    /**
     * Scale text points relative to "basic" 96 DPI.
-    * 
+    *
     * @param device
     * @param pt
     * @return
@@ -1040,10 +1194,10 @@ public class WidgetHelper
    {
       return (int)Math.round(pt * (device.getDPI().y / 96.0));
    }
-	
+
    /**
     * Get width of given text in pixels using settings from given control
-    * 
+    *
     * @param control
     * @param text
     * @return
@@ -1055,7 +1209,7 @@ public class WidgetHelper
 
    /**
     * Get width and height of given text in pixels using settings from given control
-    * 
+    *
     * @param control
     * @param text
     * @return
@@ -1071,7 +1225,7 @@ public class WidgetHelper
 
    /**
     * Get width and height of given text in pixels using given control and font
-    * 
+    *
     * @param control
     * @param font
     * @param text
@@ -1088,7 +1242,7 @@ public class WidgetHelper
 
    /**
     * Get column index by column ID
-    * 
+    *
     * @param table table control
     * @param id the id index to be found by
     * @return index of the column
@@ -1105,13 +1259,13 @@ public class WidgetHelper
             break;
          }
       }
-      
+
       return index;
    }
 
    /**
     *  Get column index by column ID
-    *  
+    *
     * @param tree tree control
     * @param id the id index to be found by
     * @return index of the column
@@ -1128,7 +1282,7 @@ public class WidgetHelper
             break;
          }
       }
-      
+
       return index;
    }
 
@@ -1245,7 +1399,7 @@ public class WidgetHelper
 
    /**
     * Attach mouse track listener to composite (compatibility layer for RAP).
-    * 
+    *
     * @param control control to attach listener to
     * @param listener mouse track listener
     */
@@ -1256,7 +1410,7 @@ public class WidgetHelper
 
    /**
     * Attach mouse move listener to composite (compatibility layer for RAP).
-    * 
+    *
     * @param control control to attach listener to
     * @param listener mouse track listener
     */
@@ -1292,7 +1446,7 @@ public class WidgetHelper
    /**
     * Set control redraw flag. Should be used when redraw flag should be changed in desktop version but not in web version. Do
     * nothing for web client.
-    * 
+    *
     * @param control control to change redraw flag on
     * @param redraw new redraw flag
     */
@@ -1364,7 +1518,7 @@ public class WidgetHelper
 
    /**
     * Get clipboard available types (compatibility layer for RAP, has no effect in desktop build)
-    * 
+    *
     * @param cb
     * @return
     */
@@ -1416,7 +1570,7 @@ public class WidgetHelper
 
    /**
     * Save given image to file (will show file save dialog in desktop client and initiate download in web client).
-    * 
+    *
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
     * @param image image to save
@@ -1433,7 +1587,7 @@ public class WidgetHelper
 
    /**
     * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
-    * 
+    *
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
     * @param text text to save
@@ -1445,7 +1599,7 @@ public class WidgetHelper
 
    /**
     * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
-    * 
+    *
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
     * @param fileExtensions file filter extensions (can be null)
@@ -1464,7 +1618,7 @@ public class WidgetHelper
 
    /**
     * Save temporary file to location provided by user.
-    * 
+    *
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
     * @param fileExtensions file filter extensions (can be null)
@@ -1484,7 +1638,7 @@ public class WidgetHelper
 
    /**
     * Export data to file (will show file save dialog in desktop client and initiate download in web client).
-    * 
+    *
     * @param view parent view (can be null)
     * @param fileNameHint hint for the file name (can be null)
     * @param fileExtensions file filter extensions (can be null)

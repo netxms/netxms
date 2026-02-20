@@ -107,6 +107,7 @@ public class WebServiceManager extends ConfigurationView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "WebServiceManager");
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -195,6 +196,9 @@ public class WebServiceManager extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionCreate);
       manager.add(actionEdit);
       manager.add(actionDelete);
@@ -231,7 +235,7 @@ public class WebServiceManager extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)
@@ -345,7 +349,7 @@ public class WebServiceManager extends ConfigurationView
 
    /**
     * Show web service definitoin configuration dialog
-    * 
+    *
     * @param definition web service defninition object
     * @return true if OK was pressed
     */

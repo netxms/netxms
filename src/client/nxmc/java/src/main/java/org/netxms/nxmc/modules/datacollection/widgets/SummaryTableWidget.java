@@ -92,7 +92,7 @@ public class SummaryTableWidget extends Composite
 
    /**
     * Create summary table widget
-    * 
+    *
     * @param parent parent composite
     * @param style widget style
     * @param view view part this widget is associated with
@@ -102,11 +102,11 @@ public class SummaryTableWidget extends Composite
    public SummaryTableWidget(Composite parent, int style, View view, int tableId, long baseObjectId)
    {
       super(parent, style);
-      
+
       this.view = view;
       this.tableId = tableId;
       this.baseObjectId = baseObjectId;
-      
+
       setLayout(new FillLayout());
 
       viewer = new SortableTreeViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
@@ -137,20 +137,20 @@ public class SummaryTableWidget extends Composite
             refreshController.dispose();
          }
       });
-      
+
       viewer.getTree().addMouseListener(new MouseListener() {
          @Override
          public void mouseUp(MouseEvent e)
          {
          }
-         
+
          @Override
          public void mouseDown(MouseEvent e)
          {
             if (e.button == 3)
                currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
          }
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -159,7 +159,7 @@ public class SummaryTableWidget extends Composite
    }
 
    /**
-    * Create actions 
+    * Create actions
     */
    private void createActions()
    {
@@ -229,7 +229,7 @@ public class SummaryTableWidget extends Composite
       manager.add(actionUseMultipliers);
       manager.add(new Separator());
       manager.add(nodeMenuManager);
-      
+
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(objectSelectionProvider.getStructuredSelection(), contextId, ((MenuManager)manager).getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
@@ -300,10 +300,10 @@ public class SummaryTableWidget extends Composite
       job.setUser(false);
       job.start();
    }
-   
+
    /**
     * Update viewer with fresh table data
-    * 
+    *
     * @param table table
     */
    public void update(final Table table)
@@ -314,6 +314,7 @@ public class SummaryTableWidget extends Composite
          final int[] widths = new int[names.length];
          Arrays.fill(widths, 100);
          viewer.createColumns(names, widths, 0, SWT.UP);
+         viewer.enableColumnReordering(false);
          final PreferenceStore settings = PreferenceStore.getInstance();
          final String key = view.getBaseId() + ".SummaryTable." + Integer.toString(tableId);
          WidgetHelper.restoreTreeViewerSettings(viewer, key);
@@ -335,7 +336,7 @@ public class SummaryTableWidget extends Composite
       {
          List<SortItem> sortItem = new ArrayList<SortItem>();
          for(int i = 0; i < sortingColumnList.size() ; i++)
-         {            
+         {
             boolean isDesc = sortingColumnList.get(i).charAt(0) == '>' ? true : false;
             int index = table.getColumnIndex(sortingColumnList.get(i).substring(1));
             if(index >= 0)
@@ -343,7 +344,7 @@ public class SummaryTableWidget extends Composite
                sortItem.add(new SortItem(index, isDesc));
             }
          }
-         
+
          // find index of columns to compare and desc or asc
          final List<SortItem> sortItemFin = sortItem;
          table.sort(new Comparator<TableRow>() {
@@ -359,7 +360,7 @@ public class SummaryTableWidget extends Composite
                }
                return result;
             }
-            
+
             private int compareItem(TableRow row1, TableRow row2, int index, boolean sortDesc)
             {
                TableCell c1 = row1.get(index);
@@ -367,7 +368,7 @@ public class SummaryTableWidget extends Composite
 
                String s1 = (c1 != null) ? c1.getValue() : "";
                String s2 = (c2 != null) ? c2.getValue() : "";
-               
+
                int result = 0;
                try
                {
@@ -399,7 +400,7 @@ public class SummaryTableWidget extends Composite
    {
       public int columnIndex;
       public boolean descending;
-      
+
       public SortItem(int columnIndex, boolean descending)
       {
          this.columnIndex = columnIndex;
@@ -425,7 +426,7 @@ public class SummaryTableWidget extends Composite
 
    /**
     * Set automatic refresh interval. If less or equal 0, automatic refresh will be disabled.
-    * 
+    *
     * @param interval auto refresh interval in seconds
     */
    public void setAutoRefresh(int interval)
@@ -471,7 +472,7 @@ public class SummaryTableWidget extends Composite
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
-      
+
       AbstractObject object = ((ObjectWrapper)selection.getFirstElement()).getObject();
       MainWindow.switchToObject(object.getObjectId(), 0);
    }
@@ -484,7 +485,7 @@ public class SummaryTableWidget extends Composite
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
-      
+
       final List<PollRequest> requests = new ArrayList<PollRequest>();
       for(Object o : selection.toList())
       {
@@ -512,10 +513,10 @@ public class SummaryTableWidget extends Composite
             }
          }
       }
-      
+
       if (requests.isEmpty())
          return;
-      
+
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Running forced DCI poll"), view) {
          @Override
@@ -544,7 +545,7 @@ public class SummaryTableWidget extends Composite
          }
       }.start();
    }
-   
+
    /**
     * Forced poll request
     */
@@ -552,17 +553,17 @@ public class SummaryTableWidget extends Composite
    {
       public long nodeId;
       public long dciId;
-      
+
       public PollRequest(long nodeId, long dciId)
       {
          this.nodeId = nodeId;
          this.dciId = dciId;
       }
    }
-   
+
    /**
     * Set number of lines to show
-    * 
+    *
     * @param lineCount line count to be shown
     */
    public void setShowNumLine(int lineCount)
@@ -572,11 +573,11 @@ public class SummaryTableWidget extends Composite
 
    /**
     * Set columns that will be used to sort table
-    * 
+    *
     * @param sortingColumnList columns to be used while sorting
     */
    public void setSortColumns(List<String> sortingColumnList)
    {
-      this.sortingColumnList = sortingColumnList;      
+      this.sortingColumnList = sortingColumnList;
    }
 }

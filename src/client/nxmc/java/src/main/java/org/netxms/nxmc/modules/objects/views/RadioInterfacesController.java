@@ -20,9 +20,12 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -32,6 +35,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceControllerComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.RadioInterfaceControllerLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -97,6 +101,16 @@ public class RadioInterfacesController extends NodeSubObjectTableView
 		viewer.setLabelProvider(new RadioInterfaceControllerLabelProvider(viewer));
 		viewer.setComparator(new RadioInterfaceControllerComparator());
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
 		createPopupMenu();
 	}
 
@@ -130,6 +144,18 @@ public class RadioInterfacesController extends NodeSubObjectTableView
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return (object instanceof AccessPoint) && object.isChildOf(getObjectId());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
    }
 
    /**

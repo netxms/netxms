@@ -38,6 +38,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -72,6 +74,7 @@ import org.netxms.nxmc.modules.users.views.helpers.UserFilter;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -125,13 +128,13 @@ public class UserManagementView extends ConfigurationView
 	@Override
    protected void createContent(Composite parent)
 	{
-		final String[] names = { 
-		      i18n.tr("Name"), 
-		      i18n.tr("Type"), 
-		      i18n.tr("Full name"), 
-		      i18n.tr("Description"), 
-		      i18n.tr("Source"), 
-		      i18n.tr("Authentication"), 
+		final String[] names = {
+		      i18n.tr("Name"),
+		      i18n.tr("Type"),
+		      i18n.tr("Full name"),
+		      i18n.tr("Description"),
+		      i18n.tr("Source"),
+		      i18n.tr("Authentication"),
 		      i18n.tr("GUID"),
 		      i18n.tr("LDAP DN"),
 		      i18n.tr("Last login"),
@@ -167,6 +170,15 @@ public class UserManagementView extends ConfigurationView
 				actionEditUser.run();
 			}
 		});
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
 
       createActions();
 		createContextMenu();
@@ -194,7 +206,7 @@ public class UserManagementView extends ConfigurationView
 				}
 			}
 		};
-      session.addListener(sessionListener);      
+      session.addListener(sessionListener);
       viewer.setInput(session.getUserDatabaseObjects());
 
 		getUsersAndRefresh();
@@ -223,7 +235,7 @@ public class UserManagementView extends ConfigurationView
          }
       };
       job.setUser(false);
-      job.start();  
+      job.start();
    }
 
 	/**
@@ -296,7 +308,7 @@ public class UserManagementView extends ConfigurationView
 			}
 		};
 		actionChangePassword.setEnabled(false);
-		
+
       actionIssueToken = new Action(i18n.tr("Issue authentication &token...")) {
          @Override
          public void run()
@@ -312,8 +324,8 @@ public class UserManagementView extends ConfigurationView
          {
             enableUser();
          }
-      };      
-    
+      };
+
       actionDisable = new Action(i18n.tr("Disable")) {
          @Override
          public void run()
@@ -321,7 +333,7 @@ public class UserManagementView extends ConfigurationView
             disableUser();
          }
       };
-      
+
       actionDetachUserFromLDAP = new Action(i18n.tr("Detach from LDAP")) {
          @Override
          public void run()
@@ -349,6 +361,9 @@ public class UserManagementView extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionGenerateAccessReport);
       super.fillLocalMenu(manager);
    }
@@ -375,7 +390,7 @@ public class UserManagementView extends ConfigurationView
 
 	/**
 	 * Fill context menu
-	 * 
+	 *
 	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
@@ -550,7 +565,7 @@ public class UserManagementView extends ConfigurationView
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       final List<AbstractUserObject> objects = new ArrayList<>();
       for(Object o : selection.toList())
          objects.add((AbstractUserObject)o);
@@ -618,7 +633,7 @@ public class UserManagementView extends ConfigurationView
    }
 
    /**
-    * Set user/group to non LDAP 
+    * Set user/group to non LDAP
     */
    private void detachLDAPUser()
    {
@@ -628,7 +643,7 @@ public class UserManagementView extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(Object object : selection.toList())
-            {                
+            {
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
                session.detachUserFromLdap(((AbstractUserObject)object).getId());
             }

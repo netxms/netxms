@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -36,6 +37,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
@@ -200,7 +203,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
                case SessionNotification.SECRET_CONFIG_CHANGED:
                   type = NetworkCredentials.AGENT_SECRETS;
                   break;
-                  
+
             }
             if (type != 0)
             {
@@ -244,7 +247,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
 	/**
     * Load configuration from server
-    * 
+    *
     * @param configId ID of SNMP configuration
     * @param zoneUIN of configuration
     */
@@ -313,9 +316,9 @@ public class NetworkCredentialsEditor extends ConfigurationView
       {
          if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Refresh Network Credentials"),
                i18n.tr("This will discard all unsaved changes. Do you really want to continue?")))
-            return;          
+            return;
       }
-      loadConfiguration(NetworkCredentials.EVERYTHING, NetworkCredentials.ALL_ZONES);  
+      loadConfiguration(NetworkCredentials.EVERYTHING, NetworkCredentials.ALL_ZONES);
 
       modified = false;
       bothModified = false;
@@ -328,6 +331,18 @@ public class NetworkCredentialsEditor extends ConfigurationView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionSave);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = snmpUsmCredentialsList.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -538,7 +553,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       layout.marginWidth = 0;
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
-		
+
       final String[] names = { i18n.tr("User name"), i18n.tr("Auth type"), i18n.tr("Priv type"), i18n.tr("Auth password"), i18n.tr("Priv password"), i18n.tr("Comments") };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
       snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
@@ -557,6 +572,15 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void doubleClick(DoubleClickEvent event)
          {
             editUsmCredentials();
+         }
+      });
+      snmpUsmCredentialsList.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(snmpUsmCredentialsList, getBaseId() + ".snmpUsm");
+      snmpUsmCredentialsList.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(snmpUsmCredentialsList, getBaseId() + ".snmpUsm");
          }
       });
 
@@ -777,7 +801,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
             addSharedSecret();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -1401,7 +1425,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 	 */
 	private void addCommunity()
 	{
-      InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("Add SNMP Community String"), 
+      InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("Add SNMP Community String"),
             i18n.tr("Enter SNMP community string"), "", null);
 		if (dlg.open() == Window.OK)
 		{
@@ -1429,7 +1453,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			setModified(NetworkCredentials.SNMP_COMMUNITIES);
 		}
 	}
-   
+
    /**
     * Copy selected SNMP community to clipboard
     */
@@ -1444,7 +1468,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
 	/**
 	 * Move community string in priority
-	 * 
+	 *
 	 * @param up true to move up or false to move down
 	 */
    protected void moveCommunity(boolean up)
@@ -1460,14 +1484,14 @@ public class NetworkCredentialsEditor extends ConfigurationView
             {
                if (index < 1)
                   return;
-               
+
                Collections.swap(list, index - 1, index);
             }
             else
             {
                if ((index + 1) == list.size())
                   return;
-               
+
                Collections.swap(list, index + 1, index);
             }
          }
@@ -1491,7 +1515,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
 		}
 	}
-   
+
    /**
     * Edit SNMP USM credential
     */
@@ -1509,7 +1533,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
-	
+
 	/**
 	 * Remove selected SNMP USM credentials
 	 */
@@ -1530,7 +1554,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
 	/**
 	 * Move SNMP USM credential
-	 * 
+	 *
 	 * @param up true if up, false if down
 	 */
    protected void moveUsmCredentials(boolean up)
@@ -1546,14 +1570,14 @@ public class NetworkCredentialsEditor extends ConfigurationView
             {
                if (index < 1)
                   return;
-               
+
                Collections.swap(list, index - 1, index);
             }
             else
             {
                if ((index + 1) == list.size())
                   return;
-               
+
                Collections.swap(list, index + 1, index);
             }
          }
@@ -1561,7 +1585,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          setModified(NetworkCredentials.SNMP_USM_CREDENTIALS);
       }
    }
-	
+
    /**
     * Add agent shared secret
     */
@@ -1609,7 +1633,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
    /**
     * Move up or down agent shared secret
-    * 
+    *
     * @param up true if up, false if down
     */
    protected void moveSharedSecret(boolean up)
@@ -1625,14 +1649,14 @@ public class NetworkCredentialsEditor extends ConfigurationView
             {
                if (index < 1)
                   return;
-               
+
                Collections.swap(list, index - 1, index);
             }
             else
             {
                if ((index + 1) == list.size())
                   return;
-               
+
                Collections.swap(list, index + 1, index);
             }
          }
@@ -1706,7 +1730,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
    /**
     * Move SSH credential
-    * 
+    *
     * @param up true if up, false if down
     */
    protected void moveSshCredentials(boolean up)
@@ -1740,7 +1764,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
    /**
     * Add port to the list
-    * 
+    *
     * @param type port type
     */
    private void addPort(TableViewer viewer, String typeName)
@@ -1758,7 +1782,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
    /**
     * Remove selected port
-    * 
+    *
     * @param type port type
     */
    private void removePort(TableViewer viewer)
@@ -1779,7 +1803,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
    /**
     * Move port
-    * 
+    *
     * @param type port type
     * @param up true if up, false if down
     */

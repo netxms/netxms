@@ -118,6 +118,7 @@ public class PhysicalLinkManager
          }
       });
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -260,11 +261,14 @@ public class PhysicalLinkManager
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         mgr.add(resetAction);
       mgr.add(actionAdd);
       mgr.add(actionEdit);
       mgr.add(actionDelete);
@@ -306,7 +310,7 @@ public class PhysicalLinkManager
 
    /**
     * Sync physical links interface objects
-    * 
+    *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

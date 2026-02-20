@@ -33,6 +33,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -125,7 +127,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       super(LocalizationHelper.getI18n(MibExplorer.class).tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"),
             toolView ? "tools.mib-explorer" : "objects.mib-explorer", objectId, context, false);
       this.toolView = toolView;
-   }  
+   }
 
    /**
     * Create agent configuration editor for given node.
@@ -160,10 +162,10 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       if (!view.walkActive)
       {
          walkData.addAll(view.walkData);
-         viewer.setInput(walkData);         
+         viewer.setInput(walkData);
          viewer.packColumns();
       }
-      mibBrowser.getTreeViewer().setExpandedElements(view.mibBrowser.getTreeViewer().getVisibleExpandedElements());    
+      mibBrowser.getTreeViewer().setExpandedElements(view.mibBrowser.getTreeViewer().getVisibleExpandedElements());
       mibBrowser.getTreeViewer().setSelection(view.mibBrowser.getTreeViewer().getSelection());
    }
 
@@ -264,6 +266,15 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		});
       viewer.addDoubleClickListener((e) -> selectInTree());
       viewer.setInput(walkData);
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
 
       splitter.setWeights(new int[] { 70, 30 });
 
@@ -338,7 +349,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	 * Create actions
 	 */
 	private void createActions()
-	{		
+	{
 		actionWalk = new Action(i18n.tr("&Walk")) {
 			@Override
 			public void run()
@@ -474,7 +485,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 
 	/**
 	 * Copy values in given column and selected rows to clipboard
-	 * 
+	 *
 	 * @param column column index
 	 */
 	private void copyColumnToClipboard(int column)
@@ -509,6 +520,9 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionShowResultFilter);
       manager.add(actionShortTextualNames);
    }
@@ -528,7 +542,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 
 	/**
 	 * Fill MIB tree context menu
-	 * 
+	 *
 	 * @param mgr Menu manager
 	 */
 	protected void fillTreeContextMenu(final IMenuManager manager)
@@ -554,7 +568,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 
 	/**
 	 * Fill walk results table context menu
-	 * 
+	 *
 	 * @param mgr Menu manager
 	 */
 	protected void fillResultsContextMenu(final IMenuManager manager)
@@ -587,7 +601,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(i18n.tr("OID"));
 		tc.setWidth(300);
-		
+
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
       tc.setText("OID as text");
       tc.setWidth(300);
@@ -613,7 +627,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       if (walkActive || (getObject() == null))
 			return;
 
-      
+
       if (oid == null)
       {
          final MibObject mibObject = mibBrowser.getSelection();
@@ -705,12 +719,12 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    }
 
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
       restoredSelection = memento.getAsString("selection", null);
    }

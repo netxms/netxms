@@ -97,6 +97,7 @@ public class ServerVariables extends ConfigurationView
       final int[] widths = { 200, 150, 150, 80, 500 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER,
             SortableTableViewer.DEFAULT_STYLE);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServerVariablesLabelProvider());
@@ -131,7 +132,7 @@ public class ServerVariables extends ConfigurationView
     * Create actions
     */
    private void createActions()
-   {            
+   {
       actionAdd = new Action(i18n.tr("Create new..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -139,7 +140,7 @@ public class ServerVariables extends ConfigurationView
             addVariable();
          }
       };
-      actionAdd.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"); 
+      actionAdd.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_config_variable");
 
       actionEdit = new Action(i18n.tr("Edit..."), SharedIcons.EDIT) {
          @Override
@@ -216,6 +217,9 @@ public class ServerVariables extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionAdd);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportAllToCsv);
    }
 

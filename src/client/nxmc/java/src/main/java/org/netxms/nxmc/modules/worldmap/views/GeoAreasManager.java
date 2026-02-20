@@ -120,6 +120,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
       final String[] names = { "ID", "Name", "Comments" };
       final int[] widths = { 100, 400, 800 };
       viewer = new SortableTableViewer(splitter, names, widths, 1, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new GeoAreaLabelProvider());
@@ -161,7 +162,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
 
       coordinateListViewer = new TableViewer(details);
       coordinateListViewer.setContentProvider(new ArrayContentProvider());
-      
+
       mapViewer = new GeoAreaViewer(details, SWT.BORDER, this);
       mapViewer.enableMapControls(false);
 
@@ -284,6 +285,9 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    {
       manager.add(actionNew);
       manager.add(actionImport);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -318,7 +322,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -567,7 +571,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
          {
             for(GeoArea a : replaceList)
                session.modifyGeoArea(a);
-            
+
             for(Entry<String, List<GeoLocation>> e : importedAreas.entrySet())
             {
                GeoArea a = new GeoArea(0, e.getKey(), "Imported from KML", e.getValue());

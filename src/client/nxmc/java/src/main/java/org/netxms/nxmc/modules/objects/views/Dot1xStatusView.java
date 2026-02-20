@@ -64,11 +64,11 @@ public class Dot1xStatusView extends ObjectView
 	public static final int COLUMN_INTERFACE = 2;
 	public static final int COLUMN_PAE_STATE = 3;
 	public static final int COLUMN_BACKEND_STATE = 4;
-	
+
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
-	
+
    /**
     * @param name
     * @param image
@@ -94,6 +94,7 @@ public class Dot1xStatusView extends ObjectView
 		setFilterClient(viewer, filter);
       viewer.addFilter(filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "Dot1xStatusView");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -145,6 +146,19 @@ public class Dot1xStatusView extends ObjectView
 		manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      manager.add(actionExportToCsv);
+      manager.add(actionExportAllToCsv);
+   }
 
 	/**
     * @see org.netxms.nxmc.base.views.View#refresh()

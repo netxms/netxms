@@ -70,7 +70,7 @@ public class AlarmsView extends ObjectView
       alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", () -> AlarmsView.this.isActive());
       setFilterClient(alarmList.getViewer(), alarmList.getFilter());
       enableFilterAutocomplete(new SearchQueryContentProposalProvider(alarmList.getAttributeProposals()));
-      
+
       createActions();
    }
 
@@ -144,6 +144,7 @@ public class AlarmsView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(alarmList.getActionShowColors());
+      manager.add(alarmList.getActionResetColumnOrder());
       manager.add(new Separator());
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);

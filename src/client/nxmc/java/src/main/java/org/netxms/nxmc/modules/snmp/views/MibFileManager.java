@@ -129,6 +129,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Modified") };
       final int[] columnWidths = { 300, 150, 300, 300 };
       viewer = new SortableTableViewer(listArea, columnNames, columnWidths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServerFileLabelProvider());
@@ -269,6 +270,9 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    {
       manager.add(actionUpload);
       manager.add(actionCompile);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -293,7 +297,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -445,7 +449,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
 
    /**
     * Process new entry
-    * 
+    *
     * @param entry new entry
     */
    private void processCompilationLogEntry(MibCompilationLogEntry entry)

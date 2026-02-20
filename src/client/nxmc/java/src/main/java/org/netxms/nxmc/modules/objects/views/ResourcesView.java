@@ -18,8 +18,12 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -30,6 +34,7 @@ import org.netxms.nxmc.modules.objects.views.helpers.ClusterResourceListComparat
 import org.netxms.nxmc.modules.objects.views.helpers.ClusterResourceListFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.ClusterResourceListLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -38,11 +43,11 @@ import org.xnap.commons.i18n.I18n;
 public class ResourcesView extends ObjectView
 {
    private I18n i18n = LocalizationHelper.getI18n(ResourcesView.class);
-   
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VIP = 1;
 	public static final int COLUMN_OWNER = 2;
-	
+
 	private SortableTableViewer resourceList;
 	private Cluster cluster;
 
@@ -55,14 +60,14 @@ public class ResourcesView extends ObjectView
    public ResourcesView()
    {
       super(LocalizationHelper.getI18n(ResourcesView.class).tr("Resources"), ResourceManager.getImageDescriptor("icons/object-views/cluster.png"), "objects.resources", true);
-   }	
-	
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent)
-	{		
+	{
 		final String[] names = { i18n.tr("Resource"), i18n.tr("VIP"), i18n.tr("Owner") };
 		final int[] widths = { 200, 120, 150 };
 		resourceList = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
@@ -72,7 +77,29 @@ public class ResourcesView extends ObjectView
       ClusterResourceListFilter filter = new ClusterResourceListFilter();
       resourceList.addFilter(filter);
 		setFilterClient(resourceList, filter);
+
+		resourceList.enableColumnReordering();
+		WidgetHelper.restoreColumnOrder(resourceList, getBaseId());
+		resourceList.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnOrder(resourceList, getBaseId());
+			}
+		});
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = resourceList.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)

@@ -104,7 +104,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
    protected void createContent(Composite parent)
    {
       final int[] widths = { 200, 200, 100, 100, 100, 100, 100, 100, 100, 100 };
-      final String[] names = { i18n.tr("Name"), i18n.tr("Display Name"), i18n.tr("Data Type"), i18n.tr("Mandatory"), 
+      final String[] names = { i18n.tr("Name"), i18n.tr("Display Name"), i18n.tr("Data Type"), i18n.tr("Mandatory"),
             i18n.tr("Unique"), i18n.tr("Hidden"), i18n.tr("Autofill"), i18n.tr("Range min"), i18n.tr("Range max"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -122,6 +122,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "AssetManagementAttributes");
 
       viewer.getControl().addDisposeListener(new DisposeListener() {
@@ -171,7 +172,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          public void run()
          {
             createAttribute();
-         }         
+         }
       };
       addKeyBinding("M1+N", actionAdd);
 
@@ -180,7 +181,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          public void run()
          {
             editAttribute();
-         }         
+         }
       };
       addKeyBinding("M3+ENTER", actionEdit);
 
@@ -189,7 +190,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          public void run()
          {
             deleteAttribute();
-         }         
+         }
       };
       addKeyBinding("M1+D", actionDelete);
    }
@@ -203,7 +204,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"), 
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"),
             i18n.tr("Selected attributes will be deleted. Are you sure?")))
          return;
 
@@ -214,15 +215,15 @@ public class AssetManagementSchemaManager extends ConfigurationView
             for(Object o : selection.toList())
             {
                session.deleteAssetAttribute(((AssetAttribute)o).getName());
-            }            
+            }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot update asset management schema");
          }
-      }.start();      
+      }.start();
    }
 
    /**
@@ -236,7 +237,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
 
       AssetAttribute attr = (AssetAttribute)selection.getFirstElement();
       if (!showAttributePropertyPage(attr, false))
-         return;          
+         return;
 
       new Job(i18n.tr("Updating asset management schema"), this) {
          @Override
@@ -268,7 +269,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          {
             session.createAssetAttribute(attr);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -319,6 +320,9 @@ public class AssetManagementSchemaManager extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionAdd);
    }
 
@@ -338,12 +342,12 @@ public class AssetManagementSchemaManager extends ConfigurationView
 
       // Create menu.
       Menu menu = manager.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);     
+      viewer.getControl().setMenu(menu);
    }
-   
+
    /**
-    * Fill context menu 
-    * 
+    * Fill context menu
+    *
     * @param mgr menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)

@@ -120,6 +120,7 @@ public class TwoFactorAuthenticationMethods extends ConfigurationView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "TwoFactorAuthenticationMethods");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -224,6 +225,9 @@ public class TwoFactorAuthenticationMethods extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionNewMethod);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -257,7 +261,7 @@ public class TwoFactorAuthenticationMethods extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)

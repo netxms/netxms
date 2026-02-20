@@ -20,10 +20,13 @@ package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -53,6 +56,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.ThresholdTreeFilter;
 import org.netxms.nxmc.modules.datacollection.views.helpers.ThresholdTreeLabelProvider;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -61,7 +65,7 @@ import org.xnap.commons.i18n.I18n;
 public class ThresholdSummaryView extends ObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(ThresholdSummaryView.class);
-   
+
    public static final int COLUMN_NODE = 0;
    public static final int COLUMN_STATUS = 1;
    public static final int COLUMN_PARAMETER = 2;
@@ -131,6 +135,16 @@ public class ThresholdSummaryView extends ObjectView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTree().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       createContextMenu();
 
       session.addListener(sessionListener);
@@ -138,7 +152,7 @@ public class ThresholdSummaryView extends ObjectView
 
    /**
     * Process threshold state change
-    * 
+    *
     * @param stateChange state change information
     */
    private void processNotification(ThresholdStateChange stateChange)
@@ -196,12 +210,24 @@ public class ThresholdSummaryView extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    private void fillContextMenu(IMenuManager mgr)
    {
       ShowHistoricalDataMenuItems.populateMenu(mgr, this, getObject(), viewer, getDciSelectionType());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -221,7 +247,7 @@ public class ThresholdSummaryView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       refresh();
-	}   
+	}
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()

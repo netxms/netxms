@@ -96,6 +96,7 @@ public class ScriptLibraryView extends ConfigurationView
       final String[] names = { i18n.tr("ID"), i18n.tr("Name") };
       final int[] widths = { 90, 500 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScriptLabelProvider());
@@ -238,7 +239,7 @@ public class ScriptLibraryView extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -250,6 +251,17 @@ public class ScriptLibraryView extends ConfigurationView
       mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(actionCopyName);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

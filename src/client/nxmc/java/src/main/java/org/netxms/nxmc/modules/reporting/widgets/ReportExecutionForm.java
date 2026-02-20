@@ -121,7 +121,7 @@ public class ReportExecutionForm extends Composite
 	 * @param style
 	 */
    public ReportExecutionForm(Composite parent, int style, ReportDefinition report, View view)
-	{		
+	{
 		super(parent, style);
 		this.report = report;
       this.view = view;
@@ -200,7 +200,7 @@ public class ReportExecutionForm extends Composite
 
       final SessionListener sessionListener = new SessionListener() {
 			@Override
-			public void notificationHandler(SessionNotification n) 
+			public void notificationHandler(SessionNotification n)
 			{
             if (isDisposed())
                return;
@@ -208,8 +208,8 @@ public class ReportExecutionForm extends Composite
             if (n.getCode() == SessionNotification.SCHEDULE_UPDATE)
 				{
                getDisplay().asyncExec(() -> refreshScheduleList());
-				} 
-				else if (n.getCode() == SessionNotification.RS_RESULTS_MODIFIED) 
+				}
+				else if (n.getCode() == SessionNotification.RS_RESULTS_MODIFIED)
 				{
                getDisplay().asyncExec(() -> refreshResultList());
 				}
@@ -281,7 +281,7 @@ public class ReportExecutionForm extends Composite
 
 	/**
 	 * Create "Schedules" section's content
-	 * 
+	 *
 	 * @param parent
 	 *            parent composite
 	 */
@@ -297,6 +297,7 @@ public class ReportExecutionForm extends Composite
 		scheduleList.setContentProvider(new ArrayContentProvider());
 		scheduleList.setLabelProvider(new ScheduleLabelProvider(scheduleList));
 
+      scheduleList.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(scheduleList, "ReportExecutionForm.ScheduleList");
 		scheduleList.getControl().addDisposeListener(new DisposeListener() {
          @Override
@@ -336,7 +337,7 @@ public class ReportExecutionForm extends Composite
       Menu menu = menuMgr.createContextMenu(scheduleList.getControl());
       scheduleList.getControl().setMenu(menu);
    }
-	
+
    /**
     * Fill schedules context menu
     * @param mgr Menu manager
@@ -348,7 +349,7 @@ public class ReportExecutionForm extends Composite
 
 	/**
 	 * Create "Results" section's content
-	 * 
+	 *
 	 * @param parent
 	 *            parent composite
 	 */
@@ -361,6 +362,7 @@ public class ReportExecutionForm extends Composite
 		resultList.setLabelProvider(new ReportResultLabelProvider(resultList));
       resultList.setComparator(new ReportResultComparator());
 
+      resultList.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(resultList, "ReportExecutionForm.ResultList");
       resultList.getControl().addDisposeListener(new DisposeListener() {
          @Override
@@ -441,7 +443,7 @@ public class ReportExecutionForm extends Composite
 
 	/**
 	 * Create entry fields for parameters
-	 * 
+	 *
 	 * @param parent
 	 */
 	private void createParamEntryFields(Composite parent)
@@ -523,7 +525,7 @@ public class ReportExecutionForm extends Composite
 
 	/**
     * Render currently selected report result
-    * 
+    *
     * @param format rendering format
     * @param preview true for preview mode
     */

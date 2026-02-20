@@ -31,6 +31,8 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -57,6 +59,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataLabelP
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -80,7 +83,7 @@ public class HistoricalDataView extends ViewWithContext
 	private String nodeName;
 	private String tableName;
 	private String instance;
-	private String column;   
+	private String column;
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -129,9 +132,9 @@ public class HistoricalDataView extends ViewWithContext
          sb.append('#');
          sb.append(column);
       }
-      
+
       return sb.toString();
-   }	
+   }
 
    /**
     * Create new historical data view.
@@ -157,7 +160,7 @@ public class HistoricalDataView extends ViewWithContext
     */
    public HistoricalDataView(AbstractObject contextObject, long ownerId, long dciId, String tableName, String instance, String column)
    {
-      super(LocalizationHelper.getI18n(HistoricalDataView.class).tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"), 
+      super(LocalizationHelper.getI18n(HistoricalDataView.class).tr("Historical Data"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png"),
             buildId(contextObject, dciId, tableName, instance, column), true);
 
       session = Registry.getSession();
@@ -165,8 +168,8 @@ public class HistoricalDataView extends ViewWithContext
       contextId = contextObject.getObjectId();
       this.ownerId = ownerId;
       this.dciId = dciId;
-      this.tableName = tableName; 
-      this.instance = instance; 
+      this.tableName = tableName;
+      this.instance = instance;
       this.column = column;
 
       nodeName = contextObject.getObjectName();
@@ -248,7 +251,7 @@ public class HistoricalDataView extends ViewWithContext
 
       new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		final String[] names = (tableName != null) ? 
+		final String[] names = (tableName != null) ?
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value") } :
          new String[] { i18n.tr("Timestamp"), i18n.tr("Value"), i18n.tr("Formatted value"), i18n.tr("Raw value") };
       final int[] widths = { 180, 400, 400, 400 };
@@ -260,6 +263,15 @@ public class HistoricalDataView extends ViewWithContext
       viewer.addFilter(filter);
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		setFilterClient(viewer, filter);
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
 
 		createActions();
 		createContextMenu();
@@ -283,7 +295,7 @@ public class HistoricalDataView extends ViewWithContext
 	 * Create actions
 	 */
 	private void createActions()
-	{		
+	{
       actionSelectRange = new Action(i18n.tr("Select data &range..."), SharedIcons.DATES) {
 			@Override
 			public void run()
@@ -300,7 +312,7 @@ public class HistoricalDataView extends ViewWithContext
 		      deleteValue();
 		   }
 		};
-		
+
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -323,6 +335,9 @@ public class HistoricalDataView extends ViewWithContext
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionSelectRange);
       manager.add(new Separator());
       manager.add(actionExportAllToCsv);
@@ -349,7 +364,7 @@ public class HistoricalDataView extends ViewWithContext
 		manager.add(actionSelectRange);
       manager.add(new Separator());
 		manager.add(actionExportToCsv);
-      manager.add(actionExportAllToCsv);		
+      manager.add(actionExportAllToCsv);
       manager.add(new Separator());
       manager.add(actionDeleteDciEntry);
 	}
@@ -368,7 +383,7 @@ public class HistoricalDataView extends ViewWithContext
       new Job(i18n.tr("Reading DCI data from server"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
-			{            
+			{
 			   final DataSeries data;
 			   if (tableName != null)
 			      data = session.getCollectedTableData(ownerId, dciId, instance, column, timeFrom, timeTo, recordLimit);
@@ -481,7 +496,7 @@ public class HistoricalDataView extends ViewWithContext
    {
       if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != contextId))
          return;
-      
+
       refresh();
    }
 
@@ -511,36 +526,36 @@ public class HistoricalDataView extends ViewWithContext
       if (column != null)
          memento.set("column", column);
       if (timeFrom != null)
-         memento.set("timeFrom", timeFrom.getTime());         
+         memento.set("timeFrom", timeFrom.getTime());
       if (timeTo != null)
-         memento.set("timeTo", timeTo.getTime());       
-      
-      memento.set("recordLimit", recordLimit);     
-   }  
+         memento.set("timeTo", timeTo.getTime());
+
+      memento.set("recordLimit", recordLimit);
+   }
 
 
    /**
     * Restore view state
-    * 
+    *
     * @param memento memento to restore the state
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     */
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       ownerId = memento.getAsLong("ownerId", 0);
       contextId = memento.getAsLong("contextId", 0);
       dciId = memento.getAsLong("dciId", 0);
-      tableName = memento.getAsString("tableName", null); 
+      tableName = memento.getAsString("tableName", null);
       instance = memento.getAsString("instance", null);
       column = memento.getAsString("column", null);
-      
+
       AbstractObject object = session.findObjectById(contextId);
       if (object != null)
          nodeName = object.getObjectName();
       String dciName =  (tableName == null ? Long.toString(dciId) : tableName);
       fullName = nodeName + ": [" + dciName + "]";
       setName(dciName);
-      
+
       long timestmap = memento.getAsLong("timeFrom", 0);
       if (timestmap != 0)
          timeFrom = new Date(timestmap);
@@ -549,7 +564,7 @@ public class HistoricalDataView extends ViewWithContext
          timeTo = new Date(timestmap);
 
       recordLimit = memento.getAsInteger("recordLimit", recordLimit);
-      
+
       super.restoreState(memento);
    }
 

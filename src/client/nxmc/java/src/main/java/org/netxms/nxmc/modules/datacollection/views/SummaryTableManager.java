@@ -38,6 +38,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -60,6 +62,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.SummaryTableLabelPro
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -68,16 +71,16 @@ import org.xnap.commons.i18n.I18n;
 public class SummaryTableManager extends ConfigurationView
 {
    private final I18n i18n = LocalizationHelper.getI18n(SummaryTableManager.class);
-	
+
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_MENU_PATH = 1;
 	public static final int COLUMN_TITLE = 2;
-	
+
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private SessionListener listener = null;
 	private Map<Integer, DciSummaryTableDescriptor> descriptors = new HashMap<Integer, DciSummaryTableDescriptor>();
-	
+
 	private Action actionCreateSingleValue;
    private Action actionCreateTableValue;
 	private Action actionEdit;
@@ -86,10 +89,10 @@ public class SummaryTableManager extends ConfigurationView
    /**
     * Constructor
     */
-   public SummaryTableManager() 
+   public SummaryTableManager()
    {
       super(LocalizationHelper.getI18n(SummaryTableManager.class).tr("DCI Summary Tables"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "configuration.summary-tables", true);
-      session = Registry.getSession();    
+      session = Registry.getSession();
    }
 
    /**
@@ -109,6 +112,16 @@ public class SummaryTableManager extends ConfigurationView
 		viewer.addFilter(filter);
 		setFilterClient(viewer, filter);
 
+		viewer.enableColumnReordering();
+		WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnOrder(viewer, getBaseId());
+			}
+		});
+
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -118,7 +131,7 @@ public class SummaryTableManager extends ConfigurationView
 				actionDelete.setEnabled(selection.size() > 0);
 			}
 		});
-		
+
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -195,10 +208,10 @@ public class SummaryTableManager extends ConfigurationView
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void createActions()
-	{       
+	{
 		// create add action for single value table
 		actionCreateSingleValue = new Action("Create new summary table...", SharedIcons.ADD_OBJECT) {
 			@Override
@@ -207,7 +220,7 @@ public class SummaryTableManager extends ConfigurationView
 				createSummaryTable(false);
 			}
 		};
-		
+
 		actionCreateTableValue = new Action("Create new summary table for table DCIs...", ResourceManager.getImageDescriptor("icons/new_table.png")) {
 		   @Override
 		   public void run()
@@ -239,7 +252,7 @@ public class SummaryTableManager extends ConfigurationView
 
    /**
     * Fill local tool bar
-    * 
+    *
     * @param manager Menu manager for local toolbar
     */
 	@Override
@@ -248,6 +261,18 @@ public class SummaryTableManager extends ConfigurationView
       manager.add(actionCreateSingleValue);
       manager.add(actionCreateTableValue);
       super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -278,7 +303,7 @@ public class SummaryTableManager extends ConfigurationView
 	 */
 	private void createSummaryTable(boolean isTableSource)
 	{
-		DciSummaryTable t = new DciSummaryTable("", "", isTableSource); 
+		DciSummaryTable t = new DciSummaryTable("", "", isTableSource);
 		if (showPropertyPages(t, true))
 		{
 			// was saved to server
@@ -288,10 +313,10 @@ public class SummaryTableManager extends ConfigurationView
 			viewer.setSelection(new StructuredSelection(d));
 		}
 	}
-	
+
 	/**
 	 * Show property pages for provided summary table
-	 * 
+	 *
 	 * @param t summary table
 	 * @return
 	 */
@@ -303,7 +328,7 @@ public class SummaryTableManager extends ConfigurationView
       if (!t.isTableSoure())
          pm.addToRoot(new PreferenceNode("columns", new SummaryTableColumns(t)));
 
-      PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, 
+      PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm,
             isNew ? i18n.tr("Create DCI Summary Table") : i18n.tr("Edit Summary Table"));
       return dlg.open() == Window.OK;
 	}
@@ -316,7 +341,7 @@ public class SummaryTableManager extends ConfigurationView
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() != 1)
 			return;
-		
+
 		final DciSummaryTableDescriptor d = (DciSummaryTableDescriptor)selection.getFirstElement();
 		new Job(i18n.tr("Read DCI summary table config"), this) {
 			@Override
@@ -333,7 +358,7 @@ public class SummaryTableManager extends ConfigurationView
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -341,7 +366,7 @@ public class SummaryTableManager extends ConfigurationView
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Delete selected datasets
 	 */
@@ -350,15 +375,15 @@ public class SummaryTableManager extends ConfigurationView
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 			return;
-		
+
 		if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Confirm Delete"), i18n.tr("Selected DCI summary tables will be deleted. Are you really sure?")))
 			return;
-	
+
 		final int[] idList = new int[selection.size()];
 		int i = 0;
 		for(Object o : selection.toList())
 			idList[i++] = ((DciSummaryTableDescriptor)o).getId();
-		
+
 		new Job(i18n.tr("Delete DCI summary tables from server"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
@@ -375,7 +400,7 @@ public class SummaryTableManager extends ConfigurationView
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{

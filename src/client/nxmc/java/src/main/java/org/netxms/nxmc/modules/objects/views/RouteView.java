@@ -27,6 +27,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -47,6 +49,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RouteLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -162,6 +165,16 @@ public class RouteView extends AdHocObjectView
       actionExportToCsv = new ExportToCsvAction(this, viewer, true);
       actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       createContextMenu();
    }
 
@@ -182,6 +195,9 @@ public class RouteView extends AdHocObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionExportAllToCsv);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -210,7 +226,7 @@ public class RouteView extends AdHocObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -283,18 +299,18 @@ public class RouteView extends AdHocObjectView
    @Override
    public void saveState(Memento memento)
    {
-      super.saveState(memento);  
-      memento.set("source", source.getObjectId());  
+      super.saveState(memento);
+      memento.set("source", source.getObjectId());
       memento.set("destination", destination.getObjectId());
    }
 
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
       source = session.findObjectById(memento.getAsLong("source", 0), AbstractNode.class);
       destination = session.findObjectById(memento.getAsLong("destination", 0), AbstractNode.class);

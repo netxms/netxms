@@ -138,7 +138,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    public BaseDataCollectionView(String name, String id, boolean hasFilter)
    {
-      super(name, ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter); 
+      super(name, ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), id, hasFilter);
    }
 
    /**
@@ -171,7 +171,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(comparator);
       viewer.addFilter(lvFilter);
-      setFilterClient(viewer, lvFilter); 
+      setFilterClient(viewer, lvFilter);
       if (isHideOwner())
          viewer.removeColumnById(LV_COLUMN_OWNER);
 
@@ -184,7 +184,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    /**
     * If owner column should be hidden
-    * 
+    *
     * @return true if should be hidden
     */
    protected boolean isHideOwner()
@@ -207,7 +207,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)
@@ -220,13 +220,13 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       export.add(actionCopyToClipboard);
       export.add(actionCopyDciName);
       export.add(actionCopyValueToClipboard);
-      manager.add(export); 
-      
+      manager.add(export);
+
       MenuManager actions = new MenuManager(i18n.tr("A&ctions"));
       actions.add(actionForcePoll);
       actions.add(actionRecalculateData);
       actions.add(actionClearData);
-      manager.add(actions);    
+      manager.add(actions);
 
       MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
       viewOptions.add(actionUseMultipliers);
@@ -252,6 +252,9 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
       manager.add(actionUseMultipliers);
@@ -313,7 +316,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          }
       };
       addKeyBinding("M1+M3+D", actionShowDisabled);
-      
+
       actionCopyToClipboard = new CopyTableRowsAction(this, true);
 
       actionCopyValueToClipboard = new Action(i18n.tr("&Copy value to clipboard"), SharedIcons.COPY) {
@@ -379,7 +382,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    {
       getDataFromServer(null);
    }
-   
+
    /**
     * Get DCI id
     */
@@ -406,26 +409,26 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    /**
     * Show DCI properties dialog
-    * 
+    *
     * @param object Data collection object
     * @return true if OK was pressed
     */
    protected boolean showDCIPropertyPages(final DataCollectionObject object)
    {
       DataCollectionObjectEditor dce = new DataCollectionObjectEditor(object);
-      PreferenceManager pm = new PreferenceManager();  
-      pm.addToRoot(new PreferenceNode("general", new General(dce)));     
-      boolean hasClusterParent = getObject().getAllParents(AbstractObject.OBJECT_CLUSTER).size() > 0;  
+      PreferenceManager pm = new PreferenceManager();
+      pm.addToRoot(new PreferenceNode("general", new General(dce)));
+      boolean hasClusterParent = getObject().getAllParents(AbstractObject.OBJECT_CLUSTER).size() > 0;
       if ((getObject() instanceof Cluster) || (getObject() instanceof Template) || hasClusterParent)
-         pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));    
+         pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));
       pm.addToRoot(new PreferenceNode("customSchedule", new CustomSchedule(dce)));
       if (dce.getObject() instanceof DataCollectionTable)
-         pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));    
-      pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));    
-      if (dce.getObject() instanceof DataCollectionItem)         
-         pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));   
+         pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));
+      pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));
+      if (dce.getObject() instanceof DataCollectionItem)
+         pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));
       else
-         pm.addToRoot(new PreferenceNode("thresholds", new TableThresholds(dce)));            
+         pm.addToRoot(new PreferenceNode("thresholds", new TableThresholds(dce)));
       pm.addToRoot(new PreferenceNode("instanceDiscovery", new InstanceDiscovery(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("performanceTab", new PerformanceView(dce)));
@@ -434,10 +437,10 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("winperf", new WinPerf(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptions(dce)));             
+         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptions(dce)));
       else
-         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptionsTable(dce)));   
-      pm.addToRoot(new PreferenceNode("comments", new Comments(dce)));  
+         pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptionsTable(dce)));
+      pm.addToRoot(new PreferenceNode("comments", new Comments(dce)));
 
       PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, String.format(i18n.tr("Properties for %s"), object.getName()));
       dlg.setBlockOnOpen(true);
@@ -455,12 +458,13 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    /**
     * Actions to make after last values view was created
-    * 
+    *
     * @param configPrefix
     * @param validator
     */
    protected void postLastValueViewCreation(String configPrefix, VisibilityValidator validator)
    {
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       final PreferenceStore ds = PreferenceStore.getInstance();
@@ -471,7 +475,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          {
             if (viewer.getTable().isDisposed())
                return;
-            
+
             getDataFromServer(null);
          }
       }, validator);
@@ -504,7 +508,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             ds.set(configPrefix + ".showUnsupported", isShowUnsupported());
             ds.set(configPrefix + ".showHidden", isShowHidden());
          }
-      });      
+      });
 
       autoRefreshInterval = ds.getAsInteger(configPrefix + ".autoRefreshInterval", autoRefreshInterval);
       setAutoRefreshEnabled(ds.getAsBoolean(configPrefix + ".autoRefresh", true));
@@ -517,7 +521,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       lvFilter.setShowDisabled(ds.getAsBoolean(configPrefix + ".showDisabled", false));
       lvFilter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", true));
       lvFilter.setShowHidden(ds.getAsBoolean(configPrefix + ".showHidden", false));
-      
+
       createContextMenu();
 
       if ((validator == null) || validator.isVisible())
@@ -526,7 +530,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    /**
     * Get data from server
-    * @param callback 
+    * @param callback
     */
    protected void getDataFromServer(Runnable callback)
    {
@@ -616,7 +620,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    {
       this.autoRefreshInterval = autoRefreshInterval;
    }
-   
+
    /**
     * @return the useMultipliers
     */
@@ -660,7 +664,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          viewer.refresh(true);
       }
    }
-   
+
    /**
     * @return
     */
@@ -735,7 +739,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       {
          openView(new TableLastValuesView(getObject(), getObjectId(dcObject), getDciId(dcObject)));
       }
-      else 
+      else
       {
          List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(1);
          items.add(getConfigFromObject(dcObject));
@@ -777,7 +781,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          sb.append(nl);
       WidgetHelper.copyToClipboard(sb.toString());
    }
-   
+
    /**
     * Copy DCI name of selection
     */
@@ -786,7 +790,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       StringBuilder dciName = new StringBuilder();
       for(Object o : selection.toList())
       {
@@ -814,7 +818,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    {
       return 30;
    }
-   
+
    /**
     * Check if selection is DCI, tbale or mixed
     */
@@ -833,7 +837,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          {
             isTable = true;
          }
-         else 
+         else
          {
             isDci = true;
          }

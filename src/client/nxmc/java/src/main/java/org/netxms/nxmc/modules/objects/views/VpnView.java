@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
@@ -41,7 +42,7 @@ import org.xnap.commons.i18n.I18n;
 public class VpnView extends NodeSubObjectTableView
 {
    private final I18n i18n = LocalizationHelper.getI18n(VpnView.class);
-   
+
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
    public static final int COLUMN_STATUS = 2;
@@ -122,6 +123,7 @@ public class VpnView extends NodeSubObjectTableView
       filter = new VPNConnectorFilter(labelProvider);
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "VPNTable.V1"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -129,7 +131,18 @@ public class VpnView extends NodeSubObjectTableView
          {
             WidgetHelper.saveColumnSettings(viewer.getTable(), "VPNTable.V1"); //$NON-NLS-1$
          }
-      });   
+      });
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

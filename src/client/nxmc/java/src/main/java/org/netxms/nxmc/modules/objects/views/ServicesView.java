@@ -135,6 +135,7 @@ public class ServicesView extends ObjectView
       viewer.setLabelProvider(new ServiceLabelProvider());
       viewer.setComparator(new ServiceComparator());
       viewer.addFilter(new ServiceFilter());
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "ServiceTable");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -209,7 +210,7 @@ public class ServicesView extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -226,6 +227,17 @@ public class ServicesView extends ObjectView
          manager.add(new Separator());
          manager.add(startTypeMenu);
       }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

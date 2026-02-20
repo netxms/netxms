@@ -71,13 +71,13 @@ import org.xnap.commons.i18n.I18n;
 public class PolicyListView extends ObjectView implements SessionListener
 {
    private final I18n i18n = LocalizationHelper.getI18n(PolicyListView.class);
-   public static final String JOB_FAMILY = "PolicyEditorJob"; 
+   public static final String JOB_FAMILY = "PolicyEditorJob";
 
    // Columns
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_GUID = 2;
-   
+
    private Display display;
    private NXCSession session;
    private HashMap<UUID, AgentPolicy> policies = null;
@@ -96,9 +96,9 @@ public class PolicyListView extends ObjectView implements SessionListener
    /**
     * Constructor
     */
-   public PolicyListView() 
+   public PolicyListView()
    {
-      super(LocalizationHelper.getI18n(PolicyListView.class).tr("Agent Policies"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), "AgentPolicies", true); 
+      super(LocalizationHelper.getI18n(PolicyListView.class).tr("Agent Policies"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), "AgentPolicies", true);
       session = Registry.getSession();
    }
 
@@ -107,18 +107,19 @@ public class PolicyListView extends ObjectView implements SessionListener
     */
    @Override
    protected void createContent(Composite parent)
-   {      
+   {
       display = getWindow().getShell().getDisplay();
-      
+
       final String[] names = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("GUID") };
       final int[] widths = { 250, 200, 100 };
-      
+
       policyList = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       policyList.setContentProvider(new ArrayContentProvider());
       policyList.setLabelProvider(new PolicyLabelProvider());
       policyList.setComparator(new PolicyComparator());
       filter = new PolicyFilter();
       policyList.addFilter(filter);
+      policyList.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(policyList, "PolicyEditorView"); //$NON-NLS-1$
       policyList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -153,8 +154,8 @@ public class PolicyListView extends ObjectView implements SessionListener
       });
 
       createActions();
-      createPopupMenu();  
-      
+      createPopupMenu();
+
       session.addListener(this);
       refresh();
    }
@@ -177,14 +178,14 @@ public class PolicyListView extends ObjectView implements SessionListener
    {
       applyPolicy();
       refresh();
-   } 
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
    public void refresh()
-   {      
+   {
       if (!isActive())
          return;
 
@@ -208,7 +209,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          {
             return i18n.tr("Can't load policy list");
          }
-         
+
       };
       job.start();
    }
@@ -224,7 +225,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          {
             createNewPolicy();
          }
-      }; 
+      };
 
       actionRename = new Action(i18n.tr("&Rename")) {
          @Override
@@ -270,7 +271,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          }
       };
       actionDuplicate.setEnabled(false);
-      
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -279,7 +280,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          }
       };
       actionDelete.setEnabled(false);
-      
+
       actionForceDeploy = new Action(i18n.tr("&Force deploy"), ResourceManager.getImageDescriptor("icons/push.png")) {
          @Override
          public void run()
@@ -298,9 +299,9 @@ public class PolicyListView extends ObjectView implements SessionListener
       IStructuredSelection selection = policyList.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       AgentPolicy policy = (AgentPolicy)selection.getFirstElement();
-      CreatePolicyDialog dlg = new CreatePolicyDialog(getWindow().getShell(), policy);  
+      CreatePolicyDialog dlg = new CreatePolicyDialog(getWindow().getShell(), policy);
       if (dlg.open() != Window.OK)
          return;
 
@@ -311,7 +312,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          {
             session.savePolicy(getObjectId(), newPolicy, false);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -342,7 +343,7 @@ public class PolicyListView extends ObjectView implements SessionListener
       final AgentPolicy[] policyList = new AgentPolicy[selection.size()];
       for(int i = 0; (i < policyList.length) && it.hasNext(); i++)
          policyList[i] = (AgentPolicy)it.next();
-      
+
       new Job(i18n.tr("Copy policy of template: {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -359,9 +360,9 @@ public class PolicyListView extends ObjectView implements SessionListener
             if (doMove)
             {
                for(AgentPolicy p : policyList)
-                  session.deletePolicy(getObjectId(), ((AgentPolicy)p).getGuid()); 
+                  session.deletePolicy(getObjectId(), ((AgentPolicy)p).getGuid());
             }
-            
+
             if (doMove || sameObject)
             {
                runInUIThread(new Runnable() {
@@ -379,7 +380,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          {
             return i18n.tr("Error on policy item manipulcation for template: {0}", getObjectId());
          }
-      }.start();      
+      }.start();
    }
 
    /**
@@ -392,14 +393,14 @@ public class PolicyListView extends ObjectView implements SessionListener
       final AgentPolicy[] policyList = new AgentPolicy[selection.size()];
       for(int i = 0; (i < policyList.length) && it.hasNext(); i++)
          policyList[i] = new AgentPolicy((AgentPolicy)it.next());
-      
+
       new Job(i18n.tr("Duplicate policy items for template: {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(AgentPolicy p : policyList)
                session.savePolicy(getObjectId(), p, true);
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -407,7 +408,7 @@ public class PolicyListView extends ObjectView implements SessionListener
                   showInformationMessage();
                }
             });
-            
+
          }
 
          @Override
@@ -416,7 +417,7 @@ public class PolicyListView extends ObjectView implements SessionListener
             return i18n.tr("Error duplicationg policies on template: ", getObjectName());
          }
       }.start();
-      
+
    }
 
    /**
@@ -427,25 +428,25 @@ public class PolicyListView extends ObjectView implements SessionListener
       IStructuredSelection selection = policyList.getStructuredSelection();
       AgentPolicy policy = (AgentPolicy)selection.getFirstElement();
       openView(new PolicyEditorView(policy.getGuid(), getObjectId(), new LocalChangeListener() {
-         
+
          @Override
          public void onObjectChange()
          {
             showInformationMessage();
          }
       }));
-      
+
    }
-   
+
    /**
     * Delete policy
     */
    protected void deletePolicy()
-   {      
+   {
       IStructuredSelection selection = policyList.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete policy"), i18n.tr("Do you really want to delete selected policies?")))
          return;
 
@@ -455,9 +456,9 @@ public class PolicyListView extends ObjectView implements SessionListener
          {
             for(Object policy : selection.toList())
             {
-               session.deletePolicy(getObjectId(), ((AgentPolicy)policy).getGuid()); 
+               session.deletePolicy(getObjectId(), ((AgentPolicy)policy).getGuid());
             }
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -480,7 +481,7 @@ public class PolicyListView extends ObjectView implements SessionListener
     */
    protected void createNewPolicy()
    {
-      CreatePolicyDialog dlg = new CreatePolicyDialog(getWindow().getShell(), null);  
+      CreatePolicyDialog dlg = new CreatePolicyDialog(getWindow().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
 
@@ -495,7 +496,7 @@ public class PolicyListView extends ObjectView implements SessionListener
                public void run()
                {
                   openView(new PolicyEditorView(newObjectGuid, getObjectId(), new LocalChangeListener() {
-                     
+
                      @Override
                      public void onObjectChange()
                      {
@@ -506,7 +507,7 @@ public class PolicyListView extends ObjectView implements SessionListener
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -514,13 +515,13 @@ public class PolicyListView extends ObjectView implements SessionListener
          }
       }.start();
    }
-   
+
    /**
     * Force deploy policies
     */
    private void forceDeploy()
-   {     
-      final NXCSession session = Registry.getSession();     
+   {
+      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Running forced agent policy deployment for template \"{0}\"", getObjectName()), null, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -533,7 +534,7 @@ public class PolicyListView extends ObjectView implements SessionListener
                   clearMessages();
                   addMessage(MessageArea.SUCCESS, i18n.tr("Policies from template \"{0}\" successfully installed", getObjectName()));
                }
-            });               
+            });
          }
 
          @Override
@@ -564,7 +565,7 @@ public class PolicyListView extends ObjectView implements SessionListener
             mgr.add(actionCopy);
             mgr.add(actionDuplicate);
             mgr.add(new Separator());
-            mgr.add(actionForceDeploy);  
+            mgr.add(actionForceDeploy);
          }
       });
 
@@ -581,7 +582,7 @@ public class PolicyListView extends ObjectView implements SessionListener
    {
       manager.add(actionCreate);
       manager.add(new Separator());
-      manager.add(actionForceDeploy); 
+      manager.add(actionForceDeploy);
    }
 
    /**
@@ -590,8 +591,11 @@ public class PolicyListView extends ObjectView implements SessionListener
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = policyList.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionCreate);
-      manager.add(actionForceDeploy);      
+      manager.add(actionForceDeploy);
       manager.add(new Separator());
    }
 
@@ -603,14 +607,14 @@ public class PolicyListView extends ObjectView implements SessionListener
    {
       switch(n.getCode())
       {
-         case SessionNotification.POLICY_MODIFIED: 
+         case SessionNotification.POLICY_MODIFIED:
             if (n.getSubCode() != getObjectId())
                return;
 
             display.asyncExec(new Runnable() {
                @Override
                public void run()
-               {     
+               {
                   if (policyList.getControl().isDisposed())
                      return;
 
@@ -646,7 +650,7 @@ public class PolicyListView extends ObjectView implements SessionListener
             break;
       }
    }
-   
+
    /**
     * Apply policy on view dispose or on selected object change
     */
@@ -654,13 +658,13 @@ public class PolicyListView extends ObjectView implements SessionListener
    {
       if (getObjectId() == 0)
          return;
-      
+
       Job job = new Job(i18n.tr("Update policy on editor close"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.onPolicyEditorClose(getObjectId());
-            runInUIThread(new Runnable() {               
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
@@ -669,7 +673,7 @@ public class PolicyListView extends ObjectView implements SessionListener
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -677,7 +681,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          }
       };
       job.setUser(false);
-      job.start();      
+      job.start();
    }
 
    /* (non-Javadoc)
@@ -689,20 +693,20 @@ public class PolicyListView extends ObjectView implements SessionListener
       applyPolicy();
       super.dispose();
    }
-   
+
    /**
     * Display message with information about policy deploy
     */
    public void showInformationMessage()
    {
       addMessage(MessageArea.INFORMATION, i18n.tr("Changes in policies have been made. Please deploy them to nodes"), false, "Deploy policies", new Runnable() {
-         
+
          @Override
          public void run()
          {
-            forceDeploy();            
+            forceDeploy();
          }
-      });  
+      });
       actionForceDeploy.setEnabled(true);
    }
 
@@ -712,7 +716,7 @@ public class PolicyListView extends ObjectView implements SessionListener
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Template); 
+      return (context != null) && (context instanceof Template);
    }
 
    /**

@@ -136,6 +136,7 @@ public class AccessPointsView extends ObjectView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "AccessPointsTable");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -204,6 +205,18 @@ public class AccessPointsView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      manager.add(actionExportToCsv);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
 	@Override
@@ -252,5 +265,5 @@ public class AccessPointsView extends ObjectView
    {
       refresh();
       super.activate();
-   }   
+   }
 }

@@ -132,6 +132,7 @@ public class IncidentList extends Composite
       filter = new IncidentListFilter();
       viewer.addFilter(filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -594,5 +595,15 @@ public class IncidentList extends Composite
    public Action getActionCreate()
    {
       return actionCreate;
+   }
+
+   /**
+    * Get action for resetting column order
+    *
+    * @return reset column order action
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return viewer.getResetColumnOrderAction();
    }
 }

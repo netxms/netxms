@@ -73,9 +73,9 @@ public class SnmpTrapEditor extends ConfigurationView
 	public static final int COLUMN_TRAP_OID = 1;
 	public static final int COLUMN_EVENT = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
-	
+
 	private static final String TABLE_CONFIG_PREFIX = "SnmpTrapEditor"; //$NON-NLS-1$
-	
+
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Action actionNew;
@@ -127,6 +127,7 @@ public class SnmpTrapEditor extends ConfigurationView
       final String[] columnNames = { i18n.tr("ID"), i18n.tr("OID"), i18n.tr("Event"), i18n.tr("Description") };
 		final int[] columnWidths = { 70, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpTrapLabelProvider());
@@ -157,10 +158,10 @@ public class SnmpTrapEditor extends ConfigurationView
             WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
 			}
 		});
-		
+
 		createActions();
 		createPopupMenu();
-		
+
       session.addListener(sessionListener);
 
       refresh();
@@ -178,7 +179,7 @@ public class SnmpTrapEditor extends ConfigurationView
 				createTrap();
 			}
 		};
-		
+
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
 			@Override
 			public void run()
@@ -186,7 +187,7 @@ public class SnmpTrapEditor extends ConfigurationView
 				editTrap();
 			}
 		};
-		
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -195,7 +196,7 @@ public class SnmpTrapEditor extends ConfigurationView
 			}
 		};
 	}
-	
+
 	/**
 	 * Create pop-up menu for user list
 	 */
@@ -218,7 +219,7 @@ public class SnmpTrapEditor extends ConfigurationView
 
 	/**
 	 * Fill context menu
-	 * 
+	 *
 	 * @param manager Menu manager
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
@@ -244,6 +245,9 @@ public class SnmpTrapEditor extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionNew);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -285,7 +289,7 @@ public class SnmpTrapEditor extends ConfigurationView
 					}
 				}
 				updateTrapList();
-			}	
+			}
 
          @Override
          protected String getErrorMessage()
@@ -392,7 +396,7 @@ public class SnmpTrapEditor extends ConfigurationView
 
 	/**
 	 * Show SNMP trap configuration dialog
-	 * 
+	 *
 	 * @param trap SNMP trap configuration object
 	 * @return true if OK was pressed
 	 */

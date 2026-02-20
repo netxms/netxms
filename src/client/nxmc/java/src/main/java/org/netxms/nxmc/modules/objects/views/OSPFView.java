@@ -25,6 +25,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -43,6 +45,7 @@ import org.netxms.nxmc.modules.objects.views.helpers.OSPFAreaLabelProvider;
 import org.netxms.nxmc.modules.objects.views.helpers.OSPFNeighborComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.OSPFNeighborLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -135,6 +138,16 @@ public class OSPFView extends ObjectView
       viewerAreas.setContentProvider(new ArrayContentProvider());
       viewerAreas.setLabelProvider(new OSPFAreaLabelProvider());
       viewerAreas.setComparator(new OSPFAreaComparator());
+
+      viewerAreas.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewerAreas, getBaseId() + ".areas");
+      viewerAreas.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewerAreas, getBaseId() + ".areas");
+         }
+      });
    }
 
    /**
@@ -153,6 +166,16 @@ public class OSPFView extends ObjectView
       viewerNeighbors.setContentProvider(new ArrayContentProvider());
       viewerNeighbors.setLabelProvider(new OSPFNeighborLabelProvider());
       viewerNeighbors.setComparator(new OSPFNeighborComparator());
+
+      viewerNeighbors.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewerNeighbors, getBaseId() + ".neighbors");
+      viewerNeighbors.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewerNeighbors, getBaseId() + ".neighbors");
+         }
+      });
    }
 
 	/**
@@ -200,6 +223,27 @@ public class OSPFView extends ObjectView
       menu = manager.createContextMenu(viewerNeighbors.getControl());
       viewerNeighbors.getControl().setMenu(menu);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewerAreas.getResetColumnOrderAction();
+      if (resetAction != null)
+      {
+         manager.add(new Action(resetAction.getText()) {
+            @Override
+            public void run()
+            {
+               viewerAreas.resetColumnOrder();
+               viewerNeighbors.resetColumnOrder();
+            }
+         });
+      }
+      super.fillLocalMenu(manager);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()

@@ -35,6 +35,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -217,7 +219,7 @@ public class IncidentDetails extends AdHocObjectView
 
       titleFont = FontTools.createTitleFont();
       boldFont = FontTools.createAdjustedFont(JFaceResources.getDefaultFont(), 0, SWT.BOLD);
-      parent.addDisposeListener(e -> { 
+      parent.addDisposeListener(e -> {
          boldFont.dispose();
          titleFont.dispose();
       });
@@ -467,6 +469,9 @@ public class IncidentDetails extends AdHocObjectView
       manager.add(actionResolve);
       manager.add(actionReopen);
       manager.add(actionClose);
+      Action resetAction = alarmViewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       super.fillLocalMenu(manager);
    }
 
@@ -667,7 +672,7 @@ public class IncidentDetails extends AdHocObjectView
       layout.marginHeight = 0;
       alarmsArea.setLayout(layout);
 
-      
+
       Label label = new Label(alarmsArea, SWT.NONE);
       label.setText(i18n.tr("Linked Alarms"));
       label.setFont(boldFont);
@@ -678,6 +683,16 @@ public class IncidentDetails extends AdHocObjectView
       alarmViewer.setContentProvider(new ArrayContentProvider());
       alarmViewer.setLabelProvider(new AlarmListLabelProvider());
       alarmViewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+      alarmViewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(alarmViewer, getBaseId());
+      alarmViewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(alarmViewer, getBaseId());
+         }
+      });
 
       alarmViewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override

@@ -121,7 +121,7 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectFinder extends View
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectFinder.class);
-   
+
    public static final int COL_ID = 0;
    public static final int COL_CLASS = 1;
    public static final int COL_NAME = 2;
@@ -133,11 +133,11 @@ public class ObjectFinder extends View
    private static final int SEARCH_MODE_PATTERN = 1;
    private static final int SEARCH_MODE_REGEXP = 2;
 
-   private static final String[] OBJECT_ATTRIBUTES = 
+   private static final String[] OBJECT_ATTRIBUTES =
       {
          "adminState",
          "agentVersion",
-         "alarms", 
+         "alarms",
          "alias",
          "bootTime",
          "bridgeBaseAddress",
@@ -344,16 +344,16 @@ public class ObjectFinder extends View
          int i = 0;
          for (; i < zoneElements.length; i++)
          {
-            if (((Zone)element).getUIN() == ((Zone)zoneElements[i]).getUIN()) 
+            if (((Zone)element).getUIN() == ((Zone)zoneElements[i]).getUIN())
             {
                break;
-            }            
+            }
          }
          if (i == zoneElements.length)
          {
             zoneList.setChecked(element, false);
          }
-      }      
+      }
 
       ipRangeStart.setText(view.ipRangeStart.getText());
       ipRangeEnd.setText(view.ipRangeEnd.getText());
@@ -365,7 +365,7 @@ public class ObjectFinder extends View
       else
          results.setInput(view.results.getInput());
    }
- 
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -394,13 +394,13 @@ public class ObjectFinder extends View
       layout.numColumns = session.isZoningEnabled() ? 3 : 2;
       conditionGroup.setLayout(layout);
       filterTab.setControl(conditionGroup);
-      
+
       /*** Full text search ***/
       Composite fullTextSearchGroup = new Composite(conditionGroup, SWT.NONE);
       fullTextSearchGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       layout = new GridLayout();
       fullTextSearchGroup.setLayout(layout);
-      
+
       text = new LabeledText(fullTextSearchGroup, SWT.NONE);
       text.setLabel("Search string");
       text.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
@@ -436,10 +436,10 @@ public class ObjectFinder extends View
       classFilterGroup.setLayoutData(gd);
       layout = new GridLayout();
       classFilterGroup.setLayout(layout);
-      
+
       Label classFilterTitle = new Label(classFilterGroup, SWT.NONE);
       classFilterTitle.setText("Class filter");
-      
+
       classList = CheckboxTableViewer.newCheckList(classFilterGroup, SWT.BORDER | SWT.CHECK);
       classList.setContentProvider(new ArrayContentProvider());
       classList.setInput(OBJECT_CLASSES);
@@ -447,7 +447,7 @@ public class ObjectFinder extends View
       gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.heightHint = 100;
       classList.getTable().setLayoutData(gd);
-      
+
       Composite classListButtons = new Composite(classFilterGroup, SWT.NONE);
       RowLayout rlayout = new RowLayout();
       rlayout.marginLeft = 0;
@@ -481,17 +481,17 @@ public class ObjectFinder extends View
 
       /*** Zone filter ***/
       if (session.isZoningEnabled())
-      {      
+      {
          Composite zoneFilterGroup = new Composite(conditionGroup, SWT.NONE);
          gd = new GridData(SWT.FILL, SWT.FILL, true, true);
          gd.verticalSpan = 2;
          zoneFilterGroup.setLayoutData(gd);
          layout = new GridLayout();
          zoneFilterGroup.setLayout(layout);
-         
+
          Label zoneFilterTitle = new Label(zoneFilterGroup, SWT.NONE);
          zoneFilterTitle.setText("Zone filter");
-         
+
          zoneList = CheckboxTableViewer.newCheckList(zoneFilterGroup, SWT.BORDER | SWT.CHECK);
          zoneList.setContentProvider(new ArrayContentProvider());
          List<Zone> zones = session.getAllZones();
@@ -501,12 +501,12 @@ public class ObjectFinder extends View
          gd = new GridData(SWT.FILL, SWT.FILL, true, true);
          gd.heightHint = 100;
          zoneList.getTable().setLayoutData(gd);
-         
+
          Composite zoneListButtons = new Composite(zoneFilterGroup, SWT.NONE);
          rlayout = new RowLayout();
          rlayout.marginLeft = 0;
          zoneListButtons.setLayout(rlayout);
-         
+
          selectAll = new Button(zoneListButtons, SWT.PUSH);
          selectAll.setText("Select &all");
          rd = new RowData();
@@ -707,7 +707,7 @@ public class ObjectFinder extends View
 
       /*** Result view ***/
 
-      Composite resultArea = new Composite(splitter, SWT.NONE); 
+      Composite resultArea = new Composite(splitter, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -718,8 +718,8 @@ public class ObjectFinder extends View
       weights[0] = settings.getAsInteger("ObjectFinder.weight1", 25);
       weights[1] = settings.getAsInteger("ObjectFinder.weight2", 70);
       splitter.setWeights(weights);
-      
-      separator = new Label(resultArea, SWT.SEPARATOR | SWT.HORIZONTAL);      
+
+      separator = new Label(resultArea, SWT.SEPARATOR | SWT.HORIZONTAL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -732,14 +732,15 @@ public class ObjectFinder extends View
       results.setLabelProvider(new ObjectSearchResultLabelProvider(results));
       results.setComparator(new ObjectSearchResultComparator());
       results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      results.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(results, "ResultTable");
 
       parent.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
-         {       
+         {
             WidgetHelper.saveTableViewerSettings(results, "ResultTable");
-            
+
             int[] weights = splitter.getWeights();
             settings.set("ObjectFinder.weight1", weights[0]);
             settings.set("ObjectFinder.weight2", weights[1]);
@@ -758,10 +759,10 @@ public class ObjectFinder extends View
             return new StructuredSelection(objects);
          }
       });
-      
+
       createResultsContextMenu();
       createActions();
-      
+
       tabFolder.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -778,7 +779,7 @@ public class ObjectFinder extends View
             }
             settings.set("ObjectFinder.selectedTab", index);
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -834,6 +835,9 @@ public class ObjectFinder extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = results.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionStartSearch);
       manager.add(actionSaveAs);
       manager.add(new Separator());
@@ -878,8 +882,8 @@ public class ObjectFinder extends View
 
    /**
     * Fill context menu
-    * @param nodeMenuManager 
-    * 
+    * @param nodeMenuManager
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager, MenuManager nodeMenuManager)
@@ -993,7 +997,7 @@ public class ObjectFinder extends View
    }
 
    /**
-    * Start search 
+    * Start search
     */
    private void startSearch()
    {
@@ -1017,11 +1021,11 @@ public class ObjectFinder extends View
             MessageDialogHelper.openWarning(getWindow().getShell(), "Warning", "IP address range end is invalid");
          }
       }
-      
-      List<Integer> classFilter = new ArrayList<Integer>(); 
+
+      List<Integer> classFilter = new ArrayList<Integer>();
       for(Object o : classList.getCheckedElements())
          classFilter.add(((ObjectClass)o).classId);
-      
+
       List<Integer> zoneFilter = new ArrayList<Integer>();
       if (session.isZoningEnabled())
       {
@@ -1037,12 +1041,12 @@ public class ObjectFinder extends View
 
    /**
     * Do object search
-    * 
+    *
     * @param searchString search string
     * @param classFilter
     * @param zoneFilter
-    * @param addrEnd 
-    * @param addrStart 
+    * @param addrEnd
+    * @param addrStart
     */
    private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Integer> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
    {
@@ -1083,7 +1087,7 @@ public class ObjectFinder extends View
                         AbstractNode parent = ((NetworkService)object).getParentNode();
                         if (parent != null && !zoneFilter.contains(parent.getZoneId()))
                            return false;
-                     }  
+                     }
                      else if (object instanceof VPNConnector)
                      {
                         AbstractNode parent = ((VPNConnector)object).getParentNode();
@@ -1109,19 +1113,19 @@ public class ObjectFinder extends View
                         	return false;
                      }
                   }
-                  
+
                   if (!classFilter.contains(object.getObjectClass()))
                      return false;
-                  
+
                   if ((addrStart != null) && (addrEnd != null))
                   {
                      if (!checkAddrRange(addrStart, addrEnd, object))
                         return false;
                   }
-                  
+
                   if (searchString.isEmpty())
                      return true;
-                  
+
                   for(String s : object.getStrings())
                   {
                      switch(mode)
@@ -1149,7 +1153,7 @@ public class ObjectFinder extends View
                results.setInput(objects);
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1157,10 +1161,10 @@ public class ObjectFinder extends View
          }
       }.start();
    }
-   
+
    /**
     * Check if object is within given address range
-    * 
+    *
     * @param start
     * @param end
     * @param object
@@ -1185,14 +1189,14 @@ public class ObjectFinder extends View
       {
          addrList.add(((AccessPoint)object).getIpAddress());
       }
-      
+
       for(InetAddressEx a : addrList)
       {
          if ((ComparatorHelper.compareInetAddresses(a.getAddress(), start) >= 0) &&
              (ComparatorHelper.compareInetAddresses(a.getAddress(), end) <= 0))
             return true;
       }
-      
+
       return false;
    }
 
@@ -1213,7 +1217,7 @@ public class ObjectFinder extends View
 
    /**
     * Remove all columns except standard
-    * 
+    *
     * @param ignoreStandardAttributes true to ignore standard attributes
     */
    private void resetResultTable(boolean ignoreStandardAttributes)
@@ -1362,7 +1366,7 @@ public class ObjectFinder extends View
    {
       int classId;
       String className;
-      
+
       ObjectClass(int classId, String className)
       {
          this.classId = classId;

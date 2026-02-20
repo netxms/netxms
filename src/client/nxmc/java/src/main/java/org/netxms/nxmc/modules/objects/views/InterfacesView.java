@@ -105,8 +105,8 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       super(LocalizationHelper.getI18n(InterfacesView.class).tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "objects.interfaces", true);
    }
-   
-   
+
+
 
    /**
     * @see org.netxms.nxmc.base.views.View#getPriority()
@@ -126,7 +126,7 @@ public class InterfacesView extends NodeSubObjectTableView
       super.createContent(parent);
       hideSubInterfaces = PreferenceStore.getInstance().getAsBoolean("InterfacesView.HideSubInterfaces", hideSubInterfaces);
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -134,7 +134,7 @@ public class InterfacesView extends NodeSubObjectTableView
    protected void postClone(View view)
    {
       super.postClone(view);
-      labelProvider.setNode(getObject());    
+      labelProvider.setNode(getObject());
       updateColumns();
    }
 
@@ -145,7 +145,7 @@ public class InterfacesView extends NodeSubObjectTableView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      labelProvider.setNode(getObject());    
+      labelProvider.setNode(getObject());
       updateColumns();
    }
 
@@ -154,8 +154,8 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    @Override
    protected void createViewer()
-   {      
-      final String[] names = { 
+   {
+      final String[] names = {
          i18n.tr("Node"),
          i18n.tr("ID"),
          i18n.tr("Name"),
@@ -200,6 +200,7 @@ public class InterfacesView extends NodeSubObjectTableView
       ((InterfaceListFilter)filter).setHideSubInterfaces(hideSubInterfaces);
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "InterfacesView.TableViewer");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -278,6 +279,17 @@ public class InterfacesView extends NodeSubObjectTableView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+   }
+
+   /**
     * Copy mac address
     */
    private void copyMacAddress(boolean peerMacAddress)
@@ -305,7 +317,7 @@ public class InterfacesView extends NodeSubObjectTableView
             sb.append(addr != null ? addr.toString() : "");
          }
          WidgetHelper.copyToClipboard(sb.toString());
-      }      
+      }
    }
 
    /**
@@ -361,21 +373,21 @@ public class InterfacesView extends NodeSubObjectTableView
    {
       return (object instanceof Interface) && object.isChildOf(getObjectId());
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      labelProvider.setNode(object);        
+      labelProvider.setNode(object);
       super.onObjectChange(object);
    }
-   
+
    /**
-    * If node column should be shown 
-    * 
-    * @return true if should be shown 
+    * If node column should be shown
+    *
+    * @return true if should be shown
     */
    protected boolean showNodeColumn()
    {
@@ -412,18 +424,18 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    @Override
    protected void setContext(Object context)
-   {      
+   {
       if (getContext() == null || !context.getClass().equals(getContext().getClass()))
       {
          if (context instanceof Node)
          {
             viewer.getColumnById(COLUMN_NODE).setWidth(0);
-            viewer.getColumnById(COLUMN_NODE).setResizable(false);    
+            viewer.getColumnById(COLUMN_NODE).setResizable(false);
          }
          else
          {
-            viewer.getColumnById(COLUMN_NODE).setResizable(true);   
-            viewer.getColumnById(COLUMN_NODE).setWidth(150);           
+            viewer.getColumnById(COLUMN_NODE).setResizable(true);
+            viewer.getColumnById(COLUMN_NODE).setWidth(150);
          }
       }
       super.setContext(context);
@@ -434,12 +446,12 @@ public class InterfacesView extends NodeSubObjectTableView
       if (getContext() instanceof Node)
       {
          viewer.getColumnById(COLUMN_NODE).setWidth(0);
-         viewer.getColumnById(COLUMN_NODE).setResizable(false);    
+         viewer.getColumnById(COLUMN_NODE).setResizable(false);
       }
       else
       {
-         viewer.getColumnById(COLUMN_NODE).setResizable(true);   
-         viewer.getColumnById(COLUMN_NODE).setWidth(150);           
+         viewer.getColumnById(COLUMN_NODE).setResizable(true);
+         viewer.getColumnById(COLUMN_NODE).setWidth(150);
       }
    }
 }

@@ -89,7 +89,7 @@ public class EventTemplateList extends Composite implements SessionListener
 
    /**
     * Constructor for event template list.
-    * 
+    *
     * @param view owning view
     * @param parent parent composite
     * @param style widget style bits
@@ -103,7 +103,7 @@ public class EventTemplateList extends Composite implements SessionListener
 
    /**
     * Constructor for event template list.
-    * 
+    *
     * @param parent parent composite
     * @param style widget style bits
     * @param configPrefix configuration prefix
@@ -114,7 +114,7 @@ public class EventTemplateList extends Composite implements SessionListener
       super(parent, style);
       setLayout(new FillLayout());
 
-      session = Registry.getSession();      
+      session = Registry.getSession();
 
       final String[] names = { i18n.tr("Code"), i18n.tr("Name"), i18n.tr("Severity"), i18n.tr("Flags"), i18n.tr("Message"), i18n.tr("Tags") };
       final int[] widths = { 70, 200, 90, 50, 400, 300 };
@@ -125,6 +125,7 @@ public class EventTemplateList extends Composite implements SessionListener
             isDialog ? dialogWidths : widths,
             0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new EventTemplateLabelProvider(isDialog));
@@ -151,7 +152,7 @@ public class EventTemplateList extends Composite implements SessionListener
             session.removeListener(EventTemplateList.this);
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
          }
-      });      
+      });
 
       createActions();
       createPopupMenu();
@@ -307,7 +308,7 @@ public class EventTemplateList extends Composite implements SessionListener
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -354,11 +355,11 @@ public class EventTemplateList extends Composite implements SessionListener
 
    /**
     * Modify event object in server
-    * 
+    *
     * @param tmpl to modify
     */
    protected void modifyEventTemplate(final EventTemplate tmpl)
-   {      
+   {
       new Job(i18n.tr("Updating event template"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -488,7 +489,7 @@ public class EventTemplateList extends Composite implements SessionListener
          }
       }.start();
    }
-   
+
    /**
     * Get underlying tree viewer
     * @return viewer
@@ -508,41 +509,51 @@ public class EventTemplateList extends Composite implements SessionListener
    }
    /**
     * Get create new template action
-    * 
+    *
     * @return new template action
     */
    public Action getActionNewTemplate()
    {
       return actionNew;
    }
-   
+
    /**
     * Get edit event object action
-    * 
+    *
     * @return edit action
     */
    public Action getActionEdit()
    {
       return actionEdit;
    }
-   
+
    /**
     * Get delete action
-    * 
+    *
     * @return delete action
     */
    public Action getActionDelete()
    {
       return actionDelete;
    }
-   
+
    /**
     * Get refresh action
-    * 
+    *
     * @return refresh action
     */
    public Action getActionRefresh()
    {
       return actionRefresh;
+   }
+
+   /**
+    * Get action for resetting column order
+    *
+    * @return reset column order action
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return viewer.getResetColumnOrderAction();
    }
 }

@@ -33,6 +33,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
@@ -50,6 +52,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryResultLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Result view for object query
@@ -155,6 +158,16 @@ public class ObjectQueryResultView extends ConfigurationView
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectQueryResultLabelProvider(viewer.getTable()));
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       createActions();
       createContextMenu();
    }
@@ -201,6 +214,9 @@ public class ObjectQueryResultView extends ConfigurationView
    {
       manager.add(actionCopyToClipboard);
       manager.add(actionExportToCSV);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

@@ -104,6 +104,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Modified") };
       final int[] columnWidths = { 300, 150, 300, 300 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServerFileLabelProvider());
@@ -231,6 +232,17 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
@@ -256,7 +268,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)

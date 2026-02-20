@@ -88,7 +88,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    public static final int COLUMN_NAME = 1;
    public static final int COLUMN_PORTS = 2;
    public static final int COLUMN_INTERFACES = 3;
-   
+
    private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
    private VlanLabelProvider labelProvider;
    private DisplayMode displayMode = DisplayMode.NONE;
@@ -155,11 +155,11 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    protected void createContent(Composite parent)
 	{
       super.createContent(parent);
-      
+
      // Composite area = new Composite(mainArea, SWT.NONE);
 
       mainArea.setLayout(new GridLayout());
-      
+
       Composite controlBar = new Composite(mainArea, SWT.NONE);
       controlBar.setBackground(mainArea.getBackground());
       controlBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -250,12 +250,12 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
              {
                 selection = new StructuredSelection();
              }
-             
+
              for(ISelectionChangedListener listener : selectionListeners)
                 listener.selectionChanged(new SelectionChangedEvent(PortView.this, selection));
           }
       });
-       
+
 
       scroller.setContent(portView);
       scroller.setBackground(portView.getBackground());
@@ -271,7 +271,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       });
 
       new Label(deviceViewArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      
+
       Composite vlanListArea = new Composite(splitter, SWT.NONE);
       layout = new GridLayout();
       layout.marginHeight = 0;
@@ -282,7 +282,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       final String[] names = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Ports"), "Interfaces" };
       final int[] widths = { 80, 180, 400, 400 };
       vlanList = new SortableTableViewer(vlanListArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
-      vlanList.setContentProvider(new ArrayContentProvider());      
+      vlanList.setContentProvider(new ArrayContentProvider());
       labelProvider = new VlanLabelProvider();
       vlanList.setLabelProvider(labelProvider);
       vlanList.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -312,6 +312,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
          }
       });
 
+      vlanList.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(vlanList, "VlanList");
       vlanList.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -320,11 +321,11 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
             WidgetHelper.saveTableViewerSettings(vlanList, "VlanList");
          }
       });
-      
+
       new Label(vlanListArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      
+
       splitter.setWeights(new int[] { 60, 40 });
-      
+
 		createContextMenu();
       createActions();
       createPopupMenu();
@@ -334,7 +335,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
     * Create actions
     */
    private void createActions()
-   {     
+   {
       actionShowVlanMap = new Action(i18n.tr("Show VLAN &map")) {
          @Override
          public void run()
@@ -353,6 +354,9 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = vlanList.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportAllToCsv);
    }
 

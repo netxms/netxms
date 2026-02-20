@@ -60,7 +60,7 @@ public class SummaryTable extends AdHocObjectView
     */
    protected SummaryTable()
    {
-      super(LocalizationHelper.getI18n(SummaryTable.class).tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "objects.summary-table", 0, 0, false); 
+      super(LocalizationHelper.getI18n(SummaryTable.class).tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "objects.summary-table", 0, 0, false);
    }
 
    /**
@@ -73,13 +73,13 @@ public class SummaryTable extends AdHocObjectView
       view.tableId = tableId;
       view.baseObjectId = baseObjectId;
       return view;
-   }     
+   }
 
    /**
     * Post clone action
     */
    protected void postClone(View origin)
-   {    
+   {
       super.postClone(origin);
       viewer.refresh();
    }
@@ -95,15 +95,15 @@ public class SummaryTable extends AdHocObjectView
 
 		createActions();
 	}
-	
+
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer.getViewer(), false);
-	}	
-	
+	}
+
    /**
     * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
     */
@@ -111,6 +111,9 @@ public class SummaryTable extends AdHocObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(viewer.getActionUseMultipliers());
+      Action resetAction = viewer.getViewer().getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportAllToCsv);
    }
 
@@ -131,7 +134,7 @@ public class SummaryTable extends AdHocObjectView
    {
       manager.add(actionExportAllToCsv);
    }
-	
+
 	/**
 	 * @param table
 	 */
@@ -148,18 +151,18 @@ public class SummaryTable extends AdHocObjectView
    @Override
    public void saveState(Memento memento)
    {
-      super.saveState(memento);  
-      memento.set("tableId", tableId);  
+      super.saveState(memento);
+      memento.set("tableId", tableId);
       memento.set("baseObjectId", baseObjectId);
    }
 
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
       tableId = memento.getAsInteger("tableId", 0);
       baseObjectId = memento.getAsLong("baseObjectId", 0);

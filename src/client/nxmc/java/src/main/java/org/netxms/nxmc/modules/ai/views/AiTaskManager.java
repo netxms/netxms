@@ -95,6 +95,7 @@ public class AiTaskManager extends ConfigurationView
       final String[] columnNames = { i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Owner"), i18n.tr("State"), i18n.tr("Last Execution"), i18n.tr("Next Execution"), i18n.tr("Explanation") };
       final int[] columnWidths = { 90, 300, 150, 100, 150, 150, 400 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "AITaskManager");
       viewer.setContentProvider(new ArrayContentProvider());
       AiTaskLabelProvider labelProvider = new AiTaskLabelProvider(viewer);
@@ -143,7 +144,7 @@ public class AiTaskManager extends ConfigurationView
    {
       super.postContentCreate();
       refresh();
-   }   
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
@@ -244,7 +245,7 @@ public class AiTaskManager extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)
@@ -268,6 +269,9 @@ public class AiTaskManager extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionNew);
    }
 

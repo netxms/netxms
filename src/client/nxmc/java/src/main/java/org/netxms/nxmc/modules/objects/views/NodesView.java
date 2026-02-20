@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
 public class NodesView extends ObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(NodesView.class);
-   
+
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_IP_ADDRESS = 2;
@@ -66,7 +66,7 @@ public class NodesView extends ObjectView
    public static final int COLUMN_AGENT_VERSION = 5;
    public static final int COLUMN_SYS_DESCRIPTION = 6;
    public static final int COLUMN_STATUS = 7;
-	
+
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
    private SessionListener sessionListener;
@@ -131,6 +131,7 @@ public class NodesView extends ObjectView
 		viewer.setComparator(new NodeListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
+		viewer.enableColumnReordering();
 		WidgetHelper.restoreTableViewerSettings(viewer, "NodeTable.V2");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -195,6 +196,17 @@ public class NodesView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+   }
+
+   /**
     * Fill context menu
     * @param mgr Menu manager
     */
@@ -252,5 +264,5 @@ public class NodesView extends ObjectView
    {
       refresh();
       super.activate();
-   }   
+   }
 }

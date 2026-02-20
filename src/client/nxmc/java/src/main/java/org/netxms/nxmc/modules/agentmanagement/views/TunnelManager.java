@@ -96,7 +96,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
    private Action actionExportToCsv;
-   
+
    /**
     * Constructor
     */
@@ -104,14 +104,14 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    {
       super(LocalizationHelper.getI18n(TunnelManager.class).tr("Agent Tunnels"), ResourceManager.getImageDescriptor("icons/config-views/tunnel_manager.png"), ID, true);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent)
-   {     
-      final String[] names = 
+   {
+      final String[] names =
          { i18n.tr("ID"), i18n.tr("State"), i18n.tr("Node"), i18n.tr("IP address"), i18n.tr("Channels"), i18n.tr("System name"), i18n.tr("Hostname"),
            i18n.tr("Platform"), i18n.tr("System information"), i18n.tr("Hardware ID"), i18n.tr("Serial number"), i18n.tr("Agent version"),
            i18n.tr("Agent ID"), i18n.tr("Agent proxy"), i18n.tr("SNMP proxy"), i18n.tr("SNMP trap proxy"), i18n.tr("Syslog proxy"), i18n.tr("User agent"),
@@ -125,6 +125,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, ID));
 
@@ -192,7 +193,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
     * Create actions
     */
    private void createActions()
-   {      
+   {
       actionCreateNode = new Action(i18n.tr("&Create node and bind...")) {
          @Override
          public void run()
@@ -232,7 +233,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
             filter.setHideNonUA(actionHideNonUA.isChecked());
          }
       };
-      
+
       actionExportToCsv = new ExportToCsvAction(this, viewer, false);
    }
 
@@ -250,7 +251,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
-   
+
    /**
     * Fill context menu
     * @param manager Menu manager
@@ -286,10 +287,13 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);
-   }  
-   
+   }
+
    /**
     * Refresh view
     */
@@ -400,7 +404,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
 
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
       if (dlg.open() != Window.OK)
-         return;      
+         return;
       final long nodeId = dlg.getSelectedObjects().get(0).getObjectId();
 
       new Job(i18n.tr("Bind tunnels"), this) {
@@ -451,7 +455,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
          }
       }.start();
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
     */

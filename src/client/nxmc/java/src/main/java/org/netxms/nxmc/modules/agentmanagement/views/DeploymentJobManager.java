@@ -84,7 +84,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
    private Action actionCancel;
    private Action actionHideInactive;
    private Action actionExportToCsv;
-   
+
    /**
     * Constructor
     */
@@ -98,7 +98,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
     */
    @Override
    protected void createContent(Composite parent)
-   {     
+   {
       final String[] names = {
             i18n.tr("ID"), i18n.tr("Node"), i18n.tr("User"), i18n.tr("Status"), i18n.tr("Error message"), i18n.tr("Creation time"), i18n.tr("Execution time"), i18n.tr("Completion time"),
             i18n.tr("Package ID"), i18n.tr("Package type"), i18n.tr("Package name"), i18n.tr("Platform"), i18n.tr("Version"), i18n.tr("File"), i18n.tr("Description")
@@ -112,6 +112,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.getTable().addDisposeListener((e) -> WidgetHelper.saveTableViewerSettings(viewer, ID));
 
@@ -179,7 +180,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
     * Create actions
     */
    private void createActions()
-   {      
+   {
       actionCancel = new Action("&Cancel", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -214,7 +215,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
-   
+
    /**
     * Fill context menu
     * @param manager Menu manager
@@ -240,10 +241,13 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);
-   }  
-   
+   }
+
    /**
     * Refresh view
     */

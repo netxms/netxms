@@ -41,6 +41,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCException;
@@ -101,7 +103,7 @@ public class SSHKeys extends ConfigurationView
     */
    @Override
    public void createContent(Composite parent)
-   { 
+   {
       final String[] setColumnNames = { "ID", "Name" };
       final int[] setColumnWidths = { 150, 250 };
       viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -137,6 +139,15 @@ public class SSHKeys extends ConfigurationView
          public void doubleClick(DoubleClickEvent event)
          {
             editKey();
+         }
+      });
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
          }
       });
 
@@ -205,14 +216,14 @@ public class SSHKeys extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr menu manager
     */
    private void fillContextMenu(IMenuManager mgr)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() == 1) 
-      {         
+      if (selection.size() == 1)
+      {
          mgr.add(actionCopyToClipboard);
          mgr.add(new Separator());
          mgr.add(actionEdit);
@@ -232,6 +243,9 @@ public class SSHKeys extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionImport);
       manager.add(actionGenerateNew);
    }
@@ -337,7 +351,7 @@ public class SSHKeys extends ConfigurationView
       if (selection.size() != 1)
          return;
 
-      final SshKeyPair key = (SshKeyPair)selection.getFirstElement();      
+      final SshKeyPair key = (SshKeyPair)selection.getFirstElement();
       WidgetHelper.copyToClipboard(key.getPublicKey());
    }
 
@@ -357,13 +371,13 @@ public class SSHKeys extends ConfigurationView
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
       {
-         list.add((SshKeyPair)it.next());         
+         list.add((SshKeyPair)it.next());
       }
 
       new Job(i18n.tr("Delete SSH key"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         {     
+         {
             for (SshKeyPair key : list)
             {
                try
@@ -405,7 +419,7 @@ public class SSHKeys extends ConfigurationView
          {
             return "Cannot delete SSH key";
          }
-      }.start(); 
+      }.start();
    }
 
    /**
@@ -428,13 +442,13 @@ public class SSHKeys extends ConfigurationView
          {
             session.updateSshKey(dlg.getSshKeyData());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot update SSH key");
          }
-      }.start(); 
+      }.start();
    }
 
    /**
@@ -452,17 +466,17 @@ public class SSHKeys extends ConfigurationView
          {
             session.updateSshKey(dlg.getSshKeyData());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot import SSH keys");
          }
-      }.start(); 
+      }.start();
    }
 
    /**
-    * Generate new keys 
+    * Generate new keys
     */
    private void generateKeys()
    {
@@ -482,13 +496,13 @@ public class SSHKeys extends ConfigurationView
          {
             session.generateSshKeys(dlg.getValue().trim());
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot generate SSH keys");
          }
-      }.start(); 
+      }.start();
    }
 
    /**

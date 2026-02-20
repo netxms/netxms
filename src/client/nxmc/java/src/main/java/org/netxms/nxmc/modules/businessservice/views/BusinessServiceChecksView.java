@@ -113,8 +113,8 @@ public class BusinessServiceChecksView extends ObjectView
    protected void createContent(Composite parent)
    {
       // Setup table columns
-      final String[] names = { 
-            i18n.tr("ID"), 
+      final String[] names = {
+            i18n.tr("ID"),
             i18n.tr("Description"),
             i18n.tr("Type"),
             i18n.tr("Object"),
@@ -132,7 +132,7 @@ public class BusinessServiceChecksView extends ObjectView
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.addFilter(filter);
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {         
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -140,7 +140,7 @@ public class BusinessServiceChecksView extends ObjectView
             BusinessServiceCheck check = null;
             if (selection.size() > 0)
                check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
-            
+
             actionEdit.setEnabled((selection.size() == 1) && (check.getPrototypeServiceId() == 0));
             actionDuplicate.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(selection.size() > 0);
@@ -148,13 +148,16 @@ public class BusinessServiceChecksView extends ObjectView
             actionShowDciDetails.setEnabled(selection.size() == 1 && check.getDciId() != 0);
          }
       });
-      
+
+      viewer.enableColumnReordering();
       WidgetHelper.restoreColumnSettings(viewer.getTable(), ID);
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveColumnSettings(viewer.getTable(), ID);
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
          }
       });
 
@@ -291,7 +294,7 @@ public class BusinessServiceChecksView extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -322,6 +325,9 @@ public class BusinessServiceChecksView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       super.fillLocalMenu(manager);
    }
 
@@ -361,23 +367,23 @@ public class BusinessServiceChecksView extends ObjectView
             deleteCheck();
          }
       };
-      
+
       actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
          @Override
          public void run()
          {
             showObjectDetails(false);
          }
-         
+
       };
-      
+
       actionShowDciDetails = new Action(i18n.tr("Go to &DCI")) {
          @Override
          public void run()
          {
             showObjectDetails(true);
          }
-         
+
       };
    }
 
@@ -414,7 +420,7 @@ public class BusinessServiceChecksView extends ObjectView
          {
             return i18n.tr("Cannot delete business service check");
          }
-      }.start();      
+      }.start();
    }
 
    /**
@@ -509,7 +515,7 @@ public class BusinessServiceChecksView extends ObjectView
 
    /**
     * Update DCI labels in check list
-    * 
+    *
     * @param checks
     */
    public void updateDciLabels(Collection<BusinessServiceCheck> checks)
@@ -542,7 +548,7 @@ public class BusinessServiceChecksView extends ObjectView
 
    /**
     * Sync missing objects
-    * 
+    *
     * @param checks
     */
    public void syncMissingObjects(Collection<BusinessServiceCheck> checks)
@@ -550,7 +556,7 @@ public class BusinessServiceChecksView extends ObjectView
       new Job(i18n.tr("Synchronize objects"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         {            
+         {
             List<Long> relatedOpbjects = new ArrayList<Long>();
             for (NodeItemPair pair : checks)
             {
@@ -604,7 +610,7 @@ public class BusinessServiceChecksView extends ObjectView
       session.removeListener(sessionListener);
       super.dispose();
    }
-   
+
    private void showObjectDetails(boolean showDCI)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
@@ -614,7 +620,7 @@ public class BusinessServiceChecksView extends ObjectView
       final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
       if (check.getObjectId() == 0)
          return;
-      
+
       MainWindow.switchToObject(check.getObjectId(), showDCI ? check.getDciId() : 0);
    }
 }

@@ -22,6 +22,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -62,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
 public class BusinessServiceAvailabilityView extends ObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceAvailabilityView.class);
-   private static final String ID = "BusinessServiceAvailability";   
+   private static final String ID = "BusinessServiceAvailability";
 
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_SERVICE_ID = 1;
@@ -208,12 +210,15 @@ public class BusinessServiceAvailabilityView extends ObjectView
       ticketViewer.setLabelProvider(new BusinessServiceTicketLabelProvider());
       ticketViewer.setComparator(new BusinessServiceTicketComparator());
 
+      ticketViewer.enableColumnReordering();
       WidgetHelper.restoreColumnSettings(ticketViewer.getTable(), ID);
+      WidgetHelper.restoreColumnOrder(ticketViewer, getBaseId());
       ticketViewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveColumnSettings(ticketViewer.getTable(), ID);
+            WidgetHelper.saveColumnOrder(ticketViewer, getBaseId());
          }
       });
 
@@ -251,6 +256,18 @@ public class BusinessServiceAvailabilityView extends ObjectView
       gd.horizontalAlignment = SWT.FILL;
       gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
       button.setLayoutData(gd);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = ticketViewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
    }
 
    /**

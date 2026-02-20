@@ -50,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
 public class TableToolResults extends ObjectToolResultView
 {
    private final I18n i18n = LocalizationHelper.getI18n(TableToolResults.class);
-   
+
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
@@ -61,7 +61,7 @@ public class TableToolResults extends ObjectToolResultView
    public TableToolResults(ObjectContext node, ObjectTool tool)
    {
       super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/table.gif"), false);
-	} 
+	}
 
    /**
     * Clone constructor
@@ -70,7 +70,7 @@ public class TableToolResults extends ObjectToolResultView
    {
       super();
    }
-   
+
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
@@ -101,6 +101,9 @@ public class TableToolResults extends ObjectToolResultView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
+		Action resetAction = viewer.getResetColumnOrderAction();
+		if (resetAction != null)
+		   manager.add(resetAction);
 		manager.add(actionExportAllToCsv);
 	}
 
@@ -171,10 +174,10 @@ public class TableToolResults extends ObjectToolResultView
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Update viewer with fresh table data
-	 * 
+	 *
 	 * @param table table
 	 */
 	private void updateViewer(final Table table)
@@ -185,6 +188,7 @@ public class TableToolResults extends ObjectToolResultView
 			final int[] widths = new int[names.length];
 			Arrays.fill(widths, 100);
 			viewer.createColumns(names, widths, 0, SWT.UP);
+			viewer.enableColumnReordering();
 			WidgetHelper.restoreTableViewerSettings(viewer, "TableToolResults." + Long.toString(tool.getId())); //$NON-NLS-1$
 			viewer.getTable().addDisposeListener(new DisposeListener() {
 				@Override

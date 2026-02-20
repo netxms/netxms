@@ -29,6 +29,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
@@ -52,6 +54,7 @@ import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetListFilter;
 import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetListLabelProvider;
 import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyReader;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -125,6 +128,16 @@ public class AssetSummaryView extends ObjectView
       AssetListFilter filter = new AssetListFilter(propertyReader);
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
+
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
 
       createActions();
       createContextMenu();
@@ -290,6 +303,9 @@ public class AssetSummaryView extends ObjectView
       manager.add(actionHideEmptyColumns);
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -308,12 +324,12 @@ public class AssetSummaryView extends ObjectView
 
       // Create menu.
       Menu menu = manager.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);     
+      viewer.getControl().setMenu(menu);
    }
 
    /**
-    * Fill context menu 
-    * 
+    * Fill context menu
+    *
     * @param mgr menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)

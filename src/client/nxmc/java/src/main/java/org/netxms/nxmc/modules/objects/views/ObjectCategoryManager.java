@@ -101,6 +101,7 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
       final String[] names = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Icon"), i18n.tr("Map image") };
       final int[] widths = { 100, 500, 200, 200 };
       viewer = new SortableTableViewer(parent, names, widths, 1, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectCategoryLabelProvider());
@@ -243,6 +244,9 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionNew);
       manager.add(actionEdit);
       manager.add(actionDelete);
@@ -278,7 +282,7 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)

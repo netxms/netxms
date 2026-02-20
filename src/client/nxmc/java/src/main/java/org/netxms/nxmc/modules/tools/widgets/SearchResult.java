@@ -58,7 +58,7 @@ public class SearchResult extends Composite
 {
    private final I18n i18n = LocalizationHelper.getI18n(SearchResult.class);
    private static final Logger logger = LoggerFactory.getLogger(DashboardControl.class);
-   
+
    public static final int COLUMN_SEQUENCE = 0;
    public static final int COLUMN_NODE = 1;
    public static final int COLUMN_INTERFACE = 2;
@@ -69,7 +69,7 @@ public class SearchResult extends Composite
    public static final int COLUMN_PORT = 7;
    public static final int COLUMN_INDEX = 8;
    public static final int COLUMN_TYPE = 9;
-   
+
    private View view;
    private SortableTableViewer viewer;
    private List<ConnectionPoint> results = new ArrayList<ConnectionPoint>();
@@ -80,7 +80,7 @@ public class SearchResult extends Composite
 
    /**
     * Create serach result widget
-    * 
+    *
     * @param view owning view part
     * @param parent parent widget
     * @param style style
@@ -99,6 +99,7 @@ public class SearchResult extends Composite
       ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new ConnectionPointComparator(labelProvider));
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -159,7 +160,7 @@ public class SearchResult extends Composite
     * Create pop-up menu
     */
    private void createPopupMenu()
-   {      
+   {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
@@ -169,10 +170,10 @@ public class SearchResult extends Composite
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
-   
+
    /**
     * Fill context menu
-    * @param nodeMenuManager 
+    * @param nodeMenuManager
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -183,7 +184,7 @@ public class SearchResult extends Composite
       manager.add(new Separator());
       manager.add(actionClearLog);
    }
-   
+
    /**
     * Copy mac address
     */
@@ -199,16 +200,16 @@ public class SearchResult extends Composite
          {
             if (i > 0)
                sb.append(newLine);
-            
+
             sb.append(selection.get(i).getLocalMacAddress().toString());
          }
          WidgetHelper.copyToClipboard(sb.toString());
-      }      
+      }
    }
-   
+
    /**
     * Copy content to clipboard
-    * 
+    *
     * @param column column number or -1 to copy all columns
     */
    private void copyToClipboard(int column)
@@ -274,7 +275,7 @@ public class SearchResult extends Composite
 
    /**
     * Add search result to view
-    * 
+    *
     * @param cp connection point information
     */
    private void addResult(ConnectionPoint cp)
@@ -283,10 +284,10 @@ public class SearchResult extends Composite
       results.add(cp);
       viewer.setInput(results.toArray());
    }
-   
+
    /**
     * Add search result to view
-    * 
+    *
     * @param cp connection point information
     */
    private void retireResults()
@@ -337,7 +338,7 @@ public class SearchResult extends Composite
                   }
                });
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
@@ -349,7 +350,7 @@ public class SearchResult extends Composite
 
    /**
     * Show connection point information - step 2.
-    * 
+    *
     * @param session communication session
     * @param cp connection point information
     */
@@ -366,7 +367,7 @@ public class SearchResult extends Composite
             {
                if (host != null)
                {
-                  view.addMessage(MessageArea.INFORMATION, 
+                  view.addMessage(MessageArea.INFORMATION,
                         String.format(i18n.tr("Node %1$s is connected to wireless access point %2$s/%3$s"),
                               host.getObjectName(), bridge.getObjectName(), iface.getObjectName()));
                }
@@ -374,14 +375,14 @@ public class SearchResult extends Composite
                {
                   if (cp.getLocalIpAddress() != null)
                   {
-                     view.addMessage(MessageArea.INFORMATION, 
+                     view.addMessage(MessageArea.INFORMATION,
                            String.format(i18n.tr("Node with IP address %1$s and MAC address %2$s is connected to wireless access point %3$s/%4$s"),
                                  cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
                                  bridge.getObjectName(), iface.getObjectName()));
                   }
                   else
                   {
-                     view.addMessage(MessageArea.INFORMATION, 
+                     view.addMessage(MessageArea.INFORMATION,
                            String.format(i18n.tr("Node with MAC address %1$s is connected to wireless access point %2$s/%3$s"),
                                  cp.getLocalMacAddress(), bridge.getObjectName(), iface.getObjectName()));
                   }
@@ -391,7 +392,7 @@ public class SearchResult extends Composite
             {
                if (host != null)
                {
-                  view.addMessage(MessageArea.INFORMATION, 
+                  view.addMessage(MessageArea.INFORMATION,
                         String.format(i18n.tr("Node %1$s is %2$s connected to network switch %3$s port %4$s"), host.getObjectName(),
                               cp.getType() == ConnectionPointType.DIRECT ? i18n.tr("directly")
                                     : i18n.tr("indirectly"),
@@ -401,7 +402,7 @@ public class SearchResult extends Composite
                {
                   if (cp.getLocalIpAddress() != null)
                   {
-                     view.addMessage(MessageArea.INFORMATION, 
+                     view.addMessage(MessageArea.INFORMATION,
                            String.format(i18n.tr("Node with IP address %1$s and MAC address %2$s is %3$s connected to network switch %4$s port %5$s"),
                                  cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
                                  cp.getType() == ConnectionPointType.DIRECT ? i18n.tr("directly")
@@ -410,7 +411,7 @@ public class SearchResult extends Composite
                   }
                   else
                   {
-                     view.addMessage(MessageArea.INFORMATION, 
+                     view.addMessage(MessageArea.INFORMATION,
                            String.format(i18n.tr("Node with MAC address %1$s is %2$s connected to network switch %3$s port %4$s"),
                                  cp.getLocalMacAddress(),
                                  cp.getType() == ConnectionPointType.DIRECT ? i18n.tr("directly") : i18n.tr("indirectly"),
@@ -422,7 +423,7 @@ public class SearchResult extends Composite
          }
          else if ((host != null) && (cp.getType() == ConnectionPointType.UNKNOWN))
          {
-            view.addMessage(MessageArea.WARNING, 
+            view.addMessage(MessageArea.WARNING,
                   String.format("Found node %s but it's connection point is unknown", host.getObjectName()));
             addResult(cp);
          }
@@ -434,14 +435,14 @@ public class SearchResult extends Composite
       catch(Exception e)
       {
          logger.error("Exception in host search result view", e);
-         view.addMessage(MessageArea.WARNING, 
-               String.format(i18n.tr("Connection point information cannot be shown: %s"), e.getLocalizedMessage()));         
+         view.addMessage(MessageArea.WARNING,
+               String.format(i18n.tr("Connection point information cannot be shown: %s"), e.getLocalizedMessage()));
       }
    }
 
    /**
     * Show connection point information
-    * 
+    *
     * @param cp[] connection point information
     */
    public void showConnection(final List<ConnectionPoint> cps)
@@ -487,7 +488,7 @@ public class SearchResult extends Composite
 
    /**
     * Show connection point information
-    * 
+    *
     * @param cp[] connection point information
     */
    public void showConnectionStep2(NXCSession session, List<ConnectionPoint> cps)
@@ -496,29 +497,29 @@ public class SearchResult extends Composite
       try
       {
          for (ConnectionPoint p : cps)
-         {                        
+         {
             if (p.getType() == ConnectionPointType.NOT_FOUND)
                counter++;
-            
+
             addResult(p);
          }
          if (counter > 0)
          {
-            view.addMessage(MessageArea.WARNING, 
-                  i18n.tr("Connection point information cannot be found") + " for " + counter + " interfaces!");    
+            view.addMessage(MessageArea.WARNING,
+                  i18n.tr("Connection point information cannot be found") + " for " + counter + " interfaces!");
          }
-         
+
       }
       catch(Exception e)
       {
-         view.addMessage(MessageArea.WARNING, 
-               String.format(i18n.tr("Connection point information cannot be shown: %s"), e.getLocalizedMessage())); 
+         view.addMessage(MessageArea.WARNING,
+               String.format(i18n.tr("Connection point information cannot be shown: %s"), e.getLocalizedMessage()));
       }
    }
 
    /**
-    * Copy results between views 
-    * 
+    * Copy results between views
+    *
     * @param serachResultWidget source widget
     */
    public void copyResults(SearchResult serachResultWidget)

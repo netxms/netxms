@@ -33,6 +33,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
@@ -58,6 +60,7 @@ import org.netxms.nxmc.modules.objecttools.propertypages.Filter;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -66,7 +69,7 @@ import org.xnap.commons.i18n.I18n;
 public class TemplateGraphView extends ConfigurationView implements SessionListener
 {
    private final I18n i18n = LocalizationHelper.getI18n(TemplateGraphView.class);
-   
+
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DCI_NAMES = 1;
    public static final int COLUMN_DCI_DESCRIPTIONS = 2;
@@ -102,6 +105,16 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 		viewer.setLabelProvider(new TemplateGraphLabelProvider());
       viewer.addDoubleClickListener((e) -> editTemplateGraph());
 
+		viewer.enableColumnReordering();
+		WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnOrder(viewer, getBaseId());
+			}
+		});
+
 		createActions();
 		createPopupMenu();
 
@@ -113,7 +126,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 	 * Create actions
 	 */
 	private void createActions()
-	{		
+	{
 		actionEdit = new Action("Edit graph") {
 			@Override
 			public void run()
@@ -138,7 +151,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          }
       };
 	}
-	
+
    /**
     * Save this graph as predefined
     */
@@ -225,7 +238,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
                   }
             });
             break;
-         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
+         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
             viewer.getControl().getDisplay().asyncExec(() -> {
                if (!(n.getObject() instanceof GraphDefinition))
                   return;
@@ -343,6 +356,9 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 		manager.add(actionAdd);
 		manager.add(actionEdit);
       manager.add(actionDelete);
+		Action resetAction = viewer.getResetColumnOrderAction();
+		if (resetAction != null)
+			manager.add(resetAction);
 	}
 
    /**
@@ -417,18 +433,18 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
             return i18n.tr("Error reading predefined graph list");
 			}
 		}.start();
-	}	
+	}
 
-   
+
    /**
     * Show Graph configuration dialog
-    * 
+    *
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
    private boolean showGraphPropertyPages(GraphDefinition settings)
    {
-      PreferenceManager pm = new PreferenceManager();    
+      PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, true)));
       pm.addToRoot(new PreferenceNode("general", new GeneralChart(settings, true)));
       pm.addToRoot(new PreferenceNode("filter", new Filter(settings)));
@@ -460,6 +476,6 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
     */
    @Override
    public void save()
-   {      
+   {
    }
 }

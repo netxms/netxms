@@ -29,6 +29,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.UserSession;
@@ -44,6 +46,7 @@ import org.netxms.nxmc.modules.objects.views.helpers.UserSessionFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.UserSessionLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
 
@@ -136,6 +139,16 @@ public class UserSessionsView extends ObjectView
       }, validator);
       refreshController.setInterval(30);
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       createActions();
       createContextMenu();
    }
@@ -190,8 +203,8 @@ public class UserSessionsView extends ObjectView
    }
 
    /**
-    * Fill context menu 
-    * 
+    * Fill context menu
+    *
     * @param manager menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -223,6 +236,9 @@ public class UserSessionsView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionExportAllToCsv);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       super.fillLocalMenu(manager);
    }
 

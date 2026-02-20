@@ -39,6 +39,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -53,6 +55,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ElementLabelComparator;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -84,7 +87,7 @@ public class PersistentStorageView extends ConfigurationView
     */
    @Override
    public void createContent(Composite parent)
-   { 
+   {
       final String[] setColumnNames = { i18n.tr("Key"), i18n.tr("Value") };
       final int[] setColumnWidths = { 200, 400 };
       viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -110,6 +113,16 @@ public class PersistentStorageView extends ConfigurationView
       KeyValuePairFilter filter = new KeyValuePairFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
+
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
 
       createActions();
       createPopupMenu();
@@ -146,14 +159,14 @@ public class PersistentStorageView extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr menu manager
     */
    private void fillContextMenu(IMenuManager mgr)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() == 1) 
-      {         
+      if (selection.size() == 1)
+      {
          mgr.add(actionEdit);
       }
 
@@ -171,6 +184,9 @@ public class PersistentStorageView extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -244,7 +260,7 @@ public class PersistentStorageView extends ConfigurationView
    }
 
    /**
-    * Create 
+    * Create
     */
    private void createValue()
    {
@@ -260,7 +276,7 @@ public class PersistentStorageView extends ConfigurationView
             runInUIThread(new Runnable() {
                @Override
                public void run()
-               {                  
+               {
                   pStorageSet.put(dlg.getKey(), dlg.getValue());
                   viewer.refresh();
                }
@@ -272,7 +288,7 @@ public class PersistentStorageView extends ConfigurationView
          {
             return i18n.tr("Cannot create persistent storage entry");
          }
-      }.start();   
+      }.start();
    }
 
    /**
@@ -280,7 +296,7 @@ public class PersistentStorageView extends ConfigurationView
     */
    @SuppressWarnings("unchecked")
    private void deleteValue()
-   {      
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
 
       final List<String> keys = new ArrayList<>();
@@ -310,8 +326,8 @@ public class PersistentStorageView extends ConfigurationView
          {
             return i18n.tr("Cannot delete persistent storage entry");
          }
-      }.start();        
-   }   
+      }.start();
+   }
 
    /**
     * Edit value
@@ -336,7 +352,7 @@ public class PersistentStorageView extends ConfigurationView
             runInUIThread(new Runnable() {
                @Override
                public void run()
-               {            
+               {
                   pStorageSet.put(dlg.getKey(), dlg.getValue());
                   viewer.refresh();
                }
@@ -348,7 +364,7 @@ public class PersistentStorageView extends ConfigurationView
          {
             return i18n.tr("Cannot update persistent storage entry");
          }
-      }.start();      
+      }.start();
    }
 
    /**

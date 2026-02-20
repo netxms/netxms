@@ -106,6 +106,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
       final String[] columnNames = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Description") };
       final int[] columnWidths = { 90, 200, 100, 200 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectToolsLabelProvider());
@@ -248,6 +249,9 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionNew);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -267,7 +271,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -411,7 +415,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
 
    /**
     * Save object tool configuration on server
-    * 
+    *
     * @param details object tool details
     */
    private void saveObjectTool(final ObjectToolDetails details)
@@ -537,7 +541,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
 
    /**
     * Show Object tools configuration dialog
-    * 
+    *
     * @param trap Object tool details object
     * @return true if OK was pressed
     */

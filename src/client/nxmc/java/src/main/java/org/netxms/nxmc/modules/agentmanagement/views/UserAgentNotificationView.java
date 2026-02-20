@@ -65,8 +65,8 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    public static final int COL_END_TIME = 6;
    public static final int COL_CREATION_TIME = 7;
    public static final int COL_CREATED_BY = 8;
-   
-   private SortableTableViewer viewer; 
+
+   private SortableTableViewer viewer;
    private UserAgentNotificationFilter filter;
    private Action actionShowAllOneTime;
    private Action actionShowAllOneScheduled;
@@ -89,7 +89,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    {
       parent.setLayout(new FillLayout());
       session = Registry.getSession();
-      
+
       final String[] names = { i18n.tr("ID"), i18n.tr("Objects"), i18n.tr("Message"), i18n.tr("Is recalled"), i18n.tr("Is startup"), i18n.tr("Start time"), i18n.tr("End time"), i18n.tr("Creation time"), i18n.tr("Created by") };
       final int[] widths = { 80, 300, 300, 80, 80, 100, 100, 100, 100 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
@@ -100,13 +100,14 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
       filter = new UserAgentNotificationFilter(lebleProvider);
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
-      
+
       PreferenceStore settings = PreferenceStore.getInstance();
-      
+
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, ID);
       filter.setShowAllOneTime(settings.getAsBoolean("UserAgentNotification.showAllOneTime", false));
       filter.setShowAllOneScheduled(settings.getAsBoolean("UserAgentNotification.showAllOneScheduled", false));
-      
+
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -116,10 +117,10 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
             settings.set("UserAgentNotification.showAllOneScheduled", filter.isShowAllOneScheduled());
          }
       });
-      
-      createActions();     
-      createPopupMenu(); 
-      session.addListener(this);      
+
+      createActions();
+      createPopupMenu();
+      session.addListener(this);
       refresh();
    }
 
@@ -137,7 +138,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
     * Create actions
     */
    private void createActions()
-   {      
+   {
       actionShowAllOneTime = new Action(i18n.tr("Show all &one time notifications"), IAction.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -147,7 +148,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          }
       };
       actionShowAllOneTime.setChecked(filter.isShowAllOneTime());
-      
+
       actionShowAllOneScheduled = new Action(i18n.tr("Show all &scheduler notifications"), IAction.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -157,7 +158,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          }
       };
       actionShowAllOneScheduled.setChecked(filter.isShowAllOneScheduled());
-      
+
       actionRecall = new Action(i18n.tr("Recall notification")) {
          @Override
          public void run()
@@ -166,10 +167,10 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          }
       };
    }
-   
+
 
    /**
-    * Recall message 
+    * Recall message
     */
    private void recallMessage()
    {
@@ -177,7 +178,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
       if ((selection.size() >= 1))
       {
          for(Object o : selection.toList())
-         {            
+         {
             final UserAgentNotification msg = (UserAgentNotification)o;
             new Job(i18n.tr("Recall user support application notification"), this) {
                @Override
@@ -185,7 +186,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
                {
                   session.recallUserAgentNotification(msg.getId());
                }
-               
+
                @Override
                protected String getErrorMessage()
                {
@@ -215,7 +216,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
-   
+
    /**
     * Fill context menu
     * @param manager Menu manager
@@ -237,12 +238,23 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
          if(recallIsActive)
             manager.add(actionRecall);
       }
-      
+
       manager.add(new Separator());
       manager.add(actionShowAllOneTime);
       manager.add(actionShowAllOneScheduled);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+   }
+
    /**
     * Refresh view
     */
@@ -263,7 +275,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -294,7 +306,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
 	            }
 	         });
 				break;
-		}		
+		}
 	}
 
    @Override

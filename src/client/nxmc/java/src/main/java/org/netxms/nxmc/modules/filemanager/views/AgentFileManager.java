@@ -88,9 +88,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AgentFileManager extends ObjectView
 {
-   public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileManager"; 
-   
-   private static final String TABLE_CONFIG_PREFIX = "AgentFileManager"; 
+   public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileManager";
+
+   private static final String TABLE_CONFIG_PREFIX = "AgentFileManager";
 
    // Columns
    public static final int COLUMN_NAME = 0;
@@ -164,11 +164,12 @@ public class AgentFileManager extends ObjectView
     */
    @Override
    protected void createContent(Composite parent)
-   {      
+   {
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Date modified"), i18n.tr("Owner"), i18n.tr("Group"), i18n.tr("Access Rights") };
-      final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };         
+      final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };
       viewer = new SortableTreeViewer(parent, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTreeViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ViewAgentFilesProvider());
       viewer.setLabelProvider(new AgentFileLabelProvider());
@@ -195,11 +196,11 @@ public class AgentFileManager extends ObjectView
             WidgetHelper.saveTreeViewerSettings(viewer, TABLE_CONFIG_PREFIX);
          }
       });
-      
+
       enableDragSupport();
       enableDropSupport();
       enableInPlaceRename();
-      
+
       createActions();
       createPopupMenu();
    }
@@ -234,7 +235,7 @@ public class AgentFileManager extends ObjectView
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
       viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new AgentFileDropAdapter(viewer));
    }
-   
+
    /**
     * Enable in-place renames
     */
@@ -248,7 +249,7 @@ public class AgentFileManager extends ObjectView
          }
       }, ColumnViewerEditor.DEFAULT);
       viewer.setCellEditors(new CellEditor[] { new TextCellEditor(viewer.getTree()) });
-      viewer.setColumnProperties(new String[] { "name" }); 
+      viewer.setColumnProperties(new String[] { "name" });
       viewer.setCellModifier(new ICellModifier() {
          @Override
          public void modify(Object element, String property, Object value)
@@ -256,7 +257,7 @@ public class AgentFileManager extends ObjectView
             if (element instanceof Item)
                element = ((Item)element).getData();
 
-            if (property.equals("name")) 
+            if (property.equals("name"))
             {
                if (element instanceof AgentFile)
                {
@@ -268,7 +269,7 @@ public class AgentFileManager extends ObjectView
          @Override
          public Object getValue(Object element, String property)
          {
-            if (property.equals("name")) 
+            if (property.equals("name"))
             {
                if (element instanceof AgentFile)
                {
@@ -281,14 +282,14 @@ public class AgentFileManager extends ObjectView
          @Override
          public boolean canModify(Object element, String property)
          {
-            return property.equals("name"); 
+            return property.equals("name");
          }
       });
    }
-   
+
    /**
     * Do actual rename
-    * 
+    *
     * @param AgentFile
     * @param newName
     */
@@ -308,17 +309,17 @@ public class AgentFileManager extends ObjectView
                @Override
                public void executeAction() throws NXCException, IOException
                {
-                  session.renameAgentFile(getObjectId(), agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, false); 
+                  session.renameAgentFile(getObjectId(), agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, false);
                }
-               
+
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
-                  session.renameAgentFile(getObjectId(), agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, true); 
+                  session.renameAgentFile(getObjectId(), agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, true);
                }
             };
             verify.run(viewer.getControl().getDisplay());
-    
+
             if(verify.isOkPressed())
             {
                runInUIThread(new Runnable() {
@@ -358,7 +359,7 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+U", actionUploadFile);
-      
+
       actionUploadFolder = new Action(i18n.tr("Upload &folder...")) {
          @Override
          public void run()
@@ -400,7 +401,7 @@ public class AgentFileManager extends ObjectView
             showFile(true, 8192);
          }
       };
-      
+
       actionShowFile = new Action(i18n.tr("&Show")) {
          @Override
          public void run()
@@ -427,7 +428,7 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+N", actionCreateDirectory);
-      
+
       actionCalculateFolderSize = new Action("Calculate folder &size") {
          @Override
          public void run()
@@ -436,7 +437,7 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+S", actionCalculateFolderSize);
-      
+
       actionCopyFileName = new Action("Copy file &name") {
          @Override
          public void run()
@@ -445,7 +446,7 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+C", actionCopyFileName);
-      
+
       actionCopyFilePath = new Action("Copy file &path") {
          @Override
          public void run()
@@ -454,6 +455,17 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+shift+C", actionCopyFilePath);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -478,7 +490,7 @@ public class AgentFileManager extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager mgr)
@@ -486,7 +498,7 @@ public class AgentFileManager extends ObjectView
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (selection.size() == 1)
       {
          if (((AgentFile)selection.getFirstElement()).isDirectory())
@@ -504,11 +516,11 @@ public class AgentFileManager extends ObjectView
       }
 
       mgr.add(actionDownloadFile);
-      
+
       if (isFolderOnlySelection(selection))
          mgr.add(actionCalculateFolderSize);
       mgr.add(new Separator());
-      
+
       if (selection.size() == 1)
       {
          if (((AgentFile)selection.getFirstElement()).isDirectory())
@@ -531,10 +543,10 @@ public class AgentFileManager extends ObjectView
          mgr.add(actionRefreshDirectory);
       }
    }
-   
+
    /**
     * Check if given selection contains only folders
-    * 
+    *
     * @param selection
     * @return
     */
@@ -557,7 +569,7 @@ public class AgentFileManager extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<AgentFile> files = session.listAgentFiles(null, "/", getObjectId()); 
+            final List<AgentFile> files = session.listAgentFiles(null, "/", getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -615,7 +627,7 @@ public class AgentFileManager extends ObjectView
          }
       }.start();
    }
-   
+
    /**
     * Upload local file to agent
     */
@@ -647,8 +659,8 @@ public class AgentFileManager extends ObjectView
                   new NestedVerifyOverwrite(getWindow().getShell(), localFile.isDirectory() ? AgentFile.DIRECTORY : AgentFile.FILE, localFile.getName(), true, true, false) {
                      @Override
                      public void executeAction() throws NXCException, IOException
-                     {                        
-                        session.uploadLocalFileToAgent(getObjectId(), localFile, uploadFolder.getFullName() + "/" + rFileName, overvrite, new ProgressListener() { 
+                     {
+                        session.uploadLocalFileToAgent(getObjectId(), localFile, uploadFolder.getFullName() + "/" + rFileName, overvrite, new ProgressListener() {
                            private long unitSize;
                            private int progress = 0;
 
@@ -670,13 +682,13 @@ public class AgentFileManager extends ObjectView
                               }
                            }
                         });
-                        monitor.done(); 
+                        monitor.done();
                      }
 
                      @Override
                      public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                      {
-                        session.uploadLocalFileToAgent(getObjectId(), localFile, uploadFolder.getFullName() + "/" + rFileName, true, new ProgressListener() { 
+                        session.uploadLocalFileToAgent(getObjectId(), localFile, uploadFolder.getFullName() + "/" + rFileName, true, new ProgressListener() {
                            private long prevWorkDone = 0;
 
                            @Override
@@ -692,7 +704,7 @@ public class AgentFileManager extends ObjectView
                               prevWorkDone = workDone;
                            }
                         });
-                        monitor.done(); 
+                        monitor.done();
                      }
                   }.run(viewer.getControl().getDisplay());
                }
@@ -715,7 +727,7 @@ public class AgentFileManager extends ObjectView
          }.start();
       }
    }
-   
+
    /**
     * Upload local folder to agent
     */
@@ -726,7 +738,7 @@ public class AgentFileManager extends ObjectView
          return;
 
       FileDownloadHelper.uploadFolder(getObjectId(), selection, this, viewer);
-   }   
+   }
 
    /**
     * Delete selected file
@@ -880,17 +892,17 @@ public class AgentFileManager extends ObjectView
                @Override
                public void executeAction() throws NXCException, IOException
                {
-                  session.renameAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), false); 
+                  session.renameAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), false);
                }
 
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
-                  session.renameAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), true);                   
+                  session.renameAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), true);
                }
             };
             verify.run(viewer.getControl().getDisplay());
-            
+
             if (verify.isOkPressed())
             {
                target.setChildren(session.listAgentFiles(target, target.getFullName(), getObjectId()));
@@ -914,7 +926,7 @@ public class AgentFileManager extends ObjectView
 
    /**
     * Copy agent file
-    * 
+    *
     * @param target where the file will be moved
     * @param object file being moved
     */
@@ -928,13 +940,13 @@ public class AgentFileManager extends ObjectView
                @Override
                public void executeAction() throws NXCException, IOException
                {
-                  session.copyAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), false); 
+                  session.copyAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), false);
                }
 
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
-                  session.copyAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), true); 
+                  session.copyAgentFile(getObjectId(), object.getFullName(), target.getFullName() + "/" + object.getName(), true);
                }
             };
             verify.run(viewer.getControl().getDisplay());
@@ -959,12 +971,12 @@ public class AgentFileManager extends ObjectView
          }
       }.start();
    }
-   
+
    /**
     * Create new folder
     */
    private void createFolder()
-   {      
+   {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
@@ -976,20 +988,20 @@ public class AgentFileManager extends ObjectView
       final CreateFolderDialog dlg = new CreateFolderDialog(getWindow().getShell());
       if (dlg.open() != Window.OK)
          return;
-      
+
       final String newFolder = dlg.getNewName();
-      
+
       new Job(i18n.tr("Creating folder"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         { 
+         {
             NestedVerifyOverwrite verify = new NestedVerifyOverwrite(getWindow().getShell(), AgentFile.DIRECTORY, newFolder, true, true, false) {
                @Override
                public void executeAction() throws NXCException, IOException
                {
-                  session.createFolderOnAgent(getObjectId(), parentFolder.getFullName() + "/" + newFolder); 
+                  session.createFolderOnAgent(getObjectId(), parentFolder.getFullName() + "/" + newFolder);
                }
-   
+
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
@@ -1009,7 +1021,7 @@ public class AgentFileManager extends ObjectView
          }
       }.start();
    }
-   
+
    /**
     * Show file size
     */
@@ -1018,11 +1030,11 @@ public class AgentFileManager extends ObjectView
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
-      
+
       final List<AgentFile> files = new ArrayList<AgentFile>(selection.size());
       for(Object o : selection.toList())
          files.add((AgentFile)o);
-      
+
       new Job("Calculate folder size", this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -1039,7 +1051,7 @@ public class AgentFileManager extends ObjectView
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1047,7 +1059,7 @@ public class AgentFileManager extends ObjectView
          }
       }.start();
    }
-   
+
    /**
     * Copy name of file to clipboard
     */
@@ -1077,7 +1089,7 @@ public class AgentFileManager extends ObjectView
 
       /**
        * Agent file drop adapter constructor
-       * 
+       *
        * @param viewer
        * @param mode Copy or Move
        */
@@ -1097,7 +1109,7 @@ public class AgentFileManager extends ObjectView
          for(int i = 0; i < movableSelection.size(); i++)
          {
             AgentFile movableObject = (AgentFile)movableSelection.get(i);
-            
+
             if (operation == DND.DROP_COPY)
                copyFile((AgentFile)getCurrentTarget(), movableObject);
             else
@@ -1138,7 +1150,7 @@ public class AgentFileManager extends ObjectView
             }
          }
          return true;
-      }      
+      }
    }
 
    /**
@@ -1149,10 +1161,10 @@ public class AgentFileManager extends ObjectView
    {
       if(object == null)
          return;
-      
+
       refresh();
       String os = ((Node)session.findObjectById(getObjectId())).getSystemDescription(); //$NON-NLS-1$
-      if (os.contains("Windows")) 
+      if (os.contains("Windows"))
       {
          viewer.removeColumnById(COLUMN_GROUP);
          viewer.removeColumnById(COLUMN_ACCESS_RIGHTS);
@@ -1160,7 +1172,7 @@ public class AgentFileManager extends ObjectView
       else
       {
          viewer.addColumn(i18n.tr("Group"), 150);
-         viewer.addColumn(i18n.tr("Access Rights"), 200);         
+         viewer.addColumn(i18n.tr("Access Rights"), 200);
       }
    }
 }

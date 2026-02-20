@@ -138,6 +138,7 @@ public class AssetView extends ObjectView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "Asset");
       viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
@@ -151,7 +152,7 @@ public class AssetView extends ObjectView
       createContextMenu();
 
       refresh();
-   }   
+   }
 
    /**
     * Check if all mandatory attributes are set and notify if something is missing
@@ -160,7 +161,7 @@ public class AssetView extends ObjectView
    {
       if (getObject() == null)
          return;
-      
+
       StringBuilder missingEntries = new StringBuilder();
       for(AssetAttribute definition : session.getAssetManagementSchema().values())
       {
@@ -185,7 +186,7 @@ public class AssetView extends ObjectView
     * Create actions
     */
    void createActions()
-   {    
+   {
       final IMenuListener menuListener = new IMenuListener() {
          @Override
          public void menuAboutToShow(IMenuManager manager)
@@ -222,7 +223,7 @@ public class AssetView extends ObjectView
          public void run()
          {
             updateAttribute();
-         }         
+         }
       };
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
@@ -230,7 +231,7 @@ public class AssetView extends ObjectView
          public void run()
          {
             deleteAttribute();
-         }         
+         }
       };
    }
 
@@ -271,12 +272,12 @@ public class AssetView extends ObjectView
     * @param name attribute name
     */
    private void addProperty(String name)
-   {      
+   {
       EditAssetPropertyDialog dlg = new EditAssetPropertyDialog(getWindow().getShell(), name, null);
       if (dlg.open() != Window.OK)
          return;
 
-      final String value = dlg.getValue(); 
+      final String value = dlg.getValue();
       new Job(i18n.tr("Adding asset property"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -411,6 +412,9 @@ public class AssetView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       attributeSelectionSubMenu.update(true);
       manager.add(attributeSelectionSubMenu);
    }
@@ -431,12 +435,12 @@ public class AssetView extends ObjectView
 
       // Create menu.
       Menu menu = manager.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);     
+      viewer.getControl().setMenu(menu);
    }
 
    /**
-    * Fill context menu 
-    * 
+    * Fill context menu
+    *
     * @param mgr menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)

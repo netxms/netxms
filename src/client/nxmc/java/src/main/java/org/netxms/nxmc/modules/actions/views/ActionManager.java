@@ -101,6 +101,7 @@ public class ActionManager extends ConfigurationView
             i18n.tr("Subject"), i18n.tr("Data"), i18n.tr("Channel") };
       final int[] columnWidths = { 150, 90, 100, 120, 200, 100 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "ActionManager");
       viewer.setContentProvider(new ArrayContentProvider());
       ActionLabelProvider labelProvider = new ActionLabelProvider();
@@ -175,7 +176,7 @@ public class ActionManager extends ConfigurationView
    {
       super.postContentCreate();
       refresh();
-   }   
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
@@ -312,7 +313,7 @@ public class ActionManager extends ConfigurationView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)
@@ -340,6 +341,9 @@ public class ActionManager extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionNew);
    }
 
@@ -465,7 +469,7 @@ public class ActionManager extends ConfigurationView
 
    /**
     * Enable/disable selected actions
-    * 
+    *
     * @param enable true to enable
     */
    private void enableActions(final boolean enable)

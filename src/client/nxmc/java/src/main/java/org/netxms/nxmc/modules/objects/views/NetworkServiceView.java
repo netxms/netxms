@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
@@ -110,7 +111,7 @@ public class NetworkServiceView extends NodeSubObjectTableView
    protected void createViewer()
    {
       final String[] names = { "Id", "Name", "Status", "Service type", "Address", "Port", "Request", "Response", "Poller node", "Poll count" };
-      
+
       final int[] widths = { 60, 150, 80, 80, 80, 80, 200, 200, 200, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new NetworkServiceListLabelProvider();
@@ -122,6 +123,7 @@ public class NetworkServiceView extends NodeSubObjectTableView
       filter = new NetworkServiceFilter(labelProvider);
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "NetworkService.V1"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -129,7 +131,18 @@ public class NetworkServiceView extends NodeSubObjectTableView
          {
             WidgetHelper.saveColumnSettings(viewer.getTable(), "NetworkService.V1"); //$NON-NLS-1$
          }
-      });   
+      });
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

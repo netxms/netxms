@@ -112,11 +112,11 @@ public class AlarmDetails extends AdHocObjectView
 	public static final int EV_COLUMN_MESSAGE = 3;
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 
-	private static final String[] stateText = 
-	   { 
-	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Outstanding"), 
-	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Acknowledged"), 
-	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Resolved"), 
+	private static final String[] stateText =
+	   {
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Outstanding"),
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Acknowledged"),
+	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Resolved"),
 	      LocalizationHelper.getI18n(AlarmDetails.class).tr("Terminated")
       };
 
@@ -167,18 +167,18 @@ public class AlarmDetails extends AdHocObjectView
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
    }
-   
+
    protected AlarmDetails()
    {
       super(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"),
-            "objects.alarm-details", 0, 0, false); 
+            "objects.alarm-details", 0, 0, false);
       objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
       stateImages[1] = ResourceManager.getImage("icons/alarms/acknowledged.png");
       stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
-      stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");      
+      stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
    }
 
    /**
@@ -190,15 +190,25 @@ public class AlarmDetails extends AdHocObjectView
       AlarmDetails view = (AlarmDetails)super.cloneView();
       view.alarmId = alarmId;
       return view;
-   }  
+   }
 
    /**
     * Post clone action
     */
    protected void postClone(View origin)
-   {      
+   {
       super.postClone(origin);
       refresh();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      if (eventViewer != null)
+         manager.add(eventViewer.getResetColumnOrderAction());
    }
 
    /**
@@ -219,7 +229,7 @@ public class AlarmDetails extends AdHocObjectView
       createEventsSection(parent);
       createCommentsSection(parent);
       createDataSection(parent);
-      
+
       createActions();
       createContextMenu();
 	}
@@ -254,7 +264,7 @@ public class AlarmDetails extends AdHocObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(final IMenuManager manager)
@@ -270,8 +280,8 @@ public class AlarmDetails extends AdHocObjectView
    {
       super.postContentCreate();
       refresh();
-   }  
-   
+   }
+
 	/**
 	 * Create alarm details section
 	 */
@@ -411,7 +421,7 @@ public class AlarmDetails extends AdHocObjectView
 			{
 				addComment();
 			}
-		});  
+		});
 	}
 
 	/**
@@ -431,6 +441,7 @@ public class AlarmDetails extends AdHocObjectView
 		eventViewer.setContentProvider(new EventTreeContentProvider());
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
 		eventViewer.setComparator(new EventTreeComparator());
+      eventViewer.enableColumnReordering();
 
 		WidgetHelper.restoreTreeViewerSettings(eventViewer, "AlarmDetails.Events"); //$NON-NLS-1$
 		eventViewer.getControl().addDisposeListener(new DisposeListener() {
@@ -472,7 +483,7 @@ public class AlarmDetails extends AdHocObjectView
 				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
 
 				AbstractObject sourceObject = session.findObjectById(alarm.getSourceObjectId());
-				final DciValue[] lastValues; 
+				final DciValue[] lastValues;
 				if (sourceObject instanceof DataCollectionTarget)
 				{
 				   lastValues = session.getLastValues(alarm.getSourceObjectId());
@@ -498,13 +509,13 @@ public class AlarmDetails extends AdHocObjectView
 					public void run()
 					{
 						updateAlarmDetails(alarm);
-						
+
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
 
 						for(AlarmComment n : comments)
 							editors.put(n.getId(), createEditor(n, alarm.getState() != Alarm.STATE_TERMINATED));
-				      linkAddComment.setVisible(alarm.getState() != Alarm.STATE_TERMINATED);    
+				      linkAddComment.setVisible(alarm.getState() != Alarm.STATE_TERMINATED);
 
 						if (events != null)
 						{
@@ -524,7 +535,7 @@ public class AlarmDetails extends AdHocObjectView
                      labelAccessDenied.moveAbove(null);
                      labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
                   }
-						
+
 						if (!dataSectionCreated)
 						{
    						if (alarm.getDciId() != 0)
@@ -562,7 +573,7 @@ public class AlarmDetails extends AdHocObjectView
    						   dd.fill = false;
    						}
    						dataSectionCreated = true;
-						}						
+						}
 						else if (dataViewControl != null)
 						{
 						   refreshData();
@@ -579,10 +590,10 @@ public class AlarmDetails extends AdHocObjectView
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Create elements of data area
-	 * 
+	 *
 	 * @param alarm current alarm
 	 * @param dci current DCI
 	 */
@@ -668,7 +679,7 @@ public class AlarmDetails extends AdHocObjectView
          {
             if (dataViewControl.isDisposed())
                return;
-            
+
             refreshData();
          }
       });
@@ -686,7 +697,7 @@ public class AlarmDetails extends AdHocObjectView
 
 	/**
 	 * Create comment editor widget
-	 * 
+	 *
 	 * @param note alarm note associated with this widget
 	 * @return
 	 */
@@ -722,7 +733,7 @@ public class AlarmDetails extends AdHocObjectView
    {
       editComment(0, "");//$NON-NLS-1$
    }
-   
+
    /**
     * Edit comment
     */
@@ -745,7 +756,7 @@ public class AlarmDetails extends AdHocObjectView
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -753,7 +764,7 @@ public class AlarmDetails extends AdHocObjectView
          }
       }.start();
    }
-	
+
    /**
     * Delete comment
     */
@@ -761,7 +772,7 @@ public class AlarmDetails extends AdHocObjectView
    {
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirmation"), i18n.tr("Are you sure you want to delete this alarm comment?")))
          return;
-      
+
       new Job(i18n.tr("Delete comment job"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -775,7 +786,7 @@ public class AlarmDetails extends AdHocObjectView
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -783,10 +794,10 @@ public class AlarmDetails extends AdHocObjectView
          }
       }.start();
    }
-   
+
 	/**
 	 * Update alarm details
-	 * 
+	 *
 	 * @param alarm
 	 */
 	private void updateAlarmDetails(Alarm alarm)
@@ -831,9 +842,9 @@ public class AlarmDetails extends AdHocObjectView
    {
       if (updateInProgress)
          return;
-      
+
       updateInProgress = true;
-      
+
       Job job = new Job("Update DCI data view", this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -912,8 +923,8 @@ public class AlarmDetails extends AdHocObjectView
    {
       if (getObjectId() == 0  && getContextId() == 0)
          return true;
-      
-      return (context != null) && (context instanceof AbstractObject) && 
+
+      return (context != null) && (context instanceof AbstractObject) &&
             ((((AbstractObject)context).getObjectId() == getObjectId()) || (((AbstractObject)context).getObjectId() == getContextId()));
    }
 
@@ -928,14 +939,14 @@ public class AlarmDetails extends AdHocObjectView
    }
 
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
-      alarmId = memento.getAsLong("alarmId", 0);  
+      alarmId = memento.getAsLong("alarmId", 0);
       setName(String.format(LocalizationHelper.getI18n(AlarmDetails.class).tr("Alarm Details [%d]"), alarmId));
       if (alarmId == 0)
          throw(new ViewNotRestoredException(i18n.tr("Invalid alarm id")));

@@ -103,6 +103,7 @@ public class NotificationChannels extends ConfigurationView
       final int[] widths = { 160, 250, 100, 100, 100, 100, 80, 400 };
       final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Messages"), i18n.tr("Failures"), i18n.tr("Queue"), i18n.tr("Status"), i18n.tr("Error message") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "NotificationChannelList");
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new NotificationChannelLabelProvider());
@@ -144,7 +145,7 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       session.addListener(listener);
-   }  
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#dispose()
@@ -170,7 +171,7 @@ public class NotificationChannels extends ConfigurationView
     * Create actions
     */
    private void createActions()
-   {      
+   {
       actionNewChannel = new Action(i18n.tr("&New..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -274,6 +275,9 @@ public class NotificationChannels extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionNewChannel);
       manager.add(actionSendNotificationGlobal);
    }
@@ -394,7 +398,7 @@ public class NotificationChannels extends ConfigurationView
          }
       }.start();
    }
-   
+
    /**
     * Clear queue of selected channels
     */
@@ -433,7 +437,7 @@ public class NotificationChannels extends ConfigurationView
 
    /**
     * Send notification to channel
-    * 
+    *
     * @param isContext true if called from context menu
     */
    private void sendNotification(boolean isContext)

@@ -63,7 +63,7 @@ public class DciList extends Composite
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_PARAMETER = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
-	
+
    private boolean filterEnabled = true;
    private DciListFilter filter;
 	private FilterText filterText;
@@ -73,10 +73,10 @@ public class DciList extends Composite
 	private SortableTableViewer viewer;
 	private int dcObjectType;	// DC object type filter; -1 allows all object types
 	private boolean allowNoValueObjects = false;
-	
+
 	/**
     * Create DCI list widget
-    * 
+    *
     * @param view owning view
     * @param parent parent widget
     * @param style style
@@ -123,6 +123,7 @@ public class DciList extends Composite
 		viewer.setComparator(new DciListComparator());
 		filter = new DciListFilter();
 		viewer.addFilter(filter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -140,7 +141,7 @@ public class DciList extends Composite
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
-      
+
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(0, 0);
@@ -155,7 +156,7 @@ public class DciList extends Composite
 
 		getDataFromServer();
 	}
-	
+
 	/**
 	 * Get data from server
 	 */
@@ -177,8 +178,8 @@ public class DciList extends Composite
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final List<DciValue> data = 
-						(dcObjectType == -1) ? Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)) 
+				final List<DciValue> data =
+						(dcObjectType == -1) ? Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects))
 								: new ArrayList<DciValue>(Arrays.asList(session.getDataCollectionSummary(node.getObjectId(), false, false, allowNoValueObjects)));
 				if (dcObjectType != -1)
 				{
@@ -190,7 +191,7 @@ public class DciList extends Composite
 							it.remove();
 					}
 				}
-						
+
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -203,10 +204,10 @@ public class DciList extends Composite
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Change node object
-	 * 
+	 *
 	 * @param node new node or mobile device object
 	 */
 	public void setNode(AbstractObject node)
@@ -214,7 +215,7 @@ public class DciList extends Composite
 		this.node = node;
 		getDataFromServer();
 	}
-	
+
 	/**
 	 * Refresh view
 	 */
@@ -222,10 +223,10 @@ public class DciList extends Composite
 	{
 		getDataFromServer();
 	}
-	
+
 	/**
 	 * Get selected DCI
-	 * 
+	 *
 	 * @return selected DCI
 	 */
 	@SuppressWarnings("unchecked")
@@ -253,7 +254,7 @@ public class DciList extends Composite
 		this.dcObjectType = dcObjectType;
 		getDataFromServer();
 	}
-	
+
 	/**
 	 * @param listener
 	 */
@@ -264,7 +265,7 @@ public class DciList extends Composite
 
    /**
     * Enable or disable filter
-    * 
+    *
     * @param enable New filter state
     */
    public void enableFilter(boolean enable)
@@ -287,10 +288,10 @@ public class DciList extends Composite
    {
       return filterEnabled;
    }
-   
+
    /**
     * Set filter text
-    * 
+    *
     * @param text New filter text
     */
    public void setFilter(final String text)
@@ -301,7 +302,7 @@ public class DciList extends Composite
 
    /**
     * Get filter text
-    * 
+    *
     * @return Current filter text
     */
    public String getFilter()

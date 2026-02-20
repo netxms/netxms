@@ -33,6 +33,8 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
@@ -74,7 +76,7 @@ public class PackageManager extends ConfigurationView
    private Action actionUploadToServer;
    private Action actionRemove;
    private Action actionEditMetadata;
-   
+
    /**
     * Constructor
     */
@@ -98,6 +100,16 @@ public class PackageManager extends ConfigurationView
 		viewer.setLabelProvider(new PackageLabelProvider());
 		viewer.setComparator(new PackageComparator());
 
+		viewer.enableColumnReordering();
+		WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnOrder(viewer, getBaseId());
+			}
+		});
+
 		createActions();
 		createPopupMenu();
 
@@ -106,7 +118,7 @@ public class PackageManager extends ConfigurationView
          actionEditMetadata.setEnabled(selection.size() == 1);
          actionRemove.setEnabled(selection.size() > 0);
 		});
-		
+
       viewer.addDoubleClickListener((event) -> editPackageMetadata());
 
 		refresh();
@@ -125,7 +137,7 @@ public class PackageManager extends ConfigurationView
 	 * Create actions
 	 */
 	private void createActions()
-	{		
+	{
       actionUploadToServer = new Action(i18n.tr("&Upload to server..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -193,6 +205,9 @@ public class PackageManager extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionUploadToServer);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**
@@ -232,7 +247,7 @@ public class PackageManager extends ConfigurationView
       WidgetHelper.setFileDialogFilterNames(fd,
             new String[] {
                   i18n.tr("NetXMS Agent Package"), i18n.tr("Debian Binary Package"), i18n.tr("Executable"), i18n.tr("Windows Installer Package"), i18n.tr("Windows Installer Patch"),
-                  i18n.tr("Windows Update Package"), i18n.tr("NetXMS Package Info"), i18n.tr("RPM Package"), i18n.tr("Compressed TAR Archive"), i18n.tr("ZIP Archive"), 
+                  i18n.tr("Windows Update Package"), i18n.tr("NetXMS Package Info"), i18n.tr("RPM Package"), i18n.tr("Compressed TAR Archive"), i18n.tr("ZIP Archive"),
                   i18n.tr("All Files")
             });
 		String packageFileName = fd.open();
@@ -432,7 +447,7 @@ public class PackageManager extends ConfigurationView
 	{
 		if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Package Delete"), i18n.tr("Are you sure you wish to delete selected packages?")))
 			return;
-		
+
       final NXCSession session = Registry.getSession();
       final Object[] packages = viewer.getStructuredSelection().toArray();
 		final List<Object> removedPackages = new ArrayList<Object>();

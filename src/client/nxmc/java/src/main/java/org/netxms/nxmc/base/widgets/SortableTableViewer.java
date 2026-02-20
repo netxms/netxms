@@ -20,18 +20,22 @@ package org.netxms.nxmc.base.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.helpers.TableSortingListener;
+import org.netxms.nxmc.localization.LocalizationHelper;
 
 /**
  * Implementation of TableViewer with column sorting support
@@ -39,14 +43,15 @@ import org.netxms.nxmc.base.widgets.helpers.TableSortingListener;
 public class SortableTableViewer extends TableViewer
 {
 	public static final int DEFAULT_STYLE = -1;
-	
+
 	private boolean initialized = false;
 	private List<TableColumn> columns = new ArrayList<TableColumn>(16);
 	private TableSortingListener sortingListener;
-	
+	private Action actionResetColumnOrder;
+
 	/**
     * Constructor
-    * 
+    *
     * @param parent Parent composite for table control
     * @param names Column names
     * @param widths Column widths (may be null)
@@ -62,7 +67,7 @@ public class SortableTableViewer extends TableViewer
 
 	/**
     * Constructor for delayed initialization
-    * 
+    *
     * @param parent Parent composite for table control
     * @param style widget style
     */
@@ -76,7 +81,7 @@ public class SortableTableViewer extends TableViewer
 
 	/**
 	 * Create columns
-	 * 
+	 *
 	 * @param names
 	 * @param widths
 	 * @param defaultSortingColumn
@@ -106,7 +111,7 @@ public class SortableTableViewer extends TableViewer
 
 	/**
 	 * Add column to viewer
-	 * 
+	 *
 	 * @param name column name
 	 * @param width column width
 	 * @return created column object
@@ -141,10 +146,10 @@ public class SortableTableViewer extends TableViewer
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Remove column by ID
-	 * 
+	 *
 	 * @param id column ID
 	 */
 	public void removeColumnById(int id)
@@ -179,7 +184,7 @@ public class SortableTableViewer extends TableViewer
       for(TableColumn c : getTable().getColumns())
          c.dispose();
    }
-	
+
 	/**
 	 * Disable sorting
 	 */
@@ -189,7 +194,7 @@ public class SortableTableViewer extends TableViewer
 			c.removeSelectionListener(sortingListener);
 		getTable().setSortColumn(null);
 	}
-	
+
 	/**
 	 * Pack columns
 	 */
@@ -209,7 +214,7 @@ public class SortableTableViewer extends TableViewer
 
    /**
     * Get column index at given point
-    * 
+    *
     * @param p
     * @return
     */
@@ -228,6 +233,75 @@ public class SortableTableViewer extends TableViewer
          }
       }
       return null;
+   }
+
+   /**
+    * Enable column reordering with persistence.
+    */
+   public void enableColumnReordering()
+   {
+      enableColumnReordering(true);
+   }
+
+   /**
+    * Enable column reordering.
+    *
+    * @param persist if true, column order is saved/restored between restarts
+    */
+   public void enableColumnReordering(boolean persist)
+   {
+      Table table = getTable();
+      for(TableColumn c : table.getColumns())
+         c.setMoveable(true);
+      table.setData("persistColumnOrder", Boolean.valueOf(persist));
+
+      String menuText = LocalizationHelper.getI18n(SortableTableViewer.class).tr("Restore Default Column Order");
+
+      actionResetColumnOrder = new Action(menuText) {
+         @Override
+         public void run()
+         {
+            resetColumnOrder();
+         }
+      };
+
+      Menu headerMenu = new Menu(table);
+      MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
+      resetItem.setText(menuText);
+      resetItem.addListener(SWT.Selection, e -> resetColumnOrder());
+
+      table.addListener(SWT.MenuDetect, event -> {
+         Point pt = table.getDisplay().map(null, table, new Point(event.x, event.y));
+         if (pt.y < table.getHeaderHeight())
+         {
+            headerMenu.setLocation(event.x, event.y);
+            headerMenu.setVisible(true);
+            event.doit = false;
+         }
+      });
+   }
+
+   /**
+    * Reset column order to default sequential order.
+    */
+   public void resetColumnOrder()
+   {
+      Table table = getTable();
+      int count = table.getColumnCount();
+      int[] order = new int[count];
+      for(int i = 0; i < count; i++)
+         order[i] = i;
+      table.setColumnOrder(order);
+   }
+
+   /**
+    * Get action for resetting column order to default. Returns null if column reordering is not enabled.
+    *
+    * @return action for resetting column order or null
+    */
+   public Action getResetColumnOrderAction()
+   {
+      return actionResetColumnOrder;
    }
 
    /**

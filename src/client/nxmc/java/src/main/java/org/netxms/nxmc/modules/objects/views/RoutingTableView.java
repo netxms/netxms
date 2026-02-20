@@ -26,6 +26,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AbstractObject;
@@ -39,6 +41,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -100,6 +103,16 @@ public class RoutingTableView extends ObjectView
 		viewer.setLabelProvider(new RoutingTableLabelProvider());
 		viewer.setComparator(new RoutingTableComparator());
 
+		viewer.enableColumnReordering();
+		WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnOrder(viewer, getBaseId());
+			}
+		});
+
 		createActions();
 		createContextMenu();
 	}
@@ -121,6 +134,9 @@ public class RoutingTableView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
 	{
 		manager.add(actionExportAllToCsv);
+		Action resetAction = viewer.getResetColumnOrderAction();
+		if (resetAction != null)
+			manager.add(resetAction);
 	}
 
 	/**
@@ -131,7 +147,7 @@ public class RoutingTableView extends ObjectView
 	{
 		manager.add(actionExportAllToCsv);
 	}
-	
+
 	/**
     * Create context menu
     */

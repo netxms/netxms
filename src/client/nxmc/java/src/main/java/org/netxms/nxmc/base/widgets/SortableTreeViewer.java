@@ -20,15 +20,19 @@ package org.netxms.nxmc.base.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.nxmc.base.widgets.helpers.TreeSortingListener;
+import org.netxms.nxmc.localization.LocalizationHelper;
 
 /**
  * Implementation of TreeViewer with column sorting support
@@ -36,14 +40,15 @@ import org.netxms.nxmc.base.widgets.helpers.TreeSortingListener;
 public class SortableTreeViewer extends TreeViewer
 {
 	public static final int DEFAULT_STYLE = -1;
-	
+
 	private boolean initialized = false;
 	private List<TreeColumn> columns;
 	private TreeSortingListener sortingListener;
-	
+	private Action actionResetColumnOrder;
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param parent Parent composite for table control
 	 * @param names Column names
 	 * @param widths Column widths (may be null)
@@ -61,7 +66,7 @@ public class SortableTreeViewer extends TreeViewer
 
 	/**
 	 * Constructor for delayed initialization
-	 * 
+	 *
 	 * @param parent
 	 * @param style
 	 */
@@ -74,7 +79,7 @@ public class SortableTreeViewer extends TreeViewer
 
 	/**
 	 * Create columns
-	 * 
+	 *
 	 * @param names
 	 * @param widths
 	 * @param defaultSortingColumn
@@ -85,9 +90,9 @@ public class SortableTreeViewer extends TreeViewer
 		if (initialized)
 			return;
 		initialized = true;
-		
+
 		sortingListener = new TreeSortingListener(this);
-		
+
 		columns = new ArrayList<TreeColumn>(names.length);
 		for(int i = 0; i < names.length; i++)
 		{
@@ -135,7 +140,7 @@ public class SortableTreeViewer extends TreeViewer
 
    /**
     * Get column index at given point
-    * 
+    *
     * @param p
     * @return
     */
@@ -155,7 +160,7 @@ public class SortableTreeViewer extends TreeViewer
       }
       return null;
    }
-	
+
 	/**
 	 * @return the initialized
 	 */
@@ -163,7 +168,7 @@ public class SortableTreeViewer extends TreeViewer
 	{
 		return initialized;
 	}
-	
+
 	/**
 	 * Disable sorting
 	 */
@@ -176,7 +181,7 @@ public class SortableTreeViewer extends TreeViewer
 
    /**
     * Remove column by ID
-    * 
+    *
     * @param id column ID
     */
    public void removeColumnById(int id)
@@ -191,10 +196,10 @@ public class SortableTreeViewer extends TreeViewer
          }
       }
    }
-   
+
    /**
     * Add column to viewer
-    * 
+    *
     * @param name column name
     * @param width column width
     * @return created column object
@@ -211,5 +216,74 @@ public class SortableTreeViewer extends TreeViewer
       c.setData("ID", Integer.valueOf(index)); //$NON-NLS-1$
       c.addSelectionListener(sortingListener);
       return c;
+   }
+
+   /**
+    * Enable column reordering with persistence.
+    */
+   public void enableColumnReordering()
+   {
+      enableColumnReordering(true);
+   }
+
+   /**
+    * Enable column reordering.
+    *
+    * @param persist if true, column order is saved/restored between restarts
+    */
+   public void enableColumnReordering(boolean persist)
+   {
+      Tree tree = getTree();
+      for(TreeColumn c : tree.getColumns())
+         c.setMoveable(true);
+      tree.setData("persistColumnOrder", Boolean.valueOf(persist));
+
+      String menuText = LocalizationHelper.getI18n(SortableTreeViewer.class).tr("Restore Default Column Order");
+
+      actionResetColumnOrder = new Action(menuText) {
+         @Override
+         public void run()
+         {
+            resetColumnOrder();
+         }
+      };
+
+      Menu headerMenu = new Menu(tree);
+      MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
+      resetItem.setText(menuText);
+      resetItem.addListener(SWT.Selection, e -> resetColumnOrder());
+
+      tree.addListener(SWT.MenuDetect, event -> {
+         Point pt = tree.getDisplay().map(null, tree, new Point(event.x, event.y));
+         if (pt.y < tree.getHeaderHeight())
+         {
+            headerMenu.setLocation(event.x, event.y);
+            headerMenu.setVisible(true);
+            event.doit = false;
+         }
+      });
+   }
+
+   /**
+    * Reset column order to default sequential order.
+    */
+   public void resetColumnOrder()
+   {
+      Tree tree = getTree();
+      int count = tree.getColumnCount();
+      int[] order = new int[count];
+      for(int i = 0; i < count; i++)
+         order[i] = i;
+      tree.setColumnOrder(order);
+   }
+
+   /**
+    * Get action for resetting column order to default. Returns null if column reordering is not enabled.
+    *
+    * @return action for resetting column order or null
+    */
+   public Action getResetColumnOrderAction()
+   {
+      return actionResetColumnOrder;
    }
 }

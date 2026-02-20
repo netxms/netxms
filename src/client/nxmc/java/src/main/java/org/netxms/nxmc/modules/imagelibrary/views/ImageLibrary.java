@@ -41,6 +41,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Composite;
@@ -126,6 +128,16 @@ public class ImageLibrary extends ConfigurationView
          }
       });
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTree().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       viewer.addDoubleClickListener((e) -> {
          IStructuredSelection selection = viewer.getStructuredSelection();
          if (selection.getFirstElement() instanceof ImageCategory)
@@ -157,9 +169,9 @@ public class ImageLibrary extends ConfigurationView
             actionSave.setEnabled(false);
          }
       });
-		
+
 		imagePreview = new ImagePreview(splitter, SWT.BORDER);
-		
+
 		splitter.setWeights(new int[] { 70, 30 });
 
 		createActions();
@@ -302,7 +314,7 @@ public class ImageLibrary extends ConfigurationView
       }
       return mimeType;
 	}
-	
+
 	/**
 	 * Add new image
 	 */
@@ -325,7 +337,7 @@ public class ImageLibrary extends ConfigurationView
          uploadNewImage(dialog.getName(), dialog.getCategory(), dialog.getFileName());
       }
 	}
-	
+
 	/**
 	 * Edit existing image
 	 */
@@ -334,7 +346,7 @@ public class ImageLibrary extends ConfigurationView
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       if (selection.getFirstElement() instanceof LibraryImage)
       {
          LibraryImage image = (LibraryImage)selection.getFirstElement();
@@ -446,7 +458,7 @@ public class ImageLibrary extends ConfigurationView
 				});
 
 				monitor.done();
-				
+
 				runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -546,7 +558,7 @@ public class ImageLibrary extends ConfigurationView
 	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 	   if (selection.isEmpty())
 	      return;
-	   
+
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Library Images"), i18n.tr("Do you really want to delete selected images?")))
 	      return;
 
@@ -564,17 +576,17 @@ public class ImageLibrary extends ConfigurationView
 		      categoryDeleteList.add(((ImageCategory)o).getName());
 		   }
 		}
-		
+
 		if (deleteList.isEmpty())
 		   return;
-		
+
       new Job(i18n.tr("Delete library images"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(LibraryImage i : deleteList)
                session.deleteImage(i);
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -665,6 +677,18 @@ public class ImageLibrary extends ConfigurationView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
@@ -728,7 +752,7 @@ public class ImageLibrary extends ConfigurationView
 
    /**
     * Update local copy of library image
-    * 
+    *
     * @param guid
     */
    private void updateImageLocalCopy(final UUID guid)
@@ -774,7 +798,7 @@ public class ImageLibrary extends ConfigurationView
 
    /**
     * Remove local copy of library image
-    * 
+    *
     * @param guid
     */
    private void removeImageLocalCopy(UUID guid)

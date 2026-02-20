@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -40,6 +41,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -72,6 +75,7 @@ import org.netxms.nxmc.modules.objecttools.widgets.ServerCommandExecutor;
 import org.netxms.nxmc.modules.objecttools.widgets.ServerScriptExecutor;
 import org.netxms.nxmc.modules.objecttools.widgets.helpers.ExecutorStateChangeListener;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
@@ -99,7 +103,7 @@ public class MultiNodeCommandExecutor extends ObjectView
 
 
    /**
-    * 
+    *
     * @param tool
     * @param sourceObjects
     * @param nodes
@@ -113,7 +117,7 @@ public class MultiNodeCommandExecutor extends ObjectView
       applicableObjects = nodes;
       objectToolInfo = new CommonContext(tool, inputValues, maskedFields);
       this.sourceObjects = sourceObjects;
-   }    
+   }
 
 
    /**
@@ -122,7 +126,7 @@ public class MultiNodeCommandExecutor extends ObjectView
    protected MultiNodeCommandExecutor()
    {
       super(null, ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"), null, false);
-   } 
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#cloneView()
@@ -142,9 +146,9 @@ public class MultiNodeCommandExecutor extends ObjectView
     */
    @Override
    protected void createContent(Composite parent)
-	{      
+	{
       parent.setLayout(new FillLayout());
-      
+
       splitter = new SashForm(parent, SWT.VERTICAL);
 
       Composite topPart = new Composite(splitter, SWT.NONE);
@@ -201,6 +205,16 @@ public class MultiNodeCommandExecutor extends ObjectView
          }
       });
 
+      viewer.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+         }
+      });
+
       createActions();
 	}
 
@@ -244,15 +258,15 @@ public class MultiNodeCommandExecutor extends ObjectView
             }
          });
          executor.onClone(e);
-         executors.add(executor);         
+         executors.add(executor);
       }
-      
+
       viewer.setInput(executors.toArray());
       viewer.getTable().setSelection(0);
       onSelectionChange();
-      
+
       super.postClone(view);
-   }      
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
@@ -266,10 +280,10 @@ public class MultiNodeCommandExecutor extends ObjectView
          restoreState();
       super.postContentCreate();
    }
-   
+
    /**
     * Restore context objects
-    * 
+    *
     * @param destinationList list too add context objects
     * @param sourceList source list to parse object id's
     * @throws IOException  if socket I/O error occurs
@@ -287,9 +301,9 @@ public class MultiNodeCommandExecutor extends ObjectView
             long contextId = Long.parseLong(elements[3]);
             destinationList.add(new ObjectContext(session.findObjectById(objectId), alarmId > 0 ? session.getAlarm(alarmId) : null, contextId));
          }
-      }         
+      }
    }
-   
+
    /**
     * Restore state in post create
     */
@@ -298,15 +312,15 @@ public class MultiNodeCommandExecutor extends ObjectView
       applicableObjects = new HashSet<ObjectContext>();
       sourceObjects = new HashSet<ObjectContext>();
       Job job = new Job(i18n.tr("Find alarm id"), this) {
-         
+
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         {     
+         {
             restoreContextObjects(applicableObjects, restoredApplicableObjects);
             restoreContextObjects(sourceObjects, restoredSourceObjects);
             runInUIThread(() -> createExecutors(false));
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -407,7 +421,7 @@ public class MultiNodeCommandExecutor extends ObjectView
 
 	/**
 	 * Execute command on nodes
-	 * 
+	 *
 	 * @param tool object tool to execute
 	 * @param nodes node list to execute on
 	 * @param inputValues input values provided by user
@@ -421,7 +435,7 @@ public class MultiNodeCommandExecutor extends ObjectView
    }
 
    /**
-    * Create executers and execute if required 
+    * Create executers and execute if required
     */
    private void createExecutors(boolean execute)
    {
@@ -462,7 +476,7 @@ public class MultiNodeCommandExecutor extends ObjectView
       }
       viewer.setInput(executors.toArray());
       viewer.getTable().setSelection(0);
-      
+
       onSelectionChange();
    }
 
@@ -472,7 +486,7 @@ public class MultiNodeCommandExecutor extends ObjectView
    @Override
    public void setFocus()
    {
-      viewer.getTable().setFocus();      
+      viewer.getTable().setFocus();
    }
 
    /**
@@ -495,6 +509,18 @@ public class MultiNodeCommandExecutor extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#isCloseable()
     */
    @Override
@@ -502,18 +528,18 @@ public class MultiNodeCommandExecutor extends ObjectView
    {
       return true;
    }
-   
+
    /**
-    * Restore user input fields if required. 
+    * Restore user input fields if required.
     * Is used to restore masked fields after console restart
-    * 
+    *
     * @return true if fields was successfully restored
     */
    private boolean restoreUserInputFields()
    {
       if (!askInputValues)
-         return true;      
-      
+         return true;
+
       final InputField[] fields = objectToolInfo.tool.getInputFields();
       if (fields.length > 0)
       {
@@ -534,13 +560,13 @@ public class MultiNodeCommandExecutor extends ObjectView
       askInputValues = false;
       return true;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.Perspective#saveState(org.netxms.nxmc.Memento)
     */
    @Override
    public void saveState(Memento memento)
-   {      
+   {
       super.saveState(memento);
       memento.set("inputValues.keys", objectToolInfo.inputValues.keySet());
       List<String> values = new ArrayList<String>();
@@ -558,14 +584,14 @@ public class MultiNodeCommandExecutor extends ObjectView
       memento.set("inputValues.values", values);
       if (objectToolInfo.maskedFields != null)
          memento.set("maskedFields", objectToolInfo.maskedFields);
-      memento.set("tool", objectToolInfo.tool.getId());  
-      
+      memento.set("tool", objectToolInfo.tool.getId());
+
       memento.set("applicableObjects", applicableObjects);
       memento.set("sourceObjects", sourceObjects);
    }
-   
+
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.Perspective#restoreState(org.netxms.nxmc.Memento)
     */
    @Override
@@ -579,9 +605,9 @@ public class MultiNodeCommandExecutor extends ObjectView
       {
          inputValues.put(keys.get(i), values.get(i));
       }
-      
-      List<String> maskedFields = memento.getAsStringList("maskedFields");   
-      long id = memento.getAsLong("tool", 0);   
+
+      List<String> maskedFields = memento.getAsStringList("maskedFields");
+      long id = memento.getAsLong("tool", 0);
       ObjectTool tool = ObjectToolsCache.getInstance().findTool(id);
       if (tool == null)
          throw(new ViewNotRestoredException(i18n.tr("Invalid tool id")));

@@ -176,7 +176,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Create alarm list widget
-    * 
+    *
     * @param viewPart owning view part
     * @param parent parent composite
     * @param style widget style
@@ -194,23 +194,24 @@ public class AlarmList extends CompositeWithMessageArea
       getContent().setLayout(new FillLayout());
 
 		// Setup table columns
-		final String[] names = { 
-		      i18n.tr("Severity"), 
+		final String[] names = {
+		      i18n.tr("Severity"),
 		      i18n.tr("State"),
 		      i18n.tr("Source"),
 		      i18n.tr("Zone"),
 		      i18n.tr("Message"),
 		      i18n.tr("Count"),
 		      i18n.tr("Comments"),
-		      i18n.tr("Helpdesk ID"), 
+		      i18n.tr("Helpdesk ID"),
 		      i18n.tr("Ack/Resolve By"),
-		      i18n.tr("Created"), 
+		      i18n.tr("Created"),
 		      i18n.tr("Last Change")
 		   };
 		final int[] widths = { 100, 100, 150, 130, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTreeViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTreeViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
          alarmViewer.removeColumnById(COLUMN_ZONE);
+      alarmViewer.enableColumnReordering();
       WidgetHelper.restoreTreeViewerSettings(alarmViewer, configPrefix);
 
       labelProvider = new AlarmListLabelProvider(alarmViewer);
@@ -238,7 +239,7 @@ public class AlarmList extends CompositeWithMessageArea
       // Get filter settings
       final PreferenceStore ps = PreferenceStore.getInstance();
       initShowfilter = ps.getAsBoolean("AlarmList.ShowFilter", true);
-		
+
 		createActions();
 		createContextMenu();
 
@@ -348,7 +349,7 @@ public class AlarmList extends CompositeWithMessageArea
                      if (a.getState() == Alarm.STATE_OUTSTANDING)
                         count++;
                }
-   
+
                if (count > 0)
                {
                   ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).toggleBlinkState();
@@ -359,12 +360,12 @@ public class AlarmList extends CompositeWithMessageArea
             else
             {
                ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).stopBlinking();
-               alarmViewer.refresh();               
+               alarmViewer.refresh();
             }
          }
       };
 
-      if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) 
+      if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false))
       {
          blinkEnabled = true;
          getDisplay().timerExec(500, blinkTimer);
@@ -373,9 +374,9 @@ public class AlarmList extends CompositeWithMessageArea
          @Override
          public void propertyChange(PropertyChangeEvent event)
          {
-            if (event.getProperty().equals("AlarmList.BlinkOutstandingAlarm")) 
+            if (event.getProperty().equals("AlarmList.BlinkOutstandingAlarm"))
             {
-               if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) 
+               if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false))
                {
                   blinkEnabled = true;
                   getDisplay().timerExec(500, blinkTimer);
@@ -383,7 +384,7 @@ public class AlarmList extends CompositeWithMessageArea
                else
                   blinkEnabled = false;
             }
-            else if (event.getProperty().equals("AlarmList.ShowStatusColor")) 
+            else if (event.getProperty().equals("AlarmList.ShowStatusColor"))
             {
                boolean showColors = ps.getAsBoolean("AlarmList.ShowStatusColor", false);
                if (labelProvider.isShowColor() != showColors)
@@ -426,7 +427,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Get selection provider of alarm list
-    * 
+    *
     * @return
     */
    public ISelectionProvider getSelectionProvider()
@@ -454,7 +455,7 @@ public class AlarmList extends CompositeWithMessageArea
 							sb.append(newLine);
 						sb.append('[');
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SEVERITY)));
-						sb.append("]\t"); 
+						sb.append("]\t");
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SOURCE)));
 						sb.append('\t');
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_MESSAGE)));
@@ -484,7 +485,7 @@ public class AlarmList extends CompositeWithMessageArea
 				}
 			}
 		};
-      actionCopyMessage.setId("AlarmList.CopyMessage"); 
+      actionCopyMessage.setId("AlarmList.CopyMessage");
 
       actionAcknowledge = new Action(i18n.tr("&Acknowledge"), ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png")) {
 			@Override
@@ -493,7 +494,7 @@ public class AlarmList extends CompositeWithMessageArea
 				acknowledgeAlarms(false, 0);
 			}
 		};
-      actionAcknowledge.setId("AlarmList.Acknowledge"); 
+      actionAcknowledge.setId("AlarmList.Acknowledge");
 
       actionStickyAcknowledge = new Action(i18n.tr("&Sticky acknowledge"), ResourceManager.getImageDescriptor("icons/alarms/acknowledged_sticky.png")) {
 			@Override
@@ -502,26 +503,26 @@ public class AlarmList extends CompositeWithMessageArea
 				acknowledgeAlarms(true, 0);
 			}
 		};
-      actionStickyAcknowledge.setId("AlarmList.StickyAcknowledge"); 
+      actionStickyAcknowledge.setId("AlarmList.StickyAcknowledge");
 
-      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/alarms/resolved.png")) { 
+      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/alarms/resolved.png")) {
 			@Override
 			public void run()
 			{
 				resolveAlarms();
 			}
 		};
-      actionResolve.setId("AlarmList.Resolve"); 
+      actionResolve.setId("AlarmList.Resolve");
 
-      actionTerminate = new Action(i18n.tr("&Terminate"), ResourceManager.getImageDescriptor("icons/alarms/terminated.png")) { 
+      actionTerminate = new Action(i18n.tr("&Terminate"), ResourceManager.getImageDescriptor("icons/alarms/terminated.png")) {
 			@Override
 			public void run()
 			{
 				terminateAlarms();
 			}
 		};
-      actionTerminate.setId("AlarmList.Terminate"); 
-		
+      actionTerminate.setId("AlarmList.Terminate");
+
       actionCreateIssue = new Action(i18n.tr("Create ticket in &helpdesk system"),
             ResourceManager.getImageDescriptor("icons/alarms/create-issue.png")) {
          @Override
@@ -562,13 +563,13 @@ public class AlarmList extends CompositeWithMessageArea
             IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
             if (selection.size() != 1)
                return;
-            
+
             final long id = ((Alarm)selection.getFirstElement()).getSourceObjectId();
             MainWindow.switchToObject(id, 0);
 			}
 		};
       actionGoToObject.setId("AlarmList.GoToObject");
-      
+
       actionGoToDci = new Action(i18n.tr("Go to &DCI")) {
          @Override
          public void run()
@@ -576,7 +577,7 @@ public class AlarmList extends CompositeWithMessageArea
             IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
             if (selection.size() != 1)
                return;
-            
+
             final long objectId = ((Alarm)selection.getFirstElement()).getSourceObjectId();
             final long dciId = ((Alarm)selection.getFirstElement()).getDciId();
             MainWindow.switchToObject(objectId, dciId);
@@ -586,7 +587,7 @@ public class AlarmList extends CompositeWithMessageArea
 
       actionExportToCsv = new ExportToCsvAction(view, alarmViewer, true);
 
-		//time based sticky acknowledgement	
+		//time based sticky acknowledgement
       timeAcknowledgeOther = new Action("Other...") {
          @Override
          public void run()
@@ -600,7 +601,7 @@ public class AlarmList extends CompositeWithMessageArea
             }
          }
       };
-      timeAcknowledgeOther.setId("AlarmList.TimeAcknowledgeOther"); 
+      timeAcknowledgeOther.setId("AlarmList.TimeAcknowledgeOther");
 
       actionShowColor = new Action(i18n.tr("Show status &colors"), Action.AS_CHECK_BOX) {
          @Override
@@ -612,7 +613,7 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       actionShowColor.setChecked(labelProvider.isShowColor());
-      
+
       actionShowAlarmDetails = new Action(i18n.tr("Show &alarm details")) {
          @Override
          public void run()
@@ -621,7 +622,7 @@ public class AlarmList extends CompositeWithMessageArea
             if (selection.size() != 1)
                return;
 
-            final long alarmId = ((Alarm)selection.getFirstElement()).getId();            
+            final long alarmId = ((Alarm)selection.getFirstElement()).getId();
             view.openView(new AlarmDetails(alarmId, rootObject));
          }
       };
@@ -645,19 +646,19 @@ public class AlarmList extends CompositeWithMessageArea
       int menuSize = settings.getAsInteger("AlarmList.AckMenuSize", 0);
       if (menuSize < 1)
       {
-         settings.set("AlarmList.AckMenuSize", 4); 
+         settings.set("AlarmList.AckMenuSize", 4);
          timeAcknowledge = new ArrayList<Action>(4);
          createDefaultIntervals();
-         settings.set("AlarmList.AckMenuEntry.0", 1 * 60 * 60); 
-         settings.set("AlarmList.AckMenuEntry.1", 4 * 60 * 60); 
-         settings.set("AlarmList.AckMenuEntry.2", 24 * 60 * 60); 
-         settings.set("AlarmList.AckMenuEntry.3", 2 * 24 * 60 * 60); 
+         settings.set("AlarmList.AckMenuEntry.0", 1 * 60 * 60);
+         settings.set("AlarmList.AckMenuEntry.1", 4 * 60 * 60);
+         settings.set("AlarmList.AckMenuEntry.2", 24 * 60 * 60);
+         settings.set("AlarmList.AckMenuEntry.3", 2 * 24 * 60 * 60);
          return;
 	   }
 	   timeAcknowledge = new ArrayList<Action>(menuSize);
       for(int i = 0; i < menuSize; i++)
       {
-         final int time = settings.getAsInteger("AlarmList.AckMenuEntry." + Integer.toString(i), 0); 
+         final int time = settings.getAsInteger("AlarmList.AckMenuEntry." + Integer.toString(i), 0);
 	      if (time == 0)
 	         continue;
 	      timeAcknowledge.add(createTimeAcknowledgeAction(time, i));
@@ -677,7 +678,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Create action for time acknowledge.
-    * 
+    *
     * @param time time in seconds
     * @param index action index
     * @return new action
@@ -742,7 +743,7 @@ public class AlarmList extends CompositeWithMessageArea
 
 	/**
 	 * Fill context menu
-    * 
+    *
 	 * @param mgr Menu manager
 	 */
    protected void fillContextMenu(IMenuManager manager, MenuManager objectMenuManager)
@@ -765,7 +766,7 @@ public class AlarmList extends CompositeWithMessageArea
             {
                timeAcknowledgeMenu.add(act);
             }
-            timeAcknowledgeMenu.add(new Separator());   
+            timeAcknowledgeMenu.add(new Separator());
             timeAcknowledgeMenu.add(timeAcknowledgeOther);
       		manager.add(timeAcknowledgeMenu);
 		   }
@@ -775,7 +776,7 @@ public class AlarmList extends CompositeWithMessageArea
 		   manager.add(actionResolve);
 		if (states == 4 || !session.isStrictAlarmStatusFlow())
 		   manager.add(actionTerminate);
-		
+
 		manager.add(new Separator());
 
 		if (selection.size() == 1)
@@ -830,12 +831,12 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
-    * We add 2 to status to give to outstanding status not zero meaning: 
-    * STATE_OUTSTANDING + 2 = 2 
+    * We add 2 to status to give to outstanding status not zero meaning:
+    * STATE_OUTSTANDING + 2 = 2
     * STATE_ACKNOWLEDGED + 2 = 3
-    * STATE_RESOLVED + 2 = 4 
+    * STATE_RESOLVED + 2 = 4
     * It is needed as we can't move STATE_OUTSTANDING to STATE_TERMINATED in strict flow mode. Number of status should be meaningful.
-    * 
+    *
     * Then we sum all statuses with or command.
     * To STATE_ACKNOWLEDGED only from STATE_OUTSTANDING = 2, STATE_ACKNOWLEDGED = 2
     * To STATE_RESOLVED from STATE_OUTSTANDING and STATE_ACKNOWLEDGED = 2 | 3 = 3, STATE_RESOLVED <=3
@@ -845,7 +846,7 @@ public class AlarmList extends CompositeWithMessageArea
     * STATE_OUTSTANDING | STATE_RESOLVED = 6
     * STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
     * STATE_OUTSTANDING | STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
-    * 
+    *
     * @param array selected objects array
     */
    private int getSelectionType(Object[] array)
@@ -860,7 +861,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Change root object for alarm list
-    * 
+    *
     * @param objectId ID of new root object
     */
    public void setRootObject(long objectId)
@@ -873,10 +874,10 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Change root objects for alarm list. List is refreshed after change.
-    * 
+    *
     * @param List of objectId
     */
-   public void setRootObjects(List<Long> selectedObjects) 
+   public void setRootObjects(List<Long> selectedObjects)
    {
       alarmFilter.setRootObjects(selectedObjects);
       filterRunPending = true;
@@ -1102,7 +1103,7 @@ public class AlarmList extends CompositeWithMessageArea
 	{
 		alarmFilter.setStateFilter(filter);
 	}
-	
+
 	/**
 	 * @param filter
 	 */
@@ -1110,7 +1111,7 @@ public class AlarmList extends CompositeWithMessageArea
 	{
 		alarmFilter.setSeverityFilter(filter);
 	}
-	
+
 	/**
     * Acknowledge selected alarms
     *
@@ -1146,7 +1147,7 @@ public class AlarmList extends CompositeWithMessageArea
 			}
 		}.start();
 	}
-		
+
 	/**
 	 * Resolve selected alarms
 	 */
@@ -1155,7 +1156,7 @@ public class AlarmList extends CompositeWithMessageArea
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
 			return;
-		
+
       final List<Long> alarmIds = new ArrayList<Long>(selection.size());
       for(Object o : selection.toList())
          alarmIds.add(((Alarm)o).getId());
@@ -1191,7 +1192,7 @@ public class AlarmList extends CompositeWithMessageArea
    {
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
-         return;     
+         return;
 
 		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
 		for(Object o : selection.toList())
@@ -1199,7 +1200,7 @@ public class AlarmList extends CompositeWithMessageArea
       new Job(i18n.tr("Terminate alarms"), view) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
-			{		      
+			{
 		      final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
 				if (!terminationFails.isEmpty())
 				{
@@ -1347,7 +1348,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Get underlying table viewer.
-    * 
+    *
     * @return
     */
    public TreeViewer getViewer()
@@ -1357,7 +1358,7 @@ public class AlarmList extends CompositeWithMessageArea
 
    /**
     * Get action to toggle status color display
-    * 
+    *
     * @return
     */
    public IAction getActionShowColors()
@@ -1366,8 +1367,18 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
+    * Get action to reset column order to default.
+    *
+    * @return action for resetting column order
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return alarmViewer.getResetColumnOrderAction();
+   }
+
+   /**
     * Enable/disable status color background
-    * 
+    *
     * @param show
     */
    public void setShowColors(boolean show)
@@ -1377,7 +1388,7 @@ public class AlarmList extends CompositeWithMessageArea
       alarmViewer.refresh();
       PreferenceStore.getInstance().set("AlarmList.ShowStatusColor", show);
    }
-   
+
    /**
     * Send request to AI assistant for selected alarm
     */
@@ -1537,4 +1548,3 @@ public class AlarmList extends CompositeWithMessageArea
       }
    }
 }
-

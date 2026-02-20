@@ -90,7 +90,7 @@ public class MaintenanceJournalView extends ObjectView
       super(LocalizationHelper.getI18n(MaintenanceJournalView.class).tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"),
             "objects.maintenance-journal", true);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -149,6 +149,7 @@ public class MaintenanceJournalView extends ObjectView
          }
       });
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -224,13 +225,24 @@ public class MaintenanceJournalView extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr menu manager
     */
    protected void fillContextMenu(IMenuManager mgr)
    {
       mgr.add(actionAdd);
       mgr.add(actionEdit);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

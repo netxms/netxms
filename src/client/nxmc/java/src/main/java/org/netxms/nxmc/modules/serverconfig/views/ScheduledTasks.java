@@ -108,7 +108,7 @@ public class ScheduledTasks extends ConfigurationView
     */
    @Override
    public void createContent(Composite parent)
-   {      
+   {
       final int[] widths = { 50, 100, 200, 400, 200, 150, 200, 150, 100, 200, 250, 200 };
       final String[] names = { i18n.tr("ID"), i18n.tr("Schedule Type"), i18n.tr("Object"), i18n.tr("Parameters"), i18n.tr("Timer key"), i18n.tr("Execution time"), i18n.tr("Execution time description"), i18n.tr("Last execution time"),
             i18n.tr("Execution status"), i18n.tr("Administrative status"), i18n.tr("Owner"), i18n.tr("Comments") };
@@ -128,6 +128,7 @@ public class ScheduledTasks extends ConfigurationView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "ScheduledTasks");
       final PreferenceStore settings = PreferenceStore.getInstance();
       filter.setShowCompletedTasks(settings.getAsBoolean("ScheduledTasks.showCompleted", true));
@@ -192,7 +193,7 @@ public class ScheduledTasks extends ConfigurationView
          }
       };
       actionShowCompletedTasks.setChecked(filter.isShowCompletedTasks());
-      
+
       actionShowDisabledTasks = new Action(i18n.tr("Show &disabled tasks"), IAction.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -202,7 +203,7 @@ public class ScheduledTasks extends ConfigurationView
          }
       };
       actionShowDisabledTasks.setChecked(filter.isShowDisabledTasks());
-      
+
       actionShowSystemTasks = new Action(i18n.tr("Show &system tasks"), IAction.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -221,7 +222,7 @@ public class ScheduledTasks extends ConfigurationView
          }
       };
       addKeyBinding("M1+N", actionCreate);
-      
+
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -331,7 +332,7 @@ public class ScheduledTasks extends ConfigurationView
                if (reschedule)
                   session.addScheduledTask(task);
                else
-                  session.updateScheduledTask(task);                  
+                  session.updateScheduledTask(task);
             }
          }
 
@@ -357,7 +358,7 @@ public class ScheduledTasks extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(Object o : selection.toList())
-            {  
+            {
                ScheduledTask task = (ScheduledTask)o;
                task.setEnabed(enabled);
                session.updateScheduledTask(task);
@@ -376,10 +377,10 @@ public class ScheduledTasks extends ConfigurationView
     * Create task
     */
    private void createTask()
-   {     
+   {
       new Job(i18n.tr("Creating scheduled task"), this) {
          private ScheduledTask task = null;
-         
+
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -414,6 +415,9 @@ public class ScheduledTasks extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(new Separator());
       manager.add(actionShowCompletedTasks);
       manager.add(actionShowDisabledTasks);
@@ -428,7 +432,7 @@ public class ScheduledTasks extends ConfigurationView
    {
       manager.add(actionCreate);
    }
-   
+
    /**
     * Create pop-up menu for variable list
     */
@@ -455,8 +459,8 @@ public class ScheduledTasks extends ConfigurationView
    protected void fillContextMenu(IMenuManager mgr)
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() == 1) 
-      {         
+      if (selection.size() == 1)
+      {
          ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
          if (origin.getSchedule().isEmpty())
          {
@@ -464,7 +468,7 @@ public class ScheduledTasks extends ConfigurationView
          }
          else
          {
-            mgr.add(actionEdit);            
+            mgr.add(actionEdit);
          }
       }
 
@@ -479,7 +483,7 @@ public class ScheduledTasks extends ConfigurationView
          if(containDisabled && containEnabled)
             break;
       }
-         
+
       if (containDisabled)
          mgr.add(actionEnable);
       if (containEnabled)
@@ -544,7 +548,7 @@ public class ScheduledTasks extends ConfigurationView
    @Override
    public void setFocus()
    {
-      viewer.getTable().setFocus();      
+      viewer.getTable().setFocus();
    }
 
    /**

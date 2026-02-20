@@ -92,8 +92,8 @@ public class WirelessStations extends NodeSubObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && 
-            ((context instanceof AbstractNode) && (((AbstractNode)context).isWirelessAccessPoint() || ((AbstractNode)context).isWirelessController()) || 
+      return (context != null) &&
+            ((context instanceof AbstractNode) && (((AbstractNode)context).isWirelessAccessPoint() || ((AbstractNode)context).isWirelessController()) ||
             (context instanceof AccessPoint));
    }
 
@@ -116,6 +116,7 @@ public class WirelessStations extends NodeSubObjectView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "WirelessStations.V2");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -152,6 +153,9 @@ public class WirelessStations extends NodeSubObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
 		manager.add(actionExportAllToCsv);
 	}
 
@@ -163,7 +167,7 @@ public class WirelessStations extends NodeSubObjectView
 	{
 		manager.add(actionExportAllToCsv);
 	}
-	
+
 	/**
     * Create context menu
     */
@@ -261,7 +265,7 @@ public class WirelessStations extends NodeSubObjectView
 
    /**
     * Copy content to clipboard
-    * 
+    *
     * @param column column number or -1 to copy all columns
     */
    private void copyToClipboard(int column)

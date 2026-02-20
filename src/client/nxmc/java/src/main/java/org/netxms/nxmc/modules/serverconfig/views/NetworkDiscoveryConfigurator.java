@@ -35,6 +35,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -199,6 +201,18 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = filterAddressList.getResetColumnOrderAction();
+      if (resetAction != null)
+      {
+         manager.add(new Action(resetAction.getText()) {
+            @Override
+            public void run()
+            {
+               filterAddressList.resetColumnOrder();
+               activeDiscoveryAddressList.resetColumnOrder();
+            }
+         });
+      }
       manager.add(actionSave);
    }
 
@@ -275,7 +289,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       radioDiscoveryActiveAndPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActiveAndPassive.setText(i18n.tr("Active and passive"));
       radioDiscoveryActiveAndPassive.setBackground(clientArea.getBackground());
-      radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
+      radioDiscoveryActiveAndPassive.addSelectionListener(listener);
 
       checkEnableSNMPProbing = new Button(clientArea, SWT.CHECK);
       checkEnableSNMPProbing.setText(i18n.tr("Enable SNMP probing"));
@@ -396,7 +410,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             }
          }
       });
-      
+
       activeDiscoveryScheduleLabel = new Label(clientArea, SWT.LEFT);
       activeDiscoveryScheduleLabel.setText(i18n.tr("Active discovery schedule configuration"));
       activeDiscoveryScheduleLabel.setBackground(clientArea.getBackground());
@@ -411,17 +425,17 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             setModified();
             if (radioActiveDiscoveryInterval.getSelection())
             {
-               config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));  
+               config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));
                activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? NetworkDiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
                activeDiscoverySchedule.setEnabled(false);
-               activeDiscoveryInterval.setEnabled(true);         
+               activeDiscoveryInterval.setEnabled(true);
             }
             else
             {
                config.setActiveDiscoveryPollInterval(0);
                activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
                activeDiscoverySchedule.setEnabled(true);
-               activeDiscoveryInterval.setEnabled(false); 
+               activeDiscoveryInterval.setEnabled(false);
             }
          }
 
@@ -430,7 +444,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          {
             widgetSelected(e);
          }
-      };      
+      };
 
       radioActiveDiscoveryInterval = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoveryInterval.setText(i18n.tr("Interval"));
@@ -470,11 +484,11 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             config.setActiveDiscoveryPollSchedule(activeDiscoverySchedule.getText());
             setModified();
          }
-      });  
+      });
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.LEFT;
-      activeDiscoverySchedule.setLayoutData(gd);  
+      activeDiscoverySchedule.setLayoutData(gd);
    }
 
    /**
@@ -559,6 +573,15 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          public void doubleClick(DoubleClickEvent event)
          {
             editAddressFilterElement();
+         }
+      });
+      filterAddressList.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(filterAddressList, getBaseId() + ".filterAddressList");
+      filterAddressList.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(filterAddressList, getBaseId() + ".filterAddressList");
          }
       });
 
@@ -707,7 +730,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
       activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider(true));
       activeDiscoveryAddressList.setComparator(new AddressListElementComparator(true));
-      
+
       // Hide Zone column if zoning is disabled
       if (!Registry.getSession().isZoningEnabled())
       {
@@ -720,6 +743,15 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          public void doubleClick(DoubleClickEvent event)
          {
             editTargetAddressListElement();
+         }
+      });
+      activeDiscoveryAddressList.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(activeDiscoveryAddressList, getBaseId() + ".activeDiscoveryAddressList");
+      activeDiscoveryAddressList.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(activeDiscoveryAddressList, getBaseId() + ".activeDiscoveryAddressList");
          }
       });
 
@@ -747,7 +779,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          {
             addTargetAddressListElement();
          }
-      });      
+      });
 
       final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
       linkEdit.setText(i18n.tr("Edit..."));
@@ -923,7 +955,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          }
       }
    }
-   
+
    /**
     * Edit active discovery range element
     */
@@ -959,7 +991,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
          setModified();
       }
    }
-   
+
    /**
     * Scan select address range(s)
     */

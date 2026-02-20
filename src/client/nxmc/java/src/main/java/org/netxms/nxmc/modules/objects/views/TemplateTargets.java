@@ -69,7 +69,7 @@ public class TemplateTargets extends ObjectView
    public static final int COLUMN_DESCRIPTION = 4;
 
    private SessionListener sessionListener;
-   private SortableTableViewer viewer; 
+   private SortableTableViewer viewer;
    private TemplateTargetsFilter filter;
    private TemplateTargetsLabelProvider labelProvider;
    private Action actionAddTarget;
@@ -96,7 +96,7 @@ public class TemplateTargets extends ObjectView
             i18n.tr("Zone"),
             i18n.tr("Primary host name"),
             i18n.tr("Description"),
-            
+
       };
       final int[] widths = { 60, 300, 300, 300, 300 };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
@@ -107,6 +107,7 @@ public class TemplateTargets extends ObjectView
       filter = new TemplateTargetsFilter(labelProvider);
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "InterfacesView.TableViewer");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -114,7 +115,7 @@ public class TemplateTargets extends ObjectView
          {
             WidgetHelper.saveColumnSettings(viewer.getTable(), "InterfacesView.TableViewer");
          }
-      });     
+      });
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -128,10 +129,10 @@ public class TemplateTargets extends ObjectView
             }
          }
       });
-      
+
       createActions();
       createContextMenu();
-      
+
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -155,7 +156,7 @@ public class TemplateTargets extends ObjectView
       };
       session.addListener(sessionListener);
    }
-   
+
    /**
     * Create context menu
     */
@@ -194,6 +195,9 @@ public class TemplateTargets extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionAddTarget);
       manager.add(new Separator());
    }
@@ -220,7 +224,7 @@ public class TemplateTargets extends ObjectView
          }
       };
       actionRemoveTarget.setEnabled(false);
-      
+
 
       actionGoToObject = new Action(i18n.tr("Go to &Object")) {
          @Override
@@ -269,7 +273,7 @@ public class TemplateTargets extends ObjectView
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       final long parentId = getObjectId();
       final TemplateRemovalDialog dlg = new TemplateRemovalDialog(getWindow().getShell());
       if (dlg.open() != Window.OK)
@@ -292,9 +296,9 @@ public class TemplateTargets extends ObjectView
          }
       }.start();
    }
-   
-   
-   
+
+
+
    /**
     * Open template and it's DCI
     */
@@ -304,7 +308,7 @@ public class TemplateTargets extends ObjectView
       if (selection.size() != 1)
          return;
 
-      AbstractObject object = (AbstractObject)selection.getFirstElement();      
+      AbstractObject object = (AbstractObject)selection.getFirstElement();
       MainWindow.switchToObject(object.getObjectId(), 0);
    }
 

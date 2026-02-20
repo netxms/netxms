@@ -123,6 +123,7 @@ public class MappingTableManagerView extends ConfigurationView
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "MappingTablesList");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -237,6 +238,9 @@ public class MappingTableManagerView extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
 		manager.add(actionNewTable);
 	}
 
@@ -248,7 +252,7 @@ public class MappingTableManagerView extends ConfigurationView
 	{
 		manager.add(actionNewTable);
 	}
-	
+
 	/**
 	 * Create pop-up menu for variable list
 	 */
@@ -387,7 +391,7 @@ public class MappingTableManagerView extends ConfigurationView
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
 			return;
-		
+
 		MappingTableDescriptor d = (MappingTableDescriptor)selection.getFirstElement();
       openView(new MappingTableEditorView(d.getId(), d.getName()));
 	}

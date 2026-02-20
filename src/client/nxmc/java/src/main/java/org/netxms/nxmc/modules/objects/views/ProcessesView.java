@@ -140,6 +140,7 @@ public class ProcessesView extends ObjectView
       viewer.setLabelProvider(new ProcessLabelProvider());
       viewer.setComparator(new ProcessComparator());
       viewer.addFilter(new ProcessFilter());
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "ProcessTable");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -187,12 +188,23 @@ public class ProcessesView extends ObjectView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    protected void fillContextMenu(IMenuManager manager)
    {
       manager.add(actionTerminate);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
    }
 
    /**

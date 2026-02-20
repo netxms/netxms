@@ -100,8 +100,8 @@ public class SwitchForwardingDatabaseView extends ObjectView
     */
    @Override
    protected void createContent(Composite parent)
-	{	   
-		final String[] names = { 
+	{
+		final String[] names = {
             i18n.tr("MAC"), i18n.tr("NIC Vendor"), i18n.tr("Port"), i18n.tr("Interface"), i18n.tr("VLAN"), i18n.tr("Node"), i18n.tr("Type")
 		   };
 		final int[] widths = { 180, 200, 100, 200, 100, 250, 110 };
@@ -113,6 +113,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
 		setFilterClient(viewer, filter);
 		viewer.addFilter(filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, "SwitchForwardingDatabase");
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -182,6 +183,9 @@ public class SwitchForwardingDatabaseView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      Action resetAction = viewer.getResetColumnOrderAction();
+      if (resetAction != null)
+         manager.add(resetAction);
       manager.add(actionExportAllToCsv);
    }
 

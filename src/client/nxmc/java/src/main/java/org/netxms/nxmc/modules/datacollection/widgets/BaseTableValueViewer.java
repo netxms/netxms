@@ -110,7 +110,7 @@ public abstract class BaseTableValueViewer extends Composite
       viewer.addFilter(filter);
       cellSelectionManager = new CellSelectionManager(viewer);
 
-      final PreferenceStore ds = PreferenceStore.getInstance(); 
+      final PreferenceStore ds = PreferenceStore.getInstance();
       labelProvider.setUseMultipliers(ds.getAsBoolean(configId + ".useMultipliers", false));
 
       if (saveTableSettings)
@@ -130,7 +130,7 @@ public abstract class BaseTableValueViewer extends Composite
 
    /**
     * Build configuration ID
-    *  
+    *
     * @param configSubId configuration sub-ID
     * @return configuration ID
     */
@@ -154,7 +154,7 @@ public abstract class BaseTableValueViewer extends Composite
       };
       actionUseMultipliers.setChecked(labelProvider.areMultipliersUsed());
    }
-   
+
    /**
     * Create pop-up menu
     */
@@ -172,7 +172,7 @@ public abstract class BaseTableValueViewer extends Composite
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager
     */
    protected void fillContextMenu(IMenuManager manager)
@@ -183,7 +183,7 @@ public abstract class BaseTableValueViewer extends Composite
 
    /**
     * Set initial sorting column and direction
-    * 
+    *
     * @param columnName name of the column to be used for initial sorting
     * @param direction initial sorting direction (SWT.UP or SWT.DOWN)
     */
@@ -195,7 +195,7 @@ public abstract class BaseTableValueViewer extends Composite
 
    /**
     * Update viewer with fresh table data
-    * 
+    *
     * @param table new table DCI data
     */
    protected void updateViewer(final Table table)
@@ -226,8 +226,9 @@ public abstract class BaseTableValueViewer extends Composite
          }
          viewer.createColumns(names, widths, columnIndex, sortDirection);
 
+         viewer.enableColumnReordering();
          if (saveTableSettings)
-            WidgetHelper.restoreTableViewerSettings(viewer, configId); 
+            WidgetHelper.restoreTableViewerSettings(viewer, configId);
          viewer.getTable().addDisposeListener((e) -> {
             if (saveTableSettings)
                WidgetHelper.saveTableViewerSettings(viewer, configId);
@@ -266,7 +267,7 @@ public abstract class BaseTableValueViewer extends Composite
          if (cd.isInstanceColumn())
          {
             if (!first)
-               instance.append("~~~"); 
+               instance.append("~~~");
             instance.append(row.getValue(i));
             first = false;
          }
@@ -279,7 +280,7 @@ public abstract class BaseTableValueViewer extends Composite
     */
    public String getTitle()
    {
-      return (currentData != null) ? currentData.getTitle() : ""; 
+      return (currentData != null) ? currentData.getTitle() : "";
    }
 
    /**
@@ -289,7 +290,17 @@ public abstract class BaseTableValueViewer extends Composite
    {
       return viewer;
    }
-   
+
+   /**
+    * Get action for resetting column order
+    *
+    * @return reset column order action
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return viewer.getResetColumnOrderAction();
+   }
+
    /**
     * @return
     */
@@ -297,7 +308,7 @@ public abstract class BaseTableValueViewer extends Composite
    {
       return actionUseMultipliers;
    }
-   
+
    /**
     * Refresh table
     */

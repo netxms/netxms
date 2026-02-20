@@ -123,6 +123,7 @@ public class AiMessageList extends Composite
       filter = new AiMessageListFilter(labelProvider);
       viewer.addFilter(filter);
 
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -508,5 +509,15 @@ public class AiMessageList extends Composite
    public Action getActionDelete()
    {
       return actionDelete;
+   }
+
+   /**
+    * Get action for resetting column order
+    *
+    * @return reset column order action
+    */
+   public Action getActionResetColumnOrder()
+   {
+      return viewer.getResetColumnOrderAction();
    }
 }
