@@ -28,6 +28,26 @@
 bool CheckUserMembershipInternal(uint32_t userId, uint32_t groupId, GroupSearchPath *searchPath);
 
 /**
+ * User flag to JSON field name mapping
+ */
+static FlagNameMapping s_userFlagMapping[] =
+{
+   { UF_DISABLED, "disabled" },
+   { UF_CHANGE_PASSWORD, "changePassword" },
+   { UF_CANNOT_CHANGE_PASSWORD, "cannotChangePassword" },
+   { UF_INTRUDER_LOCKOUT, "intruderLockout" },
+   { UF_PASSWORD_NEVER_EXPIRES, "passwordNeverExpires" },
+   { UF_LDAP_USER, "ldapUser" },
+   { UF_SYNC_EXCEPTION, "syncException" },
+   { UF_CLOSE_OTHER_SESSIONS, "closeOtherSessions" },
+   { UF_TOKEN_AUTH_ONLY, "tokenAuthOnly" },
+   { UF_2FA_EXEMPT, "twoFAExempt" },
+   { UF_2FA_ENFORCE, "twoFAEnforce" },
+   { UF_SERVICE_ACCOUNT, "serviceAccount" },
+   { 0, nullptr }
+};
+
+/**
  * Compare user IDs (for qsort)
  */
 static int CompareUserId(const void *e1, const void *e2)
@@ -264,11 +284,11 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
       m_uiAccessRules = WideStringFromUTF8String(uiAccessRules);
    }
 
-   if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
+   json_t *jsonFlags = json_object_get(const_cast<json_t*>(json), "flags");
+   if (json_is_object(jsonFlags))
    {
-      uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
-      // Modify only specific flags from JSON
-      // Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
+      uint32_t flags = static_cast<uint32_t>(json_object_update_flags(jsonFlags, m_flags, s_userFlagMapping));
+      // Apply only specific flags from JSON; ignore all but CHANGE_PASSWORD for superuser and "everyone" group
       m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
       if (m_id == 0)
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
@@ -463,7 +483,7 @@ json_t *UserDatabaseObject::toJson() const
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "systemRights", json_integer(m_systemRights));
    json_object_set_new(root, "uiAccessRules", json_string_t(m_uiAccessRules));
-   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "flags", json_boolean_object(m_flags, s_userFlagMapping));
    json_object_set_new(root, "attributes", m_attributes.toJson());
    json_object_set_new(root, "ldapDn", json_string_t(m_ldapDn));
    json_object_set_new(root, "ldapId", json_string_t(m_ldapId));

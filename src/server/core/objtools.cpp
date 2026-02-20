@@ -2049,19 +2049,20 @@ static const int ToolTypeFromString(const char *type)
 }
 
 /**
- * Add flags as boolean fields to JSON object
+ * Object tool flag to JSON field name mapping
  */
-static void AddFlagsToJson(json_t *tool, uint32_t flags)
+static FlagNameMapping s_toolFlagMapping[] =
 {
-   json_object_set_new(tool, "askConfirmation", json_boolean(flags & TF_ASK_CONFIRMATION));
-   json_object_set_new(tool, "generatesOutput", json_boolean(flags & TF_GENERATES_OUTPUT));
-   json_object_set_new(tool, "disabled", json_boolean(flags & TF_DISABLED));
-   json_object_set_new(tool, "showInCommands", json_boolean(flags & TF_SHOW_IN_COMMANDS));
-   json_object_set_new(tool, "snmpIndexedByValue", json_boolean(flags & TF_SNMP_INDEXED_BY_VALUE));
-   json_object_set_new(tool, "runInContainerContext", json_boolean(flags & TF_RUN_IN_CONTAINER_CONTEXT));
-   json_object_set_new(tool, "suppressSuccessMessage", json_boolean(flags & TF_SUPPRESS_SUCCESS_MESSAGE));
-   json_object_set_new(tool, "setupTcpTunnel", json_boolean(flags & TF_SETUP_TCP_TUNNEL));
-}
+   { TF_ASK_CONFIRMATION, "askConfirmation" },
+   { TF_GENERATES_OUTPUT, "generatesOutput" },
+   { TF_DISABLED, "disabled" },
+   { TF_SHOW_IN_COMMANDS, "showInCommands" },
+   { TF_SNMP_INDEXED_BY_VALUE, "snmpIndexedByValue" },
+   { TF_RUN_IN_CONTAINER_CONTEXT, "runInContainerContext" },
+   { TF_SUPPRESS_SUCCESS_MESSAGE, "suppressSuccessMessage" },
+   { TF_SETUP_TCP_TUNNEL, "setupTcpTunnel" },
+   { 0, nullptr }
+};
 
 /**
  * Load object tool's input field definitions
@@ -2406,7 +2407,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
 
       json_object_set_new(tool, "type", json_string(ToolTypeToString(toolType)));
 
-      AddFlagsToJson(tool, flags);
+      json_object_set_new(tool, "flags", json_boolean_object(flags, s_toolFlagMapping));
 
       DBGetFieldUTF8(hResult, i, 7, buffer, sizeof(buffer));
       json_object_set_new(tool, "confirmationMessage", json_string(buffer));
@@ -2513,7 +2514,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
       MemFree(data);
 
       uint32_t flags = DBGetFieldULong(hResult, 0, 3);
-      AddFlagsToJson(tool, flags);
+      json_object_set_new(tool, "flags", json_boolean_object(flags, s_toolFlagMapping));
 
       DBGetField(hResult, 0, 4, buffer, MAX_DB_STRING);
       json_object_set_new(tool, "description", json_string_t(buffer));
