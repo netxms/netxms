@@ -312,9 +312,8 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       time_t timeRemaining = tokenMaxExpiresAt - now;
       if ((timeRemaining > 0) && (timeRemaining <= static_cast<time_t>(GetAuthTokenWarningThreshold())))
       {
-         TCHAR buffer[32];
-         _sntprintf(buffer, 32, _T("%d"), static_cast<int>(timeRemaining));
-         context->setResponseHeader(_T("X-Token-Expires-In"), buffer);
+         wchar_t buffer[32];
+         context->setResponseHeader(_T("X-Token-Expires-In"), IntegerToString(static_cast<int>(timeRemaining), buffer));
          context->setResponseHeader(_T("X-Token-Refresh-Recommended"), _T("true"));
       }
    }
