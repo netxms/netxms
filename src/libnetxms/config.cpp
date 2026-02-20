@@ -743,29 +743,28 @@ void ConfigEntry::createXml(StringBuffer &xml, int level) const
 /**
  * Create JSON element(s) from config entry
  */
-void ConfigEntry::createJson(json_t *parent) const
+void ConfigEntry::createJson(json_t *parent, bool toCamelCase) const
 {
-   TCHAR *name = MemCopyString(m_name);
-   TCHAR *ptr = _tcschr(name, _T('#'));
-   if (ptr != nullptr)
-      *ptr = 0;
+   StringBuffer name(m_name);
+   ssize_t index = name.find(_T("#"));
+   if (index > 0)
+      name.truncate(index);
 
-   char *utf8Name = UTF8StringFromTString(name);
-   MemFree(name);
+   std::string utf8Name = name.getUTF8StdString();
+   if (toCamelCase && !utf8Name.empty())
+      utf8Name[0] = tolower(utf8Name[0]); // make name camel case; it will not affect reading as it is case-insensitive
 
    if (m_first != nullptr)
    {
       json_t *obj = json_object();
       for (ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
          e->createJson(obj);
-      json_object_set_new(parent, utf8Name, obj);
+      json_object_set_new(parent, utf8Name.c_str(), obj);
    }
    else if (!m_values.isEmpty())
    {
-      json_object_set_new(parent, utf8Name, json_string_t(m_values.get(0)));
+      json_object_set_new(parent, utf8Name.c_str(), json_string_t(m_values.get(0)));
    }
-
-   MemFree(utf8Name);
 }
 
 /**
@@ -1932,7 +1931,7 @@ String Config::createXml() const
 /**
  * Create JSON from config. Caller is responsible for calling json_decref() on the returned object.
  */
-json_t *Config::createJson(const TCHAR *topLevelTag) const
+json_t *Config::createJson(const TCHAR *topLevelTag, bool toCamelCase) const
 {
    json_t *root = json_object();
 
@@ -1954,7 +1953,7 @@ json_t *Config::createJson(const TCHAR *topLevelTag) const
       if (children != nullptr)
       {
          for (int i = 0; i < children->size(); i++)
-            children->get(i)->createJson(root);
+            children->get(i)->createJson(root, toCamelCase);
       }
    }
 
