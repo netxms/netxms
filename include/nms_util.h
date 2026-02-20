@@ -1519,6 +1519,7 @@ public:
    StringBuffer& replace(const TCHAR *src, const TCHAR *dst);
    StringBuffer& trim();
    StringBuffer& shrink(size_t chars = 1);
+   StringBuffer& truncate(size_t newLength);
    StringBuffer& removeRange(size_t start, ssize_t len = -1);
 
    StringBuffer& toUppercase();

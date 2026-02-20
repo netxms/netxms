@@ -1231,6 +1231,19 @@ StringBuffer& StringBuffer::shrink(size_t chars)
 }
 
 /**
+ * Truncate string to given length
+ */
+StringBuffer& StringBuffer::truncate(size_t newLength)
+{
+   if (m_length > newLength)
+   {
+      m_length = newLength;
+      m_buffer[m_length] = 0;
+   }
+   return *this;
+}
+
+/**
  * Clear string
  */
 void StringBuffer::clear(bool releaseBuffer)
