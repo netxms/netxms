@@ -712,6 +712,25 @@ void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Returns JSON array with group membership information for given user.
+ * Access to user database must be locked.
+ */
+json_t *GroupMembershipInfoToJson(uint32_t userId)
+{
+   IntegerArray<uint32_t> list;
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *object = it.next();
+      if (object->isGroup() && (object->getId() != GROUP_EVERYONE) && ((Group *)object)->isMember(userId))
+      {
+         list.add(object->getId());
+      }
+   }
+   return json_integer_array(list);
+}
+
+/**
  * Update group membership for user
  */
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)

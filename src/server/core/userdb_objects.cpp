@@ -1132,6 +1132,7 @@ json_t *User::toJson() const
    json_object_set_new(root, "authFailures", json_integer(m_authFailures));
    json_object_set_new(root, "email", json_string_t(m_email));
    json_object_set_new(root, "phoneNumber", json_string_t(m_phoneNumber));
+   json_object_set_new(root, "groups", GroupMembershipInfoToJson(m_id));
    return root;
 }
 

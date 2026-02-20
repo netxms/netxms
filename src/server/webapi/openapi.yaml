@@ -3506,6 +3506,11 @@ components:
         phoneNumber:
           type: string
           description: Phone number
+        groups:
+          type: array
+          items:
+            type: integer
+          description: List of group identifiers this user belongs to
     UserGroup:
       type: object
       description: User group

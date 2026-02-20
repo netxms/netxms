@@ -570,6 +570,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
 void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Object *ldapObject);
 void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
+json_t *GroupMembershipInfoToJson(uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const IntegerArray<uint32_t>& ids);
