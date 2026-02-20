@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -145,8 +145,8 @@ static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object
    }
 
    StringList args = SplitCommandLine(object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr));
-   TCHAR actionName[MAX_PARAM_NAME];
-   _tcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
+   wchar_t actionName[MAX_PARAM_NAME];
+   wcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
    args.remove(0);
 
    uint32_t rcc;
