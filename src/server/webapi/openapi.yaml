@@ -1832,6 +1832,44 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/object-tools:
+    get:
+      summary: List object tools applicable to an object
+      description: Retrieve a list of object tools that are applicable to the specified object, filtered by tool ACL, container context, disabled status, and the tool's menu filter (SNMP/agent requirements, OID match, OS match, template match, custom attribute match).
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID to filter tools for
+        - name: types
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of tool types to filter by. Uses kebab-case format (e.g., "action,server-script,ssh-command")
+      responses:
+        '200':
+          description: Successful retrieval of applicable object tools.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectToolSummary'
+        '400':
+          description: Invalid object ID.
+        '403':
+          description: User does not have read access to the object.
+        '404':
+          description: Object with given ID does not exist.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
   /v1/objects/query:
     post:
       summary: Execute object query
