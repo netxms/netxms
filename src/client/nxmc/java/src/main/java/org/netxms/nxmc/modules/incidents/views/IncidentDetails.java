@@ -472,6 +472,9 @@ public class IncidentDetails extends AdHocObjectView
       Action resetAction = alarmViewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = alarmViewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       super.fillLocalMenu(manager);
    }
 

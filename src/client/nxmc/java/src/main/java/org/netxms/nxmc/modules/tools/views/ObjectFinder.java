@@ -838,6 +838,9 @@ public class ObjectFinder extends View
       Action resetAction = results.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = results.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionStartSearch);
       manager.add(actionSaveAs);
       manager.add(new Separator());

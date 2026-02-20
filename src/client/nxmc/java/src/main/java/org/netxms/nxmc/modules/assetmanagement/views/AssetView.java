@@ -415,6 +415,9 @@ public class AssetView extends ObjectView
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       attributeSelectionSubMenu.update(true);
       manager.add(attributeSelectionSubMenu);
    }

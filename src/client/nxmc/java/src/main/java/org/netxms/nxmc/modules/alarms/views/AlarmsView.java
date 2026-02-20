@@ -145,6 +145,7 @@ public class AlarmsView extends ObjectView
    {
       manager.add(alarmList.getActionShowColors());
       manager.add(alarmList.getActionResetColumnOrder());
+      manager.add(alarmList.getActionShowAllColumns());
       manager.add(new Separator());
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);

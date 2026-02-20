@@ -114,6 +114,9 @@ public class SummaryTable extends AdHocObjectView
       Action resetAction = viewer.getViewer().getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getViewer().getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionExportAllToCsv);
    }
 

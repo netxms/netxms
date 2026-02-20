@@ -213,6 +213,18 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             }
          });
       }
+      Action showAllAction = filterAddressList.getShowAllColumnsAction();
+      if (showAllAction != null)
+      {
+         manager.add(new Action(showAllAction.getText()) {
+            @Override
+            public void run()
+            {
+               filterAddressList.showAllColumns();
+               activeDiscoveryAddressList.showAllColumns();
+            }
+         });
+      }
       manager.add(actionSave);
    }
 

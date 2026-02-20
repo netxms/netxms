@@ -606,4 +606,14 @@ public class IncidentList extends Composite
    {
       return viewer.getResetColumnOrderAction();
    }
+
+   /**
+    * Get action to show all hidden columns.
+    *
+    * @return show all columns action
+    */
+   public Action getActionShowAllColumns()
+   {
+      return viewer.getShowAllColumnsAction();
+   }
 }

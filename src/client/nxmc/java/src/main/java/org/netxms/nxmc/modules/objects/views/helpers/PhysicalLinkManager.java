@@ -269,6 +269,9 @@ public class PhysicalLinkManager
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          mgr.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         mgr.add(showAllAction);
       mgr.add(actionAdd);
       mgr.add(actionEdit);
       mgr.add(actionDelete);

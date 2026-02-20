@@ -1377,6 +1377,16 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
+    * Get action to show all hidden columns.
+    *
+    * @return action for showing all hidden columns
+    */
+   public Action getActionShowAllColumns()
+   {
+      return alarmViewer.getShowAllColumnsAction();
+   }
+
+   /**
     * Enable/disable status color background
     *
     * @param show

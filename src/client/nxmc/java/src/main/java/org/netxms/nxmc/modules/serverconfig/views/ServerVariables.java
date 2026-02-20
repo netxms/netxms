@@ -220,6 +220,9 @@ public class ServerVariables extends ConfigurationView
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionExportAllToCsv);
    }
 

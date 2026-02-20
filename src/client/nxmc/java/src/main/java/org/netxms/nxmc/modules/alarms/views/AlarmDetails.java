@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -208,7 +209,12 @@ public class AlarmDetails extends AdHocObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       if (eventViewer != null)
+      {
          manager.add(eventViewer.getResetColumnOrderAction());
+         Action showAllAction = eventViewer.getShowAllColumnsAction();
+         if (showAllAction != null)
+            manager.add(showAllAction);
+      }
    }
 
    /**

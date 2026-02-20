@@ -594,6 +594,9 @@ public class PolicyListView extends ObjectView implements SessionListener
       Action resetAction = policyList.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = policyList.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionCreate);
       manager.add(actionForceDeploy);
       manager.add(new Separator());

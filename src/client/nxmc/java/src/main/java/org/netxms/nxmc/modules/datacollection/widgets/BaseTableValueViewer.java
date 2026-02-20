@@ -302,6 +302,16 @@ public abstract class BaseTableValueViewer extends Composite
    }
 
    /**
+    * Get action to show all hidden columns.
+    *
+    * @return show all columns action
+    */
+   public Action getActionShowAllColumns()
+   {
+      return viewer.getShowAllColumnsAction();
+   }
+
+   /**
     * @return
     */
    public Action getActionUseMultipliers()

@@ -556,4 +556,14 @@ public class EventTemplateList extends Composite implements SessionListener
    {
       return viewer.getResetColumnOrderAction();
    }
+
+   /**
+    * Get action to show all hidden columns.
+    *
+    * @return show all columns action
+    */
+   public Action getActionShowAllColumns()
+   {
+      return viewer.getShowAllColumnsAction();
+   }
 }

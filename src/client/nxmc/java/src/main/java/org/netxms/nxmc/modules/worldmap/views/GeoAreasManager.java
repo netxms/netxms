@@ -288,6 +288,9 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
    }
 
    /**

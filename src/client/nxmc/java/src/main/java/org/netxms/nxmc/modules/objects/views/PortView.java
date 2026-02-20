@@ -357,6 +357,9 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       Action resetAction = vlanList.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = vlanList.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionExportAllToCsv);
    }
 

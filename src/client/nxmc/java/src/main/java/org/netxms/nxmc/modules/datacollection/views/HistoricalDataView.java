@@ -338,6 +338,9 @@ public class HistoricalDataView extends ViewWithContext
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionSelectRange);
       manager.add(new Separator());
       manager.add(actionExportAllToCsv);

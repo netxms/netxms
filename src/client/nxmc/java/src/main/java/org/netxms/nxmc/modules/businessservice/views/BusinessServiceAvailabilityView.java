@@ -267,6 +267,9 @@ public class BusinessServiceAvailabilityView extends ObjectView
       Action resetAction = ticketViewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = ticketViewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       super.fillLocalMenu(manager);
    }
 

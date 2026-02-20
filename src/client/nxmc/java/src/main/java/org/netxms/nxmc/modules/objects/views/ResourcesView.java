@@ -98,6 +98,9 @@ public class ResourcesView extends ObjectView
       Action resetAction = resourceList.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = resourceList.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       super.fillLocalMenu(manager);
    }
 

@@ -255,6 +255,9 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
       manager.add(actionUseMultipliers);

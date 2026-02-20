@@ -204,6 +204,13 @@ public class SoftwareInventoryView extends ObjectView
          resetAction = ((SortableTreeViewer)viewer).getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = null;
+      if (viewer instanceof SortableTableViewer)
+         showAllAction = ((SortableTableViewer)viewer).getShowAllColumnsAction();
+      else if (viewer instanceof SortableTreeViewer)
+         showAllAction = ((SortableTreeViewer)viewer).getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
    }
 
    /**

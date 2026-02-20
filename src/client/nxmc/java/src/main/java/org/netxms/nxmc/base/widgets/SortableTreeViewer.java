@@ -28,11 +28,13 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.nxmc.base.widgets.helpers.TreeSortingListener;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Implementation of TreeViewer with column sorting support
@@ -45,6 +47,9 @@ public class SortableTreeViewer extends TreeViewer
 	private List<TreeColumn> columns;
 	private TreeSortingListener sortingListener;
 	private Action actionResetColumnOrder;
+	private Action actionShowAllColumns;
+	private Menu headerMenu;
+	private int clickedColumnId = -1;
 
 	/**
 	 * Constructor
@@ -118,7 +123,11 @@ public class SortableTreeViewer extends TreeViewer
       Tree tree = getTree();
       int count = tree.getColumnCount();
       for(int i = 0; i < count; i++)
-         tree.getColumn(i).pack();
+      {
+         TreeColumn c = tree.getColumn(i);
+         if (c.getResizable())
+            c.pack();
+      }
    }
 
 	/**
@@ -233,14 +242,13 @@ public class SortableTreeViewer extends TreeViewer
     */
    public void enableColumnReordering(boolean persist)
    {
+      final I18n i18n = LocalizationHelper.getI18n(SortableTreeViewer.class);
       Tree tree = getTree();
       for(TreeColumn c : tree.getColumns())
          c.setMoveable(true);
       tree.setData("persistColumnOrder", Boolean.valueOf(persist));
 
-      String menuText = LocalizationHelper.getI18n(SortableTreeViewer.class).tr("Restore Default Column Order");
-
-      actionResetColumnOrder = new Action(menuText) {
+      actionResetColumnOrder = new Action(i18n.tr("Restore Default Column Order")) {
          @Override
          public void run()
          {
@@ -248,15 +256,72 @@ public class SortableTreeViewer extends TreeViewer
          }
       };
 
-      Menu headerMenu = new Menu(tree);
-      MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
-      resetItem.setText(menuText);
-      resetItem.addListener(SWT.Selection, e -> resetColumnOrder());
+      actionShowAllColumns = new Action(i18n.tr("Show All Columns")) {
+         @Override
+         public void run()
+         {
+            showAllColumns();
+         }
+      };
+
+      headerMenu = new Menu(tree);
+      headerMenu.addListener(SWT.Show, e -> {
+         for(MenuItem item : headerMenu.getItems())
+            item.dispose();
+
+         int visibleCount = 0;
+         for(TreeColumn c : tree.getColumns())
+            if (c.getData("savedWidth") == null)
+               visibleCount++;
+
+         if (clickedColumnId >= 0)
+         {
+            TreeColumn clickedColumn = getColumnById(clickedColumnId);
+            if (clickedColumn != null && clickedColumn.getData("savedWidth") == null)
+            {
+               MenuItem hideItem = new MenuItem(headerMenu, SWT.PUSH);
+               hideItem.setText(i18n.tr("Hide \"{0}\"", clickedColumn.getText()));
+               hideItem.addListener(SWT.Selection, ev -> hideColumn(clickedColumnId));
+               hideItem.setEnabled(visibleCount > 1);
+            }
+         }
+
+         if (hasHiddenColumns())
+         {
+            MenuItem showAllItem = new MenuItem(headerMenu, SWT.PUSH);
+            showAllItem.setText(i18n.tr("Show All Columns"));
+            showAllItem.addListener(SWT.Selection, ev -> showAllColumns());
+
+            MenuItem showCascade = new MenuItem(headerMenu, SWT.CASCADE);
+            showCascade.setText(i18n.tr("Show Column"));
+            Menu showMenu = new Menu(headerMenu);
+            showCascade.setMenu(showMenu);
+
+            int[] order = tree.getColumnOrder();
+            for(int idx : order)
+            {
+               TreeColumn c = tree.getColumn(idx);
+               if (c.getData("savedWidth") != null)
+               {
+                  int colId = (Integer)c.getData("ID");
+                  MenuItem showItem = new MenuItem(showMenu, SWT.PUSH);
+                  showItem.setText(c.getText());
+                  showItem.addListener(SWT.Selection, ev -> showColumn(colId));
+               }
+            }
+         }
+
+         new MenuItem(headerMenu, SWT.SEPARATOR);
+         MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
+         resetItem.setText(i18n.tr("Restore Default Column Order"));
+         resetItem.addListener(SWT.Selection, ev -> resetColumnOrder());
+      });
 
       tree.addListener(SWT.MenuDetect, event -> {
          Point pt = tree.getDisplay().map(null, tree, new Point(event.x, event.y));
          if (pt.y < tree.getHeaderHeight())
          {
+            clickedColumnId = getColumnIdAtHeaderPoint(pt);
             headerMenu.setLocation(event.x, event.y);
             headerMenu.setVisible(true);
             event.doit = false;
@@ -278,6 +343,97 @@ public class SortableTreeViewer extends TreeViewer
    }
 
    /**
+    * Hide column by ID (save width, set width to 0, make non-resizable).
+    *
+    * @param columnId column ID
+    */
+   public void hideColumn(int columnId)
+   {
+      TreeColumn column = getColumnById(columnId);
+      if (column == null || column.getData("savedWidth") != null)
+         return;
+      column.setData("savedWidth", Integer.valueOf(column.getWidth()));
+      column.setWidth(0);
+      column.setResizable(false);
+   }
+
+   /**
+    * Show column by ID (restore width, make resizable, clear saved width).
+    *
+    * @param columnId column ID
+    */
+   public void showColumn(int columnId)
+   {
+      TreeColumn column = getColumnById(columnId);
+      if (column == null || column.getData("savedWidth") == null)
+         return;
+      int width = (Integer)column.getData("savedWidth");
+      column.setData("savedWidth", null);
+      column.setResizable(true);
+      if (width > 0)
+         column.setWidth(width);
+      else
+         column.pack();
+   }
+
+   /**
+    * Show all hidden columns.
+    */
+   public void showAllColumns()
+   {
+      for(TreeColumn c : getTree().getColumns())
+      {
+         if (c.getData("savedWidth") != null)
+         {
+            int id = (Integer)c.getData("ID");
+            showColumn(id);
+         }
+      }
+   }
+
+   /**
+    * Check if any columns are hidden.
+    *
+    * @return true if there are hidden columns
+    */
+   public boolean hasHiddenColumns()
+   {
+      for(TreeColumn c : getTree().getColumns())
+         if (c.getData("savedWidth") != null)
+            return true;
+      return false;
+   }
+
+   /**
+    * Get column ID at the given header point by walking columns in display order.
+    *
+    * @param pt point relative to the tree
+    * @return column ID or -1 if not found
+    */
+   private int getColumnIdAtHeaderPoint(Point pt)
+   {
+      Tree tree = getTree();
+      int[] order = tree.getColumnOrder();
+      int scrollOffset = 0;
+      ScrollBar hBar = tree.getHorizontalBar();
+      if (hBar != null)
+         scrollOffset = hBar.getSelection();
+      int x = scrollOffset;
+      for(int idx : order)
+      {
+         TreeColumn c = tree.getColumn(idx);
+         int w = c.getWidth();
+         if (pt.x >= x - scrollOffset && pt.x < x - scrollOffset + w)
+         {
+            Object id = c.getData("ID");
+            return (id instanceof Integer) ? (Integer)id : -1;
+         }
+         x += w;
+      }
+      return -1;
+   }
+
+   /**
     * Get action for resetting column order to default. Returns null if column reordering is not enabled.
     *
     * @return action for resetting column order or null
@@ -285,5 +441,15 @@ public class SortableTreeViewer extends TreeViewer
    public Action getResetColumnOrderAction()
    {
       return actionResetColumnOrder;
+   }
+
+   /**
+    * Get action for showing all hidden columns. Returns null if column reordering is not enabled.
+    *
+    * @return action for showing all hidden columns or null
+    */
+   public Action getShowAllColumnsAction()
+   {
+      return actionShowAllColumns;
    }
 }

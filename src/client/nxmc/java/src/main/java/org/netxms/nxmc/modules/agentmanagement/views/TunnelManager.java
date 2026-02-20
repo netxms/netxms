@@ -290,6 +290,9 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = viewer.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);
    }

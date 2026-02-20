@@ -342,6 +342,9 @@ public class NetworkCredentialsEditor extends ConfigurationView
       Action resetAction = snmpUsmCredentialsList.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
+      Action showAllAction = snmpUsmCredentialsList.getShowAllColumnsAction();
+      if (showAllAction != null)
+         manager.add(showAllAction);
       super.fillLocalMenu(manager);
    }
 

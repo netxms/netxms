@@ -542,6 +542,74 @@ public class WidgetHelper
       return null;
    }
 
+   /**
+    * Build comma-separated string of hidden column IDs.
+    *
+    * @param columns column items
+    * @return comma-separated string of hidden column IDs
+    */
+   private static String buildHiddenColumnsString(Item[] columns)
+   {
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < columns.length; i++)
+      {
+         if (columns[i].getData("savedWidth") != null)
+         {
+            if (sb.length() > 0)
+               sb.append(',');
+            Object id = columns[i].getData("ID");
+            sb.append((id instanceof Integer) ? id : i);
+         }
+      }
+      return sb.toString();
+   }
+
+   /**
+    * Apply hidden state to columns from comma-separated ID string.
+    *
+    * @param hiddenStr comma-separated column IDs to hide
+    * @param columns column items
+    */
+   private static void applyHiddenColumns(String hiddenStr, Item[] columns)
+   {
+      if (hiddenStr == null || hiddenStr.isEmpty())
+         return;
+
+      Set<Integer> hiddenIds = new HashSet<>();
+      try
+      {
+         for(String idStr : hiddenStr.split(","))
+            hiddenIds.add(Integer.parseInt(idStr.trim()));
+      }
+      catch(NumberFormatException e)
+      {
+         return;
+      }
+
+      for(int i = 0; i < columns.length; i++)
+      {
+         Object id = columns[i].getData("ID");
+         int colId = (id instanceof Integer) ? (Integer)id : i;
+         if (hiddenIds.contains(colId))
+         {
+            if (columns[i] instanceof TableColumn)
+            {
+               TableColumn tc = (TableColumn)columns[i];
+               tc.setData("savedWidth", Integer.valueOf(tc.getWidth()));
+               tc.setWidth(0);
+               tc.setResizable(false);
+            }
+            else if (columns[i] instanceof TreeColumn)
+            {
+               TreeColumn tc = (TreeColumn)columns[i];
+               tc.setData("savedWidth", Integer.valueOf(tc.getWidth()));
+               tc.setWidth(0);
+               tc.setResizable(false);
+            }
+         }
+      }
+   }
+
 	/**
 	 * Save settings of table viewer columns
 	 *
@@ -557,7 +625,8 @@ public class WidgetHelper
          Object id = columns[i].getData("ID");
          if ((id == null) || !(id instanceof Integer))
             id = Integer.valueOf(i);
-         int width = columns[i].getWidth();
+         Object savedWidth = columns[i].getData("savedWidth");
+         int width = (savedWidth instanceof Integer) ? (Integer)savedWidth : columns[i].getWidth();
          if (((Integer)id == columns.length - 1) && SystemUtils.IS_OS_LINUX)
          {
             // Attempt workaround for Linux issue when last table column grows by few pixels on each open
@@ -582,6 +651,8 @@ public class WidgetHelper
       {
          settings.set(prefix + ".columnOrder", buildColumnOrderString(table.getColumnOrder(), columns));
       }
+
+      settings.set(prefix + ".hiddenColumns", buildHiddenColumnsString(columns));
 	}
 
 	/**
@@ -616,6 +687,8 @@ public class WidgetHelper
          if (order != null)
             table.setColumnOrder(order);
       }
+
+      applyHiddenColumns(settings.getAsString(prefix + ".hiddenColumns", ""), columns);
 	}
 
 	/**
@@ -633,13 +706,17 @@ public class WidgetHelper
          Object id = columns[i].getData("ID");
          if ((id == null) || !(id instanceof Integer))
             id = Integer.valueOf(i);
-         settings.set(prefix + "." + id + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
+         Object savedWidth = columns[i].getData("savedWidth");
+         int width = (savedWidth instanceof Integer) ? (Integer)savedWidth : columns[i].getWidth();
+         settings.set(prefix + "." + id + ".width", width); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
       if (Boolean.TRUE.equals(tree.getData("persistColumnOrder")))
       {
          settings.set(prefix + ".columnOrder", buildColumnOrderString(tree.getColumnOrder(), columns));
       }
+
+      settings.set(prefix + ".hiddenColumns", buildHiddenColumnsString(columns));
 	}
 
 	/**
@@ -674,6 +751,8 @@ public class WidgetHelper
          if (order != null)
             tree.setColumnOrder(order);
       }
+
+      applyHiddenColumns(settings.getAsString(prefix + ".hiddenColumns", ""), columns);
 	}
 
 	/**
@@ -794,8 +873,10 @@ public class WidgetHelper
    public static void saveColumnOrder(SortableTableViewer viewer, String prefix)
    {
       Table table = viewer.getTable();
-      PreferenceStore.getInstance().set(prefix + ".columnOrder",
+      PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set(prefix + ".columnOrder",
          buildColumnOrderString(table.getColumnOrder(), table.getColumns()));
+      settings.set(prefix + ".hiddenColumns", buildHiddenColumnsString(table.getColumns()));
    }
 
    /**
@@ -808,9 +889,11 @@ public class WidgetHelper
    public static void restoreColumnOrder(SortableTableViewer viewer, String prefix)
    {
       Table table = viewer.getTable();
-      int[] order = parseColumnOrder(PreferenceStore.getInstance().getAsString(prefix + ".columnOrder", ""), table.getColumns());
+      PreferenceStore settings = PreferenceStore.getInstance();
+      int[] order = parseColumnOrder(settings.getAsString(prefix + ".columnOrder", ""), table.getColumns());
       if (order != null)
          table.setColumnOrder(order);
+      applyHiddenColumns(settings.getAsString(prefix + ".hiddenColumns", ""), table.getColumns());
    }
 
    /**
@@ -823,8 +906,10 @@ public class WidgetHelper
    public static void saveColumnOrder(SortableTreeViewer viewer, String prefix)
    {
       Tree tree = viewer.getTree();
-      PreferenceStore.getInstance().set(prefix + ".columnOrder",
+      PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set(prefix + ".columnOrder",
          buildColumnOrderString(tree.getColumnOrder(), tree.getColumns()));
+      settings.set(prefix + ".hiddenColumns", buildHiddenColumnsString(tree.getColumns()));
    }
 
    /**
@@ -837,9 +922,11 @@ public class WidgetHelper
    public static void restoreColumnOrder(SortableTreeViewer viewer, String prefix)
    {
       Tree tree = viewer.getTree();
-      int[] order = parseColumnOrder(PreferenceStore.getInstance().getAsString(prefix + ".columnOrder", ""), tree.getColumns());
+      PreferenceStore settings = PreferenceStore.getInstance();
+      int[] order = parseColumnOrder(settings.getAsString(prefix + ".columnOrder", ""), tree.getColumns());
       if (order != null)
          tree.setColumnOrder(order);
+      applyHiddenColumns(settings.getAsString(prefix + ".hiddenColumns", ""), tree.getColumns());
    }
 
 	/**

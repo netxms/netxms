@@ -242,6 +242,18 @@ public class OSPFView extends ObjectView
             }
          });
       }
+      Action showAllAction = viewerAreas.getShowAllColumnsAction();
+      if (showAllAction != null)
+      {
+         manager.add(new Action(showAllAction.getText()) {
+            @Override
+            public void run()
+            {
+               viewerAreas.showAllColumns();
+               viewerNeighbors.showAllColumns();
+            }
+         });
+      }
       super.fillLocalMenu(manager);
    }
 

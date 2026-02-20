@@ -99,7 +99,7 @@ public class DataCollectionView extends BaseDataCollectionView
    private static final Logger logger = LoggerFactory.getLogger(DataCollectionView.class);
 
    private final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
-   
+
    public static final String VIEW_ID = "objects.data-collection";
 
    // Columns for "data collection configuration" mode
@@ -178,11 +178,11 @@ public class DataCollectionView extends BaseDataCollectionView
          if (dciConfig != null)
          {
             dciConfig.setUserData(viewer);
-            dciConfig.setRemoteChangeListener(changeListener);  
+            dciConfig.setRemoteChangeListener(changeListener);
          }
       }
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -191,7 +191,7 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       this.parent = parent;
 
-      VisibilityValidator validator = new VisibilityValidator() { 
+      VisibilityValidator validator = new VisibilityValidator() {
          @Override
          public boolean isVisible()
          {
@@ -202,15 +202,15 @@ public class DataCollectionView extends BaseDataCollectionView
       createActions();
 
       if (editMode)
-         createDataCollectionViewer(parent);  
-      else 
+         createDataCollectionViewer(parent);
+      else
          createLastValuesViewer(parent, validator);
 
       updateActionStates();
    }
 
    /**
-    * Create 
+    * Create
     */
    private void createDataCollectionViewer(Composite parent)
    {
@@ -228,9 +228,10 @@ public class DataCollectionView extends BaseDataCollectionView
       viewer.setLabelProvider(new DciLabelProvider());
       viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
       dcFilter = new DciFilter();
-      setFilterClient(viewer, dcFilter); 
+      setFilterClient(viewer, dcFilter);
       dcFilter.setHideTemplateItems(ds.getAsBoolean(configPrefix + ".hideTemplateItems", false));
       viewer.addFilter(dcFilter);
+      viewer.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       viewer.addSelectionChangedListener(new DciSelectionChange());
@@ -251,7 +252,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
       createContextMenu();
 
-      hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false); 
+      hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false);
 
       final Display display = viewer.getControl().getDisplay();
       changeListener = new RemoteChangeListener() {
@@ -272,7 +273,7 @@ public class DataCollectionView extends BaseDataCollectionView
          {
             display.asyncExec(() -> viewer.refresh());
          }
-      };   
+      };
    }
 
    /**
@@ -295,13 +296,13 @@ public class DataCollectionView extends BaseDataCollectionView
                break;
             }
          }
-      }   
-      viewer.setSelection(new StructuredSelection(selected.toArray()));     
+      }
+      viewer.setSelection(new StructuredSelection(selected.toArray()));
    }
 
    /**
     * Actions to make after last values view was created
-    * 
+    *
     * @param configPrefix
     * @param validator
     */
@@ -331,9 +332,9 @@ public class DataCollectionView extends BaseDataCollectionView
                   {
                      refresh();
                   }
-               }); 
+               });
             }
-         }        
+         }
       };
 
       session.addListener(clientListener);
@@ -341,7 +342,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Fill context menu
-    * 
+    *
     * @param mgr Menu manager
     */
    @Override
@@ -352,7 +353,7 @@ public class DataCollectionView extends BaseDataCollectionView
       if (!isTemplate)
       {
          ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
-      }         
+      }
       manager.add(actionCreateItem);
       manager.add(actionCreateTable);
       if (actionActivate.isEnabled())
@@ -366,15 +367,15 @@ public class DataCollectionView extends BaseDataCollectionView
       manager.add(actionBulkUpdate);
       manager.add(actionDuplicate);
       manager.add(actionDelete);
-      
+
       MenuManager moveOrCopy = new MenuManager(i18n.tr("Move or Copy"));
       moveOrCopy.add(actionCopy);
       moveOrCopy.add(actionMove);
       if (!isTemplate)
-         moveOrCopy.add(actionConvert);      
+         moveOrCopy.add(actionConvert);
       manager.add(moveOrCopy);
       manager.add(new Separator());
-      
+
       MenuManager export = new MenuManager(i18n.tr("E&xport"));
       export.add(actionExportToCsv);
       export.add(actionExportAllToCsv);
@@ -382,19 +383,19 @@ public class DataCollectionView extends BaseDataCollectionView
       export.add(actionCopyDciName);
       if (!editMode)
          export.add(actionCopyValueToClipboard);
-      manager.add(export);      
+      manager.add(export);
 
       MenuManager actions = new MenuManager(i18n.tr("A&ctions"));
       actions.add(actionForcePoll);
       actions.add(actionRecalculateData);
       actions.add(actionClearData);
-      manager.add(actions);      
+      manager.add(actions);
 
       MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
       if (editMode)
       {
          if (!isTemplate)
-            viewOptions.add(actionHideTemplateItems);         
+            viewOptions.add(actionHideTemplateItems);
       }
       else
       {
@@ -405,7 +406,7 @@ public class DataCollectionView extends BaseDataCollectionView
          viewOptions.add(actionShowHidden);
       }
       manager.add(viewOptions);
-      
+
       if (!isTemplate)
       {
          manager.add(new Separator());
@@ -419,7 +420,7 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    protected void createActions()
    {
-      super.createActions();      
+      super.createActions();
 
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
@@ -507,7 +508,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       };
       actionDisable.setEnabled(false);
-      
+
       actionActivateThresholds = new Action(i18n.tr("Enable threshold processing"), ResourceManager.getImageDescriptor("icons/dci/active.gif")) {
          @Override
          public void run()
@@ -526,7 +527,7 @@ public class DataCollectionView extends BaseDataCollectionView
                actionActivateThresholds.setEnabled(true);
          }
       };
-    
+
       actionCreateItem = new Action(i18n.tr("&New parameter..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -554,7 +555,7 @@ public class DataCollectionView extends BaseDataCollectionView
             switchMode();
             refresh();
          }
-      }; 
+      };
       actionToggleEditMode.setChecked(editMode);
       addKeyBinding("M1+M", actionToggleEditMode);
 
@@ -576,7 +577,7 @@ public class DataCollectionView extends BaseDataCollectionView
             commitDciChanges(false);
          }
       };
-      actionApplyChanges.setEnabled(false);      
+      actionApplyChanges.setEnabled(false);
       addKeyBinding("M1+S", actionApplyChanges);
 
       actionShowTemplate = new Action(i18n.tr("Go to &Template DCI")) {
@@ -620,7 +621,7 @@ public class DataCollectionView extends BaseDataCollectionView
                         viewer.setInput(dciConfig.getItems());
                         if (callback != null)
                            callback.run();
-                        else 
+                        else
                         {
                            List<DataCollectionObject> selected = new ArrayList<DataCollectionObject>(selection.size());
                            Iterator<?> it = selection.iterator();
@@ -635,8 +636,8 @@ public class DataCollectionView extends BaseDataCollectionView
                                     break;
                                  }
                               }
-                           }   
-                           viewer.setSelection(new StructuredSelection(selected.toArray()));                           
+                           }
+                           viewer.setSelection(new StructuredSelection(selected.toArray()));
                         }
                      }
                   });
@@ -685,7 +686,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Get data collection object from given object
-    * 
+    *
     * @param dci dci object
     * @return DCO
     */
@@ -703,7 +704,7 @@ public class DataCollectionView extends BaseDataCollectionView
       }
       return dco;
    }
-   
+
    /**
     * Open template and it's DCI
     */
@@ -714,10 +715,10 @@ public class DataCollectionView extends BaseDataCollectionView
          return;
 
       DataCollectionObject dco = getDataCollectionObject(selection.getFirstElement());
-      
+
       MainWindow.switchToObject(dco.getTemplateId(), dco.getTemplateItemId());
    }
-   
+
    /**
     * Create new data collection item
     */
@@ -738,12 +739,12 @@ public class DataCollectionView extends BaseDataCollectionView
       }
       showDCIPropertyPages(dci);
    }
-   
+
    /**
     * Create new data collection table
     */
    private void createTable()
-   {     
+   {
       DataCollectionTable dci = new DataCollectionTable(dciConfig, 0);
       AbstractObject object = getObject();
       if ((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
@@ -762,7 +763,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Change status for selected items
-    * 
+    *
     * @param newStatus New status
     */
    private void setItemStatus(final DataCollectionObjectStatus newStatus)
@@ -800,7 +801,7 @@ public class DataCollectionView extends BaseDataCollectionView
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
          return;
 
@@ -860,7 +861,7 @@ public class DataCollectionView extends BaseDataCollectionView
       final long[] dciList = new long[selection.size()];
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getDciId(it.next());
-      
+
       new Job(i18n.tr("Duplicating data collection items for {0}", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -875,7 +876,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       }.start();
    }
-   
+
    /**
     * Copy items to another node
     */
@@ -936,12 +937,12 @@ public class DataCollectionView extends BaseDataCollectionView
     * Open bulk update dialog
     */
    private void openBulkUpdateDialog()
-   {      
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
       final Set<Long> dciList = new HashSet<Long>(selection.size());
 
       boolean isCustomRetention = true;
-      boolean isCustomInterval = true;      
+      boolean isCustomInterval = true;
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
       {
@@ -951,14 +952,14 @@ public class DataCollectionView extends BaseDataCollectionView
             isCustomRetention = false;
          if (dco.getPollingScheduleType() != DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
             isCustomInterval = false;
-      }      
+      }
 
       BulkUpdateDialog dlg = new BulkUpdateDialog(getWindow().getShell(), isCustomRetention, isCustomInterval);
       if (dlg.open() != Window.OK)
-         return;      
+         return;
 
       final List<BulkDciUpdateElementUI> elements = dlg.getBulkUpdateElements();
-      
+
       boolean changed = false;
       for (BulkDciUpdateElementUI e : elements)
       {
@@ -1042,7 +1043,7 @@ public class DataCollectionView extends BaseDataCollectionView
             {
                session.applyTemplate(template.getObjectId(), dciConfig.getOwnerId());
             }
-           
+
             monitor.done();
          }
 
@@ -1056,27 +1057,27 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Open bulk update dialog
-    * @return 
+    * @return
     */
    private boolean changeThresholdStatus(boolean disableThresholds)
-   {      
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      final Set<Long> dciList = new HashSet<Long>(selection.size());   
+      final Set<Long> dciList = new HashSet<Long>(selection.size());
       final List<BulkDciUpdateElement> elements;
-      
+
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
       {
          DataCollectionObject dco = getDataCollectionObject(it.next());
          dciList.add(dco.getId());
-      }    
-      
+      }
+
       if (disableThresholds)
       {
          DisableThresholdsDialog dlg = new DisableThresholdsDialog(getWindow().getShell());
          if (dlg.open() != Window.OK)
-            return false;      
-         
+            return false;
+
          elements = dlg.getBulkUpdateElements();
       }
       else
@@ -1109,9 +1110,9 @@ public class DataCollectionView extends BaseDataCollectionView
       actionApplyChanges.setEnabled(true);
       if (!viewer.getTable().isDisposed() && messageId < 1)
       {
-         messageId = addMessage(MessageArea.INFORMATION, 
-               i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"), 
-               true, "Apply changes", new Runnable() {            
+         messageId = addMessage(MessageArea.INFORMATION,
+               i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"),
+               true, "Apply changes", new Runnable() {
             @Override
             public void run()
             {
@@ -1151,7 +1152,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       }
 
-      VisibilityValidator validator = new VisibilityValidator() { 
+      VisibilityValidator validator = new VisibilityValidator() {
          @Override
          public boolean isVisible()
          {
@@ -1161,14 +1162,14 @@ public class DataCollectionView extends BaseDataCollectionView
 
       if (editMode)
       {
-         createDataCollectionViewer(parent);  
+         createDataCollectionViewer(parent);
          if (dciConfig != null)
          {
             dciConfig.setUserData(viewer);
-            dciConfig.setRemoteChangeListener(changeListener);  
+            dciConfig.setRemoteChangeListener(changeListener);
          }
       }
-      else 
+      else
       {
          createLastValuesViewer(parent, validator);
       }
@@ -1197,7 +1198,7 @@ public class DataCollectionView extends BaseDataCollectionView
    public boolean isValidForContext(Object context)
    {
       return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Template));
-   }  
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
@@ -1205,7 +1206,7 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (!editMode && (object instanceof Template))      
+      if (!editMode && (object instanceof Template))
       {
          editMode = true;
          actionToggleEditMode.setChecked(true);
@@ -1232,10 +1233,10 @@ public class DataCollectionView extends BaseDataCollectionView
             dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
             if (object instanceof Template)
             {
-               dciConfig.setLocalChangeListener(new LocalChangeListener() {                  
+               dciConfig.setLocalChangeListener(new LocalChangeListener() {
                   @Override
                   public void onObjectChange()
-                  {         
+                  {
                      runInUIThread(new Runnable() {
                         @Override
                         public void run()
@@ -1256,7 +1257,7 @@ public class DataCollectionView extends BaseDataCollectionView
                   if(dco.getRelatedObject() != 0)
                      relatedOpbjects.add(dco.getRelatedObject());
                }
-               if (relatedOpbjects.size() > 0) 
+               if (relatedOpbjects.size() > 0)
                {
                   session.syncMissingObjects(relatedOpbjects, NXCSession.OBJECT_SYNC_WAIT);
                }
@@ -1269,7 +1270,7 @@ public class DataCollectionView extends BaseDataCollectionView
                   if (editMode)
                   {
                      dciConfig.setUserData(DataCollectionView.this);
-                     dciConfig.setRemoteChangeListener(changeListener);  
+                     dciConfig.setRemoteChangeListener(changeListener);
                   }
 
                   if (isActive())
@@ -1283,7 +1284,7 @@ public class DataCollectionView extends BaseDataCollectionView
          {
             return i18n.tr("Cannot open data collection configuration for {0}", object.getObjectName());
          }
-      }.start(); 
+      }.start();
    }
 
    /**
@@ -1365,17 +1366,17 @@ public class DataCollectionView extends BaseDataCollectionView
                return i18n.tr("Cannot close data collection configuration for {0}", getObjectName());
             }
          }.start();
-      } 
+      }
       super.dispose();
    }
 
    /**
     * Commit DCI changes
-    * 
+    *
     * @param ignoreErrors if true, ignore possible commit errors
     */
    private void commitDciChanges(boolean ignoreErrors)
-   { 
+   {
       if (dciConfig == null)
          return;
 
@@ -1414,7 +1415,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Set new view input
-    * 
+    *
     * @param items
     */
    public void setInput(DataCollectionObject[] items)
@@ -1424,7 +1425,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Update modified object
-    *  
+    *
     * @param object
     */
    public void update(DataCollectionObject object)
@@ -1434,7 +1435,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    /**
     * Set visibility mode for template items
-    * 
+    *
     * @param hide true to hide template items
     */
    private void setHideTemplateItems(boolean hide)
@@ -1444,13 +1445,13 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
-    * Select DCI 
-    * 
+    * Select DCI
+    *
     * @param dciId DCI id
     */
    public void selectDci(long dciId)
    {
-      refresh( new Runnable() {         
+      refresh( new Runnable() {
          @Override
          public void run()
          {
@@ -1459,16 +1460,16 @@ public class DataCollectionView extends BaseDataCollectionView
                for (DataCollectionObject item : (DataCollectionObject[])viewer.getInput())
                {
                   if (item.getId() == dciId)
-                     viewer.setSelection(new StructuredSelection(item), true); 
+                     viewer.setSelection(new StructuredSelection(item), true);
                }
             }
-            else 
+            else
             {
                for (DciValue item : (DciValue[])viewer.getInput())
                {
                   if (item.getId() == dciId)
-                     viewer.setSelection(new StructuredSelection(item), true); 
-               }            
+                     viewer.setSelection(new StructuredSelection(item), true);
+               }
             }
          }
       });
@@ -1482,17 +1483,17 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       super.saveState(memento);
       memento.set("editMode", editMode);
-   }  
+   }
 
    /**
-    * @throws ViewNotRestoredException 
+    * @throws ViewNotRestoredException
     * @see org.netxms.nxmc.base.views.ViewWithContext#restoreState(org.netxms.nxmc.Memento)
     */
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
       editMode = memento.getAsBoolean("editMode", false);
-   }     
+   }
 
    /**
     * DCI selection change listener class
@@ -1521,7 +1522,7 @@ public class DataCollectionView extends BaseDataCollectionView
             while(it.hasNext() && (!canActivate || !canDisable))
             {
                Object object = it.next();
-               if (object instanceof DataCollectionObject) 
+               if (object instanceof DataCollectionObject)
                {
                   DataCollectionObject dci = (DataCollectionObject)object;
                   if (dci.getStatus() != DataCollectionObjectStatus.ACTIVE)
@@ -1531,7 +1532,7 @@ public class DataCollectionView extends BaseDataCollectionView
                   if (dci.getThresholdDisableEndTime() != 0)
                      canActivateThresholds = true;
                   if (dci.getTemplateId() != 0)
-                     hasTemplate = true;    
+                     hasTemplate = true;
                }
                else
                {
@@ -1546,8 +1547,8 @@ public class DataCollectionView extends BaseDataCollectionView
                   {
                      DataCollectionObject dco = getDataCollectionObject(dci);
                      if (dco != null && dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
-                        hasTemplate = true;                            
-                  }        
+                        hasTemplate = true;
+                  }
                }
             }
             actionActivate.setEnabled(canActivate);
