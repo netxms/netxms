@@ -203,6 +203,7 @@ public:
       m_handler = handler;
       m_requestData.setAllocationStep(32768);
       m_responseData.setAllocationStep(32768);
+      m_contentType[0] = 0;
       m_requestDocument = nullptr;
       m_userId = userId;
       _tcscpy(m_loginName, userName);
@@ -365,7 +366,7 @@ public:
    {
       char *s = json_dumps(data, 0);
       setResponseData(s, strlen(s), "application/json");
-      free(s);
+      MemFree(s);
    }
 
    void setErrorResponse(const char *reason)

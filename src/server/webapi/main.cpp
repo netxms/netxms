@@ -211,6 +211,15 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/grafana/query-list")
       .GET(H_GrafanaObjectQueryList)
       .build();
+   RouteBuilder("v1/object-tools")
+      .GET(H_ObjectTools)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id")
+      .GET(H_ObjectToolDetails)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id/execute")
+      .POST(H_ObjectToolExecute)
+      .build();
    RouteBuilder("v1/objects")
       .GET(H_Objects)
       .build();
@@ -273,15 +282,6 @@ static bool InitModule(Config *config)
       .GET(H_ServerActionDetails)
       .PUT(H_ServerActionUpdate)
       .DELETE(H_ServerActionDelete)
-      .build();
-   RouteBuilder("v1/object-tools")
-      .GET(H_ObjectTools)
-      .build();
-   RouteBuilder("v1/object-tools/:tool-id")
-      .GET(H_ObjectToolDetails)
-      .build();
-   RouteBuilder("v1/object-tools/:tool-id/execute")
-      .POST(H_ObjectToolExecute)
       .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)
