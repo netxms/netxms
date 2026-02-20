@@ -77,6 +77,7 @@ int H_ObjectSearch(Context *context);
 int H_ObjectToolExecute(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
+int H_ObjectToolsForObject(Context *context);
 int H_ScriptLibrary(Context *context);
 int H_ScriptDetails(Context *context);
 int H_ScriptCreate(Context *context);
@@ -255,6 +256,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/take-screenshot")
       .GET(H_TakeScreenshot)
+      .build();
+   RouteBuilder("v1/objects/:object-id/object-tools")
+      .GET(H_ObjectToolsForObject)
       .build();
    RouteBuilder("v1/objects/:object-id/sub-tree")
       .GET(H_ObjectSubTree)

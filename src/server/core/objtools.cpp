@@ -24,6 +24,7 @@
 #include <netxms-regex.h>
 #include <nxtools.h>
 #include <nms_users.h>
+#include <pugixml.h>
 
 /**
  * Object tool acl entry
@@ -2111,10 +2112,190 @@ static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, json_t *to
 }
 
 /**
- * Get all object tools available for given user into JSON document
+ * Filter flags for object menu filter
  */
-json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter)
+#define MENU_FILTER_REQUIRES_SNMP                    0x01
+#define MENU_FILTER_REQUIRES_AGENT                   0x02
+#define MENU_FILTER_REQUIRES_OID_MATCH               0x04
+#define MENU_FILTER_REQUIRES_NODE_OS_MATCH           0x08
+#define MENU_FILTER_REQUIRES_TEMPLATE_MATCH          0x10
+#define MENU_FILTER_REQUIRES_CUSTOM_ATTRIBUTE_MATCH  0x40
+
+/**
+ * Check if object tool's menu filter is applicable for given object.
+ * Filter XML has format:
+ *   <objectMenuFilter>
+ *     <flags>N</flags>
+ *     <toolOS>pattern</toolOS>
+ *     <snmpOid>pattern</snmpOid>
+ *     <toolTemplate>pattern1,pattern2</toolTemplate>
+ *     <toolCustomAttributes>pattern1,pattern2</toolCustomAttributes>
+ *   </objectMenuFilter>
+ */
+static bool IsToolFilterApplicable(const char *filterXml, const shared_ptr<NetObj>& object)
 {
+   if (filterXml == nullptr || *filterXml == 0)
+      return true;
+
+   pugi::xml_document doc;
+   if (!doc.load_string(filterXml))
+      return true; // Cannot parse filter - treat as applicable
+
+   pugi::xml_node root = doc.child("objectMenuFilter");
+   if (!root)
+      return true;
+
+   int filterFlags = root.child("flags").text().as_int(0);
+   if (filterFlags == 0)
+      return true;
+
+   if (object->getObjectClass() == OBJECT_NODE)
+   {
+      Node& node = static_cast<Node&>(*object);
+
+      if ((filterFlags & MENU_FILTER_REQUIRES_SNMP) && !node.isSNMPSupported())
+         return false;
+
+      if ((filterFlags & MENU_FILTER_REQUIRES_AGENT) && !node.isNativeAgent())
+         return false;
+
+      if (filterFlags & MENU_FILTER_REQUIRES_OID_MATCH)
+      {
+         const char *oidPattern = root.child_value("snmpOid");
+         if (oidPattern != nullptr && *oidPattern != 0)
+         {
+            WCHAR patternW[256];
+            utf8_to_wchar(oidPattern, -1, patternW, 256);
+            WCHAR oidStr[256];
+            node.getSNMPObjectId().toStringW(oidStr, 256);
+            if (!MatchStringW(patternW, oidStr, false))
+               return false;
+         }
+      }
+
+      if (filterFlags & MENU_FILTER_REQUIRES_NODE_OS_MATCH)
+      {
+         const char *osPatterns = root.child_value("toolOS");
+         if (osPatterns != nullptr && *osPatterns != 0)
+         {
+            bool match = false;
+            char *buf = MemCopyStringA(osPatterns);
+            char *state;
+            char *token = strtok_r(buf, ",", &state);
+            while (token != nullptr)
+            {
+               WCHAR *patternW = WideStringFromUTF8String(token);
+               if (RegexpMatchW(node.getPlatformName(), patternW, true))
+               {
+                  match = true;
+                  MemFree(patternW);
+                  break;
+               }
+               MemFree(patternW);
+               token = strtok_r(nullptr, ",", &state);
+            }
+            MemFree(buf);
+            if (!match)
+               return false;
+         }
+      }
+   }
+   else
+   {
+      if (filterFlags & (MENU_FILTER_REQUIRES_SNMP | MENU_FILTER_REQUIRES_AGENT | MENU_FILTER_REQUIRES_OID_MATCH | MENU_FILTER_REQUIRES_NODE_OS_MATCH))
+         return false;
+   }
+
+   if (filterFlags & MENU_FILTER_REQUIRES_TEMPLATE_MATCH)
+   {
+      if (object->getObjectClass() != OBJECT_NODE && object->getObjectClass() != OBJECT_CLUSTER)
+         return false;
+
+      const char *templatePatterns = root.child_value("toolTemplate");
+      if (templatePatterns != nullptr && *templatePatterns != 0)
+      {
+         bool match = false;
+         unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATE);
+         for(int p = 0; p < parents->size() && !match; p++)
+         {
+            char *buf = MemCopyStringA(templatePatterns);
+            char *state;
+            char *token = strtok_r(buf, ",", &state);
+            while (token != nullptr)
+            {
+               TrimA(token);
+               WCHAR *patternW = WideStringFromUTF8String(token);
+               if (RegexpMatchW(parents->get(p)->getName(), patternW, true))
+               {
+                  match = true;
+                  MemFree(patternW);
+                  break;
+               }
+               MemFree(patternW);
+               token = strtok_r(nullptr, ",", &state);
+            }
+            MemFree(buf);
+         }
+         if (!match)
+            return false;
+      }
+   }
+
+   if (filterFlags & MENU_FILTER_REQUIRES_CUSTOM_ATTRIBUTE_MATCH)
+   {
+      const char *attrPatterns = root.child_value("toolCustomAttributes");
+      if (attrPatterns != nullptr && *attrPatterns != 0)
+      {
+         StringList patterns;
+         char *buf = MemCopyStringA(attrPatterns);
+         char *state;
+         char *token = strtok_r(buf, ",", &state);
+         while (token != nullptr)
+         {
+            TrimA(token);
+            patterns.addPreallocated(WideStringFromUTF8String(token));
+            token = strtok_r(nullptr, ",", &state);
+         }
+         MemFree(buf);
+
+         bool match = false;
+         object->forEachCustomAttribute(
+            [&patterns, &match](const TCHAR *key, const CustomAttribute *value) -> EnumerationCallbackResult
+            {
+               for(int i = 0; i < patterns.size(); i++)
+               {
+                  if (RegexpMatch(key, patterns.get(i), true))
+                  {
+                     match = true;
+                     return _STOP;
+                  }
+               }
+               return _CONTINUE;
+            }
+         );
+
+         if (!match)
+            return false;
+      }
+   }
+
+   return true;
+}
+
+/**
+ * Get object tools available for given user into JSON document.
+ * If objectId is non-zero, only tools applicable to that object are returned.
+ */
+json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter, uint32_t objectId)
+{
+   shared_ptr<NetObj> object;
+   if (objectId != 0)
+   {
+      object = FindObjectById(objectId);
+      if (object == nullptr)
+         return json_array();
+   }
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
    if (hResult == nullptr)
@@ -2166,6 +2347,20 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
       if (!typeSet.isEmpty() && !typeSet.contains(toolType))
          continue;
 
+      uint32_t flags = DBGetFieldULong(hResult, i, 4);
+
+      if (object != nullptr)
+      {
+         // Skip disabled tools when filtering for a specific object
+         if (flags & TF_DISABLED)
+            continue;
+
+         // Container context check: tool with RUN_IN_CONTAINER_CONTEXT must match container objects and vice versa
+         if ((flags & TF_RUN_IN_CONTAINER_CONTEXT) ? !object->isContainerObject() : object->isContainerObject())
+            continue;
+      }
+
+      // Check ACL
       bool hasAccess = fullAccess;
       if (!fullAccess)
       {
@@ -2184,33 +2379,47 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
          }
       }
 
-      if (hasAccess)
+      if (!hasAccess)
+         continue;
+
+      // Apply object menu filter when filtering for a specific object
+      if (object != nullptr)
       {
-         json_t *tool = json_object();
-         json_object_set_new(tool, "id", json_integer(toolId));
-
-         char buffer[1024];
-         DBGetFieldUTF8(hResult, i, 1, buffer, sizeof(buffer));
-         json_object_set_new(tool, "name", json_string(buffer));
-
-         json_object_set_new(tool, "type", json_string(ToolTypeToString(toolType)));
-
-         uint32_t flags = DBGetFieldULong(hResult, i, 4);
-         AddFlagsToJson(tool, flags);
-
-         DBGetFieldUTF8(hResult, i, 7, buffer, sizeof(buffer));
-         json_object_set_new(tool, "confirmationMessage", json_string(buffer));
-
-         DBGetFieldUTF8(hResult, i, 8, buffer, sizeof(buffer));
-         json_object_set_new(tool, "commandName", json_string(buffer));
-
-         DBGetFieldUTF8(hResult, i, 9, buffer, sizeof(buffer));
-         json_object_set_new(tool, "commandShortName", json_string(buffer));
-
-         LoadInputFieldDefinitions(toolId, hdb, tool);
-
-         json_array_append_new(tools, tool);
+         TCHAR *filterTChar = DBGetField(hResult, i, 6, nullptr, 0);
+         if (filterTChar != nullptr)
+         {
+            char *filterUtf8 = UTF8StringFromWideString(filterTChar);
+            MemFree(filterTChar);
+            bool applicable = IsToolFilterApplicable(filterUtf8, object);
+            MemFree(filterUtf8);
+            if (!applicable)
+               continue;
+         }
       }
+
+      json_t *tool = json_object();
+      json_object_set_new(tool, "id", json_integer(toolId));
+
+      char buffer[1024];
+      DBGetFieldUTF8(hResult, i, 1, buffer, sizeof(buffer));
+      json_object_set_new(tool, "name", json_string(buffer));
+
+      json_object_set_new(tool, "type", json_string(ToolTypeToString(toolType)));
+
+      AddFlagsToJson(tool, flags);
+
+      DBGetFieldUTF8(hResult, i, 7, buffer, sizeof(buffer));
+      json_object_set_new(tool, "confirmationMessage", json_string(buffer));
+
+      DBGetFieldUTF8(hResult, i, 8, buffer, sizeof(buffer));
+      json_object_set_new(tool, "commandName", json_string(buffer));
+
+      DBGetFieldUTF8(hResult, i, 9, buffer, sizeof(buffer));
+      json_object_set_new(tool, "commandShortName", json_string(buffer));
+
+      LoadInputFieldDefinitions(toolId, hdb, tool);
+
+      json_array_append_new(tools, tool);
    }
 
    DBFreeResult(hResult);
