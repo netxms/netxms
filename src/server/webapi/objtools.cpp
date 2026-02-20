@@ -71,6 +71,35 @@ int H_ObjectTools(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/object-tools
+ */
+int H_ObjectToolsForObject(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   const char *typesFilter = context->getQueryParameter("types");
+   json_t *tools = GetObjectToolsIntoJSON(context->getUserId(),
+      context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS), typesFilter, objectId);
+   if (tools == nullptr)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+   context->setResponseData(tools);
+   json_decref(tools);
+   return 200;
+}
+
+/**
  * Handler for /v1/object-tools/:tool-id
  */
 int H_ObjectToolDetails(Context *context)
