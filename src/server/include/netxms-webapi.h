@@ -118,6 +118,7 @@ class NXCORE_EXPORTABLE RouteBuilder
 private:
    const char *m_path;
    bool m_auth;
+   char m_scope[32];
    RouteHandler m_handlers[5];
    MHD_UpgradeHandler m_upgradeHandler;
 
@@ -126,6 +127,7 @@ public:
    {
       m_path = path;
       m_auth = true;
+      m_scope[0] = 0;
       memset(m_handlers, 0, sizeof(m_handlers));
    }
 
@@ -162,6 +164,12 @@ public:
    RouteBuilder& noauth()
    {
       m_auth = false;
+      return *this;
+   }
+
+   RouteBuilder& scope(const char *s)
+   {
+      strlcpy(m_scope, s, sizeof(m_scope));
       return *this;
    }
 

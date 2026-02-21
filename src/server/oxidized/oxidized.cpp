@@ -41,6 +41,8 @@ std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetLatestBackup(const Node&
 std::pair<DeviceBackupApiStatus, std::vector<BackupData>> OxidizedGetBackupList(const Node& node);
 std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetBackupById(const Node& node, int64_t id);
 
+int H_OxidizedNodes(Context *context);
+
 /**
  * Global configuration variables
  */
@@ -196,8 +198,10 @@ static bool OxidizedInitializeModule(Config *config)
    if (g_oxidizedDefaultModel[0] != 0)
       nxlog_debug_tag(DEBUG_TAG, 5, L"Oxidized default model set to \"%hs\"", g_oxidizedDefaultModel);
 
-   extern int H_OxidizedNodes(Context *context);
-   RouteBuilder("oxidized/nodes").GET(H_OxidizedNodes).build();
+   RouteBuilder("oxidized/nodes")
+      .GET(H_OxidizedNodes)
+      .scope("oxydized")
+      .build();
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"Oxidized integration module version " NETXMS_VERSION_STRING L" initialized");
    return true;
