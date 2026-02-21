@@ -36,6 +36,7 @@ struct Route
    RouteHandler handlers[5];
    MHD_UpgradeHandler upgradeHandler;
    bool auth;
+   char scope[32];
 };
 
 /**
@@ -68,17 +69,18 @@ void RouteBuilder::build()
    {
       StringBuffer methods;
       if (m_handlers[(int)Method::GET] != nullptr)
-         methods.append(_T("GET "));
+         methods.append(L"GET ");
       if (m_handlers[(int)Method::POST] != nullptr)
-         methods.append(_T("POST "));
+         methods.append(L"POST ");
       if (m_handlers[(int)Method::PUT] != nullptr)
-         methods.append(_T("PUT "));
+         methods.append(L"PUT ");
       if (m_handlers[(int)Method::PATCH] != nullptr)
-         methods.append(_T("PATCH "));
+         methods.append(L"PATCH ");
       if (m_handlers[(int)Method::DELETE] != nullptr)
-         methods.append(_T("DELETE "));
+         methods.append(L"DELETE ");
       methods.trim();
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Registering endpoint /%hs [%s]%s"), m_path, methods.cstr(), m_auth ? _T("") : _T(" (no auth)"));
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, L"Registering endpoint /%hs [%s]%s%s%hs", m_path, methods.cstr(),
+         m_auth ? L"" : L" (no auth)", (m_scope[0] != 0) ? L" (scope: " : L"", (m_scope[0] != 0) ? m_scope : "");
    }
 
    if (s_root == nullptr)
@@ -91,6 +93,7 @@ void RouteBuilder::build()
       memcpy(s_root->handlers, m_handlers, sizeof(m_handlers));
       s_root->upgradeHandler = m_upgradeHandler;
       s_root->auth = m_auth;
+      strlcpy(s_root->scope, m_scope, sizeof(s_root->scope));
       return;
    }
 
@@ -141,6 +144,7 @@ void RouteBuilder::build()
    memcpy(r->handlers, m_handlers, sizeof(m_handlers));
    r->upgradeHandler = m_upgradeHandler;
    r->auth = m_auth;
+   strlcpy(r->scope, m_scope, sizeof(r->scope));
 }
 
 /**
@@ -220,7 +224,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       const char *contentType = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE);
       if ((contentType == nullptr) || (strcmp(contentType, "application/json") && strncmp(contentType, "application/json;", 17)))
       {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Unsupported media type \"%hs\""), CHECK_NULL_A(contentType));
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Unsupported media type \"%hs\"", CHECK_NULL_A(contentType));
          *responseCode = 415;  // Unsupported Media Type
          return nullptr;
       }
