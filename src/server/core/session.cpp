@@ -12488,11 +12488,12 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
                {
                   StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+                  StringMap maskedInputFields(inputFields);
                   for (int i = 0; i < maskedFields.size(); i++)
                   {
-                     inputFields.set(maskedFields.get(i), _T("******"));
+                     maskedInputFields.set(maskedFields.get(i), _T("******"));
                   }
-                  maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
+                  maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &maskedInputFields, nullptr);
                }
                else
                {
