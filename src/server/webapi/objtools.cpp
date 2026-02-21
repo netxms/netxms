@@ -433,7 +433,7 @@ int H_ObjectToolExecute(Context *context)
    }
 
    // Check tool ACL
-   if (!CheckObjectToolAccess(toolId, context->getUserId()))
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS) && !CheckObjectToolAccess(toolId, context->getUserId()))
    {
       MemFree(toolData);
       return 403;
