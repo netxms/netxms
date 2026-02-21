@@ -4014,7 +4014,7 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
 {
    StringList *args = new StringList();
 
-   TCHAR *temp = _tcsdup(cmdline);
+   Buffer<TCHAR, 1024> temp(cmdline, _tcslen(cmdline) + 1);
    int state = 0;
 
    TCHAR *curr = temp;
@@ -4074,7 +4074,6 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
       if (*curr != 0)
          args->add(curr);
    }
-   MemFree(temp);
    return args;
 }
 
