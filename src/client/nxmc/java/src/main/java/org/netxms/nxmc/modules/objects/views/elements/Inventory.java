@@ -22,9 +22,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -140,6 +142,20 @@ public class Inventory extends TableElement
             addPair(i18n.tr("Vendor"), sensor.getVendor(), true);
             addPair(i18n.tr("Model"), sensor.getModel(), true);
             addPair(i18n.tr("Serial number"), sensor.getSerialNumber(), true);
+            break;
+         case AbstractObject.OBJECT_CLOUDDOMAIN:
+            CloudDomain cloudDomain = (CloudDomain)object;
+            addPair(i18n.tr("Connector"), cloudDomain.getConnectorName(), true);
+            addPair(i18n.tr("Account"), cloudDomain.getAccountIdentifier(), true);
+            addPair(i18n.tr("Auto-discover"), cloudDomain.isAutoDiscoverChildren() ? i18n.tr("Yes") : i18n.tr("No"));
+            break;
+         case AbstractObject.OBJECT_RESOURCE:
+            Resource resource = (Resource)object;
+            addPair(i18n.tr("Cloud resource ID"), resource.getCloudResourceId(), true);
+            addPair(i18n.tr("Connector"), resource.getConnectorName(), true);
+            addPair(i18n.tr("Type"), resource.getResourceType(), true);
+            addPair(i18n.tr("Region"), resource.getRegion(), true);
+            addPair(i18n.tr("Provider state"), resource.getProviderState(), true);
             break;
          case AbstractObject.OBJECT_TEMPLATE:
             Template template = (Template)object;

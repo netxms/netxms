@@ -56,6 +56,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.assetmanagement.dialogs.CreateAssetDialog;
 import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServicePrototype;
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateCloudDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
@@ -89,6 +90,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateCollector;
    private Action actionCreateCluster;
    private Action actionCreateCircuit;
+   private Action actionCreateCloudDomain;
    private Action actionCreateCondition;
    private Action actionCreateContainer;
    private Action actionCreateDashboard;
@@ -132,6 +134,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCircuit, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCloudDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCollector, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
@@ -294,6 +297,40 @@ public class ObjectCreateMenuManager extends MenuManager
       };
 
       actionCreateCircuit = new GenericObjectCreationAction(i18n.tr("&Circuit..."), AbstractObject.OBJECT_CIRCUIT, i18n.tr("Circuit"));
+
+      actionCreateCloudDomain = new Action(i18n.tr("C&loud domain...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateCloudDomainDialog dlg = new CreateCloudDomainDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating cloud domain"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CLOUDDOMAIN, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setConnectorName(dlg.getConnectorName());
+                  cd.setAccountIdentifier(dlg.getAccountIdentifier());
+                  cd.setCredentials(dlg.getCredentials());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create cloud domain object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
       actionCreateCondition = new GenericObjectCreationAction(i18n.tr("C&ondition..."), AbstractObject.OBJECT_CONDITION, i18n.tr("Condition"));
       actionCreateCollector = new GenericObjectCreationAction(i18n.tr("&Collector..."), AbstractObject.OBJECT_COLLECTOR, i18n.tr("Collector"));
       actionCreateContainer = new GenericObjectCreationAction(i18n.tr("&Container..."), AbstractObject.OBJECT_CONTAINER, i18n.tr("Container"));

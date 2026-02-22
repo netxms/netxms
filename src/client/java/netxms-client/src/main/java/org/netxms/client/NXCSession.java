@@ -177,9 +177,11 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -1666,6 +1668,12 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_SENSOR:
             object = new Sensor(msg, this);
+            break;
+         case AbstractObject.OBJECT_CLOUDDOMAIN:
+            object = new CloudDomain(msg, this);
+            break;
+         case AbstractObject.OBJECT_RESOURCE:
+            object = new Resource(msg, this);
             break;
          case AbstractObject.OBJECT_SERVICEROOT:
             object = new ServiceRoot(msg, this);
@@ -6826,6 +6834,18 @@ public class NXCSession
          case AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE:
             msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, data.getInstanceDiscoveryMethod());
             break;
+         case AbstractObject.OBJECT_CLOUDDOMAIN:
+            msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
+            msg.setField(NXCPCodes.VID_ACCOUNT_IDENTIFIER, data.getAccountIdentifier());
+            msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
+            msg.setField(NXCPCodes.VID_DISCOVERY_SCHEDULE, data.getDiscoverySchedule());
+            msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
+            msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
+            msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
+            msg.setFieldInt32(NXCPCodes.VID_DEFAULT_POLL_INTERVAL, data.getDefaultPollingInterval());
+            msg.setField(NXCPCodes.VID_AUTO_DISCOVER_CHILDREN, data.isAutoDiscoverChildren());
+            msg.setField(NXCPCodes.VID_AUTO_PROVISION_DCI, data.isAutoProvisionDCI());
+            break;
       }
 
       if (userData != null)
@@ -7782,6 +7802,29 @@ public class NXCSession
       {
          msg.setFieldInt64(NXCPCodes.VID_EXPECTED_CAPABILITIES, data.getExpectedCapabilities());
       }
+
+      if (data.getConnectorName() != null)
+         msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
+      if (data.getAccountIdentifier() != null)
+         msg.setField(NXCPCodes.VID_ACCOUNT_IDENTIFIER, data.getAccountIdentifier());
+      if (data.getCredentials() != null)
+         msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
+      if (data.getDiscoverySchedule() != null)
+         msg.setField(NXCPCodes.VID_DISCOVERY_SCHEDULE, data.getDiscoverySchedule());
+      if (data.getDiscoveryFilter() != null)
+         msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
+      if (data.getRemovalPolicy() != null)
+         msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
+      if (data.getGracePeriod() != null)
+         msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
+      if (data.getDefaultPollingInterval() != null)
+         msg.setFieldInt32(NXCPCodes.VID_DEFAULT_POLL_INTERVAL, data.getDefaultPollingInterval());
+      if (data.getAutoDiscoverChildren() != null)
+         msg.setField(NXCPCodes.VID_AUTO_DISCOVER_CHILDREN, data.getAutoDiscoverChildren());
+      if (data.getAutoProvisionDCI() != null)
+         msg.setField(NXCPCodes.VID_AUTO_PROVISION_DCI, data.getAutoProvisionDCI());
+      if (data.getCloudLinkedNodeId() != null)
+         msg.setFieldUInt32(NXCPCodes.VID_LINKED_NODE_ID, data.getCloudLinkedNodeId());
 
       modifyCustomObject(data, userData, msg);
 

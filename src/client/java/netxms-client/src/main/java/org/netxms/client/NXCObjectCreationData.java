@@ -110,6 +110,16 @@ public class NXCObjectCreationData
    private int instanceDiscoveryMethod;
    private long assetId;
    private Map<String, String> assetProperties;
+   private String connectorName;
+   private String accountIdentifier;
+   private String credentials;
+   private String discoverySchedule;
+   private String discoveryFilter;
+   private int removalPolicy;
+   private int gracePeriod;
+   private int defaultPollingInterval;
+   private boolean autoDiscoverChildren;
+   private boolean autoProvisionDCI;
 
 	/**
 	 * Constructor.
@@ -181,6 +191,16 @@ public class NXCObjectCreationData
 	   deviceAddress = "";
 	   gatewayNodeId = 0;
 	   webServiceProxyId = 0;
+      connectorName = "";
+      accountIdentifier = "";
+      credentials = "";
+      discoverySchedule = "";
+      discoveryFilter = "";
+      removalPolicy = 0;
+      gracePeriod = 0;
+      defaultPollingInterval = 0;
+      autoDiscoverChildren = false;
+      autoProvisionDCI = false;
 	}
 	
 	/**
@@ -266,6 +286,26 @@ public class NXCObjectCreationData
          gatewayNodeId = data.getGatewayNodeId();
       if (data.getWebServiceProxy() != null)
          webServiceProxyId = data.getWebServiceProxy();
+      if (data.getConnectorName() != null)
+         connectorName = data.getConnectorName();
+      if (data.getAccountIdentifier() != null)
+         accountIdentifier = data.getAccountIdentifier();
+      if (data.getCredentials() != null)
+         credentials = data.getCredentials();
+      if (data.getDiscoverySchedule() != null)
+         discoverySchedule = data.getDiscoverySchedule();
+      if (data.getDiscoveryFilter() != null)
+         discoveryFilter = data.getDiscoveryFilter();
+      if (data.getRemovalPolicy() != null)
+         removalPolicy = data.getRemovalPolicy();
+      if (data.getGracePeriod() != null)
+         gracePeriod = data.getGracePeriod();
+      if (data.getDefaultPollingInterval() != null)
+         defaultPollingInterval = data.getDefaultPollingInterval();
+      if (data.getAutoDiscoverChildren() != null)
+         autoDiscoverChildren = data.getAutoDiscoverChildren();
+      if (data.getAutoProvisionDCI() != null)
+         autoProvisionDCI = data.getAutoProvisionDCI();
 	}
 
 	/**
@@ -1238,6 +1278,166 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the connectorName
+    */
+   public String getConnectorName()
+   {
+      return connectorName;
+   }
+
+   /**
+    * @param connectorName the connectorName to set
+    */
+   public void setConnectorName(String connectorName)
+   {
+      this.connectorName = connectorName;
+   }
+
+   /**
+    * @return the accountIdentifier
+    */
+   public String getAccountIdentifier()
+   {
+      return accountIdentifier;
+   }
+
+   /**
+    * @param accountIdentifier the accountIdentifier to set
+    */
+   public void setAccountIdentifier(String accountIdentifier)
+   {
+      this.accountIdentifier = accountIdentifier;
+   }
+
+   /**
+    * @return the credentials
+    */
+   public String getCredentials()
+   {
+      return credentials;
+   }
+
+   /**
+    * @param credentials the credentials to set
+    */
+   public void setCredentials(String credentials)
+   {
+      this.credentials = credentials;
+   }
+
+   /**
+    * @return the discoverySchedule
+    */
+   public String getDiscoverySchedule()
+   {
+      return discoverySchedule;
+   }
+
+   /**
+    * @param discoverySchedule the discoverySchedule to set
+    */
+   public void setDiscoverySchedule(String discoverySchedule)
+   {
+      this.discoverySchedule = discoverySchedule;
+   }
+
+   /**
+    * @return the discoveryFilter
+    */
+   public String getDiscoveryFilter()
+   {
+      return discoveryFilter;
+   }
+
+   /**
+    * @param discoveryFilter the discoveryFilter to set
+    */
+   public void setDiscoveryFilter(String discoveryFilter)
+   {
+      this.discoveryFilter = discoveryFilter;
+   }
+
+   /**
+    * @return the removalPolicy
+    */
+   public int getRemovalPolicy()
+   {
+      return removalPolicy;
+   }
+
+   /**
+    * @param removalPolicy the removalPolicy to set
+    */
+   public void setRemovalPolicy(int removalPolicy)
+   {
+      this.removalPolicy = removalPolicy;
+   }
+
+   /**
+    * @return the gracePeriod
+    */
+   public int getGracePeriod()
+   {
+      return gracePeriod;
+   }
+
+   /**
+    * @param gracePeriod the gracePeriod to set
+    */
+   public void setGracePeriod(int gracePeriod)
+   {
+      this.gracePeriod = gracePeriod;
+   }
+
+   /**
+    * @return the defaultPollingInterval
+    */
+   public int getDefaultPollingInterval()
+   {
+      return defaultPollingInterval;
+   }
+
+   /**
+    * @param defaultPollingInterval the defaultPollingInterval to set
+    */
+   public void setDefaultPollingInterval(int defaultPollingInterval)
+   {
+      this.defaultPollingInterval = defaultPollingInterval;
+   }
+
+   /**
+    * @return the autoDiscoverChildren
+    */
+   public boolean isAutoDiscoverChildren()
+   {
+      return autoDiscoverChildren;
+   }
+
+   /**
+    * @param autoDiscoverChildren the autoDiscoverChildren to set
+    */
+   public void setAutoDiscoverChildren(boolean autoDiscoverChildren)
+   {
+      this.autoDiscoverChildren = autoDiscoverChildren;
+   }
+
+   /**
+    * @return the autoProvisionDCI
+    */
+   public boolean isAutoProvisionDCI()
+   {
+      return autoProvisionDCI;
+   }
+
+   /**
+    * @param autoProvisionDCI the autoProvisionDCI to set
+    */
+   public void setAutoProvisionDCI(boolean autoProvisionDCI)
+   {
+      this.autoProvisionDCI = autoProvisionDCI;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1252,6 +1452,9 @@ public class NXCObjectCreationData
             ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
-            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
+            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties +
+            ", connectorName=" + connectorName + ", accountIdentifier=" + accountIdentifier + ", credentials=" + credentials + ", discoverySchedule=" + discoverySchedule +
+            ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", defaultPollingInterval=" + defaultPollingInterval +
+            ", autoDiscoverChildren=" + autoDiscoverChildren + ", autoProvisionDCI=" + autoProvisionDCI + "]";
    }
 }

@@ -576,6 +576,8 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_SUBNET);
             classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
             classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
+            classFilter.add(AbstractObject.OBJECT_CLOUDDOMAIN);
+            classFilter.add(AbstractObject.OBJECT_RESOURCE);
             break;
          case MAPS:
             classFilter.add(AbstractObject.OBJECT_NETWORKMAP);

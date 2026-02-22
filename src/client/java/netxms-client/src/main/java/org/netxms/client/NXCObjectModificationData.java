@@ -202,6 +202,17 @@ public class NXCObjectModificationData
    private Integer mapHeight;
    private Long expectedCapabilities;
    private String dashboardNameTemplate;
+   private String connectorName;
+   private String accountIdentifier;
+   private String credentials;
+   private String discoverySchedule;
+   private String discoveryFilter;
+   private Integer removalPolicy;
+   private Integer gracePeriod;
+   private Integer defaultPollingInterval;
+   private Boolean autoDiscoverChildren;
+   private Boolean autoProvisionDCI;
+   private Long cloudLinkedNodeId;
 
    /**
     * Constructor for creating modification data for given object
@@ -2553,5 +2564,181 @@ public class NXCObjectModificationData
    public void setDashboardNameTemplate(String dashboardNameTemplate)
    {
       this.dashboardNameTemplate = dashboardNameTemplate;
+   }
+
+   /**
+    * @return the connectorName
+    */
+   public String getConnectorName()
+   {
+      return connectorName;
+   }
+
+   /**
+    * @param connectorName the connectorName to set
+    */
+   public void setConnectorName(String connectorName)
+   {
+      this.connectorName = connectorName;
+   }
+
+   /**
+    * @return the accountIdentifier
+    */
+   public String getAccountIdentifier()
+   {
+      return accountIdentifier;
+   }
+
+   /**
+    * @param accountIdentifier the accountIdentifier to set
+    */
+   public void setAccountIdentifier(String accountIdentifier)
+   {
+      this.accountIdentifier = accountIdentifier;
+   }
+
+   /**
+    * @return the credentials
+    */
+   public String getCredentials()
+   {
+      return credentials;
+   }
+
+   /**
+    * @param credentials the credentials to set
+    */
+   public void setCredentials(String credentials)
+   {
+      this.credentials = credentials;
+   }
+
+   /**
+    * @return the discoverySchedule
+    */
+   public String getDiscoverySchedule()
+   {
+      return discoverySchedule;
+   }
+
+   /**
+    * @param discoverySchedule the discoverySchedule to set
+    */
+   public void setDiscoverySchedule(String discoverySchedule)
+   {
+      this.discoverySchedule = discoverySchedule;
+   }
+
+   /**
+    * @return the discoveryFilter
+    */
+   public String getDiscoveryFilter()
+   {
+      return discoveryFilter;
+   }
+
+   /**
+    * @param discoveryFilter the discoveryFilter to set
+    */
+   public void setDiscoveryFilter(String discoveryFilter)
+   {
+      this.discoveryFilter = discoveryFilter;
+   }
+
+   /**
+    * @return the removalPolicy
+    */
+   public Integer getRemovalPolicy()
+   {
+      return removalPolicy;
+   }
+
+   /**
+    * @param removalPolicy the removalPolicy to set
+    */
+   public void setRemovalPolicy(int removalPolicy)
+   {
+      this.removalPolicy = removalPolicy;
+   }
+
+   /**
+    * @return the gracePeriod
+    */
+   public Integer getGracePeriod()
+   {
+      return gracePeriod;
+   }
+
+   /**
+    * @param gracePeriod the gracePeriod to set
+    */
+   public void setGracePeriod(int gracePeriod)
+   {
+      this.gracePeriod = gracePeriod;
+   }
+
+   /**
+    * @return the defaultPollingInterval
+    */
+   public Integer getDefaultPollingInterval()
+   {
+      return defaultPollingInterval;
+   }
+
+   /**
+    * @param defaultPollingInterval the defaultPollingInterval to set
+    */
+   public void setDefaultPollingInterval(int defaultPollingInterval)
+   {
+      this.defaultPollingInterval = defaultPollingInterval;
+   }
+
+   /**
+    * @return the autoDiscoverChildren
+    */
+   public Boolean getAutoDiscoverChildren()
+   {
+      return autoDiscoverChildren;
+   }
+
+   /**
+    * @param autoDiscoverChildren the autoDiscoverChildren to set
+    */
+   public void setAutoDiscoverChildren(boolean autoDiscoverChildren)
+   {
+      this.autoDiscoverChildren = autoDiscoverChildren;
+   }
+
+   /**
+    * @return the autoProvisionDCI
+    */
+   public Boolean getAutoProvisionDCI()
+   {
+      return autoProvisionDCI;
+   }
+
+   /**
+    * @param autoProvisionDCI the autoProvisionDCI to set
+    */
+   public void setAutoProvisionDCI(boolean autoProvisionDCI)
+   {
+      this.autoProvisionDCI = autoProvisionDCI;
+   }
+
+   /**
+    * @return the cloudLinkedNodeId
+    */
+   public Long getCloudLinkedNodeId()
+   {
+      return cloudLinkedNodeId;
+   }
+
+   /**
+    * @param cloudLinkedNodeId the cloudLinkedNodeId to set
+    */
+   public void setCloudLinkedNodeId(long cloudLinkedNodeId)
+   {
+      this.cloudLinkedNodeId = cloudLinkedNodeId;
    }
 }
