@@ -86,6 +86,7 @@ import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectLabelDecorator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeComparator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeContentProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
@@ -587,6 +588,25 @@ public class ObjectTree extends Composite
    {
       filter.setHideSubInterfaces(hide);
       onFilterModify();
+   }
+
+   /**
+    * Set show child object count flag.
+    *
+    * @param show true to show child object count
+    */
+   public void setShowChildCount(boolean show)
+   {
+      ((DecoratingObjectLabelProvider)objectTree.getLabelProvider()).setShowChildCount(show);
+      objectTree.refresh();
+   }
+
+   /**
+    * @return true if child object count is shown
+    */
+   public boolean isShowChildCount()
+   {
+      return ((ObjectLabelDecorator)((DecoratingObjectLabelProvider)objectTree.getLabelProvider()).getLabelDecorator()).isShowChildCount();
    }
 
    /**

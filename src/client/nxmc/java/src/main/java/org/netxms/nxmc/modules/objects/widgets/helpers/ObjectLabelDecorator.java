@@ -36,6 +36,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 public class ObjectLabelDecorator implements ILabelDecorator
 {
    private Map<Image, Image[]> imageCache = new HashMap<Image, Image[]>();
+   private boolean showChildCount = false;
 
    /**
     * @see org.eclipse.jface.viewers.ILabelDecorator#decorateImage(org.eclipse.swt.graphics.Image, java.lang.Object)
@@ -76,11 +77,62 @@ public class ObjectLabelDecorator implements ILabelDecorator
    public String decorateText(String text, Object element)
    {
       AbstractObject object = (AbstractObject)element;
+      StringBuilder decoration = new StringBuilder();
+      if (showChildCount && isContainerObject(object))
+         decoration.append(" (").append(object.getChildCount()).append(')');
       if (object.isInMaintenanceMode())
-         return text + " [Maintenance]";
-      if ((object instanceof AbstractNode) && ((AbstractNode)object).isDecommissioned())
-         return text + " [Decommissioned]";
-      return null;
+         decoration.append(" [Maintenance]");
+      else if ((object instanceof AbstractNode) && ((AbstractNode)object).isDecommissioned())
+         decoration.append(" [Decommissioned]");
+      return (decoration.length() > 0) ? text + decoration.toString() : null;
+   }
+
+   /**
+    * Check if given object is a container-like object that can have children displayed as count.
+    *
+    * @param object object to check
+    * @return true if object is a container-like object
+    */
+   private static boolean isContainerObject(AbstractObject object)
+   {
+      switch(object.getObjectClass())
+      {
+         case AbstractObject.OBJECT_CONTAINER:
+         case AbstractObject.OBJECT_CIRCUIT:
+         case AbstractObject.OBJECT_COLLECTOR:
+         case AbstractObject.OBJECT_TEMPLATEGROUP:
+         case AbstractObject.OBJECT_DASHBOARDGROUP:
+         case AbstractObject.OBJECT_NETWORKMAPGROUP:
+         case AbstractObject.OBJECT_ASSETGROUP:
+         case AbstractObject.OBJECT_BUSINESSSERVICE:
+         case AbstractObject.OBJECT_SERVICEROOT:
+         case AbstractObject.OBJECT_TEMPLATEROOT:
+         case AbstractObject.OBJECT_DASHBOARDROOT:
+         case AbstractObject.OBJECT_NETWORKMAPROOT:
+         case AbstractObject.OBJECT_ASSETROOT:
+         case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
+            return true;
+         default:
+            return false;
+      }
+   }
+
+   /**
+    * @return true if child object count is shown
+    */
+   public boolean isShowChildCount()
+   {
+      return showChildCount;
+   }
+
+   /**
+    * Set show child object count flag.
+    *
+    * @param showChildCount true to show child object count
+    */
+   public void setShowChildCount(boolean showChildCount)
+   {
+      this.showChildCount = showChildCount;
    }
 
    /**
