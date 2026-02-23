@@ -52,7 +52,7 @@ static std::string LoadSkillFile(const char *fileName)
 {
    wchar_t path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
-   wcslcat(path, L"/skills/", MAX_PATH);
+   wcslcat(path, FS_PATH_SEPARATOR L"skills" FS_PATH_SEPARATOR, MAX_PATH);
    size_t len = wcslen(path);
    mb_to_wchar(fileName, -1, &path[len], MAX_PATH - len);
    char *content = LoadFileAsUTF8String(path);
