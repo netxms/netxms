@@ -108,6 +108,7 @@ public class ObjectBrowser extends NavigationView
    private Action actionMoveMap;
    private Action actionMoveAsset;
    private Action actionShowHiddenObjects;
+   private Action actionShowChildObjectCount;
    private Action actionDnDControlledByServer;
    private Action actionDnDEnable;
    private Action actionDnDConfirm;
@@ -273,9 +274,13 @@ public class ObjectBrowser extends NavigationView
    protected void postContentCreate()
    {
       super.postContentCreate();
-      boolean showHiddenObjects = PreferenceStore.getInstance().getAsBoolean("ObjectBrowser.ShowHiddenObjects." + subtreeType.toString(), false);
+      PreferenceStore ps = PreferenceStore.getInstance();
+      boolean showHiddenObjects = ps.getAsBoolean("ObjectBrowser.ShowHiddenObjects." + subtreeType.toString(), false);
       objectTree.setShowHiddenObjects(showHiddenObjects);
       actionShowHiddenObjects.setChecked(showHiddenObjects);
+      boolean showChildObjectCount = ps.getAsBoolean("ObjectBrowser.ShowChildObjectCount", false);
+      objectTree.setShowChildCount(showChildObjectCount);
+      actionShowChildObjectCount.setChecked(showChildObjectCount);
    }
 
    /**
@@ -295,6 +300,7 @@ public class ObjectBrowser extends NavigationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionShowHiddenObjects);
+      manager.add(actionShowChildObjectCount);
       MenuManager dndMenu = new MenuManager(i18n.tr("&Drag and drop"));
       dndMenu.add(actionDnDControlledByServer);
       dndMenu.add(new Separator());
@@ -413,6 +419,15 @@ public class ObjectBrowser extends NavigationView
       };
       actionShowHiddenObjects.setChecked(objectTree.isShowHiddenObjects());
       actionShowHiddenObjects.setImageDescriptor(ResourceManager.getImageDescriptor("icons/hidden-objects.png"));
+
+      actionShowChildObjectCount = new Action(i18n.tr("Show &child object count"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            objectTree.setShowChildCount(isChecked());
+            PreferenceStore.getInstance().set("ObjectBrowser.ShowChildObjectCount", isChecked());
+         }
+      };
 
       actionDnDControlledByServer = new Action(i18n.tr("Controlled by server"), Action.AS_RADIO_BUTTON) {
          @Override

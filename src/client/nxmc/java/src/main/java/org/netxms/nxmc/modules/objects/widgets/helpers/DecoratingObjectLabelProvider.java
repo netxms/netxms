@@ -73,6 +73,16 @@ public class DecoratingObjectLabelProvider extends DecoratingLabelProvider
    }
 
    /**
+    * Set show child object count flag.
+    *
+    * @param show true to show child object count
+    */
+   public void setShowChildCount(boolean show)
+   {
+      ((ObjectLabelDecorator)getLabelDecorator()).setShowChildCount(show);
+   }
+
+   /**
     * @see org.eclipse.jface.viewers.DecoratingLabelProvider#getForeground(java.lang.Object)
     */
    @Override
