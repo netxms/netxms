@@ -324,6 +324,9 @@ Source: "..\..\..\sql\dbschema_oracle.sql"; DestDir: "{app}\share\sql"; Flags: i
 Source: "..\..\..\sql\dbschema_pgsql.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbschema_sqlite.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbschema_tsdb.sql"; DestDir: "{app}\share\sql"; Flags: ignoreversion; Components: server
+; AI skills and prompts
+Source: "..\..\server\aitools\prompts\*.md"; DestDir: "{app}\share\prompts"; Flags: ignoreversion; Components: server
+Source: "..\..\server\aitools\skills\*.md"; DestDir: "{app}\share\skills"; Flags: ignoreversion; Components: server
 ; Misc files
 Source: "..\..\..\contrib\mibs\*.mib"; DestDir: "{app}\share\mibs"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\oui\*.csv"; DestDir: "{app}\share\oui"; Flags: ignoreversion; Components: server
