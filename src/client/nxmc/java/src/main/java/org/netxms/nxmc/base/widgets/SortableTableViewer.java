@@ -261,7 +261,7 @@ public class SortableTableViewer extends TableViewer
          c.setMoveable(true);
       table.setData("persistColumnOrder", Boolean.valueOf(persist));
 
-      actionResetColumnOrder = new Action(i18n.tr("Restore Default Column Order")) {
+      actionResetColumnOrder = new Action(i18n.tr("Restore default column order")) {
          @Override
          public void run()
          {
@@ -269,7 +269,7 @@ public class SortableTableViewer extends TableViewer
          }
       };
 
-      actionShowAllColumns = new Action(i18n.tr("Show All Columns")) {
+      actionShowAllColumns = new Action(i18n.tr("Show all columns")) {
          @Override
          public void run()
          {
@@ -302,11 +302,11 @@ public class SortableTableViewer extends TableViewer
          if (hasHiddenColumns())
          {
             MenuItem showAllItem = new MenuItem(headerMenu, SWT.PUSH);
-            showAllItem.setText(i18n.tr("Show All Columns"));
+            showAllItem.setText(i18n.tr("Show all columns"));
             showAllItem.addListener(SWT.Selection, ev -> showAllColumns());
 
             MenuItem showCascade = new MenuItem(headerMenu, SWT.CASCADE);
-            showCascade.setText(i18n.tr("Show Column"));
+            showCascade.setText(i18n.tr("Show column"));
             Menu showMenu = new Menu(headerMenu);
             showCascade.setMenu(showMenu);
 
@@ -326,13 +326,13 @@ public class SortableTableViewer extends TableViewer
 
          new MenuItem(headerMenu, SWT.SEPARATOR);
          MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
-         resetItem.setText(i18n.tr("Restore Default Column Order"));
+         resetItem.setText(i18n.tr("Restore default column order"));
          resetItem.addListener(SWT.Selection, ev -> resetColumnOrder());
       });
 
       table.addListener(SWT.MenuDetect, event -> {
          Point pt = table.getDisplay().map(null, table, new Point(event.x, event.y));
-         if (pt.y < table.getHeaderHeight())
+         if (pt.y < 0) // FIXME: is it on all platforms?
          {
             clickedColumnId = getColumnIdAtHeaderPoint(pt);
             headerMenu.setLocation(event.x, event.y);
