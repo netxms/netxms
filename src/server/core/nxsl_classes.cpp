@@ -6476,7 +6476,7 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("providerState"))
    {
-      value = vm->createValue(resource->getProviderState());
+      value = vm->createValue(resource->getProviderState().c_str());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("region"))
    {

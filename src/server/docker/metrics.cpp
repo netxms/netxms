@@ -296,7 +296,7 @@ DataCollectionError DockerCollectTable(const TCHAR *resourceId, const TCHAR *met
 /**
  * Query current state of a resource
  */
-int16_t DockerQueryState(const TCHAR *resourceId, TCHAR *providerState, size_t bufLen, json_t *credentials)
+int16_t DockerQueryState(const TCHAR *resourceId, char *providerState, size_t bufLen, json_t *credentials)
 {
    DockerClient client;
    if (!client.configure(credentials))
@@ -318,7 +318,7 @@ int16_t DockerQueryState(const TCHAR *resourceId, TCHAR *providerState, size_t b
 
       int16_t state = DockerContainerStateToResourceState(status);
       if (status != nullptr && providerState != nullptr)
-         utf8_to_wchar(status, -1, providerState, bufLen);
+         strlcpy(providerState, status, bufLen);
       json_decref(response);
       return state;
    }
@@ -329,7 +329,7 @@ int16_t DockerQueryState(const TCHAR *resourceId, TCHAR *providerState, size_t b
    if (response != nullptr)
    {
       if (providerState != nullptr)
-         wcslcpy(providerState, L"active", bufLen);
+         strlcpy(providerState, "active", bufLen);
       json_decref(response);
       return RESOURCE_STATE_ACTIVE;
    }
@@ -340,7 +340,7 @@ int16_t DockerQueryState(const TCHAR *resourceId, TCHAR *providerState, size_t b
    if (response != nullptr)
    {
       if (providerState != nullptr)
-         wcslcpy(providerState, L"active", bufLen);
+         strlcpy(providerState, "active", bufLen);
       json_decref(response);
       return RESOURCE_STATE_ACTIVE;
    }

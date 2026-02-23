@@ -120,7 +120,7 @@ static ResourceDescriptor *DiscoverContainers(DockerClient *client)
       const char *state = json_object_get_string_utf8(container, "State", nullptr);
       rd->state = DockerContainerStateToResourceState(state);
       if (state != nullptr)
-         utf8_to_wchar(state, -1, rd->providerState, 256);
+         strlcpy(rd->providerState, state, 256);
 
       // Tags from Labels
       rd->tags = ExtractLabels(json_object_get(container, "Labels"));
@@ -205,7 +205,7 @@ static ResourceDescriptor *DiscoverNetworks(DockerClient *client)
 
       const char *driver = json_object_get_string_utf8(network, "Driver", nullptr);
       if (driver != nullptr)
-         utf8_to_wchar(driver, -1, rd->providerState, 256);
+         strlcpy(rd->providerState, driver, 256);
 
       rd->tags = ExtractLabels(json_object_get(network, "Labels"));
 
@@ -260,7 +260,7 @@ static ResourceDescriptor *DiscoverVolumes(DockerClient *client)
 
       const char *driver = json_object_get_string_utf8(volume, "Driver", nullptr);
       if (driver != nullptr)
-         utf8_to_wchar(driver, -1, rd->providerState, 256);
+         strlcpy(rd->providerState, driver, 256);
 
       rd->tags = ExtractLabels(json_object_get(volume, "Labels"));
 

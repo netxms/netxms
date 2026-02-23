@@ -6474,10 +6474,6 @@ void ClientSession::createObject(const NXCPMessage& request)
                   object = make_shared<CloudDomain>(objectName, request);
                   NetObjInsert(object, true, false);
                   break;
-               case OBJECT_RESOURCE:
-                  object = make_shared<Resource>(objectName, request);
-                  NetObjInsert(object, true, false);
-                  break;
                case OBJECT_NETWORKMAP:
                   {
                      IntegerArray<uint32_t> seeds;

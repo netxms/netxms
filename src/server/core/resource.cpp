@@ -36,44 +36,6 @@ Resource::Resource() : super(Pollable::STATUS)
 }
 
 /**
- * Constructor from NXCP message
- */
-Resource::Resource(const wchar_t *name, const NXCPMessage& request) : super(name, Pollable::STATUS)
-{
-   m_parentId = request.getFieldAsUInt32(VID_PARENT_ID);
-   m_cloudResourceId = request.getFieldAsSharedString(VID_CLOUD_RESOURCE_ID);
-   m_connectorName = request.getFieldAsSharedString(VID_CONNECTOR_NAME);
-   m_resourceType = request.getFieldAsSharedString(VID_RESOURCE_TYPE);
-   m_region = request.getFieldAsSharedString(VID_CLOUD_REGION);
-   m_state = request.getFieldAsInt16(VID_RESOURCE_STATE);
-   m_providerState = request.getFieldAsSharedString(VID_PROVIDER_STATE);
-   m_linkedNodeId = request.getFieldAsUInt32(VID_LINKED_NODE_ID);
-   m_accountId = request.getFieldAsSharedString(VID_ACCOUNT_ID);
-   m_connectorData = request.getFieldAsSharedString(VID_CONNECTOR_DATA);
-   m_lastDiscoveryTime = 0;
-   m_status = STATUS_NORMAL;
-
-   // Load tags from message
-   uint32_t tagCount = request.getFieldAsUInt32(VID_NUM_TAGS);
-   if (tagCount > 0)
-   {
-      m_tags = new StringMap();
-      uint32_t fieldId = VID_RESOURCE_TAG_LIST_BASE;
-      for (uint32_t i = 0; i < tagCount; i++)
-      {
-         TCHAR key[256], value[1024];
-         request.getFieldAsString(fieldId++, key, 256);
-         request.getFieldAsString(fieldId++, value, 1024);
-         m_tags->set(key, value);
-      }
-   }
-   else
-   {
-      m_tags = nullptr;
-   }
-}
-
-/**
  * Resource destructor
  */
 Resource::~Resource()
@@ -103,13 +65,15 @@ bool Resource::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
    if (hResult == nullptr)
       return false;
 
+   char buffer[256];
+
    m_parentId = DBGetFieldULong(hResult, 0, 0);
    m_cloudResourceId = DBGetFieldAsSharedString(hResult, 0, 1);
    m_connectorName = DBGetFieldAsSharedString(hResult, 0, 2);
    m_resourceType = DBGetFieldAsSharedString(hResult, 0, 3);
    m_region = DBGetFieldAsSharedString(hResult, 0, 4);
    m_state = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 5));
-   m_providerState = DBGetFieldAsSharedString(hResult, 0, 6);
+   m_providerState = DBGetFieldUTF8(hResult, 0, 6, buffer, 256);
    m_linkedNodeId = DBGetFieldULong(hResult, 0, 7);
    m_accountId = DBGetFieldAsSharedString(hResult, 0, 8);
    m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 9);
@@ -173,7 +137,7 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_resourceType, DB_BIND_TRANSIENT);
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_region, DB_BIND_TRANSIENT);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_providerState, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 7, DB_CTYPE_UTF8_STRING, DB_SQLTYPE_VARCHAR, m_providerState.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_linkedNodeId);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_accountId, DB_BIND_TRANSIENT);
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
@@ -195,7 +159,7 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, L"DELETE FROM resource_tags WHERE resource_id=?");
          if (success && (m_tags != nullptr) && (m_tags->size() > 0))
          {
-            hStmt = DBPrepare(hdb, L"INSERT INTO resource_tags (resource_id,tag_key,tag_value) VALUES (?,?,?)");
+            hStmt = DBPrepare(hdb, L"INSERT INTO resource_tags (resource_id,tag_key,tag_value) VALUES (?,?,?)", m_tags->size() > 1);
             if (hStmt != nullptr)
             {
                lockProperties();
@@ -257,7 +221,7 @@ json_t *Resource::toJson()
    json_object_set_new(root, "resourceType", json_string_t(m_resourceType));
    json_object_set_new(root, "region", json_string_t(m_region));
    json_object_set_new(root, "state", json_integer(m_state));
-   json_object_set_new(root, "providerState", json_string_t(m_providerState));
+   json_object_set_new(root, "providerState", json_string(m_providerState.c_str()));
    json_object_set_new(root, "linkedNodeId", json_integer(m_linkedNodeId));
    json_object_set_new(root, "accountId", json_string_t(m_accountId));
    json_object_set_new(root, "lastDiscoveryTime", json_integer(m_lastDiscoveryTime));
@@ -279,7 +243,7 @@ void Resource::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_RESOURCE_TYPE, m_resourceType);
    msg->setField(VID_CLOUD_REGION, m_region);
    msg->setField(VID_RESOURCE_STATE, m_state);
-   msg->setField(VID_PROVIDER_STATE, m_providerState);
+   msg->setFieldFromUtf8String(VID_PROVIDER_STATE, m_providerState.c_str());
    msg->setField(VID_LINKED_NODE_ID, m_linkedNodeId);
    msg->setField(VID_ACCOUNT_ID, m_accountId);
    msg->setField(VID_LAST_DISCOVERY_TIME, static_cast<uint32_t>(m_lastDiscoveryTime));
@@ -351,12 +315,12 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
       {
          json_t *credentials = domain->getCredentials();
 
-         wchar_t providerStateBuf[256];
+         char providerStateBuf[256];
          SharedString resourceId = getCloudResourceId();
          int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
          if (newState >= 0)
          {
-            if (m_state != newState || wcscmp(m_providerState, providerStateBuf))
+            if (m_state != newState || strcmp(m_providerState.c_str(), providerStateBuf))
             {
                updateState(newState, providerStateBuf);
                sendPollerMsg(L"   Resource state changed to %d (%s)\r\n", newState, providerStateBuf);
@@ -485,10 +449,10 @@ void Resource::setLinkedNodeId(uint32_t nodeId)
 /**
  * Update resource state
  */
-void Resource::updateState(int16_t newState, const TCHAR *providerState)
+void Resource::updateState(int16_t newState, const char *providerState)
 {
    lockProperties();
-   if (m_state != newState || wcscmp(m_providerState, providerState))
+   if (m_state != newState || strcmp(m_providerState.c_str(), providerState))
    {
       m_state = newState;
       m_providerState = providerState;

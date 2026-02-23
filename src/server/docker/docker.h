@@ -71,7 +71,6 @@ DataCollectionError DockerCollect(const TCHAR *resourceId, const TCHAR *metric, 
 DataCollectionError DockerCollectTable(const TCHAR *resourceId, const TCHAR *metric, int16_t aggregation,
    shared_ptr<Table> *value, json_t *credentials);
 
-int16_t DockerQueryState(const TCHAR *resourceId, TCHAR *providerState, size_t bufLen,
-   json_t *credentials);
+int16_t DockerQueryState(const TCHAR *resourceId, char *providerState, size_t bufLen, json_t *credentials);
 
 #endif

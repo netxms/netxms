@@ -3517,7 +3517,7 @@ protected:
    SharedString m_resourceType;
    SharedString m_region;
    int16_t m_state;
-   SharedString m_providerState;
+   std::string m_providerState;
    uint32_t m_linkedNodeId;
    StringMap *m_tags;
    SharedString m_accountId;
@@ -3532,7 +3532,6 @@ protected:
 
 public:
    Resource();
-   Resource(const wchar_t *name, const NXCPMessage& request);
    virtual ~Resource();
 
    shared_ptr<Resource> self() { return static_pointer_cast<Resource>(NObject::self()); }
@@ -3556,7 +3555,7 @@ public:
    SharedString getResourceType() const { return GetAttributeWithLock(m_resourceType, m_mutexProperties); }
    SharedString getRegion() const { return GetAttributeWithLock(m_region, m_mutexProperties); }
    int16_t getResourceState() const { return m_state; }
-   SharedString getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
+   std::string getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
    uint32_t getParentDomainOrResourceId() const { return m_parentId; }
    uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
    SharedString getAccountId() const { return GetAttributeWithLock(m_accountId, m_mutexProperties); }
@@ -3564,7 +3563,7 @@ public:
    const StringMap *getTags() const { return m_tags; }
 
    void updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId, const TCHAR *connectorName);
-   void updateState(int16_t newState, const TCHAR *providerState);
+   void updateState(int16_t newState, const char *providerState);
    void setLinkedNodeId(uint32_t nodeId);
    void setOwnerDomain(const shared_ptr<CloudDomain>& domain) { m_ownerDomain = domain; }
    shared_ptr<CloudDomain> getOwnerDomain() const { return m_ownerDomain.lock(); }

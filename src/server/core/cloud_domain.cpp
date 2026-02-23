@@ -340,14 +340,14 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
          shared_ptr<Resource> resource = static_pointer_cast<Resource>(children->getShared(i));
          SharedString resourceId = resource->getCloudResourceId();
 
-         TCHAR providerStateBuf[256];
+         char providerStateBuf[256];
          int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
          if (newState >= 0)
          {
-            if (resource->getResourceState() != newState || _tcscmp(resource->getProviderState(), providerStateBuf))
+            if (resource->getResourceState() != newState || strcmp(resource->getProviderState().c_str(), providerStateBuf))
             {
                resource->updateState(newState, providerStateBuf);
-               sendPollerMsg(L"   Resource \"%s\" state changed to %d (%s)\r\n", resource->getName(), static_cast<int>(newState), providerStateBuf);
+               sendPollerMsg(L"   Resource \"%s\" state changed to %d (%s)\r\n", resource->getName(), newState, providerStateBuf);
             }
          }
          else
@@ -538,7 +538,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                   switch (removalPolicy)
                   {
                      case 0: // Mark inactive
-                        resource->updateState(RESOURCE_STATE_INACTIVE, L"Not found in discovery");
+                        resource->updateState(RESOURCE_STATE_INACTIVE, "Not found in discovery");
                         nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Marked resource \"%s\" [%u] as inactive (not found in discovery)", resource->getName(), resource->getId());
                         break;
                      case 1: // Delete after grace period
@@ -551,7 +551,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                         }
                         else
                         {
-                           resource->updateState(RESOURCE_STATE_INACTIVE, L"Not found in discovery");
+                           resource->updateState(RESOURCE_STATE_INACTIVE, "Not found in discovery");
                            nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Marked resource \"%s\" [%u] as inactive (grace period not expired)", resource->getName(), resource->getId());
                         }
                         break;

@@ -86,9 +86,9 @@ struct ResourceDescriptor
    TCHAR type[256];                    // Provider-specific type
    TCHAR region[128];                  // Region/location
    int16_t state;                      // RESOURCE_STATE_* value
-   TCHAR providerState[256];           // Raw provider state string
+   char providerState[256];            // Raw provider state string
    StringMap *tags;                    // Key-value tag pairs (caller owns)
-   TCHAR linkHint[256];               // Hostname/IP/FQDN for Node matching
+   TCHAR linkHint[256];                // Hostname/IP/FQDN for Node matching
    ResourceDescriptor *children;       // First child (linked list via next)
    ResourceDescriptor *next;           // Next sibling
    StringList *metricHints;            // Suggested default metrics (caller owns)
@@ -151,7 +151,7 @@ struct CloudConnectorInterface
 
    int16_t (*QueryState)(
       const TCHAR *resourceId,
-      TCHAR *providerState,
+      char *providerState,
       size_t bufLen,
       json_t *credentials);
 
