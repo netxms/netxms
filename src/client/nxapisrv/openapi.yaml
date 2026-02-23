@@ -2600,47 +2600,222 @@ components:
             - 4: NETWORK
             - 5: CONTAINER
             - 6: ZONE
+            - 7: SERVICEROOT
             - 8: TEMPLATE
             - 9: TEMPLATEGROUP
+            - 10: TEMPLATEROOT
             - 11: NETWORKSERVICE
+            - 12: VPNCONNECTOR
             - 13: CONDITION
             - 14: CLUSTER
+            - 15: BUSINESSSERVICEPROTOTYPE
+            - 16: ASSET
+            - 17: ASSETGROUP
+            - 18: ASSETROOT
+            - 19: NETWORKMAPROOT
+            - 20: NETWORKMAPGROUP
             - 21: NETWORKMAP
+            - 22: DASHBOARDROOT
             - 23: DASHBOARD
+            - 24: DASHBOARDTEMPLATE
+            - 27: BUSINESSSERVICEROOT
             - 28: BUSINESSSERVICE
+            - 29: COLLECTOR
+            - 30: CIRCUIT
+            - 31: MOBILEDEVICE
             - 32: RACK
+            - 33: ACCESSPOINT
+            - 34: WIRELESSDOMAIN
             - 35: CHASSIS
+            - 36: DASHBOARDGROUP
             - 37: SENSOR
+            - 10000: CUSTOM
         name:
           type: string
+          description: Object name
         parentId:
           type: integer
           format: int64
+          description: Parent object ID this object to be created under
         comments:
           type: string
+          description: Object comment
         creationFlags:
           type: integer
+          description: |
+            Bit flags for object creation:
+            - 0x0001: DISABLE_ICMP
+            - 0x0002: DISABLE_NXCP
+            - 0x0004: DISABLE_SNMP
+            - 0x0008: CREATE_UNMANAGED
+            - 0x0010: ENTER_MAINTENANCE
+            - 0x0020: AS_ZONE_PROXY
+            - 0x0040: DISABLE_ETHERNET_IP
+            - 0x0080: SNMP_SETTINGS_LOCKED
+            - 0x0100: EXTERNAL_GATEWAY
+            - 0x0200: DISABLE_SSH
+            - 0x0400: DISABLE_MODBUS_TCP
+            - 0x0800: DISABLE_VNC
         primaryName:
           type: string
           description: Node primary name (IP address or DNS name)
         agentPort:
           type: integer
+          description: Node agent port
         snmpPort:
           type: integer
+          description: Node SNMP port
+        etherNetIpPort:
+          type: integer
+          description: Node EtherNet/IP port
         sshPort:
           type: integer
+          description: Node SSH port
+        ipAddress:
+          type: string
+          description: Interface IP address
+        agentProxyId:
+          type: integer
+          format: int64
+          description: Node agent proxy ID
+        snmpProxyId:
+          type: integer
+          format: int64
+          description: Node SNMP proxy ID
+        etherNetIpProxyId:
+          type: integer
+          format: int64
+          description: Node EtherNet/IP proxy ID
+        icmpProxyId:
+          type: integer
+          format: int64
+          description: Node ICMP proxy ID
+        sshProxyId:
+          type: integer
+          format: int64
+          description: Node SSH proxy ID
+        mapType:
+          type: integer
+          description: Network map type
+        seedObjectIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Network map seed objects
         zoneUIN:
           type: integer
+          description: Subnet/Node/Zone zone UIN
+        serviceType:
+          type: integer
+          description: |
+            Network service type:
+            - 0: CUSTOM
+            - 1: SSH
+            - 2: POP3
+            - 3: SMTP
+            - 4: FTP
+            - 5: HTTP
+            - 6: HTTPS
+            - 7: TELNET
+        ipPort:
+          type: integer
+          description: Network Service IP port
+        request:
+          type: string
+          description: Network Service request string
+        response:
+          type: string
+          description: Network Service expected response
         linkedNodeId:
           type: integer
           format: int64
+          description: Linked node ID for NodeLink object
         template:
           type: boolean
-        mapType:
+          description: If service check object is a template
+        macAddress:
+          type: string
+          description: Interface or sensor MAC address
+        ifIndex:
           type: integer
+          description: Interface index
+        ifType:
+          type: integer
+          description: Interface type
+        module:
+          type: integer
+          description: Interface module number
+        port:
+          type: integer
+          description: Interface port number
+        physicalPort:
+          type: boolean
+          description: Whether interface has a physical port
+        createStatusDci:
+          type: boolean
+          description: Whether a status DCI should be created for network service
+        deviceId:
+          type: string
+          description: Mobile device ID
+        height:
+          type: integer
+          description: Rack height
+        controllerId:
+          type: integer
+          format: int64
+          description: Chassis controller node ID
+        sshLogin:
+          type: string
+          description: Node SSH login
+        sshPassword:
+          type: string
+          description: Node SSH password
+        deviceClass:
+          type: integer
+          description: Sensor device class
+        vendor:
+          type: string
+          description: Sensor vendor
+        commProtocol:
+          type: integer
+          description: Sensor communication protocol
+        xmlConfig:
+          type: string
+          description: Sensor XML configuration
+        xmlRegConfig:
+          type: string
+          description: Sensor XML registration configuration
+        serialNumber:
+          type: string
+          description: Sensor serial number
+        deviceAddress:
+          type: string
+          description: Sensor device address
+        metaType:
+          type: string
+          description: Sensor meta type
+        description:
+          type: string
+          description: Sensor description
+        sensorProxy:
+          type: integer
+          format: int64
+          description: Sensor proxy node ID
+        instanceDiscoveryMethod:
+          type: integer
+          description: |
+            Business service instance discovery method:
+            - 1: IDM_AGENT_LIST
+            - 2: IDM_AGENT_TABLE
+            - 5: IDM_SCRIPT
 
     ObjectModificationData:
       type: object
+      description: |
+        Fields that are not set will not be updated.
+        Array fields are replaced fully (if new array does not contain old elements, they will be deleted).
+        Note: Starting from version 4, isAutoBindEnabled and isAutoUnbindEnabled are replaced by autoBindFlags.
       properties:
         name:
           type: string
@@ -2654,24 +2829,355 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccessListElement'
+          description: inheritAccessRights should be provided in the same request
         inheritAccessRights:
           type: boolean
+          description: acl should be provided in the same request
         customAttributes:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CustomAttribute'
+          description: Object name is custom attribute name. All custom attributes must be included; attributes not in JSON will be deleted.
         autoBindFilter:
           type: string
+        version:
+          type: integer
         description:
           type: string
+        agentPort:
+          type: integer
+        agentSecret:
+          type: string
+        agentProxy:
+          type: integer
+          format: int64
+        snmpPort:
+          type: integer
+        snmpVersion:
+          type: string
+          description: Node SNMP version
+          enum: [V1, V2C, V3, DEFAULT]
+        snmpAuthMethod:
+          type: integer
+          description: snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpPrivMethod should be provided in the same request
+        snmpPrivMethod:
+          type: integer
+          description: snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpAuthMethod should be provided in the same request
+        snmpAuthName:
+          type: string
+          description: snmpAuthPassword, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpAuthPassword:
+          type: string
+          description: snmpAuthName, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpPrivPassword:
+          type: string
+          description: snmpAuthName, snmpAuthPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpProxy:
+          type: integer
+          format: int64
+        icmpProxy:
+          type: integer
+          format: int64
+        trustedNodes:
+          type: array
+          items:
+            type: integer
+            format: int64
         geolocation:
           $ref: '#/components/schemas/Geolocation'
-        postalAddress:
-          $ref: '#/components/schemas/PostalAddress'
+        mapBackground:
+          type: string
+          format: uuid
+          description: mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request
+        mapBackgroundLocation:
+          $ref: '#/components/schemas/Geolocation'
+          description: mapBackground, mapBackgroundZoom, mapBackgroundColor should be provided in the same request
+        mapBackgroundZoom:
+          type: integer
+          description: mapBackground, mapBackgroundLocation, mapBackgroundColor should be provided in the same request
+        mapBackgroundColor:
+          type: integer
+          description: mapBackground, mapBackgroundLocation, mapBackgroundZoom should be provided in the same request
+        mapImage:
+          type: string
+          format: uuid
+        columnCount:
+          type: integer
+        script:
+          type: string
+        activationEvent:
+          type: integer
+        deactivationEvent:
+          type: integer
+        sourceObject:
+          type: integer
+          format: int64
+        activeStatus:
+          type: integer
+        inactiveStatus:
+          type: integer
+        drillDownObjectId:
+          type: integer
+          format: int64
+        pollerNode:
+          type: integer
+          format: int64
+        requiredPolls:
+          type: integer
+        serviceType:
+          type: integer
+        ipProtocol:
+          type: integer
+        ipPort:
+          type: integer
+        ipAddress:
+          type: string
+          description: Network service IP address
+        request:
+          type: string
+          description: Network service request string
+        response:
+          type: string
+          description: Network service expected response
         objectFlags:
           type: integer
+          description: |
+            Object flags specific for each object type. objectFlagsMask should be provided in the same request.
+            Possible values can be found in NXSL documentation under each object.
         objectFlagsMask:
           type: integer
+          description: Bitmask that defines which bits in objectFlags will have effect. objectFlags should be provided in the same request.
+        ifXTablePolicy:
+          type: integer
+        reportDefinition:
+          type: string
+        networkList:
+          type: array
+          items:
+            type: string
+          description: IP address list
+        statusCalculationMethod:
+          type: integer
+        statusPropagationMethod:
+          type: integer
+        fixedPropagatedStatus:
+          type: string
+          description: Object status for fixed propagation
+          enum: [NORMAL, WARNING, MINOR, MAJOR, CRITICAL, UNKNOWN, UNMANAGED, DISABLED, TESTING]
+        statusShift:
+          type: integer
+        statusTransformation:
+          type: array
+          items:
+            type: string
+            enum: [NORMAL, WARNING, MINOR, MAJOR, CRITICAL, UNKNOWN, UNMANAGED, DISABLED, TESTING]
+          description: Object status mapping list
+        statusSingleThreshold:
+          type: integer
+        statusThresholds:
+          type: array
+          items:
+            type: integer
+        expectedState:
+          type: integer
+        linkColor:
+          type: integer
+        connectionRouting:
+          type: integer
+        discoveryRadius:
+          type: integer
+        height:
+          type: integer
+        filter:
+          type: string
+        peerGatewayId:
+          type: integer
+          format: int64
+        localNetworks:
+          type: array
+          items:
+            type: string
+          description: VPN local networks IP addresses. remoteNetworks should be provided in the same request.
+        remoteNetworks:
+          type: array
+          items:
+            type: string
+          description: VPN remote networks IP addresses. localNetworks should be provided in the same request.
+        postalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+        agentCacheMode:
+          type: string
+          enum: [DEFAULT, ON, OFF]
+        agentCompressionMode:
+          type: string
+          enum: [DEFAULT, ENABLED, DISABLED]
+        mapObjectDisplayMode:
+          type: string
+          enum: [ICON, SMALL_LABEL, LARGE_LABEL, STATUS, FLOOR_PLAN]
+        physicalContainerObjectId:
+          type: integer
+          format: int64
+        rackImageFront:
+          type: string
+          format: uuid
+          description: rackImageRear, rackPosition, rackHeight, rackOrientation should be provided in the same request
+        rackImageRear:
+          type: string
+          format: uuid
+          description: rackImageFront, rackPosition, rackHeight, rackOrientation should be provided in the same request
+        rackPosition:
+          type: integer
+          description: rackImageFront, rackImageRear, rackHeight, rackOrientation should be provided in the same request
+        rackHeight:
+          type: integer
+          description: rackImageFront, rackImageRear, rackPosition, rackOrientation should be provided in the same request
+        rackOrientation:
+          type: string
+          enum: [FILL, FRONT, REAR]
+          description: rackImageFront, rackImageRear, rackPosition, rackHeight should be provided in the same request
+        dashboards:
+          type: array
+          items:
+            type: integer
+            format: int64
+        rackNumberingTopBottom:
+          type: boolean
+        controllerId:
+          type: integer
+          format: int64
+        chassisId:
+          type: integer
+          format: int64
+        sshProxy:
+          type: integer
+          format: int64
+        sshLogin:
+          type: string
+        sshPassword:
+          type: string
+        sshPort:
+          type: integer
+        sshKeyId:
+          type: integer
+        zoneProxies:
+          type: array
+          items:
+            type: integer
+            format: int64
+        urls:
+          type: array
+          items:
+            type: object
+        seedObjectIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        macAddress:
+          type: string
+          description: Sensor MAC address
+        deviceClass:
+          type: integer
+        vendor:
+          type: string
+        serialNumber:
+          type: string
+        deviceAddress:
+          type: string
+        metaType:
+          type: string
+        sensorProxy:
+          type: integer
+          format: int64
+        xmlConfig:
+          type: string
+        snmpPorts:
+          type: array
+          items:
+            type: string
+        responsibleUsers:
+          type: array
+          items:
+            type: integer
+            format: int64
+        icmpStatCollectionMode:
+          type: string
+          enum: [DEFAULT, ON, OFF]
+        icmpTargets:
+          type: array
+          items:
+            type: string
+          description: ICMP ping target IP addresses
+        chassisPlacement:
+          type: string
+        etherNetIPPort:
+          type: integer
+        etherNetIPProxy:
+          type: integer
+          format: int64
+        certificateMappingMethod:
+          type: string
+          enum: [SUBJECT, PUBLIC_KEY, COMMON_NAME, TEMPLATE_ID]
+          description: certificateMappingData should be provided in the same request
+        certificateMappingData:
+          type: string
+          description: certificateMappingMethod should be provided in the same request
+        categoryId:
+          type: integer
+        geoLocationControlMode:
+          type: string
+          enum: [NO_CONTROL, RESTRICTED_AREAS, ALLOWED_AREAS]
+        geoAreas:
+          type: array
+          items:
+            type: integer
+            format: int64
+        instanceDiscoveryMethod:
+          type: integer
+          description: |
+            Business service instance discovery method:
+            - 1: IDM_AGENT_LIST
+            - 2: IDM_AGENT_TABLE
+            - 5: IDM_SCRIPT
+        instanceDiscoveryData:
+          type: string
+          description: Business service instance discovery data
+        instanceDiscoveryFilter:
+          type: string
+          description: Business service instance discovery data filtering script
+        autoBindFilter2:
+          type: string
+          description: Second binding script used for DCI binding (currently used in business service)
+        autoBindFlags:
+          type: integer
+          description: |
+            Auto bind bit flags:
+            - 0x0001: First script for auto bind is enabled
+            - 0x0002: First script for auto unbind is enabled
+            - 0x0004: Second script for auto bind is enabled
+            - 0x0008: Second script for auto unbind is enabled
+        objectStatusThreshold:
+          type: integer
+          description: |
+            Business service default threshold for auto-created object checks:
+            - 0: Default
+            - 1: Warning
+            - 2: Minor
+            - 3: Major
+            - 4: Critical
+        dciStatusThreshold:
+          type: integer
+          description: |
+            Business service default threshold for auto-created DCI checks:
+            - 0: Default
+            - 1: Warning
+            - 2: Minor
+            - 3: Major
+            - 4: Critical
+        sourceNode:
+          type: integer
+          format: int64
+          description: ID of source node for business service instance discovery methods
 
     Geolocation:
       type: object
@@ -2714,6 +3220,7 @@ components:
       properties:
         userId:
           type: integer
+          format: int64
         accessRights:
           type: integer
           description: |
@@ -2729,7 +3236,21 @@ components:
             - 0x00000100: CONTROL
             - 0x00000200: TERM_ALARMS
             - 0x00000400: PUSH_DATA
+            - 0x00000800: CREATE_ISSUE
+            - 0x00001000: DOWNLOAD
+            - 0x00002000: UPLOAD
+            - 0x00004000: MANAGE_FILES
             - 0x00008000: MAINTENANCE
+            - 0x00010000: READ_AGENT
+            - 0x00020000: READ_SNMP
+            - 0x00040000: SCREENSHOT
+            - 0x00080000: EDIT_MNT_JOURNAL
+            - 0x00100000: CONFIGURE_AGENT
+            - 0x00200000: EDIT_COMMENTS
+            - 0x00400000: EDIT_RESP_USERS
+            - 0x00800000: DELEGATED_READ
+            - 0x01000000: MANAGE_POLICIES
+            - 0x02000000: MANAGE_INCIDENTS
 
     CustomAttribute:
       type: object
