@@ -10728,7 +10728,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
 void Node::prepareForDeletion()
 {
    // Wait for all pending polls
-   nxlog_debug(4, _T("Node::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Node::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish", m_name, m_id);
    while (m_statusPollState.isPending() || m_configurationPollState.isPending() ||
           m_discoveryPollState.isPending() || m_routingPollState.isPending() ||
           m_topologyPollState.isPending() || m_instancePollState.isPending() ||
@@ -10736,7 +10736,7 @@ void Node::prepareForDeletion()
    {
       ThreadSleepMs(100);
    }
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Node::prepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
 
    UnbindAgentTunnel(m_id, 0);
 
@@ -10756,7 +10756,7 @@ void Node::prepareForDeletion()
             NetObj *circuit = circuits->get(j);
             NetObj::unlinkObjects(circuit, iface);
             circuit->calculateCompoundStatus();
-            nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node::prepareForDeletion(%s [%u]): interface \"%s\" removed from circuit \"%s\" [%u]"),
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Node::prepareForDeletion(%s [%u]): interface \"%s\" removed from circuit \"%s\" [%u]",
                m_name, m_id, iface->getName(), circuit->getName(), circuit->getId());
          }
       }

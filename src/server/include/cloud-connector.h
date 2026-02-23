@@ -118,16 +118,6 @@ struct ResourceDescriptor
 };
 
 /**
- * Credentials context passed to connector methods
- */
-struct CloudConnectorCredentials
-{
-   const BYTE *data;       // Encrypted credential blob
-   size_t dataLen;         // Blob length
-   const TCHAR *accountId; // Account identifier (subscription ID, etc.)
-};
-
-/**
  * Module interface for cloud connector
  */
 struct CloudConnectorInterface
@@ -136,13 +126,13 @@ struct CloudConnectorInterface
    void (*Shutdown)();
 
    ResourceDescriptor *(*Discover)(
-      const CloudConnectorCredentials *credentials,
+      json_t *credentials,
       const TCHAR *filter);
 
    ObjectArray<MetricDefinition> *(*GetMetricDefinitions)(
       const TCHAR *resourceType,
       const TCHAR *resourceId,
-      const CloudConnectorCredentials *credentials);
+      json_t *credentials);
 
    DataCollectionError (*Collect)(
       const TCHAR *resourceId,
@@ -150,20 +140,20 @@ struct CloudConnectorInterface
       int16_t aggregation,
       TCHAR *value,
       size_t bufLen,
-      const CloudConnectorCredentials *credentials);
+      json_t *credentials);
 
    DataCollectionError (*CollectTable)(
       const TCHAR *resourceId,
       const TCHAR *metric,
       int16_t aggregation,
       shared_ptr<Table> *value,
-      const CloudConnectorCredentials *credentials);
+      json_t *credentials);
 
    int16_t (*QueryState)(
       const TCHAR *resourceId,
       TCHAR *providerState,
       size_t bufLen,
-      const CloudConnectorCredentials *credentials);
+      json_t *credentials);
 
    // Optional batch collection (nullptr if not supported)
    DataCollectionError (*BatchCollect)(
@@ -171,17 +161,17 @@ struct CloudConnectorInterface
       const ObjectArray<TCHAR> *metrics,
       const IntegerArray<int16_t> *aggregations,
       StringList *values,
-      const CloudConnectorCredentials *credentials);
+      json_t *credentials);
 };
 
 /**
  * Find cloud connector by name
  */
-CloudConnectorInterface NXCORE_EXPORTABLE *FindCloudConnector(const TCHAR *name);
+CloudConnectorInterface NXCORE_EXPORTABLE *FindCloudConnector(const wchar_t *name);
 
 /**
  * Get error message for given status
  */
-const TCHAR NXCORE_EXPORTABLE *GetCloudConnectorErrorMessage(CloudConnectorStatus status);
+const wchar_t NXCORE_EXPORTABLE *GetCloudConnectorErrorMessage(CloudConnectorStatus status);
 
 #endif   /* _cloud_connector_h_ */

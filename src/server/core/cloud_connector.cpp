@@ -33,9 +33,9 @@ static StringObjectMap<CloudConnectorInterface> s_connectors(Ownership::False);
 /**
  * Get error message for given status
  */
-const TCHAR *GetCloudConnectorErrorMessage(CloudConnectorStatus status)
+const wchar_t *GetCloudConnectorErrorMessage(CloudConnectorStatus status)
 {
-   static const TCHAR *messages[] =
+   static const wchar_t *messages[] =
    {
       L"No errors",
       L"Connector unavailable",
@@ -49,7 +49,7 @@ const TCHAR *GetCloudConnectorErrorMessage(CloudConnectorStatus status)
 /**
  * Find cloud connector by name
  */
-CloudConnectorInterface *FindCloudConnector(const TCHAR *name)
+CloudConnectorInterface *FindCloudConnector(const wchar_t *name)
 {
    return s_connectors.get(name);
 }
@@ -66,27 +66,23 @@ void InitializeCloudConnectors()
       if (status == CloudConnectorStatus::SUCCESS)
       {
          s_connectors.set(CURRENT_MODULE.name, CURRENT_MODULE.cloudConnector);
-         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
-            L"Cloud connector \"%s\" registered successfully", CURRENT_MODULE.name);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Cloud connector \"%s\" registered successfully", CURRENT_MODULE.name);
          count++;
       }
       else
       {
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG,
-            L"Cloud connector provided by module %s cannot be initialized (%s)",
-            CURRENT_MODULE.name, GetCloudConnectorErrorMessage(status));
+            L"Cloud connector provided by module %s cannot be initialized (%s)", CURRENT_MODULE.name, GetCloudConnectorErrorMessage(status));
       }
    }
 
    if (count > 0)
    {
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
-         L"%d cloud connector(s) registered", count);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"%d cloud connector(s) registered", count);
       InterlockedOr64(&g_flags, AF_CLOUD_CONNECTOR_ENABLED);
    }
    else
    {
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
-         L"No cloud connectors available");
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"No cloud connectors available");
    }
 }

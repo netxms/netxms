@@ -111,7 +111,6 @@ public class NXCObjectCreationData
    private long assetId;
    private Map<String, String> assetProperties;
    private String connectorName;
-   private String accountIdentifier;
    private String credentials;
    private String discoverySchedule;
    private String discoveryFilter;
@@ -192,7 +191,6 @@ public class NXCObjectCreationData
 	   gatewayNodeId = 0;
 	   webServiceProxyId = 0;
       connectorName = "";
-      accountIdentifier = "";
       credentials = "";
       discoverySchedule = "";
       discoveryFilter = "";
@@ -288,8 +286,6 @@ public class NXCObjectCreationData
          webServiceProxyId = data.getWebServiceProxy();
       if (data.getConnectorName() != null)
          connectorName = data.getConnectorName();
-      if (data.getAccountIdentifier() != null)
-         accountIdentifier = data.getAccountIdentifier();
       if (data.getCredentials() != null)
          credentials = data.getCredentials();
       if (data.getDiscoverySchedule() != null)
@@ -1294,22 +1290,6 @@ public class NXCObjectCreationData
    }
 
    /**
-    * @return the accountIdentifier
-    */
-   public String getAccountIdentifier()
-   {
-      return accountIdentifier;
-   }
-
-   /**
-    * @param accountIdentifier the accountIdentifier to set
-    */
-   public void setAccountIdentifier(String accountIdentifier)
-   {
-      this.accountIdentifier = accountIdentifier;
-   }
-
-   /**
     * @return the credentials
     */
    public String getCredentials()
@@ -1453,7 +1433,7 @@ public class NXCObjectCreationData
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
             gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties +
-            ", connectorName=" + connectorName + ", accountIdentifier=" + accountIdentifier + ", credentials=" + credentials + ", discoverySchedule=" + discoverySchedule +
+            ", connectorName=" + connectorName + ", credentials=" + credentials + ", discoverySchedule=" + discoverySchedule +
             ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", defaultPollingInterval=" + defaultPollingInterval +
             ", autoDiscoverChildren=" + autoDiscoverChildren + ", autoProvisionDCI=" + autoProvisionDCI + "]";
    }

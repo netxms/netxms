@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,6 +180,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("Network Device Driver"));
       origin.add(i18n.tr("Modbus"));
       origin.add(i18n.tr("EtherNet/IP"));
+      origin.add(i18n.tr("Cloud Connector"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override

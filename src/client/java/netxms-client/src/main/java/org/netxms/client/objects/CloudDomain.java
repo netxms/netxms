@@ -33,7 +33,6 @@ import org.netxms.client.objects.interfaces.PollingTarget;
 public class CloudDomain extends DataCollectionTarget implements PollingTarget
 {
    private String connectorName;
-   private String accountIdentifier;
    private boolean hasCredentials;
    private String discoverySchedule;
    private String discoveryFilter;
@@ -56,7 +55,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    {
       super(msg, session);
       connectorName = msg.getFieldAsString(NXCPCodes.VID_CONNECTOR_NAME);
-      accountIdentifier = msg.getFieldAsString(NXCPCodes.VID_ACCOUNT_IDENTIFIER);
       hasCredentials = msg.getFieldAsBoolean(NXCPCodes.VID_CLOUD_CREDENTIALS);
       discoverySchedule = msg.getFieldAsString(NXCPCodes.VID_DISCOVERY_SCHEDULE);
       discoveryFilter = msg.getFieldAsString(NXCPCodes.VID_DISCOVERY_FILTER);
@@ -105,7 +103,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    {
       Set<String> strings = super.getStrings();
       addString(strings, connectorName);
-      addString(strings, accountIdentifier);
       addString(strings, discoverySchedule);
       addString(strings, lastDiscoveryMessage);
       return strings;
@@ -117,14 +114,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    public String getConnectorName()
    {
       return connectorName;
-   }
-
-   /**
-    * @return the accountIdentifier
-    */
-   public String getAccountIdentifier()
-   {
-      return accountIdentifier;
    }
 
    /**

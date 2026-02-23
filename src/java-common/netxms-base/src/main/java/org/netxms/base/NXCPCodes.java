@@ -1479,7 +1479,7 @@ public class NXCPCodes
    public static final long VID_2FA_GRACE_LOGINS = 944;
    public static final long VID_LAST_CHECK_TIME = 945;
    public static final long VID_CONNECTOR_NAME = 946;
-   public static final long VID_ACCOUNT_IDENTIFIER = 947;
+   public static final long VID_ACCOUNT_ID = 947;
    public static final long VID_CLOUD_CREDENTIALS = 948;
    public static final long VID_DISCOVERY_SCHEDULE = 949;
    public static final long VID_DISCOVERY_FILTER = 950;
@@ -1497,14 +1497,13 @@ public class NXCPCodes
    public static final long VID_RESOURCE_STATE = 962;
    public static final long VID_PROVIDER_STATE = 963;
    public static final long VID_LINKED_NODE_ID = 964;
-   public static final long VID_ACCOUNT_ID = 965;
-   public static final long VID_CONNECTOR_DATA = 966;
-   public static final long VID_NUM_TAGS = 967;
+   public static final long VID_CONNECTOR_DATA = 965;
+   public static final long VID_NUM_TAGS = 966;
+
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
    public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
    public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;
-
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
 	public static final long VID_ACL_RIGHTS_BASE = 0x00002000L;

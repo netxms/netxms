@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -195,7 +195,7 @@ static EnumerationCallbackResult CheckMgmtFlagCallback(NetObj *object, void *dat
  */
 void CheckForMgmtNode()
 {
-   bool roaming = ConfigReadBoolean(_T("Server.RoamingMode"), false);
+   bool roaming = ConfigReadBoolean(L"Server.RoamingMode", false);
 
    if (roaming)
    {
@@ -204,7 +204,7 @@ void CheckForMgmtNode()
       {
          g_dwMgmtNode = mgmtNode->getId();
          if (!mgmtNode->getPrimaryIpAddress().isLoopback())
-            static_cast<Node&>(*mgmtNode).setPrimaryHostName(_T("127.0.0.1"));
+            static_cast<Node&>(*mgmtNode).setPrimaryHostName(L"127.0.0.1");
       }
       else
       {
@@ -230,7 +230,7 @@ void CheckForMgmtNode()
                if (!node->isLocalManagement())
                {
                   node->setLocalMgmtFlag();
-                  nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
+                  nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, L"Local management node %s [%u] was not have NC_IS_LOCAL_MGMT flag set", node->getName(), node->getId());
                }
                g_dwMgmtNode = node->getId();   // Set local management node ID
                break;
@@ -308,37 +308,37 @@ static EnumerationCallbackResult QueueForPolling(NetObj *object, void *data)
 
    if (pollableObject->isStatusPollAvailable() && pollableObject->lockForStatusPoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for status poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for status poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doStatusPoll, RegisterPoller(PollerType::STATUS, object->self()));
    }
 
    if (pollableObject->isConfigurationPollAvailable() && pollableObject->lockForConfigurationPoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for configuration poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for configuration poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doConfigurationPoll, RegisterPoller(PollerType::CONFIGURATION, object->self()));
    }
 
    if (pollableObject->isInstanceDiscoveryPollAvailable() && pollableObject->lockForInstanceDiscoveryPoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for instance discovery poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for instance discovery poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doInstanceDiscoveryPoll, RegisterPoller(PollerType::INSTANCE_DISCOVERY, object->self()));
    }
 
    if (pollableObject->isTopologyPollAvailable() && pollableObject->lockForTopologyPoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for topology poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for topology poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doTopologyPoll, RegisterPoller(PollerType::TOPOLOGY, object->self()));
    }
 
    if (pollableObject->isRoutingTablePollAvailable() && pollableObject->lockForRoutingTablePoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for routing table poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for routing table poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doRoutingTablePoll, RegisterPoller(PollerType::ROUTING_TABLE, object->self()));
    }
 
    if (pollableObject->isDiscoveryPollAvailable() && pollableObject->lockForDiscoveryPoll())
    {
-      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("%s %s [%u] queued for discovery poll"), object->getObjectClassName(), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, L"%s %s [%u] queued for discovery poll", object->getObjectClassName(), object->getName(), object->getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, pollableObject, &Pollable::doDiscoveryPoll, RegisterPoller(PollerType::DISCOVERY, object->self()));
    }
 

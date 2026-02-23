@@ -20,12 +20,23 @@
 **/
 
 #include "nxcore.h"
+#include <cloud-connector.h>
+
+#define POLL_CANCELLATION_CHECKPOINT() \
+         do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
+
+/**
+ * Debug tag for cloud discovery
+ */
+#define DEBUG_TAG_CLOUD_DISCOVERY   L"cloud.discovery"
 
 /**
  * Default constructor for CloudDomain class
  */
 CloudDomain::CloudDomain() : super(Pollable::STATUS | Pollable::CONFIGURATION)
 {
+   m_credentials = nullptr;
+   m_parsedCredentials = nullptr;
    m_removalPolicy = 0;
    m_gracePeriod = 30;
    m_defaultPollingInterval = 300;
@@ -43,8 +54,9 @@ CloudDomain::CloudDomain(const wchar_t *name, const NXCPMessage& request) : supe
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_connectorName = request.getFieldAsSharedString(VID_CONNECTOR_NAME);
-   m_accountIdentifier = request.getFieldAsSharedString(VID_ACCOUNT_IDENTIFIER);
-   m_credentials = request.getFieldAsSharedString(VID_CLOUD_CREDENTIALS);
+   m_credentials = request.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS);
+   m_parsedCredentials = nullptr;
+   parseCredentials();
    m_discoverySchedule = request.getFieldAsSharedString(VID_DISCOVERY_SCHEDULE);
    m_discoveryFilter = request.getFieldAsSharedString(VID_DISCOVERY_FILTER);
    m_removalPolicy = request.getFieldAsInt16(VID_REMOVAL_POLICY);
@@ -58,10 +70,28 @@ CloudDomain::CloudDomain(const wchar_t *name, const NXCPMessage& request) : supe
 }
 
 /**
+ * Parse credentials JSON string and cache the result
+ */
+void CloudDomain::parseCredentials()
+{
+   json_decref(m_parsedCredentials);
+   m_parsedCredentials = nullptr;
+   if (m_credentials != nullptr)
+   {
+      json_error_t error;
+      m_parsedCredentials = json_loads(m_credentials, 0, &error);
+      if (m_parsedCredentials == nullptr)
+         nxlog_write_tag(NXLOG_WARNING, L"cloud", L"CloudDomain(%s [%u]): failed to parse credentials JSON on line %d: %hs", m_name, m_id, error.line, error.text);
+   }
+}
+
+/**
  * CloudDomain destructor
  */
 CloudDomain::~CloudDomain()
 {
+   MemFree(m_credentials);
+   json_decref(m_parsedCredentials);
 }
 
 /**
@@ -80,7 +110,7 @@ bool CloudDomain::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *pre
          m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT connector_name,account_identifier,credentials,discovery_schedule,discovery_filter,removal_policy,grace_period,default_poll_interval,auto_discover_children,auto_provision_dci,last_discovery_status,last_discovery_time,last_discovery_msg FROM cloud_domains WHERE id=?");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT connector_name,credentials,discovery_schedule,discovery_filter,removal_policy,grace_period,default_poll_interval,auto_discover_children,auto_provision_dci,last_discovery_status,last_discovery_time,last_discovery_msg FROM cloud_domains WHERE id=?");
    if (hStmt == nullptr)
       return false;
 
@@ -91,18 +121,18 @@ bool CloudDomain::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *pre
       return false;
 
    m_connectorName = DBGetFieldAsSharedString(hResult, 0, 0);
-   m_accountIdentifier = DBGetFieldAsSharedString(hResult, 0, 1);
-   m_credentials = DBGetFieldAsSharedString(hResult, 0, 2);
-   m_discoverySchedule = DBGetFieldAsSharedString(hResult, 0, 3);
-   m_discoveryFilter = DBGetFieldAsSharedString(hResult, 0, 4);
-   m_removalPolicy = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 5));
-   m_gracePeriod = DBGetFieldULong(hResult, 0, 6);
-   m_defaultPollingInterval = DBGetFieldULong(hResult, 0, 7);
-   m_autoDiscoverChildren = DBGetFieldLong(hResult, 0, 8) != 0;
-   m_autoProvisionDCI = DBGetFieldLong(hResult, 0, 9) != 0;
-   m_lastDiscoveryStatus = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 10));
-   m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 11);
-   m_lastDiscoveryMessage = DBGetFieldAsSharedString(hResult, 0, 12);
+   m_credentials = DBGetFieldUTF8(hResult, 0, 1, nullptr, 0);
+   parseCredentials();
+   m_discoverySchedule = DBGetFieldAsSharedString(hResult, 0, 2);
+   m_discoveryFilter = DBGetFieldAsSharedString(hResult, 0, 3);
+   m_removalPolicy = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 4));
+   m_gracePeriod = DBGetFieldULong(hResult, 0, 5);
+   m_defaultPollingInterval = DBGetFieldULong(hResult, 0, 6);
+   m_autoDiscoverChildren = DBGetFieldLong(hResult, 0, 7) != 0;
+   m_autoProvisionDCI = DBGetFieldLong(hResult, 0, 8) != 0;
+   m_lastDiscoveryStatus = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 9));
+   m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 10);
+   m_lastDiscoveryMessage = DBGetFieldAsSharedString(hResult, 0, 11);
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -126,7 +156,7 @@ bool CloudDomain::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_CLOUD_DOMAIN_PROPERTIES))
    {
       static const TCHAR *columns[] = {
-         L"connector_name", L"account_identifier", L"credentials", L"discovery_schedule",
+         L"connector_name", L"credentials", L"discovery_schedule",
          L"discovery_filter", L"removal_policy", L"grace_period", L"default_poll_interval",
          L"auto_discover_children", L"auto_provision_dci", L"last_discovery_status",
          L"last_discovery_time", L"last_discovery_msg", nullptr
@@ -136,19 +166,18 @@ bool CloudDomain::saveToDatabase(DB_HANDLE hdb)
       {
          lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_connectorName, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_accountIdentifier, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_credentials, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_discoverySchedule, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_discoveryFilter, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_removalPolicy));
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_gracePeriod);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_defaultPollingInterval);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_autoDiscoverChildren ? 1 : 0);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_autoProvisionDCI ? 1 : 0);
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_lastDiscoveryStatus));
-         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
-         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_lastDiscoveryMessage, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_credentials, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_discoverySchedule, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_discoveryFilter, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_removalPolicy));
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_gracePeriod);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_defaultPollingInterval);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_autoDiscoverChildren ? 1 : 0);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_autoProvisionDCI ? 1 : 0);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_lastDiscoveryStatus));
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_lastDiscoveryMessage, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
          unlockProperties();
 
          success = DBExecute(hStmt);
@@ -190,7 +219,6 @@ json_t *CloudDomain::toJson()
 
    lockProperties();
    json_object_set_new(root, "connectorName", json_string_t(m_connectorName));
-   json_object_set_new(root, "accountIdentifier", json_string_t(m_accountIdentifier));
    json_object_set_new(root, "removalPolicy", json_integer(m_removalPolicy));
    json_object_set_new(root, "gracePeriod", json_integer(m_gracePeriod));
    json_object_set_new(root, "defaultPollingInterval", json_integer(m_defaultPollingInterval));
@@ -211,8 +239,7 @@ void CloudDomain::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_CONNECTOR_NAME, m_connectorName);
-   msg->setField(VID_ACCOUNT_IDENTIFIER, m_accountIdentifier);
-   msg->setField(VID_CLOUD_CREDENTIALS, !m_credentials.isNull());
+   msg->setField(VID_CLOUD_CREDENTIALS, m_credentials != nullptr);
    msg->setField(VID_DISCOVERY_SCHEDULE, m_discoverySchedule);
    msg->setField(VID_DISCOVERY_FILTER, m_discoveryFilter);
    msg->setField(VID_REMOVAL_POLICY, m_removalPolicy);
@@ -232,10 +259,12 @@ uint32_t CloudDomain::modifyFromMessageInternal(const NXCPMessage& msg, ClientSe
 {
    if (msg.isFieldExist(VID_CONNECTOR_NAME))
       m_connectorName = msg.getFieldAsSharedString(VID_CONNECTOR_NAME);
-   if (msg.isFieldExist(VID_ACCOUNT_IDENTIFIER))
-      m_accountIdentifier = msg.getFieldAsSharedString(VID_ACCOUNT_IDENTIFIER);
    if (msg.isFieldExist(VID_CLOUD_CREDENTIALS))
-      m_credentials = msg.getFieldAsSharedString(VID_CLOUD_CREDENTIALS);
+   {
+      MemFree(m_credentials);
+      m_credentials = msg.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS);
+      parseCredentials();
+   }
    if (msg.isFieldExist(VID_DISCOVERY_SCHEDULE))
       m_discoverySchedule = msg.getFieldAsSharedString(VID_DISCOVERY_SCHEDULE);
    if (msg.isFieldExist(VID_DISCOVERY_FILTER))
@@ -293,7 +322,51 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
    sendPollerMsg(L"Starting status poll of cloud domain %s\r\n", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of cloud domain \"%s\" [%u]", m_name, m_id);
 
-   // TODO: Phase 2 - call connector queryState() for child resources
+   // Query state for child resources
+   poller->setStatus(L"query state");
+   SharedString connectorName = getConnectorName();
+   CloudConnectorInterface *connector = FindCloudConnector(connectorName);
+   if (connector != nullptr)
+   {
+      json_t *credentials = getCredentials();
+
+      unique_ptr<SharedObjectArray<NetObj>> children = getChildren(OBJECT_RESOURCE);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"CloudDomain::statusPoll(%s [%u]): querying state for %d resources", m_name, m_id, children->size());
+
+      for (int i = 0; i < children->size(); i++)
+      {
+         POLL_CANCELLATION_CHECKPOINT();
+
+         shared_ptr<Resource> resource = static_pointer_cast<Resource>(children->getShared(i));
+         SharedString resourceId = resource->getCloudResourceId();
+
+         TCHAR providerStateBuf[256];
+         int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
+         if (newState >= 0)
+         {
+            if (resource->getResourceState() != newState || _tcscmp(resource->getProviderState(), providerStateBuf))
+            {
+               resource->updateState(newState, providerStateBuf);
+               sendPollerMsg(L"   Resource \"%s\" state changed to %d (%s)\r\n", resource->getName(), static_cast<int>(newState), providerStateBuf);
+            }
+         }
+         else
+         {
+            sendPollerMsg(POLLER_WARNING L"   Failed to query state for resource \"%s\"\r\n", resource->getName());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Failed to query state for resource \"%s\" [%u]", resource->getName(), resource->getId());
+         }
+      }
+
+      json_decref(credentials);
+   }
+   else
+   {
+      if (!connectorName.isEmpty())
+      {
+         sendPollerMsg(POLLER_WARNING L"   Cloud connector \"%s\" not found\r\n", static_cast<const TCHAR*>(connectorName));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Cloud connector \"%s\" not found for cloud domain \"%s\" [%u]", static_cast<const TCHAR*>(connectorName), m_name, m_id);
+      }
+   }
 
    calculateCompoundStatus(true);
 
@@ -333,8 +406,204 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
    m_pollRequestor = session;
    m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Starting configuration poll of cloud domain \"%s\" [%u]", m_name, m_id);
+   sendPollerMsg(L"Starting configuration poll of cloud domain %s\r\n", m_name);
 
-   // TODO: Phase 2 - call connector discover() and reconcile resources
+   // Find cloud connector
+   poller->setStatus(L"discover");
+   SharedString connectorName = getConnectorName();
+   CloudConnectorInterface *connector = FindCloudConnector(connectorName);
+   if (connector != nullptr)
+   {
+      sendPollerMsg(L"   Using cloud connector \"%s\"\r\n", static_cast<const TCHAR*>(connectorName));
+
+      // Call connector discover
+      json_t *credentials = getCredentials();
+      SharedString filter = GetAttributeWithLock(m_discoveryFilter, m_mutexProperties);
+      ResourceDescriptor *discoveredTree = connector->Discover(credentials, filter);
+      json_decref(credentials);
+      if (discoveredTree != nullptr)
+      {
+         sendPollerMsg(L"   Discovery successful, reconciling resources\r\n");
+         nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Discovery returned results for cloud domain \"%s\" [%u]", m_name, m_id);
+
+         // Collect all discovered cloud resource IDs into a set for tracking
+         StringSet discoveredIds;
+         std::function<void(const ResourceDescriptor *, uint32_t)> reconcileResources;
+
+         reconcileResources = [this, &connector, &discoveredIds, &reconcileResources, &connectorName](const ResourceDescriptor *desc, uint32_t parentObjId) {
+            for (const ResourceDescriptor *d = desc; d != nullptr; d = d->next)
+            {
+               if (IsShutdownInProgress())
+                  return;
+
+               // Find existing resource child by cloud resource ID
+               shared_ptr<Resource> resource;
+               shared_ptr<NetObj> parentObj = FindObjectById(parentObjId);
+               if (parentObj == nullptr)
+                  return;
+               unique_ptr<SharedObjectArray<NetObj>> children = parentObj->getChildren(OBJECT_RESOURCE);
+               for (int i = 0; i < children->size(); i++)
+               {
+                  shared_ptr<Resource> r = static_pointer_cast<Resource>(children->getShared(i));
+                  if (!_tcscmp(r->getCloudResourceId(), d->resourceId))
+                  {
+                     resource = r;
+                     break;
+                  }
+               }
+
+               if (resource != nullptr)
+               {
+                  // Update existing resource
+                  resource->updateFromDiscovery(d, parentObjId, connectorName);
+                  resource->setName(d->name);
+                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Updated existing resource \"%s\" [%u] (cloud ID: %s)", resource->getName(), resource->getId(), d->resourceId);
+               }
+               else
+               {
+                  // Create new resource
+                  resource = make_shared<Resource>();
+                  resource->setName(d->name);
+                  NetObjInsert(resource, true, false);
+                  resource->updateFromDiscovery(d, parentObjId, connectorName);
+                  resource->setOwnerDomain(self());
+
+                  // Link to parent
+                  linkObjects(parentObj, resource);
+                  resource->publish();
+
+                  sendPollerMsg(L"   Created new resource \"%s\" (cloud ID: %s)\r\n", d->name, d->resourceId);
+                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Created new resource \"%s\" [%u] (cloud ID: %s) under parent [%u]",
+                     d->name, resource->getId(), d->resourceId, parentObjId);
+               }
+
+               // Node linking via linkHint
+               if (d->linkHint[0] != 0)
+               {
+                  shared_ptr<Node> linkedNode;
+                  InetAddress addr = InetAddress::resolveHostName(d->linkHint);
+                  if (addr.isValidUnicast())
+                  {
+                     linkedNode = FindNodeByIP(0, true, addr);
+                  }
+                  if (linkedNode == nullptr)
+                  {
+                     unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(0, d->linkHint);
+                     if (nodes != nullptr && nodes->size() > 0)
+                        linkedNode = static_pointer_cast<Node>(nodes->getShared(0));
+                  }
+                  if (linkedNode != nullptr)
+                  {
+                     resource->setLinkedNodeId(linkedNode->getId());
+                     nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Linked resource \"%s\" [%u] to node \"%s\" [%u]",
+                        resource->getName(), resource->getId(), linkedNode->getName(), linkedNode->getId());
+                  }
+               }
+
+               discoveredIds.add(d->resourceId);
+
+               // Recurse for children
+               if (d->children != nullptr)
+                  reconcileResources(d->children, resource->getId());
+            }
+         };
+
+         reconcileResources(discoveredTree, m_id);
+
+         POLL_CANCELLATION_CHECKPOINT();
+
+         // Remove resources not found in discovery
+         poller->setStatus(L"reconcile");
+         lockProperties();
+         int16_t removalPolicy = m_removalPolicy;
+         uint32_t gracePeriod = m_gracePeriod;
+         unlockProperties();
+
+         std::function<void(uint32_t)> removeStaleResources;
+         removeStaleResources = [this, &discoveredIds, &removeStaleResources, removalPolicy, gracePeriod](uint32_t parentObjId) {
+            shared_ptr<NetObj> parentObj = FindObjectById(parentObjId);
+            if (parentObj == nullptr)
+               return;
+
+            unique_ptr<SharedObjectArray<NetObj>> children = parentObj->getChildren(OBJECT_RESOURCE);
+            for (int i = 0; i < children->size(); i++)
+            {
+               shared_ptr<Resource> resource = static_pointer_cast<Resource>(children->getShared(i));
+
+               // First recurse into children
+               removeStaleResources(resource->getId());
+
+               if (!discoveredIds.contains(resource->getCloudResourceId()))
+               {
+                  switch (removalPolicy)
+                  {
+                     case 0: // Mark inactive
+                        resource->updateState(RESOURCE_STATE_INACTIVE, L"Not found in discovery");
+                        nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Marked resource \"%s\" [%u] as inactive (not found in discovery)", resource->getName(), resource->getId());
+                        break;
+                     case 1: // Delete after grace period
+                     {
+                        time_t lastSeen = resource->getLastDiscoveryTime();
+                        if (lastSeen != 0 && (time(nullptr) - lastSeen > static_cast<time_t>(gracePeriod) * 86400))
+                        {
+                           nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Deleting resource \"%s\" [%u] (grace period expired)", resource->getName(), resource->getId());
+                           resource->deleteObject();
+                        }
+                        else
+                        {
+                           resource->updateState(RESOURCE_STATE_INACTIVE, L"Not found in discovery");
+                           nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Marked resource \"%s\" [%u] as inactive (grace period not expired)", resource->getName(), resource->getId());
+                        }
+                        break;
+                     }
+                     case 2: // Delete immediately
+                        nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Deleting resource \"%s\" [%u] (immediate removal policy)", resource->getName(), resource->getId());
+                        resource->deleteObject();
+                        break;
+                     case 3: // Ignore
+                        break;
+                  }
+               }
+            }
+         };
+
+         removeStaleResources(m_id);
+
+         // Update discovery status - success
+         lockProperties();
+         m_lastDiscoveryStatus = 0;
+         m_lastDiscoveryTime = time(nullptr);
+         m_lastDiscoveryMessage = L"";
+         setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
+         unlockProperties();
+
+         delete discoveredTree;
+      }
+      else
+      {
+         sendPollerMsg(POLLER_ERROR L"   Discovery returned no results\r\n");
+         nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Discovery returned no results for cloud domain \"%s\" [%u]", m_name, m_id);
+
+         lockProperties();
+         m_lastDiscoveryStatus = 2;
+         m_lastDiscoveryTime = time(nullptr);
+         m_lastDiscoveryMessage = L"Discovery returned no results";
+         setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
+         unlockProperties();
+      }
+   }
+   else
+   {
+      sendPollerMsg(POLLER_ERROR L"   Cloud connector \"%s\" not found\r\n", static_cast<const TCHAR*>(connectorName));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Cloud connector \"%s\" not found for cloud domain \"%s\" [%u]", static_cast<const TCHAR*>(connectorName), m_name, m_id);
+
+      lockProperties();
+      m_lastDiscoveryStatus = 2;
+      m_lastDiscoveryTime = time(nullptr);
+      m_lastDiscoveryMessage = L"Cloud connector not found";
+      setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
+      unlockProperties();
+   }
 
    // Execute hook script
    poller->setStatus(L"hook");
@@ -356,10 +625,10 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
  */
 void CloudDomain::prepareForDeletion()
 {
-   nxlog_debug(4, L"CloudDomain::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish", m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"CloudDomain::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish", m_name, m_id);
    while (m_statusPollState.isPending() || m_configurationPollState.isPending())
       ThreadSleepMs(100);
-   nxlog_debug(4, L"CloudDomain::PrepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"CloudDomain::prepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
 
    super::prepareForDeletion();
 }

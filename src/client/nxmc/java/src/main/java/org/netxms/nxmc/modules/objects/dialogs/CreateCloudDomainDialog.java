@@ -41,13 +41,11 @@ public class CreateCloudDomainDialog extends Dialog
    private LabeledText nameField;
    private LabeledText aliasField;
    private LabeledText connectorNameField;
-   private LabeledText accountIdentifierField;
    private LabeledText credentialsField;
 
    private String name;
    private String alias;
    private String connectorName;
-   private String accountIdentifier;
    private String credentials;
 
    /**
@@ -107,11 +105,6 @@ public class CreateCloudDomainDialog extends Dialog
       connectorNameField.getTextControl().setTextLimit(255);
       connectorNameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
-      accountIdentifierField = new LabeledText(dialogArea, SWT.NONE);
-      accountIdentifierField.setLabel(i18n.tr("Account identifier"));
-      accountIdentifierField.getTextControl().setTextLimit(255);
-      accountIdentifierField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-
       credentialsField = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
       credentialsField.setLabel(i18n.tr("Credentials"));
       credentialsField.getTextControl().setTextLimit(255);
@@ -135,7 +128,6 @@ public class CreateCloudDomainDialog extends Dialog
       name = nameField.getText().trim();
       alias = aliasField.getText().trim();
       connectorName = connectorNameField.getText().trim();
-      accountIdentifier = accountIdentifierField.getText().trim();
       credentials = credentialsField.getText();
 
       super.okPressed();
@@ -163,14 +155,6 @@ public class CreateCloudDomainDialog extends Dialog
    public String getConnectorName()
    {
       return connectorName;
-   }
-
-   /**
-    * @return the accountIdentifier
-    */
-   public String getAccountIdentifier()
-   {
-      return accountIdentifier;
    }
 
    /**

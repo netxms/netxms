@@ -6836,7 +6836,6 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_CLOUDDOMAIN:
             msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
-            msg.setField(NXCPCodes.VID_ACCOUNT_IDENTIFIER, data.getAccountIdentifier());
             msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
             msg.setField(NXCPCodes.VID_DISCOVERY_SCHEDULE, data.getDiscoverySchedule());
             msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
@@ -7805,8 +7804,6 @@ public class NXCSession
 
       if (data.getConnectorName() != null)
          msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
-      if (data.getAccountIdentifier() != null)
-         msg.setField(NXCPCodes.VID_ACCOUNT_IDENTIFIER, data.getAccountIdentifier());
       if (data.getCredentials() != null)
          msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
       if (data.getDiscoverySchedule() != null)

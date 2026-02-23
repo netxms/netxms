@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -613,19 +613,19 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
 
    calculateCompoundStatus(true);
 
-   poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"));
+   poller->setStatus(L"hook");
+   executeHookScript(L"StatusPoll");
 
    lockProperties();
    if (prevState != m_state)
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
 
-   sendPollerMsg(_T("Finished status poll of sensor %s\r\n"), m_name);
-   sendPollerMsg(_T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of sensor %s\r\n", m_name);
+   sendPollerMsg(L"Sensor status after poll is %s\r\n", GetStatusAsText(m_status, true));
 
    pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Finished status poll of sensor \"%s\" [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of sensor \"%s\" [%u]", m_name, m_id);
 }
 
 /**
@@ -634,10 +634,10 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
 void Sensor::prepareForDeletion()
 {
    // Wait for all pending polls
-   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Sensor::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
    while (m_statusPollState.isPending() || m_configurationPollState.isPending())
       ThreadSleepMs(100);
-   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Sensor::prepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    super::prepareForDeletion();
 }
@@ -654,7 +654,7 @@ void Sensor::populateInternalCommunicationTopologyMap(NetworkMapObjectList *map,
       if (gw != nullptr)
       {
          map->addObject(m_gatewayNodeId);
-         map->linkObjects(m_id, m_gatewayNodeId, LINK_TYPE_SENSOR_PROXY, _T("Sensor gateway"));
+         map->linkObjects(m_id, m_gatewayNodeId, LINK_TYPE_SENSOR_PROXY, L"Sensor gateway");
          callPopulateInternalCommunicationTopologyMap(static_cast<DataCollectionTarget*>(gw.get()), map, m_gatewayNodeId, false, checkAllProxies);
       }
    }

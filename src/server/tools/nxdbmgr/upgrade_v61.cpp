@@ -48,7 +48,6 @@ static bool H_UpgradeFromV4()
       L"CREATE TABLE cloud_domains ("
       L"  id integer not null,"
       L"  connector_name varchar(63) not null,"
-      L"  account_identifier varchar(256) not null,"
       L"  credentials varchar(4096) null,"
       L"  discovery_schedule varchar(128) not null,"
       L"  discovery_filter varchar(4096) null,"

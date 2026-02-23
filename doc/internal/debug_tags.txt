@@ -23,6 +23,8 @@ bizsvc.check	Business service check
 
 client.session	Client sessions
 
+cloud.discovery	Cloud domain resource discovery and reconciliation
+
 cas		CAS
 comm.*		Communications (in agent log)
 comm.listener	All listeners
@@ -60,6 +62,8 @@ dc.snmp		Agent SNMP data collection
 dc.summarytable Data collection summary tables
 
 dload		Debug output of dynamic library loading functions
+
+docker		Docker cloud connector
 
 event.*		Event related messages
 event.corr	Event correlation

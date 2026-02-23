@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -203,7 +203,6 @@ public class NXCObjectModificationData
    private Long expectedCapabilities;
    private String dashboardNameTemplate;
    private String connectorName;
-   private String accountIdentifier;
    private String credentials;
    private String discoverySchedule;
    private String discoveryFilter;
@@ -2580,22 +2579,6 @@ public class NXCObjectModificationData
    public void setConnectorName(String connectorName)
    {
       this.connectorName = connectorName;
-   }
-
-   /**
-    * @return the accountIdentifier
-    */
-   public String getAccountIdentifier()
-   {
-      return accountIdentifier;
-   }
-
-   /**
-    * @param accountIdentifier the accountIdentifier to set
-    */
-   public void setAccountIdentifier(String accountIdentifier)
-   {
-      this.accountIdentifier = accountIdentifier;
    }
 
    /**

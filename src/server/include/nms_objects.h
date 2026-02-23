@@ -47,6 +47,7 @@ class DelegateObject;
 class EventReference;
 class NetworkMap;
 class ImportContext;
+struct ResourceDescriptor;
 
 /**
  * Global variables used by inline methods
@@ -3442,8 +3443,8 @@ private:
 
 protected:
    SharedString m_connectorName;
-   SharedString m_accountIdentifier;
-   SharedString m_credentials;
+   char *m_credentials;
+   json_t *m_parsedCredentials;
    SharedString m_discoverySchedule;
    SharedString m_discoveryFilter;
    int16_t m_removalPolicy;
@@ -3454,6 +3455,8 @@ protected:
    int16_t m_lastDiscoveryStatus;
    time_t m_lastDiscoveryTime;
    SharedString m_lastDiscoveryMessage;
+
+   void parseCredentials();
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
@@ -3481,7 +3484,13 @@ public:
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
-   SharedString getAccountIdentifier() const { return GetAttributeWithLock(m_accountIdentifier, m_mutexProperties); }
+   json_t *getCredentials() const
+   {
+      lockProperties();
+      json_t *credentials = (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
+      unlockProperties();
+      return credentials;
+   }
    int16_t getRemovalPolicy() const { return m_removalPolicy; }
    uint32_t getGracePeriod() const { return m_gracePeriod; }
    uint32_t getDefaultPollingInterval() const { return m_defaultPollingInterval; }
@@ -3514,6 +3523,7 @@ protected:
    SharedString m_accountId;
    time_t m_lastDiscoveryTime;
    SharedString m_connectorData;
+   weak_ptr<CloudDomain> m_ownerDomain;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
@@ -3539,6 +3549,7 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
    SharedString getCloudResourceId() const { return GetAttributeWithLock(m_cloudResourceId, m_mutexProperties); }
    SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
@@ -3551,6 +3562,14 @@ public:
    SharedString getAccountId() const { return GetAttributeWithLock(m_accountId, m_mutexProperties); }
    time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
    const StringMap *getTags() const { return m_tags; }
+
+   void updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId, const TCHAR *connectorName);
+   void updateState(int16_t newState, const TCHAR *providerState);
+   void setLinkedNodeId(uint32_t nodeId);
+   void setOwnerDomain(const shared_ptr<CloudDomain>& domain) { m_ownerDomain = domain; }
+   shared_ptr<CloudDomain> getOwnerDomain() const { return m_ownerDomain.lock(); }
+
+   DataCollectionError getMetricFromCloudConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
 
    virtual json_t *toJson() override;
 };

@@ -209,6 +209,16 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
                *error = DCE_NOT_SUPPORTED;
             }
             break;
+         case DS_CLOUD_CONNECTOR:
+            if (dcTarget->getObjectClass() == OBJECT_RESOURCE)
+            {
+               *error = static_cast<Resource*>(dcTarget)->getMetricFromCloudConnector(dci.getName(), buffer, MAX_RESULT_LENGTH);
+            }
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;
@@ -448,7 +458,8 @@ static void ItemPoller()
       g_idxCollectorById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxNodeById.forEach(QueueItems, &watchdogId);
-		g_idxSensorById.forEach(QueueItems, &watchdogId);
+		g_idxResourceById.forEach(QueueItems, &watchdogId);
+      g_idxSensorById.forEach(QueueItems, &watchdogId);
 
 		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
 		g_averageDCIQueuingTime = static_cast<uint32_t>(queuingTime.getAverage());

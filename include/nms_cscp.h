@@ -1670,7 +1670,7 @@ typedef struct
 #define VID_2FA_GRACE_LOGINS        ((uint32_t)944)
 #define VID_LAST_CHECK_TIME         ((uint32_t)945)
 #define VID_CONNECTOR_NAME          ((uint32_t)946)
-#define VID_ACCOUNT_IDENTIFIER      ((uint32_t)947)
+#define VID_ACCOUNT_ID              ((uint32_t)947)
 #define VID_CLOUD_CREDENTIALS       ((uint32_t)948)
 #define VID_DISCOVERY_SCHEDULE      ((uint32_t)949)
 #define VID_DISCOVERY_FILTER        ((uint32_t)950)
@@ -1688,9 +1688,8 @@ typedef struct
 #define VID_RESOURCE_STATE          ((uint32_t)962)
 #define VID_PROVIDER_STATE          ((uint32_t)963)
 #define VID_LINKED_NODE_ID          ((uint32_t)964)
-#define VID_ACCOUNT_ID              ((uint32_t)965)
-#define VID_CONNECTOR_DATA          ((uint32_t)966)
-#define VID_NUM_TAGS                ((uint32_t)967)
+#define VID_CONNECTOR_DATA          ((uint32_t)965)
+#define VID_NUM_TAGS                ((uint32_t)966)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

@@ -2499,7 +2499,7 @@ if test "x$DIST_BUILD" != "xyes"; then
 			HAVE_LIBCURL=yes
 			LIBS="$LIBS -lcurl"
 		], [ HAVE_LIBCURL=no ])
-		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, CURLOPT_CONNECT_TO, CURLOPT_RESOLVE, CURLOPT_XOAUTH2_BEARER, CURLOPT_PROTOCOLS_STR, CURLPROXY_HTTPS, CURLE_NOT_BUILT_IN, CURLE_UNKNOWN_OPTION, curl_version_info, curl_url],,,[
+		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, CURLOPT_CONNECT_TO, CURLOPT_RESOLVE, CURLOPT_XOAUTH2_BEARER, CURLOPT_PROTOCOLS_STR, CURLPROXY_HTTPS, CURLE_NOT_BUILT_IN, CURLE_UNKNOWN_OPTION, curl_version_info, curl_url, CURLOPT_UNIX_SOCKET_PATH],,,[
 #include <curl/curl.h>
 		])
 	fi
@@ -5147,6 +5147,7 @@ AC_CONFIG_FILES([
 	src/server/hdlink/jira/Makefile
 	src/server/hdlink/redmine/Makefile
 	src/server/include/Makefile
+	src/server/docker/Makefile
 	src/server/leef/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile

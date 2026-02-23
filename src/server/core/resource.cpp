@@ -20,6 +20,7 @@
 **/
 
 #include "nxcore.h"
+#include <cloud-connector.h>
 
 /**
  * Default constructor for Resource class
@@ -295,33 +296,8 @@ void Resource::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
  */
 uint32_t Resource::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
-   if (msg.isFieldExist(VID_CLOUD_RESOURCE_ID))
-      m_cloudResourceId = msg.getFieldAsSharedString(VID_CLOUD_RESOURCE_ID);
-   if (msg.isFieldExist(VID_CONNECTOR_NAME))
-      m_connectorName = msg.getFieldAsSharedString(VID_CONNECTOR_NAME);
-   if (msg.isFieldExist(VID_RESOURCE_TYPE))
-      m_resourceType = msg.getFieldAsSharedString(VID_RESOURCE_TYPE);
-   if (msg.isFieldExist(VID_CLOUD_REGION))
-      m_region = msg.getFieldAsSharedString(VID_CLOUD_REGION);
-   if (msg.isFieldExist(VID_RESOURCE_STATE))
-      m_state = msg.getFieldAsInt16(VID_RESOURCE_STATE);
-   if (msg.isFieldExist(VID_PROVIDER_STATE))
-      m_providerState = msg.getFieldAsSharedString(VID_PROVIDER_STATE);
    if (msg.isFieldExist(VID_LINKED_NODE_ID))
       m_linkedNodeId = msg.getFieldAsUInt32(VID_LINKED_NODE_ID);
-   if (msg.isFieldExist(VID_ACCOUNT_ID))
-      m_accountId = msg.getFieldAsSharedString(VID_ACCOUNT_ID);
-   if (msg.isFieldExist(VID_CONNECTOR_DATA))
-      m_connectorData = msg.getFieldAsSharedString(VID_CONNECTOR_DATA);
-
-   if (msg.isFieldExist(VID_NUM_TAGS))
-   {
-      delete m_tags;
-      if (msg.getFieldAsUInt32(VID_NUM_TAGS) > 0)
-         m_tags = new StringMap(msg, VID_RESOURCE_TAG_LIST_BASE, VID_NUM_TAGS);
-      else
-         m_tags = nullptr;
-   }
 
    return super::modifyFromMessageInternal(msg, session);
 }
@@ -365,7 +341,49 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
    sendPollerMsg(L"Starting status poll of resource %s\r\n", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of resource \"%s\" [%u]", m_name, m_id);
 
-   // TODO: Phase 2 - call connector queryState()
+   poller->setStatus(L"query state");
+   shared_ptr<CloudDomain> domain = m_ownerDomain.lock();
+   if (domain != nullptr)
+   {
+      SharedString connectorName = domain->getConnectorName();
+      CloudConnectorInterface *connector = FindCloudConnector(connectorName);
+      if (connector != nullptr)
+      {
+         json_t *credentials = domain->getCredentials();
+
+         wchar_t providerStateBuf[256];
+         SharedString resourceId = getCloudResourceId();
+         int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
+         if (newState >= 0)
+         {
+            if (m_state != newState || wcscmp(m_providerState, providerStateBuf))
+            {
+               updateState(newState, providerStateBuf);
+               sendPollerMsg(L"   Resource state changed to %d (%s)\r\n", newState, providerStateBuf);
+            }
+            else
+            {
+               sendPollerMsg(L"   Resource state is unchanged (%d, %s)\r\n", newState, providerStateBuf);
+            }
+         }
+         else
+         {
+            sendPollerMsg(POLLER_WARNING L"   Failed to query resource state\r\n");
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Failed to query state for resource \"%s\" [%u]", m_name, m_id);
+         }
+
+         json_decref(credentials);
+      }
+      else
+      {
+         sendPollerMsg(POLLER_WARNING L"   Cloud connector \"%s\" not found\r\n", connectorName.cstr());
+      }
+   }
+   else
+   {
+      sendPollerMsg(POLLER_WARNING L"   Owner cloud domain not available\r\n");
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Owner cloud domain not available for resource \"%s\" [%u]", m_name, m_id);
+   }
 
    calculateCompoundStatus(true);
 
@@ -380,6 +398,106 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
 }
 
 /**
+ * Get most critical additional status from any object specific function or component.
+ */
+int Resource::getAdditionalMostCriticalStatus(StringBuffer *explanation)
+{
+   switch(m_state)
+   {
+      case RESOURCE_STATE_ACTIVE:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is active");
+         return STATUS_NORMAL;
+      case RESOURCE_STATE_CREATING:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is being created");
+         return STATUS_NORMAL;
+      case RESOURCE_STATE_DEGRADED:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is degraded");
+         return STATUS_WARNING;
+      case RESOURCE_STATE_DELETING:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is being deleted");
+         return STATUS_WARNING;
+      case RESOURCE_STATE_FAILED:
+         if (explanation != nullptr)
+            explanation->append(L"Resource has failed");
+         return STATUS_CRITICAL;
+      case RESOURCE_STATE_INACTIVE:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is inactive");
+         return STATUS_MINOR;
+      case RESOURCE_STATE_UNREACHABLE:
+         if (explanation != nullptr)
+            explanation->append(L"Resource is unreachable");
+         return STATUS_MAJOR;
+      default:
+         if (explanation != nullptr)
+            explanation->append(L"Resource state is unknown");
+         return STATUS_UNKNOWN;
+   }
+}
+
+/**
+ * Update resource properties from discovery descriptor
+ */
+void Resource::updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId, const TCHAR *connectorName)
+{
+   lockProperties();
+   m_cloudResourceId = desc->resourceId;
+   m_resourceType = desc->type;
+   m_region = desc->region;
+   m_state = desc->state;
+   m_providerState = desc->providerState;
+   m_parentId = parentId;
+   m_connectorName = connectorName;
+   m_lastDiscoveryTime = time(nullptr);
+
+   delete m_tags;
+   if (desc->tags != nullptr)
+   {
+      m_tags = new StringMap(*desc->tags);
+   }
+   else
+   {
+      m_tags = nullptr;
+   }
+
+   setModified(MODIFY_RESOURCE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set linked node ID
+ */
+void Resource::setLinkedNodeId(uint32_t nodeId)
+{
+   lockProperties();
+   if (m_linkedNodeId != nodeId)
+   {
+      m_linkedNodeId = nodeId;
+      setModified(MODIFY_RESOURCE_PROPERTIES);
+   }
+   unlockProperties();
+}
+
+/**
+ * Update resource state
+ */
+void Resource::updateState(int16_t newState, const TCHAR *providerState)
+{
+   lockProperties();
+   if (m_state != newState || wcscmp(m_providerState, providerState))
+   {
+      m_state = newState;
+      m_providerState = providerState;
+      setModified(MODIFY_RESOURCE_PROPERTIES);
+   }
+   unlockProperties();
+}
+
+/**
  * Post-load hook. Link resource to parent object after all objects are loaded.
  */
 void Resource::postLoad()
@@ -389,9 +507,37 @@ void Resource::postLoad()
    {
       shared_ptr<NetObj> parent = FindObjectById(m_parentId);
       if (parent != nullptr)
+      {
          linkObjects(parent, self());
+
+         // Walk parent chain to find CloudDomain ancestor
+         shared_ptr<NetObj> current = parent;
+         while (current != nullptr)
+         {
+            if (current->getObjectClass() == OBJECT_CLOUDDOMAIN)
+            {
+               m_ownerDomain = static_pointer_cast<CloudDomain>(current);
+               break;
+            }
+            // Move up to next parent (Resource objects have a single logical parent)
+            unique_ptr<SharedObjectArray<NetObj>> parents = current->getParents();
+            shared_ptr<NetObj> nextParent;
+            for (int i = 0; i < parents->size(); i++)
+            {
+               shared_ptr<NetObj> p = parents->getShared(i);
+               if (p->getObjectClass() == OBJECT_CLOUDDOMAIN || p->getObjectClass() == OBJECT_RESOURCE)
+               {
+                  nextParent = p;
+                  break;
+               }
+            }
+            current = nextParent;
+         }
+      }
       else
+      {
          nxlog_write(NXLOG_ERROR, L"Inconsistent database: resource \"%s\" [%u] has reference to non-existing parent object [%u]", m_name, m_id, m_parentId);
+      }
    }
 }
 
@@ -400,10 +546,31 @@ void Resource::postLoad()
  */
 void Resource::prepareForDeletion()
 {
-   nxlog_debug(4, L"Resource::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish", m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Resource::prepareForDeletion(%s [%u]): waiting for outstanding polls to finish", m_name, m_id);
    while (m_statusPollState.isPending())
       ThreadSleepMs(100);
-   nxlog_debug(4, L"Resource::PrepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Resource::prepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
 
    super::prepareForDeletion();
+}
+
+/**
+ * Get metric value from cloud connector
+ */
+DataCollectionError Resource::getMetricFromCloudConnector(const wchar_t *metric, wchar_t *buffer, size_t size)
+{
+   shared_ptr<CloudDomain> domain = m_ownerDomain.lock();
+   if (domain == nullptr)
+      return DCE_NOT_SUPPORTED;
+
+   SharedString connectorName = domain->getConnectorName();
+   CloudConnectorInterface *connector = FindCloudConnector(connectorName);
+   if (connector == nullptr)
+      return DCE_NOT_SUPPORTED;
+
+   json_t *credentials = domain->getCredentials();
+   DataCollectionError rc = connector->Collect(m_cloudResourceId, metric, 0, buffer, size, credentials);
+   json_decref(credentials);
+   nxlog_debug_tag(L"dc.cloud", 7, _T("Resource(%s)->getMetricFromCloudConnector(%s): result=%d"), m_name, metric, rc);
+   return rc;
 }

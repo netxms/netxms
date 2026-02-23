@@ -317,7 +317,6 @@ public class ObjectCreateMenuManager extends MenuManager
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CLOUDDOMAIN, dlg.getName(), parentId);
                   cd.setObjectAlias(dlg.getAlias());
                   cd.setConnectorName(dlg.getConnectorName());
-                  cd.setAccountIdentifier(dlg.getAccountIdentifier());
                   cd.setCredentials(dlg.getCredentials());
                   session.createObject(cd);
                }

@@ -49,6 +49,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Circuit;
+import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
@@ -59,6 +60,7 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -133,7 +135,7 @@ public final class ObjectMenuFactory
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-      else if ((object instanceof BusinessService) || (object instanceof Cluster))
+      else if ((object instanceof BusinessService) || (object instanceof Cluster) || (object instanceof CloudDomain) || (object instanceof WirelessDomain))
 		{
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
@@ -153,11 +155,6 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-      else if (object instanceof WirelessDomain)
-      {
-         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
-      }
       else if (object instanceof Collector || object instanceof Circuit)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
@@ -165,8 +162,13 @@ public final class ObjectMenuFactory
       }
       else if (object instanceof AccessPoint)
       {
-         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+      }
+      else if (object instanceof Resource)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)
