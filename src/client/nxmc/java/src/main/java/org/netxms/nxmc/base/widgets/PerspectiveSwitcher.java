@@ -42,6 +42,7 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.FontTools;
 
 /**
  * Custom perspective switcher sidebar widget. Supports expanded (icon + text) and collapsed (icon only) modes with section grouping
@@ -103,8 +104,8 @@ public class PerspectiveSwitcher extends Composite
       selectionForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.Selection");
       hoverBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Hover");
       sectionHeaderForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.SectionHeader");
-      mainFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
-      sectionHeaderFont = ThemeEngine.getFont("Window.PerspectiveSwitcher.SectionHeader");
+      mainFont = FontTools.createAdjustedFont(getFont(), 3);
+      sectionHeaderFont = FontTools.createAdjustedFont(getFont(), -1, SWT.BOLD);
 
       buildSections(perspectives);
 
@@ -116,6 +117,11 @@ public class PerspectiveSwitcher extends Composite
       setBackground(backgroundColor);
 
       createContent();
+
+      addDisposeListener((e) -> {
+         mainFont.dispose();
+         sectionHeaderFont.dispose();
+      });
    }
 
    /**
@@ -172,6 +178,7 @@ public class PerspectiveSwitcher extends Composite
       GridLayout scrollLayout = new GridLayout();
       scrollLayout.marginWidth = 0;
       scrollLayout.marginHeight = 4;
+      scrollLayout.marginTop = 4;
       scrollLayout.verticalSpacing = 0;
       scrollContent.setLayout(scrollLayout);
       scrollContent.setBackground(backgroundColor);
@@ -397,9 +404,7 @@ public class PerspectiveSwitcher extends Composite
 
          GridLayout layout = new GridLayout();
          layout.marginWidth = 0;
-         layout.marginHeight = 0;
-         layout.marginTop = 2;
-         layout.marginBottom = 2;
+         layout.marginHeight = 4;
          layout.horizontalSpacing = 0;
          layout.verticalSpacing = 0;
 

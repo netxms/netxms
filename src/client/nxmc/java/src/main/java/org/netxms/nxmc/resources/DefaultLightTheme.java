@@ -106,9 +106,9 @@ public class DefaultLightTheme extends Theme
       elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
       elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(224, 224, 224), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 13));
       elements.put("Window.Header.Highlight", new ThemeElement(new RGB(0, 72, 104), new RGB(224, 224, 224)));
-      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(17, 60, 81), new RGB(224, 224, 224), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 14));
+      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0x5A, 0x6D, 0x80), new RGB(255, 255, 255)));
       elements.put("Window.PerspectiveSwitcher.Selection", new ThemeElement(new RGB(0, 90, 130), new RGB(255, 255, 255)));
-      elements.put("Window.PerspectiveSwitcher.Hover", new ThemeElement(new RGB(0, 72, 104), null));
-      elements.put("Window.PerspectiveSwitcher.SectionHeader", new ThemeElement(null, new RGB(150, 180, 200), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 10));
+      elements.put("Window.PerspectiveSwitcher.Hover", new ThemeElement(new RGB(0x1A, 0x7A, 0x9E), null));
+      elements.put("Window.PerspectiveSwitcher.SectionHeader", new ThemeElement(null, new RGB(150, 180, 200)));
    }
 }
