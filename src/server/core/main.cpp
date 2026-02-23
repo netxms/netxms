@@ -112,6 +112,7 @@ void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
 void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
+void InitializeCloudConnectors();
 void LoadWellKnownPortList();
 bool InitAIAssistant();
 void ShutdownAIMessageManager();
@@ -1369,6 +1370,7 @@ retry_db_lock:
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
+   InitializeCloudConnectors();
    InitAIAssistant();
 
    // Load users and authentication methods

@@ -246,6 +246,28 @@ public:
 };
 
 /**
+ * NXSL "CloudDomain" class
+ */
+class NXSL_CloudDomainClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_CloudDomainClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "Resource" class
+ */
+class NXSL_ResourceClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_ResourceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "Asset" class
  */
 class NXSL_AssetClass : public NXSL_NetObjClass
@@ -786,6 +808,8 @@ extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;
+extern NXSL_CloudDomainClass g_nxslCloudDomainClass;
+extern NXSL_ResourceClass g_nxslResourceClass;
 extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

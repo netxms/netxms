@@ -928,6 +928,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_AP_PROPERTIES        0x10000000
 #define MODIFY_AI_DATA              0x20000000
 #define MODIFY_PORT_STOP_LIST       0x40000000
+#define MODIFY_CLOUD_DOMAIN_PROPERTIES 0x80000000
+#define MODIFY_RESOURCE_PROPERTIES  0x80000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -3426,6 +3428,129 @@ public:
    bool isModbusSupported() const { return is_bit_set(m_capabilities, SC_IS_MODBUS); }
 
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
+
+   virtual json_t *toJson() override;
+};
+
+/**
+ * Cloud domain class
+ */
+class NXCORE_EXPORTABLE CloudDomain : public DataCollectionTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+protected:
+   SharedString m_connectorName;
+   SharedString m_accountIdentifier;
+   SharedString m_credentials;
+   SharedString m_discoverySchedule;
+   SharedString m_discoveryFilter;
+   int16_t m_removalPolicy;
+   uint32_t m_gracePeriod;
+   uint32_t m_defaultPollingInterval;
+   bool m_autoDiscoverChildren;
+   bool m_autoProvisionDCI;
+   int16_t m_lastDiscoveryStatus;
+   time_t m_lastDiscoveryTime;
+   SharedString m_lastDiscoveryMessage;
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   CloudDomain();
+   CloudDomain(const wchar_t *name, const NXCPMessage& request);
+   virtual ~CloudDomain();
+
+   shared_ptr<CloudDomain> self() { return static_pointer_cast<CloudDomain>(NObject::self()); }
+   shared_ptr<const CloudDomain> self() const { return static_pointer_cast<const CloudDomain>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_CLOUDDOMAIN; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual void prepareForDeletion() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
+   SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
+   SharedString getAccountIdentifier() const { return GetAttributeWithLock(m_accountIdentifier, m_mutexProperties); }
+   int16_t getRemovalPolicy() const { return m_removalPolicy; }
+   uint32_t getGracePeriod() const { return m_gracePeriod; }
+   uint32_t getDefaultPollingInterval() const { return m_defaultPollingInterval; }
+   bool isAutoDiscoverChildren() const { return m_autoDiscoverChildren; }
+   bool isAutoProvisionDCI() const { return m_autoProvisionDCI; }
+   int16_t getLastDiscoveryStatus() const { return m_lastDiscoveryStatus; }
+   time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
+
+   virtual json_t *toJson() override;
+};
+
+/**
+ * Resource class
+ */
+class NXCORE_EXPORTABLE Resource : public DataCollectionTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+protected:
+   uint32_t m_parentId;
+   SharedString m_cloudResourceId;
+   SharedString m_connectorName;
+   SharedString m_resourceType;
+   SharedString m_region;
+   int16_t m_state;
+   SharedString m_providerState;
+   uint32_t m_linkedNodeId;
+   StringMap *m_tags;
+   SharedString m_accountId;
+   time_t m_lastDiscoveryTime;
+   SharedString m_connectorData;
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   Resource();
+   Resource(const wchar_t *name, const NXCPMessage& request);
+   virtual ~Resource();
+
+   shared_ptr<Resource> self() { return static_pointer_cast<Resource>(NObject::self()); }
+   shared_ptr<const Resource> self() const { return static_pointer_cast<const Resource>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_RESOURCE; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual void postLoad() override;
+   virtual void prepareForDeletion() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
+   SharedString getCloudResourceId() const { return GetAttributeWithLock(m_cloudResourceId, m_mutexProperties); }
+   SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
+   SharedString getResourceType() const { return GetAttributeWithLock(m_resourceType, m_mutexProperties); }
+   SharedString getRegion() const { return GetAttributeWithLock(m_region, m_mutexProperties); }
+   int16_t getResourceState() const { return m_state; }
+   SharedString getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
+   uint32_t getParentDomainOrResourceId() const { return m_parentId; }
+   uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
+   SharedString getAccountId() const { return GetAttributeWithLock(m_accountId, m_mutexProperties); }
+   time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
+   const StringMap *getTags() const { return m_tags; }
 
    virtual json_t *toJson() override;
 };
@@ -6095,6 +6220,8 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxBusinessServicesById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxCloudDomainById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxResourceById;
 
 // User agent messages
 extern Mutex g_userAgentNotificationListMutex;

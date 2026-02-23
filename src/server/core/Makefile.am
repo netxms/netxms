@@ -10,7 +10,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			anomaly_profile.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
-			ccy.cpp cdp.cpp cert.cpp chassis.cpp circuit.cpp client.cpp cluster.cpp collector.cpp \
+			ccy.cpp cdp.cpp cert.cpp chassis.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp \
 			columnfilter.cpp condition.cpp config.cpp console.cpp container.cpp correlate.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dci_recalc.cpp dcitem.cpp \
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
@@ -29,7 +29,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
 			object_queries.cpp objects.cpp objtools.cpp ospf.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
-			radius.cpp reporting.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
+			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \

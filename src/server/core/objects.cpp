@@ -64,6 +64,8 @@ ObjectIndex g_idxBusinessServicesById;
 ObjectIndex g_idxNetMapById;
 ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
+ObjectIndex g_idxCloudDomainById;
+ObjectIndex g_idxResourceById;
 ObjectIndex g_idxAssetById;
 ObjectIndex g_idxCollectorById;
 ObjectIndex g_idxCircuitById;
@@ -454,6 +456,12 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_SENSOR:
 				g_idxSensorById.put(object->getId(), object);
             break;
+         case OBJECT_CLOUDDOMAIN:
+            g_idxCloudDomainById.put(object->getId(), object);
+            break;
+         case OBJECT_RESOURCE:
+            g_idxResourceById.put(object->getId(), object);
+            break;
          default:
 				{
 					bool processed = false;
@@ -635,6 +643,12 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
 		case OBJECT_SENSOR:
 			g_idxSensorById.remove(object.getId());
+         break;
+      case OBJECT_CLOUDDOMAIN:
+         g_idxCloudDomainById.remove(object.getId());
+         break;
+      case OBJECT_RESOURCE:
+         g_idxResourceById.remove(object.getId());
          break;
       default:
 			{
@@ -1132,6 +1146,10 @@ static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
          return &g_idxNodeById;
       case OBJECT_SENSOR:
          return &g_idxSensorById;
+      case OBJECT_CLOUDDOMAIN:
+         return &g_idxCloudDomainById;
+      case OBJECT_RESOURCE:
+         return &g_idxResourceById;
       case OBJECT_SUBNET:
          return &g_idxSubnetById;
       case OBJECT_ZONE:
@@ -1436,7 +1454,7 @@ bool LoadObjects()
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
                                            _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"),
-                                           _T("asset_id"), _T("owner_id"), _T("radio_index"), nullptr };
+                                           _T("asset_id"), _T("owner_id"), _T("radio_index"), _T("resource_id"), nullptr };
 
       nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 1, _T("Caching object configuration tables"));
       bool success =
@@ -1513,8 +1531,11 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("cloud_domains"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("resources"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("resource_tags"), _T("resource_id,tag_key"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("assets"), _T("id"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("asset_properties"), _T("asset_id,attr_name"), _T("*"));
+               DBCacheTable(cachedb, mainDB, _T("asset_properties"), _T("asset_id,attr_name"), _T("*"), intColumns);
 
       if (success)
       {
@@ -1618,6 +1639,10 @@ bool LoadObjects()
    g_idxMobileDeviceById.setStartupMode(false);
    LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, preparedStatements, _T("sensors"));
    g_idxSensorById.setStartupMode(false);
+   LoadObjectsFromTable<CloudDomain>(_T("cloud domain"), hdb, preparedStatements, _T("cloud_domains"));
+   g_idxCloudDomainById.setStartupMode(false);
+   LoadObjectsFromTable<Resource>(_T("resource"), hdb, preparedStatements, _T("resources"));
+   g_idxResourceById.setStartupMode(false);
 
    LoadObjectsFromTable<Node>(_T("node"), hdb, preparedStatements, _T("nodes"), nullptr,
       IsZoningEnabled() ?
@@ -2065,7 +2090,9 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_RACK) ||
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_SUBNET) ||
-             (childClass == OBJECT_WIRELESSDOMAIN))
+             (childClass == OBJECT_WIRELESSDOMAIN) ||
+             (childClass == OBJECT_CLOUDDOMAIN) ||
+             (childClass == OBJECT_RESOURCE))
             return true;
          break;
       case OBJECT_CIRCUIT:
@@ -2094,7 +2121,9 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
-             (childClass == OBJECT_SENSOR))
+             (childClass == OBJECT_SENSOR) ||
+             (childClass == OBJECT_CLOUDDOMAIN) ||
+             (childClass == OBJECT_RESOURCE))
             return true;
          break;
       case OBJECT_NETWORKMAPROOT:
@@ -2133,6 +2162,14 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
       case OBJECT_WIRELESSDOMAIN:
          if ((childClass == OBJECT_ACCESSPOINT) || (childClass == OBJECT_NODE))
+            return true;
+         break;
+      case OBJECT_CLOUDDOMAIN:
+         if (childClass == OBJECT_RESOURCE)
+            return true;
+         break;
+      case OBJECT_RESOURCE:
+         if (childClass == OBJECT_RESOURCE)
             return true;
          break;
       case OBJECT_ZONE:

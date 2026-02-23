@@ -613,12 +613,13 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const TCHAR *originName[13] =
+            static const TCHAR *originName[14] =
             {
                _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
                _T("Web Service"), _T("Push"), _T("WinPerf"),
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
-               _T("Device Driver"), _T("Modbus"), _T("EtherNet/IP")
+               _T("Device Driver"), _T("Modbus"), _T("EtherNet/IP"),
+               _T("Cloud Connector")
             };
             EventBuilder(eventCode[status], owner->getId())
                .dci(m_id)
@@ -1931,8 +1932,8 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus" };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : L"unknown";
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_CLOUD_CONNECTOR)) ? names[dataProvider] : L"unknown";
 }
 
 /**

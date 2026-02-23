@@ -144,6 +144,8 @@
 #define OBJECT_CHASSIS               35
 #define OBJECT_DASHBOARDGROUP        36
 #define OBJECT_SENSOR                37
+#define OBJECT_CLOUDDOMAIN           38
+#define OBJECT_RESOURCE              39
 
 /** Base value for custom object classes */
 #define OBJECT_CUSTOM                10000
@@ -1125,6 +1127,28 @@ enum HistoricalDataType
 #define DS_DEVICE_DRIVER      10
 #define DS_MODBUS             11
 #define DS_ETHERNET_IP        12
+#define DS_CLOUD_CONNECTOR    13
+
+/**
+ * Resource state
+ */
+#define RESOURCE_STATE_UNKNOWN       0
+#define RESOURCE_STATE_ACTIVE        1
+#define RESOURCE_STATE_DEGRADED      2
+#define RESOURCE_STATE_INACTIVE      3
+#define RESOURCE_STATE_FAILED        4
+#define RESOURCE_STATE_CREATING      5
+#define RESOURCE_STATE_DELETING      6
+#define RESOURCE_STATE_UNREACHABLE   7
+
+/**
+ * Metric aggregation types
+ */
+#define METRIC_AGGREGATION_AVERAGE   0
+#define METRIC_AGGREGATION_MIN       1
+#define METRIC_AGGREGATION_MAX       2
+#define METRIC_AGGREGATION_TOTAL     3
+#define METRIC_AGGREGATION_COUNT     4
 
 /**
  * Item status

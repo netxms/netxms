@@ -95,6 +95,7 @@ public:
 struct DeviceBackupInterface;
 struct ResponsibleUser;
 struct WirelessControllerBridge;
+struct CloudConnectorInterface;
 
 /**
  * Module registration structure
@@ -145,6 +146,7 @@ typedef struct
    WirelessControllerBridge *(*pfGetWLCBridgeInterface)(const wchar_t *bridgeName);
    std::string (*pfGetAIAgentInstructions)();
    DeviceBackupInterface *deviceBackupInterface;
+   CloudConnectorInterface *cloudConnector;
    NXCORE_LOG *logs;
    HMODULE hModule;
    NXMODULE_METADATA *metadata;

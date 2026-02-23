@@ -482,6 +482,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("BUSINESSSERVICEPROTOTYPE", vm->createValue(OBJECT_BUSINESSSERVICEPROTO));
    vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));
+   vm->addConstant("CLOUDDOMAIN", vm->createValue(OBJECT_CLOUDDOMAIN));
    vm->addConstant("CLUSTER", vm->createValue(OBJECT_CLUSTER));
    vm->addConstant("COLLECTOR", vm->createValue(OBJECT_COLLECTOR));
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));
@@ -499,6 +500,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("NETWORKSERVICE", vm->createValue(OBJECT_NETWORKSERVICE));
    vm->addConstant("NODE", vm->createValue(OBJECT_NODE));
    vm->addConstant("RACK", vm->createValue(OBJECT_RACK));
+   vm->addConstant("RESOURCE", vm->createValue(OBJECT_RESOURCE));
    vm->addConstant("SENSOR", vm->createValue(OBJECT_SENSOR));
    vm->addConstant("SERVICEROOT", vm->createValue(OBJECT_SERVICEROOT));
    vm->addConstant("SUBNET", vm->createValue(OBJECT_SUBNET));

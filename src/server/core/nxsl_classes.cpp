@@ -6380,6 +6380,142 @@ NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const NXSL_Identifier
 }
 
 /**
+ * Implementation of "CloudDomain" class: constructor
+ */
+NXSL_CloudDomainClass::NXSL_CloudDomainClass() : NXSL_DCTargetClass()
+{
+   setName(L"CloudDomain");
+}
+
+/**
+ * Implementation of "CloudDomain" class: get attribute
+ */
+NXSL_Value *NXSL_CloudDomainClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto cloudDomain = SharedObjectFromData<CloudDomain>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("accountIdentifier"))
+   {
+      value = vm->createValue(cloudDomain->getAccountIdentifier());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("autoDiscoverChildren"))
+   {
+      value = vm->createValue(cloudDomain->isAutoDiscoverChildren());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("autoProvisionDCI"))
+   {
+      value = vm->createValue(cloudDomain->isAutoProvisionDCI());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
+   {
+      value = vm->createValue(cloudDomain->getConnectorName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultPollingInterval"))
+   {
+      value = vm->createValue(cloudDomain->getDefaultPollingInterval());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gracePeriod"))
+   {
+      value = vm->createValue(cloudDomain->getGracePeriod());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryStatus"))
+   {
+      value = vm->createValue(cloudDomain->getLastDiscoveryStatus());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(cloudDomain->getLastDiscoveryTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("removalPolicy"))
+   {
+      value = vm->createValue(cloudDomain->getRemovalPolicy());
+   }
+
+   return value;
+}
+
+/**
+ * Implementation of "Resource" class: constructor
+ */
+NXSL_ResourceClass::NXSL_ResourceClass() : NXSL_DCTargetClass()
+{
+   setName(L"Resource");
+}
+
+/**
+ * Implementation of "Resource" class: get attribute
+ */
+NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto resource = SharedObjectFromData<Resource>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("accountId"))
+   {
+      value = vm->createValue(resource->getAccountId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
+   {
+      value = vm->createValue(resource->getConnectorName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(resource->getLastDiscoveryTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedNode"))
+   {
+      shared_ptr<NetObj> linkedNode = FindObjectById(resource->getLinkedNodeId(), OBJECT_NODE);
+      value = (linkedNode != nullptr) ? linkedNode->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedNodeId"))
+   {
+      value = vm->createValue(resource->getLinkedNodeId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("providerState"))
+   {
+      value = vm->createValue(resource->getProviderState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("region"))
+   {
+      value = vm->createValue(resource->getRegion());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceId"))
+   {
+      value = vm->createValue(resource->getCloudResourceId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceType"))
+   {
+      value = vm->createValue(resource->getResourceType());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
+   {
+      value = vm->createValue(resource->getResourceState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("tags"))
+   {
+      const StringMap *tags = resource->getTags();
+      NXSL_HashMap *map = new NXSL_HashMap(vm);
+      if (tags != nullptr)
+      {
+         for(auto it : const_cast<StringMap&>(*tags))
+         {
+            map->set(it->key, vm->createValue(static_cast<const TCHAR*>(it->value)));
+         }
+      }
+      value = vm->createValue(map);
+   }
+
+   return value;
+}
+
+/**
  * SNMPTransport::get() method
  */
 NXSL_METHOD_DEFINITION(SNMPTransport, get)
@@ -8482,6 +8618,8 @@ NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;
+NXSL_CloudDomainClass g_nxslCloudDomainClass;
+NXSL_ResourceClass g_nxslResourceClass;
 NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

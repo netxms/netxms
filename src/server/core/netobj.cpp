@@ -41,7 +41,7 @@ static const WCHAR *s_classNameW[]=
       L"BusinessServiceRoot", L"BusinessService", L"Collector",
       L"Circuit", L"MobileDevice", L"Rack", L"AccessPoint",
       L"WirelessDomain", L"Chassis", L"DashboardGroup",
-      L"Sensor"
+      L"Sensor", L"CloudDomain", L"Resource"
    };
 static const char *s_classNameA[]=
    {
@@ -56,7 +56,7 @@ static const char *s_classNameA[]=
       "BusinessServiceRoot", "BusinessService", "Collector",
       "Circuit", "MobileDevice", "Rack", "AccessPoint",
       "WirelessDomain", "Chassis", "DashboardGroup",
-      "Sensor"
+      "Sensor", "CloudDomain", "Resource"
    };
 
 /**
