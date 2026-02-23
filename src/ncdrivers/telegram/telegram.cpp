@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Telegram messenger
-** Copyright (C) 2014-2025 Raden Solutions
+** Copyright (C) 2014-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -152,7 +152,7 @@ struct Chat
  */
 struct ProxyInfo
 {
-   char hostname[MAX_PATH];
+   char hostname[256];
    uint16_t port;
    uint16_t protocol;
    char user[128];
@@ -185,7 +185,7 @@ private:
    THREAD m_updateHandlerThread;
    char m_authToken[64];
    long m_ipVersion;
-   ProxyInfo *m_proxy;
+   StructArray<ProxyInfo> m_proxies;
    TCHAR *m_botName;
    StringObjectMap<Chat> m_chats;
    Mutex m_chatsLock;
@@ -203,7 +203,6 @@ private:
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));
       m_ipVersion = CURL_IPRESOLVE_WHATEVER;
-      m_proxy = nullptr;
       m_botName = nullptr;
       m_shutdownFlag = false;
       m_nextUpdateId = 0;
@@ -237,7 +236,6 @@ TelegramDriver::~TelegramDriver()
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for update handler thread completion for bot %s"), m_botName);
    ThreadJoin(m_updateHandlerThread);
    MemFree(m_botName);
-   MemFree(m_proxy);
 }
 
 /**
@@ -283,132 +281,147 @@ static struct curl_slist *CreateConnectToList(long ipVersion)
 #endif
 
 /**
+ * Set proxy options on CURL handle
+ */
+static void SetCurlProxy(CURL *curl, const ProxyInfo *proxy)
+{
+   curl_easy_setopt(curl, CURLOPT_PROXY, proxy->hostname);
+   if (proxy->port != 0)
+      curl_easy_setopt(curl, CURLOPT_PROXYPORT, (long)proxy->port);
+   if (proxy->protocol != 0x7FFF)
+      curl_easy_setopt(curl, CURLOPT_PROXYTYPE, (long)proxy->protocol);
+   if (proxy->user[0] != 0)
+      curl_easy_setopt(curl, CURLOPT_PROXYUSERNAME, proxy->user);
+   if (proxy->password[0] != 0)
+      curl_easy_setopt(curl, CURLOPT_PROXYPASSWORD, proxy->password);
+}
+
+/**
  * Send request to Telegram API
  */
-static CallResponse SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, bool useLocalResolver, const char *method, json_t *data)
+static CallResponse SendTelegramRequest(const char *token, const StructArray<ProxyInfo> *proxies, long ipVersion, bool useLocalResolver, const char *method, json_t *data)
 {
-   CURL *curl = curl_easy_init();
-   if (curl == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return CallResponse();
-   }
-
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
-#endif
-
-   curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
-
-   ByteStream responseData(32768);
-   responseData.setAllocationStep(32768);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
-   curl_easy_setopt(curl, CURLOPT_IPRESOLVE, ipVersion);
-
-#if HAVE_DECL_CURLOPT_CONNECT_TO
-   struct curl_slist *connectTo = nullptr;
-   if (useLocalResolver && (proxy != nullptr))
-   {
-      connectTo = CreateConnectToList(ipVersion);
-      if (connectTo != nullptr)
-         curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
-   }
-#endif
-
-   if (proxy != nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: using proxy %hs"), proxy->hostname);
-      curl_easy_setopt(curl, CURLOPT_PROXY, proxy->hostname);
-      if (proxy->port != 0)
-      {
-         curl_easy_setopt(curl, CURLOPT_PROXYPORT, (long)proxy->port);
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy port %d"), proxy->port);
-      }
-      if (proxy->protocol != 0x7FFF)
-      {
-         curl_easy_setopt(curl, CURLOPT_PROXYTYPE, (long)proxy->protocol);
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy type %d"), proxy->protocol);
-      }
-      if (proxy->user[0] != 0)
-      {
-         curl_easy_setopt(curl, CURLOPT_PROXYUSERNAME, proxy->user);
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy login %hs"), proxy->user);
-      }
-      if (proxy->password[0] != 0)
-      {
-         curl_easy_setopt(curl, CURLOPT_PROXYPASSWORD, proxy->password);
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: proxy password set"));
-      }
-   }
-
-   struct curl_slist *headers = nullptr;
-   char *json;
-   if (data != nullptr)
-   {
-      json = json_dumps(data, 0);
-      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
-      headers = curl_slist_append(headers, "Content-Type: application/json");
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Request to send: %hs"), json);
-   }
-   else
-   {
-      json = nullptr;
-   }
-
-   char errorBuffer[CURL_ERROR_SIZE];
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+   int proxyCount = (proxies != nullptr) ? proxies->size() : 0;
+   // When proxies are configured, iterate through them; when none configured, make one direct attempt
+   int totalAttempts = (proxyCount > 0) ? proxyCount : 1;
 
    CallResponse response;
 
-   char url[256];
-   snprintf(url, 256, "https://api.telegram.org/bot%s/%s", token, method);
-   if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+   for (int attempt = 0; attempt < totalAttempts; attempt++)
    {
-      CURLcode rc = curl_easy_perform(curl);
-      if (rc == CURLE_OK)
-      {
-         long responseCode;
-         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("HTTP response %03d, %d bytes"), static_cast<int>(responseCode), static_cast<int>(responseData.size()));
-         response.statusCode = static_cast<int>(responseCode);
-         response.allowRetry = ((responseCode >= 500) && (responseCode <= 599));
+      const ProxyInfo *proxy = (proxyCount > 0) ? proxies->get(attempt) : nullptr;
 
-         if (responseData.size() > 0)
+      CURL *curl = curl_easy_init();
+      if (curl == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+         return CallResponse();
+      }
+
+#if HAVE_DECL_CURLOPT_NOSIGNAL
+      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
+#endif
+
+      curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
+
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+      curl_easy_setopt(curl, CURLOPT_IPRESOLVE, ipVersion);
+
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+      struct curl_slist *connectTo = nullptr;
+      if (useLocalResolver && (proxy != nullptr))
+      {
+         connectTo = CreateConnectToList(ipVersion);
+         if (connectTo != nullptr)
+            curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
+      }
+#endif
+
+      if (proxy != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SendTelegramRequest: using proxy %hs:%u (attempt %d/%d)"), proxy->hostname, proxy->port, attempt + 1, totalAttempts);
+         SetCurlProxy(curl, proxy);
+      }
+
+      struct curl_slist *headers = nullptr;
+      char *json;
+      if (data != nullptr)
+      {
+         json = json_dumps(data, 0);
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
+         headers = curl_slist_append(headers, "Content-Type: application/json");
+         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Request to send: %hs"), json);
+      }
+      else
+      {
+         json = nullptr;
+      }
+
+      char errorBuffer[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
+      response = CallResponse();
+
+      char url[256];
+      snprintf(url, 256, "https://api.telegram.org/bot%s/%s", token, method);
+      if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+      {
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
-            responseData.write('\0');
-            json_error_t error;
-            response.data = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
-            if (response.data == nullptr)
+            long responseCode;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("HTTP response %03d, %d bytes"), static_cast<int>(responseCode), static_cast<int>(responseData.size()));
+            response.statusCode = static_cast<int>(responseCode);
+            response.allowRetry = ((responseCode >= 500) && (responseCode <= 599));
+
+            if (responseData.size() > 0)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse API response (%hs)"), error.text);
+               responseData.write('\0');
+               json_error_t error;
+               response.data = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
+               if (response.data == nullptr)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse API response (%hs)"), error.text);
+               }
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Empty API response (HTTP response status code %03d)"), static_cast<int>(responseCode));
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Empty API response (HTTP response status code %03d)"), static_cast<int>(responseCode));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
+            response.allowRetry = (rc == CURLE_COULDNT_RESOLVE_PROXY) || (rc == CURLE_COULDNT_RESOLVE_HOST) || (rc == CURLE_COULDNT_CONNECT) ||
+                     (rc == CURLE_OPERATION_TIMEDOUT) || (rc == CURLE_SSL_CONNECT_ERROR) || (rc == CURLE_SEND_ERROR) || (rc == CURLE_RECV_ERROR);
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
-         response.allowRetry = (rc == CURLE_COULDNT_RESOLVE_PROXY) || (rc == CURLE_COULDNT_RESOLVE_HOST) || (rc == CURLE_COULDNT_CONNECT) ||
-                  (rc == CURLE_OPERATION_TIMEDOUT) || (rc == CURLE_SSL_CONNECT_ERROR) || (rc == CURLE_SEND_ERROR) || (rc == CURLE_RECV_ERROR);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-   }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
-   }
-   curl_slist_free_all(headers);
+      curl_slist_free_all(headers);
 #if HAVE_DECL_CURLOPT_CONNECT_TO
-   curl_slist_free_all(connectTo);
+      curl_slist_free_all(connectTo);
 #endif
-   curl_easy_cleanup(curl);
-   MemFree(json);
+      curl_easy_cleanup(curl);
+      MemFree(json);
+
+      if (!response.allowRetry)
+         break;   // Success or non-transport error - stop trying
+
+      // Transport failure - log and try next proxy
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SendTelegramRequest: transport failure via %hs, trying next proxy"), (proxy != nullptr) ? proxy->hostname : "direct connection");
+      json_decref(response.data);
+      response.data = nullptr;
+   }
 
    return response;
 }
@@ -509,6 +522,47 @@ uint16_t ProxyProtocolCodeFromName(const char *protocolName)
 }
 
 /**
+ * Parse fallback proxy configuration entry
+ */
+static bool ParseProxyEntry(ConfigEntry *entry, ProxyInfo *proxy)
+{
+   memset(proxy, 0, sizeof(ProxyInfo));
+   proxy->protocol = 0x7FFF;
+
+   const wchar_t *hostname = entry->getSubEntryValue(L"Hostname");
+   if ((hostname == nullptr) || (*hostname == 0))
+   {
+      // Use entry name as hostname if not explicitly set
+      wchar_to_utf8(entry->getName(), -1, proxy->hostname, 256);
+   }
+   else
+   {
+      wchar_to_utf8(hostname, -1, proxy->hostname, 256);
+   }
+   proxy->port = static_cast<uint16_t>(entry->getSubEntryValueAsUInt(L"Port", 0, 0));
+
+   const wchar_t *proxyType = entry->getSubEntryValue(L"Type", 0, L"http");
+   char protocol[8];
+   wchar_to_utf8(proxyType, -1, protocol, sizeof(protocol));
+   proxy->protocol = ProxyProtocolCodeFromName(protocol);
+   if (proxy->protocol == 0xFFFF)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Unsupported proxy type %s for fallback proxy %s", proxyType, hostname);
+      proxy->protocol = 0x7FFF;
+   }
+
+   const wchar_t *user = entry->getSubEntryValue(L"User");
+   if (user != nullptr)
+      wchar_to_utf8(user, -1, proxy->user, sizeof(proxy->user));
+
+   const wchar_t *password = entry->getSubEntryValue(L"Password");
+   if (password != nullptr)
+      wchar_to_utf8(password, -1, proxy->password, sizeof(proxy->password));
+
+   return true;
+}
+
+/**
  * Create driver instance
  */
 TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageManager *storageManager)
@@ -560,8 +614,38 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
       return nullptr;
    }
 
+   StructArray<ProxyInfo> proxies;
+
+   // Add legacy flat proxy as primary if configured
+   if (proxy.hostname[0] != 0)
+   {
+      proxies.add(proxy);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Added primary proxy %hs"), proxy.hostname);
+   }
+
+   // Parse FallbackProxy sub-entries (FallbackProxy/name)
+   unique_ptr<ObjectArray<ConfigEntry>> proxyEntries = config->getOrderedSubEntries(L"/FallbackProxy", L"*");
+   if (proxyEntries != nullptr)
+   {
+      for (int i = 0; i < proxyEntries->size(); i++)
+      {
+         ProxyInfo additionalProxy;
+         if (ParseProxyEntry(proxyEntries->get(i), &additionalProxy))
+         {
+            proxies.add(additionalProxy);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Added fallback proxy %hs"), additionalProxy.hostname);
+         }
+         else
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid fallback proxy entry (missing hostname)"));
+         }
+      }
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Configured %d proxy(ies)"), proxies.size());
+
    TelegramDriver *driver = nullptr;
-   CallResponse response = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), (options & USE_LOCAL_RESOLVER) && (proxy.hostname[0] != 0), "getMe", nullptr);
+   CallResponse response = SendTelegramRequest(authToken, proxies.size() > 0 ? &proxies : nullptr, IPVersionFromOptions(options), (options & USE_LOCAL_RESOLVER) && (proxies.size() > 0), "getMe", nullptr);
    json_t *info = response.data;
 	if (info != nullptr)
 	{
@@ -580,8 +664,9 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	            driver->m_longPollingMode = (options & LONG_POLLING) ? true : false;
 	            driver->m_useLocalResolver = (options & USE_LOCAL_RESOLVER) ? true : false;
 	            driver->m_pollingInterval = pollingInterval;
-	            driver->m_proxy = (proxy.hostname[0] != 0) ? MemCopyBlock(&proxy, sizeof(ProxyInfo)) : nullptr;
-               driver->m_ipVersion = IPVersionFromOptions(options);
+	            for (int i = 0; i < proxies.size(); i++)
+	               driver->m_proxies.add(*proxies.get(i));
+	            driver->m_ipVersion = IPVersionFromOptions(options);
 #ifdef UNICODE
 	            driver->m_botName = WideStringFromUTF8String(json_string_value(name));
 #else
@@ -648,117 +733,125 @@ static int ProgressCallbackPreV_7_32(void *context, double dltotal, double dlnow
 void TelegramDriver::updateHandler(TelegramDriver *driver)
 {
    // Main loop
+   int proxyCount = driver->m_proxies.size();
+   int totalAttempts = (proxyCount > 0) ? proxyCount : 1;
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
    while(!driver->m_shutdownFlag)
    {
-      CURL *curl = curl_easy_init();
-      if (curl == nullptr)
+      // Proxy iteration loop - try each configured proxy before waiting and restarting
+      for (int proxyIndex = 0; proxyIndex < totalAttempts && !driver->m_shutdownFlag; proxyIndex++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_init() failed"), driver->m_botName);
-         if (driver->m_shutdownCondition.wait(60000))
-            break;
-         continue;
-      }
+         const ProxyInfo *proxy = (proxyCount > 0) ? driver->m_proxies.get(proxyIndex) : nullptr;
 
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-#endif
-
-      curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300L);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
-
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
-
-      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-#if LIBCURL_VERSION_NUM < 0x072000
-      curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressCallbackPreV_7_32);
-      curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, driver);
-#else
-      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
-      curl_easy_setopt(curl, CURLOPT_XFERINFODATA, driver);
-#endif
-      curl_easy_setopt(curl, CURLOPT_IPRESOLVE, driver->m_ipVersion);
-
-#if HAVE_DECL_CURLOPT_CONNECT_TO
-      struct curl_slist *connectTo = nullptr;
-      if (driver->m_useLocalResolver && (driver->m_proxy != nullptr))
-      {
-         connectTo = CreateConnectToList(driver->m_ipVersion);
-         if (connectTo != nullptr)
-            curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
-      }
-#endif
-
-      if (driver->m_proxy != nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): proxy is enabled"), driver->m_botName);
-         curl_easy_setopt(curl, CURLOPT_PROXY, driver->m_proxy->hostname);
-         if (driver->m_proxy->port != 0)
-            curl_easy_setopt(curl, CURLOPT_PROXYPORT, (long)driver->m_proxy->port);
-         if (driver->m_proxy->protocol != 0x7FFF)
-            curl_easy_setopt(curl, CURLOPT_PROXYTYPE, (long)driver->m_proxy->protocol);
-         if (driver->m_proxy->user[0] != 0)
-            curl_easy_setopt(curl, CURLOPT_PROXYUSERNAME, driver->m_proxy->user);
-         if (driver->m_proxy->password[0] != 0)
-            curl_easy_setopt(curl, CURLOPT_PROXYPASSWORD, driver->m_proxy->password);
-      }
-
-      // Inner loop while connection is active
-      while(!driver->m_shutdownFlag)
-      {
-         if (!driver->m_longPollingMode)
+         CURL *curl = curl_easy_init();
+         if (curl == nullptr)
          {
-            if (SleepAndCheckForShutdown(driver->m_pollingInterval))
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_init() failed"), driver->m_botName);
+            if (driver->m_shutdownCondition.wait(60000))
                break;
+            continue;
          }
 
-         char url[256];
-         snprintf(url, 256, "https://api.telegram.org/bot%s/getUpdates?timeout=%u&offset=" INT64_FMTA,
-               driver->m_authToken, driver->m_longPollingMode ? driver->m_pollingInterval : 0, driver->m_nextUpdateId);
-         if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+#if HAVE_DECL_CURLOPT_NOSIGNAL
+         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+#endif
+
+         curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data
+         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300L);
+         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
+         curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
+
+         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+
+         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+#if LIBCURL_VERSION_NUM < 0x072000
+         curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressCallbackPreV_7_32);
+         curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, driver);
+#else
+         curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
+         curl_easy_setopt(curl, CURLOPT_XFERINFODATA, driver);
+#endif
+         curl_easy_setopt(curl, CURLOPT_IPRESOLVE, driver->m_ipVersion);
+
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+         struct curl_slist *connectTo = nullptr;
+         if (driver->m_useLocalResolver && (proxy != nullptr))
          {
-            if (curl_easy_perform(curl) == CURLE_OK)
+            connectTo = CreateConnectToList(driver->m_ipVersion);
+            if (connectTo != nullptr)
+               curl_easy_setopt(curl, CURLOPT_CONNECT_TO, connectTo);
+         }
+#endif
+
+         if (proxy != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): using proxy %hs (%d/%d)"), driver->m_botName, proxy->hostname, proxyIndex + 1, totalAttempts);
+            SetCurlProxy(curl, proxy);
+         }
+
+         // Inner loop while connection is active
+         while(!driver->m_shutdownFlag)
+         {
+            if (!driver->m_longPollingMode)
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): got %d bytes"), driver->m_botName, static_cast<int>(responseData.size()));
-               if (responseData.size() > 0)
+               if (SleepAndCheckForShutdown(driver->m_pollingInterval))
+                  break;
+            }
+
+            char url[256];
+            snprintf(url, 256, "https://api.telegram.org/bot%s/getUpdates?timeout=%u&offset=" INT64_FMTA,
+                  driver->m_authToken, driver->m_longPollingMode ? driver->m_pollingInterval : 0, driver->m_nextUpdateId);
+            if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+            {
+               if (curl_easy_perform(curl) == CURLE_OK)
                {
-                  responseData.write('\0');
-                  json_error_t error;
-                  json_t *data = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
-                  if (data != nullptr)
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): got %d bytes"), driver->m_botName, static_cast<int>(responseData.size()));
+                  if (responseData.size() > 0)
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): valid JSON document received"), driver->m_botName);
-                     driver->processUpdate(data);
-                     json_decref(data);
+                     responseData.write('\0');
+                     json_error_t error;
+                     json_t *data = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
+                     if (data != nullptr)
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): valid JSON document received"), driver->m_botName);
+                        driver->processUpdate(data);
+                        json_decref(data);
+                     }
+                     else
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Cannot parse API response (%hs)"), driver->m_botName, error.text);
+                     }
                   }
-                  else
-                  {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Cannot parse API response (%hs)"), driver->m_botName, error.text);
-                  }
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_perform() failed, trying next proxy"), driver->m_botName);
+                  break;
                }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_perform() failed"), driver->m_botName);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_setopt(CURLOPT_URL) failed"), driver->m_botName);
                break;
             }
+            responseData.clear();
          }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_setopt(CURLOPT_URL) failed"), driver->m_botName);
-            break;
-         }
+
+#if HAVE_DECL_CURLOPT_CONNECT_TO
+         curl_slist_free_all(connectTo);
+#endif
+         curl_easy_cleanup(curl);
          responseData.clear();
       }
 
-#if HAVE_DECL_CURLOPT_CONNECT_TO
-      curl_slist_free_all(connectTo);
-#endif
-      curl_easy_cleanup(curl);
-      responseData.clear();
+      // All proxies exhausted (or no proxies), wait before retrying from the beginning
+      if (!driver->m_shutdownFlag)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): all proxies exhausted, waiting 30 seconds before retry"), driver->m_botName);
+         if (driver->m_shutdownCondition.wait(30000))
+            break;
+      }
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Update handler thread for Telegram bot %s stopped"), driver->m_botName);
@@ -935,7 +1028,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          json_object_set_new(request, "message_thread_id", json_integer(topicId));
       }
 
-      CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, m_useLocalResolver && (m_proxy != nullptr), "sendMessage", request);
+      CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion, m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
       json_decref(request);
 
       if (json_is_object(response.data))
@@ -984,7 +1077,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 bool TelegramDriver::checkHealth()
 {
    bool status = false;
-   CallResponse response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, m_useLocalResolver && (m_proxy != nullptr), "getMe", nullptr);
+   CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion, m_useLocalResolver && (m_proxies.size() > 0), "getMe", nullptr);
    if (response.data != nullptr)
    {
       json_t *ok = json_object_get(response.data, "ok");
