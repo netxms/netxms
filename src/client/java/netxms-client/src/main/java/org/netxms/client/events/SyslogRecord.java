@@ -70,6 +70,9 @@ public class SyslogRecord
 	private String hostname;
 	private String tag;
 	private String message;
+	private String processId;
+	private String messageId;
+	private String structuredData;
 	
 	/**
 	 * Create syslog record object from NXCP message
@@ -87,6 +90,9 @@ public class SyslogRecord
 		hostname = msg.getFieldAsString(baseId + 5);
 		tag = msg.getFieldAsString(baseId + 6);
 		message = msg.getFieldAsString(baseId + 7);
+		processId = msg.getFieldAsString(baseId + 8);
+		messageId = msg.getFieldAsString(baseId + 9);
+		structuredData = msg.getFieldAsString(baseId + 10);
 	}
 
 	/**
@@ -151,5 +157,29 @@ public class SyslogRecord
 	public String getMessage()
 	{
 		return message;
+	}
+
+	/**
+	 * @return the RFC5424 process ID (PROCID)
+	 */
+	public String getProcessId()
+	{
+		return processId;
+	}
+
+	/**
+	 * @return the RFC5424 message ID (MSGID)
+	 */
+	public String getMessageId()
+	{
+		return messageId;
+	}
+
+	/**
+	 * @return the RFC5424 structured data as JSON string
+	 */
+	public String getStructuredData()
+	{
+		return structuredData;
 	}
 }

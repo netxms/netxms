@@ -24,6 +24,72 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.5 to 61.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"syslog", L"msg_tag", 48, true));
+   static const wchar_t *batch =
+      L"ALTER TABLE syslog ADD msg_procid varchar(128)\n"
+      L"ALTER TABLE syslog ADD msg_msgid varchar(32)\n"
+      L"ALTER TABLE syslog ADD msg_sd $SQL:TEXT\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
+ * Upgrade from 61.4 to 61.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE cloud_domains ("
+      L"  id integer not null,"
+      L"  connector_name varchar(63) not null,"
+      L"  account_identifier varchar(256) not null,"
+      L"  credentials varchar(4096) null,"
+      L"  discovery_schedule varchar(128) not null,"
+      L"  discovery_filter varchar(4096) null,"
+      L"  removal_policy smallint not null,"
+      L"  grace_period integer not null,"
+      L"  default_poll_interval integer not null,"
+      L"  auto_discover_children integer not null,"
+      L"  auto_provision_dci integer not null,"
+      L"  last_discovery_status smallint not null,"
+      L"  last_discovery_time integer not null,"
+      L"  last_discovery_msg varchar(4096) null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE resources ("
+      L"  id integer not null,"
+      L"  parent_id integer not null,"
+      L"  cloud_resource_id varchar(1024) not null,"
+      L"  connector_name varchar(63) not null,"
+      L"  resource_type varchar(256) not null,"
+      L"  region varchar(128) null,"
+      L"  state smallint not null,"
+      L"  provider_state varchar(256) null,"
+      L"  linked_node_id integer not null,"
+      L"  account_id varchar(256) null,"
+      L"  last_discovery_time integer not null,"
+      L"  connector_data $SQL:TEXT null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE resource_tags ("
+      L"  resource_id integer not null,"
+      L"  tag_key varchar(256) not null,"
+      L"  tag_value varchar(1024) null,"
+      L"  PRIMARY KEY(resource_id,tag_key))"));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 61.3 to 61.4
  */
 static bool H_UpgradeFromV3()
@@ -115,6 +181,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  61,  6,  H_UpgradeFromV5 },
+   { 4,  61,  5,  H_UpgradeFromV4 },
    { 3,  61,  4,  H_UpgradeFromV3 },
    { 2,  61,  3,  H_UpgradeFromV2 },
    { 1,  61,  2,  H_UpgradeFromV1 },

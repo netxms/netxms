@@ -40,11 +40,16 @@ private:
    shared_ptr<Node> m_node;
    char m_hostName[MAX_SYSLOG_HOSTNAME_LEN];
    char m_tag[MAX_SYSLOG_TAG_LEN];
+   char m_procId[MAX_SYSLOG_PROCID_LEN];
+   char m_msgId[MAX_SYSLOG_MSGID_LEN];
+   char *m_structuredData;
    char *m_rawMessage;
    wchar_t *m_message;
    InetAddress m_sourceAddress;
    char *m_rawData;
    size_t m_rawDataLen;
+
+   bool parseRFC5424(char *curr, size_t currPos);
 
 public:
    SyslogMessage(const InetAddress& addr, const char *rawData, size_t rawDataLen) : m_sourceAddress(addr)
@@ -59,6 +64,9 @@ public:
       m_severity = SYSLOG_SEVERITY_NOTICE;
       m_hostName[0] = 0;
       m_tag[0] = 0;
+      m_procId[0] = 0;
+      m_msgId[0] = 0;
+      m_structuredData = nullptr;
       m_rawMessage = nullptr;
       m_message = nullptr;
    }
@@ -75,6 +83,9 @@ public:
       m_severity = SYSLOG_SEVERITY_NOTICE;
       m_hostName[0] = 0;
       m_tag[0] = 0;
+      m_procId[0] = 0;
+      m_msgId[0] = 0;
+      m_structuredData = nullptr;
       m_rawMessage = nullptr;
       m_message = nullptr;
    }
@@ -83,6 +94,7 @@ public:
    {
       MemFree(m_rawData);
       MemFree(m_message);
+      MemFree(m_structuredData);
    }
 
    bool parse();
@@ -110,6 +122,9 @@ public:
    const TCHAR *getMessage() const { return m_message; }
    const char *getHostName() const { return m_hostName; }
    const char *getTag() const { return m_tag; }
+   const char *getProcId() const { return m_procId; }
+   const char *getMsgId() const { return m_msgId; }
+   const char *getStructuredData() const { return m_structuredData; }
 };
 
 #endif   /* _nxcore_syslog_h_ */

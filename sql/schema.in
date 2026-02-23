@@ -1956,8 +1956,11 @@ CREATE TABLE syslog
   source_object_id integer not null,
   zone_uin integer not null,
   hostname varchar(127) null,
-  msg_tag varchar(32) null,
+  msg_tag varchar(48) null,
   msg_text SQL_TEXT null,
+  msg_procid varchar(128) null,
+  msg_msgid varchar(32) null,
+  msg_sd SQL_TEXT null,
 #ifdef DB_TSDB
   PRIMARY KEY(msg_id,msg_timestamp)
 #else
@@ -2627,6 +2630,59 @@ CREATE TABLE sensors
    serial_number varchar(63) null,
    device_address varchar(127) null,
    PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Cloud domains
+ */
+CREATE TABLE cloud_domains
+(
+   id integer not null,
+   connector_name varchar(63) not null,
+   account_identifier varchar(256) not null,
+   credentials varchar(4096) null,
+   discovery_schedule varchar(128) not null,
+   discovery_filter varchar(4096) null,
+   removal_policy smallint not null,
+   grace_period integer not null,
+   default_poll_interval integer not null,
+   auto_discover_children integer not null,
+   auto_provision_dci integer not null,
+   last_discovery_status smallint not null,
+   last_discovery_time integer not null,
+   last_discovery_msg varchar(4096) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Cloud resources
+ */
+CREATE TABLE resources
+(
+   id integer not null,
+   parent_id integer not null,
+   cloud_resource_id varchar(1024) not null,  // ID of this resource for cloud connector
+   connector_name varchar(63) not null,
+   resource_type varchar(256) not null,
+   region varchar(128) null,
+   state smallint not null,
+   provider_state varchar(256) null,
+   linked_node_id integer not null,
+   account_id varchar(256) null,
+   last_discovery_time integer not null,
+   connector_data SQL_TEXT null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Cloud resource tags
+ */
+CREATE TABLE resource_tags
+(
+   resource_id integer not null,
+   tag_key varchar(256) not null,
+   tag_value varchar(1024) null,
+   PRIMARY KEY(resource_id,tag_key)
 ) TABLE_TYPE;
 
 /**

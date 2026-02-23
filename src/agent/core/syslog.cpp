@@ -22,7 +22,7 @@
 
 #include "nxagentd.h"
 
-#define MAX_SYSLOG_MSG_LEN    1024
+#define MAX_SYSLOG_MSG_LEN    8192
 
 /**
  * Syslog record

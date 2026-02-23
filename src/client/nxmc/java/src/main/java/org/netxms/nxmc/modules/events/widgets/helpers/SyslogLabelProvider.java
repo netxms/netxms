@@ -123,6 +123,12 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 				return record.getTag();
 			case SyslogTraceWidget.COLUMN_HOSTNAME:
 				return record.getHostname();
+			case SyslogTraceWidget.COLUMN_PROCESS_ID:
+				return record.getProcessId();
+			case SyslogTraceWidget.COLUMN_MESSAGE_ID:
+				return record.getMessageId();
+			case SyslogTraceWidget.COLUMN_STRUCTURED_DATA:
+				return record.getStructuredData();
 		}
 		return null;
 	}

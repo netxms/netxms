@@ -45,7 +45,10 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	public static final int COLUMN_FACILITY = 3;
 	public static final int COLUMN_HOSTNAME = 4;
 	public static final int COLUMN_TAG = 5;
-	public static final int COLUMN_MESSAGE = 6;
+	public static final int COLUMN_PROCESS_ID = 6;
+	public static final int COLUMN_MESSAGE_ID = 7;
+	public static final int COLUMN_STRUCTURED_DATA = 8;
+	public static final int COLUMN_MESSAGE = 9;
 
    private I18n i18n;
 	private NXCSession session;
@@ -97,6 +100,9 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
       addColumn(i18n.tr("Facility"), 90);
       addColumn(i18n.tr("Host name"), 130);
       addColumn(i18n.tr("Tag"), 90);
+      addColumn(i18n.tr("Process ID"), 90);
+      addColumn(i18n.tr("Message ID"), 90);
+      addColumn(i18n.tr("Structured Data"), 200);
       addColumn(i18n.tr("Message"), 600);
 	}
 

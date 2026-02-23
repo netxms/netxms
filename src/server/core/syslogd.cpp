@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 /**
  * Max syslog message length
  */
-#define MAX_SYSLOG_MSG_LEN    1024
+#define MAX_SYSLOG_MSG_LEN    8192
 
 /**
  * Queues
@@ -165,6 +165,332 @@ static bool ParseTimeStamp(char **start, size_t msgSize, size_t *currPos, time_t
 }
 
 /**
+ * Parse RFC5424 timestamp (ISO 8601 format)
+ * Returns parsed time_t or -1 on error. Advances curr and currPos past the field and trailing space.
+ */
+static time_t ParseRFC5424Timestamp(char **curr, size_t *currPos, size_t rawDataLen)
+{
+   char *p = *curr;
+
+   // NILVALUE
+   if (*p == '-')
+   {
+      p++;
+      (*currPos)++;
+      if (*p != ' ')
+         return static_cast<time_t>(-1);
+      p++;
+      (*currPos)++;
+      *curr = p;
+      return time(nullptr);
+   }
+
+   // Full timestamp: YYYY-MM-DDTHH:MM:SS[.frac]Z or YYYY-MM-DDTHH:MM:SS[.frac]+HH:MM
+   if (rawDataLen - *currPos < 20) // Minimum: "YYYY-MM-DDTHH:MM:SSZ"
+      return static_cast<time_t>(-1);
+
+   struct tm timestamp;
+   memset(&timestamp, 0, sizeof(struct tm));
+
+   // YYYY-MM-DD
+   if (sscanf(p, "%04d-%02d-%02d", &timestamp.tm_year, &timestamp.tm_mon, &timestamp.tm_mday) != 3)
+      return static_cast<time_t>(-1);
+   timestamp.tm_year -= 1900;
+   timestamp.tm_mon -= 1;
+   p += 10;
+   *currPos += 10;
+
+   // 'T' separator
+   if (*p != 'T')
+      return static_cast<time_t>(-1);
+   p++;
+   (*currPos)++;
+
+   // HH:MM:SS
+   if (sscanf(p, "%02d:%02d:%02d", &timestamp.tm_hour, &timestamp.tm_min, &timestamp.tm_sec) != 3)
+      return static_cast<time_t>(-1);
+   p += 8;
+   *currPos += 8;
+
+   // Optional fractional seconds
+   if (*p == '.')
+   {
+      p++;
+      (*currPos)++;
+      while (isdigit(*p))
+      {
+         p++;
+         (*currPos)++;
+      }
+   }
+
+   // Timezone
+   int tzOffset = 0;
+   if (*p == 'Z')
+   {
+      p++;
+      (*currPos)++;
+   }
+   else if (*p == '+' || *p == '-')
+   {
+      int sign = (*p == '+') ? 1 : -1;
+      p++;
+      (*currPos)++;
+      int tzHour, tzMin;
+      if (sscanf(p, "%02d:%02d", &tzHour, &tzMin) != 2)
+         return static_cast<time_t>(-1);
+      tzOffset = sign * (tzHour * 3600 + tzMin * 60);
+      p += 5;
+      *currPos += 5;
+   }
+   else
+   {
+      return static_cast<time_t>(-1);
+   }
+
+   // Expect space after timestamp
+   if (*p != ' ')
+      return static_cast<time_t>(-1);
+   p++;
+   (*currPos)++;
+
+#if HAVE_TIMEGM
+   time_t t = timegm(&timestamp);
+#else
+   time_t t = mktime(&timestamp);
+   // Adjust for local timezone to get UTC
+   struct tm utcCheck;
+#if HAVE_GMTIME_R
+   gmtime_r(&t, &utcCheck);
+#else
+   memcpy(&utcCheck, gmtime(&t), sizeof(struct tm));
+#endif
+   t += (t - mktime(&utcCheck));
+#endif
+
+   if (t == static_cast<time_t>(-1))
+      return static_cast<time_t>(-1);
+
+   t -= tzOffset;
+   *curr = p;
+   return t;
+}
+
+/**
+ * Parse RFC5424 SD-ELEMENT field and convert to JSON string
+ * Input starts at first '[', ends when no more '[' follows.
+ * Returns heap-allocated JSON string or nullptr on error.
+ */
+static char *ConvertStructuredDataToJSON(char **curr, size_t *currPos, size_t rawDataLen)
+{
+   char *p = *curr;
+
+   // NILVALUE
+   if (*p == '-')
+   {
+      p++;
+      (*currPos)++;
+      *curr = p;
+      return nullptr;
+   }
+
+   if (*p != '[')
+      return nullptr;
+
+   StringBuffer json;
+   json.append(L"{");
+   bool firstElement = true;
+
+   while (*p == '[')
+   {
+      p++;
+      (*currPos)++;
+
+      // Parse SD-ID (up to first space or ']')
+      char sdId[65];
+      int i = 0;
+      while (*p != ' ' && *p != ']' && *p != 0 && i < 64 && *currPos < rawDataLen)
+      {
+         sdId[i++] = *p++;
+         (*currPos)++;
+      }
+      sdId[i] = 0;
+
+      if (!firstElement)
+         json.append(L",");
+      firstElement = false;
+
+      json.append(L"\"");
+      wchar_t wbuf[256];
+      mb_to_wchar(sdId, -1, wbuf, 256);
+      json.append(EscapeStringForJSON(wbuf));
+      json.append(L"\":{");
+
+      bool firstParam = true;
+
+      // Parse parameters
+      while (*p == ' ' && *currPos < rawDataLen)
+      {
+         p++;
+         (*currPos)++;
+
+         // Parameter name
+         char paramName[65];
+         i = 0;
+         while (*p != '=' && *p != ']' && *p != 0 && i < 64 && *currPos < rawDataLen)
+         {
+            paramName[i++] = *p++;
+            (*currPos)++;
+         }
+         paramName[i] = 0;
+
+         if (*p != '=')
+            break;
+         p++;
+         (*currPos)++;
+
+         // Parameter value (quoted)
+         if (*p != '"')
+            break;
+         p++;
+         (*currPos)++;
+
+         char paramValue[1024];
+         i = 0;
+         while (*p != 0 && i < 1023 && *currPos < rawDataLen)
+         {
+            if (*p == '\\' && (*(p + 1) == '"' || *(p + 1) == '\\' || *(p + 1) == ']'))
+            {
+               p++;
+               (*currPos)++;
+               paramValue[i++] = *p++;
+               (*currPos)++;
+            }
+            else if (*p == '"')
+            {
+               p++;
+               (*currPos)++;
+               break;
+            }
+            else
+            {
+               paramValue[i++] = *p++;
+               (*currPos)++;
+            }
+         }
+         paramValue[i] = 0;
+
+         if (!firstParam)
+            json.append(L",");
+         firstParam = false;
+
+         mb_to_wchar(paramName, -1, wbuf, 256);
+         json.append(L"\"");
+         json.append(EscapeStringForJSON(wbuf));
+         json.append(L"\":\"");
+         wchar_t wval[1024];
+         mb_to_wchar(paramValue, -1, wval, 1024);
+         json.append(EscapeStringForJSON(wval));
+         json.append(L"\"");
+      }
+
+      json.append(L"}");
+
+      // Skip closing ']'
+      if (*p == ']')
+      {
+         p++;
+         (*currPos)++;
+      }
+   }
+
+   json.append(L"}");
+   *curr = p;
+   return json.getUTF8String();
+}
+
+/**
+ * Parse RFC5424 space-delimited field into buffer
+ */
+static void ParseRFC5424Field(char **curr, size_t *currPos, size_t rawDataLen, char *buffer, size_t bufferSize)
+{
+   char *p = *curr;
+   if (*p == '-')
+   {
+      buffer[0] = 0;
+      p++;
+      (*currPos)++;
+   }
+   else
+   {
+      size_t i = 0;
+      while (*p != ' ' && *p != 0 && i < bufferSize - 1 && *currPos < rawDataLen)
+      {
+         buffer[i++] = *p++;
+         (*currPos)++;
+      }
+      buffer[i] = 0;
+   }
+
+   // Skip trailing space
+   if (*p == ' ')
+   {
+      p++;
+      (*currPos)++;
+   }
+   *curr = p;
+}
+
+/**
+ * Parse RFC5424 formatted syslog message
+ * curr points to just after version and space (first char of TIMESTAMP)
+ */
+bool SyslogMessage::parseRFC5424(char *curr, size_t currPos)
+{
+   // Parse TIMESTAMP
+   time_t msgTimestamp = ParseRFC5424Timestamp(&curr, &currPos, m_rawDataLen);
+   if (msgTimestamp == static_cast<time_t>(-1))
+      return false;
+   if (!s_alwaysUseServerTime)
+      m_timestamp = msgTimestamp;
+
+   // Parse HOSTNAME
+   ParseRFC5424Field(&curr, &currPos, m_rawDataLen, m_hostName, MAX_SYSLOG_HOSTNAME_LEN);
+
+   // Parse APP-NAME → m_tag
+   ParseRFC5424Field(&curr, &currPos, m_rawDataLen, m_tag, MAX_SYSLOG_TAG_LEN);
+
+   // Parse PROCID
+   ParseRFC5424Field(&curr, &currPos, m_rawDataLen, m_procId, MAX_SYSLOG_PROCID_LEN);
+
+   // Parse MSGID
+   ParseRFC5424Field(&curr, &currPos, m_rawDataLen, m_msgId, MAX_SYSLOG_MSGID_LEN);
+
+   // Parse STRUCTURED-DATA
+   m_structuredData = ConvertStructuredDataToJSON(&curr, &currPos, m_rawDataLen);
+
+   // Skip space before MSG if present
+   if (*curr == ' ')
+   {
+      curr++;
+      currPos++;
+   }
+
+   // Strip UTF-8 BOM if present
+   if (currPos + 3 <= m_rawDataLen &&
+       static_cast<uint8_t>(curr[0]) == 0xEF &&
+       static_cast<uint8_t>(curr[1]) == 0xBB &&
+       static_cast<uint8_t>(curr[2]) == 0xBF)
+   {
+      curr += 3;
+      currPos += 3;
+   }
+
+   m_rawMessage = curr;
+   return true;
+}
+
+/**
  * Parse syslog message
  */
 bool SyslogMessage::parse()
@@ -193,7 +519,15 @@ bool SyslogMessage::parse()
       }
    }
 
-   // Parse HEADER part
+   // Check for RFC5424 version
+   if (*currPtr == '1' && *(currPtr + 1) == ' ')
+   {
+      currPtr += 2;
+      currPos += 2;
+      return parseRFC5424(currPtr, currPos);
+   }
+
+   // Parse RFC3164 HEADER part
    time_t msgTimestamp;
    if (ParseTimeStamp(&currPtr, m_rawDataLen, &currPos, &msgTimestamp))
    {
@@ -258,6 +592,12 @@ void SyslogMessage::fillNXCPMessage(NXCPMessage *msg) const
    msg->setFieldFromMBString(fieldId++, m_hostName);
    msg->setFieldFromMBString(fieldId++, m_tag);
    msg->setField(fieldId++, m_message);
+   msg->setFieldFromMBString(fieldId++, m_procId);
+   msg->setFieldFromMBString(fieldId++, m_msgId);
+   if (m_structuredData != nullptr)
+      msg->setFieldFromMBString(fieldId++, m_structuredData);
+   else
+      msg->setField(fieldId++, L"");
 }
 
 /**
@@ -368,8 +708,8 @@ static void SyslogWriterThread()
 
       DB_STATEMENT hStmt = DBPrepare(hdb,
                (g_dbSyntax == DB_SYNTAX_TSDB) ?
-                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?)") :
-                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
+                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text,msg_procid,msg_msgid,msg_sd) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?,?)") :
+                        _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text,msg_procid,msg_msgid,msg_sd) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == nullptr)
       {
          delete msg;
@@ -390,6 +730,12 @@ static void SyslogWriterThread()
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getHostName()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getTag()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg->getMessage(), DB_BIND_STATIC);
+         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getProcId()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getMsgId()), DB_BIND_DYNAMIC);
+         if (msg->getStructuredData() != nullptr)
+            DBBind(hStmt, 12, DB_SQLTYPE_TEXT, WideStringFromMBString(msg->getStructuredData()), DB_BIND_DYNAMIC);
+         else
+            DBBind(hStmt, 12, DB_SQLTYPE_TEXT, _T(""), DB_BIND_STATIC);
 
          if (!DBExecute(hStmt))
          {
@@ -441,8 +787,8 @@ static void ProcessSyslogMessage(SyslogMessage *msg)
       msg->convertRawMessage(codepage);
 
 		TCHAR ipAddr[64];
-		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%u tag=\"%hs\" msg=\"%s\""),
-		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%u tag=\"%hs\" procId=\"%hs\" msgId=\"%hs\" msg=\"%s\""),
+		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getProcId(), msg->getMsgId(), msg->getMessage());
 
 		bool writeToDatabase = true;
 		s_parserLock.lock();

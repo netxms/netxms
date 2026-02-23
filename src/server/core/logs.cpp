@@ -227,6 +227,9 @@ static NXCORE_LOG s_logs[] =
 			{ L"hostname", L"Host", LC_TEXT, 0 },
 			{ L"msg_tag", L"Tag", LC_TEXT, 0 },
 			{ L"msg_text", L"Text", LC_TEXT, 0 },
+			{ L"msg_procid", L"Process ID", LC_TEXT, 0 },
+			{ L"msg_msgid", L"Message ID", LC_TEXT, 0 },
+			{ L"msg_sd", L"Structured Data", LC_TEXT, 0 },
          { nullptr, nullptr, 0, 0 }
 		}
 	},
