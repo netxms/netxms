@@ -259,3 +259,53 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
    DBConnectionPoolReleaseConnection(hdb);
    return list;
 }
+
+/**
+ * Topology excluded subnets cache
+ */
+static ObjectArray<InetAddressListElement> *s_topologyExcludedSubnets = nullptr;
+static RWLock s_topologyExcludedSubnetsLock;
+
+/**
+ * Load topology excluded subnets from database into cache
+ */
+void LoadTopologyExcludedSubnets()
+{
+   ObjectArray<InetAddressListElement> *list = LoadServerAddressList(ADDR_LIST_TOPOLOGY_EXCLUDED_SUBNETS);
+   s_topologyExcludedSubnetsLock.writeLock();
+   delete s_topologyExcludedSubnets;
+   s_topologyExcludedSubnets = list;
+   s_topologyExcludedSubnetsLock.unlock();
+   nxlog_debug(2, L"Loaded %d topology excluded subnet entries", (list != nullptr) ? list->size() : 0);
+}
+
+/**
+ * Reload topology excluded subnets (called after client updates the list)
+ */
+void ReloadTopologyExcludedSubnets()
+{
+   LoadTopologyExcludedSubnets();
+}
+
+/**
+ * Check if given address is in topology excluded subnet
+ */
+bool NXCORE_EXPORTABLE IsAddressInTopologyExcludedSubnet(int32_t zoneUIN, const InetAddress& addr)
+{
+   bool result = false;
+   s_topologyExcludedSubnetsLock.readLock();
+   if (s_topologyExcludedSubnets != nullptr)
+   {
+      for(int i = 0; i < s_topologyExcludedSubnets->size(); i++)
+      {
+         InetAddressListElement *e = s_topologyExcludedSubnets->get(i);
+         if (e->contains(addr) && ((e->getZoneUIN() == 0) || (e->getZoneUIN() == zoneUIN)))
+         {
+            result = true;
+            break;
+         }
+      }
+   }
+   s_topologyExcludedSubnetsLock.unlock();
+   return result;
+}

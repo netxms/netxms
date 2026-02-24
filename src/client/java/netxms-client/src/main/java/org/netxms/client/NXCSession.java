@@ -287,6 +287,7 @@ public class NXCSession
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
    public static final int ADDRESS_LIST_DISCOVERY_FILTER = 2;
+   public static final int ADDRESS_LIST_TOPOLOGY_EXCLUDED_SUBNETS = 3;
 
    // Server components
    public static final int SERVER_COMPONENT_DISCOVERY_MANAGER = 1;

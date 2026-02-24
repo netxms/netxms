@@ -111,6 +111,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    private ScriptSelector filterScript;
    private SortableTableViewer filterAddressList;
    private SortableTableViewer activeDiscoveryAddressList;
+   private SortableTableViewer topologyExcludedSubnetsList;
    private Action actionSave;
 
    /**
@@ -153,6 +154,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       createFilterSection();
       createScheduleSection();
       createActiveDiscoverySection();
+      createTopologyExcludedSubnetsSection();
 
       createActions();
 
@@ -855,6 +857,141 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    }
 
    /**
+    * Create "Topology excluded subnets" section
+    */
+   private void createTopologyExcludedSubnetsSection()
+   {
+      Section section = new Section(content, i18n.tr("Topology excluded subnets"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      clientArea.setBackground(content.getBackground());
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
+      clientArea.setLayout(layout);
+
+      final String[] names = { i18n.tr("Range"), i18n.tr("Zone"), i18n.tr("Proxy"), i18n.tr("Comments") };
+      final int[] widths = { 150, 150, 150, 150 };
+      topologyExcludedSubnetsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      topologyExcludedSubnetsList.getTable().setLayoutData(gd);
+      topologyExcludedSubnetsList.getTable().setSortDirection(SWT.UP);
+      topologyExcludedSubnetsList.setContentProvider(new ArrayContentProvider());
+      topologyExcludedSubnetsList.setLabelProvider(new AddressListLabelProvider(true));
+      topologyExcludedSubnetsList.setComparator(new AddressListElementComparator(true));
+
+      // Hide Proxy column (not relevant for topology excluded subnets)
+      org.eclipse.swt.widgets.TableColumn proxyColumn = topologyExcludedSubnetsList.getTable().getColumn(PROXY);
+      proxyColumn.setWidth(0);
+      proxyColumn.setResizable(false);
+
+      // Hide Zone column if zoning is disabled
+      if (!Registry.getSession().isZoningEnabled())
+      {
+         final org.eclipse.swt.widgets.TableColumn zoneColumn = topologyExcludedSubnetsList.getTable().getColumn(ZONE);
+         zoneColumn.setWidth(0);
+         zoneColumn.setResizable(false);
+      }
+      topologyExcludedSubnetsList.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editTopologyExcludedSubnetElement();
+         }
+      });
+      topologyExcludedSubnetsList.enableColumnReordering();
+      WidgetHelper.restoreColumnOrder(topologyExcludedSubnetsList, getBaseId() + ".topologyExcludedSubnetsList");
+      topologyExcludedSubnetsList.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveColumnOrder(topologyExcludedSubnetsList, getBaseId() + ".topologyExcludedSubnetsList");
+         }
+      });
+
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addTopologyExcludedSubnetElement();
+         }
+      });
+
+      final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
+      linkEdit.setText(i18n.tr("Edit..."));
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      linkEdit.setBackground(clientArea.getBackground());
+      linkEdit.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editTopologyExcludedSubnetElement();
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      linkRemove.setEnabled(false);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeTopologyExcludedSubnetElements();
+         }
+      });
+
+      topologyExcludedSubnetsList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = topologyExcludedSubnetsList.getStructuredSelection();
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+         }
+      });
+   }
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -907,6 +1044,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       activeDiscoveryAddressList.setInput(config.getTargets().toArray());
       filterAddressList.setInput(config.getAddressFilter().toArray());
+      topologyExcludedSubnetsList.setInput(config.getTopologyExcludedSubnets().toArray());
 
       filterScript.setScriptName(config.getFilterScript());
 
@@ -1000,6 +1138,61 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             list.remove(o);
          }
          activeDiscoveryAddressList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * Add element to topology excluded subnets list
+    */
+   private void addTopologyExcludedSubnetElement()
+   {
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, false, null);
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getTopologyExcludedSubnets();
+         InetAddressListElement element = dlg.getElement();
+         if (!list.contains(element))
+         {
+            list.add(element);
+            topologyExcludedSubnetsList.setInput(list.toArray());
+            setModified();
+         }
+      }
+   }
+
+   /**
+    * Edit topology excluded subnet element
+    */
+   private void editTopologyExcludedSubnetElement()
+   {
+      IStructuredSelection selection = topologyExcludedSubnetsList.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, false, (InetAddressListElement)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getTopologyExcludedSubnets();
+         topologyExcludedSubnetsList.setInput(list.toArray());
+         setModified();
+      }
+   }
+
+   /**
+    * Remove element(s) from topology excluded subnets list
+    */
+   private void removeTopologyExcludedSubnetElements()
+   {
+      final List<InetAddressListElement> list = config.getTopologyExcludedSubnets();
+      IStructuredSelection selection = (IStructuredSelection)topologyExcludedSubnetsList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            list.remove(o);
+         }
+         topologyExcludedSubnetsList.setInput(list.toArray());
          setModified();
       }
    }

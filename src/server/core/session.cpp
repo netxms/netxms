@@ -10875,6 +10875,8 @@ void ClientSession::setAddrList(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
          WriteAuditLog(AUDIT_SYSCFG, true, m_userId, m_workstation, m_id, 0, _T("Address list %d modified"), listType);
+         if (listType == ADDR_LIST_TOPOLOGY_EXCLUDED_SUBNETS)
+            ReloadTopologyExcludedSubnets();
       }
       else
       {

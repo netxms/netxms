@@ -490,8 +490,9 @@ enum
 /**
  * Address list types
  */
-#define ADDR_LIST_DISCOVERY_TARGETS    1
-#define ADDR_LIST_DISCOVERY_FILTER     2
+#define ADDR_LIST_DISCOVERY_TARGETS          1
+#define ADDR_LIST_DISCOVERY_FILTER           2
+#define ADDR_LIST_TOPOLOGY_EXCLUDED_SUBNETS  3
 
 /**
  * Discovery filter flags

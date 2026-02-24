@@ -51,6 +51,7 @@ public class NetworkDiscoveryConfig
    private String activeDiscoveryPollSchedule;
 	private List<InetAddressListElement> targets;
 	private List<InetAddressListElement> addressFilter;
+	private List<InetAddressListElement> topologyExcludedSubnets;
 
 	/**
 	 * Create empty object
@@ -88,6 +89,7 @@ public class NetworkDiscoveryConfig
 
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
+		config.topologyExcludedSubnets = session.getAddressList(NXCSession.ADDRESS_LIST_TOPOLOGY_EXCLUDED_SUBNETS);
 
 		return config;
 	}
@@ -176,6 +178,7 @@ public class NetworkDiscoveryConfig
 
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER, addressFilter);
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
+		session.setAddressList(NXCSession.ADDRESS_LIST_TOPOLOGY_EXCLUDED_SUBNETS, topologyExcludedSubnets);
 
 		session.resetServerComponent(NXCSession.SERVER_COMPONENT_DISCOVERY_MANAGER);
 	}
@@ -247,6 +250,22 @@ public class NetworkDiscoveryConfig
 	{
 		this.addressFilter = addressFilter;
 	}
+
+   /**
+    * @return the topologyExcludedSubnets
+    */
+   public List<InetAddressListElement> getTopologyExcludedSubnets()
+   {
+      return topologyExcludedSubnets;
+   }
+
+   /**
+    * @param topologyExcludedSubnets the topologyExcludedSubnets to set
+    */
+   public void setTopologyExcludedSubnets(List<InetAddressListElement> topologyExcludedSubnets)
+   {
+      this.topologyExcludedSubnets = topologyExcludedSubnets;
+   }
 
    /**
     * @return the useSnmpTraps

@@ -307,6 +307,12 @@ static bool DuplicatesCheck(DiscoveredAddress *address)
       return false;  // Broadcast MAC
    }
 
+   if (IsAddressInTopologyExcludedSubnet(address->zoneUIN, address->ipAddr))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"DuplicatesCheck(%s): IP address is in topology excluded subnet, skipping duplicate checks", ipAddrText);
+      return true;
+   }
+
    if (FindNodeByIP(address->zoneUIN, address->ipAddr) != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"DuplicatesCheck(%s): node already exist in database", ipAddrText);
@@ -631,6 +637,13 @@ static bool AcceptNewNodeStage2(DiscoveredAddress *address)
             InetAddress addr = iface->ipAddrList.get(j);
             if (!addr.isValidUnicast())
                continue;
+
+            if (IsAddressInTopologyExcludedSubnet(address->zoneUIN, addr))
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, L"AcceptNewNodeStage2(%s): IP address %s on interface %s is in topology excluded subnet, skipping",
+                  ipAddrText, addr.toString().cstr(), iface->name);
+               continue;
+            }
 
             shared_ptr<Node> existingNode = FindNodeByIP(address->zoneUIN, addr);
             if (existingNode != nullptr)

@@ -1634,6 +1634,10 @@ bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int
 
 ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType);
 
+void LoadTopologyExcludedSubnets();
+void ReloadTopologyExcludedSubnets();
+bool NXCORE_EXPORTABLE IsAddressInTopologyExcludedSubnet(int32_t zoneUIN, const InetAddress& addr);
+
 bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb);
 
 /**

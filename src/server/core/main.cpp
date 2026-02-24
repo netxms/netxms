@@ -1471,6 +1471,8 @@ retry_db_lock:
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Parallel syncer is not supported on MySQL/MariaDB"));
    }
 
+   LoadTopologyExcludedSubnets();
+
    // Create network discovery thread pool
    g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 8), ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 64));
 

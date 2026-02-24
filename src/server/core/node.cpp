@@ -2267,6 +2267,8 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
       {
          InetAddress addr = info->ipAddrList.get(i);
          bool addToSubnet = addr.isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(addr));
+         if (addToSubnet && IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
+            addToSubnet = false;
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
                    m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
                    (cluster != nullptr) ? cluster->getName() : _T("(null)"),
@@ -11963,6 +11965,9 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    if ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0))
       return shared_ptr<Subnet>();  // Do not create subnet from 0.0.0.0/8
 
+   if (IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
+      return shared_ptr<Subnet>();
+
    if (syntheticMask)
    {
       if (!AdjustSubnetBaseAddress(addr, m_zoneUIN))
@@ -12075,6 +12080,9 @@ void Node::checkSubnetBinding()
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
+
+      if (IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
+         continue;
 
       wchar_t buffer[64];
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Node::checkSubnetBinding(%s [%u]): checking address %s/%d", m_name, m_id, addr.toString(buffer), addr.getMaskBits());
