@@ -822,7 +822,7 @@ typedef struct
 #define VID_ACTION_DATA             ((uint32_t)100)
 #define VID_EMAIL_SUBJECT           ((uint32_t)101)
 #define VID_RCPT_ADDR               ((uint32_t)102)
-//#define VID_NPE_NAME                ((uint32_t)103)
+#define VID_STORE_CHANGES_ONLY      ((uint32_t)103)
 #define VID_CATEGORY_ID             ((uint32_t)104)
 #define VID_DCI_DELTA_CALCULATION   ((uint32_t)105)
 #define VID_TRANSFORMATION_SCRIPT   ((uint32_t)106)

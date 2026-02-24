@@ -5492,6 +5492,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       response->setField(VID_DCI_NAME, dci->getName());
       response->setField(VID_DESCRIPTION, dci->getDescription());
       response->setField(VID_POLLING_INTERVAL, dci->getEffectivePollingInterval());
+      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
       sendMessage(response);
 
       int16_t dataType;
