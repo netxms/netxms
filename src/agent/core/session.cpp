@@ -266,7 +266,7 @@ void CommSession::readThread()
                      if (msg->isEndOfFile())
                      {
                         debugPrintf(4, _T("Transfer of file \"%s\" completed"), dInfo->getFileName());
-                        dInfo->close(true);
+                        dInfo->close(true, true, true);
                         m_downloadFileMap.remove(msg->getId());
 
                         NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);

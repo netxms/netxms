@@ -785,7 +785,7 @@ public:
 
    virtual bool open(bool append = false);
    virtual bool write(const BYTE *data, size_t dataSize, bool compressedStream);
-   virtual void close(bool success, bool deleteOnFailure = true);
+   virtual void close(bool success, bool deleteOnFailure = true, bool replaceLocked = false);
 
    static uint32_t getFileInfo(NXCPMessage *response, const TCHAR *fileName);
    const TCHAR *getFileName() const { return m_fileName; }

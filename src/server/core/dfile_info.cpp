@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2017-2025 Raden Solutions
+** Copyright (C) 2017-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,9 +56,9 @@ void ServerDownloadFileInfo::updatePackageDBInfo(const wchar_t *description, con
 /**
  * Closes file and changes it's date if required
  */
-void ServerDownloadFileInfo::close(bool success, bool deleteOnFailure)
+void ServerDownloadFileInfo::close(bool success, bool deleteOnFailure, bool replaceLocked)
 {
-   DownloadFileInfo::close(success, deleteOnFailure);
+   DownloadFileInfo::close(success, deleteOnFailure, replaceLocked);
    if (m_completionCallback != nullptr)
       m_completionCallback(m_fileName, m_uploadData, success);
 }
