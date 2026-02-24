@@ -1168,7 +1168,7 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
       {
          json_array_append(m_messages, message);
          json_t *toolCalls = json_object_get(message, "tool_calls");
-         if (toolCalls != nullptr)
+         if (json_is_array(toolCalls) && json_array_size(toolCalls) > 0)
          {
             size_t i;
             json_t *tool;
