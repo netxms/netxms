@@ -457,6 +457,8 @@
     <ClCompile Include="chassis.cpp" />
     <ClCompile Include="circuit.cpp" />
     <ClCompile Include="client.cpp" />
+    <ClCompile Include="cloud_connector.cpp" />
+    <ClCompile Include="cloud_domain.cpp" />
     <ClCompile Include="cluster.cpp" />
     <ClCompile Include="collector.cpp" />
     <ClCompile Include="columnfilter.cpp" />
@@ -561,6 +563,7 @@
     <ClCompile Include="rack.cpp" />
     <ClCompile Include="radius.cpp" />
     <ClCompile Include="reporting.cpp" />
+    <ClCompile Include="resource.cpp" />
     <ClCompile Include="rootobj.cpp" />
     <ClCompile Include="schedule.cpp" />
     <ClCompile Include="script.cpp" />
