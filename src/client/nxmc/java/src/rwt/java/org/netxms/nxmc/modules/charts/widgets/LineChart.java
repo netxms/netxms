@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
@@ -506,7 +507,8 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
     */
    private void updateSeries(int index, ChartDciConfig item)
 	{
-      final DciDataRow[] values = chart.getDataSeries().get(index).getValues();
+      DataSeries data = chart.getDataSeries().get(index);
+      final DciDataRow[] values = data.getValues();
 
 		// Create series
 		Date[] xSeries = new Date[values.length];
@@ -523,8 +525,8 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
 
-      int pollingInterval = chart.getDataSeries().get(index).getPollingInterval();
-      if (pollingInterval > 0)
+      int pollingInterval = data.getPollingInterval();
+      if ((pollingInterval > 0) && !data.isStoreChangesOnly())
       {
          // Use 3x polling interval as gap threshold (X-axis is in milliseconds)
          series.setLineGapThreshold(pollingInterval * 3.0 * 1000.0);

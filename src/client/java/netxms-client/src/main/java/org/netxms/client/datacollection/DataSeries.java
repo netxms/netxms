@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ public class DataSeries
    private int useMultiplier = 0;  // 0 - auto, 1 - use, 2 - do not use
    private Threshold[] thresholds = null;
    private int pollingInterval;
+   private boolean storeChangesOnly;
 
    /**
     * Create empty data series
@@ -97,6 +98,7 @@ public class DataSeries
       this.useMultiplier = src.useMultiplier;
       this.thresholds = src.thresholds;
       this.pollingInterval = src.pollingInterval;
+      this.storeChangesOnly = src.storeChangesOnly;
    }
 
    /**
@@ -112,6 +114,7 @@ public class DataSeries
       multiplierPower = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
       useMultiplier = msg.getFieldAsInt32(NXCPCodes.VID_USE_MULTIPLIER);
       pollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
+      storeChangesOnly = msg.getFieldAsBoolean(NXCPCodes.VID_STORE_CHANGES_ONLY);
 
       String units = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
       measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
@@ -355,6 +358,14 @@ public class DataSeries
    public int getPollingInterval()
    {
       return pollingInterval;
+   }
+
+   /**
+    * @return the storeChangesOnly
+    */
+   public boolean isStoreChangesOnly()
+   {
+      return storeChangesOnly;
    }
 
    /**

@@ -137,7 +137,7 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_resourceType, DB_BIND_TRANSIENT);
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_region, DB_BIND_TRANSIENT);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
-         DBBind(hStmt, 7, DB_CTYPE_UTF8_STRING, DB_SQLTYPE_VARCHAR, m_providerState.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_providerState.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_linkedNodeId);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_accountId, DB_BIND_TRANSIENT);
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
