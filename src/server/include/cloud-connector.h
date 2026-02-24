@@ -81,14 +81,14 @@ struct MetricDefinition
  */
 struct ResourceDescriptor
 {
-   TCHAR resourceId[1024];             // Provider's unique resource ID
-   TCHAR name[MAX_OBJECT_NAME];        // Display name
-   TCHAR type[256];                    // Provider-specific type
-   TCHAR region[128];                  // Region/location
+   char resourceId[1024];              // Provider's unique resource ID
+   char name[MAX_OBJECT_NAME];         // Display name
+   char type[256];                     // Provider-specific type
+   char region[128];                   // Region/location
    int16_t state;                      // RESOURCE_STATE_* value
    char providerState[256];            // Raw provider state string
    StringMap *tags;                    // Key-value tag pairs (caller owns)
-   TCHAR linkHint[256];                // Hostname/IP/FQDN for Node matching
+   char linkHint[256];                 // Hostname/IP/FQDN for Node matching
    ResourceDescriptor *children;       // First child (linked list via next)
    ResourceDescriptor *next;           // Next sibling
    StringList *metricHints;            // Suggested default metrics (caller owns)

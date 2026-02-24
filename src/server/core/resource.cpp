@@ -55,7 +55,7 @@ bool Resource::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
 
    Pollable::loadFromDatabase(hdb, m_id);
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT parent_id,cloud_resource_id,connector_name,resource_type,region,state,provider_state,linked_node_id,account_id,last_discovery_time,connector_data FROM resources WHERE id=?");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT parent_id,cloud_resource_id,resource_type,region,state,provider_state,linked_node_id,account_id,last_discovery_time,connector_data FROM resources WHERE id=?");
    if (hStmt == nullptr)
       return false;
 
@@ -69,15 +69,16 @@ bool Resource::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
 
    m_parentId = DBGetFieldULong(hResult, 0, 0);
    m_cloudResourceId = DBGetFieldAsSharedString(hResult, 0, 1);
-   m_connectorName = DBGetFieldAsSharedString(hResult, 0, 2);
-   m_resourceType = DBGetFieldAsSharedString(hResult, 0, 3);
-   m_region = DBGetFieldAsSharedString(hResult, 0, 4);
-   m_state = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 5));
-   m_providerState = DBGetFieldUTF8(hResult, 0, 6, buffer, 256);
-   m_linkedNodeId = DBGetFieldULong(hResult, 0, 7);
-   m_accountId = DBGetFieldAsSharedString(hResult, 0, 8);
-   m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 9);
-   m_connectorData = DBGetFieldAsSharedString(hResult, 0, 10);
+   m_resourceType = DBGetFieldUTF8(hResult, 0, 2, buffer, 256);
+   m_region = DBGetFieldUTF8(hResult, 0, 3, buffer, 256);
+   m_state = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 4));
+   m_providerState = DBGetFieldUTF8(hResult, 0, 5, buffer, 256);
+   m_linkedNodeId = DBGetFieldULong(hResult, 0, 6);
+   m_accountId = DBGetFieldUTF8(hResult, 0, 7, buffer, 256);
+   m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 8);
+   char *connectorData = DBGetFieldUTF8(hResult, 0, 9, nullptr, 0);
+   m_connectorData = CHECK_NULL_EX_A(connectorData);
+   MemFree(connectorData);
    DBFreeResult(hResult);
 
    // Load tags
@@ -123,7 +124,7 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_RESOURCE_PROPERTIES))
    {
       static const TCHAR *columns[] = {
-         L"parent_id", L"cloud_resource_id", L"connector_name", L"resource_type", L"region",
+         L"parent_id", L"cloud_resource_id", L"resource_type", L"region",
          L"state", L"provider_state", L"linked_node_id", L"account_id",
          L"last_discovery_time", L"connector_data", nullptr
       };
@@ -133,16 +134,15 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
          lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_parentId);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_cloudResourceId, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_connectorName, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_resourceType, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_region, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_providerState.c_str(), DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_linkedNodeId);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_accountId, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
-         DBBind(hStmt, 11, DB_SQLTYPE_TEXT, m_connectorData, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_resourceType.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_region.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_providerState.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_linkedNodeId);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_accountId.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
+         DBBind(hStmt, 10, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_connectorData.c_str(), DB_BIND_STATIC);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
          unlockProperties();
 
          success = DBExecute(hStmt);
@@ -217,13 +217,15 @@ json_t *Resource::toJson()
 
    lockProperties();
    json_object_set_new(root, "resourceId", json_string_t(m_cloudResourceId));
-   json_object_set_new(root, "connectorName", json_string_t(m_connectorName));
-   json_object_set_new(root, "resourceType", json_string_t(m_resourceType));
-   json_object_set_new(root, "region", json_string_t(m_region));
+   shared_ptr<CloudDomain> domain = m_ownerDomain.lock();
+   if (domain != nullptr)
+      json_object_set_new(root, "connectorName", json_string_t(domain->getConnectorName()));
+   json_object_set_new(root, "resourceType", json_string(m_resourceType.c_str()));
+   json_object_set_new(root, "region", json_string(m_region.c_str()));
    json_object_set_new(root, "state", json_integer(m_state));
    json_object_set_new(root, "providerState", json_string(m_providerState.c_str()));
    json_object_set_new(root, "linkedNodeId", json_integer(m_linkedNodeId));
-   json_object_set_new(root, "accountId", json_string_t(m_accountId));
+   json_object_set_new(root, "accountId", json_string(m_accountId.c_str()));
    json_object_set_new(root, "lastDiscoveryTime", json_integer(m_lastDiscoveryTime));
    if (m_tags != nullptr)
       json_object_set_new(root, "tags", m_tags->toJson());
@@ -239,15 +241,17 @@ void Resource::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_CLOUD_RESOURCE_ID, m_cloudResourceId);
-   msg->setField(VID_CONNECTOR_NAME, m_connectorName);
-   msg->setField(VID_RESOURCE_TYPE, m_resourceType);
-   msg->setField(VID_CLOUD_REGION, m_region);
+   shared_ptr<CloudDomain> domain = m_ownerDomain.lock();
+   if (domain != nullptr)
+      msg->setField(VID_CONNECTOR_NAME, domain->getConnectorName());
+   msg->setFieldFromUtf8String(VID_RESOURCE_TYPE, m_resourceType.c_str());
+   msg->setFieldFromUtf8String(VID_CLOUD_REGION, m_region.c_str());
    msg->setField(VID_RESOURCE_STATE, m_state);
    msg->setFieldFromUtf8String(VID_PROVIDER_STATE, m_providerState.c_str());
    msg->setField(VID_LINKED_NODE_ID, m_linkedNodeId);
-   msg->setField(VID_ACCOUNT_ID, m_accountId);
+   msg->setFieldFromUtf8String(VID_ACCOUNT_ID, m_accountId.c_str());
    msg->setField(VID_LAST_DISCOVERY_TIME, static_cast<uint32_t>(m_lastDiscoveryTime));
-   msg->setField(VID_CONNECTOR_DATA, m_connectorData);
+   msg->setFieldFromUtf8String(VID_CONNECTOR_DATA, m_connectorData.c_str());
 
    if (m_tags != nullptr)
       m_tags->fillMessage(msg, VID_RESOURCE_TAG_LIST_BASE, VID_NUM_TAGS);
@@ -406,16 +410,15 @@ int Resource::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 /**
  * Update resource properties from discovery descriptor
  */
-void Resource::updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId, const TCHAR *connectorName)
+void Resource::updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId)
 {
    lockProperties();
-   m_cloudResourceId = desc->resourceId;
+   m_cloudResourceId = WideStringFromUTF8String(desc->resourceId);
    m_resourceType = desc->type;
    m_region = desc->region;
    m_state = desc->state;
    m_providerState = desc->providerState;
    m_parentId = parentId;
-   m_connectorName = connectorName;
    m_lastDiscoveryTime = time(nullptr);
 
    delete m_tags;

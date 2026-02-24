@@ -2661,7 +2661,6 @@ CREATE TABLE resources
    id integer not null,
    parent_id integer not null,
    cloud_resource_id varchar(1024) not null,  // ID of this resource for cloud connector
-   connector_name varchar(63) not null,
    resource_type varchar(256) not null,
    region varchar(128) null,
    state smallint not null,

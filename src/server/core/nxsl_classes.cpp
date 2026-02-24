@@ -6455,11 +6455,15 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    auto resource = SharedObjectFromData<Resource>(object);
    if (NXSL_COMPARE_ATTRIBUTE_NAME("accountId"))
    {
-      value = vm->createValue(resource->getAccountId());
+      value = vm->createValue(resource->getAccountId().c_str());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
    {
-      value = vm->createValue(resource->getConnectorName());
+      shared_ptr<CloudDomain> domain = resource->getOwnerDomain();
+      if (domain != nullptr)
+         value = vm->createValue(domain->getConnectorName());
+      else
+         value = vm->createValue(L"");
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryTime"))
    {
@@ -6480,7 +6484,7 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("region"))
    {
-      value = vm->createValue(resource->getRegion());
+      value = vm->createValue(resource->getRegion().c_str());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceId"))
    {
@@ -6488,7 +6492,7 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceType"))
    {
-      value = vm->createValue(resource->getResourceType());
+      value = vm->createValue(resource->getResourceType().c_str());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
    {

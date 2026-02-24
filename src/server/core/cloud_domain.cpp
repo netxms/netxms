@@ -57,7 +57,9 @@ CloudDomain::CloudDomain(const wchar_t *name, const NXCPMessage& request) : supe
    m_credentials = request.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS);
    m_parsedCredentials = nullptr;
    parseCredentials();
-   m_discoverySchedule = request.getFieldAsSharedString(VID_DISCOVERY_SCHEDULE);
+   char *schedule = request.getFieldAsUtf8String(VID_DISCOVERY_SCHEDULE);
+   m_discoverySchedule = CHECK_NULL_EX_A(schedule);
+   MemFree(schedule);
    m_discoveryFilter = request.getFieldAsSharedString(VID_DISCOVERY_FILTER);
    m_removalPolicy = request.getFieldAsInt16(VID_REMOVAL_POLICY);
    m_gracePeriod = request.getFieldAsUInt32(VID_GRACE_PERIOD);
@@ -120,10 +122,12 @@ bool CloudDomain::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *pre
    if (hResult == nullptr)
       return false;
 
+   char buffer[256];
+
    m_connectorName = DBGetFieldAsSharedString(hResult, 0, 0);
    m_credentials = DBGetFieldUTF8(hResult, 0, 1, nullptr, 0);
    parseCredentials();
-   m_discoverySchedule = DBGetFieldAsSharedString(hResult, 0, 2);
+   m_discoverySchedule = DBGetFieldUTF8(hResult, 0, 2, buffer, 256);
    m_discoveryFilter = DBGetFieldAsSharedString(hResult, 0, 3);
    m_removalPolicy = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 4));
    m_gracePeriod = DBGetFieldULong(hResult, 0, 5);
@@ -132,7 +136,9 @@ bool CloudDomain::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *pre
    m_autoProvisionDCI = DBGetFieldLong(hResult, 0, 8) != 0;
    m_lastDiscoveryStatus = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 9));
    m_lastDiscoveryTime = DBGetFieldULong(hResult, 0, 10);
-   m_lastDiscoveryMessage = DBGetFieldAsSharedString(hResult, 0, 11);
+   char *lastDiscoveryMsg = DBGetFieldUTF8(hResult, 0, 11, nullptr, 0);
+   m_lastDiscoveryMessage = CHECK_NULL_EX_A(lastDiscoveryMsg);
+   MemFree(lastDiscoveryMsg);
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -167,7 +173,7 @@ bool CloudDomain::saveToDatabase(DB_HANDLE hdb)
          lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_connectorName, DB_BIND_TRANSIENT);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_credentials, DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_discoverySchedule, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_discoverySchedule.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_discoveryFilter, DB_BIND_TRANSIENT);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_removalPolicy));
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_gracePeriod);
@@ -176,7 +182,7 @@ bool CloudDomain::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_autoProvisionDCI ? 1 : 0);
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_lastDiscoveryStatus));
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
-         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_lastDiscoveryMessage, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_lastDiscoveryMessage.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
          unlockProperties();
 
@@ -226,7 +232,7 @@ json_t *CloudDomain::toJson()
    json_object_set_new(root, "autoProvisionDCI", json_boolean(m_autoProvisionDCI));
    json_object_set_new(root, "lastDiscoveryStatus", json_integer(m_lastDiscoveryStatus));
    json_object_set_new(root, "lastDiscoveryTime", json_integer(m_lastDiscoveryTime));
-   json_object_set_new(root, "lastDiscoveryMessage", json_string_t(m_lastDiscoveryMessage));
+   json_object_set_new(root, "lastDiscoveryMessage", json_string(m_lastDiscoveryMessage.c_str()));
    unlockProperties();
 
    return root;
@@ -240,7 +246,7 @@ void CloudDomain::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_CONNECTOR_NAME, m_connectorName);
    msg->setField(VID_CLOUD_CREDENTIALS, m_credentials != nullptr);
-   msg->setField(VID_DISCOVERY_SCHEDULE, m_discoverySchedule);
+   msg->setFieldFromUtf8String(VID_DISCOVERY_SCHEDULE, m_discoverySchedule.c_str());
    msg->setField(VID_DISCOVERY_FILTER, m_discoveryFilter);
    msg->setField(VID_REMOVAL_POLICY, m_removalPolicy);
    msg->setField(VID_GRACE_PERIOD, m_gracePeriod);
@@ -249,7 +255,7 @@ void CloudDomain::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AUTO_PROVISION_DCI, m_autoProvisionDCI);
    msg->setField(VID_LAST_DISCOVERY_STATUS, m_lastDiscoveryStatus);
    msg->setField(VID_LAST_DISCOVERY_TIME, static_cast<uint32_t>(m_lastDiscoveryTime));
-   msg->setField(VID_LAST_DISCOVERY_MESSAGE, m_lastDiscoveryMessage);
+   msg->setFieldFromUtf8String(VID_LAST_DISCOVERY_MESSAGE, m_lastDiscoveryMessage.c_str());
 }
 
 /**
@@ -266,7 +272,11 @@ uint32_t CloudDomain::modifyFromMessageInternal(const NXCPMessage& msg, ClientSe
       parseCredentials();
    }
    if (msg.isFieldExist(VID_DISCOVERY_SCHEDULE))
-      m_discoverySchedule = msg.getFieldAsSharedString(VID_DISCOVERY_SCHEDULE);
+   {
+      char *schedule = msg.getFieldAsUtf8String(VID_DISCOVERY_SCHEDULE);
+      m_discoverySchedule = CHECK_NULL_EX_A(schedule);
+      MemFree(schedule);
+   }
    if (msg.isFieldExist(VID_DISCOVERY_FILTER))
       m_discoveryFilter = msg.getFieldAsSharedString(VID_DISCOVERY_FILTER);
    if (msg.isFieldExist(VID_REMOVAL_POLICY))
@@ -430,7 +440,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
          StringSet discoveredIds;
          std::function<void(const ResourceDescriptor *, uint32_t)> reconcileResources;
 
-         reconcileResources = [this, &connector, &discoveredIds, &reconcileResources, &connectorName](const ResourceDescriptor *desc, uint32_t parentObjId) {
+         reconcileResources = [this, &connector, &discoveredIds, &reconcileResources](const ResourceDescriptor *desc, uint32_t parentObjId) {
             for (const ResourceDescriptor *d = desc; d != nullptr; d = d->next)
             {
                if (IsShutdownInProgress())
@@ -442,10 +452,12 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                if (parentObj == nullptr)
                   return;
                unique_ptr<SharedObjectArray<NetObj>> children = parentObj->getChildren(OBJECT_RESOURCE);
+               WCHAR wResourceId[1024];
+               utf8_to_wchar(d->resourceId, -1, wResourceId, 1024);
                for (int i = 0; i < children->size(); i++)
                {
                   shared_ptr<Resource> r = static_pointer_cast<Resource>(children->getShared(i));
-                  if (!_tcscmp(r->getCloudResourceId(), d->resourceId))
+                  if (!wcscmp(r->getCloudResourceId(), wResourceId))
                   {
                      resource = r;
                      break;
@@ -455,25 +467,25 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                if (resource != nullptr)
                {
                   // Update existing resource
-                  resource->updateFromDiscovery(d, parentObjId, connectorName);
-                  resource->setName(d->name);
-                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Updated existing resource \"%s\" [%u] (cloud ID: %s)", resource->getName(), resource->getId(), d->resourceId);
+                  resource->updateFromDiscovery(d, parentObjId);
+                  resource->setName(WideStringFromUTF8String(d->name));
+                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Updated existing resource \"%s\" [%u] (cloud ID: %hs)", resource->getName(), resource->getId(), d->resourceId);
                }
                else
                {
                   // Create new resource
                   resource = make_shared<Resource>();
-                  resource->setName(d->name);
+                  resource->setName(WideStringFromUTF8String(d->name));
                   NetObjInsert(resource, true, false);
-                  resource->updateFromDiscovery(d, parentObjId, connectorName);
+                  resource->updateFromDiscovery(d, parentObjId);
                   resource->setOwnerDomain(self());
 
                   // Link to parent
                   linkObjects(parentObj, resource);
                   resource->publish();
 
-                  sendPollerMsg(L"   Created new resource \"%s\" (cloud ID: %s)\r\n", d->name, d->resourceId);
-                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Created new resource \"%s\" [%u] (cloud ID: %s) under parent [%u]",
+                  sendPollerMsg(L"   Created new resource \"%hs\" (cloud ID: %hs)\r\n", d->name, d->resourceId);
+                  nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Created new resource \"%hs\" [%u] (cloud ID: %hs) under parent [%u]",
                      d->name, resource->getId(), d->resourceId, parentObjId);
                }
 
@@ -481,14 +493,16 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                if (d->linkHint[0] != 0)
                {
                   shared_ptr<Node> linkedNode;
-                  InetAddress addr = InetAddress::resolveHostName(d->linkHint);
+                  WCHAR wLinkHint[256];
+                  utf8_to_wchar(d->linkHint, -1, wLinkHint, 256);
+                  InetAddress addr = InetAddress::resolveHostName(wLinkHint);
                   if (addr.isValidUnicast())
                   {
                      linkedNode = FindNodeByIP(0, true, addr);
                   }
                   if (linkedNode == nullptr)
                   {
-                     unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(0, d->linkHint);
+                     unique_ptr<SharedObjectArray<NetObj>> nodes = FindNodesByHostname(0, wLinkHint);
                      if (nodes != nullptr && nodes->size() > 0)
                         linkedNode = static_pointer_cast<Node>(nodes->getShared(0));
                   }
@@ -500,7 +514,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                   }
                }
 
-               discoveredIds.add(d->resourceId);
+               discoveredIds.add(wResourceId);
 
                // Recurse for children
                if (d->children != nullptr)
@@ -538,7 +552,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                   switch (removalPolicy)
                   {
                      case 0: // Mark inactive
-                        resource->updateState(RESOURCE_STATE_INACTIVE, "Not found in discovery");
+                        resource->updateState(RESOURCE_STATE_INACTIVE, "missing");
                         nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Marked resource \"%s\" [%u] as inactive (not found in discovery)", resource->getName(), resource->getId());
                         break;
                      case 1: // Delete after grace period
@@ -551,7 +565,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                         }
                         else
                         {
-                           resource->updateState(RESOURCE_STATE_INACTIVE, "Not found in discovery");
+                           resource->updateState(RESOURCE_STATE_INACTIVE, "missing");
                            nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Marked resource \"%s\" [%u] as inactive (grace period not expired)", resource->getName(), resource->getId());
                         }
                         break;
@@ -573,7 +587,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
          lockProperties();
          m_lastDiscoveryStatus = 0;
          m_lastDiscoveryTime = time(nullptr);
-         m_lastDiscoveryMessage = L"";
+         m_lastDiscoveryMessage = "";
          setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
          unlockProperties();
 
@@ -587,7 +601,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
          lockProperties();
          m_lastDiscoveryStatus = 2;
          m_lastDiscoveryTime = time(nullptr);
-         m_lastDiscoveryMessage = L"Discovery returned no results";
+         m_lastDiscoveryMessage = "Discovery returned no results";
          setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
          unlockProperties();
       }
@@ -600,7 +614,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
       lockProperties();
       m_lastDiscoveryStatus = 2;
       m_lastDiscoveryTime = time(nullptr);
-      m_lastDiscoveryMessage = L"Cloud connector not found";
+      m_lastDiscoveryMessage = "Cloud connector not found";
       setModified(MODIFY_CLOUD_DOMAIN_PROPERTIES);
       unlockProperties();
    }

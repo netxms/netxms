@@ -66,7 +66,6 @@ static bool H_UpgradeFromV4()
       L"  id integer not null,"
       L"  parent_id integer not null,"
       L"  cloud_resource_id varchar(1024) not null,"
-      L"  connector_name varchar(63) not null,"
       L"  resource_type varchar(256) not null,"
       L"  region varchar(128) null,"
       L"  state smallint not null,"

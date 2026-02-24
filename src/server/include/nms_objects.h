@@ -3445,7 +3445,7 @@ protected:
    SharedString m_connectorName;
    char *m_credentials;
    json_t *m_parsedCredentials;
-   SharedString m_discoverySchedule;
+   std::string m_discoverySchedule;
    SharedString m_discoveryFilter;
    int16_t m_removalPolicy;
    uint32_t m_gracePeriod;
@@ -3454,7 +3454,7 @@ protected:
    bool m_autoProvisionDCI;
    int16_t m_lastDiscoveryStatus;
    time_t m_lastDiscoveryTime;
-   SharedString m_lastDiscoveryMessage;
+   std::string m_lastDiscoveryMessage;
 
    void parseCredentials();
 
@@ -3513,16 +3513,15 @@ private:
 protected:
    uint32_t m_parentId;
    SharedString m_cloudResourceId;
-   SharedString m_connectorName;
-   SharedString m_resourceType;
-   SharedString m_region;
+   std::string m_resourceType;
+   std::string m_region;
    int16_t m_state;
    std::string m_providerState;
    uint32_t m_linkedNodeId;
    StringMap *m_tags;
-   SharedString m_accountId;
+   std::string m_accountId;
    time_t m_lastDiscoveryTime;
-   SharedString m_connectorData;
+   std::string m_connectorData;
    weak_ptr<CloudDomain> m_ownerDomain;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3551,18 +3550,17 @@ public:
    virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
    SharedString getCloudResourceId() const { return GetAttributeWithLock(m_cloudResourceId, m_mutexProperties); }
-   SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
-   SharedString getResourceType() const { return GetAttributeWithLock(m_resourceType, m_mutexProperties); }
-   SharedString getRegion() const { return GetAttributeWithLock(m_region, m_mutexProperties); }
+   std::string getResourceType() const { return GetAttributeWithLock(m_resourceType, m_mutexProperties); }
+   std::string getRegion() const { return GetAttributeWithLock(m_region, m_mutexProperties); }
    int16_t getResourceState() const { return m_state; }
    std::string getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
    uint32_t getParentDomainOrResourceId() const { return m_parentId; }
    uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
-   SharedString getAccountId() const { return GetAttributeWithLock(m_accountId, m_mutexProperties); }
+   std::string getAccountId() const { return GetAttributeWithLock(m_accountId, m_mutexProperties); }
    time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
    const StringMap *getTags() const { return m_tags; }
 
-   void updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId, const TCHAR *connectorName);
+   void updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId);
    void updateState(int16_t newState, const char *providerState);
    void setLinkedNodeId(uint32_t nodeId);
    void setOwnerDomain(const shared_ptr<CloudDomain>& domain) { m_ownerDomain = domain; }

@@ -99,7 +99,7 @@ static ResourceDescriptor *DiscoverContainers(DockerClient *client)
       ResourceDescriptor *rd = new ResourceDescriptor();
 
       // Resource ID = full container SHA
-      utf8_to_wchar(id, -1, rd->resourceId, 1024);
+      strlcpy(rd->resourceId, id, 1024);
 
       // Name = first entry from Names array, strip leading '/'
       json_t *names = json_object_get(container, "Names");
@@ -110,11 +110,11 @@ static ResourceDescriptor *DiscoverContainers(DockerClient *client)
          {
             if (name[0] == '/')
                name++;
-            utf8_to_wchar(name, -1, rd->name, MAX_OBJECT_NAME);
+            strlcpy(rd->name, name, MAX_OBJECT_NAME);
          }
       }
 
-      wcscpy(rd->type, L"docker.container");
+      strcpy(rd->type, "docker.container");
 
       // State
       const char *state = json_object_get_string_utf8(container, "State", nullptr);
@@ -139,7 +139,7 @@ static ResourceDescriptor *DiscoverContainers(DockerClient *client)
                const char *ip = json_object_get_string_utf8(netData, "IPAddress", nullptr);
                if (ip != nullptr && ip[0] != 0)
                {
-                  utf8_to_wchar(ip, -1, rd->linkHint, 256);
+                  strlcpy(rd->linkHint, ip, 256);
                   break;
                }
             }
@@ -194,13 +194,13 @@ static ResourceDescriptor *DiscoverNetworks(DockerClient *client)
 
       ResourceDescriptor *rd = new ResourceDescriptor();
 
-      utf8_to_wchar(id, -1, rd->resourceId, 1024);
+      strlcpy(rd->resourceId, id, 1024);
 
       const char *name = json_object_get_string_utf8(network, "Name", nullptr);
       if (name != nullptr)
-         utf8_to_wchar(name, -1, rd->name, MAX_OBJECT_NAME);
+         strlcpy(rd->name, name, MAX_OBJECT_NAME);
 
-      wcscpy(rd->type, L"docker.network");
+      strcpy(rd->type, "docker.network");
       rd->state = RESOURCE_STATE_ACTIVE;
 
       const char *driver = json_object_get_string_utf8(network, "Driver", nullptr);
@@ -252,10 +252,10 @@ static ResourceDescriptor *DiscoverVolumes(DockerClient *client)
       ResourceDescriptor *rd = new ResourceDescriptor();
 
       // Volume name is used as resource ID (volumes have no separate ID)
-      utf8_to_wchar(name, -1, rd->resourceId, 1024);
-      utf8_to_wchar(name, -1, rd->name, MAX_OBJECT_NAME);
+      strlcpy(rd->resourceId, name, 1024);
+      strlcpy(rd->name, name, MAX_OBJECT_NAME);
 
-      wcscpy(rd->type, L"docker.volume");
+      strcpy(rd->type, "docker.volume");
       rd->state = RESOURCE_STATE_ACTIVE;
 
       const char *driver = json_object_get_string_utf8(volume, "Driver", nullptr);
