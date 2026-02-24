@@ -8594,7 +8594,7 @@ void ClientSession::updatePackageMetadata(const NXCPMessage& request)
    {
       // Current user has no rights for package management
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on agent package metadata update"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on agent package metadata update");
    }
 
    sendMessage(msg);
@@ -8613,7 +8613,7 @@ void ClientSession::removePackage(const NXCPMessage& request)
       uint32_t rcc = UninstallPackage(packageId);
       if (rcc == RCC_SUCCESS)
       {
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Agent package [%u] removed"), packageId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Agent package [%u] removed", packageId);
       }
       response.setField(VID_RCC, rcc);
    }
@@ -8621,7 +8621,7 @@ void ClientSession::removePackage(const NXCPMessage& request)
    {
       // Current user has no rights for package management
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on agent package removal"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on agent package removal");
    }
 
    sendMessage(response);
@@ -8703,12 +8703,13 @@ void ClientSession::deployPackage(const NXCPMessage& request)
             auto job = make_shared<PackageDeploymentJob>(node->getId(), m_userId, now, package);
             if (job->createDatabaseRecord())
             {
-               debugPrintf(5, _T("Scheduled deployment of package [%u] on node \"%s\" [%u]"), packageId, node->getName(), node->getId());
+               debugPrintf(5, L"Scheduled deployment of package [%u] on node \"%s\" [%u]", packageId, node->getName(), node->getId());
+               writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Started deployment of package \"%s\" [%u]", package.name, packageId);
                RegisterPackageDeploymentJob(job);
             }
             else
             {
-               debugPrintf(5, _T("Cannot create database record for deployment job [%u] on node \"%s\" [%u]"), job->getId(), node->getName(), node->getId());
+               debugPrintf(5, L"Cannot create database record for deployment job [%u] on node \"%s\" [%u]", job->getId(), node->getName(), node->getId());
                rcc = RCC_DB_FAILURE;
             }
          }
@@ -8719,6 +8720,7 @@ void ClientSession::deployPackage(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on starting package deployment");
    }
 
    sendMessage(response);
