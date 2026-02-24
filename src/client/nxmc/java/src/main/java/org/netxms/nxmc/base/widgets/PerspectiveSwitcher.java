@@ -52,8 +52,8 @@ public class PerspectiveSwitcher extends Composite
 {
    private static final int EXPANDED_WIDTH = 200;
    private static final int COLLAPSED_WIDTH = 48;
-   private static final int ICON_SIZE_EXPANDED = 20;
-   private static final int ICON_SIZE_COLLAPSED = 24;
+   private static final int ICON_SIZE_EXPANDED = 18;
+   private static final int ICON_SIZE_COLLAPSED = 20;
    private static final int ITEM_HEIGHT = 36;
    private static final int SECTION_HEADER_HEIGHT = 28;
    private static final int SECTION_SPACING = 16;
@@ -104,8 +104,8 @@ public class PerspectiveSwitcher extends Composite
       selectionForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.Selection");
       hoverBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Hover");
       sectionHeaderForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.SectionHeader");
-      mainFont = FontTools.createAdjustedFont(getFont(), 3);
-      sectionHeaderFont = FontTools.createAdjustedFont(getFont(), -1, SWT.BOLD);
+      mainFont = FontTools.createAdjustedFont(getFont(), 2);
+      sectionHeaderFont = FontTools.createAdjustedFont(getFont(), -2, SWT.BOLD);
 
       buildSections(perspectives);
 
