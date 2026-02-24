@@ -155,7 +155,7 @@ uint32_t DownloadFileInfo::getFileInfo(NXCPMessage *response, const TCHAR *fileN
 /**
  * Closes file and changes it's date if required
  */
-void DownloadFileInfo::close(bool success, bool deleteOnFailure)
+void DownloadFileInfo::close(bool success, bool deleteOnFailure, bool replaceLocked)
 {
    _close(m_fileHandle);
    m_fileHandle = -1;
@@ -166,11 +166,63 @@ void DownloadFileInfo::close(bool success, bool deleteOnFailure)
 
    if (success)
    {
-      _tremove(m_fileName);
+#ifdef _WIN32
+      if (!DeleteFile(m_fileName))
+      {
+         DWORD e = GetLastError();
+         if (e != ERROR_FILE_NOT_FOUND)
+         {
+            nxlog_debug(5, _T("DownloadFileInfo(%s): cannot delete existing file (%s)"), m_fileName, GetSystemErrorText(e).cstr());
+            
+            if (e == ERROR_ACCESS_DENIED)
+            {
+               HANDLE h = CreateFile(m_fileName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+               if (h == INVALID_HANDLE_VALUE)
+               {
+                  e = GetLastError();
+                  nxlog_debug(5, _T("DownloadFileInfo(%s): existing file open attempt returned error (%s)"), m_fileName, GetSystemErrorText(e).cstr());
+               }
+               else
+               {
+                  CloseHandle(h);
+                  // File is not locked — it's likely a permissions issue on delete
+               }
+            }
+
+            if ((e == ERROR_SHARING_VIOLATION) && replaceLocked)
+            {
+               // Try to rename existing file and delete after reboot
+               TCHAR oldFileName[MAX_PATH], suffix[32];
+               _sntprintf(suffix, 32, _T(".old.%u"), static_cast<uint32_t>(time(nullptr)));
+               _tcslcpy(oldFileName, m_fileName, MAX_PATH);
+               _tcslcat(oldFileName, suffix, MAX_PATH);
+               if (MoveFileEx(m_fileName, oldFileName, MOVEFILE_REPLACE_EXISTING))
+               {
+                  nxlog_debug(5, _T("DownloadFileInfo(%s): existing file renamed to %s"), m_fileName, oldFileName);
+                  MoveFileEx(oldFileName, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
+               }
+               else
+               {
+                  nxlog_debug(5, _T("DownloadFileInfo(%s): cannot move existing file (%s)"), m_fileName, GetSystemErrorText(e).cstr());
+               }
+            }
+         }
+      }
+#else
+      if (_tremove(m_fileName) != 0)
+      {
+         if (errno != ENOENT)
+            nxlog_debug(5, _T("DownloadFileInfo(%s): cannot delete existing file (%d: %s)"), m_fileName, errno, _tcserror(errno));
+      }
+#endif
       if (_trename(tempFileName, m_fileName) == 0)
       {
          if (m_fileModificationTime != 0)
             SetLastModificationTime(m_fileName, m_fileModificationTime);
+      }
+      else
+      {
+         nxlog_debug(5, _T("DownloadFileInfo(%s): cannot replace file (%d: %s)"), m_fileName, errno, _tcserror(errno));
       }
    }
    else if (deleteOnFailure)

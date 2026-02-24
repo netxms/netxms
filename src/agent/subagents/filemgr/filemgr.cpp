@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2025 Raden Solutions
+ ** Copyright (C) 2014-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -998,7 +998,10 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
 
       bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
       if (ValidateFileChangeOperation(fullPath, allowOverwirite, response))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("CH_Upload: validation successful, proceeding to receive file; path=%s"), fullPath);
          session->openFile(response, fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME), static_cast<FileTransferResumeMode>(request->getFieldAsUInt16(VID_RESUME_MODE)));
+      }
    }
    else
    {
