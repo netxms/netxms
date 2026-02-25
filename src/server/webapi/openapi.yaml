@@ -35,6 +35,8 @@ tags:
     description: User management
   - name: User Groups
     description: User group management
+  - name: Notification Channels
+    description: Notification channel and driver management
   - name: Two-Factor Authentication
     description: Two-factor authentication method management and user bindings
 paths:
@@ -2133,6 +2135,281 @@ paths:
         - BearerAuth: []
       tags:
         - Script Library
+  /v1/notification-channels:
+    get:
+      summary: List notification channels
+      description: Retrieve a list of all notification channels configured on the server.
+      responses:
+        '200':
+          description: Notification channels retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationChannel'
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+    post:
+      summary: Create a notification channel
+      description: Create a new notification channel with the specified driver and configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - driverName
+              properties:
+                name:
+                  type: string
+                  description: Unique channel name
+                description:
+                  type: string
+                  description: Channel description
+                driverName:
+                  type: string
+                  description: Notification driver name
+                configuration:
+                  type: string
+                  description: Driver-specific configuration (XML or NXSL script)
+      responses:
+        '201':
+          description: Notification channel created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannel'
+        '400':
+          description: Invalid or missing required fields
+        '403':
+          description: Access denied
+        '409':
+          description: Channel with this name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+  /v1/notification-channels/{channel-name}:
+    get:
+      summary: Get notification channel details
+      description: Retrieve details of a specific notification channel.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Channel name
+      responses:
+        '200':
+          description: Notification channel details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannel'
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+    put:
+      summary: Update a notification channel
+      description: Update an existing notification channel. Only provided fields are updated.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Channel name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Channel description
+                driverName:
+                  type: string
+                  description: Notification driver name
+                configuration:
+                  type: string
+                  description: Driver-specific configuration (XML or NXSL script)
+      responses:
+        '200':
+          description: Notification channel updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannel'
+        '400':
+          description: Invalid request
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+    delete:
+      summary: Delete a notification channel
+      description: Delete a notification channel. Fails if the channel is used in server actions.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Channel name
+      responses:
+        '204':
+          description: Notification channel deleted successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+        '409':
+          description: Channel is used in server actions
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+  /v1/notification-channels/{channel-name}/rename:
+    post:
+      summary: Rename a notification channel
+      description: Rename an existing notification channel. Also updates references in server actions.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Current channel name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newName
+              properties:
+                newName:
+                  type: string
+                  description: New channel name
+      responses:
+        '200':
+          description: Notification channel renamed successfully
+        '400':
+          description: Invalid or missing new name
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+        '409':
+          description: Channel with the new name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+  /v1/notification-channels/{channel-name}/clear-queue:
+    post:
+      summary: Clear notification channel queue
+      description: Clear all pending messages in the notification channel's queue.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Channel name
+      responses:
+        '204':
+          description: Queue cleared successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+  /v1/notification-channels/{channel-name}/send:
+    post:
+      summary: Send a notification
+      description: Send a test notification message through the specified channel.
+      parameters:
+        - name: channel-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Channel name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipient
+                - body
+              properties:
+                recipient:
+                  type: string
+                  description: Message recipient
+                subject:
+                  type: string
+                  description: Message subject
+                body:
+                  type: string
+                  description: Message body
+      responses:
+        '204':
+          description: Notification queued for sending
+        '400':
+          description: Invalid or missing required fields
+        '403':
+          description: Access denied
+        '404':
+          description: Notification channel not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
+  /v1/notification-drivers:
+    get:
+      summary: List notification drivers
+      description: Retrieve a list of all loaded notification channel driver names.
+      responses:
+        '200':
+          description: Notification drivers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Notification Channels
   /v1/server-actions:
     get:
       summary: List server actions
@@ -3419,6 +3696,51 @@ paths:
         - Two-Factor Authentication
 components:
   schemas:
+    NotificationChannel:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Channel name
+        description:
+          type: string
+          description: Channel description
+        driverName:
+          type: string
+          description: Notification driver name
+        configuration:
+          type: string
+          description: Driver-specific configuration
+        driverInitialized:
+          type: boolean
+          description: Whether the driver was initialized successfully
+        needSubject:
+          type: boolean
+          description: Whether the driver requires a subject field
+        needRecipient:
+          type: boolean
+          description: Whether the driver requires a recipient field
+        errorMessage:
+          type: string
+          description: Last error message
+        sendStatus:
+          type: integer
+          description: Last send status code
+        healthCheckStatus:
+          type: boolean
+          description: Health check status
+        lastMessageTime:
+          type: string
+          description: Timestamp of last sent message
+        messageCount:
+          type: integer
+          description: Total messages sent
+        failureCount:
+          type: integer
+          description: Total send failures
+        queueSize:
+          type: integer
+          description: Current message queue size
     Alarm:
       type: object
       properties:

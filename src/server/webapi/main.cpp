@@ -62,6 +62,15 @@ int H_Alarms(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
 int H_PerformanceViewDCIs(Context *context);
+int H_NotificationChannelClearQueue(Context *context);
+int H_NotificationChannelCreate(Context *context);
+int H_NotificationChannelDelete(Context *context);
+int H_NotificationChannelDetails(Context *context);
+int H_NotificationChannelRename(Context *context);
+int H_NotificationChannels(Context *context);
+int H_NotificationChannelSend(Context *context);
+int H_NotificationChannelUpdate(Context *context);
+int H_NotificationDrivers(Context *context);
 int H_GrafanaDciList(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
@@ -209,6 +218,27 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/find/mac-address")
       .GET(H_FindMacAddress)
+      .build();
+   RouteBuilder("v1/notification-channels")
+      .GET(H_NotificationChannels)
+      .POST(H_NotificationChannelCreate)
+      .build();
+   RouteBuilder("v1/notification-channels/:channel-name")
+      .GET(H_NotificationChannelDetails)
+      .PUT(H_NotificationChannelUpdate)
+      .DELETE(H_NotificationChannelDelete)
+      .build();
+   RouteBuilder("v1/notification-channels/:channel-name/clear-queue")
+      .POST(H_NotificationChannelClearQueue)
+      .build();
+   RouteBuilder("v1/notification-channels/:channel-name/rename")
+      .POST(H_NotificationChannelRename)
+      .build();
+   RouteBuilder("v1/notification-channels/:channel-name/send")
+      .POST(H_NotificationChannelSend)
+      .build();
+   RouteBuilder("v1/notification-drivers")
+      .GET(H_NotificationDrivers)
       .build();
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)

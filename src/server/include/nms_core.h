@@ -1444,6 +1444,8 @@ bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name);
 void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg);
 void NXCORE_EXPORTABLE GetNotificationChannels(Table *table);
 json_t NXCORE_EXPORTABLE *GetNotificationChannels(bool basicInfoOnly);
+json_t NXCORE_EXPORTABLE *GetNotificationChannelByName(const wchar_t *name);
+json_t NXCORE_EXPORTABLE *GetNotificationDriversAsJson();
 void NXCORE_EXPORTABLE GetNotificationDrivers(NXCPMessage *msg);
 char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name);
 bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name);

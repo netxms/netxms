@@ -1159,6 +1159,32 @@ void NXCORE_EXPORTABLE GetNotificationChannels(NXCPMessage *msg)
 }
 
 /**
+ * Get single notification channel as JSON by name
+ */
+json_t NXCORE_EXPORTABLE *GetNotificationChannelByName(const wchar_t *name)
+{
+   json_t *result = nullptr;
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   if (nc != nullptr)
+      result = nc->toJson();
+   s_channelListLock.unlock();
+   return result;
+}
+
+/**
+ * Get notification drivers as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetNotificationDriversAsJson()
+{
+   json_t *drivers = json_array();
+   StringList driverNames = s_driverList.keys();
+   for (int i = 0; i < driverNames.size(); i++)
+      json_array_append_new(drivers, json_string_t(driverNames.get(i)));
+   return drivers;
+}
+
+/**
  * Get notification channel list
  */
 json_t NXCORE_EXPORTABLE *GetNotificationChannels(bool basicInfoOnly)
