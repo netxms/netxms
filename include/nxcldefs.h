@@ -1357,7 +1357,8 @@ enum AggregationFunction
 #define CFG_IMPORT_REPLACE_LOGPARSER_MACROS           0x1000
 #define CFG_IMPORT_REPLACE_SYSLOG_PARSERS             0x2000
 #define CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS        0x4000
-#define CFG_IMPORT_REPLACE_EVERYTHING                 0x7FFF
+#define CFG_IMPORT_REPLACE_MAPPING_TABLES             0x8000
+#define CFG_IMPORT_REPLACE_EVERYTHING                 0xFFFF
 
 /**
 * Alarm category flags

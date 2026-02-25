@@ -2502,6 +2502,7 @@ CREATE TABLE licenses
 CREATE TABLE mapping_tables
 (
   id integer not null,
+  guid varchar(36) not null,
   name varchar(63) not null,
   flags integer not null,
   description varchar(4000) null,

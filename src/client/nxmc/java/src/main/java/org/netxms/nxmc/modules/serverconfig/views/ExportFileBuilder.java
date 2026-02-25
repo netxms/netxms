@@ -59,6 +59,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -90,6 +91,7 @@ import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserRule;
 import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
+import org.netxms.nxmc.modules.serverconfig.dialogs.MappingTableSelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.ObjectToolSelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SummaryTableSelectionDialog;
@@ -124,6 +126,7 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer ruleViewer;
    private TableViewer scriptViewer;
    private TableViewer summaryTableViewer;
+   private TableViewer mappingTableViewer;
 	private TableViewer templateViewer;
    private TableViewer toolsViewer;
 	private TableViewer trapViewer;
@@ -138,6 +141,7 @@ public class ExportFileBuilder extends ConfigurationView
    private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<>();
    private Map<Long, Script> scripts = new HashMap<Long, Script>();
    private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<>();
+   private Map<Integer, MappingTableDescriptor> mappingTables = new HashMap<>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
    private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
@@ -201,6 +205,7 @@ public class ExportFileBuilder extends ConfigurationView
       createSyslogSection();
       createWindowsEventLogSection();
 		createActions();
+      createMappingTablesSection();
 	}
 
 	/**
@@ -825,6 +830,94 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
    /**
+    * Create "Mapping Tables" section
+    */
+   private void createMappingTablesSection()
+   {
+      Section section = new Section(content, i18n.tr("Mapping Tables"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+
+      mappingTableViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      mappingTableViewer.getTable().setLayoutData(gd);
+      mappingTableViewer.setContentProvider(new ArrayContentProvider());
+      mappingTableViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((MappingTableDescriptor)element).getName();
+         }
+      });
+      mappingTableViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((MappingTableDescriptor)e1).getName().compareToIgnoreCase(((MappingTableDescriptor)e2).getName());
+         }
+      });
+      mappingTableViewer.getTable().setSortDirection(SWT.UP);
+
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addMappingTables();
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeObjects(mappingTableViewer, mappingTables);
+         }
+      });
+   }
+
+   /**
     * Create "Actions" section
     */
    private void createActionsSection()
@@ -1399,6 +1492,11 @@ public class ExportFileBuilder extends ConfigurationView
       for(LogParserRule r : windowsLogParsers.values())
          windowsEventList[i++] = r.getGuid();
 
+      final long[] mappingTableList = new long[mappingTables.size()];
+      i = 0;
+      for(MappingTableDescriptor t : mappingTables.values())
+         mappingTableList[i++] = t.getId();
+
       final String descriptionText = description.getText();
 
       new Job(i18n.tr("Exporting and saving configuration"), this) {
@@ -1406,7 +1504,7 @@ public class ExportFileBuilder extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final File json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
-                  assetAttributesList, syslogList, windowsEventList);
+                  assetAttributesList, syslogList, windowsEventList, mappingTableList);
             runInUIThread(() -> completionHandler.exportCompleted(json));
          }
 
@@ -1442,6 +1540,8 @@ public class ExportFileBuilder extends ConfigurationView
 	{
       if (o instanceof DciSummaryTableDescriptor)
          return ((DciSummaryTableDescriptor)o).getId();
+      if (o instanceof MappingTableDescriptor)
+         return ((MappingTableDescriptor)o).getId();
       if (o instanceof EventProcessingPolicyRule)
          return ((EventProcessingPolicyRule)o).getGuid();
       if (o instanceof EventTemplate)
@@ -1975,6 +2075,36 @@ public class ExportFileBuilder extends ConfigurationView
             }
          }.start();
       }
+   }
+
+   /**
+    * Add mapping tables to list
+    */
+   private void addMappingTables()
+   {
+      new Job(i18n.tr("Loading mapping tables"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<MappingTableDescriptor> tables = session.listMappingTables();
+            runInUIThread(() -> {
+               MappingTableSelectionDialog dlg = new MappingTableSelectionDialog(getWindow().getShell(), tables);
+               if (dlg.open() == Window.OK)
+               {
+                  for(MappingTableDescriptor t : dlg.getSelection())
+                     mappingTables.put(t.getId(), t);
+                  mappingTableViewer.setInput(mappingTables.values().toArray());
+                  setModified();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot load mapping tables");
+         }
+      }.start();
    }
 
    /**

@@ -283,6 +283,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_LOGPARSER_MACROS          = 0x1000;
    public static final int CFG_IMPORT_REPLACE_SYSLOG_PARSERS            = 0x2000;
    public static final int CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS       = 0x4000;
+   public static final int CFG_IMPORT_REPLACE_MAPPING_TABLES           = 0x8000;
 
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
@@ -10471,13 +10472,14 @@ public class NXCSession
     * @param assetAttributes List of asset management atributes to be exported
     * @param syslogList List of Syslog processing rule GUIDs
     * @param windowsEventList List of Windows Event Log processing rule GUIDs
+    * @param mappingTables List of mapping table identifiers
     * @return file with resulting XML document
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
-         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList) throws IOException, NXCException
+         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, long[] mappingTables) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -10498,6 +10500,8 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webServices.length);
       msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webServices);
       msg.setField(NXCPCodes.VID_ASSET_ATTRIBUTE_NAMES, assetAttributes);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_MAPPING_TABLES, mappingTables.length);
+      msg.setField(NXCPCodes.VID_MAPPING_TABLE_LIST, mappingTables);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;

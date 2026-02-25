@@ -56,19 +56,22 @@ class NXCORE_EXPORTABLE MappingTable
 {
 private:
 	uint32_t m_id;
+	uuid m_guid;
 	TCHAR *m_name;
 	uint32_t m_flags;
 	TCHAR *m_description;
 	StringObjectMap<MappingTableElement> m_data;
 
-	MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description);
+	MappingTable(int32_t id, const uuid& guid, TCHAR *name, uint32_t flags, TCHAR *description);
 
 public:
 	~MappingTable();
 
 	static MappingTable *createFromMessage(const NXCPMessage& msg);
 	static MappingTable *createFromDatabase(DB_HANDLE hdb, uint32_t id);
+	static MappingTable *createFromJson(json_t *json);
 
+   void updateFromJson(json_t *json);
    void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
 
    void fillMessage(NXCPMessage *msg) const;
@@ -83,6 +86,7 @@ public:
 	}
 
 	uint32_t getId() const { return m_id; }
+	const uuid& getGuid() const { return m_guid; }
 	const TCHAR *getName() const { return CHECK_NULL(m_name); }
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 	uint32_t getFlags() const { return m_flags; }
@@ -100,5 +104,7 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSessi
 uint32_t DeleteMappingTable(uint32_t id, ClientSession *session);
 uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg);
 uint32_t ListMappingTables(NXCPMessage *msg);
+void CreateMappingTableExportRecord(json_t *array, uint32_t id);
+bool ImportMappingTable(json_t *config, bool overwrite, ImportContext *context);
 
 #endif

@@ -18,13 +18,21 @@
  */
 package org.netxms.nxmc.modules.nxsl.views;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -42,6 +50,7 @@ import org.eclipse.nebula.widgets.grid.Grid;
 import org.eclipse.nebula.widgets.grid.GridColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
@@ -49,6 +58,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.views.helpers.NaturalOrderComparator;
@@ -57,6 +67,7 @@ import org.netxms.nxmc.modules.nxsl.views.helpers.MappingTableEntryLabelProvider
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -78,6 +89,8 @@ public class MappingTableEditorView extends ConfigurationView
 	private Action actionNewRow;
 	private Action actionDelete;
 	private Action actionSave;
+	private ExportToCsvAction actionExportCsv;
+	private Action actionImportCsv;
 
    /**
     * Create new mapping table editor view.
@@ -189,6 +202,18 @@ public class MappingTableEditorView extends ConfigurationView
 		};
 		actionSave.setEnabled(false);
       addKeyBinding("M1+S", actionSave);
+
+      actionExportCsv = new ExportToCsvAction(this, viewer, false);
+      actionExportCsv.setEnabled(false);
+
+      actionImportCsv = new Action(i18n.tr("&Import from CSV..."), SharedIcons.IMPORT) {
+         @Override
+         public void run()
+         {
+            importFromCsv();
+         }
+      };
+      actionImportCsv.setEnabled(false);
 	}
 
    /**
@@ -199,6 +224,9 @@ public class MappingTableEditorView extends ConfigurationView
 	{
 		manager.add(actionNewRow);
 		manager.add(actionSave);
+		manager.add(new Separator());
+		manager.add(actionExportCsv);
+		manager.add(actionImportCsv);
 	}
 
    /**
@@ -209,6 +237,9 @@ public class MappingTableEditorView extends ConfigurationView
 	{
 		manager.add(actionNewRow);
 		manager.add(actionSave);
+		manager.add(new Separator());
+		manager.add(actionExportCsv);
+		manager.add(actionImportCsv);
 	}
 
 	/**
@@ -239,6 +270,9 @@ public class MappingTableEditorView extends ConfigurationView
 	{
 		manager.add(actionNewRow);
 		manager.add(actionDelete);
+		manager.add(new Separator());
+		manager.add(actionExportCsv);
+		manager.add(actionImportCsv);
 	}
 
    /**
@@ -321,6 +355,8 @@ public class MappingTableEditorView extends ConfigurationView
 						mappingTable = t;
                   viewer.setInput(mappingTable.getData());
 						actionNewRow.setEnabled(true);
+						actionExportCsv.setEnabled(true);
+						actionImportCsv.setEnabled(true);
 						setModified(false);
 					}
 				});
@@ -376,6 +412,154 @@ public class MappingTableEditorView extends ConfigurationView
       viewer.refresh();
 		setModified(true);
 	}
+
+   /**
+    * Import mapping table data from CSV file
+    */
+   private void importFromCsv()
+   {
+      if (mappingTable == null)
+         return;
+
+      FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.OPEN);
+      WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.csv", "*.*" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { i18n.tr("CSV files"), i18n.tr("All files") });
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+
+      try
+      {
+         List<MappingTableEntry> entries = parseCsvFile(new File(fileName));
+         if (entries.isEmpty())
+         {
+            MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Import"), i18n.tr("CSV file contains no data rows"));
+            return;
+         }
+
+         boolean replace = MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Import CSV"),
+               i18n.tr("Do you want to replace all existing entries? Click \"No\" to append imported entries to existing data."));
+
+         if (replace)
+         {
+            mappingTable.getData().clear();
+         }
+         else
+         {
+            // Remove pseudo-entry before appending
+            if (!mappingTable.getData().isEmpty())
+            {
+               MappingTableEntry last = mappingTable.getData().get(mappingTable.getData().size() - 1);
+               if (last.getKey() == null && last.getValue() == null && last.getDescription() == null)
+                  mappingTable.getData().remove(mappingTable.getData().size() - 1);
+            }
+         }
+
+         mappingTable.getData().addAll(entries);
+         mappingTable.getData().add(new MappingTableEntry(null, null, null)); // Add pseudo-entry at end
+         viewer.setInput(mappingTable.getData());
+         viewer.refresh();
+         setModified(true);
+      }
+      catch(Exception e)
+      {
+         MessageDialogHelper.openError(getWindow().getShell(), i18n.tr("Error"), i18n.tr("Cannot import CSV: {0}", e.getLocalizedMessage()));
+      }
+   }
+
+   /**
+    * Parse a CSV file into mapping table entries
+    */
+   private static List<MappingTableEntry> parseCsvFile(File file) throws Exception
+   {
+      List<MappingTableEntry> entries = new ArrayList<>();
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)))
+      {
+         // Skip BOM if present
+         reader.mark(1);
+         int firstChar = reader.read();
+         if (firstChar != '\ufeff' && firstChar != -1)
+            reader.reset();
+
+         String line;
+         boolean firstLine = true;
+         while((line = reader.readLine()) != null)
+         {
+            if (line.trim().isEmpty())
+               continue;
+
+            String[] fields = parseCsvLine(line);
+            if (fields.length < 2)
+               continue;
+
+            // Skip header line
+            if (firstLine)
+            {
+               firstLine = false;
+               if (fields[0].equalsIgnoreCase("Key") && fields[1].equalsIgnoreCase("Value"))
+                  continue;
+            }
+
+            String key = fields[0];
+            String value = fields.length > 1 ? fields[1] : "";
+            String description = fields.length > 2 ? fields[2] : "";
+            entries.add(new MappingTableEntry(key, value, description));
+         }
+      }
+      return entries;
+   }
+
+   /**
+    * Parse a single CSV line respecting RFC 4180 quoting
+    */
+   private static String[] parseCsvLine(String line)
+   {
+      List<String> fields = new ArrayList<>();
+      StringBuilder current = new StringBuilder();
+      boolean inQuotes = false;
+
+      for(int i = 0; i < line.length(); i++)
+      {
+         char c = line.charAt(i);
+         if (inQuotes)
+         {
+            if (c == '"')
+            {
+               if (i + 1 < line.length() && line.charAt(i + 1) == '"')
+               {
+                  current.append('"');
+                  i++; // Skip escaped quote
+               }
+               else
+               {
+                  inQuotes = false;
+               }
+            }
+            else
+            {
+               current.append(c);
+            }
+         }
+         else
+         {
+            if (c == '"')
+            {
+               inQuotes = true;
+            }
+            else if (c == ',')
+            {
+               fields.add(current.toString());
+               current.setLength(0);
+            }
+            else
+            {
+               current.append(c);
+            }
+         }
+      }
+      fields.add(current.toString());
+      return fields.toArray(new String[0]);
+   }
 
    /**
     * Cell modifier class

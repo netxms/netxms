@@ -25,6 +25,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.nebula.jface.gridviewer.GridTableViewer;
+import org.eclipse.nebula.widgets.grid.GridColumn;
+import org.eclipse.nebula.widgets.grid.GridItem;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -136,6 +139,32 @@ public abstract class TableRowAction extends Action
 
          TableItem[] selection = selectionOnly ? ((TableViewer)viewer).getTable().getSelection() : ((TableViewer)viewer).getTable().getItems();
          for(TableItem item : selection)
+         {
+            String[] row = new String[numColumns];
+            for(int i = 0; i < numColumns; i++)
+               row[i] = item.getText(i);
+            data.add(row);
+         }
+      }
+      else if (viewer instanceof GridTableViewer)
+      {
+         int numColumns = ((GridTableViewer)viewer).getGrid().getColumnCount();
+         if (numColumns == 0)
+            numColumns = 1;
+
+         if (withHeader)
+         {
+            GridColumn[] columns = ((GridTableViewer)viewer).getGrid().getColumns();
+            String[] headerRow = new String[numColumns];
+            for(int i = 0; i < numColumns; i++)
+            {
+               headerRow[i] = columns[i].getText();
+            }
+            data.add(headerRow);
+         }
+
+         GridItem[] selection = selectionOnly ? ((GridTableViewer)viewer).getGrid().getSelection() : ((GridTableViewer)viewer).getGrid().getItems();
+         for(GridItem item : selection)
          {
             String[] row = new String[numColumns];
             for(int i = 0; i < numColumns; i++)

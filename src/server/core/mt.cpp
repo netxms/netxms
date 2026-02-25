@@ -31,7 +31,11 @@
  */
 MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 {
+	uuid guid = msg.getFieldAsGUID(VID_GUID);
+	if (guid.isNull())
+	   guid = uuid::generate();
 	MappingTable *mt = new MappingTable(msg.getFieldAsInt32(VID_MAPPING_TABLE_ID),
+	                                    guid,
 	                                    msg.getFieldAsString(VID_NAME),
 													msg.getFieldAsUInt32(VID_FLAGS),
 													msg.getFieldAsString(VID_DESCRIPTION));
@@ -63,7 +67,7 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, uint32_t id)
 {
 	MappingTable *mt = nullptr;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,flags,description FROM mapping_tables WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,flags,description,guid FROM mapping_tables WHERE id=?"));
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -72,7 +76,8 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, uint32_t id)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
-				mt = new MappingTable(id, 
+					mt = new MappingTable(id,
+					DBGetFieldGUID(hResult, 0, 3),
 					DBGetField(hResult, 0, 0, nullptr, 0),		// name
 					DBGetFieldULong(hResult, 0, 1),			// flags
 					DBGetField(hResult, 0, 2, nullptr, 0));	// description
@@ -115,9 +120,10 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, uint32_t id)
 /**
  * Internal constructor
  */
-MappingTable::MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description) : m_data(Ownership::True)
+MappingTable::MappingTable(int32_t id, const uuid& guid, TCHAR *name, uint32_t flags, TCHAR *description) : m_data(Ownership::True)
 {
 	m_id = id;
+	m_guid = guid;
 	m_name = name;
 	m_flags = flags;
 	m_description = description;
@@ -141,6 +147,7 @@ void MappingTable::fillMessage(NXCPMessage *msg) const
 	msg->setField(VID_NAME, CHECK_NULL_EX(m_name));
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->setField(VID_GUID, m_guid);
 
 	msg->setField(VID_NUM_ELEMENTS, m_data.size());
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -171,11 +178,11 @@ bool MappingTable::saveToDatabase() const
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), static_cast<uint32_t>(m_id)))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE mapping_tables SET name=?,flags=?,description=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE mapping_tables SET name=?,flags=?,description=?,guid=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO mapping_tables (name,flags,description,id) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO mapping_tables (name,flags,description,guid,id) VALUES (?,?,?,?,?)"));
 	}
 	if (hStmt == nullptr)
 		goto failure2;
@@ -183,7 +190,8 @@ bool MappingTable::saveToDatabase() const
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
 
 	if (!DBExecute(hStmt))
 		goto failure;
@@ -256,6 +264,7 @@ json_t *MappingTable::toJson() const
 {
    json_t *root = json_object();
 
+   json_object_set_new(root, "guid", json_string_t(m_guid.toString()));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "flags", json_integer(m_flags));
@@ -289,6 +298,57 @@ NXSL_Value *MappingTable::getKeysForNXSL(NXSL_VM *vm) const
          return _CONTINUE;
       });
    return vm->createValue(keys);
+}
+
+/**
+ * Create mapping table object from JSON
+ */
+MappingTable *MappingTable::createFromJson(json_t *json)
+{
+   uuid guid = json_object_get_uuid(json, "guid");
+   if (guid.isNull())
+      guid = uuid::generate();
+
+   MappingTable *mt = new MappingTable(0, guid, MemCopyString(_T("")), 0, MemCopyString(_T("")));
+   mt->updateFromJson(json);
+   return mt;
+}
+
+/**
+ * Update mapping table from JSON (keeps existing ID and GUID)
+ */
+void MappingTable::updateFromJson(json_t *json)
+{
+   MemFree(m_name);
+   MemFree(m_description);
+   m_name = json_object_get_string_t(json, "name", _T(""));
+   m_description = json_object_get_string_t(json, "description", _T(""));
+   m_flags = json_object_get_uint32(json, "flags");
+   m_data.clear();
+
+   json_t *elements = json_object_get(json, "elements");
+   if (json_is_array(elements))
+   {
+      size_t index;
+      json_t *element;
+      json_array_foreach(elements, index, element)
+      {
+         if (json_is_object(element))
+         {
+            TCHAR key[64];
+            String keyStr = json_object_get_string(element, "key", _T(""));
+            _tcslcpy(key, keyStr, 64);
+            if (m_flags & MTF_NUMERIC_KEYS)
+            {
+               int32_t n = _tcstol(key, nullptr, 0);
+               _sntprintf(key, 64, _T("%ld"), n);
+            }
+            TCHAR *value = json_object_get_string_t(element, "value", _T(""));
+            TCHAR *desc = json_object_get_string_t(element, "description", _T(""));
+            m_data.set(key, new MappingTableElement(value, desc));
+         }
+      }
+   }
 }
 
 /**
@@ -493,7 +553,8 @@ uint32_t ListMappingTables(NXCPMessage *msg)
 		msg->setField(fieldId++, mt->getName());
 		msg->setField(fieldId++, mt->getDescription());
 		msg->setField(fieldId++, mt->getFlags());
-		fieldId += 6;
+		msg->setField(fieldId++, mt->getGuid());
+		fieldId += 5;
 	}
 	s_mappingTablesLock.unlock();
 	return RCC_SUCCESS;
@@ -618,4 +679,116 @@ int F_GetMappingTableKeys(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    s_mappingTablesLock.unlock();
 
    return 0;
+}
+
+/**
+ * Create mapping table export record
+ */
+void CreateMappingTableExportRecord(json_t *array, uint32_t id)
+{
+   s_mappingTablesLock.readLock();
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      if (s_mappingTables.get(i)->getId() == id)
+      {
+         json_array_append_new(array, s_mappingTables.get(i)->toJson());
+         break;
+      }
+   }
+   s_mappingTablesLock.unlock();
+}
+
+/**
+ * Import mapping table from JSON
+ */
+bool ImportMappingTable(json_t *config, bool overwrite, ImportContext *context)
+{
+   uuid guid = json_object_get_uuid(config, "guid");
+   if (guid.isNull())
+   {
+      context->log(NXLOG_ERROR, _T("ImportMappingTable()"), _T("Missing mapping table GUID"));
+      return false;
+   }
+
+   String name = json_object_get_string(config, "name", _T("<unnamed>"));
+
+   // Check if mapping table with same GUID or name already exists
+   s_mappingTablesLock.writeLock();
+   MappingTable *existing = nullptr;
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      MappingTable *mt = s_mappingTables.get(i);
+      if (mt->getGuid().equals(guid))
+      {
+         existing = mt;
+         break;
+      }
+   }
+   if (existing == nullptr)
+   {
+      for(int i = 0; i < s_mappingTables.size(); i++)
+      {
+         MappingTable *mt = s_mappingTables.get(i);
+         if (!_tcsicmp(mt->getName(), name))
+         {
+            existing = mt;
+            break;
+         }
+      }
+   }
+
+   if (existing != nullptr)
+   {
+      if (!overwrite)
+      {
+         s_mappingTablesLock.unlock();
+         TCHAR guidStr[64];
+         guid.toString(guidStr);
+         context->log(NXLOG_INFO, _T("ImportMappingTable()"), _T("Mapping table \"%s\" with GUID %s already exists (skipping)"), name.cstr(), guidStr);
+         return true;
+      }
+
+      existing->updateFromJson(config);
+      if (existing->saveToDatabase())
+      {
+         uint32_t id = existing->getId();
+         s_mappingTablesLock.unlock();
+
+         std::pair<uint32_t, uint32_t> notifyContext(NX_NOTIFY_MAPTBL_CHANGED, id);
+         EnumerateClientSessions(NotifyClients, &notifyContext);
+
+         context->log(NXLOG_INFO, _T("ImportMappingTable()"), _T("Mapping table \"%s\" updated"), name.cstr());
+         return true;
+      }
+      else
+      {
+         s_mappingTablesLock.unlock();
+         context->log(NXLOG_ERROR, _T("ImportMappingTable()"), _T("Failed to save mapping table \"%s\" to database"), name.cstr());
+         return false;
+      }
+   }
+   else
+   {
+      MappingTable *mt = MappingTable::createFromJson(config);
+      mt->createUniqueId();
+      if (mt->saveToDatabase())
+      {
+         s_mappingTables.add(mt);
+         uint32_t id = mt->getId();
+         s_mappingTablesLock.unlock();
+
+         std::pair<uint32_t, uint32_t> notifyContext(NX_NOTIFY_MAPTBL_CHANGED, id);
+         EnumerateClientSessions(NotifyClients, &notifyContext);
+
+         context->log(NXLOG_INFO, _T("ImportMappingTable()"), _T("Mapping table \"%s\" imported"), name.cstr());
+         return true;
+      }
+      else
+      {
+         delete mt;
+         s_mappingTablesLock.unlock();
+         context->log(NXLOG_ERROR, _T("ImportMappingTable()"), _T("Failed to save mapping table \"%s\" to database"), name.cstr());
+         return false;
+      }
+   }
 }

@@ -24,6 +24,36 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.6 to 61.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE mapping_tables ADD guid varchar(36)"));
+
+   DB_RESULT hResult = SQLSelect(L"SELECT id FROM mapping_tables");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uuid guid = uuid::generate();
+         wchar_t query[256];
+         _sntprintf(query, 256, L"UPDATE mapping_tables SET guid='%s' WHERE id=%d", guid.toString().cstr(), DBGetFieldInt32(hResult, i, 0));
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"mapping_tables", L"guid"));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 61.5 to 61.6
  */
 static bool H_UpgradeFromV5()
@@ -175,6 +205,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  61,  7,  H_UpgradeFromV6 },
    { 5,  61,  6,  H_UpgradeFromV5 },
    { 4,  61,  5,  H_UpgradeFromV4 },
    { 3,  61,  4,  H_UpgradeFromV3 },

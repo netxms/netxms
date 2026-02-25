@@ -139,6 +139,7 @@ public class ImportConfiguration extends ConfigurationView
       addOptionCheckBox(i18n.tr("Replace S&NMP traps"), NXCSession.CFG_IMPORT_REPLACE_TRAPS);
       addOptionCheckBox(i18n.tr("Replace &templates"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATES);
       addOptionCheckBox(i18n.tr("Replace template names and &locations"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS);
+      addOptionCheckBox(i18n.tr("Replace &mapping tables"), NXCSession.CFG_IMPORT_REPLACE_MAPPING_TABLES);
       addOptionCheckBox(i18n.tr("Replace &web service definitions"), NXCSession.CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS);
       addOptionCheckBox(i18n.tr("Replace logparser &macro definitions"), NXCSession.CFG_IMPORT_REPLACE_LOGPARSER_MACROS);
       addOptionCheckBox(i18n.tr("Replace syslog parser definitons"), NXCSession.CFG_IMPORT_REPLACE_SYSLOG_PARSERS);

@@ -11321,6 +11321,18 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             MemFree(idList);
             json_object_set_new(root, "dciSummaryTables", dciSummaryTables);
 
+            // Export mapping tables
+            json_t *mappingTables = json_array();
+            count = request.getFieldAsUInt32(VID_NUM_MAPPING_TABLES);
+            idList = MemAllocArray<uint32_t>(count);
+            request.getFieldAsInt32Array(VID_MAPPING_TABLE_LIST, count, idList);
+            for(uint32_t i = 0; i < count; i++)
+            {
+               CreateMappingTableExportRecord(mappingTables, idList[i]);
+            }
+            MemFree(idList);
+            json_object_set_new(root, "mappingTables", mappingTables);
+
             // Export actions
             json_t *actions = json_array();
             count = request.getFieldAsUInt32(VID_NUM_ACTIONS);

@@ -1499,6 +1499,8 @@ public class NXCPCodes
    public static final long VID_LINKED_NODE_ID = 964;
    public static final long VID_CONNECTOR_DATA = 965;
    public static final long VID_NUM_TAGS = 966;
+   public static final long VID_NUM_MAPPING_TABLES = 967;
+   public static final long VID_MAPPING_TABLE_LIST = 968;
 
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;

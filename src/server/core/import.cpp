@@ -24,6 +24,7 @@
 #include "nxcore.h"
 #include <nxcore_websvc.h>
 #include <asset_management.h>
+#include <netxms_mt.h>
 #include <jansson/jansson.h>
 #include <netxms-xml.h>
 
@@ -1127,7 +1128,7 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfigFromJson() called, flags=0x%04X"), flags);
 
    uint32_t rcc = RCC_SUCCESS;
-   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *webServices, *assets, *syslog, *winlog;
+   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *mappingTables, *webServices, *assets, *syslog, *winlog;
    
    // Import events
    events = json_object_get(root, "events");
@@ -1212,6 +1213,28 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
          }
       }
       context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("DCI summary tables import completed"));
+   }
+
+   // Import mapping tables
+   mappingTables = json_object_get(root, "mappingTables");
+   if (json_is_array(mappingTables))
+   {
+      size_t count = json_array_size(mappingTables);
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d mapping tables to import"), (int)count);
+
+      size_t index;
+      json_t *table;
+      json_array_foreach(mappingTables, index, table)
+      {
+         if (json_is_object(table))
+         {
+            if (!ImportMappingTable(table, (flags & CFG_IMPORT_REPLACE_MAPPING_TABLES) != 0, context))
+            {
+               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import mapping table"));
+            }
+         }
+      }
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Mapping tables import completed"));
    }
 
    // Import web service definitions
