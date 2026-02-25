@@ -16431,7 +16431,7 @@ void ClientSession::addNotificationChannel(const NXCPMessage& request)
                TCHAR description[MAX_NC_DESCRIPTION];
                request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
                char *configuration = request.getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
-               CreateNotificationChannelAndSave(name, description, driverName, configuration);
+               CreateNotificationChannel(name, description, driverName, configuration);
                response.setField(VID_RCC, RCC_SUCCESS);
                NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);

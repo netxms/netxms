@@ -1449,10 +1449,10 @@ json_t NXCORE_EXPORTABLE *GetNotificationDriversAsJson();
 void NXCORE_EXPORTABLE GetNotificationDrivers(NXCPMessage *msg);
 char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name);
 bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name);
-void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
-void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
-void RenameNotificationChannel(TCHAR *name, TCHAR *newName);
-bool DeleteNotificationChannel(const TCHAR *name);
+void NXCORE_EXPORTABLE CreateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
+void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
+void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName);
+bool NXCORE_EXPORTABLE DeleteNotificationChannel(const wchar_t *name);
 
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 

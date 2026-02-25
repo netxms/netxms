@@ -3495,6 +3495,10 @@ public:
    virtual json_t *toJson() override;
 };
 
+#ifdef _WIN32
+template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<CloudDomain>;
+#endif
+
 /**
  * Resource class
  */

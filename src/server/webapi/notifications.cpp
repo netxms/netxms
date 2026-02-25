@@ -109,7 +109,7 @@ int H_NotificationChannelCreate(Context *context)
    json_t *jsonConfig = json_object_get(request, "configuration");
    char *configuration = json_is_string(jsonConfig) ? MemCopyStringA(json_string_value(jsonConfig)) : MemCopyStringA("");
 
-   CreateNotificationChannelAndSave(name, description, driverName, configuration);
+   CreateNotificationChannel(name, description, driverName, configuration);
    NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Notification channel \"%s\" created via REST API", name);
 

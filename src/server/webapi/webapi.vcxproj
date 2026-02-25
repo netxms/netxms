@@ -336,6 +336,7 @@
     <ClCompile Include="grafana.cpp" />
     <ClCompile Include="info.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="notifications.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="scripts.cpp" />

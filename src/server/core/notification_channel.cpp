@@ -897,7 +897,7 @@ void NotificationChannel::getStatus(NotificationChannelStatus *status)
 /**
  * Delete method called in separate thread
  */
-static void DeleteNotificationChannelInternal(TCHAR *name)
+static void DeleteNotificationChannelInternal(wchar_t *name)
 {
    s_channelListLock.lock();
    shared_ptr<NotificationChannel> nc = s_channelList.unlink(name);
@@ -925,7 +925,7 @@ static void DeleteNotificationChannelInternal(TCHAR *name)
 /**
  * Delete notification channel
  */
-bool DeleteNotificationChannel(const TCHAR *name)
+bool DeleteNotificationChannel(const wchar_t *name)
 {
    s_channelListLock.lock();
    bool contains = s_channelList.contains(name);
@@ -951,7 +951,7 @@ bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name)
 /**
  * Create new notification channel
  */
-static shared_ptr<NotificationChannel> CreateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
+static shared_ptr<NotificationChannel> CreateNotificationChannelObject(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration)
 {
    NCDriverDescriptor *dd = s_driverList.get(driverName);
    NCDriver *driver = nullptr;
@@ -1043,11 +1043,11 @@ static shared_ptr<NotificationChannel> CreateNotificationChannel(const TCHAR *na
 }
 
 /**
- * Create notification channel and save
+ * Create notification channel
  */
-void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
+void NXCORE_EXPORTABLE CreateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration)
 {
-   shared_ptr<NotificationChannel> nc = CreateNotificationChannel(name, description, driverName, configuration);
+   shared_ptr<NotificationChannel> nc = CreateNotificationChannelObject(name, description, driverName, configuration);
    s_channelListLock.lock();
    s_channelList.set(name, nc);
    nc->saveToDatabase();
@@ -1057,7 +1057,7 @@ void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *descriptio
 /**
  * Update new notification channel
  */
-void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
+void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration)
 {
    s_channelListLock.lock();
    shared_ptr<NotificationChannel> nc = s_channelList.getShared(name);
@@ -1071,7 +1071,7 @@ void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, cons
  * first - old name
  * second - new name
  */
-static void RenameNotificationChannelInDB(std::pair<TCHAR*, TCHAR*> *names)
+static void RenameNotificationChannelInDB(std::pair<wchar_t*, wchar_t*> *names)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = false;
@@ -1120,7 +1120,7 @@ static void RenameNotificationChannelInDB(std::pair<TCHAR*, TCHAR*> *names)
 /**
  * Rename notification channel
  */
-void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
+void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName)
 {
    s_channelListLock.lock();
    shared_ptr<NotificationChannel> nc = s_channelList.unlink(name);
@@ -1128,7 +1128,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
    {
       nc->updateName(newName);
       s_channelList.set(newName, nc);
-      auto pair = new std::pair<TCHAR*, TCHAR*>(name, newName);
+      auto pair = new std::pair<wchar_t*, wchar_t*>(name, newName);
       UpdateChannelNameInActions(pair);
       ThreadPoolExecuteSerialized(g_mainThreadPool, NC_THREAD_KEY, RenameNotificationChannelInDB, pair);
    }
@@ -1540,7 +1540,7 @@ void LoadNotificationChannels()
          DBGetField(hResult, i, 1, driverName, MAX_OBJECT_NAME);
          DBGetField(hResult, i, 2, description, MAX_NC_DESCRIPTION);
          char *configuration = DBGetFieldA(hResult, i, 3, nullptr, 0);
-         shared_ptr<NotificationChannel> nc = CreateNotificationChannel(name, description, driverName, configuration);
+         shared_ptr<NotificationChannel> nc = CreateNotificationChannelObject(name, description, driverName, configuration);
          s_channelListLock.lock();
          s_channelList.set(name, nc);
          s_channelListLock.unlock();
