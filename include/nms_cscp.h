@@ -1672,13 +1672,13 @@ typedef struct
 #define VID_CONNECTOR_NAME          ((uint32_t)946)
 #define VID_ACCOUNT_ID              ((uint32_t)947)
 #define VID_CLOUD_CREDENTIALS       ((uint32_t)948)
-#define VID_DISCOVERY_SCHEDULE      ((uint32_t)949)
+// #define VID_DISCOVERY_SCHEDULE      ((uint32_t)949)  -- removed, ID reserved
 #define VID_DISCOVERY_FILTER        ((uint32_t)950)
 #define VID_REMOVAL_POLICY          ((uint32_t)951)
 #define VID_GRACE_PERIOD            ((uint32_t)952)
-#define VID_DEFAULT_POLL_INTERVAL   ((uint32_t)953)
-#define VID_AUTO_DISCOVER_CHILDREN  ((uint32_t)954)
-#define VID_AUTO_PROVISION_DCI      ((uint32_t)955)
+// #define VID_DEFAULT_POLL_INTERVAL   ((uint32_t)953)  -- removed, ID reserved
+// #define VID_AUTO_DISCOVER_CHILDREN  ((uint32_t)954)  -- removed, ID reserved
+// #define VID_AUTO_PROVISION_DCI      ((uint32_t)955)  -- removed, ID reserved
 #define VID_LAST_DISCOVERY_STATUS   ((uint32_t)956)
 #define VID_LAST_DISCOVERY_TIME     ((uint32_t)957)
 #define VID_LAST_DISCOVERY_MESSAGE  ((uint32_t)958)

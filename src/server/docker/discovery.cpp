@@ -146,12 +146,6 @@ static ResourceDescriptor *DiscoverContainers(DockerClient *client)
          }
       }
 
-      // Metric hints
-      rd->metricHints = new StringList();
-      rd->metricHints->add(L"cpu_percent");
-      rd->metricHints->add(L"memory_usage");
-      rd->metricHints->add(L"memory_percent");
-
       // Append to linked list
       if (tail != nullptr)
          tail->next = rd;

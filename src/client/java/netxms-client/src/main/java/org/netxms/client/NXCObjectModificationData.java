@@ -204,13 +204,9 @@ public class NXCObjectModificationData
    private String dashboardNameTemplate;
    private String connectorName;
    private String credentials;
-   private String discoverySchedule;
    private String discoveryFilter;
    private Integer removalPolicy;
    private Integer gracePeriod;
-   private Integer defaultPollingInterval;
-   private Boolean autoDiscoverChildren;
-   private Boolean autoProvisionDCI;
    private Long cloudLinkedNodeId;
 
    /**
@@ -2598,22 +2594,6 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the discoverySchedule
-    */
-   public String getDiscoverySchedule()
-   {
-      return discoverySchedule;
-   }
-
-   /**
-    * @param discoverySchedule the discoverySchedule to set
-    */
-   public void setDiscoverySchedule(String discoverySchedule)
-   {
-      this.discoverySchedule = discoverySchedule;
-   }
-
-   /**
     * @return the discoveryFilter
     */
    public String getDiscoveryFilter()
@@ -2659,54 +2639,6 @@ public class NXCObjectModificationData
    public void setGracePeriod(int gracePeriod)
    {
       this.gracePeriod = gracePeriod;
-   }
-
-   /**
-    * @return the defaultPollingInterval
-    */
-   public Integer getDefaultPollingInterval()
-   {
-      return defaultPollingInterval;
-   }
-
-   /**
-    * @param defaultPollingInterval the defaultPollingInterval to set
-    */
-   public void setDefaultPollingInterval(int defaultPollingInterval)
-   {
-      this.defaultPollingInterval = defaultPollingInterval;
-   }
-
-   /**
-    * @return the autoDiscoverChildren
-    */
-   public Boolean getAutoDiscoverChildren()
-   {
-      return autoDiscoverChildren;
-   }
-
-   /**
-    * @param autoDiscoverChildren the autoDiscoverChildren to set
-    */
-   public void setAutoDiscoverChildren(boolean autoDiscoverChildren)
-   {
-      this.autoDiscoverChildren = autoDiscoverChildren;
-   }
-
-   /**
-    * @return the autoProvisionDCI
-    */
-   public Boolean getAutoProvisionDCI()
-   {
-      return autoProvisionDCI;
-   }
-
-   /**
-    * @param autoProvisionDCI the autoProvisionDCI to set
-    */
-   public void setAutoProvisionDCI(boolean autoProvisionDCI)
-   {
-      this.autoProvisionDCI = autoProvisionDCI;
    }
 
    /**

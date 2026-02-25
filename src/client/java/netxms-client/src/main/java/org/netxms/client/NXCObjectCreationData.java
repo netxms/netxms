@@ -112,13 +112,9 @@ public class NXCObjectCreationData
    private Map<String, String> assetProperties;
    private String connectorName;
    private String credentials;
-   private String discoverySchedule;
    private String discoveryFilter;
    private int removalPolicy;
    private int gracePeriod;
-   private int defaultPollingInterval;
-   private boolean autoDiscoverChildren;
-   private boolean autoProvisionDCI;
 
 	/**
 	 * Constructor.
@@ -192,13 +188,9 @@ public class NXCObjectCreationData
 	   webServiceProxyId = 0;
       connectorName = "";
       credentials = "";
-      discoverySchedule = "";
       discoveryFilter = "";
       removalPolicy = 0;
       gracePeriod = 0;
-      defaultPollingInterval = 0;
-      autoDiscoverChildren = false;
-      autoProvisionDCI = false;
 	}
 	
 	/**
@@ -288,20 +280,12 @@ public class NXCObjectCreationData
          connectorName = data.getConnectorName();
       if (data.getCredentials() != null)
          credentials = data.getCredentials();
-      if (data.getDiscoverySchedule() != null)
-         discoverySchedule = data.getDiscoverySchedule();
       if (data.getDiscoveryFilter() != null)
          discoveryFilter = data.getDiscoveryFilter();
       if (data.getRemovalPolicy() != null)
          removalPolicy = data.getRemovalPolicy();
       if (data.getGracePeriod() != null)
          gracePeriod = data.getGracePeriod();
-      if (data.getDefaultPollingInterval() != null)
-         defaultPollingInterval = data.getDefaultPollingInterval();
-      if (data.getAutoDiscoverChildren() != null)
-         autoDiscoverChildren = data.getAutoDiscoverChildren();
-      if (data.getAutoProvisionDCI() != null)
-         autoProvisionDCI = data.getAutoProvisionDCI();
 	}
 
 	/**
@@ -1306,22 +1290,6 @@ public class NXCObjectCreationData
    }
 
    /**
-    * @return the discoverySchedule
-    */
-   public String getDiscoverySchedule()
-   {
-      return discoverySchedule;
-   }
-
-   /**
-    * @param discoverySchedule the discoverySchedule to set
-    */
-   public void setDiscoverySchedule(String discoverySchedule)
-   {
-      this.discoverySchedule = discoverySchedule;
-   }
-
-   /**
     * @return the discoveryFilter
     */
    public String getDiscoveryFilter()
@@ -1370,54 +1338,6 @@ public class NXCObjectCreationData
    }
 
    /**
-    * @return the defaultPollingInterval
-    */
-   public int getDefaultPollingInterval()
-   {
-      return defaultPollingInterval;
-   }
-
-   /**
-    * @param defaultPollingInterval the defaultPollingInterval to set
-    */
-   public void setDefaultPollingInterval(int defaultPollingInterval)
-   {
-      this.defaultPollingInterval = defaultPollingInterval;
-   }
-
-   /**
-    * @return the autoDiscoverChildren
-    */
-   public boolean isAutoDiscoverChildren()
-   {
-      return autoDiscoverChildren;
-   }
-
-   /**
-    * @param autoDiscoverChildren the autoDiscoverChildren to set
-    */
-   public void setAutoDiscoverChildren(boolean autoDiscoverChildren)
-   {
-      this.autoDiscoverChildren = autoDiscoverChildren;
-   }
-
-   /**
-    * @return the autoProvisionDCI
-    */
-   public boolean isAutoProvisionDCI()
-   {
-      return autoProvisionDCI;
-   }
-
-   /**
-    * @param autoProvisionDCI the autoProvisionDCI to set
-    */
-   public void setAutoProvisionDCI(boolean autoProvisionDCI)
-   {
-      this.autoProvisionDCI = autoProvisionDCI;
-   }
-
-   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1433,8 +1353,7 @@ public class NXCObjectCreationData
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
             gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties +
-            ", connectorName=" + connectorName + ", credentials=" + credentials + ", discoverySchedule=" + discoverySchedule +
-            ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", defaultPollingInterval=" + defaultPollingInterval +
-            ", autoDiscoverChildren=" + autoDiscoverChildren + ", autoProvisionDCI=" + autoProvisionDCI + "]";
+            ", connectorName=" + connectorName + ", credentials=" + credentials +
+            ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + "]";
    }
 }

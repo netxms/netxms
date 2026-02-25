@@ -6398,21 +6398,9 @@ NXSL_Value *NXSL_CloudDomainClass::getAttr(NXSL_Object *object, const NXSL_Ident
 
    NXSL_VM *vm = object->vm();
    auto cloudDomain = SharedObjectFromData<CloudDomain>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("autoDiscoverChildren"))
-   {
-      value = vm->createValue(cloudDomain->isAutoDiscoverChildren());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("autoProvisionDCI"))
-   {
-      value = vm->createValue(cloudDomain->isAutoProvisionDCI());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
    {
       value = vm->createValue(cloudDomain->getConnectorName());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("defaultPollingInterval"))
-   {
-      value = vm->createValue(cloudDomain->getDefaultPollingInterval());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("gracePeriod"))
    {

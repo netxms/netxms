@@ -34,13 +34,9 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
 {
    private String connectorName;
    private boolean hasCredentials;
-   private String discoverySchedule;
    private String discoveryFilter;
    private int removalPolicy;
    private int gracePeriod;
-   private int defaultPollingInterval;
-   private boolean autoDiscoverChildren;
-   private boolean autoProvisionDCI;
    private int lastDiscoveryStatus;
    private Date lastDiscoveryTime;
    private String lastDiscoveryMessage;
@@ -56,13 +52,9 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
       super(msg, session);
       connectorName = msg.getFieldAsString(NXCPCodes.VID_CONNECTOR_NAME);
       hasCredentials = msg.getFieldAsBoolean(NXCPCodes.VID_CLOUD_CREDENTIALS);
-      discoverySchedule = msg.getFieldAsString(NXCPCodes.VID_DISCOVERY_SCHEDULE);
       discoveryFilter = msg.getFieldAsString(NXCPCodes.VID_DISCOVERY_FILTER);
       removalPolicy = msg.getFieldAsInt16(NXCPCodes.VID_REMOVAL_POLICY);
       gracePeriod = msg.getFieldAsInt32(NXCPCodes.VID_GRACE_PERIOD);
-      defaultPollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_DEFAULT_POLL_INTERVAL);
-      autoDiscoverChildren = msg.getFieldAsBoolean(NXCPCodes.VID_AUTO_DISCOVER_CHILDREN);
-      autoProvisionDCI = msg.getFieldAsBoolean(NXCPCodes.VID_AUTO_PROVISION_DCI);
       lastDiscoveryStatus = msg.getFieldAsInt16(NXCPCodes.VID_LAST_DISCOVERY_STATUS);
       lastDiscoveryTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_DISCOVERY_TIME);
       lastDiscoveryMessage = msg.getFieldAsString(NXCPCodes.VID_LAST_DISCOVERY_MESSAGE);
@@ -103,7 +95,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    {
       Set<String> strings = super.getStrings();
       addString(strings, connectorName);
-      addString(strings, discoverySchedule);
       addString(strings, lastDiscoveryMessage);
       return strings;
    }
@@ -122,14 +113,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    public boolean hasCredentials()
    {
       return hasCredentials;
-   }
-
-   /**
-    * @return the discoverySchedule
-    */
-   public String getDiscoverySchedule()
-   {
-      return discoverySchedule;
    }
 
    /**
@@ -154,30 +137,6 @@ public class CloudDomain extends DataCollectionTarget implements PollingTarget
    public int getGracePeriod()
    {
       return gracePeriod;
-   }
-
-   /**
-    * @return the defaultPollingInterval
-    */
-   public int getDefaultPollingInterval()
-   {
-      return defaultPollingInterval;
-   }
-
-   /**
-    * @return true if auto-discovery of children is enabled
-    */
-   public boolean isAutoDiscoverChildren()
-   {
-      return autoDiscoverChildren;
-   }
-
-   /**
-    * @return true if auto-provisioning of DCIs is enabled
-    */
-   public boolean isAutoProvisionDCI()
-   {
-      return autoProvisionDCI;
    }
 
    /**

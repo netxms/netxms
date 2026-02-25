@@ -6838,13 +6838,9 @@ public class NXCSession
          case AbstractObject.OBJECT_CLOUDDOMAIN:
             msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
             msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
-            msg.setField(NXCPCodes.VID_DISCOVERY_SCHEDULE, data.getDiscoverySchedule());
             msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
             msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
             msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
-            msg.setFieldInt32(NXCPCodes.VID_DEFAULT_POLL_INTERVAL, data.getDefaultPollingInterval());
-            msg.setField(NXCPCodes.VID_AUTO_DISCOVER_CHILDREN, data.isAutoDiscoverChildren());
-            msg.setField(NXCPCodes.VID_AUTO_PROVISION_DCI, data.isAutoProvisionDCI());
             break;
       }
 
@@ -7807,20 +7803,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
       if (data.getCredentials() != null)
          msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
-      if (data.getDiscoverySchedule() != null)
-         msg.setField(NXCPCodes.VID_DISCOVERY_SCHEDULE, data.getDiscoverySchedule());
       if (data.getDiscoveryFilter() != null)
          msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
       if (data.getRemovalPolicy() != null)
          msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
       if (data.getGracePeriod() != null)
          msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
-      if (data.getDefaultPollingInterval() != null)
-         msg.setFieldInt32(NXCPCodes.VID_DEFAULT_POLL_INTERVAL, data.getDefaultPollingInterval());
-      if (data.getAutoDiscoverChildren() != null)
-         msg.setField(NXCPCodes.VID_AUTO_DISCOVER_CHILDREN, data.getAutoDiscoverChildren());
-      if (data.getAutoProvisionDCI() != null)
-         msg.setField(NXCPCodes.VID_AUTO_PROVISION_DCI, data.getAutoProvisionDCI());
       if (data.getCloudLinkedNodeId() != null)
          msg.setFieldUInt32(NXCPCodes.VID_LINKED_NODE_ID, data.getCloudLinkedNodeId());
 

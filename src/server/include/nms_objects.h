@@ -3445,13 +3445,9 @@ protected:
    SharedString m_connectorName;
    char *m_credentials;
    json_t *m_parsedCredentials;
-   std::string m_discoverySchedule;
    SharedString m_discoveryFilter;
    int16_t m_removalPolicy;
    uint32_t m_gracePeriod;
-   uint32_t m_defaultPollingInterval;
-   bool m_autoDiscoverChildren;
-   bool m_autoProvisionDCI;
    int16_t m_lastDiscoveryStatus;
    time_t m_lastDiscoveryTime;
    std::string m_lastDiscoveryMessage;
@@ -3493,9 +3489,6 @@ public:
    }
    int16_t getRemovalPolicy() const { return m_removalPolicy; }
    uint32_t getGracePeriod() const { return m_gracePeriod; }
-   uint32_t getDefaultPollingInterval() const { return m_defaultPollingInterval; }
-   bool isAutoDiscoverChildren() const { return m_autoDiscoverChildren; }
-   bool isAutoProvisionDCI() const { return m_autoProvisionDCI; }
    int16_t getLastDiscoveryStatus() const { return m_lastDiscoveryStatus; }
    time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
 

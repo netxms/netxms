@@ -1481,13 +1481,13 @@ public class NXCPCodes
    public static final long VID_CONNECTOR_NAME = 946;
    public static final long VID_ACCOUNT_ID = 947;
    public static final long VID_CLOUD_CREDENTIALS = 948;
-   public static final long VID_DISCOVERY_SCHEDULE = 949;
+   // public static final long VID_DISCOVERY_SCHEDULE = 949;  -- removed, ID reserved
    public static final long VID_DISCOVERY_FILTER = 950;
    public static final long VID_REMOVAL_POLICY = 951;
    public static final long VID_GRACE_PERIOD = 952;
-   public static final long VID_DEFAULT_POLL_INTERVAL = 953;
-   public static final long VID_AUTO_DISCOVER_CHILDREN = 954;
-   public static final long VID_AUTO_PROVISION_DCI = 955;
+   // public static final long VID_DEFAULT_POLL_INTERVAL = 953;  -- removed, ID reserved
+   // public static final long VID_AUTO_DISCOVER_CHILDREN = 954;  -- removed, ID reserved
+   // public static final long VID_AUTO_PROVISION_DCI = 955;  -- removed, ID reserved
    public static final long VID_LAST_DISCOVERY_STATUS = 956;
    public static final long VID_LAST_DISCOVERY_TIME = 957;
    public static final long VID_LAST_DISCOVERY_MESSAGE = 958;

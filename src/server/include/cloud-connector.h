@@ -91,7 +91,6 @@ struct ResourceDescriptor
    char linkHint[256];                 // Hostname/IP/FQDN for Node matching
    ResourceDescriptor *children;       // First child (linked list via next)
    ResourceDescriptor *next;           // Next sibling
-   StringList *metricHints;            // Suggested default metrics (caller owns)
 
    ResourceDescriptor()
    {
@@ -105,7 +104,6 @@ struct ResourceDescriptor
       linkHint[0] = 0;
       children = nullptr;
       next = nullptr;
-      metricHints = nullptr;
    }
 
    ~ResourceDescriptor()
@@ -113,7 +111,6 @@ struct ResourceDescriptor
       delete tags;
       delete children;
       delete next;
-      delete metricHints;
    }
 };
 
