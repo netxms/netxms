@@ -425,18 +425,21 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                   }
                }
 
+               WCHAR wName[MAX_OBJECT_NAME];
+               utf8_to_wchar(d->name, -1, wName, MAX_OBJECT_NAME);
+
                if (resource != nullptr)
                {
                   // Update existing resource
                   resource->updateFromDiscovery(d, parentObjId);
-                  resource->setName(WideStringFromUTF8String(d->name));
+                  resource->setName(wName);
                   nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 6, L"Updated existing resource \"%s\" [%u] (cloud ID: %hs)", resource->getName(), resource->getId(), d->resourceId);
                }
                else
                {
                   // Create new resource
                   resource = make_shared<Resource>();
-                  resource->setName(WideStringFromUTF8String(d->name));
+                  resource->setName(wName);
                   NetObjInsert(resource, true, false);
                   resource->updateFromDiscovery(d, parentObjId);
                   resource->setOwnerDomain(self());

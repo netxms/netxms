@@ -413,7 +413,9 @@ int Resource::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 void Resource::updateFromDiscovery(const ResourceDescriptor *desc, uint32_t parentId)
 {
    lockProperties();
-   m_cloudResourceId = WideStringFromUTF8String(desc->resourceId);
+   WCHAR wResourceId[1024];
+   utf8_to_wchar(desc->resourceId, -1, wResourceId, 1024);
+   m_cloudResourceId = wResourceId;
    m_resourceType = desc->type;
    m_region = desc->region;
    m_state = desc->state;
