@@ -449,11 +449,11 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
-                   disabled_until,last_login,created)
+                   disabled_until,last_login,created,tfa_grace_logins)
    VALUES (0,'system',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
            35184372088831,12,'','Built-in system account',5,0,  /* Flags: change password + disabled */
-           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0,5
           );
 
 /**
@@ -463,11 +463,11 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
-                   disabled_until,last_login,created)
+                   disabled_until,last_login,created,tfa_grace_logins)
    VALUES (1,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
            0,8,'','Default administrator account',5,0,
-           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0,5
           );
 
 /**
@@ -477,11 +477,11 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
-                   disabled_until,last_login,created)
+                   disabled_until,last_login,created,tfa_grace_logins)
    VALUES (2,'anonymous',
            '$$', /* No password */
            0,1104,'','Anonymous account',5,0,  /* Flags: UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES | UF_TOKEN_AUTH_ONLY */
-           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0,5
           );
 
 /**
