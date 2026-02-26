@@ -92,6 +92,7 @@ private:
    THREAD m_outputThread;
 #ifdef _WIN32
    HANDLE m_phandle;
+   HANDLE m_jobHandle;
    HANDLE m_pipe;
 #else
    pid_t m_pid;
