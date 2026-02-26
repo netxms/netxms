@@ -39,9 +39,9 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			webapi.cpp webapi_auth.cpp webapi_context.cpp webapi_router.cpp webapi_tls.cpp \
 			websvc.cpp winevent.cpp winperf.cpp wireless_domain.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
-	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @LIBISOTREE_CPPFLAGS@ @MICROHTTPD_CPPFLAGS@
+	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@ @MICROHTTPD_CPPFLAGS@
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@ @LIBISOTREE_LDFLAGS@ @MICROHTTPD_LDFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@ @MICROHTTPD_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \

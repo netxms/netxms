@@ -206,8 +206,6 @@ DISABLE_LDAP="no"
 REQUIRE_LDAP="no"
 DISABLE_MODBUS="no"
 REQUIRE_MODBUS="no"
-DISABLE_ISOTREE="no"
-REQUIRE_ISOTREE="no"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
@@ -992,27 +990,6 @@ AC_ARG_WITH(libmodbus,
 	fi
 ])
 
-AC_ARG_ENABLE(isotree,
-[AS_HELP_STRING(--disable-isotree,disable isolation tree algorithm)],
-[
-	if test "x$enableval" = "xno"; then
-		DISABLE_ISOTREE="yes"
-	fi
-	if test "x$enableval" = "xyes"; then
-		DISABLE_ISOTREE="no"
-		REQUIRE_ISOTREE="yes"
-	fi
-])
-
-AC_ARG_WITH(libisotree,
-[AS_HELP_STRING(--with-libisotree,specify libisotree location)],
-[
-	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LIBISOTREE_LDFLAGS="-L${withval}/lib"
-		LIBISOTREE_CPPFLAGS="-I${withval}/include"
-	fi
-])
 
 AC_ARG_ENABLE(unicode,
 [AS_HELP_STRING(--disable-unicode,disable UNICODE build)],
@@ -2702,45 +2679,6 @@ else
 fi
 
 
-#--------------------------------------------------------------------
-# Checks for libisotree
-#--------------------------------------------------------------------
-
-if test "x$DISABLE_ISOTREE" != "xyes" -a "x$DIST_BUILD" != "xyes" -a "x$BUILD_SERVER" = "xyes"; then
-	OLD_CPPFLAGS="$CPPFLAGS"
-	OLD_LDFLAGS="$LDFLAGS"
-	OLD_LIBS="$LIBS"
-	CPPFLAGS="$LIBISOTREE_CPPFLAGS $CPPFLAGS"
-	LDFLAGS="$LIBISOTREE_LDFLAGS $LDFLAGS"
-
-   AC_LANG_PUSH([C++])
-
-   AC_CHECK_HEADER(isotree_oop.hpp,
-		[
-			HAVE_LIBISOTREE=yes
-			AC_DEFINE(HAVE_ISOTREE_OOP_HPP, 1, Define to 1 if isotree_oop.hpp is available)
-		], HAVE_LIBISOTREE=no)
-	if test "x$HAVE_LIBISOTREE" = "xyes"; then
-		AC_CHECK_LIB(isotree, isotree_predict, [ HAVE_LIBISOTREE=yes ], [ HAVE_LIBISOTREE=no ])
-	fi
-
-	if test "x$HAVE_LIBISOTREE" = "xyes"; then
-		AC_DEFINE(WITH_LIBISOTREE, 1, Define to 1 if libisotree is available)
-		SERVER_LIBS="$SERVER_LIBS -lisotree"
-	else
-		if test "x$REQUIRE_ISOTREE" = "xyes"; then
-			AC_MSG_ERROR([libisotree is required])
-		fi
-	fi
-
-   AC_LANG_POP([C++])
-
-	CPPFLAGS="$OLD_CPPFLAGS"
-	LDFLAGS="$OLD_LDFLAGS"
-	LIBS="$OLD_LIBS"
-else
-	HAVE_LIBISOTREE=no
-fi
 
 
 #--------------------------------------------------------------------
@@ -4848,8 +4786,6 @@ AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(JANSSON_LIBS)
-AC_SUBST(LIBISOTREE_CPPFLAGS)
-AC_SUBST(LIBISOTREE_LDFLAGS)
 AC_SUBST(LIBNXAGENT_LIBS)
 AC_SUBST(LIBNXSRV_LIBS)
 AC_SUBST(LIBSSH_CPPFLAGS)
@@ -5270,11 +5206,6 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "Editline support        : YES"
 	else
 		echo "Editline support        : NO"
-	fi
-	if test "x${HAVE_LIBISOTREE}" = "xyes"; then
-		echo "Isolation tree support  : YES"
-	else
-		echo "Isolation tree support  : NO"
 	fi
 	echo "Server components       : ${SERVER_COMPONENTS}"
 	echo "Fan-out data drivers    : ${PDSDRV_DIRS}"
