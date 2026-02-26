@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,26 +33,32 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Create mapping table
+ * Mapping table properties dialog
  */
-public class MappingTableCreationDialog extends Dialog
+public class MappingTablePropertiesDialog extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(MappingTableCreationDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MappingTablePropertiesDialog.class);
 
-	private LabeledText textName;
-	private LabeledText textDescription;
-	private Button checkNumericKeys;
-	private String name;
-	private String description;
-	private int flags;
+   private LabeledText textName;
+   private LabeledText textDescription;
+   private Button checkNumericKeys;
+   private String name;
+   private String description;
+   private int flags;
 
-	/**
-	 * @param parentShell
-	 */
-	public MappingTableCreationDialog(Shell parentShell)
-	{
-		super(parentShell);
-	}
+   /**
+    * @param parentShell parent shell
+    * @param name current name
+    * @param description current description
+    * @param flags current flags
+    */
+   public MappingTablePropertiesDialog(Shell parentShell, String name, String description, int flags)
+   {
+      super(parentShell);
+      this.name = name;
+      this.description = description;
+      this.flags = flags;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
@@ -61,18 +67,18 @@ public class MappingTableCreationDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Create Mapping Table"));
+      newShell.setText(i18n.tr("Mapping Table Properties"));
    }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createDialogArea(Composite parent)
-	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		GridLayout layout = new GridLayout();
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
+
+      GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -81,14 +87,16 @@ public class MappingTableCreationDialog extends Dialog
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(i18n.tr("Name"));
       textName.getTextControl().setTextLimit(63);
+      textName.setText(name);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
       textName.setLayoutData(gd);
-      
+
       textDescription = new LabeledText(dialogArea, SWT.NONE);
       textDescription.setLabel(i18n.tr("Description"));
+      textDescription.setText(description);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -96,9 +104,10 @@ public class MappingTableCreationDialog extends Dialog
 
       checkNumericKeys = new Button(dialogArea, SWT.CHECK);
       checkNumericKeys.setText(i18n.tr("Numeric keys"));
+      checkNumericKeys.setSelection((flags & MappingTable.NUMERIC_KEYS) != 0);
 
-		return dialogArea;
-	}
+      return dialogArea;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
@@ -112,29 +121,27 @@ public class MappingTableCreationDialog extends Dialog
       super.okPressed();
    }
 
-	/**
-	 * Get table name
-	 * 
-	 */
-	public String getName()
-	{
-		return name;
-	}
-	
-	/**
-	 * Get table description
-	 *
-	 */
-	public String getDescription()
-	{
-		return description;
-	}
+   /**
+    * Get table name
+    */
+   public String getName()
+   {
+      return name;
+   }
 
-	/**
-	 * Get table flags
-	 */
-	public int getFlags()
-	{
-		return flags;
-	}
+   /**
+    * Get table description
+    */
+   public String getDescription()
+   {
+      return description;
+   }
+
+   /**
+    * Get table flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
 }

@@ -372,7 +372,7 @@ public class MappingTableEditorView extends ConfigurationView
 
 	/**
 	 * Set or clear "modified" flag
-	 * 
+	 *
 	 * @param m
 	 */
 	private void setModified(boolean m)

@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -51,6 +52,7 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.dialogs.MappingTableCreationDialog;
+import org.netxms.nxmc.modules.nxsl.dialogs.MappingTablePropertiesDialog;
 import org.netxms.nxmc.modules.nxsl.views.helpers.MappingTableListComparator;
 import org.netxms.nxmc.modules.nxsl.views.helpers.MappingTableListFilter;
 import org.netxms.nxmc.modules.nxsl.views.helpers.MappingTableListLabelProvider;
@@ -80,6 +82,7 @@ public class MappingTableManagerView extends ConfigurationView
 	private Action actionNewTable;
 	private Action actionEditTable;
 	private Action actionDeleteTables;
+	private Action actionProperties;
 
    /**
     * Create mapping table manager view
@@ -117,6 +120,7 @@ public class MappingTableManagerView extends ConfigurationView
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				actionEditTable.setEnabled(selection.size() == 1);
 				actionDeleteTables.setEnabled(selection.size() > 0);
+				actionProperties.setEnabled(selection.size() == 1);
 			}
 		});
       MappingTableListFilter filter = new MappingTableListFilter();
@@ -230,6 +234,15 @@ public class MappingTableManagerView extends ConfigurationView
 		};
 		actionDeleteTables.setEnabled(false);
       addKeyBinding("M1+D", actionDeleteTables);
+
+      actionProperties = new Action(i18n.tr("&Properties..."), SharedIcons.PROPERTIES) {
+			@Override
+			public void run()
+			{
+				editProperties();
+			}
+		};
+		actionProperties.setEnabled(false);
 	}
 
 	/**
@@ -285,6 +298,7 @@ public class MappingTableManagerView extends ConfigurationView
 		mgr.add(actionNewTable);
 		mgr.add(actionEditTable);
 		mgr.add(actionDeleteTables);
+		mgr.add(actionProperties);
 	}
 
    /**
@@ -358,7 +372,7 @@ public class MappingTableManagerView extends ConfigurationView
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Integer assignedId = session.createMappingTable(dlg.getName(), dlg.getDescription(), 0);
+				final Integer assignedId = session.createMappingTable(dlg.getName(), dlg.getDescription(), dlg.getFlags());
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -368,7 +382,7 @@ public class MappingTableManagerView extends ConfigurationView
 						MappingTableDescriptor d = mappingTables.get(assignedId);
 						if (d == null)
 						{
-							d = new MappingTableDescriptor(assignedId, dlg.getName(), dlg.getDescription(), 0);
+							d = new MappingTableDescriptor(assignedId, dlg.getName(), dlg.getDescription(), dlg.getFlags());
 							mappingTables.put(assignedId, d);
 						}
 						viewer.setInput(mappingTables.values().toArray());
@@ -397,6 +411,39 @@ public class MappingTableManagerView extends ConfigurationView
 
 		MappingTableDescriptor d = (MappingTableDescriptor)selection.getFirstElement();
       openView(new MappingTableEditorView(d.getId(), d.getName()));
+	}
+
+	/**
+	 * Edit properties of selected mapping table
+	 */
+	private void editProperties()
+	{
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+			return;
+
+		final MappingTableDescriptor d = (MappingTableDescriptor)selection.getFirstElement();
+		final MappingTablePropertiesDialog dlg = new MappingTablePropertiesDialog(getWindow().getShell(), d.getName(), d.getDescription(), d.getFlags());
+		if (dlg.open() != Window.OK)
+			return;
+
+      new Job(i18n.tr("Updating mapping table properties"), this) {
+			@Override
+         protected void run(IProgressMonitor monitor) throws Exception
+			{
+				final MappingTable t = session.getMappingTable(d.getId());
+				t.setName(dlg.getName());
+				t.setDescription(dlg.getDescription());
+				t.setFlags(dlg.getFlags());
+				session.updateMappingTable(t);
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+            return i18n.tr("Cannot update mapping table properties");
+			}
+		}.start();
 	}
 
 	/**
