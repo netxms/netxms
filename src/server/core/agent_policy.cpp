@@ -763,7 +763,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
+   shared_ptr<AgentConnectionEx> conn = data->node->createAgentConnection();
    if (conn == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): failed - no connection to agent"), data->debugId);
