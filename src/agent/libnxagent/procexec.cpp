@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -37,11 +37,10 @@ KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *comman
  */
 void KeyValueOutputProcessExecutor::onOutput(const char *text, size_t length)
 {
-   TCHAR *buffer;
 #ifdef UNICODE
-   buffer = WideStringFromMBStringSysLocale(text);
+   wchar_t *buffer = WideStringFromMBStringSysLocale(text);
 #else
-   buffer = MemCopyStringA(text);
+   char *buffer = MemCopyStringA(text);
 #endif
    TCHAR *newLinePtr = nullptr, *lineStartPtr = buffer, *eqPtr = nullptr;
    do
@@ -55,8 +54,8 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text, size_t length)
          m_buffer.append(lineStartPtr);
          if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
          {
-            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), m_buffer.cstr());
-            stop();
+            nxlog_debug(4, _T("KeyValueOutputProcessExecutor::onOutput(): result is too long - %s"), m_buffer.cstr());
+            terminateProcess();
             m_buffer.clear();
             break;
          }
@@ -66,8 +65,8 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text, size_t length)
          m_buffer.append(lineStartPtr);
          if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
          {
-            nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), m_buffer.cstr());
-            stop();
+            nxlog_debug(4, _T("KeyValueOutputProcessExecutor::onOutput(): result is too long - %s"), m_buffer.cstr());
+            terminateProcess();
             m_buffer.clear();
          }
          break;

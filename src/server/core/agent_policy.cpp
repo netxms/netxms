@@ -912,12 +912,12 @@ void FileDeliveryPolicy::validate()
 /**
  * Convert file permissions to text
  */
-static TCHAR *FilePermissionsToText(uint32_t bits, TCHAR *buffer)
+static wchar_t *FilePermissionsToText(uint32_t bits, wchar_t *buffer)
 {
-   _tcscpy(buffer, _T("rwxrwxrwx"));
+   memcpy(buffer, L"rwxrwxrwx", sizeof(wchar_t) * 10);
    for(int i = 0; i <= 8; i++)
       if ((bits & (1 << i)) == 0)
-         buffer[i] = _T('-');
+         buffer[i] = L'-';
    return buffer;
 }
 
