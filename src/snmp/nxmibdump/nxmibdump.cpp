@@ -188,6 +188,8 @@ static void PrintMIBObject(SNMP_MIBObject *obj)
             obj->getTextualConvention() ? obj->getTextualConvention() : _T("(none)"));
    _tprintf(_T("  Display Hint: %s\n"),
             obj->getDisplayHint() ? obj->getDisplayHint() : _T("(none)"));
+   _tprintf(_T("  Enum Values: %s\n"),
+            obj->getEnumValues() ? obj->getEnumValues() : _T("(none)"));
    _tprintf(_T("  Index: %s\n"),
             obj->getIndex() ? obj->getIndex() : _T("(none)"));
 

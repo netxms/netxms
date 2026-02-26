@@ -51,6 +51,7 @@ public:
    char *pszStr;
    char *pszDescription;
    char *displayHint;
+   char *enumValues;
 
    MP_SYNTAX()
    {
@@ -58,6 +59,7 @@ public:
       pszStr = nullptr;
       pszDescription = nullptr;
       displayHint = nullptr;
+      enumValues = nullptr;
    }
 
    ~MP_SYNTAX()
@@ -65,6 +67,7 @@ public:
       MemFree(pszStr);
       MemFree(pszDescription);
       MemFree(displayHint);
+      MemFree(enumValues);
    }
 };
 
@@ -122,6 +125,7 @@ public:
    char *pszDescription;
    char *pszTextualConvention;
    char *displayHint;
+   char *enumValues;
    int iSyntax;
    char *pszDataType;   // For defined types
    int iStatus;
@@ -140,6 +144,7 @@ public:
       pszDescription = nullptr;
       pszTextualConvention = nullptr;
       displayHint = nullptr;
+      enumValues = nullptr;
       pszDataType = nullptr;
       oid = nullptr;
       index = nullptr;
@@ -152,6 +157,7 @@ public:
       MemFree(pszDescription);
       MemFree(pszTextualConvention);
       MemFree(displayHint);
+      MemFree(enumValues);
       MemFree(pszDataType);
       delete oid;
       delete index;

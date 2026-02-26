@@ -92,6 +92,7 @@ public class MibObject
 	protected static final int MIB_TAG_TEXTUAL_CONVENTION = 0x0A;
    protected static final int MIB_TAG_INDEX              = 0x0B;
    protected static final int MIB_TAG_DISPLAY_HINT       = 0x0C;
+   protected static final int MIB_TAG_ENUM_VALUES        = 0x0D;
 	protected static final int MIB_END_OF_TAG             = 0x80;
 
 	private long id;
@@ -99,6 +100,7 @@ public class MibObject
 	private String description;
 	private String textualConvention;
    private String displayHint;
+   private String enumValues;
    private String index;
 	private int type;
 	private int status;
@@ -183,6 +185,9 @@ public class MibObject
 	         	break;
             case MIB_TAG_DISPLAY_HINT:
                displayHint = readStringFromStream(in);
+               break;
+            case MIB_TAG_ENUM_VALUES:
+               enumValues = readStringFromStream(in);
                break;
 	         default:
 	         	throw new NXCException(RCC.BAD_MIB_FILE_DATA);
@@ -380,5 +385,13 @@ public class MibObject
    public String getDisplayHint()
    {
       return (displayHint != null) ? displayHint : "";
+   }
+
+   /**
+    * @return the enumValues
+    */
+   public String getEnumValues()
+   {
+      return (enumValues != null) ? enumValues : "";
    }
 }

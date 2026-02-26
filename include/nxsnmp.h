@@ -402,6 +402,7 @@ private:
    TCHAR *m_pszDescription;
    TCHAR *m_pszTextualConvention;
    TCHAR *m_displayHint;
+   TCHAR *m_enumValues;
    TCHAR *m_index;
    int m_iType;
    int m_iStatus;
@@ -414,13 +415,15 @@ public:
    SNMP_MIBObject(uint32_t oid, const TCHAR *name);
    SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type, int status, int access,
                   const TCHAR *description, const TCHAR *textualConvention,
-                  const TCHAR *displayHint, const TCHAR *index);
+                  const TCHAR *displayHint, const TCHAR *index,
+                  const TCHAR *enumValues = nullptr);
    ~SNMP_MIBObject();
 
    void setParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
    void addChild(SNMP_MIBObject *pObject);
    void setInfo(int type, int status, int access, const TCHAR *description,
-                const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index);
+                const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index,
+                const TCHAR *enumValues = nullptr);
    void setName(const TCHAR *name) { MemFree(m_pszName); m_pszName = MemCopyString(name); }
 
    SNMP_MIBObject *getParent() { return m_pParent; }
@@ -434,6 +437,7 @@ public:
    const TCHAR *getDescription() const { return m_pszDescription; }
    const TCHAR *getTextualConvention() const { return m_pszTextualConvention; }
    const TCHAR *getDisplayHint() const { return m_displayHint; }
+   const TCHAR *getEnumValues() const { return m_enumValues; }
    const TCHAR *getIndex() const { return m_index; }
    int getType() const { return m_iType; }
    int getStatus() const { return m_iStatus; }

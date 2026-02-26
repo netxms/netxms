@@ -35,6 +35,7 @@ SNMP_MIBObject::SNMP_MIBObject()
    m_pszDescription = nullptr;
    m_pszTextualConvention = nullptr;
    m_displayHint = nullptr;
+   m_enumValues = nullptr;
    m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
@@ -45,7 +46,8 @@ SNMP_MIBObject::SNMP_MIBObject()
  * Construct object with all data
  */
 SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type, int status, int access,
-      const TCHAR *description, const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index)
+      const TCHAR *description, const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index,
+      const TCHAR *enumValues)
 {
    initialize();
 
@@ -54,6 +56,7 @@ SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name, int type, int st
    m_pszDescription = MemCopyString(description);
    m_pszTextualConvention = MemCopyString(textualConvention);
    m_displayHint = MemCopyString(displayHint);
+   m_enumValues = MemCopyString(enumValues);
    m_index = MemCopyString(index);
    m_iStatus = status;
    m_iAccess = access;
@@ -72,6 +75,7 @@ SNMP_MIBObject::SNMP_MIBObject(uint32_t oid, const TCHAR *name)
    m_pszDescription = nullptr;
    m_pszTextualConvention = nullptr;
    m_displayHint = nullptr;
+   m_enumValues = nullptr;
    m_index = nullptr;
    m_iStatus = -1;
    m_iAccess = -1;
@@ -105,6 +109,7 @@ SNMP_MIBObject::~SNMP_MIBObject()
    MemFree(m_pszDescription);
    MemFree(m_pszTextualConvention);
    MemFree(m_displayHint);
+   MemFree(m_enumValues);
    MemFree(m_index);
 }
 
@@ -142,11 +147,13 @@ SNMP_MIBObject *SNMP_MIBObject::findChildByID(uint32_t oid)
  * Set information
  */
 void SNMP_MIBObject::setInfo(int type, int status, int access, const TCHAR *description,
-      const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index)
+      const TCHAR *textualConvention, const TCHAR *displayHint, const TCHAR *index,
+      const TCHAR *enumValues)
 {
    MemFree(m_pszDescription);
    MemFree(m_pszTextualConvention);
    MemFree(m_displayHint);
+   MemFree(m_enumValues);
    MemFree(m_index);
    m_iType = type;
    m_iStatus = status;
@@ -154,6 +161,7 @@ void SNMP_MIBObject::setInfo(int type, int status, int access, const TCHAR *desc
    m_pszDescription = MemCopyString(description);
    m_pszTextualConvention = MemCopyString(textualConvention);
    m_displayHint = MemCopyString(displayHint);
+   m_enumValues = MemCopyString(enumValues);
    m_index = MemCopyString(index);
 }
 
@@ -263,6 +271,13 @@ void SNMP_MIBObject::writeToFile(ZFile *file, uint32_t flags)
          file->writeByte(MIB_TAG_DISPLAY_HINT);
          WriteStringToFile(file, m_displayHint);
          file->writeByte(MIB_TAG_DISPLAY_HINT | MIB_END_OF_TAG);
+      }
+
+      if (m_enumValues != nullptr)
+      {
+         file->writeByte(MIB_TAG_ENUM_VALUES);
+         WriteStringToFile(file, m_enumValues);
+         file->writeByte(MIB_TAG_ENUM_VALUES | MIB_END_OF_TAG);
       }
    }
 
@@ -394,6 +409,11 @@ bool SNMP_MIBObject::readFromFile(ZFile *file)
             MemFree(m_displayHint);
             m_displayHint = ReadStringFromFile(file);
             CHECK_NEXT_TAG(MIB_TAG_DISPLAY_HINT | MIB_END_OF_TAG);
+            break;
+         case MIB_TAG_ENUM_VALUES:
+            MemFree(m_enumValues);
+            m_enumValues = ReadStringFromFile(file);
+            CHECK_NEXT_TAG(MIB_TAG_ENUM_VALUES | MIB_END_OF_TAG);
             break;
          case MIB_TAG_TYPE:
             m_iType = file->readByte();

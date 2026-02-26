@@ -311,6 +311,8 @@ static void ResolveSyntax(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *m
       {
          pObject->pszTextualConvention = MemCopyStringA(pTextualConvention->pszName);
          pObject->displayHint = MemCopyStringA(pTextualConvention->displayHint);
+         if (pObject->enumValues == nullptr && pTextualConvention->enumValues != nullptr)
+            pObject->enumValues = MemCopyStringA(pTextualConvention->enumValues);
       }
       else if (pObject->pszDataType != nullptr)
       {
@@ -322,6 +324,8 @@ static void ResolveSyntax(const ObjectArray<MP_MODULE>& moduleList, MP_MODULE *m
          {
             pObject->pszTextualConvention = MemCopyStringA(tc->pszName);
             pObject->displayHint = MemCopyStringA(tc->displayHint);
+            if (pObject->enumValues == nullptr && tc->enumValues != nullptr)
+               pObject->enumValues = MemCopyStringA(tc->enumValues);
          }
       }
    }
@@ -390,16 +394,19 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
                   WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
                   WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
                   WCHAR *wdh = WideStringFromMBString(pObject->displayHint);
+                  WCHAR *wev = WideStringFromMBString(pObject->enumValues);
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname,
                                                pObject->iSyntax,
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                wdescr, wtc, wdh,
-                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr,
+                                               wev);
                   MemFree(wname);
                   MemFree(wdescr);
                   MemFree(wtc);
                   MemFree(wdh);
+                  MemFree(wev);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
@@ -408,7 +415,8 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
                                                pObject->pszDescription,
                                                pObject->pszTextualConvention,
                                                pObject->displayHint,
-                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                                               (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr,
+                                               pObject->enumValues);
 #endif
 					}
                else
@@ -442,15 +450,17 @@ static void BuildMIBTree(SNMP_MIBObject *root, MP_MODULE *module)
                   WCHAR *wdescr = WideStringFromMBString(pObject->pszDescription);
                   WCHAR *wtc = WideStringFromMBString(pObject->pszTextualConvention);
                   WCHAR *wdh = WideStringFromMBString(pObject->displayHint);
+                  WCHAR *wev = WideStringFromMBString(pObject->enumValues);
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
-                     wdescr, wtc, wdh, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                     wdescr, wtc, wdh, (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr, wev);
                   MemFree(wdescr);
                   MemFree(wtc);
                   MemFree(wdh);
+                  MemFree(wev);
 #else
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess,
                      pObject->pszDescription, pObject->pszTextualConvention, pObject->displayHint,
-                     (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr);
+                     (pObject->index != nullptr) ? indexBuffer.cstr() : nullptr, pObject->enumValues);
 #endif
                   if (pNewObj->getName() == nullptr)
 						{

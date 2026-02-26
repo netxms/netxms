@@ -243,6 +243,8 @@ static int AccessFromText(const char *pszText)
 %type <pObject> SnmpObjectGroupAssignment SnmpNotificationGroupAssignment
 %type <pObject> SnmpNotificationTypeAssignment AgentCapabilitiesAssignment
 %type <pSubId> ObjectIdentifier
+%type <number> NumberOrMinMax
+%type <pszString> NumericValue NumericValueConstraintList ValueConstraint
 
 %destructor { MemFree($$); } <pszString>
 %destructor { delete $$; } <oid>
@@ -428,21 +430,31 @@ ObjectIdentifier:
 
 NumericValue:
     NumberOrMinMax
+{
+   $$ = nullptr;
+}
 |   DefinedValue
 {
    MemFreeAndNull($1);
+   $$ = nullptr;
 }
-|   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax 
+|   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax
+{
+   $$ = nullptr;
+}
 |   Identifier LEFT_PAREN_SYM NumberOrMinMax RIGHT_PAREN_SYM
 {
+   char buffer[256];
+   snprintf(buffer, 256, "%s(%d)", $1, $3.value.nInt32);
+   $$ = MemCopyStringA(buffer);
    MemFreeAndNull($1);
 }
 ;
 
 NumberOrMinMax:
-	Number
-|	MIN_SYM
-|	MAX_SYM
+	Number              { $$ = $1; }
+|	MIN_SYM             { $$.nType = 0; $$.value.nInt32 = 0; }
+|	MAX_SYM             { $$.nType = 0; $$.value.nInt32 = 0; }
 ;
 
 DefinedValue:
@@ -503,7 +515,9 @@ ObjectTypeAssignment:
    $$->pszName = $1;
    $$->iSyntax = $3->nSyntax;
    $$->pszDataType = $3->pszStr;
+   $$->enumValues = $3->enumValues;
    $3->pszStr = nullptr;
+   $3->enumValues = nullptr;
    delete $3;
    $$->iAccess = $5;
    $$->iStatus = $6;
@@ -617,14 +631,62 @@ SnmpDescriptionStatement:
 
 ValueConstraint:
     LEFT_PAREN_SYM NumericValueConstraintList DanglingComma RIGHT_PAREN_SYM
+{
+   MemFree($2);
+   $$ = nullptr;
+}
 |   LEFT_PAREN_SYM SIZE_SYM LEFT_PAREN_SYM NumericValueConstraintList DanglingComma RIGHT_PAREN_SYM RIGHT_PAREN_SYM
+{
+   MemFree($4);
+   $$ = nullptr;
+}
 |   LEFT_BRACE_SYM NumericValueConstraintList DanglingComma RIGHT_BRACE_SYM
+{
+   $$ = $2;
+}
 ;
 
 NumericValueConstraintList:
     NumericValueConstraintList BAR_SYM NumericValue
+{
+   if ($1 != nullptr && $3 != nullptr)
+   {
+      $$ = MemAllocStringA(strlen($1) + strlen($3) + 3);
+      sprintf($$, "%s, %s", $1, $3);
+      MemFree($1);
+      MemFree($3);
+   }
+   else if ($3 != nullptr)
+   {
+      $$ = $3;
+   }
+   else
+   {
+      $$ = $1;
+   }
+}
 |   NumericValueConstraintList COMMA_SYM NumericValue
+{
+   if ($1 != nullptr && $3 != nullptr)
+   {
+      $$ = MemAllocStringA(strlen($1) + strlen($3) + 3);
+      sprintf($$, "%s, %s", $1, $3);
+      MemFree($1);
+      MemFree($3);
+   }
+   else if ($3 != nullptr)
+   {
+      $$ = $3;
+   }
+   else
+   {
+      $$ = $1;
+   }
+}
 |   NumericValue
+{
+   $$ = $1;
+}
 ;
 
 DanglingComma:
@@ -733,9 +795,11 @@ TypeOrValueAssignment:
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
       $$->displayHint = $3->displayHint;
+      $$->enumValues = $3->enumValues;
       $3->pszStr = nullptr;
       $3->pszDescription = nullptr;
       $3->displayHint = nullptr;
+      $3->enumValues = nullptr;
       delete_and_null($3);
    }
 }
@@ -750,8 +814,10 @@ TypeOrValueAssignment:
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
+      $$->enumValues = $3->enumValues;
       $3->pszStr = nullptr;
       $3->pszDescription = nullptr;
+      $3->enumValues = nullptr;
       delete_and_null($3);
    }
 }
@@ -797,10 +863,12 @@ Type:
 |   BuiltInType ValueConstraint
 {
    $$ = $1;
+   $$->enumValues = $2;
 }
 |   NamedType ValueConstraint
 {
    $$ = $1;
+   $$->enumValues = $2;
 }
 ;
 
@@ -979,7 +1047,10 @@ TextualConventionDefinitionElement:
 		s_currentSyntaxObject->nSyntax = $1->nSyntax;
 		MemFree(s_currentSyntaxObject->pszStr);
 		s_currentSyntaxObject->pszStr = $1->pszStr;
+		MemFree(s_currentSyntaxObject->enumValues);
+		s_currentSyntaxObject->enumValues = $1->enumValues;
 		$1->pszStr = nullptr;
+		$1->enumValues = nullptr;
 		delete_and_null($1);
 	}
 	else

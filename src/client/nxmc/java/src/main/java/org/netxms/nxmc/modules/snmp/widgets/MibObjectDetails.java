@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@ package org.netxms.nxmc.modules.snmp.widgets;
 
 import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -48,6 +46,8 @@ public class MibObjectDetails extends Composite
 	private Text oidText;
 	private Text description;
    private Text textualConvention;
+   private Text displayHint;
+   private Text enumValues;
    private Text index;
 	private Text type;
 	private Text status;
@@ -91,15 +91,11 @@ public class MibObjectDetails extends Composite
 	      oidGroup.setLayoutData(gd);
 	      
          oid = WidgetHelper.createLabeledText(oidGroup, SWT.BORDER, 500, i18n.tr("Object identifier (OID)"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-			oid.addModifyListener(new ModifyListener() {
-				@Override
-				public void modifyText(ModifyEvent e)
-				{
-               if (updateTreeSelection)
-                  onManualOidChange();
-				}
+         oid.addModifyListener((e) -> {
+            if (updateTreeSelection)
+               onManualOidChange();
 			});
-			
+
          Button button = new Button(oidGroup, SWT.PUSH);
          button.setText(i18n.tr("&Walk..."));
          gd = new GridData();
@@ -150,7 +146,18 @@ public class MibObjectDetails extends Composite
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      index = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Index"), "", gd);
+      gd.horizontalSpan = 2;
+      index = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Index"), "", gd);
+
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      displayHint = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Display hint"), "", gd);
+
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      enumValues = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Enum values"), "", gd);
 
 		/* MIB object's description */
 		gd = new GridData();
@@ -158,8 +165,7 @@ public class MibObjectDetails extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
-		description = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                             500, i18n.tr("Description"), "", gd); //$NON-NLS-1$
+      description = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY, 500, i18n.tr("Description"), "", gd);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -174,8 +180,7 @@ public class MibObjectDetails extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
-		textualConvention = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                                   500, i18n.tr("Textual Convention"), "", gd); //$NON-NLS-1$
+      textualConvention = WidgetHelper.createLabeledText(this, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY, 500, i18n.tr("Textual Convention"), "", gd);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -231,6 +236,8 @@ public class MibObjectDetails extends Composite
 				oidText.setText(object.getFullName());
 			}
          index.setText(object.getIndex());
+         displayHint.setText(object.getDisplayHint());
+         enumValues.setText(object.getEnumValues());
 			description.setText(object.getDescription());
 			textualConvention.setText(object.getTextualConvention());
 			type.setText(SnmpConstants.getObjectTypeName(object.getType()));
@@ -244,6 +251,8 @@ public class MibObjectDetails extends Composite
 			if (oidText != null)
             oidText.setText("");
          index.setText("");
+         displayHint.setText("");
+         enumValues.setText("");
          description.setText("");
          textualConvention.setText("");
          type.setText("");
