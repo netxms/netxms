@@ -597,7 +597,9 @@ void PackageDeploymentJob::execute()
    packageFile.append(DDIR_PACKAGES);
    packageFile.append(FS_PATH_SEPARATOR);
    packageFile.append(m_packageFile);
-   uint32_t rcc = agentConn->uploadFile(packageFile);
+   uint32_t bwLimit = node->getCustomAttributeAsUInt32(L"SysConfig:Agent.UploadBandwidthLimit", g_agentUploadBandwidthLimit);
+   uint32_t bandwidthLimit = (bwLimit > 0) ? bwLimit * 1024 : 0;
+   uint32_t rcc = agentConn->uploadFile(packageFile, nullptr, false, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): file transfer failed to node %s [%u] in job [%u] (%u: %s)",

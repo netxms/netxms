@@ -686,10 +686,11 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t 
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag,
+         uint32_t bandwidthLimit)
 {
    SocketCommChannel ch(hSocket, nullptr, Ownership::False);
-   bool result = SendFileOverNXCP(&ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
+   bool result = SendFileOverNXCP(&ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag, bandwidthLimit);
    return result;
 }
 
@@ -697,7 +698,8 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, c
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag,
+         uint32_t bandwidthLimit)
 {
    std::ifstream s;
 #ifdef UNICODE
@@ -710,7 +712,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
    if (s.fail())
       return false;
 
-   bool result = SendFileOverNXCP(channel, requestId, &s, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
+   bool result = SendFileOverNXCP(channel, requestId, &s, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag, bandwidthLimit);
 
    s.close();
    return result;
@@ -720,10 +722,11 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag,
+         uint32_t bandwidthLimit)
 {
    SocketCommChannel ch(hSocket, nullptr, Ownership::False);
-   bool result = SendFileOverNXCP(&ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
+   bool result = SendFileOverNXCP(&ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag, bandwidthLimit);
    return result;
 }
 
@@ -731,10 +734,12 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, s
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag,
+         uint32_t bandwidthLimit)
 {
    bool success = false;
    size_t bytesTransferred = 0;
+   int64_t startTime = GetMonotonicClockTime();
 
    stream->seekg(offset, (offset < 0) ? std::ios_base::end : std::ios_base::beg);
    if (!stream->fail())
@@ -801,10 +806,20 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
                break;	// Send error
          }
 
+         bytesTransferred += bytes;
          if (progressCallback != nullptr)
          {
-            bytesTransferred += bytes;
             progressCallback(bytesTransferred, cbArg);
+         }
+
+         if ((bandwidthLimit > 0) && !stream->eof())
+         {
+            if ((cancellationFlag != nullptr) && (*cancellationFlag > 0))
+               break;
+            int64_t elapsed = GetMonotonicClockTime() - startTime;
+            int64_t expectedTime = static_cast<int64_t>(bytesTransferred) * 1000 / bandwidthLimit;
+            if (expectedTime > elapsed)
+               ThreadSleepMs(static_cast<uint32_t>(expectedTime - elapsed));
          }
 
          if (stream->eof())

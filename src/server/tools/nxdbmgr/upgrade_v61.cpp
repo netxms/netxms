@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.7 to 61.8
+ */
+static bool H_UpgradeFromV7()
+{
+   if (GetSchemaLevelForMajorVersion(60) < 35)
+   {
+      CHK_EXEC(CreateConfigParam(L"Agent.UploadBandwidthLimit", L"0",
+         L"Bandwidth limit for file uploads from server to agent (0 = unlimited).",
+         L"KB/s", 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(60, 35));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 61.6 to 61.7
  */
 static bool H_UpgradeFromV6()
@@ -205,6 +221,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  61,  8,  H_UpgradeFromV7 },
    { 6,  61,  7,  H_UpgradeFromV6 },
    { 5,  61,  6,  H_UpgradeFromV5 },
    { 4,  61,  5,  H_UpgradeFromV4 },

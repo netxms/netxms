@@ -202,11 +202,13 @@ bool FileUploadJob::run(BackgroundTask *task)
 	if (conn != nullptr)
 	{
 		m_fileSize = FileSize(m_localFileFullPath);
+		uint32_t bwLimit = m_node->getCustomAttributeAsUInt32(L"SysConfig:Agent.UploadBandwidthLimit", g_agentUploadBandwidthLimit);
+		uint32_t bandwidthLimit = (bwLimit > 0) ? bwLimit * 1024 : 0;
 		uint32_t rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false,
 		   [this, task] (size_t size)
 		   {
 		      task->markProgress((m_fileSize > 0) ? static_cast<int>((size * _LL(100) / m_fileSize)) : 100);
-		   }, NXCP_STREAM_COMPRESSION_DEFLATE);
+		   }, NXCP_STREAM_COMPRESSION_DEFLATE, bandwidthLimit);
 		if (rcc == ERR_SUCCESS)
 		{
          nxlog_debug_tag(DEBUG_TAG, 5, _T("File upload to %s [%u] completed (%s)"), m_node->getName(), m_node->getId(), m_info);

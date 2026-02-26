@@ -25,11 +25,23 @@
 #include <netxms-xml.h>
 
 /**
- * Upgrade from 60.34 to 61.0
+ * Upgrade from 60.35 to 61.0
+ */
+static bool H_UpgradeFromV35()
+{
+   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 60.34 to 60.35
  */
 static bool H_UpgradeFromV34()
 {
-   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   CHK_EXEC(CreateConfigParam(L"Agent.UploadBandwidthLimit", L"0",
+      L"Bandwidth limit for file uploads from server to agent (0 = unlimited).",
+      L"KB/s", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(35));
    return true;
 }
 
@@ -1991,7 +2003,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 34, 61, 0,  H_UpgradeFromV34 },
+   { 35, 61, 0,  H_UpgradeFromV35 },
+   { 34, 60, 35, H_UpgradeFromV34 },
    { 33, 60, 34, H_UpgradeFromV33 },
    { 32, 60, 33, H_UpgradeFromV32 },
    { 31, 60, 32, H_UpgradeFromV31 },
