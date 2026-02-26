@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,6 @@
 **/
 
 #include "nxcore.h"
-
-/**
- * Poller thread pool
- */
-extern ThreadPool *g_pollerThreadPool;
 
 /**
  * Redefined status calculation for template group
@@ -409,14 +404,14 @@ bool Template::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
  */
 void Template::forceDeployPolicies(const shared_ptr<Node>& target)
 {
-   TCHAR key[64];
-   _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), target->getId());
+   wchar_t key[64] = L"AgentPolicyDeployment_";
+   IntegerToString(target->getId(), &key[22], 42);
 
    lockProperties();
    for (int i = 0; i < m_policyList.size(); i++)
    {
       const shared_ptr<GenericAgentPolicy>& policy = m_policyList.getShared(i);
-      auto data = make_shared<AgentPolicyDeploymentData>(target, target->isNewPolicyTypeFormatSupported());
+      shared_ptr<AgentPolicyDeploymentData> data = make_shared<AgentPolicyDeploymentData>(target, target->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), policy->getName());
       ThreadPoolExecuteSerialized(g_mainThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
@@ -619,8 +614,8 @@ void Template::prepareForDeletion()
  */
 void Template::removeAllPolicies(Node *node)
 {
-   TCHAR key[64];
-   _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), node->getId());
+   wchar_t key[64] = L"AgentPolicyDeployment_";
+   IntegerToString(node->getId(), &key[22], 42);
 
    for (int i = 0; i < m_policyList.size(); i++)
    {
@@ -806,9 +801,10 @@ bool Template::removePolicy(const uuid& guid)
          {
             auto data = make_shared<AgentPolicyRemovalData>(static_pointer_cast<Node>(object), policy->getGuid(), policy->getType(), static_cast<Node*>(object.get())->isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), object->getName(), object->getId(), getName(), policy->getName());
-            TCHAR key[64];
-            _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), object->getId());
-            ThreadPoolExecute(g_pollerThreadPool, RemoveAgentPolicy, data);
+
+            wchar_t key[64] = L"AgentPolicyDeployment_";
+            IntegerToString(object->getId(), &key[22], 42);
+            ThreadPoolExecuteSerialized(g_mainThreadPool, key, RemoveAgentPolicy, data);
          }
       }
       unlockChildList();
@@ -868,8 +864,8 @@ void Template::forceApplyPolicyChanges()
             data->forceInstall = true;
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
 
-            TCHAR key[64];
-            _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), node->getId());
+            wchar_t key[64] = L"AgentPolicyDeployment_";
+            IntegerToString(node->getId(), &key[22], 42);
             ThreadPoolExecuteSerialized(g_mainThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
          }
       }
@@ -885,8 +881,8 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
    if (node->getAgentConnection() == nullptr)
       return;
 
-   TCHAR key[64];
-   _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), node->getId());
+   wchar_t key[64] = L"AgentPolicyDeployment_";
+   IntegerToString(node->getId(), &key[22], 42);
 
    lockProperties();
    for (int i = 0; i < m_policyList.size(); i++)
@@ -910,7 +906,7 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
 
       node->sendPollerMsg(_T("      Scheduling deployment policy %s from template %s\r\n"), policy->getName(), m_name);
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), m_name, policy->getName());
-      ThreadPoolExecuteSerialized(g_pollerThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
    }
    unlockProperties();
 }
