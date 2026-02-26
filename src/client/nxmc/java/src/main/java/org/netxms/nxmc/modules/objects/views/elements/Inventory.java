@@ -146,7 +146,6 @@ public class Inventory extends TableElement
          case AbstractObject.OBJECT_CLOUDDOMAIN:
             CloudDomain cloudDomain = (CloudDomain)object;
             addPair(i18n.tr("Connector"), cloudDomain.getConnectorName(), true);
-            addPair(i18n.tr("Auto-discover"), cloudDomain.isAutoDiscoverChildren() ? i18n.tr("Yes") : i18n.tr("No"));
             break;
          case AbstractObject.OBJECT_RESOURCE:
             Resource resource = (Resource)object;
