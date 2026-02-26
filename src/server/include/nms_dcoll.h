@@ -705,6 +705,7 @@ public:
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
+   void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_COLUMN_NAME); }
    const TCHAR *getDisplayName() const { return (m_displayName != nullptr) ? m_displayName : m_name; }
    uint16_t getFlags() const { return m_flags; }
    int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }

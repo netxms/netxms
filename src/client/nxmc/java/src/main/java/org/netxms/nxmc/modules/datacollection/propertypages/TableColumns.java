@@ -21,10 +21,12 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -393,7 +395,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		if (selection.size() == 1)
 		{
 			final ColumnDefinition column = (ColumnDefinition)selection.getFirstElement();
-         EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
+         EditColumnDialog dlg = new EditColumnDialog(getShell(), column, getExistingColumnNames(column));
 			if (dlg.open() == Window.OK)
 			{
 				columnList.update(column, null);
@@ -407,7 +409,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 	private void addColumn()
 	{
       final ColumnDefinition column = new ColumnDefinition();
-      final EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
+      final EditColumnDialog dlg = new EditColumnDialog(getShell(), column, getExistingColumnNames(null));
 		if (dlg.open() == Window.OK)
 		{
          columns.add(column);
@@ -416,8 +418,25 @@ public class TableColumns extends AbstractDCIPropertyPage
 		}
 	}
 
+   /**
+    * Get names of all existing columns, optionally excluding one.
+    *
+    * @param excludeColumn column to exclude from the set, or null
+    * @return set of existing column names
+    */
+   private Set<String> getExistingColumnNames(ColumnDefinition excludeColumn)
+   {
+      Set<String> names = new HashSet<>();
+      for(ColumnDefinition c : columns)
+      {
+         if (c != excludeColumn)
+            names.add(c.getName());
+      }
+      return names;
+   }
+
 	/**
-	 * Move selected element up 
+	 * Move selected element up
 	 */
 	private void moveSelectionUp()
 	{
@@ -618,12 +637,25 @@ public class TableColumns extends AbstractDCIPropertyPage
                   {
                      SnmpValue v = entry.getValue();
                      logger.debug("Processing SNMP WALK value {} {}", v.getName(), v.getValue());
-                     MibObject object = MibCache.findObject(v.getObjectId(), false);
-                     String columnName = (object != null) ? object.getName() : v.getName();
+                     SnmpObjectId columnOid = new SnmpObjectId(baseOID, entry.getKey());
+                     String columnName;
+                     MibObject object = MibCache.findObject(columnOid, true);
+                     if (object != null)
+                     {
+                        columnName = object.getName();
+                     }
+                     else
+                     {
+                        object = MibCache.findObject(columnOid, false);
+                        if (object != null)
+                           columnName = object.getName() + "_" + entry.getKey();
+                        else
+                           columnName = Long.toString(entry.getKey());
+                     }
                      ColumnDefinition c = new ColumnDefinition(columnName, columnName);
                      c.setDataType(CreateSnmpDci.dciTypeFromAsnType(v.getType()));
                      c.setConvertSnmpStringToHex(v.getType() == 0xFFFF);
-                     c.setSnmpObjectId(new SnmpObjectId(baseOID, entry.getKey()));
+                     c.setSnmpObjectId(columnOid);
                      columns.add(c);
                   }
                   columnList.refresh();

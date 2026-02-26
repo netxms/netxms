@@ -805,9 +805,24 @@ void DCTable::updateFromMessage(const NXCPMessage& msg)
 	m_columns->clear();
 	int count = msg.getFieldAsInt32(VID_NUM_COLUMNS);
 	uint32_t fieldId = VID_DCI_COLUMN_BASE;
+   StringSet usedNames;
 	for(int i = 0; i < count; i++)
 	{
-		m_columns->add(new DCTableColumn(msg, fieldId));
+      DCTableColumn *column = new DCTableColumn(msg, fieldId);
+      if (usedNames.contains(column->getName()))
+      {
+         TCHAR newName[MAX_COLUMN_NAME];
+         for(int suffix = 2; ; suffix++)
+         {
+            _sntprintf(newName, MAX_COLUMN_NAME, _T("%s_%d"), column->getName(), suffix);
+            if (!usedNames.contains(newName))
+               break;
+         }
+         nxlog_debug_tag(_T("obj.dc"), 5, _T("DCTable::updateFromMessage(): duplicate column name \"%s\" renamed to \"%s\""), column->getName(), newName);
+         column->setName(newName);
+      }
+      usedNames.add(column->getName());
+		m_columns->add(column);
 		fieldId += 10;
 	}
 

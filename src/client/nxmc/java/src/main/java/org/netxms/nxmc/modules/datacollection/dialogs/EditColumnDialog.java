@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.datacollection.dialogs;
 
+import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -46,6 +47,7 @@ public class EditColumnDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
    
 	private ColumnDefinition column;
+   private Set<String> existingNames;
 	private LabeledText name;
 	private LabeledText displayName;
 	private Combo dataType;
@@ -55,13 +57,16 @@ public class EditColumnDialog extends Dialog
 	private LabeledText snmpOid;
 
 	/**
-	 * @param parentShell
+	 * @param parentShell parent shell
+	 * @param column column definition to edit
+	 * @param existingNames set of existing column names (excluding column being edited)
 	 */
-   public EditColumnDialog(Shell parentShell, ColumnDefinition column)
-	{
-		super(parentShell);
-		this.column = column;
-	}
+   public EditColumnDialog(Shell parentShell, ColumnDefinition column, Set<String> existingNames)
+   {
+      super(parentShell);
+      this.column = column;
+      this.existingNames = existingNames;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
@@ -162,6 +167,12 @@ public class EditColumnDialog extends Dialog
       if (name.getText().trim().isEmpty())
       {
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Column name can not be empty"));
+         return;
+      }
+
+      if (existingNames.contains(name.getText().trim()))
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Column with name \"{0}\" already exists", name.getText().trim()));
          return;
       }
 
