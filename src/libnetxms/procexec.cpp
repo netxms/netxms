@@ -100,6 +100,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_id = InterlockedIncrement(&s_executorId);
 #ifdef _WIN32
    m_phandle = INVALID_HANDLE_VALUE;
+   m_jobHandle = nullptr;
    m_pipe = INVALID_HANDLE_VALUE;
 #else
    m_pid = 0;
@@ -134,6 +135,8 @@ ProcessExecutor::~ProcessExecutor()
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
       CloseHandle(m_phandle);
+   if (m_jobHandle != nullptr)
+      CloseHandle(m_jobHandle);
 #endif
 }
 
@@ -290,7 +293,7 @@ bool ProcessExecutor::executeWithOutput()
    StringBuffer appNameBuffer;
    StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
    const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
-   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, m_workingDirectory, &si.StartupInfo, &pi))
+   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT | CREATE_SUSPENDED, nullptr, m_workingDirectory, &si.StartupInfo, &pi))
    {
       if (appName != nullptr)
          nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
@@ -298,6 +301,29 @@ bool ProcessExecutor::executeWithOutput()
          nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
 
       m_phandle = pi.hProcess;
+
+      m_jobHandle = CreateJobObject(nullptr, nullptr);
+      if (m_jobHandle != nullptr)
+      {
+         JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli;
+         memset(&jeli, 0, sizeof(jeli));
+         jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+         if (!SetInformationJobObject(m_jobHandle, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)) ||
+             !AssignProcessToJobObject(m_jobHandle, pi.hProcess))
+         {
+            TCHAR emsg[1024];
+            nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithOutput(): cannot configure job object (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+            CloseHandle(m_jobHandle);
+            m_jobHandle = nullptr;
+         }
+      }
+      else
+      {
+         TCHAR emsg[1024];
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithOutput(): cannot create job object (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+      }
+
+      ResumeThread(pi.hThread);
       CloseHandle(pi.hThread);
       CloseHandle(stdoutWrite);
       m_pipe = stdoutRead;
@@ -337,7 +363,7 @@ bool ProcessExecutor::executeWithoutOutput()
    si.cb = sizeof(STARTUPINFO);
 
    PROCESS_INFORMATION pi;
-   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, m_workingDirectory, &si, &pi))
+   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, CREATE_SUSPENDED, nullptr, m_workingDirectory, &si, &pi))
    {
       TCHAR buffer[1024];
       if (appName != nullptr)
@@ -355,6 +381,29 @@ bool ProcessExecutor::executeWithoutOutput()
       nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithoutOutput(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
 
    m_phandle = pi.hProcess;
+
+   m_jobHandle = CreateJobObject(nullptr, nullptr);
+   if (m_jobHandle != nullptr)
+   {
+      JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli;
+      memset(&jeli, 0, sizeof(jeli));
+      jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+      if (!SetInformationJobObject(m_jobHandle, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)) ||
+          !AssignProcessToJobObject(m_jobHandle, pi.hProcess))
+      {
+         TCHAR emsg[1024];
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithoutOutput(): cannot configure job object (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+         CloseHandle(m_jobHandle);
+         m_jobHandle = nullptr;
+      }
+   }
+   else
+   {
+      TCHAR emsg[1024];
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithoutOutput(): cannot create job object (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+   }
+
+   ResumeThread(pi.hThread);
    CloseHandle(pi.hThread);
    return true;
 }
@@ -608,6 +657,11 @@ bool ProcessExecutor::execute()
       CloseHandle(m_phandle);
       m_phandle = INVALID_HANDLE_VALUE;
    }
+   if (m_jobHandle != nullptr)
+   {
+      CloseHandle(m_jobHandle);
+      m_jobHandle = nullptr;
+   }
 
    m_initLock.lock();
 
@@ -795,6 +849,12 @@ do_wait:
    CloseHandle(executor->m_phandle);
    executor->m_phandle = INVALID_HANDLE_VALUE;
 
+   if (executor->m_jobHandle != nullptr)
+   {
+      CloseHandle(executor->m_jobHandle);
+      executor->m_jobHandle = nullptr;
+   }
+
 #else /* UNIX implementation */
 
    int pipe = executor->getOutputPipe();
@@ -872,7 +932,19 @@ do_wait:
 void ProcessExecutor::terminateProcess()
 {
 #ifdef _WIN32
-   if (m_phandle != INVALID_HANDLE_VALUE)
+   if (m_jobHandle != nullptr)
+   {
+      if (TerminateJobObject(m_jobHandle, 127))
+      {
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): job object successfully terminated"));
+      }
+      else
+      {
+         TCHAR emsg[1024];
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): cannot terminate job object (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+      }
+   }
+   else if (m_phandle != INVALID_HANDLE_VALUE)
    {
       if (TerminateProcess(m_phandle, 127))
       {
@@ -909,6 +981,11 @@ void ProcessExecutor::stop()
    {
       CloseHandle(m_phandle);
       m_phandle = INVALID_HANDLE_VALUE;
+   }
+   if (m_jobHandle != nullptr)
+   {
+      CloseHandle(m_jobHandle);
+      m_jobHandle = nullptr;
    }
 #else
    m_pid = 0;
@@ -977,6 +1054,15 @@ void ProcessExecutor::detach()
 
    CloseHandle(m_phandle);
    m_phandle = INVALID_HANDLE_VALUE;
+   if (m_jobHandle != nullptr)
+   {
+      // Remove KILL_ON_JOB_CLOSE limit so detached processes are not killed when handle is closed
+      JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli;
+      memset(&jeli, 0, sizeof(jeli));
+      SetInformationJobObject(m_jobHandle, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli));
+      CloseHandle(m_jobHandle);
+      m_jobHandle = nullptr;
+   }
    m_started = false;
    m_running = false;
 }
