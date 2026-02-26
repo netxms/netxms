@@ -46,6 +46,7 @@ struct IO_STATS
    uint32_t currReadOps;
    uint32_t currWriteOps;
    uint32_t currQueue;
+   uint64_t currIoTime;
 
    // history - totals for queue, deltas for others
    uint64_t histBytesRead[HISTORY_SIZE];
@@ -53,6 +54,7 @@ struct IO_STATS
    uint32_t histReadOps[HISTORY_SIZE];
    uint32_t histWriteOps[HISTORY_SIZE];
    uint32_t histQueue[HISTORY_SIZE];
+   uint32_t histIoTime[HISTORY_SIZE];
 };
 
 /**
@@ -89,6 +91,8 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
       s_data[i].histReadOps[s_currSlot] = kio->reads - s_data[i].currReadOps;
       s_data[i].histWriteOps[s_currSlot] = kio->writes - s_data[i].currWriteOps;
       s_data[i].histQueue[s_currSlot] = kio->wcnt + kio->rcnt;
+      // kstat_io_t rtime is cumulative run time in nanoseconds
+      s_data[i].histIoTime[s_currSlot] = static_cast<uint32_t>((kio->rtime - s_data[i].currIoTime) / 1000000);
    }
 
    // update current values
@@ -97,6 +101,7 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
    s_data[i].currReadOps = kio->reads;
    s_data[i].currWriteOps = kio->writes;
    s_data[i].currQueue = kio->wcnt + kio->rcnt;
+   s_data[i].currIoTime = kio->rtime;
 }
 
 /**
@@ -294,6 +299,19 @@ LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
       case IOSTAT_NUM_WBYTES_MAX:
          ret_uint64(value, CalculateMax64(s_data[0].histBytesWritten));
          break;
+      case IOSTAT_IO_TIME:
+      {
+         // Report maximum disk utilization across all devices
+         double maxValue = 0;
+         for(int i = 1; (i <= MAX_DEVICES) && (s_data[i].dev[0] != 0); i++)
+         {
+            double v = CalculateAverage32(s_data[i].histIoTime) / 10;
+            if (v > maxValue)
+               maxValue = v;
+         }
+         ret_double(value, maxValue);
+         break;
+      }
       default:
          rc = SYSINFO_RC_UNSUPPORTED;
          break;
@@ -366,6 +384,9 @@ LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
          break;
       case IOSTAT_NUM_WBYTES_MAX:
          ret_uint64(value, CalculateMax64(s_data[i].histBytesWritten));
+         break;
+      case IOSTAT_IO_TIME:
+         ret_double(value, CalculateAverage32(s_data[i].histIoTime) / 10);
          break;
       default:
          rc = SYSINFO_RC_UNSUPPORTED;

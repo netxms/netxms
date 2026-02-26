@@ -119,10 +119,29 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
+/**
+ * I/O stats request types
+ */
+enum
+{
+   IOSTAT_NUM_READS,
+   IOSTAT_NUM_WRITES,
+   IOSTAT_NUM_RBYTES,
+   IOSTAT_NUM_WBYTES,
+   IOSTAT_IO_TIME,
+   IOSTAT_QUEUE
+};
+
 int ExecSysctl(const char *param, void *buffer, size_t buffSize);
 void ReadCPUVendorId();
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();
+void StartIOStatCollector();
+void ShutdownIOStatCollector();
+
+LONG H_IOStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IOStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IODeviceList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

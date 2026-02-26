@@ -17,10 +17,10 @@
 SUBAGENT=darwin
 
 pkglib_LTLIBRARIES=darwin.la
-darwin_la_SOURCES=darwin.cpp net.cpp system.cpp disk.cpp cpu.cpp
+darwin_la_SOURCES=darwin.cpp iostat.cpp net.cpp system.cpp disk.cpp cpu.cpp
 darwin_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 darwin_la_LDFLAGS=-module -avoid-version -export-symbols ../platform-subagent.sym
-darwin_la_LIBADD=../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
+darwin_la_LIBADD=../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -framework IOKit -framework CoreFoundation
 
 EXTRA_DIST=cpu.h darwin.h disk.h net.h system.h
 

@@ -132,7 +132,11 @@ struct DiskPerfStats
          writeCount[nextSample] = currentRawData.WriteCount - lastRawData.WriteCount;
          queueDepth[nextSample] = currentRawData.QueueDepth;
          // Time in DISK_PERFORMANCE expressed in 100-nanosecond intervals
-         diskTime[nextSample] = static_cast<uint32_t>(((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) + (currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart)) / 10000);
+         // Use IdleTime to compute disk busy time (ReadTime + WriteTime can overlap on devices with concurrent I/O)
+         int64_t idleDelta = (currentRawData.IdleTime.QuadPart - lastRawData.IdleTime.QuadPart) / 10000;
+         if (idleDelta < 0)
+            idleDelta = 0;
+         diskTime[nextSample] = (idleDelta < 1000) ? static_cast<uint32_t>(1000 - idleDelta) : 0;
          readTime[nextSample] = static_cast<uint32_t>((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) / 10000);
          writeTime[nextSample] = static_cast<uint32_t>((currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart) / 10000);
          nextSample++;
@@ -215,6 +219,7 @@ static void IOStatColector()
             rawDataTotal.QueueDepth += rawData.QueueDepth;
             rawDataTotal.ReadTime.QuadPart += rawData.ReadTime.QuadPart;
             rawDataTotal.WriteTime.QuadPart += rawData.WriteTime.QuadPart;
+            rawDataTotal.IdleTime.QuadPart += rawData.IdleTime.QuadPart;
          }
          else
          {
@@ -344,7 +349,38 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
  */
 LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   return GetMetricValue(&s_globalDiskPerfStats, CAST_FROM_POINTER(arg, IOInfoType), value);
+   IOInfoType metric = CAST_FROM_POINTER(arg, IOInfoType);
+   if (metric == IOSTAT_IO_TIME || metric == IOSTAT_IO_READ_TIME || metric == IOSTAT_IO_WRITE_TIME)
+   {
+      // For time-based metrics report maximum across all disks (summing percentages is not meaningful)
+      double maxValue = 0;
+      LockMutex(&s_diskPerfStatsLock, INFINITE);
+      for (DiskPerfStats *ps : s_diskPerfStats)
+      {
+         double v;
+         switch (metric)
+         {
+            case IOSTAT_IO_TIME:
+               v = GetAverageValue(ps->diskTime) / 10;
+               break;
+            case IOSTAT_IO_READ_TIME:
+               v = GetAverageValue(ps->readTime) / 10;
+               break;
+            case IOSTAT_IO_WRITE_TIME:
+               v = GetAverageValue(ps->writeTime) / 10;
+               break;
+            default:
+               v = 0;
+               break;
+         }
+         if (v > maxValue)
+            maxValue = v;
+      }
+      UnlockMutex(&s_diskPerfStatsLock);
+      ret_double(value, maxValue);
+      return SYSINFO_RC_SUCCESS;
+   }
+   return GetMetricValue(&s_globalDiskPerfStats, metric, value);
 }
 
 /**

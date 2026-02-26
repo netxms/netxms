@@ -61,6 +61,7 @@ static bool SubAgentInit(Config *config)
    ReadCPUVendorId();
    SMBIOS_Parse(SMBIOS_Reader);
    StartCpuUsageCollector();
+   StartIOStatCollector();
    nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 1, _T("FreeBSD platform subagent initialized"));
    return true;
 }
@@ -70,6 +71,7 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
+   ShutdownIOStatCollector();
    ShutdownCpuUsageCollector();
 }
 
@@ -272,6 +274,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("System.CPU.VendorId"), H_CpuVendorId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
+   { _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+   { _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+   { _T("System.IO.BytesWriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+   { _T("System.IO.BytesWriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+   { _T("System.IO.DiskQueue"), H_IOStatsTotal, (const TCHAR *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+   { _T("System.IO.DiskQueue(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+   { _T("System.IO.DiskTime"), H_IOStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
+   { _T("System.IO.DiskTime(*)"), H_IOStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
+   { _T("System.IO.ReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+   { _T("System.IO.ReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+   { _T("System.IO.WriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+   { _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+
    { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 
    { _T("System.Memory.Physical.Available"),  H_MemoryInfo, (const TCHAR *)PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
@@ -314,6 +329,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
    { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
+   { _T("System.IO.Devices"),            H_IODeviceList,    NULL },
    { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
    { _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
    { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },

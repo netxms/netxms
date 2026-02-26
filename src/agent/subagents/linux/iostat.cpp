@@ -419,16 +419,20 @@ LONG H_IoStatsTotalTimePct(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 
    s_dataAccessLock.lock();
 
-   double sum = 0;
+   double maxValue = 0;
    for(int i = 0; i < s_deviceCount; i++)
    {
       if (s_devices[i].isRealDevice)
-         sum += static_cast<double>(GetSampleDelta(s_devices[i].samples, metric)) / 600; // = / 60000 * 100
+      {
+         double v = static_cast<double>(GetSampleDelta(s_devices[i].samples, metric)) / 600; // = / 60000 * 100
+         if (v > maxValue)
+            maxValue = v;
+      }
    }
 
    s_dataAccessLock.unlock();
 
-   ret_double(value, sum);
+   ret_double(value, maxValue);
    return SYSINFO_RC_SUCCESS;
 }
 

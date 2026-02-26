@@ -19,6 +19,7 @@
 **/
 
 #ifndef __darwin_h__
+#define __darwin_h__
 
 enum
 {
@@ -27,8 +28,25 @@ enum
 	INTERVAL_15MIN
 };
 
+/**
+ * I/O stats request types
+ */
+enum
+{
+   IOSTAT_NUM_READS,
+   IOSTAT_NUM_WRITES,
+   IOSTAT_NUM_RBYTES,
+   IOSTAT_NUM_WBYTES,
+   IOSTAT_IO_TIME
+};
+
 #define DEBUG_TAG _T("darwin")
 
-#define __darwin_h__
+void StartIOStatCollector();
+void ShutdownIOStatCollector();
+
+LONG H_IOStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IOStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IODeviceList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __darwin_h__

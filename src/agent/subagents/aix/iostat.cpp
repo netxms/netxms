@@ -37,6 +37,7 @@ struct DISK_INFO
 	QWORD bytesRead[SAMPLE_COUNT];
 	QWORD bytesWritten[SAMPLE_COUNT];
 	QWORD waitTime[SAMPLE_COUNT];
+	QWORD ioTime[SAMPLE_COUNT];
 	perfstat_disk_t last;
 };
 
@@ -118,6 +119,7 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 	dev->waitTime[s_currSlot] = (di->wq_time - dev->last.wq_time) / 1000;
 	// NOTE: I'm not 100% sure that wq_time is measured in microseconds,
 	// but it looks like that and I was unable to find any additional info
+	dev->ioTime[s_currSlot] = di->time - dev->last.time;
 
 	memcpy(&dev->last, di, sizeof(perfstat_disk_t));
 }
@@ -247,6 +249,19 @@ LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 		case IOSTAT_WAIT_TIME:
 			ret_uint(value, CalculateAverageTime(s_total.transfers, s_total.waitTime));
 			break;
+		case IOSTAT_IO_TIME:
+		{
+			// Report maximum disk utilization across all devices
+			double maxValue = 0;
+			for(int i = 0; (i < MAX_DEVICES) && (s_devices[i].name[0] != 0); i++)
+			{
+				double v = static_cast<double>(CalculateAverage64(s_devices[i].ioTime)) / 10;
+				if (v > maxValue)
+					maxValue = v;
+			}
+			ret_double(value, maxValue);
+			break;
+		}
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;
 			break;
@@ -297,6 +312,10 @@ LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 			break;
 		case IOSTAT_WAIT_TIME:
 			ret_uint(value, CalculateAverageTime(s_devices[i].transfers, s_devices[i].waitTime));
+			break;
+		case IOSTAT_IO_TIME:
+			// di->time is assumed to be in milliseconds; average ms per second / 10 = percentage
+			ret_double(value, static_cast<double>(CalculateAverage64(s_devices[i].ioTime)) / 10);
 			break;
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;
