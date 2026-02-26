@@ -1892,7 +1892,7 @@ static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
  * Upload file to agent
  */
 uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-      std::function<void (size_t)> progressCallback, NXCPStreamCompressionMethod compMethod)
+      std::function<void (size_t)> progressCallback, NXCPStreamCompressionMethod compMethod, uint32_t bandwidthLimit)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1995,7 +1995,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          context.lastProbeTime = time(nullptr);
          context.messageCount = 0;
 
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr))
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr, bandwidthLimit))
          {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          }

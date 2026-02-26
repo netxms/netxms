@@ -680,6 +680,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_agentRestartWaitTime = ConvertToUint32(value, 0);
    }
+   else if (!wcscmp(name, L"Agent.UploadBandwidthLimit"))
+   {
+      g_agentUploadBandwidthLimit = ConvertToUint32(value, 0);
+   }
    else if (!wcscmp(name, L"Alarms.ResolveExpirationTime"))
    {
       UpdateAlarmExpirationTimes();

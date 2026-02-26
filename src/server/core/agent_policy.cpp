@@ -968,8 +968,10 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
          BYTE localHash[MD5_DIGEST_SIZE];
          if (CalculateFileMD5Hash(localFilePath, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
          {
+            uint32_t bwLimit = data->node->getCustomAttributeAsUInt32(L"SysConfig:Agent.UploadBandwidthLimit", g_agentUploadBandwidthLimit);
+            uint32_t bandwidthLimit = (bwLimit > 0) ? bwLimit * 1024 : 0;
             nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), data->debugId, localFile->path);
-            rcc = conn->uploadFile(localFilePath, remoteFile->name(), true);
+            rcc = conn->uploadFile(localFilePath, remoteFile->name(), true, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
             if (rcc == ERR_SUCCESS)
                nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed"), data->debugId);
             else
