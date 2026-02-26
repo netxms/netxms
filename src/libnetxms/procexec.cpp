@@ -866,32 +866,41 @@ do_wait:
 }
 
 /**
- * Force stop process
+ * Terminate process without waiting for readOutput thread to finish.
+ * Safe to call from within onOutput() callback (i.e., from readOutput thread itself).
  */
-void ProcessExecutor::stop()
+void ProcessExecutor::terminateProcess()
 {
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
    {
       if (TerminateProcess(m_phandle, 127))
       {
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): process successfully terminated"));
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): process successfully terminated"));
       }
       else
       {
          TCHAR emsg[1024];
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): cannot terminate process (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): cannot terminate process (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
       }
    }
 #else
    if (m_pid != 0)
    {
       if (kill(-m_pid, SIGKILL) == 0)  // kill all processes in group
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): SIGKILL signal sent to process group %u"), m_pid);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): SIGKILL signal sent to process group %u"), m_pid);
       else
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): cannot send SIGKILL signal to process group %u (%s)"), m_pid, _tcserror(errno));
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::terminateProcess(): cannot send SIGKILL signal to process group %u (%s)"), m_pid, _tcserror(errno));
    }
 #endif
+}
+
+/**
+ * Force stop process
+ */
+void ProcessExecutor::stop()
+{
+   terminateProcess();
    waitForCompletion(INFINITE);
    m_started = false;
    m_running = false;

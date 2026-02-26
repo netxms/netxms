@@ -132,6 +132,8 @@ protected:
    static void waitForProcess(ProcessExecutor *executor);
 #endif
 
+   void terminateProcess();
+
    virtual void onOutput(const char *text, size_t length);
    virtual void endOfOutput();
 
