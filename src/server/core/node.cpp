@@ -4020,7 +4020,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 
             wchar_t key[64];
             nx_swprintf(key, 64, L"AgentPolicyDeployment_%u", m_id);
-            ThreadPoolExecuteSerialized(g_pollerThreadPool, key, RemoveAgentPolicy, data);
+            ThreadPoolExecuteSerialized(g_mainThreadPool, key, RemoveAgentPolicy, data);
          }
 
          unlockParentList();
