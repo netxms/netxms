@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -399,8 +399,6 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 	// Decrypt password
    DecryptPasswordW(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
    DecryptPasswordA("netxms", g_auditLogKey, g_auditLogKey, 128);
-
-
 
    // Parse peer node information
    if (s_peerNode[0] != 0)
