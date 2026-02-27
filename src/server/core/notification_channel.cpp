@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2025 Raden Solutions
+** Copyright (C) 2019-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <ncdrv.h>
 #include <nxsl.h>
+#include <nxai.h>
 
 #define DEBUG_TAG L"nc"
 
@@ -32,6 +33,42 @@
 static const NCConfigurationTemplate s_nxslConfigTemplate(true, true);
 
 #define NC_THREAD_KEY L"NotificationChannel"
+
+/**
+ * Throttling configuration
+ */
+struct ThrottlingConfig
+{
+   int channelBurst;
+   double channelRate;       // normalized to tokens/sec
+   int recipientBurst;
+   double recipientRate;     // normalized to tokens/sec
+   int digestThreshold;
+   int digestInterval;       // seconds
+};
+
+/**
+ * Load throttling configuration from global config
+ */
+static ThrottlingConfig LoadThrottlingConfig()
+{
+   ThrottlingConfig config;
+   config.channelBurst = ConfigReadInt(L"NotificationChannels.RateLimit.ChannelBurst", 0);
+   int channelRate = ConfigReadInt(L"NotificationChannels.RateLimit.ChannelRate", 0);
+   wchar_t channelRateUnit[64];
+   ConfigReadStr(L"NotificationChannels.RateLimit.ChannelRateUnit", channelRateUnit, 64, L"minute");
+   config.channelRate = (channelRate > 0) ? TokenBucket::rateFromUnit(channelRate, channelRateUnit) : 0;
+
+   config.recipientBurst = ConfigReadInt(L"NotificationChannels.RateLimit.RecipientBurst", 0);
+   int recipientRate = ConfigReadInt(L"NotificationChannels.RateLimit.RecipientRate", 0);
+   wchar_t recipientRateUnit[64];
+   ConfigReadStr(L"NotificationChannels.RateLimit.RecipientRateUnit", recipientRateUnit, 64, L"minute");
+   config.recipientRate = (recipientRate > 0) ? TokenBucket::rateFromUnit(recipientRate, recipientRateUnit) : 0;
+
+   config.digestThreshold = ConfigReadInt(L"NotificationChannels.RateLimit.DigestThreshold", 50);
+   config.digestInterval = ConfigReadInt(L"NotificationChannels.RateLimit.DigestInterval", 300);
+   return config;
+}
 
 /**
  * Class to store in queued notification message
@@ -231,8 +268,26 @@ private:
    uint32_t m_failureCount;
    NXSL_Program *m_nxslScript;   // Compiled NXSL script for built-in NXSL driver
 
+   // Throttling members
+   TokenBucket *m_channelBucket;
+   StringObjectMap<TokenBucket> m_recipientBuckets;
+   Mutex m_recipientBucketsLock;
+   StringObjectMap<ObjectArray<NotificationMessage>> m_digestAccumulator;
+   Mutex m_digestLock;
+   int64_t m_lastDigestTime;
+   int64_t m_lastBucketCleanupTime;
+   int64_t m_lastConfigReloadTime;
+   ThrottlingConfig m_throttlingConfig;
+
    int sendNXSL(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body,
                 const Event *event, const shared_ptr<NetObj>& sourceObject);
+
+   bool shouldDigest();
+   void absorbIntoDigest(NotificationMessage *msg);
+   TokenBucket *getOrCreateRecipientBucket(const wchar_t *recipient);
+   void checkAndSendDigests();
+   void cleanupStaleRecipientBuckets();
+   void reloadThrottlingConfig();
 
    void setError(const wchar_t *message)
    {
@@ -341,11 +396,80 @@ NotificationMessage::~NotificationMessage()
 }
 
 /**
+ * Generate digest message from accumulated notifications
+ */
+static String GenerateDigestMessage(const wchar_t *channelName, const wchar_t *recipient, const ObjectArray<NotificationMessage> &messages)
+{
+   StringBuffer header;
+   header.appendFormattedString(L"Digest of %d suppressed notifications on channel \"%s\":\n\n", messages.size(), channelName);
+
+   // Build prompt for AI
+   StringBuffer prompt;
+   prompt.append("You are a network monitoring system generating a notification digest. "
+      "The following notifications were suppressed due to rate limiting. "
+      "Produce a concise summary of the key issues. "
+      "Output only the summary text — no introductory phrases, no headers, no questions. "
+      "Do not start with phrases like \"Here's a summary\" or \"Below is a digest\". "
+      "Do not end with questions or offers for further detail. "
+      "Just state the facts: what happened, how many times, and what may need attention.\n\n");
+
+   int limit = std::min(messages.size(), 50);
+   for (int i = 0; i < limit; i++)
+   {
+      const NotificationMessage *msg = messages.get(i);
+      prompt.appendFormattedString(L"--- Message %d ---\nSubject: %s\n", i + 1, msg->getSubject());
+      const wchar_t *body = msg->getBody();
+      if (body != nullptr)
+      {
+         size_t bodyLen = wcslen(body);
+         if (bodyLen > 200)
+         {
+            wchar_t truncated[204];
+            wcsncpy(truncated, body, 200);
+            truncated[200] = 0;
+            prompt.appendFormattedString(L"Body: %s...\n", truncated);
+         }
+         else
+         {
+            prompt.appendFormattedString(L"Body: %s\n", body);
+         }
+      }
+   }
+   if (messages.size() > 50)
+      prompt.appendFormattedString(L"\n(%d more messages not shown)\n", messages.size() - 50);
+
+   // Try AI summary
+   char *promptUtf8 = prompt.getUTF8String();
+   char *response = QueryAIAssistantWithSlot(promptUtf8, nullptr, "fast", 1);
+   if (response == nullptr)
+      response = QueryAIAssistantWithSlot(promptUtf8, nullptr, "default", 1);
+   MemFree(promptUtf8);
+
+   if (response != nullptr)
+   {
+      header.appendUtf8String(response);
+      MemFree(response);
+      return header;
+   }
+
+   // Fallback: list of subjects
+   for (int i = 0; i < messages.size(); i++)
+   {
+      const wchar_t *subject = messages.get(i)->getSubject();
+      if ((subject != nullptr) && (subject[0] != 0))
+         header.appendFormattedString(L"  %d. %s\n", i + 1, messages.get(i)->getSubject());
+   }
+   return header;
+}
+
+/**
  * Notification channel constructor
  */
 NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const wchar_t *name,
       const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate, const wchar_t *errorMessage) :
-            m_driverLock(MutexType::FAST), m_notificationQueue(64, Ownership::True)
+            m_driverLock(MutexType::FAST), m_notificationQueue(64, Ownership::True),
+            m_recipientBuckets(Ownership::True), m_recipientBucketsLock(MutexType::FAST),
+            m_digestAccumulator(Ownership::True), m_digestLock(MutexType::FAST)
 {
    m_driver = driver;
    m_storageManager = storageManager;
@@ -362,6 +486,17 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    m_messageCount = 0;
    m_failureCount = 0;
    m_nxslScript = nullptr;
+
+   // Initialize throttling
+   m_throttlingConfig = LoadThrottlingConfig();
+   if ((m_throttlingConfig.channelBurst > 0) && (m_throttlingConfig.channelRate > 0))
+      m_channelBucket = new TokenBucket(m_throttlingConfig.channelBurst, m_throttlingConfig.channelRate);
+   else
+      m_channelBucket = nullptr;
+   m_lastDigestTime = GetCurrentTimeMs();
+   m_lastBucketCleanupTime = GetCurrentTimeMs();
+   m_lastConfigReloadTime = GetCurrentTimeMs();
+
    m_workerThread = ThreadCreateEx(this, &NotificationChannel::workerThread);
 }
 
@@ -375,6 +510,7 @@ NotificationChannel::~NotificationChannel()
    delete m_driver;
    delete m_storageManager;
    delete m_nxslScript;
+   delete m_channelBucket;
    MemFree(m_configuration);
 }
 
@@ -383,26 +519,66 @@ NotificationChannel::~NotificationChannel()
  */
 void NotificationChannel::workerThread()
 {
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel \"%s\" started"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Worker thread for channel \"%s\" started", m_name);
    while (true)
    {
-      NotificationMessage *notification = m_notificationQueue.getOrBlock();
+      NotificationMessage *notification = m_notificationQueue.getOrBlock(1000);
       if (notification == INVALID_POINTER_VALUE)
          break;
 
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Message to \"%s\" via channel \"%s\" dequeued"), notification->getRecipient(), m_name);
+      if (notification == nullptr)
+      {
+         // Timeout - reload config, check digest timer and cleanup stale buckets
+         reloadThrottlingConfig();
+         checkAndSendDigests();
+         cleanupStaleRecipientBuckets();
+         continue;
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Message to \"%s\" via channel \"%s\" dequeued", notification->getRecipient(), m_name);
 
       if (IsShutdownInProgress())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" via channel \"%s\" dropped due to server shutdown"), notification->getRecipient(), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Message to \"%s\" via channel \"%s\" dropped due to server shutdown", notification->getRecipient(), m_name);
          delete notification;
+         continue;
+      }
+
+      // Check channel-level rate limit
+      if (m_channelBucket != nullptr && !m_channelBucket->consume())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Message to \"%s\" via channel \"%s\" throttled (channel rate limit)", notification->getRecipient(), m_name);
+         if (shouldDigest())
+         {
+            absorbIntoDigest(notification);
+            continue;
+         }
+         m_notificationQueue.insert(notification);
+         int64_t waitMs = m_channelBucket->timeToNextToken();
+         SleepAndCheckForShutdownEx(static_cast<uint32_t>(std::min(waitMs, static_cast<int64_t>(1000))));
+         continue;
+      }
+
+      // Check recipient-level rate limit
+      TokenBucket *rb = getOrCreateRecipientBucket(notification->getRecipient());
+      if (rb != nullptr && !rb->consume())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Message to \"%s\" via channel \"%s\" throttled (recipient rate limit)", notification->getRecipient(), m_name);
+         if (shouldDigest())
+         {
+            absorbIntoDigest(notification);
+            continue;
+         }
+         m_notificationQueue.insert(notification);
+         int64_t waitMs = rb->timeToNextToken();
+         SleepAndCheckForShutdownEx(static_cast<uint32_t>(std::min(waitMs, static_cast<int64_t>(1000))));
          continue;
       }
 
       m_messageCount++;
       m_lastMessageTime = time(nullptr);
 
-      int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 30);
+      int retryCount = ConfigReadInt(L"NotificationChannels.MaxRetryCount", 30);
       while (true)
       {
          int result;
@@ -427,34 +603,34 @@ void NotificationChannel::workerThread()
          retryCount--;
          if ((result > 0) && (retryCount > 0))
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel \"%s\", retrying in %d seconds, %d retries left"), m_name, result, retryCount);
+            nxlog_debug_tag(DEBUG_TAG, 4, L"Driver error for channel \"%s\", retrying in %d seconds, %d retries left", m_name, result, retryCount);
             if (SleepAndCheckForShutdown(result))
                break;
          }
          else if (result == 0) // success
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" successfully sent via channel \"%s\""), notification->getRecipient(), m_name);
+            nxlog_debug_tag(DEBUG_TAG, 5, L"Message to \"%s\" successfully sent via channel \"%s\"", notification->getRecipient(), m_name);
             clearError();
          }
          else // failure
          {
             if (result == -99)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel \"%s\", message dropped"), m_name);
-               setError(_T("Driver not initialized"));
+               nxlog_debug_tag(DEBUG_TAG, 4, L"No driver for channel \"%s\", message dropped", m_name);
+               setError(L"Driver not initialized");
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel \"%s\", message dropped"), m_name);
-               setError(_T("Driver error"));
+               nxlog_debug_tag(DEBUG_TAG, 4, L"Driver error for channel \"%s\", message dropped", m_name);
+               setError(L"Driver error");
             }
             m_failureCount++;
 
             EventBuilder(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode)
-               .param(_T("notificationChannelName"), m_name)
-               .param(_T("recipientAddress"), notification->getRecipient())
-               .param(_T("notificationSubject"), notification->getSubject())
-               .param(_T("notificationMessage"), notification->getBody())
+               .param(L"notificationChannelName", m_name)
+               .param(L"recipientAddress", notification->getRecipient())
+               .param(L"notificationSubject", notification->getSubject())
+               .param(L"notificationMessage", notification->getBody())
                .post();
          }
 
@@ -466,7 +642,7 @@ void NotificationChannel::workerThread()
       }
       delete notification;
    }
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel \"%s\" stopped"), m_name);
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Worker thread for channel \"%s\" stopped", m_name);
 }
 
 /**
@@ -584,29 +760,238 @@ void NotificationChannel::checkHealth()
 }
 
 /**
+ * Check if queue fill exceeds digest threshold
+ */
+bool NotificationChannel::shouldDigest()
+{
+   if ((m_throttlingConfig.digestThreshold <= 0) || (m_throttlingConfig.digestInterval <= 0))
+      return false;
+
+   return static_cast<int>(m_notificationQueue.size()) >= m_throttlingConfig.digestThreshold;
+}
+
+/**
+ * Absorb notification into digest accumulator
+ */
+void NotificationChannel::absorbIntoDigest(NotificationMessage *msg)
+{
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Message to \"%s\" via channel \"%s\" absorbed into digest", msg->getRecipient(), m_name);
+
+   m_digestLock.lock();
+   ObjectArray<NotificationMessage> *recipientDigest = m_digestAccumulator.get(msg->getRecipient());
+   if (recipientDigest == nullptr)
+   {
+      recipientDigest = new ObjectArray<NotificationMessage>(16, 16, Ownership::True);
+      m_digestAccumulator.set(msg->getRecipient(), recipientDigest);
+   }
+   recipientDigest->add(msg);  // Ownership transferred to array
+   m_digestLock.unlock();
+
+   m_failureCount++;
+}
+
+/**
+ * Get or create recipient-level token bucket
+ */
+TokenBucket *NotificationChannel::getOrCreateRecipientBucket(const wchar_t *recipient)
+{
+   if ((m_throttlingConfig.recipientBurst <= 0) || (m_throttlingConfig.recipientRate <= 0))
+      return nullptr;
+
+   m_recipientBucketsLock.lock();
+   TokenBucket *bucket = m_recipientBuckets.get(recipient);
+   if (bucket == nullptr)
+   {
+      bucket = new TokenBucket(m_throttlingConfig.recipientBurst, m_throttlingConfig.recipientRate);
+      m_recipientBuckets.set(recipient, bucket);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Created recipient bucket for \"%s\" on channel \"%s\" (burst=%d, rate=%.2f/s)",
+         recipient, m_name, m_throttlingConfig.recipientBurst, m_throttlingConfig.recipientRate);
+   }
+   m_recipientBucketsLock.unlock();
+   return bucket;
+}
+
+/**
+ * Check if digest timer has fired and send accumulated digests
+ */
+void NotificationChannel::checkAndSendDigests()
+{
+   if (m_throttlingConfig.digestInterval <= 0)
+      return;
+
+   int64_t now = GetCurrentTimeMs();
+   if (now - m_lastDigestTime < static_cast<int64_t>(m_throttlingConfig.digestInterval) * 1000)
+      return;
+
+   m_lastDigestTime = now;
+
+   m_digestLock.lock();
+   if (m_digestAccumulator.size() == 0)
+   {
+      m_digestLock.unlock();
+      return;
+   }
+
+   // Collect keys first, then unlink entries
+   StringList keys;
+   auto it = m_digestAccumulator.begin();
+   while (it.hasNext())
+      keys.add(it.next()->key);
+
+   ObjectArray<ObjectArray<NotificationMessage>> pendingValues(keys.size(), 16, Ownership::True);
+   StringList pendingKeys;
+   for (int i = 0; i < keys.size(); i++)
+   {
+      ObjectArray<NotificationMessage> *msgs = m_digestAccumulator.unlink(keys.get(i));
+      if (msgs != nullptr)
+      {
+         pendingKeys.add(keys.get(i));
+         pendingValues.add(msgs);
+      }
+   }
+   m_digestLock.unlock();
+
+   // Send a digest for each recipient
+   for (int i = 0; i < pendingKeys.size(); i++)
+   {
+      const wchar_t *recipient = pendingKeys.get(i);
+      ObjectArray<NotificationMessage> *messages = pendingValues.get(i);
+
+      if (messages->size() == 0)
+         continue;
+
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Sending digest for recipient \"%s\" on channel \"%s\" (%d messages)",
+         recipient, m_name, messages->size());
+
+      String digestBody = GenerateDigestMessage(m_name, recipient, *messages);
+      String digestSubject(L"[Digest] Notification summary");
+
+      m_messageCount++;
+      m_lastMessageTime = time(nullptr);
+
+      int result;
+      m_driverLock.lock();
+      if (m_nxslScript != nullptr)
+      {
+         result = sendNXSL(recipient, digestSubject.cstr(), digestBody.cstr(), nullptr, shared_ptr<NetObj>());
+      }
+      else if (m_driver != nullptr)
+      {
+         result = m_driver->send(recipient, digestSubject.cstr(), digestBody.cstr());
+      }
+      else
+      {
+         result = -99;
+      }
+      m_driverLock.unlock();
+
+      if (result == 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Digest to \"%s\" successfully sent via channel \"%s\"", recipient, m_name);
+         clearError();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Failed to send digest to \"%s\" via channel \"%s\"", recipient, m_name);
+         m_failureCount++;
+      }
+   }
+}
+
+/**
+ * Cleanup recipient buckets that haven't been used for over 1 hour
+ */
+void NotificationChannel::cleanupStaleRecipientBuckets()
+{
+   int64_t now = GetCurrentTimeMs();
+   if (now - m_lastBucketCleanupTime < 600000)  // Every 10 minutes
+      return;
+
+   m_lastBucketCleanupTime = now;
+
+   m_recipientBucketsLock.lock();
+   // Simple approach: just clear all buckets periodically
+   // They will be recreated on demand with fresh state
+   int count = m_recipientBuckets.size();
+   if (count > 0)
+   {
+      m_recipientBuckets.clear();
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cleaned up %d recipient bucket(s) on channel \"%s\"", count, m_name);
+   }
+   m_recipientBucketsLock.unlock();
+}
+
+/**
+ * Reload throttling configuration from global config (called periodically from worker thread)
+ */
+void NotificationChannel::reloadThrottlingConfig()
+{
+   int64_t now = GetCurrentTimeMs();
+   if (now - m_lastConfigReloadTime < 10000)  // Every 10 seconds
+      return;
+
+   m_lastConfigReloadTime = now;
+
+   ThrottlingConfig newConfig = LoadThrottlingConfig();
+
+   // Check if config actually changed
+   if (newConfig.channelBurst == m_throttlingConfig.channelBurst &&
+       newConfig.channelRate == m_throttlingConfig.channelRate &&
+       newConfig.recipientBurst == m_throttlingConfig.recipientBurst &&
+       newConfig.recipientRate == m_throttlingConfig.recipientRate &&
+       newConfig.digestThreshold == m_throttlingConfig.digestThreshold &&
+       newConfig.digestInterval == m_throttlingConfig.digestInterval)
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Throttling config changed for channel \"%s\" (channelBurst=%d, channelRate=%.4f/s, recipientBurst=%d, recipientRate=%.4f/s, digestThreshold=%d, digestInterval=%ds)",
+      m_name, newConfig.channelBurst, newConfig.channelRate, newConfig.recipientBurst, newConfig.recipientRate, newConfig.digestThreshold, newConfig.digestInterval);
+
+   m_throttlingConfig = newConfig;
+
+   // Reconfigure or create/destroy channel bucket
+   if ((m_throttlingConfig.channelBurst > 0) && (m_throttlingConfig.channelRate > 0))
+   {
+      if (m_channelBucket != nullptr)
+         m_channelBucket->reconfigure(m_throttlingConfig.channelBurst, m_throttlingConfig.channelRate);
+      else
+         m_channelBucket = new TokenBucket(m_throttlingConfig.channelBurst, m_throttlingConfig.channelRate);
+   }
+   else
+   {
+      delete m_channelBucket;
+      m_channelBucket = nullptr;
+   }
+
+   // Clear recipient buckets so they get recreated with new config
+   m_recipientBucketsLock.lock();
+   m_recipientBuckets.clear();
+   m_recipientBucketsLock.unlock();
+}
+
+/**
  * Public method to send notification. It adds notification to the queue.
  */
 void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Driver for channel %s requires recipient, but message has no recipient (message dropped)", m_name);
       return;
    }
 
-   uint32_t maxQueueSize = ConfigReadULong(_T("NotificationChannels.MaxQueueSize"), 500);
+   uint32_t maxQueueSize = ConfigReadULong(L"NotificationChannels.MaxQueueSize", 500);
    if ((maxQueueSize > 0) && (m_notificationQueue.size() >= maxQueueSize))
    {
       if (!m_queueOverflow)
       {
          m_queueOverflow = true;
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
-            _T("Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped"),
+            L"Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped",
             m_name, static_cast<uint32_t>(m_notificationQueue.size()), maxQueueSize);
          EventBuilder(EVENT_NC_QUEUE_OVERFLOW, g_dwMgmtNode)
-            .param(_T("channelName"), m_name)
-            .param(_T("queueSize"), static_cast<uint32_t>(m_notificationQueue.size()))
-            .param(_T("maxQueueSize"), maxQueueSize)
+            .param(L"channelName", m_name)
+            .param(L"queueSize", static_cast<uint32_t>(m_notificationQueue.size()))
+            .param(L"maxQueueSize", maxQueueSize)
             .post();
       }
       return;
@@ -615,7 +1000,14 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
    if (m_queueOverflow)
    {
       m_queueOverflow = false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel \"%s\" queue size is below threshold"), m_name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel \"%s\" queue size is below threshold", m_name);
+   }
+
+   // Absorb into digest if throttling is enabled and queue is above digest threshold
+   if ((m_channelBucket != nullptr) && shouldDigest())
+   {
+      absorbIntoDigest(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId));
+      return;
    }
 
    m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId));
@@ -629,23 +1021,23 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver for channel %s requires recipient, but message has no recipient (message dropped)"), m_name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Driver for channel %s requires recipient, but message has no recipient (message dropped)", m_name);
       return;
    }
 
-   uint32_t maxQueueSize = ConfigReadULong(_T("NotificationChannels.MaxQueueSize"), 500);
+   uint32_t maxQueueSize = ConfigReadULong(L"NotificationChannels.MaxQueueSize", 500);
    if ((maxQueueSize > 0) && (m_notificationQueue.size() >= maxQueueSize))
    {
       if (!m_queueOverflow)
       {
          m_queueOverflow = true;
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
-            _T("Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped"),
+            L"Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped",
             m_name, static_cast<uint32_t>(m_notificationQueue.size()), maxQueueSize);
          EventBuilder(EVENT_NC_QUEUE_OVERFLOW, g_dwMgmtNode)
-            .param(_T("channelName"), m_name)
-            .param(_T("queueSize"), static_cast<uint32_t>(m_notificationQueue.size()))
-            .param(_T("maxQueueSize"), maxQueueSize)
+            .param(L"channelName", m_name)
+            .param(L"queueSize", static_cast<uint32_t>(m_notificationQueue.size()))
+            .param(L"maxQueueSize", maxQueueSize)
             .post();
       }
       return;
@@ -654,11 +1046,19 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
    if (m_queueOverflow)
    {
       m_queueOverflow = false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel \"%s\" queue size is below threshold"), m_name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel \"%s\" queue size is below threshold", m_name);
    }
 
    uint32_t eventCode = (event != nullptr) ? event->getCode() : 0;
    uint64_t eventId = (event != nullptr) ? event->getId() : 0;
+
+   // Absorb into digest if throttling is enabled and queue is above digest threshold
+   if ((m_channelBucket != nullptr) && shouldDigest())
+   {
+      absorbIntoDigest(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, event, sourceObject));
+      return;
+   }
+
    m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, event, sourceObject));
 }
 
@@ -826,6 +1226,22 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
       MemFree(m_configuration);
       m_configuration = MemCopyStringA(config);
    }
+
+   // Reconfigure throttling
+   m_throttlingConfig = LoadThrottlingConfig();
+   if ((m_throttlingConfig.channelBurst > 0) && (m_throttlingConfig.channelRate > 0))
+   {
+      if (m_channelBucket != nullptr)
+         m_channelBucket->reconfigure(m_throttlingConfig.channelBurst, m_throttlingConfig.channelRate);
+      else
+         m_channelBucket = new TokenBucket(m_throttlingConfig.channelBurst, m_throttlingConfig.channelRate);
+   }
+   else
+   {
+      delete m_channelBucket;
+      m_channelBucket = nullptr;
+   }
+
    saveToDatabase();
 }
 

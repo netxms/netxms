@@ -111,6 +111,9 @@ modules		Server modules
 mysql		MySQL monitoring subagent messages
 
 nc.*		Notification channels
+		Level 4: throttling decisions (message throttled, digest triggered)
+		Level 5: token bucket state changes, recipient bucket creation/cleanup
+		Level 6: per-message throttle checks
 
 ncd.*		Notification channel drivers
 

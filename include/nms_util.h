@@ -6715,4 +6715,29 @@ struct LIBNETXMS_EXPORTABLE Color
    static Color parseCSS(const TCHAR *css);
 };
 
+/**
+ * Token bucket rate limiter
+ */
+class LIBNETXMS_EXPORTABLE TokenBucket
+{
+private:
+   double m_tokens;
+   int m_burst;
+   double m_rate;           // tokens per second (normalized)
+   int64_t m_lastRefill;    // timestamp of last refill (ms)
+   Mutex m_mutex;
+
+   void refill();
+
+public:
+   TokenBucket(int burst, double rate);
+
+   bool consume();
+   int64_t timeToNextToken();
+   void reset();
+   void reconfigure(int burst, double rate);
+
+   static double rateFromUnit(int rate, const TCHAR *unit);
+};
+
 #endif   /* _nms_util_h_ */

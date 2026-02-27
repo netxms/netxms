@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.9 to 61.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.ChannelBurst", L"0",
+      L"Default channel-level burst size for rate limiting (0 = disabled).",
+      L"messages", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.ChannelRate", L"0",
+      L"Default channel-level sustained rate for rate limiting (0 = disabled).",
+      L"messages", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.ChannelRateUnit", L"minute",
+      L"Time unit for channel rate limit: second, minute, or hour.",
+      nullptr, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.DigestInterval", L"300",
+      L"Interval in seconds between digest notification deliveries.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.DigestThreshold", L"50",
+      L"Queue depth that triggers digest mode. When throttled messages accumulate beyond this count, they are batched into a digest instead of being delivered individually (0 = disabled).",
+      L"messages", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.RecipientBurst", L"0",
+      L"Default per-recipient burst size for rate limiting (0 = disabled).",
+      L"messages", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.RecipientRate", L"0",
+      L"Default per-recipient sustained rate for rate limiting (0 = disabled).",
+      L"messages", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"NotificationChannels.RateLimit.RecipientRateUnit", L"minute",
+      L"Time unit for recipient rate limit: second, minute, or hour.",
+      nullptr, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 61.8 to 61.9
  */
 static bool H_UpgradeFromV8()
@@ -241,6 +274,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  61, 10,  H_UpgradeFromV9 },
    { 8,  61,  9,  H_UpgradeFromV8 },
    { 7,  61,  8,  H_UpgradeFromV7 },
    { 6,  61,  7,  H_UpgradeFromV6 },

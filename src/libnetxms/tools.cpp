@@ -5513,3 +5513,92 @@ bool LIBNETXMS_EXPORTABLE FuzzyMatchStringsIgnoreCase(const TCHAR *s1, const TCH
 
    return CalculateStringSimilarity(s1, s2, true) >= threshold;
 }
+
+/**
+ * Token bucket constructor
+ */
+TokenBucket::TokenBucket(int burst, double rate) : m_mutex(MutexType::FAST)
+{
+   m_burst = burst;
+   m_rate = rate;
+   m_tokens = burst;
+   m_lastRefill = GetCurrentTimeMs();
+}
+
+/**
+ * Refill tokens based on elapsed time (must be called under lock)
+ */
+void TokenBucket::refill()
+{
+   int64_t now = GetCurrentTimeMs();
+   double elapsed = (now - m_lastRefill) / 1000.0;
+   m_tokens += elapsed * m_rate;
+   if (m_tokens > m_burst)
+      m_tokens = m_burst;
+   m_lastRefill = now;
+}
+
+/**
+ * Try to consume one token. Returns true on success.
+ */
+bool TokenBucket::consume()
+{
+   LockGuard lock(m_mutex);
+   refill();
+   if (m_tokens >= 1.0)
+   {
+      m_tokens -= 1.0;
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Milliseconds until next token is available (0 if available now)
+ */
+int64_t TokenBucket::timeToNextToken()
+{
+   LockGuard lock(m_mutex);
+   refill();
+   if (m_tokens >= 1.0)
+      return 0;
+   double deficit = 1.0 - m_tokens;
+   return static_cast<int64_t>((deficit / m_rate) * 1000.0) + 1;
+}
+
+/**
+ * Reset bucket to full capacity
+ */
+void TokenBucket::reset()
+{
+   LockGuard lock(m_mutex);
+   m_tokens = m_burst;
+   m_lastRefill = GetCurrentTimeMs();
+}
+
+/**
+ * Reconfigure bucket with new burst and rate
+ */
+void TokenBucket::reconfigure(int burst, double rate)
+{
+   LockGuard lock(m_mutex);
+   m_burst = burst;
+   m_rate = rate;
+   if (m_tokens > burst)
+      m_tokens = burst;
+   m_lastRefill = GetCurrentTimeMs();
+}
+
+/**
+ * Convert rate from given time unit to tokens per second
+ */
+double TokenBucket::rateFromUnit(int rate, const TCHAR *unit)
+{
+   if ((unit == nullptr) || !_tcsicmp(unit, _T("second")))
+      return static_cast<double>(rate);
+   if (!_tcsicmp(unit, _T("minute")))
+      return static_cast<double>(rate) / 60.0;
+   if (!_tcsicmp(unit, _T("hour")))
+      return static_cast<double>(rate) / 3600.0;
+   return static_cast<double>(rate);
+}
