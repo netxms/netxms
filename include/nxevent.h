@@ -211,6 +211,7 @@
 #define EVENT_DNS_RESOLVE_CONFLICT                  157
 #define EVENT_RUNNING_CONFIG_CHANGED                158
 #define EVENT_STARTUP_CONFIG_CHANGED                159
+#define EVENT_DEVICE_REPLACED                       160
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

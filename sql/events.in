@@ -1962,6 +1962,20 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) previousHash - SHA-256 hash of the previous configuration' CONCAT CRLF CONCAT
 		'   2) newHash - SHA-256 hash of the new configuration'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DEVICE_REPLACED, 'SYS_DEVICE_REPLACED', 'd5a3f1e6-7b8c-4d9a-be2f-3c4d5e6f7a8b',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Device replaced (serial number: %<oldSerialNumber> -> %<newSerialNumber>)',
+		'Generated when device replacement is detected during configuration poll.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) oldSerialNumber - Serial number of the old device' CONCAT CRLF CONCAT
+		'   2) newSerialNumber - Serial number of the new device' CONCAT CRLF CONCAT
+		'   3) oldHardwareId - Hardware ID of the old device' CONCAT CRLF CONCAT
+		'   4) newHardwareId - Hardware ID of the new device' CONCAT CRLF CONCAT
+		'   5) oldSnmpObjectId - SNMP object ID of the old device' CONCAT CRLF CONCAT
+		'   6) newSnmpObjectId - SNMP object ID of the new device'
+	);
 
 /*
 ** SNMP traps

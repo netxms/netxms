@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.8 to 61.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_DEVICE_REPLACED, _T("SYS_DEVICE_REPLACED"),
+      EVENT_SEVERITY_MAJOR, EF_LOG, _T("d5a3f1e6-7b8c-4d9a-be2f-3c4d5e6f7a8b"),
+      _T("Device replaced (serial number: %<oldSerialNumber> -> %<newSerialNumber>)"),
+      _T("Generated when device replacement is detected during configuration poll.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) oldSerialNumber - Serial number of the old device\r\n")
+      _T("   2) newSerialNumber - Serial number of the new device\r\n")
+      _T("   3) oldHardwareId - Hardware ID of the old device\r\n")
+      _T("   4) newHardwareId - Hardware ID of the new device\r\n")
+      _T("   5) oldSnmpObjectId - SNMP object ID of the old device\r\n")
+      _T("   6) newSnmpObjectId - SNMP object ID of the new device")));
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 61.7 to 61.8
  */
 static bool H_UpgradeFromV7()
@@ -221,6 +241,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  61,  9,  H_UpgradeFromV8 },
    { 7,  61,  8,  H_UpgradeFromV7 },
    { 6,  61,  7,  H_UpgradeFromV6 },
    { 5,  61,  6,  H_UpgradeFromV5 },

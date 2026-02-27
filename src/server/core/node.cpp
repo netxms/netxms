@@ -4612,6 +4612,20 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       unlockProperties();
    }
 
+   // Snapshot identity properties for device replacement detection
+   bool checkDeviceReplacement = !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES);
+   SharedString oldSerialNumber;
+   NodeHardwareId oldHardwareId;
+   SNMP_ObjectId oldSnmpObjectId;
+   if (checkDeviceReplacement)
+   {
+      lockProperties();
+      oldSerialNumber = m_serialNumber;
+      oldHardwareId = m_hardwareId;
+      oldSnmpObjectId = m_snmpObjectId;
+      unlockProperties();
+   }
+
    updatePrimaryIpAddr();
 
    poller->setStatus(_T("capability check"));
@@ -4864,6 +4878,31 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    updateSystemHardwareInformation(poller, rqId);
    updateHardwareComponents(poller, rqId);
    updateSoftwarePackages(poller, rqId);
+
+   // Check for device replacement
+   if (checkDeviceReplacement)
+   {
+      bool serialChanged = !oldSerialNumber.isEmpty() && !m_serialNumber.isEmpty() && _tcscmp(oldSerialNumber.cstr(), m_serialNumber.cstr()) != 0;
+      bool hardwareIdChanged = !oldHardwareId.isNull() && !m_hardwareId.isNull() && !oldHardwareId.equals(m_hardwareId);
+      bool snmpOidChanged = oldSnmpObjectId.isValid() && !oldSnmpObjectId.isZeroDotZero() && m_snmpObjectId.isValid() && !m_snmpObjectId.isZeroDotZero() && !oldSnmpObjectId.equals(m_snmpObjectId);
+      if (serialChanged || hardwareIdChanged || snmpOidChanged)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("ConfPoll(%s [%u]): device replacement detected (serial: %s -> %s, hwid: %s -> %s, oid: %s -> %s)"),
+            m_name, m_id, oldSerialNumber.cstr(), m_serialNumber.cstr(),
+            oldHardwareId.toString().cstr(), m_hardwareId.toString().cstr(),
+            oldSnmpObjectId.toString().cstr(), m_snmpObjectId.toString().cstr());
+         sendPollerMsg(POLLER_WARNING _T("Device replacement detected\r\n"));
+         EventBuilder(EVENT_DEVICE_REPLACED, m_id)
+            .param(_T("oldSerialNumber"), oldSerialNumber)
+            .param(_T("newSerialNumber"), m_serialNumber)
+            .param(_T("oldHardwareId"), oldHardwareId.toString())
+            .param(_T("newHardwareId"), m_hardwareId.toString())
+            .param(_T("oldSnmpObjectId"), oldSnmpObjectId.toString())
+            .param(_T("newSnmpObjectId"), m_snmpObjectId.toString())
+            .post();
+         m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+      }
+   }
 
    POLL_CANCELLATION_CHECKPOINT();
 
