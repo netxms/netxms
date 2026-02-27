@@ -306,7 +306,17 @@ static bool SubagentInit(Config *config)
    if (!InitializeLibCURL())
       return false;
 
-   return config->parseTemplate(_T("netsvc"), m_cfgTemplate);
+   if (!config->parseTemplate(_T("netsvc"), m_cfgTemplate))
+      return false;
+
+   if (s_certBundle[0] == 0)
+   {
+      const TCHAR *ca = config->getValue(_T("/%agent/CACertificates"));
+      if (ca != nullptr)
+         tchar_to_utf8(ca, -1, s_certBundle, sizeof(s_certBundle));
+   }
+
+   return true;
 }
 
 /**

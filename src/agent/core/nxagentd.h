@@ -1007,6 +1007,7 @@ extern uint32_t g_longRunningQueryThreshold;
 extern uint16_t g_sessionAgentPort;
 extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
+extern char g_caBundle[];
 extern uint16_t g_syslogListenPort;
 extern StringSet g_trustedRootCertificates;
 extern StringList g_acceptedEnvVars;

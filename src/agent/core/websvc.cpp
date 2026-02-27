@@ -175,6 +175,8 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);
+   if (g_caBundle[0] != 0)
+      curl_easy_setopt(curl, CURLOPT_CAINFO, g_caBundle);
    EnableLibCURLUnexpectedEOFWorkaround(curl);
 
    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, s_httpRequestMethods[requestMethod]);

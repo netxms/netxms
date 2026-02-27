@@ -251,6 +251,7 @@ uint16_t g_sessionAgentPort = 0;
 #endif
 uint32_t g_dwIdleTimeout = 120;   // Session idle timeout
 uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
+char g_caBundle[1024] = "";
 bool g_restartPending = false;   // Restart pending flag
 
 #ifndef _WIN32
@@ -321,6 +322,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
+   { _T("CACertificates"), CT_MB_STRING, 0, 0, 1024, 0, g_caBundle, nullptr },
    { _T("BackgroundExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_backgroundExternalMetrics, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_CATCH_EXCEPTIONS, 0, &s_startupFlags, nullptr },
