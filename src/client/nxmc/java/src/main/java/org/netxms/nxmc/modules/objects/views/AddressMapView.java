@@ -18,6 +18,17 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -26,18 +37,26 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.widgets.SubnetAddressMap;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "Address Map" object tab
  */
-public class AddressMapView extends ObjectView
-{   
+public class AddressMapView extends ObjectView implements ISelectionProvider
+{
+   private final I18n i18n = LocalizationHelper.getI18n(AddressMapView.class);
+
 	private ScrolledComposite scroller;
 	private SubnetAddressMap addressMap;
+   private Action actionGoToObject;
+   private ISelection selection = new StructuredSelection();
+   private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
    /**
     * Create "Services" view
@@ -46,7 +65,7 @@ public class AddressMapView extends ObjectView
    {
       super(LocalizationHelper.getI18n(AddressMapView.class).tr("Address map"), ResourceManager.getImageDescriptor("icons/object-views/address_map.png"), "objects.address-map", false);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -87,6 +106,14 @@ public class AddressMapView extends ObjectView
 			}
 		});
       addressMap.setUpdateListener(() -> scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT)));
+
+      addressMap.addSelectionListener((object) -> {
+         selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
+         for(ISelectionChangedListener l : selectionListeners)
+            l.selectionChanged(new SelectionChangedEvent(AddressMapView.this, selection));
+      });
+
+      createPopupMenu();
 	}
 
    /**
@@ -109,7 +136,7 @@ public class AddressMapView extends ObjectView
    {
       super.activate();
       refresh();
-   }  
+   }
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
@@ -118,6 +145,75 @@ public class AddressMapView extends ObjectView
    public void refresh()
    {
       addressMap.setSubnet((Subnet)getObject());
+   }
+
+   /**
+    * Create pop-up menu
+    */
+   private void createPopupMenu()
+   {
+      actionGoToObject = new Action(i18n.tr("Go to &object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection sel = (IStructuredSelection)getSelection();
+            if (sel.size() == 1 && sel.getFirstElement() instanceof AbstractObject)
+            {
+               MainWindow.switchToObject(((AbstractObject)sel.getFirstElement()).getObjectId(), 0);
+            }
+         }
+      };
+
+      MenuManager menuMgr = new ObjectContextMenuManager(this, this, null) {
+         @Override
+         protected void fillContextMenu()
+         {
+            IStructuredSelection sel = (IStructuredSelection)getSelection();
+            if (!sel.isEmpty())
+            {
+               add(actionGoToObject);
+               add(new Separator());
+            }
+            super.fillContextMenu();
+         }
+      };
+      addressMap.setMenu(menuMgr.createContextMenu(addressMap));
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void addSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionListeners.add(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void removeSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionListeners.remove(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
+   @Override
+   public ISelection getSelection()
+   {
+      return selection;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
+   @Override
+   public void setSelection(ISelection selection)
+   {
+      this.selection = selection;
    }
 
    /**

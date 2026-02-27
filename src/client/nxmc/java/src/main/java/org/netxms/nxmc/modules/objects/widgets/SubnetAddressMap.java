@@ -19,9 +19,12 @@
 package org.netxms.nxmc.modules.objects.widgets;
 
 import java.net.Inet4Address;
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -37,8 +40,10 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -46,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Subnet address map
  */
-public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrackListener
+public class SubnetAddressMap extends Canvas implements PaintListener, MouseListener, MouseTrackListener
 {
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
@@ -70,6 +75,8 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private int rowCount = 0;
 	private ColorCache colors;
    private Runnable updateListener;
+   private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
+   private AbstractNode selectedNode;
 
    /**
     * @param parent
@@ -83,9 +90,10 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       colors = new ColorCache(this);
 
       addPaintListener(this);
+      addMouseListener(this);
 
       WidgetHelper.attachMouseTrackListener(this, this);
-   }   
+   }
 
    /**
     * @see org.eclipse.swt.widgets.Widget#dispose()
@@ -187,7 +195,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 
 	/**
 	 * Get address from given point
-	 * 
+	 *
 	 * @param x
 	 * @param y
 	 * @return
@@ -195,24 +203,24 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private int getElementFromPoint(int x, int y)
 	{
 		final int xOffset = HORIZONTAL_MARGIN;
-		
+
 		if ((x < xOffset) || (y < VERTICAL_MARGIN))
 			return -1;	// x before first column
-		
+
 		int column = (x - xOffset) / (ELEMENT_WIDTH + HORIZONTAL_SPACING);
 		if (column >= ELEMENTS_PER_ROW)
 			return -1;	// x after last column
-		
+
 		if (x > xOffset + (column * (ELEMENT_WIDTH + HORIZONTAL_SPACING)) + ELEMENT_WIDTH)
 			return -1;	// x inside spacing after column
-		
+
 		int row = (y - VERTICAL_MARGIN) / (ELEMENT_HEIGHT + VERTICAL_SPACING);
 		if (row >= rowCount)
 			return -1;	// y after last row
-		
+
 		if (y > VERTICAL_MARGIN + (row * (ELEMENT_HEIGHT + VERTICAL_SPACING)) + ELEMENT_HEIGHT)
 			return -1;	// y inside spacing after row
-		
+
 		return row * ELEMENTS_PER_ROW + column;
 	}
 
@@ -261,7 +269,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 
 	/**
 	 * Draw single address
-	 * 
+	 *
 	 * @param a IP address
 	 * @param x X coordinate of top left corner
 	 * @param y Y coordinate of top left corner
@@ -356,5 +364,83 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
             }
          }
       }
+   }
+
+   /**
+    * Get node at given address map index.
+    *
+    * @param index address map index
+    * @return node object or null
+    */
+   private AbstractNode getNodeAtIndex(int index)
+   {
+      if ((addressMap == null) || (index < 0) || (index >= addressMap.length))
+         return null;
+      long nodeId = addressMap[index];
+      if ((nodeId == 0) || (nodeId == 0xFFFFFFFFL))
+         return null;
+      return session.findObjectById(nodeId, AbstractNode.class);
+   }
+
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseDown(MouseEvent e)
+   {
+      int index = getElementFromPoint(e.x, e.y);
+      setSelectedNode(getNodeAtIndex(index));
+   }
+
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseDoubleClick(MouseEvent e)
+   {
+      if (selectedNode != null)
+      {
+         MainWindow.switchToObject(selectedNode.getObjectId(), 0);
+      }
+   }
+
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseUp(MouseEvent e)
+   {
+   }
+
+   /**
+    * Add selection listener.
+    *
+    * @param listener selection listener to add
+    */
+   public void addSelectionListener(ElementSelectionListener listener)
+   {
+      selectionListeners.add(listener);
+   }
+
+   /**
+    * Remove selection listener.
+    *
+    * @param listener selection listener to remove
+    */
+   public void removeSelectionListener(ElementSelectionListener listener)
+   {
+      selectionListeners.remove(listener);
+   }
+
+   /**
+    * Set selected node and notify listeners.
+    *
+    * @param node selected node or null
+    */
+   private void setSelectedNode(AbstractNode node)
+   {
+      selectedNode = node;
+      for(ElementSelectionListener l : selectionListeners)
+         l.objectSelected(selectedNode);
    }
 }
