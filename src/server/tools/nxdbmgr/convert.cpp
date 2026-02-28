@@ -25,7 +25,7 @@
 /**
  * Migrate single data table to TSDB
  */
-bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, uint32_t nodeId, bool tdata);
+bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, DB_HANDLE hDest, uint32_t nodeId, bool tdata);
 
 /**
  * Format query into static buffer
@@ -112,7 +112,7 @@ static bool ConvertDataTables(DB_HANDLE hdb)
 
       if (DBIsTableExist(g_dbHandle, StringBuffer(_T("idata_")).append(id)) == DBIsTableExist_Found)
       {
-         if (!MigrateDataToSingleTable_TSDB(hdb, id, false) && !g_ignoreErrors)
+         if (!MigrateDataToSingleTable_TSDB(hdb, g_dbHandle, id, false) && !g_ignoreErrors)
             break;
          CHK_EXEC_NO_SP(SQLQuery(FormatQuery(_T("DROP TABLE idata_%u"), id)));
       }
@@ -123,7 +123,7 @@ static bool ConvertDataTables(DB_HANDLE hdb)
 
       if (DBIsTableExist(g_dbHandle, StringBuffer(_T("tdata_")).append(id)) == DBIsTableExist_Found)
       {
-         if (!MigrateDataToSingleTable_TSDB(hdb, id, true) && !g_ignoreErrors)
+         if (!MigrateDataToSingleTable_TSDB(hdb, g_dbHandle, id, true) && !g_ignoreErrors)
             break;
          CHK_EXEC_NO_SP(SQLQuery(FormatQuery(_T("DROP TABLE tdata_%u"), id)));
       }

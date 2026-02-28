@@ -105,5 +105,6 @@ extern bool g_skipDataMigration;
 extern bool g_skipDataSchemaMigration;
 extern bool g_machineReadableOutput;
 extern int g_migrationTxnSize;
+extern int g_migrationWorkers;
 
 #endif
