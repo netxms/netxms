@@ -319,7 +319,7 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
       {
          json_t *credentials = domain->getCredentials();
 
-         char providerStateBuf[256];
+         char providerStateBuf[256] = "";
          SharedString resourceId = getCloudResourceId();
          int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
          if (newState >= 0)

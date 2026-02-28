@@ -317,8 +317,8 @@ int16_t DockerQueryState(const TCHAR *resourceId, char *providerState, size_t bu
          status = json_object_get_string_utf8(stateObj, "Status", nullptr);
 
       int16_t state = DockerContainerStateToResourceState(status);
-      if (status != nullptr && providerState != nullptr)
-         strlcpy(providerState, status, bufLen);
+      if (providerState != nullptr)
+         strlcpy(providerState, (status != nullptr) ? status : "", bufLen);
       json_decref(response);
       return state;
    }
