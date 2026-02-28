@@ -42,6 +42,7 @@ bool g_skipDataMigration = false;
 bool g_skipDataSchemaMigration = false;
 bool g_machineReadableOutput = false;
 int g_migrationTxnSize = 4096;
+int g_migrationWorkers = 4;
 
 /**
  * Static data
@@ -538,7 +539,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:C:dDe:EfF:GhIL:mMNoPqsStT:vxXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:EfF:GhIj:L:mMNoPqsStT:vxXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -575,6 +576,7 @@ stop_search:
 #endif
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
+                     _T("   -j <count>  : Number of parallel migration workers (default 4, range 1-64).\n")
                      _T("   -L <log>    : Migrate only specific log.\n")
                      _T("   -m          : Improved machine readability of output.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
@@ -645,6 +647,14 @@ stop_search:
 				break;
          case 'I':
             SetTableSuffix(_T(" TYPE=InnoDB"));
+            break;
+         case 'j':
+            g_migrationWorkers = strtol(optarg, nullptr, 0);
+            if ((g_migrationWorkers < 1) || (g_migrationWorkers > 64))
+            {
+               _tprintf(_T("WARNING: invalid number of migration workers, reset to default\n"));
+               g_migrationWorkers = 4;
+            }
             break;
          case 'L':
             AddLogToList(optarg, &includedTables);
