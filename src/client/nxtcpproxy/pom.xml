@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <name>nxtcpproxy</name>
-    <description>TCP proxy usage example</description>
+    <description>TCP port forwarding tool</description>
     <url>http://www.netxms.org</url>
 
     <licenses>

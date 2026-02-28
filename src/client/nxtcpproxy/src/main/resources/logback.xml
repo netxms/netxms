@@ -4,7 +4,7 @@
          <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${nxtcpproxy.logfile}</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-               <fileNamePattern>${nxshell.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
+               <fileNamePattern>${nxtcpproxy.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
                <maxHistory>30</maxHistory>
                <totalSizeCap>2GB</totalSizeCap>
             </rollingPolicy>
