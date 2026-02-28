@@ -63,6 +63,7 @@ public class ObjectTool implements ObjectAction
    public static final int RUN_IN_CONTAINER_CONTEXT  = 0x00000020;
    public static final int SUPPRESS_SUCCESS_MESSAGE  = 0x00000040;
    public static final int SETUP_TCP_TUNNEL          = 0x00000080;
+   public static final int TCP_TUNNEL_TO_REMOTE_HOST = 0x00000100;
 
    private static final Logger logger = LoggerFactory.getLogger(ObjectTool.class);
 
@@ -79,6 +80,7 @@ public class ObjectTool implements ObjectAction
    protected ObjectMenuFilter filter;
 	protected byte[] imageData;
    protected int remotePort;
+   protected String remoteHost;
 	protected Map<String, InputField> inputFields;
 
 	/**
@@ -110,6 +112,7 @@ public class ObjectTool implements ObjectAction
       commandShortName = msg.getFieldAsString(baseId + 9);
 		imageData = msg.getFieldAsBinary(baseId + 10);
       remotePort = msg.getFieldAsInt32(baseId + 11);
+      remoteHost = msg.getFieldAsString(baseId + 12);
 		try
       {
          filter = XMLTools.createFromXml(ObjectMenuFilter.class, filterData);
@@ -287,6 +290,14 @@ public class ObjectTool implements ObjectAction
    public int getRemotePort()
    {
       return remotePort;
+   }
+
+   /**
+    * @return the remoteHost
+    */
+   public String getRemoteHost()
+   {
+      return remoteHost;
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ public class ObjectToolDetails extends ObjectTool
 		commandShortName = "";
 		imageData = null;
       remotePort = 0;
+      remoteHost = null;
 		inputFields = new HashMap<String, InputField>();
 
 		createDisplayName();
@@ -92,6 +93,7 @@ public class ObjectToolDetails extends ObjectTool
 		commandName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_NAME);
       commandShortName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_SHORT_NAME);
       remotePort = msg.getFieldAsInt32(NXCPCodes.VID_PORT);
+      remoteHost = msg.getFieldAsString(NXCPCodes.VID_HOSTNAME);
 		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
       try
       {
@@ -156,6 +158,7 @@ public class ObjectToolDetails extends ObjectTool
 		msg.setField(NXCPCodes.VID_COMMAND_NAME, commandName);
       msg.setField(NXCPCodes.VID_COMMAND_SHORT_NAME, commandShortName);
       msg.setFieldInt32(NXCPCodes.VID_PORT, remotePort);
+      msg.setField(NXCPCodes.VID_HOSTNAME, remoteHost);
 		if (imageData != null)
 		   msg.setField(NXCPCodes.VID_IMAGE_DATA, imageData);
 
@@ -298,6 +301,17 @@ public class ObjectToolDetails extends ObjectTool
    public void setRemotePort(int remotePort)
    {
       this.remotePort = remotePort;
+      modified = true;
+   }
+
+   /**
+    * Set remote host name for TCP tunnel.
+    *
+    * @param remoteHost remote host name
+    */
+   public void setRemoteHost(String remoteHost)
+   {
+      this.remoteHost = remoteHost;
       modified = true;
    }
 

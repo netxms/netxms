@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
@@ -72,6 +73,8 @@ public class General extends PropertyPage
    private Button checkSuppressSuccessMessage;
    private Button checkSetupTCPTunnel;
    private Spinner remotePort;
+   private Button checkTCPTunnelToRemoteHost;
+   private Text remoteHost;
 	private Button checkConfirmation;
    private LabeledText textConfirmation;
 	private Button checkDisable;
@@ -168,10 +171,10 @@ public class General extends PropertyPage
             createTCPTunnelGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
-			   String[] parameters = objectTool.getData().split("\u007F"); //$NON-NLS-1$
+            String[] parameters = objectTool.getData().split("\u007F");
 
 				textData.setLabel(i18n.tr("Remote file name"));
-				textData.setText((parameters.length > 0) ? parameters[0] : ""); //$NON-NLS-1$
+            textData.setText((parameters.length > 0) ? parameters[0] : "");
 
 				Group fileOptionsGoup = new Group(dialogArea, SWT.NONE);
 				fileOptionsGoup.setText(i18n.tr("File Options"));
@@ -204,9 +207,9 @@ public class General extends PropertyPage
 							
 				checkFollow = new Button(fileOptionsGoup, SWT.CHECK);
 				checkFollow.setText(i18n.tr("Follow file changes"));
-				if(parameters.length > 2) //$NON-NLS-1$
+            if (parameters.length > 2)
 				{
-				   checkFollow.setSelection(parameters[2].equals("true"));  //$NON-NLS-1$
+               checkFollow.setSelection(parameters[2].equals("true"));
 				}	
 				break;
 			case ObjectTool.TYPE_SNMP_TABLE:
@@ -246,7 +249,7 @@ public class General extends PropertyPage
 				gd.grabExcessHorizontalSpace = true;
 				gd.horizontalSpan = 2;
 				textParameter.setLayoutData(gd);
-				textParameter.setText((listParts.length > 1) ? listParts[1] : ""); //$NON-NLS-1$
+            textParameter.setText((listParts.length > 1) ? listParts[1] : "");
 
 				textRegexp = new LabeledText(dialogArea, SWT.NONE);
 				textRegexp.setLabel(i18n.tr("Regular expression"));
@@ -255,13 +258,13 @@ public class General extends PropertyPage
 				gd.grabExcessHorizontalSpace = true;
             gd.horizontalSpan = 2;
 				textRegexp.setLayoutData(gd);
-				textRegexp.setText((listParts.length > 2) ? listParts[2] : ""); //$NON-NLS-1$
+            textRegexp.setText((listParts.length > 2) ? listParts[2] : "");
 				break;
          case ObjectTool.TYPE_AGENT_TABLE:
             textData.setLabel(i18n.tr("Title"));
             
-            String[] tableParts = objectTool.getData().split("\u007F"); //$NON-NLS-1$
-            textData.setText((tableParts.length > 0) ? tableParts[0] : ""); //$NON-NLS-1$
+            String[] tableParts = objectTool.getData().split("\u007F");
+            textData.setText((tableParts.length > 0) ? tableParts[0] : "");
 
             textParameter = new LabeledText(dialogArea, SWT.NONE);
             textParameter.setLabel(i18n.tr("Parameter"));
@@ -270,7 +273,7 @@ public class General extends PropertyPage
             gd.grabExcessHorizontalSpace = true;
             gd.horizontalSpan = 2;
             textParameter.setLayoutData(gd);
-            textParameter.setText((tableParts.length > 1) ? tableParts[1] : ""); //$NON-NLS-1$
+            textParameter.setText((tableParts.length > 1) ? tableParts[1] : "");
             break;
 		}
 
@@ -445,6 +448,23 @@ public class General extends PropertyPage
       remotePort.setSelection(objectTool.getRemotePort());
       remotePort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
       remotePort.setEnabled(checkSetupTCPTunnel.getSelection());
+
+      checkTCPTunnelToRemoteHost = new Button(tcpTunnelGroup, SWT.CHECK);
+      checkTCPTunnelToRemoteHost.setText(i18n.tr("Connect to remote host"));
+      checkTCPTunnelToRemoteHost.setSelection((objectTool.getFlags() & ObjectTool.TCP_TUNNEL_TO_REMOTE_HOST) != 0);
+      checkTCPTunnelToRemoteHost.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+      checkTCPTunnelToRemoteHost.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            remoteHost.setEnabled(checkTCPTunnelToRemoteHost.getSelection());
+         }
+      });
+
+      remoteHost = new Text(tcpTunnelGroup, SWT.BORDER);
+      remoteHost.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+      remoteHost.setEnabled(checkTCPTunnelToRemoteHost.getSelection());
+      remoteHost.setText(objectTool.getRemoteHost() != null ? objectTool.getRemoteHost() : "");
    }
 
 	/**
@@ -534,8 +554,8 @@ public class General extends PropertyPage
 	}
 	
 	/**
-	 * 
-	 */
+    * Select icon
+    */
 	private void selectIcon()
 	{
 	   FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
@@ -675,6 +695,20 @@ public class General extends PropertyPage
       if (remotePort != null)
       {
          objectTool.setRemotePort(remotePort.getSelection());
+      }
+
+      if ((checkTCPTunnelToRemoteHost != null) && checkTCPTunnelToRemoteHost.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.TCP_TUNNEL_TO_REMOTE_HOST);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.TCP_TUNNEL_TO_REMOTE_HOST);
+      }
+
+      if (remoteHost != null)
+      {
+         objectTool.setRemoteHost(remoteHost.getText());
       }
 
 		if (icon != null)

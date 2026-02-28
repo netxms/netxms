@@ -1095,7 +1095,7 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
       hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
                              _T("tool_filter=?,confirmation_text=?,command_name=?,")
-                             _T("command_short_name=?,icon=?,remote_port=? ")
+                             _T("command_short_name=?,icon=?,remote_port=?,remote_host=? ")
                              _T("WHERE tool_id=?"));
    }
    else
@@ -1103,8 +1103,8 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
                              _T("tool_data,description,flags,tool_filter,")
                              _T("confirmation_text,command_name,command_short_name,")
-                             _T("icon,remote_port,tool_id,guid) VALUES ")
-                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                             _T("icon,remote_port,remote_host,tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       newTool = true;
    }
    if (hStmt == nullptr)
@@ -1134,10 +1134,11 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
    }
 
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt32(VID_PORT));
-   DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_HOSTNAME), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, toolId);
    if (newTool)
    {
-      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, uuid::generate());
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, uuid::generate());
    }
 
    if (!DBExecute(hStmt))
@@ -1319,7 +1320,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
       hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
                              _T("tool_filter=?,confirmation_text=?,command_name=?,")
-                             _T("command_short_name=?,icon=?,remote_port=? ")
+                             _T("command_short_name=?,icon=?,remote_port=?,remote_host=? ")
                              _T("WHERE tool_id=?"));
    }
    else
@@ -1327,8 +1328,8 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
                              _T("tool_data,description,flags,tool_filter,")
                              _T("confirmation_text,command_name,command_short_name,")
-                             _T("icon,remote_port,tool_id,guid) VALUES ")
-                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                             _T("icon,remote_port,remote_host,tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return ImportFailure(hdb, nullptr, context);
@@ -1344,15 +1345,16 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("commandShortName")), DB_BIND_STATIC);
    DBBind(hStmt, 10, DB_SQLTYPE_TEXT, config->getSubEntryValue(_T("image")), DB_BIND_STATIC);
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsInt(_T("remotePort")));
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("remoteHost")), DB_BIND_STATIC);
    if (toolId == 0)
    {
       toolId = CreateUniqueId(IDG_OBJECT_TOOL);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
-      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    }
    else
    {
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, toolId);
    }
 
    if (!DBExecute(hStmt))
@@ -1505,7 +1507,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
       hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
                              _T("tool_filter=?,confirmation_text=?,command_name=?,")
-                             _T("command_short_name=?,icon=?,remote_port=? ")
+                             _T("command_short_name=?,icon=?,remote_port=?,remote_host=? ")
                              _T("WHERE tool_id=?"));
    }
    else
@@ -1513,8 +1515,8 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
                              _T("tool_data,description,flags,tool_filter,")
                              _T("confirmation_text,command_name,command_short_name,")
-                             _T("icon,remote_port,tool_id,guid) VALUES ")
-                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                             _T("icon,remote_port,remote_host,tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == nullptr)
       return ImportFailure(hdb, nullptr, context);
@@ -1527,6 +1529,7 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    String commandName = json_object_get_string(config, "commandName", _T(""));
    String commandShortName = json_object_get_string(config, "commandShortName", _T(""));
    String image = json_object_get_string(config, "image", _T(""));
+   String remoteHost = json_object_get_string(config, "remoteHost", _T(""));
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "type", 0));
@@ -1539,15 +1542,16 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, commandShortName, DB_BIND_STATIC);
    DBBind(hStmt, 10, DB_SQLTYPE_TEXT, image, DB_BIND_STATIC);
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "remotePort", 0));
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, remoteHost, DB_BIND_STATIC);
    if (toolId == 0)
    {
       toolId = CreateUniqueId(IDG_OBJECT_TOOL);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
-      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    }
    else
    {
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, toolId);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, toolId);
    }
 
    if (!DBExecute(hStmt))
@@ -1743,7 +1747,7 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,guid,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,guid,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host FROM object_tools WHERE tool_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1756,51 +1760,33 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
    {
       if (DBGetNumRows(hResult) > 0)
       {
+         wchar_t buffer[MAX_DB_STRING];
+
          tool = json_object();
          json_object_set_new(tool, "id", json_integer(id));
 
          // Get string fields and ensure proper memory cleanup
-         TCHAR *name = DBGetField(hResult, 0, 0, nullptr, 0);
-         json_object_set_new(tool, "name", json_string_t(name));
-         MemFree(name);
-
-         TCHAR *guid = DBGetField(hResult, 0, 1, nullptr, 0);
-         json_object_set_new(tool, "guid", json_string_t(guid));
-         MemFree(guid);
-
+         json_object_set_new(tool, "name", json_string_t(DBGetField(hResult, 0, 0, buffer, MAX_DB_STRING)));
+         json_object_set_new(tool, "guid", json_string_t(DBGetField(hResult, 0, 1, buffer, MAX_DB_STRING)));
          json_object_set_new(tool, "type", json_integer(DBGetFieldLong(hResult, 0, 2)));
 
          TCHAR *data = DBGetField(hResult, 0, 3, nullptr, 0);
          json_object_set_new(tool, "data", json_string_t(data));
          MemFree(data);
 
-         TCHAR *description = DBGetField(hResult, 0, 4, nullptr, 0);
-         json_object_set_new(tool, "description", json_string_t(description));
-         MemFree(description);
-
+         json_object_set_new(tool, "description", json_string_t(DBGetField(hResult, 0, 4, buffer, MAX_DB_STRING)));
          json_object_set_new(tool, "flags", json_integer(DBGetFieldLong(hResult, 0, 5)));
-
-         TCHAR *filter = DBGetField(hResult, 0, 6, nullptr, 0);
-         json_object_set_new(tool, "filter", json_string_t(filter));
-         MemFree(filter);
-
-         TCHAR *confirmation = DBGetField(hResult, 0, 7, nullptr, 0);
-         json_object_set_new(tool, "confirmation", json_string_t(confirmation));
-         MemFree(confirmation);
-
-         TCHAR *commandName = DBGetField(hResult, 0, 8, nullptr, 0);
-         json_object_set_new(tool, "commandName", json_string_t(commandName));
-         MemFree(commandName);
-
-         TCHAR *commandShortName = DBGetField(hResult, 0, 9, nullptr, 0);
-         json_object_set_new(tool, "commandShortName", json_string_t(commandShortName));
-         MemFree(commandShortName);
+         json_object_set_new(tool, "filter", json_string_t(DBGetField(hResult, 0, 6, buffer, MAX_DB_STRING)));
+         json_object_set_new(tool, "confirmation", json_string_t(DBGetField(hResult, 0, 7, buffer, MAX_DB_STRING)));
+         json_object_set_new(tool, "commandName", json_string_t(DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING)));
+         json_object_set_new(tool, "commandShortName", json_string_t(DBGetField(hResult, 0, 9, buffer, MAX_DB_STRING)));
 
          TCHAR *image = DBGetField(hResult, 0, 10, nullptr, 0);
          json_object_set_new(tool, "image", json_string_t(image));
          MemFree(image);
 
          json_object_set_new(tool, "remotePort", json_integer(DBGetFieldLong(hResult, 0, 11)));
+         json_object_set_new(tool, "remoteHost", json_string_t(DBGetField(hResult, 0, 12, buffer, MAX_DB_STRING)));
 
          json_object_set_new(tool, "columns", CreateObjectToolColumnExportRecords(hdb, id));
          json_object_set_new(tool, "inputFields", CreateObjectToolInputFieldExportRecords(hdb, id));
@@ -1883,7 +1869,7 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
    }
    DBFreeResult(hResult);
 
-   hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools"));
+   hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host FROM object_tools"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1916,7 +1902,7 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
 
       if (hasAccess)
       {
-         TCHAR buffer[MAX_DB_STRING];
+         wchar_t buffer[MAX_DB_STRING];
 
          msg->setField(fieldId, toolId);
 
@@ -1937,7 +1923,7 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
          DBGetField(hResult, i, 5, buffer, MAX_DB_STRING);
          msg->setField(fieldId + 5, buffer);
 
-         // matching OID
+         // filter
          DBGetField(hResult, i, 6, buffer, MAX_DB_STRING);
          msg->setField(fieldId + 6, buffer);
 
@@ -1954,7 +1940,7 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
          msg->setField(fieldId + 9, buffer);
 
          // icon
-         TCHAR *imageDataHex = DBGetField(hResult, i, 10, nullptr, 0);
+         wchar_t *imageDataHex = DBGetField(hResult, i, 10, nullptr, 0);
          if (imageDataHex != nullptr)
          {
             size_t size = _tcslen(imageDataHex) / 2;
@@ -1969,6 +1955,9 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
          }
 
          msg->setField(fieldId + 11, DBGetFieldULong(hResult, i, 11));
+
+         DBGetField(hResult, i, 12, buffer, MAX_DB_STRING);
+         msg->setField(fieldId + 12, buffer);
 
          LoadInputFieldDefinitions(toolId, hdb, msg, fieldId + 19, fieldId + 20);
 
@@ -2314,7 +2303,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
    }
    DBFreeResult(hResult);
 
-   hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools"));
+   hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host FROM object_tools"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -2418,6 +2407,11 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
       DBGetFieldUTF8(hResult, i, 9, buffer, sizeof(buffer));
       json_object_set_new(tool, "commandShortName", json_string(buffer));
 
+      json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, i, 11)));
+
+      DBGetFieldUTF8(hResult, i, 12, buffer, sizeof(buffer));
+      json_object_set_new(tool, "remoteHost", json_string(buffer));
+
       LoadInputFieldDefinitions(toolId, hdb, tool);
 
       json_array_append_new(tools, tool);
@@ -2478,7 +2472,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
    }
 
    // Get tool details
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host FROM object_tools WHERE tool_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -2540,6 +2534,9 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
 
       json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, 0, 10)));
 
+      DBGetField(hResult, 0, 11, buffer, MAX_DB_STRING);
+      json_object_set_new(tool, "remoteHost", json_string_t(buffer));
+
       LoadInputFieldDefinitions(toolId, hdb, tool);
    }
 
@@ -2562,7 +2559,7 @@ uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port FROM object_tools WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host FROM object_tools WHERE tool_id=?"));
    if (hStmt == nullptr)
       goto cleanup;
 
@@ -2615,6 +2612,7 @@ uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg)
    }
 
    msg->setField(VID_PORT, DBGetFieldULong(hResult, 0, 10));
+   msg->setField(VID_HOSTNAME, DBGetField(hResult, 0, 11, buffer, MAX_DB_STRING));
 
    DBFreeResult(hResult);
    hResult = nullptr;

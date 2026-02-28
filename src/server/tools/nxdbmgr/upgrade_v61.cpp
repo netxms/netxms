@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.10 to 61.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE object_tools ADD remote_host varchar(255)"));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 61.9 to 61.10
  */
 static bool H_UpgradeFromV9()
@@ -274,16 +284,17 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 9,  61, 10,  H_UpgradeFromV9 },
-   { 8,  61,  9,  H_UpgradeFromV8 },
-   { 7,  61,  8,  H_UpgradeFromV7 },
-   { 6,  61,  7,  H_UpgradeFromV6 },
-   { 5,  61,  6,  H_UpgradeFromV5 },
-   { 4,  61,  5,  H_UpgradeFromV4 },
-   { 3,  61,  4,  H_UpgradeFromV3 },
-   { 2,  61,  3,  H_UpgradeFromV2 },
-   { 1,  61,  2,  H_UpgradeFromV1 },
-   { 0,  61,  1,  H_UpgradeFromV0 },
+   { 10, 61, 11,  H_UpgradeFromV10 },
+   { 9,  61, 10,  H_UpgradeFromV9  },
+   { 8,  61,  9,  H_UpgradeFromV8  },
+   { 7,  61,  8,  H_UpgradeFromV7  },
+   { 6,  61,  7,  H_UpgradeFromV6  },
+   { 5,  61,  6,  H_UpgradeFromV5  },
+   { 4,  61,  5,  H_UpgradeFromV4  },
+   { 3,  61,  4,  H_UpgradeFromV3  },
+   { 2,  61,  3,  H_UpgradeFromV2  },
+   { 1,  61,  2,  H_UpgradeFromV1  },
+   { 0,  61,  1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
 

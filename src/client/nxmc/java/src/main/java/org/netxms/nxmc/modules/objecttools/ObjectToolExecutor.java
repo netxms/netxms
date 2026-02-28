@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objecttools;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -735,7 +736,16 @@ public final class ObjectToolExecutor
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.object.getObjectId(), tool.getRemotePort(), 600000); // Close underlying proxy after 10 minutes of inactivity
+               TcpPortForwarder tcpPortForwarder;
+               if ((tool.getFlags() & ObjectTool.TCP_TUNNEL_TO_REMOTE_HOST) != 0)
+               {
+                  InetAddress remoteHost = InetAddress.getByName(tool.getRemoteHost());
+                  tcpPortForwarder = new TcpPortForwarder(session, node.object.getObjectId(), true, remoteHost, tool.getRemotePort(), 600000);
+               }
+               else
+               {
+                  tcpPortForwarder = new TcpPortForwarder(session, node.object.getObjectId(), tool.getRemotePort(), 600000); // 10 minutes
+               }
                tcpPortForwarder.setDisplay(getDisplay());
                tcpPortForwarder.setMessageArea(viewPlacement.getMessageAreaHolder());
                tcpPortForwarder.run();
