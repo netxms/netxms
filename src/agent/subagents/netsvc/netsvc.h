@@ -104,6 +104,7 @@ int CheckTLS(const char *hostname, const InetAddress &addr, uint16_t port, uint3
 
 CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *schema, uint32_t timeout);
 void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uint32_t timeout);
+struct curl_slist *CurlSetupResolve(CURL *curl, const OptionList& options, URLParser& urlParser);
 int CURLCodeToCheckResult(CURLcode cc);
 uint32_t GetTimeoutFromArgs(const TCHAR* metric, int argIndex);
 

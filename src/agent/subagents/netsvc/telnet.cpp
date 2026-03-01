@@ -95,7 +95,19 @@ LONG NetworkServiceStatus_Telnet(const char *host, const char *port, const Optio
    if (nPort == 0)
       nPort = 22;
 
-   *result = CheckTelnet(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   const TCHAR *resolveOpt = options.get(_T("resolve"));
+   if (resolveOpt != nullptr)
+   {
+      InetAddress addr = InetAddress::parse(resolveOpt);
+      if (addr.isValid())
+         *result = CheckTelnet(nullptr, addr, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+      else
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      *result = CheckTelnet(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   }
    return SYSINFO_RC_SUCCESS;
 }
 

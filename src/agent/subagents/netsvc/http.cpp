@@ -288,6 +288,7 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
    }
 
    CurlCommonSetup(curl, url, options, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   struct curl_slist *resolveList = CurlSetupResolve(curl, options, urlParser);
 
    curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0)); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
@@ -358,6 +359,7 @@ retry:
    }
 
    curl_easy_cleanup(curl);
+   curl_slist_free_all(resolveList);
 
    BYTE hash[SHA512_DIGEST_SIZE];
    context.final(&context.state, hash);

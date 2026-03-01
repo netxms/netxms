@@ -53,7 +53,19 @@ LONG NetworkServiceStatus_TCP(const char *host, const char *port, const OptionLi
    if (nPort == 0)
       nPort = 22;
 
-   *result = CheckTCP(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   const TCHAR *resolveOpt = options.get(_T("resolve"));
+   if (resolveOpt != nullptr)
+   {
+      InetAddress addr = InetAddress::parse(resolveOpt);
+      if (addr.isValid())
+         *result = CheckTCP(nullptr, addr, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+      else
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      *result = CheckTCP(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
