@@ -558,8 +558,10 @@ public class General extends PropertyPage
          }
          else
          {
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
+                  String.format(i18n.tr("Selected image is too large (%dx%d pixels). Maximum allowed size is 16x16 pixels."),
+                        image.getImageData().width, image.getImageData().height));
             image.dispose();
-            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Select image file is too large"));
          }
       }
       catch(Exception e)
