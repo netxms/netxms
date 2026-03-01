@@ -94,6 +94,31 @@ void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uin
 }
 
 /**
+ * Setup CURLOPT_RESOLVE from "resolve" option
+ */
+struct curl_slist *CurlSetupResolve(CURL *curl, const OptionList& options, URLParser& urlParser)
+{
+#if HAVE_DECL_CURLOPT_RESOLVE
+   char resolveAddr[64];
+   tchar_to_utf8(options.get(_T("resolve"), _T("")), -1, resolveAddr, sizeof(resolveAddr));
+   if (resolveAddr[0] != 0)
+   {
+      const char *urlHost = urlParser.host();
+      const char *urlPort = urlParser.port();
+      if (urlHost != nullptr && urlPort != nullptr)
+      {
+         char resolverData[1024];
+         snprintf(resolverData, sizeof(resolverData), "%s:%s:%s", urlHost, urlPort, resolveAddr);
+         struct curl_slist *resolveList = curl_slist_append(nullptr, resolverData);
+         curl_easy_setopt(curl, CURLOPT_RESOLVE, resolveList);
+         return resolveList;
+      }
+   }
+#endif
+   return nullptr;
+}
+
+/**
  * Prepare curl handle for generic service test
  */
 CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *schema, uint32_t timeout)
@@ -216,6 +241,8 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
       if (curl != nullptr)
       {
          CurlCommonSetup(curl, url, options, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+         struct curl_slist *resolveList = CurlSetupResolve(curl, options, urlParser);
+
          if (!strcmp(scheme, "http") || !strcmp(scheme, "https"))
          {
             if (pattern[0] != 0)
@@ -248,6 +275,7 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
             rc = NetworkServiceStatus_Other(curl, options, url, &checkResult);
          }
          curl_easy_cleanup(curl);
+         curl_slist_free_all(resolveList);
       }
       else
       {
