@@ -20,13 +20,17 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.AppMenuItem;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 public class MenuItemDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(MenuItemDialog.class);
+
    boolean isSubMenu;
    AppMenuItem item;
    private Text textName;
@@ -56,7 +60,7 @@ public class MenuItemDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((item != null) ? "Edit Application Menu Item" : "Create Application Menu Item");
+      newShell.setText((item != null) ? i18n.tr("Edit Application Menu Item") : i18n.tr("Create Application Menu Item"));
    }
    
    /* (non-Javadoc)
@@ -73,18 +77,18 @@ public class MenuItemDialog extends Dialog
       dialogArea.setLayout(layout);
       
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-            "Name", item != null ? item.getName() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+            i18n.tr("Name"), item != null ? item.getName() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-            "Description", item != null ? item.getDescription() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+            i18n.tr("Description"), item != null ? item.getDescription() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textDescription.getShell().setMinimumSize(300, 0);
       
       if (!isSubMenu)
       {
          textCommand = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-               "Command", item != null ? item.getCommand() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+               i18n.tr("Command"), item != null ? item.getCommand() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
          textCommand.getShell().setMinimumSize(300, 0);
       }
 
@@ -100,7 +104,7 @@ public class MenuItemDialog extends Dialog
    private void createIconSelector(Composite parent)
    {
       Group group = new Group(parent, SWT.NONE);
-      group.setText("Image");
+      group.setText(i18n.tr("Image"));
       GridData gd = new GridData(SWT.FILL, SWT.FILL, false, false);
       group.setLayoutData(gd);
       
@@ -117,7 +121,7 @@ public class MenuItemDialog extends Dialog
       
       Button link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_FIND);
-      link.setToolTipText("Select");
+      link.setToolTipText(i18n.tr("Select"));
       link.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -128,7 +132,7 @@ public class MenuItemDialog extends Dialog
 
       link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_CLEAR);
-      link.setToolTipText("Clear");
+      link.setToolTipText(i18n.tr("Clear"));
       link.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -150,7 +154,7 @@ public class MenuItemDialog extends Dialog
    {
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
       WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.gif;*.jpg;*.png", "*.*" });
-      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { "Image files", "All files" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { i18n.tr("Image Files"), i18n.tr("All Files") });
       String fileName = dlg.open();
       if (fileName == null)
          return;
@@ -167,13 +171,15 @@ public class MenuItemDialog extends Dialog
          }
          else
          {
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
+                  String.format(i18n.tr("Selected image is too large (%dx%d pixels). Maximum allowed size is 16x16 pixels."),
+                        image.getImageData().width, image.getImageData().height));
             image.dispose();
-            MessageDialogHelper.openError(getShell(), "Error", "Image is too large");
          }
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(),"Error", String.format("Can not load image %s", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot load image file: %s"), e.getLocalizedMessage()));
       }
    }
 
