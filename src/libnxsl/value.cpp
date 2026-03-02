@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -527,6 +527,19 @@ void NXSL_Value::updateNumber()
 }
 
 /**
+ * Remove trailing zeroes from real number string representation
+ */
+static inline void RemoveTrailingZeroes(TCHAR *s)
+{
+   TCHAR *d = _tcschr(s, '.');
+   if (d == nullptr)
+      return;
+   TCHAR *p = d + _tcslen(d) - 1;
+   while ((p > d + 1) && (*p == '0'))
+      *p-- = 0;
+}
+
+/**
  * Update string value
  */
 void NXSL_Value::updateString()
@@ -586,6 +599,7 @@ void NXSL_Value::updateString()
             break;
          case NXSL_DT_REAL:
             _sntprintf(buffer, 64, _T("%f"), m_value.real);
+            RemoveTrailingZeroes(buffer);
             break;
          case NXSL_DT_NULL:
             buffer[0] = 0;
