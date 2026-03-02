@@ -43,6 +43,7 @@ import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Custom perspective switcher sidebar widget. Supports expanded (icon + text) and collapsed (icon only) modes with section grouping
@@ -172,7 +173,7 @@ public class PerspectiveSwitcher extends Composite
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(false);
       scroller.setBackground(backgroundColor);
-      scroller.getVerticalBar().setIncrement(ITEM_HEIGHT);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, ITEM_HEIGHT);
 
       scrollContent = new Composite(scroller, SWT.NONE);
       GridLayout scrollLayout = new GridLayout();
