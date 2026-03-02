@@ -31,7 +31,7 @@ public class DciIdMatchingData implements IdMatchingData
 	public long dstNodeId;
 	public long dstDciId;
 	public String dstName;
-	
+
 	/**
 	 * @param srcNodeId
 	 * @param srcDciId
@@ -43,7 +43,7 @@ public class DciIdMatchingData implements IdMatchingData
 		this.srcDciId = srcDciId;
 		this.srcName = srcName;
       this.dstNodeId = AbstractObject.UNKNOWN;
-      this.dstDciId = -1;
+      this.dstDciId = 0;
 		this.dstName = null;
 	}
 

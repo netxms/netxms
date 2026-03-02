@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -332,7 +333,7 @@ public class DataSources extends DashboardElementPropertyPage
       if (dci == null)
          return;
 
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, dci.getDciId() == 0);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, (dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT));
       if (dlg.open() == Window.OK)
       {
          labelProvider.resolveDciNames(dciList);

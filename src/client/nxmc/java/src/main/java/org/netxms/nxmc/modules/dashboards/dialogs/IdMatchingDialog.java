@@ -101,7 +101,7 @@ public class IdMatchingDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
@@ -177,7 +177,7 @@ public class IdMatchingDialog extends Dialog
 
 	/**
 	 * Map node
-	 * 
+	 *
 	 * @param data
 	 */
 	private void mapNode(ObjectIdMatchingData data)
@@ -233,7 +233,7 @@ public class IdMatchingDialog extends Dialog
 
 	/**
 	 * Update mapping for all DCIs of given node after node mapping change
-	 * 
+	 *
 	 * @param objData
 	 */
 	private void updateDciMapping(final ObjectIdMatchingData objData)
@@ -251,7 +251,7 @@ public class IdMatchingDialog extends Dialog
                for(DciIdMatchingData d : objData.dcis)
 					{
                   d.dstNodeId = objData.dstId;
-                  d.dstDciId = -1;
+                  d.dstDciId = 0;
                   d.dstName = null;
                   for(DciValue v : dciValues)
 						{
@@ -277,7 +277,7 @@ public class IdMatchingDialog extends Dialog
 
 	/**
 	 * Map DCI
-	 * 
+	 *
 	 * @param data
 	 */
 	private void mapDci(DciIdMatchingData data)
