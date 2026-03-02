@@ -110,7 +110,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
     */
    @Override
    protected Control createClientArea(Composite parent)
-   {      
+   {
       content = new Composite(parent, SWT.NONE);
       content.addControlListener(new ControlListener() {
          @Override
@@ -119,7 +119,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
             chart.setSize(content.getSize());
             labelControl.setSize(content.getSize());
          }
-         
+
          @Override
          public void controlMoved(ControlEvent e)
          {
@@ -135,7 +135,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
       chartConfiguration.setExtendedLegend(true);
       chartConfiguration.setUseMultipliers(true);
       chartConfiguration.setAutoScale(true);
-      chartConfiguration.setTimePeriod(new TimePeriod()); 
+      chartConfiguration.setTimePeriod(new TimePeriod());
       chart = new Chart(content, SWT.NONE, ChartType.LINE, chartConfiguration, null);
       chart.setTimeRange(from, to);
       chart.addDoubleClickListener((e) -> openHistoryGraph());
@@ -151,7 +151,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
       label.setText("Loading...");
       GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, true);
       label.setLayoutData(gd);
-      
+
       refreshController.setInterval(30);
       return content;
    }
@@ -188,7 +188,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
 
    /**
     * Fill context menu
-    * 
+    *
     * @param manager
     */
    private void fillContextMenu(IMenuManager manager)
@@ -214,6 +214,15 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#requiresEqualColumnWidth()
+    */
+   @Override
+   public boolean requiresEqualColumnWidth()
+   {
+      return true;
+   }
+
+   /**
     * Open history graph of dci
     */
    private void openHistoryGraph()
@@ -235,7 +244,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
       chart.removeAllParameters();
       refresh();
    }
-   
+
    /**
     * Refresh element
     */
@@ -248,7 +257,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
          protected void run(IProgressMonitor monitor) throws Exception
          {
             try
-            {               
+            {
                final Date from = new Date(System.currentTimeMillis() - chartConfiguration.getTimeRangeMillis());
                final Date to = new Date(System.currentTimeMillis());
                final InterfaceTrafficDcis perfData = session.getInterfaceTrafficDcis(getObject().getObjectId());
@@ -263,12 +272,12 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
                   }
                   data[i] = session.getCollectedData(nodeId, currentDci, from, to, 0, HistoricalDataType.PROCESSED);
                }
-               
+
                runInUIThread(() -> {
                   if (!chart.isDisposed())
                   {
                      if (items == null)
-                     {                           
+                     {
                         items = perfData;
                         createChart(nodeId);
                      }
