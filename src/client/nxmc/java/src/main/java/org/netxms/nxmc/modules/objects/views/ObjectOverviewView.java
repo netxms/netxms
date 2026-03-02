@@ -144,7 +144,6 @@ public class ObjectOverviewView extends ObjectView
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.minimumWidth = SWT.DEFAULT;
       rightColumn.setLayoutData(gd);
 
       // Left column
@@ -161,7 +160,7 @@ public class ObjectOverviewView extends ObjectView
       e = new Location(leftColumn, e, this);
       elements.add(e);
       e = new LastValues(leftColumn, e, this);
-      elements.add(e);   
+      elements.add(e);
       e = new ExternalResources(leftColumn, e, this);
       elements.add(e);
       e = new Comments(leftColumn, e, this);
@@ -179,14 +178,14 @@ public class ObjectOverviewView extends ObjectView
       e = new Connection(rightColumn, e, this);
       elements.add(e);
       e = new InterfaceTrafficChart(rightColumn, e, this, false);
-      elements.add(e);   
+      elements.add(e);
       e = new InterfaceTrafficChart(rightColumn, e, this, true);
-      elements.add(e); 
+      elements.add(e);
    }
 
    /**
     * Create layout for column
-    * 
+    *
     * @return
     */
    private Layout createColumnLayout()
@@ -253,6 +252,17 @@ public class ObjectOverviewView extends ObjectView
             element.dispose();
          }
       }
+      boolean equalColumnWidth = false;
+      for(OverviewPageElement element : elements)
+      {
+         if (!element.isDisposed() && element.requiresEqualColumnWidth())
+         {
+            equalColumnWidth = true;
+            break;
+         }
+      }
+      ((GridLayout)viewArea.getLayout()).makeColumnsEqualWidth = equalColumnWidth;
+
       for(OverviewPageElement element : elements)
          element.fixPlacement();
       viewArea.layout(true, true);

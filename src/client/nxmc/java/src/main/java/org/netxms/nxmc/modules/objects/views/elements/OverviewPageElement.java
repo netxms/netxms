@@ -110,7 +110,7 @@ public abstract class OverviewPageElement
 	/**
 	 * Check if element is applicable for given object. Default implementation
 	 * always returns true.
-	 * 
+	 *
 	 * @param object object to test
 	 * @return true if element is applicable
 	 */
@@ -118,7 +118,7 @@ public abstract class OverviewPageElement
 	{
 		return true;
 	}
-	
+
 	/**
 	 * Fix control placement
 	 */
@@ -180,7 +180,7 @@ public abstract class OverviewPageElement
 			return anchor.getAnchorControl();
 		return null;
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -188,7 +188,7 @@ public abstract class OverviewPageElement
 	{
 		return ((widget != null) && !widget.isDisposed()) ? widget.getDisplay() : Display.getCurrent();
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -199,12 +199,12 @@ public abstract class OverviewPageElement
 
 	/**
 	 * Create client area.
-	 * 
+	 *
 	 * @param parent
 	 * @return
 	 */
 	protected abstract Control createClientArea(Composite parent);
-	
+
 	/**
 	 * Get height hint for element content.
 	 *
@@ -214,15 +214,25 @@ public abstract class OverviewPageElement
 	{
 	   return SWT.DEFAULT;
 	}
-	
+
+	/**
+	 * Check if this element requires equal column widths in the overview layout. Default implementation returns false.
+	 *
+	 * @return true if equal column widths are required
+	 */
+	public boolean requiresEqualColumnWidth()
+	{
+	   return false;
+	}
+
 	/**
 	 * Handler for object change.
 	 */
 	protected abstract void onObjectChange();
-	
+
 	/**
 	 * Get element's title
-	 * 
+	 *
 	 * @return element's title
 	 */
 	protected abstract String getTitle();
