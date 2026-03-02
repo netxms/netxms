@@ -24,6 +24,7 @@
 #include <nms_agent.h>
 #include "darwin.h"
 #include <IOKit/IOKitLib.h>
+#include <IOKit/IOBSD.h>
 #include <IOKit/storage/IOBlockStorageDriver.h>
 #include <IOKit/storage/IOMedia.h>
 #include <CoreFoundation/CoreFoundation.h>
