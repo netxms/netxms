@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2024 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,42 +25,30 @@
 /**
  * Tables to clear
  */
-extern const TCHAR *g_tables[];
+extern const wchar_t *g_tables[];
 
 /**
  * Delete idata_xx tables
  */
 static bool DeleteDataTables()
 {
-	DB_RESULT hResult;
-	TCHAR query[256];
-	int i, count;
+	wchar_t query[256];
 
-	hResult = SQLSelect(_T("SELECT id FROM nodes"));
-	if (hResult != NULL)
-	{
-		count = DBGetNumRows(hResult);
-		for(i = 0; i < count; i++)
-		{
-         uint32_t id = DBGetFieldULong(hResult, i, 0);
-         if (IsDataTableExist(_T("idata_%u"), id))
-         {
-            _sntprintf(query, 256, _T("DROP TABLE idata_%u"), id);
-            CHK_EXEC(SQLQuery(query));
-         }
-         if (IsDataTableExist(_T("tdata_%u"), id))
-         {
-            _sntprintf(query, 256, _T("DROP TABLE tdata_%u"), id);
-            CHK_EXEC(SQLQuery(query));
-         }
-		}
-		DBFreeResult(hResult);
-	}
-	else
-	{
-		if (!g_ignoreErrors)
-			return false;
-	}
+	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
+   for(int i = 0; i < targets->size(); i++)
+   {
+      uint32_t id = targets->get(i);
+      if (IsDataTableExist(_T("idata_%u"), id))
+      {
+         nx_swprintf(query, 256, L"DROP TABLE idata_%u", id);
+         CHK_EXEC(SQLQuery(query));
+      }
+      if (IsDataTableExist(_T("tdata_%u"), id))
+      {
+         nx_swprintf(query, 256, L"DROP TABLE tdata_%u", id);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
 
 	return true;
 }
@@ -70,11 +58,11 @@ static bool DeleteDataTables()
  */
 static bool ClearTable(const TCHAR *table, void *userData)
 {
-   TCHAR query[256];
+   wchar_t query[256];
    if ((g_dbSyntax == DB_SYNTAX_ORACLE) || (g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
-      _sntprintf(query, 256, _T("TRUNCATE TABLE %s"), table);
+      nx_swprintf(query, 256, L"TRUNCATE TABLE %s", table);
    else
-      _sntprintf(query, 256, _T("DELETE FROM %s"), table);
+      nx_swprintf(query, 256, L"DELETE FROM %s", table);
    return SQLQuery(query);
 }
 
@@ -83,15 +71,15 @@ static bool ClearTable(const TCHAR *table, void *userData)
  */
 static bool ClearTables()
 {
-	for(int i = 0; g_tables[i] != NULL; i++)
+	for(int i = 0; g_tables[i] != nullptr; i++)
 	{
-	   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (!_tcsicmp(g_tables[i], _T("idata")) || !_tcsicmp(g_tables[i], _T("tdata"))))
+	   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (!wcsicmp(g_tables[i], L"idata") || !wcsicmp(g_tables[i], L"tdata")))
 	      continue;   // idata and tdata are views in TSDB schema
-      if ((g_dbSyntax != DB_SYNTAX_TSDB) && (!_tcsnicmp(g_tables[i], _T("idata_sc_"), 9) || !_tcsnicmp(g_tables[i], _T("tdata_sc_"), 9)))
+      if ((g_dbSyntax != DB_SYNTAX_TSDB) && (!wcsnicmp(g_tables[i], L"idata_sc_", 9) || !wcsnicmp(g_tables[i], L"tdata_sc_", 9)))
          continue;   // tables named idata_sc_* and tdata_sc_* exist only in TSDB schema
-	   CHK_EXEC(ClearTable(g_tables[i], NULL));
+	   CHK_EXEC(ClearTable(g_tables[i], nullptr));
 	}
-	return EnumerateModuleTables(ClearTable, NULL);
+	return EnumerateModuleTables(ClearTable, nullptr);
 }
 
 /**
@@ -109,7 +97,7 @@ bool ClearDatabase(bool preMigration)
 	if (!ValidateDatabase())
 		return false;
 
-	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
+	WriteToTerminal(L"\n\n\x1b[1mWARNING!!!\x1b[0m\n");
 	if (!GetYesNo(preMigration ? (g_skipDataSchemaMigration ? s_warningTextMigrationNoData : s_warningTextMigration) : s_warningTextClear))
 		return false;
 
@@ -128,7 +116,7 @@ bool ClearDatabase(bool preMigration)
 	   if (success)
 		{
 			success = DBCommit(g_dbHandle);
-			_tprintf(success ? _T("Database successfully cleared\n") : _T("ERROR: cannot commit transaction\n"));
+			WriteToTerminal(success ? L"Database successfully cleared\n" : L"ERROR: cannot commit transaction\n");
 		}
 		else
 		{
@@ -137,7 +125,7 @@ bool ClearDatabase(bool preMigration)
 	}
 	else
 	{
-		_tprintf(_T("ERROR: cannot start transaction\n"));
+	   WriteToTerminal(L"ERROR: cannot start transaction\n");
 	}
 
 	return success;
