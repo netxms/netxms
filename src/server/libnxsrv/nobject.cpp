@@ -363,7 +363,7 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
       m_customAttributes.set(name, curr);
       onCustomAttributeChange(name, value);
    }
-   else if (_tcscmp(curr->value, value) || (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)))
+   else if (_tcscmp(curr->value, value) || (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)) || (curr->isInherited() && !curr->isRedefined()))
    {
       propagateRemove = (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE));
       curr->value = value;
@@ -678,6 +678,12 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
          if (!checkCustomAttributeInConflict(name, 0))
          {
             ca->flags &= ~CAF_CONFLICT;
+            if (!propagateChange && pair.first != 0)
+            {
+               ca->sourceObject = pair.first;
+               ca->value = pair.second;
+               propagateChange = true;
+            }
          }
          onCustomAttributeChange(name, ca->value);
       }
@@ -1130,4 +1136,3 @@ void NObject::pruneCustomAttributes()
       deleteCustomAttribute(deletionList.get(i));
    }
 }
-

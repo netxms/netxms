@@ -17,6 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.tests;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -871,6 +872,248 @@ public class CustomAttributeInheritanceConflict extends AbstractSessionTest
       assertTrue(containerX.getCustomAttribute(CA_NAME_1).isConflict());
 
       session.disconnect();
+   }
+
+   // Reproduces the reported bug: conflict not resolved when a relay container is deleted.
+   //
+   // 1.Creates containers:
+   //   A(custom attribute: 1 A, Inheritable),
+   //   B(redefines custom attribute: 1 B, Inheritable),
+   //   C,
+   //   V.
+   //
+   // 2.Creates hierarchy A -> B -> C, A -> V -> C
+   //   (C gets "B" from B-path and "A" from V-path -> conflict)
+   //
+   // 3.Deletes container V.
+   //   Expected: C gets value "B" from B, no conflict.
+   //   Bug: C kept stale value "A" because V was a relay for A's value and
+   //   parentId (V) != sourceObject (A) in updateOrDeleteCustomAttributeOnParentRemove.
+   @Test
+   public void testCaInheritanceConflict14() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      TestHelper.findAndDeleteContainer(session, containers);
+
+      TestHelper.createContainer(session, CONTAINER_A);
+      TestHelper.createContainer(session, CONTAINER_B);
+      TestHelper.createContainer(session, CONTAINER_C);
+      TestHelper.createContainer(session, CONTAINER_V);
+
+      Container containerA = (Container)session.findObjectByName(CONTAINER_A);
+      Container containerB = (Container)session.findObjectByName(CONTAINER_B);
+      Container containerC = (Container)session.findObjectByName(CONTAINER_C);
+      Container containerV = (Container)session.findObjectByName(CONTAINER_V);
+
+      assertNull(containerA.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerV.getCustomAttributeValue(CA_NAME_1));
+
+      // A defines attribute as "A" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId());
+      // B redefines attribute as "B" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_B, 1, containerB.getObjectId());
+
+      // Build hierarchy: A -> B -> C, A -> V -> C
+      session.bindObject(containerA.getObjectId(), containerB.getObjectId());
+      session.bindObject(containerB.getObjectId(), containerC.getObjectId());
+      session.bindObject(containerA.getObjectId(), containerV.getObjectId());
+      session.bindObject(containerV.getObjectId(), containerC.getObjectId());
+
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      // C should have a conflict (value "B" from B-path vs "A" from V-path)
+      assertTrue(containerC.getCustomAttribute(CA_NAME_1).isConflict());
+
+      // Delete V - this should resolve the conflict, C should get "B" from B
+      session.deleteObject(containerV.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      // After V is deleted, conflict should be resolved
+      assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
+      // Value should be "B" from B (not stale "A" from deleted V-path)
+      assertEquals(CA_VALUE_B, containerC.getCustomAttributeValue(CA_NAME_1));
+   }
+
+   // Similar to test 14 but unbinds instead of deleting the relay container.
+   //
+   // 1.Creates containers:
+   //   A(custom attribute: 1 A, Inheritable),
+   //   B(redefines custom attribute: 1 B, Inheritable),
+   //   C,
+   //   V.
+   //
+   // 2.Creates hierarchy A -> B -> C, A -> V -> C
+   //
+   // 3.Unbinds C from V.
+   //   Expected: C gets value "B" from B, no conflict.
+   @Test
+   public void testCaInheritanceConflict15() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      TestHelper.findAndDeleteContainer(session, containers);
+
+      TestHelper.createContainer(session, CONTAINER_A);
+      TestHelper.createContainer(session, CONTAINER_B);
+      TestHelper.createContainer(session, CONTAINER_C);
+      TestHelper.createContainer(session, CONTAINER_V);
+
+      Container containerA = (Container)session.findObjectByName(CONTAINER_A);
+      Container containerB = (Container)session.findObjectByName(CONTAINER_B);
+      Container containerC = (Container)session.findObjectByName(CONTAINER_C);
+      Container containerV = (Container)session.findObjectByName(CONTAINER_V);
+
+      assertNull(containerA.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerV.getCustomAttributeValue(CA_NAME_1));
+
+      // A defines attribute as "A" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId());
+      // B redefines attribute as "B" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_B, 1, containerB.getObjectId());
+
+      // Build hierarchy: A -> B -> C, A -> V -> C
+      session.bindObject(containerA.getObjectId(), containerB.getObjectId());
+      session.bindObject(containerB.getObjectId(), containerC.getObjectId());
+      session.bindObject(containerA.getObjectId(), containerV.getObjectId());
+      session.bindObject(containerV.getObjectId(), containerC.getObjectId());
+
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      // C should have a conflict
+      assertTrue(containerC.getCustomAttribute(CA_NAME_1).isConflict());
+
+      // Unbind C from V - this should resolve the conflict
+      session.unbindObject(containerV.getObjectId(), containerC.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      // After unbind, conflict should be resolved
+      assertFalse(containerC.getCustomAttribute(CA_NAME_1).isConflict());
+      // Value should be "B" from B
+      assertEquals(CA_VALUE_B, containerC.getCustomAttributeValue(CA_NAME_1));
+   }
+
+   // Tests that explicitly setting a custom attribute on a node with a conflict
+   // properly marks it as redefined and clears the conflict.
+   //
+   // 1.Creates containers:
+   //   A(custom attribute: 1 A, Inheritable),
+   //   V(custom attribute: 1 V, Inheritable),
+   //   B.
+   //
+   // 2.Creates hierarchy A -> B, V -> B (conflict on B)
+   //
+   // 3.Sets custom attribute on B to a new value.
+   //   Expected: B has redefined attribute, no conflict.
+   @Test
+   public void testCaInheritanceConflict16() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      TestHelper.findAndDeleteContainer(session, containers);
+
+      TestHelper.createContainer(session, CONTAINER_A);
+      TestHelper.createContainer(session, CONTAINER_B);
+      TestHelper.createContainer(session, CONTAINER_V);
+
+      Container containerA = (Container)session.findObjectByName(CONTAINER_A);
+      Container containerB = (Container)session.findObjectByName(CONTAINER_B);
+      Container containerV = (Container)session.findObjectByName(CONTAINER_V);
+
+      // A defines attribute as "A" (inheritable), V defines as "V" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId());
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_V, 1, containerV.getObjectId());
+
+      // Build hierarchy: A -> B, V -> B
+      session.bindObject(containerA.getObjectId(), containerB.getObjectId());
+      session.bindObject(containerV.getObjectId(), containerB.getObjectId());
+
+      Thread.sleep(MILLIS_300);
+
+      containerB = (Container)session.findObjectByName(CONTAINER_B);
+
+      // B should have a conflict
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isConflict());
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
+
+      // Set custom attribute on B to a new value (simulates setCustomAttribute via NXSL or properties)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_B, 1, containerB.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerB = (Container)session.findObjectByName(CONTAINER_B);
+
+      // After explicit set, B should be redefined with no conflict
+      assertFalse(containerB.getCustomAttribute(CA_NAME_1).isConflict());
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isRedefined());
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
+      assertEquals(CA_VALUE_B, containerB.getCustomAttributeValue(CA_NAME_1));
+   }
+
+   // Tests that explicitly setting a custom attribute on a node that inherited it
+   // (without conflict) properly marks it as redefined with inheritance info preserved.
+   //
+   // 1.Creates containers:
+   //   A(custom attribute: 1 A, Inheritable),
+   //   B.
+   //
+   // 2.Creates hierarchy A -> B (B inherits from A)
+   //
+   // 3.Sets custom attribute on B to the same value "A".
+   //   Expected: B has redefined attribute with inheritance info.
+   @Test
+   public void testCaInheritanceConflict17() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      TestHelper.findAndDeleteContainer(session, containers);
+
+      TestHelper.createContainer(session, CONTAINER_A);
+      TestHelper.createContainer(session, CONTAINER_B);
+
+      Container containerA = (Container)session.findObjectByName(CONTAINER_A);
+      Container containerB = (Container)session.findObjectByName(CONTAINER_B);
+
+      // A defines attribute as "A" (inheritable)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId());
+
+      // Build hierarchy: A -> B
+      session.bindObject(containerA.getObjectId(), containerB.getObjectId());
+
+      Thread.sleep(MILLIS_300);
+
+      containerB = (Container)session.findObjectByName(CONTAINER_B);
+
+      // B should have inherited attribute
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
+      assertFalse(containerB.getCustomAttribute(CA_NAME_1).isRedefined());
+      assertEquals(CA_VALUE_A, containerB.getCustomAttributeValue(CA_NAME_1));
+
+      // Set the same value on B (simulates setCustomAttribute with same value)
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerB.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerB = (Container)session.findObjectByName(CONTAINER_B);
+
+      // After explicit set, B should be redefined with inheritance info preserved
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isRedefined());
+      assertTrue(containerB.getCustomAttribute(CA_NAME_1).isInherited());
+      assertEquals(CA_VALUE_A, containerB.getCustomAttributeValue(CA_NAME_1));
    }
 
 }
