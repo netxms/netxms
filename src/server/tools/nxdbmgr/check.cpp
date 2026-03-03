@@ -75,6 +75,8 @@ IntegerArray<uint32_t> *GetDataCollectionTargets()
    CollectObjectIdentifiers(_T("access_points"), list);
    CollectObjectIdentifiers(_T("chassis"), list);
    CollectObjectIdentifiers(_T("sensors"), list);
+   CollectObjectIdentifiers(_T("resources"), list);
+   CollectObjectIdentifiers(_T("cloud_domains"), list);
    CollectObjectIdentifiers(_T("object_containers WHERE object_class=29"), list);   // objects of class "collector"
    return list;
 }
