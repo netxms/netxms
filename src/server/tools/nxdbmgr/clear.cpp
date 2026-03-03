@@ -49,6 +49,7 @@ static bool DeleteDataTables()
          CHK_EXEC(SQLQuery(query));
       }
    }
+   delete targets;
 
 	return true;
 }
