@@ -434,18 +434,12 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
          break;
    }
 
-   shared_ptr<IntegerArray<uint32_t>> targets(GetDataCollectionTargets());
-   if (targets == nullptr)
-   {
-      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m cannot collect list of data collection targets\n"));
-      return false;
-   }
-
+   IntegerArray<uint32_t> targets = GetDataCollectionTargets();
    bool singleTable = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
 
-   for(int i = 0; i < targets->size(); i++)
+   for(int i = 0; i < targets.size(); i++)
    {
-      uint32_t id = targets->get(i);
+      uint32_t id = targets.get(i);
 
       if (!g_skipDataSchemaMigration)
       {

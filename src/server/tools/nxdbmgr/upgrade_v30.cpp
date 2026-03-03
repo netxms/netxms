@@ -3073,14 +3073,13 @@ static bool H_UpgradeFromV10()
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null,raw_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
    if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) == 0)
    {
-      IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-      for(int i = 0; i < targets->size(); i++)
+      IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+      for(int i = 0; i < targets.size(); i++)
       {
          TCHAR query[256];
-         _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD raw_value varchar(255)"), targets->get(i));
+         _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD raw_value varchar(255)"), targets.get(i));
          CHK_EXEC(SQLQuery(query));
       }
-      delete targets;
    }
    CHK_EXEC(SetMinorSchemaVersion(11));
    return true;

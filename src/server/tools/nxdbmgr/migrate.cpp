@@ -582,16 +582,14 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
  */
 static bool MigrateDataTables(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDataMigrationErrors)
 {
-   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-   if (targets == nullptr)
-      return false;
+   IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
    // Create and import idata_xx and tdata_xx tables for each data collection target
-   int count = targets->size();
+   int count = targets.size();
    int i;
    for(i = 0; i < count; i++)
    {
-      uint32_t id = targets->get(i);
+      uint32_t id = targets.get(i);
       if (!g_dataOnlyMigration)
       {
          if (!CreateIDataTable(id))
@@ -621,7 +619,6 @@ static bool MigrateDataTables(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDat
       }
    }
 
-   delete targets;
    return i == count;
 }
 
@@ -1046,16 +1043,14 @@ static bool MigrateSingleDataTableToTSDB(DB_HANDLE hSource, DB_HANDLE hDest, boo
  */
 static bool MigrateDataTablesToSingleTable(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDataMigrationErrors)
 {
-   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-   if (targets == nullptr)
-      return false;
+   IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
    // Copy data from idata_xx and tdata_xx tables for each node in "nodes" table
-   int count = targets->size();
+   int count = targets.size();
    int i;
    for(i = 0; i < count; i++)
    {
-      uint32_t id = targets->get(i);
+      uint32_t id = targets.get(i);
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
          if (!MigrateDataToSingleTable_TSDB(hSource, hDest, id, false) && !ignoreDataMigrationErrors)
@@ -1072,7 +1067,6 @@ static bool MigrateDataTablesToSingleTable(DB_HANDLE hSource, DB_HANDLE hDest, b
       }
    }
 
-   delete targets;
    return i == count;
 }
 
@@ -1189,16 +1183,14 @@ static bool MigrateDataFromSingleTable(DB_HANDLE hSource, DB_HANDLE hDest, uint3
  */
 static bool MigrateDataTablesFromSingleTable(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDataMigrationErrors)
 {
-   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-   if (targets == nullptr)
-      return false;
+   IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
    // Create and import idata_xx and tdata_xx tables for each data collection target
-   int count = targets->size();
+   int count = targets.size();
    int i;
    for(i = 0; i < count; i++)
    {
-      uint32_t id = targets->get(i);
+      uint32_t id = targets.get(i);
 
       if (!g_dataOnlyMigration)
       {
@@ -1225,7 +1217,6 @@ static bool MigrateDataTablesFromSingleTable(DB_HANDLE hSource, DB_HANDLE hDest,
       }
    }
 
-   delete targets;
    return i == count;
 }
 
@@ -1576,17 +1567,15 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
       {
          if (useParallel)
          {
-            IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-            if (targets == nullptr)
-               goto cleanup;
+            IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
             // Phase 1: Create tables serially (DDL on destination)
             bool tableCreationOk = true;
             if (!g_dataOnlyMigration)
             {
-               for (int ti = 0; ti < targets->size(); ti++)
+               for (int ti = 0; ti < targets.size(); ti++)
                {
-                  uint32_t id = targets->get(ti);
+                  uint32_t id = targets.get(ti);
                   if (!CreateIDataTable(id) || !CreateTDataTable(id))
                   {
                      tableCreationOk = false;
@@ -1595,29 +1584,22 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
                }
             }
             if (!tableCreationOk)
-            {
-               delete targets;
                goto cleanup;
-            }
 
             // Phase 2: Dispatch data migrations in parallel
             if (!g_skipDataMigration)
             {
                InitializeProgressDisplay();
-               for (int ti = 0; ti < targets->size(); ti++)
+               for (int ti = 0; ti < targets.size(); ti++)
                {
-                  uint32_t id = targets->get(ti);
+                  uint32_t id = targets.get(ti);
                   DispatchDataMigration(threadPool, id, false, MigrateDataFromSingleTable);
                   DispatchDataMigration(threadPool, id, true, MigrateDataFromSingleTable);
                }
                WaitForPendingMigrations();
                if (s_migrationErrors > 0 && !ignoreDataMigrationErrors)
-               {
-                  delete targets;
                   goto cleanup;
-               }
             }
-            delete targets;
          }
          else
          {
@@ -1634,14 +1616,12 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
          }
          if (useParallel)
          {
-            IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-            if (targets == nullptr)
-               goto cleanup;
+            IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
             InitializeProgressDisplay();
-            for (int ti = 0; ti < targets->size(); ti++)
+            for (int ti = 0; ti < targets.size(); ti++)
             {
-               uint32_t id = targets->get(ti);
+               uint32_t id = targets.get(ti);
                if (g_dbSyntax == DB_SYNTAX_TSDB)
                {
                   DispatchDataMigration(threadPool, id, false, MigrateDataToSingleTable_TSDB);
@@ -1655,11 +1635,7 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
             }
             WaitForPendingMigrations();
             if (s_migrationErrors > 0 && !ignoreDataMigrationErrors)
-            {
-               delete targets;
                goto cleanup;
-            }
-            delete targets;
          }
          else
          {
@@ -1671,17 +1647,15 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
       {
          if (useParallel)
          {
-            IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-            if (targets == nullptr)
-               goto cleanup;
+            IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
             // Phase 1: Create tables serially (DDL on destination)
             bool tableCreationOk = true;
             if (!g_dataOnlyMigration)
             {
-               for (int ti = 0; ti < targets->size(); ti++)
+               for (int ti = 0; ti < targets.size(); ti++)
                {
-                  uint32_t id = targets->get(ti);
+                  uint32_t id = targets.get(ti);
                   if (!CreateIDataTable(id) || !CreateTDataTable(id))
                   {
                      tableCreationOk = false;
@@ -1690,18 +1664,15 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
                }
             }
             if (!tableCreationOk)
-            {
-               delete targets;
                goto cleanup;
-            }
 
             // Phase 2: Dispatch data migrations in parallel
             if (!g_skipDataMigration)
             {
                InitializeProgressDisplay();
-               for (int ti = 0; ti < targets->size(); ti++)
+               for (int ti = 0; ti < targets.size(); ti++)
                {
-                  uint32_t id = targets->get(ti);
+                  uint32_t id = targets.get(ti);
                   wchar_t table[32];
                   nx_swprintf(table, 32, L"idata_%u", id);
                   DispatchTableMigration(threadPool, table);
@@ -1710,12 +1681,8 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
                }
                WaitForPendingMigrations();
                if (s_migrationErrors > 0 && !ignoreDataMigrationErrors)
-               {
-                  delete targets;
                   goto cleanup;
-               }
             }
-            delete targets;
          }
          else
          {

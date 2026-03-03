@@ -66,18 +66,18 @@ static bool IsContainerObjectExists(DB_HANDLE hdb, uint32_t id, int32_t objectCl
 /**
  * Get all data collection targets
  */
-IntegerArray<uint32_t> *GetDataCollectionTargets()
+IntegerArray<uint32_t> GetDataCollectionTargets()
 {
-   IntegerArray<uint32_t> *list = new IntegerArray<uint32_t>(128, 128);
-   CollectObjectIdentifiers(_T("nodes"), list);
-   CollectObjectIdentifiers(_T("clusters"), list);
-   CollectObjectIdentifiers(_T("mobile_devices"), list);
-   CollectObjectIdentifiers(_T("access_points"), list);
-   CollectObjectIdentifiers(_T("chassis"), list);
-   CollectObjectIdentifiers(_T("sensors"), list);
-   CollectObjectIdentifiers(_T("resources"), list);
-   CollectObjectIdentifiers(_T("cloud_domains"), list);
-   CollectObjectIdentifiers(_T("object_containers WHERE object_class=29"), list);   // objects of class "collector"
+   IntegerArray<uint32_t> list(128, 128);
+   CollectObjectIdentifiers(L"nodes", &list);
+   CollectObjectIdentifiers(L"clusters", &list);
+   CollectObjectIdentifiers(L"mobile_devices", &list);
+   CollectObjectIdentifiers(L"access_points", &list);
+   CollectObjectIdentifiers(L"chassis", &list);
+   CollectObjectIdentifiers(L"sensors", &list);
+   CollectObjectIdentifiers(L"resources", &list);
+   CollectObjectIdentifiers(L"cloud_domains", &list);
+   CollectObjectIdentifiers(L"object_containers WHERE object_class=29", &list);   // objects of class "collector"
    return list;
 }
 
@@ -998,11 +998,11 @@ static void CheckCollectedData(bool isTable)
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"));
 
 	int64_t now = GetCurrentTimeMs();
-	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-	SetStageWorkTotal(targets->size());
-	for(int i = 0; i < targets->size(); i++)
+	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+	SetStageWorkTotal(targets.size());
+	for(int i = 0; i < targets.size(); i++)
    {
-      uint32_t objectId = targets->get(i);
+      uint32_t objectId = targets.get(i);
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
                isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
@@ -1026,10 +1026,10 @@ static void CheckCollectedData(bool isTable)
 
 	ResetBulkYesNo();
 
-   for(int i = 0; i < targets->size(); i++)
+   for(int i = 0; i < targets.size(); i++)
    {
-      uint32_t objectId = targets->get(i);
-      TCHAR query[1024];
+      uint32_t objectId = targets.get(i);
+      wchar_t query[1024];
       _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_%d"), isTable ? _T("tdata") : _T("idata"), objectId);
       DB_RESULT hResult = SQLSelect(query);
       if (hResult != nullptr)
@@ -1054,7 +1054,6 @@ static void CheckCollectedData(bool isTable)
 
       UpdateStageProgress(1);
    }
-	delete targets;
 
 	EndStage();
 }
@@ -1437,11 +1436,11 @@ static void CheckDataTables()
       return;  // Single table mode
 
    StartStage(_T("Data tables"));
-	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-	SetStageWorkTotal(targets->size());
-	for(int i = 0; i < targets->size(); i++)
+	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+	SetStageWorkTotal(targets.size());
+	for(int i = 0; i < targets.size(); i++)
    {
-	   uint32_t objectId = targets->get(i);
+	   uint32_t objectId = targets.get(i);
 
       // IDATA
       if (!IsDataTableExist(_T("idata_%u"), objectId))
@@ -1483,18 +1482,18 @@ static void CheckDataTables()
       SetStageWorkTotal(tables->size());
       for(int i = 0; i < tables->size(); i++)
       {
-         const TCHAR *table = tables->get(i);
-         if (!_tcsncmp(table, _T("idata_"), 6) || !_tcsncmp(table, _T("tdata_"), 6))
+         const wchar_t *table = tables->get(i);
+         if (!wcsncmp(table, L"idata_", 6) || !wcsncmp(table, L"tdata_", 6))
          {
-            TCHAR *eptr;
-            uint32_t objectId = _tcstoul(&table[6], &eptr, 10);
-            if ((*eptr == 0) && !targets->contains(objectId))
+            wchar_t *eptr;
+            uint32_t objectId = wcstoul(&table[6], &eptr, 10);
+            if ((*eptr == 0) && !targets.contains(objectId))
             {
                g_dbCheckErrors++;
                if (GetYesNoEx(_T("Data collection table %s belongs to deleted object and no longer in use. Delete it? (Y/N) "), table))
                {
-                  TCHAR query[256];
-                  if (!_tcsncmp(table, _T("tdata_"), 6))
+                  wchar_t query[256];
+                  if (!wcsncmp(table, L"tdata_", 6))
                   {
                      // Check for tdata_rows_NNN and tdata_records_NNN from older versions
                      if (IsDataTableExist(_T("tdata_rows_%u"), objectId))
@@ -1519,8 +1518,6 @@ static void CheckDataTables()
       delete tables;
    }
    EndStage();
-
-   delete targets;
 }
 
 /**

@@ -1438,14 +1438,13 @@ static bool H_UpgradeFromV13()
          CHK_EXEC(SQLQuery(query));
       }
 
-      IntegerArray<uint32_t> *dcTargets = GetDataCollectionTargets();
-      for(int i = 0; i < dcTargets->size(); i++)
+      IntegerArray<uint32_t> dcTargets = GetDataCollectionTargets();
+      for(int i = 0; i < dcTargets.size(); i++)
       {
          wchar_t query[256];
-         nx_swprintf(query, 256, L"ALTER TABLE idata_%u MODIFY (idata_value varchar2(255 char), raw_value varchar2(255 char))", dcTargets->get(i));
+         nx_swprintf(query, 256, L"ALTER TABLE idata_%u MODIFY (idata_value varchar2(255 char), raw_value varchar2(255 char))", dcTargets.get(i));
          CHK_EXEC(SQLQuery(query));
       }
-      delete dcTargets;
 
       CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,tdata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
    }
