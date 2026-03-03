@@ -34,16 +34,16 @@ static bool DeleteDataTables()
 {
 	wchar_t query[256];
 
-	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-   for(int i = 0; i < targets->size(); i++)
+	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+   for(int i = 0; i < targets.size(); i++)
    {
-      uint32_t id = targets->get(i);
-      if (IsDataTableExist(_T("idata_%u"), id))
+      uint32_t id = targets.get(i);
+      if (IsDataTableExist(L"idata_%u", id))
       {
          nx_swprintf(query, 256, L"DROP TABLE idata_%u", id);
          CHK_EXEC(SQLQuery(query));
       }
-      if (IsDataTableExist(_T("tdata_%u"), id))
+      if (IsDataTableExist(L"tdata_%u", id))
       {
          nx_swprintf(query, 256, L"DROP TABLE tdata_%u", id);
          CHK_EXEC(SQLQuery(query));

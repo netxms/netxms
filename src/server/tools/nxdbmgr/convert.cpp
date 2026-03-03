@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2024 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,16 +99,14 @@ static bool CreateTDataTable(const TCHAR *storageClass)
  */
 static bool ConvertDataTables(DB_HANDLE hdb)
 {
-   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
-   if (targets == nullptr)
-      return false;
+   IntegerArray<uint32_t> targets = GetDataCollectionTargets();
 
    // Copy data from idata_xx and tdata_xx tables for each data collection target
-   int count = targets->size();
+   int count = targets.size();
    int i;
    for(i = 0; i < count; i++)
    {
-      uint32_t id = targets->get(i);
+      uint32_t id = targets.get(i);
 
       if (DBIsTableExist(g_dbHandle, StringBuffer(_T("idata_")).append(id)) == DBIsTableExist_Found)
       {
@@ -133,7 +131,6 @@ static bool ConvertDataTables(DB_HANDLE hdb)
       }
    }
 
-   delete targets;
    return i == count;
 }
 
