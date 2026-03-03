@@ -1689,6 +1689,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_NETWORK_PATH:
          getNetworkPath(*request);
          break;
+      case CMD_GET_L2_NETWORK_PATH:
+         getL2NetworkPath(*request);
+         break;
       case CMD_GET_NODE_COMPONENTS:
          getNodeComponents(*request);
          break;
@@ -14176,6 +14179,52 @@ void ClientSession::getNetworkPath(const NXCPMessage& request)
 	}
 
 	sendMessage(response);
+}
+
+/**
+ * Get L2 network path between two nodes
+ */
+void ClientSession::getL2NetworkPath(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> node1 = FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+   shared_ptr<NetObj> node2 = FindObjectById(request.getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+
+   if ((node1 != nullptr) && (node2 != nullptr))
+   {
+      if (node1->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
+          node2->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         if ((node1->getObjectClass() == OBJECT_NODE) && (node2->getObjectClass() == OBJECT_NODE))
+         {
+            shared_ptr<NetworkPath> path = TraceL2Path(static_pointer_cast<Node>(node1), static_pointer_cast<Node>(node2));
+            if (path != nullptr)
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               path->fillMessage(&response);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }
 
 /**

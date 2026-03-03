@@ -12656,6 +12656,28 @@ public class NXCSession
    }
 
    /**
+    * Get L2 (switch-level) network path between two nodes. Returned path may be incomplete
+    * if server does not have enough FDB information to build full path. In this case,
+    * no exception thrown, and completeness of path can be checked by calling
+    * NetworkPath.isComplete().
+    *
+    * @param node1 source node
+    * @param node2 destination node
+    * @return network path object
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public NetworkPath getL2NetworkPath(long node1, long node2) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_L2_NETWORK_PATH);
+      msg.setFieldUInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, node1);
+      msg.setFieldUInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, node2);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new NetworkPath(response);
+   }
+
+   /**
     * Get routing table from node
     *
     * @param nodeId node object ID

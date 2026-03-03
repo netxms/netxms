@@ -866,6 +866,7 @@ private:
    void renameFile(const NXCPMessage& request);
 	void deleteFile(const NXCPMessage& request);
 	void getNetworkPath(const NXCPMessage& request);
+	void getL2NetworkPath(const NXCPMessage& request);
 	void getNodeComponents(const NXCPMessage& request);
    void getDeviceView(const NXCPMessage& request);
 	void getNodeSoftware(const NXCPMessage& request);

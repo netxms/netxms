@@ -4056,6 +4056,7 @@ protected:
    NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass);
    NetworkPathCheckResult checkNetworkPathLayer3(uint32_t requestId, bool secondPass);
    NetworkPathCheckResult checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass);
+   NetworkPathCheckResult checkNetworkPathLayer2Trace(const shared_ptr<Node>& lastL3Hop, uint32_t lastL3HopIfIndex, uint32_t requestId, bool secondPass);
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    bool checkSshConnection();

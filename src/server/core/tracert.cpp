@@ -121,6 +121,11 @@ json_t *NetworkPath::toJson() const
          case NetworkPathElementType::DUMMY:
             json_object_set_new(jsonHop, "type", json_string("DUMMY"));
             break;
+         case NetworkPathElementType::L2_LINK:
+            json_object_set_new(jsonHop, "type", json_string("L2_LINK"));
+            if (e->ifIndex != 0)
+               json_object_set_new(jsonHop, "ifIndex", json_integer(e->ifIndex));
+            break;
       }
       json_object_set_new(jsonHop, "name", json_string_t(e->name));
       json_array_append_new(hops, jsonHop);
@@ -172,6 +177,15 @@ void NetworkPath::print(ServerConsole *console, int padding) const
                   hop->object->getId(),
                   hop->object->getName(),
                   GetObjectName(hop->ifIndex, _T("(unknown)")),
+                  hop->ifIndex);
+            break;
+         case NetworkPathElementType::L2_LINK:
+            iface = static_cast<Node&>(*hop->object).findInterfaceByIndex(hop->ifIndex);
+            console->printf(_T("%*s[%u] %s ==> L2 via %s [ifIndex=%u]\n"),
+                  padding, _T(""),
+                  hop->object->getId(),
+                  hop->object->getName(),
+                  (iface != nullptr) ? iface->getName() : _T("unknown"),
                   hop->ifIndex);
             break;
       }
@@ -235,6 +249,164 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src
    {
       path->addHop(curr, NetworkPathElementType::DUMMY, 0, _T(""));
       path->setComplete();
+   }
+
+   return path;
+}
+
+/**
+ * Trace L2 (switch-level) path between two nodes using MAC forwarding tables
+ */
+shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& src, const shared_ptr<Node>& dest)
+{
+   auto path = make_shared<NetworkPath>(src->getIpAddress());
+
+   MacAddress targetMac = dest->getPrimaryMacAddress();
+   if (!targetMac.isValid())
+      return path;
+
+   // Phase A: Find the first switch (starting point)
+
+   // Step 1: Check if source and destination are directly connected (L2 peers)
+   unique_ptr<SharedObjectArray<NetObj>> srcInterfaces = src->getChildren(OBJECT_INTERFACE);
+   for (int i = 0; i < srcInterfaces->size(); i++)
+   {
+      Interface *iface = static_cast<Interface*>(srcInterfaces->get(i));
+      if (iface->getPeerNodeId() == dest->getId())
+      {
+         path->addHop(src, NetworkPathElementType::L2_LINK, 0, iface->getName());
+         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->setComplete();
+         return path;
+      }
+   }
+
+   // Step 2: Find interface in same subnet as destination and check if its peer is a bridge
+   uint32_t firstSwitchId = 0;
+   const wchar_t *srcOutIfName = L"";
+   shared_ptr<Interface> srcIface = src->findInterfaceInSameSubnet(dest->getIpAddress());
+   if (srcIface != nullptr)
+   {
+      uint32_t peerId = srcIface->getPeerNodeId();
+      if (peerId != 0)
+      {
+         shared_ptr<Node> peer = static_pointer_cast<Node>(FindObjectById(peerId, OBJECT_NODE));
+         if ((peer != nullptr) && peer->isBridge())
+         {
+            firstSwitchId = peerId;
+            srcOutIfName = srcIface->getName();
+         }
+      }
+   }
+
+   // Step 3: If step 2 didn't find a bridge, scan all L2 peers of source
+   if (firstSwitchId == 0)
+   {
+      for (int i = 0; i < srcInterfaces->size(); i++)
+      {
+         Interface *iface = static_cast<Interface*>(srcInterfaces->get(i));
+         uint32_t peerId = iface->getPeerNodeId();
+         if (peerId == 0)
+            continue;
+
+         shared_ptr<Node> peer = static_pointer_cast<Node>(FindObjectById(peerId, OBJECT_NODE));
+         if ((peer == nullptr) || !peer->isBridge())
+            continue;
+
+         shared_ptr<ForwardingDatabase> fdb = peer->getSwitchForwardingDatabase();
+         if (fdb == nullptr)
+            continue;
+
+         bool isStatic;
+         if (fdb->findMacAddress(targetMac, &isStatic) != 0)
+         {
+            firstSwitchId = peerId;
+            srcOutIfName = iface->getName();
+            break;
+         }
+      }
+   }
+
+   // Step 4: If source itself is a bridge, check its own FDB
+   if ((firstSwitchId == 0) && src->isBridge())
+   {
+      shared_ptr<ForwardingDatabase> fdb = src->getSwitchForwardingDatabase();
+      if (fdb != nullptr)
+      {
+         bool isStatic;
+         if (fdb->findMacAddress(targetMac, &isStatic) != 0)
+            firstSwitchId = src->getId();
+      }
+   }
+
+   if (firstSwitchId == 0)
+      return path;  // Cannot find starting switch
+
+   // Add source as L2 link hop if it is not itself the first switch
+   if (firstSwitchId != src->getId())
+      path->addHop(src, NetworkPathElementType::L2_LINK, 0, srcOutIfName);
+
+   // Phase B: Walk the FDB chain
+   HashSet<uint32_t> visitedNodes;
+   uint32_t currentNodeId = firstSwitchId;
+
+   for (int hop = 0; hop < 30; hop++)
+   {
+      if (currentNodeId == dest->getId())
+      {
+         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->setComplete();
+         return path;
+      }
+
+      if (visitedNodes.contains(currentNodeId))
+         break;  // Loop detected
+      visitedNodes.put(currentNodeId);
+
+      shared_ptr<Node> switchNode = static_pointer_cast<Node>(FindObjectById(currentNodeId, OBJECT_NODE));
+      if (switchNode == nullptr)
+         break;
+
+      shared_ptr<ForwardingDatabase> fdb = switchNode->getSwitchForwardingDatabase();
+      if (fdb == nullptr)
+         break;
+
+      bool isStatic;
+      uint32_t ifIndex = fdb->findMacAddress(targetMac, &isStatic);
+      if (ifIndex == 0)
+         break;  // Target MAC not found in FDB
+
+      shared_ptr<Interface> outIface = switchNode->findInterfaceByIndex(ifIndex);
+      path->addHop(switchNode, NetworkPathElementType::L2_LINK, ifIndex,
+            (outIface != nullptr) ? outIface->getName() : L"");
+
+      if (outIface == nullptr)
+         break;
+
+      uint32_t nextNodeId = outIface->getPeerNodeId();
+      if (nextNodeId == dest->getId())
+      {
+         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->setComplete();
+         return path;
+      }
+
+      if (nextNodeId == 0)
+      {
+         if (fdb->isSingleMacOnPort(ifIndex))
+         {
+            // Single MAC on port — likely direct connection to destination
+            path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+            path->setComplete();
+         }
+         return path;
+      }
+
+      shared_ptr<Node> nextNode = static_pointer_cast<Node>(FindObjectById(nextNodeId, OBJECT_NODE));
+      if ((nextNode == nullptr) || !nextNode->isBridge())
+         break;  // Next hop is not a bridge, stop
+
+      currentNodeId = nextNodeId;
    }
 
    return path;

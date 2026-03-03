@@ -3733,6 +3733,124 @@ NetworkPathCheckResult Node::checkNetworkPathElement(uint32_t nodeId, const TCHA
 }
 
 /**
+ * Trace layer 2 path from last L3 hop through switches using FDB lookups.
+ * Checks each intermediate switch for failures (down or interface disabled).
+ */
+NetworkPathCheckResult Node::checkNetworkPathLayer2Trace(const shared_ptr<Node>& lastL3Hop, uint32_t lastL3HopIfIndex, uint32_t requestId, bool secondPass)
+{
+   MacAddress targetMac = getPrimaryMacAddress();
+   if (!targetMac.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): target node has no known MAC address", m_name, m_id);
+      return NetworkPathCheckResult();
+   }
+
+   shared_ptr<Interface> routerIface = lastL3Hop->findInterfaceByIndex(lastL3HopIfIndex);
+   if (routerIface == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): cannot find interface with index %u on router %s [%d]",
+               m_name, m_id, lastL3HopIfIndex, lastL3Hop->getName(), lastL3Hop->getId());
+      return NetworkPathCheckResult();
+   }
+
+   uint32_t currentNodeId = routerIface->getPeerNodeId();
+   if (currentNodeId == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): router interface %s has no peer information",
+               m_name, m_id, routerIface->getName());
+      return NetworkPathCheckResult();
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): starting L2 trace from router %s [%d], target MAC %s",
+            m_name, m_id, lastL3Hop->getName(), lastL3Hop->getId(), targetMac.toString().cstr());
+
+   HashSet<uint32_t> visitedNodes;
+   for (int hop = 0; hop < 10; hop++)
+   {
+      if (currentNodeId == m_id)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): reached target node, no failures found", m_name, m_id);
+         return NetworkPathCheckResult();
+      }
+
+      if (visitedNodes.contains(currentNodeId))
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): loop detected at node [%u]", m_name, m_id, currentNodeId);
+         break;
+      }
+      visitedNodes.put(currentNodeId);
+
+      NetworkPathCheckResult result = checkNetworkPathElement(currentNodeId, L"upstream switch", false, true, requestId, secondPass);
+      if (result.rootCauseFound)
+         return result;
+
+      shared_ptr<Node> switchNode = static_pointer_cast<Node>(FindObjectById(currentNodeId, OBJECT_NODE));
+      if (switchNode == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): cannot find node object [%u]", m_name, m_id, currentNodeId);
+         break;
+      }
+
+      shared_ptr<ForwardingDatabase> fdb = switchNode->getSwitchForwardingDatabase();
+      if (fdb == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): no FDB available on switch %s [%d]",
+                  m_name, m_id, switchNode->getName(), switchNode->getId());
+         break;
+      }
+
+      bool isStatic;
+      uint32_t ifIndex = fdb->findMacAddress(targetMac, &isStatic);
+      if (ifIndex == 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): target MAC not found in FDB of switch %s [%d]",
+                  m_name, m_id, switchNode->getName(), switchNode->getId());
+         break;
+      }
+
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): target MAC found on ifIndex %u of switch %s [%d]",
+               m_name, m_id, ifIndex, switchNode->getName(), switchNode->getId());
+
+      shared_ptr<Interface> outIface = switchNode->findInterfaceByIndex(ifIndex);
+      if (outIface != nullptr)
+      {
+         if ((outIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (outIface->getAdminState() == IF_ADMIN_STATE_TESTING))
+         {
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Node::checkNetworkPathLayer2Trace(%s [%d]): interface %s [%d] on switch %s [%d] is administratively down",
+                     m_name, m_id, outIface->getName(), outIface->getId(), switchNode->getName(), switchNode->getId());
+            sendPollerMsg(POLLER_WARNING L"   Upstream interface %s on switch %s is administratively down\r\n", outIface->getName(), switchNode->getName());
+            return NetworkPathCheckResult(NetworkPathFailureReason::INTERFACE_DISABLED, switchNode->getId(), outIface->getId());
+         }
+
+         uint32_t nextNodeId = outIface->getPeerNodeId();
+         if (nextNodeId == 0)
+         {
+            if (fdb->isSingleMacOnPort(ifIndex))
+            {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): single MAC on port, likely direct connection from switch %s [%d]",
+                        m_name, m_id, switchNode->getName(), switchNode->getId());
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): no peer info on interface %s of switch %s [%d], stopping trace",
+                        m_name, m_id, outIface->getName(), switchNode->getName(), switchNode->getId());
+            }
+            break;
+         }
+         currentNodeId = nextNodeId;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): cannot find interface with index %u on switch %s [%d]",
+                  m_name, m_id, ifIndex, switchNode->getName(), switchNode->getId());
+         break;
+      }
+   }
+
+   return NetworkPathCheckResult();
+}
+
+/**
  * Check network path between node and management server to detect possible intermediate node failure - layer 2
  *
  * @return true if network path problems found
@@ -3950,6 +4068,28 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
             result.rootCauseInterfaceId = vpnConn->getId();
             break;
          }
+      }
+   }
+
+   if (!result.rootCauseFound && trace->isComplete())
+   {
+      // Find last ROUTE hop (the router with direct connection to target subnet)
+      NetworkPathElement *lastRouteHop = nullptr;
+      for (int i = trace->getHopCount() - 1; i >= 0; i--)
+      {
+         NetworkPathElement *hop = trace->getHopInfo(i);
+         if ((hop->type == NetworkPathElementType::ROUTE) && (hop->object != nullptr) && (hop->object->getId() != m_id))
+         {
+            lastRouteHop = hop;
+            break;
+         }
+      }
+
+      if ((lastRouteHop != nullptr) && (lastRouteHop->ifIndex != 0))
+      {
+         shared_ptr<Node> lastRouter = static_pointer_cast<Node>(lastRouteHop->object);
+         sendPollerMsg(L"Checking L2 path from last router %s...\r\n", lastRouter->getName());
+         result = checkNetworkPathLayer2Trace(lastRouter, lastRouteHop->ifIndex, requestId, secondPass);
       }
    }
 

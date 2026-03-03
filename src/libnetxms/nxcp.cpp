@@ -557,7 +557,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_EPP_SCRIPT_LIST"),
       _T("CMD_GET_STATUS_EXPLANATION"),
       _T("CMD_GET_DEVICE_CONFIG_BACKUPS"),
-      _T("CMD_GET_DEVICE_CONFIG_BACKUP")
+      _T("CMD_GET_DEVICE_CONFIG_BACKUP"),
+      _T("CMD_GET_L2_NETWORK_PATH")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -570,7 +571,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_DEVICE_CONFIG_BACKUP))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_L2_NETWORK_PATH))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

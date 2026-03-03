@@ -71,7 +71,8 @@ enum class NetworkPathElementType
    ROUTE = 0,
    VPN = 1,
    PROXY = 2,
-   DUMMY = 3
+   DUMMY = 3,
+   L2_LINK = 4
 };
 
 /**
@@ -456,6 +457,7 @@ class NetworkMapLink;
 
 shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
+shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *filterProvider, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 

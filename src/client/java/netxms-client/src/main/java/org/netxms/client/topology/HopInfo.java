@@ -30,6 +30,7 @@ public class HopInfo
    public static final int VPN = 1;
    public static final int PROXY = 2;
    public static final int DUMMY = 3;
+   public static final int L2_LINK = 4;
 
    private int index;
 	private long nodeId;

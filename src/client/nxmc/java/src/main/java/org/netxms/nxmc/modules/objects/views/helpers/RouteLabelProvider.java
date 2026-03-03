@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ public class RouteLabelProvider extends LabelProvider implements ITableLabelProv
          case RouteView.COLUMN_NEXT_HOP:
             return (hop.getNextHop() != null) ? hop.getNextHop().getHostAddress() : "";
          case RouteView.COLUMN_NODE:
-            return (hop.getNodeId() > 0) ? session.getObjectName(hop.getNodeId()) : i18n.tr("??");
+            return (hop.getNodeId() > 0) ? session.getObjectName(hop.getNodeId()) : "??";
          case RouteView.COLUMN_TYPE:
             switch(hop.getType())
             {
@@ -74,6 +74,8 @@ public class RouteLabelProvider extends LabelProvider implements ITableLabelProv
                   return i18n.tr("Route");
                case HopInfo.VPN:
                   return i18n.tr("VPN");
+               case HopInfo.L2_LINK:
+                  return i18n.tr("L2 Link");
             }
             break;
       }

@@ -100,6 +100,7 @@ import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.TemplateDeleteDialog;
+import org.netxms.nxmc.modules.objects.views.L2PathView;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
@@ -154,6 +155,9 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRouteFrom;
    private Action actionRouteTo;
    private Action actionRouteFromMgmtNode;
+   private Action actionL2RouteFrom;
+   private Action actionL2RouteTo;
+   private Action actionL2RouteFromMgmtNode;
    private Action actionLayer2Topology;
    private Action actionIPTopology;
    private Action actionInternalTopology;
@@ -479,6 +483,30 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionL2RouteFrom = new Action(i18n.tr("L2 path from...")) {
+         @Override
+         public void run()
+         {
+            showL2Route(true);
+         }
+      };
+
+      actionL2RouteTo = new Action(i18n.tr("L2 path to...")) {
+         @Override
+         public void run()
+         {
+            showL2Route(false);
+         }
+      };
+
+      actionL2RouteFromMgmtNode = new Action(i18n.tr("L2 path from NetXMS server")) {
+         @Override
+         public void run()
+         {
+            showL2RouteFromManagementNode();
+         }
+      };
+
       actionLayer2Topology = new Action(i18n.tr("&Layer 2 topology")) {
          @Override
          public void run()
@@ -764,10 +792,16 @@ public class ObjectContextMenuManager extends MenuManager
             if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
             {
                add(new Separator());
+               MenuManager tracePathMenu = new MenuManager(i18n.tr("Trace path"));
                if (!((Node)object).isManagementServer())
-                  add(actionRouteFromMgmtNode);
-               add(actionRouteFrom);
-               add(actionRouteTo);
+                  tracePathMenu.add(actionRouteFromMgmtNode);
+               tracePathMenu.add(actionRouteFrom);
+               tracePathMenu.add(actionRouteTo);
+               if (!((Node)object).isManagementServer())
+                  tracePathMenu.add(actionL2RouteFromMgmtNode);
+               tracePathMenu.add(actionL2RouteFrom);
+               tracePathMenu.add(actionL2RouteTo);
+               add(tracePathMenu);
                MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
                topologyMapMenu.add(actionLayer2Topology);
                topologyMapMenu.add(actionIPTopology);
@@ -1843,6 +1877,54 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : destination.getObjectId();
       view.openView(new RouteView(source, (Node)destination, contextId));
+   }
+
+   /**
+    * Show L2 path between selected node and another node
+    *
+    * @param swap if true, swap source and destination
+    */
+   private void showL2Route(boolean swap)
+   {
+      AbstractObject source = getObjectFromSelection();
+      if (!(source instanceof Node))
+         return;
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+      dlg.enableMultiSelection(false);
+      if (dlg.open() != Window.OK)
+         return;
+
+      AbstractObject destination = dlg.getSelectedObjects().get(0);
+      if (!(destination instanceof Node))
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : source.getObjectId();
+      view.openView(
+            swap ?
+               new L2PathView((Node)destination, (Node)source, contextId) :
+               new L2PathView((Node)source, (Node)destination, contextId));
+   }
+
+   /**
+    * Show L2 path from management server to selected node
+    */
+   private void showL2RouteFromManagementNode()
+   {
+      AbstractObject destination = getObjectFromSelection();
+      if (!(destination instanceof Node))
+         return;
+
+      NXCSession session = Registry.getSession();
+      Node source = (Node)session.findObject((o) -> (o instanceof Node) && ((Node)o).isManagementServer());
+      if (source == null)
+      {
+         view.addMessage(MessageArea.ERROR, i18n.tr("NetXMS server node is not accessible"));
+         return;
+      }
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : destination.getObjectId();
+      view.openView(new L2PathView(source, (Node)destination, contextId));
    }
 
    /**
