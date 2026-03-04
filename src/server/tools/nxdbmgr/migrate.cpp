@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,6 +93,8 @@ static COLUMN_IDENTIFIER s_timestampColumns[] =
    { _T("maintenance_journal"), "creation_time" },
    { _T("maintenance_journal"), "modification_time" },
    { _T("notification_log"), "notification_timestamp" },
+   { _T("package_deployment_log"), "completion_time" },
+   { _T("package_deployment_log"), "execution_time" },
    { _T("server_action_execution_log"), "action_timestamp" },
    { _T("syslog"), "msg_timestamp" },
    { _T("snmp_trap_log"), "trap_timestamp" },
