@@ -51,6 +51,9 @@ void WakeupActiveDiscoveryThread();
 
 void OnSNMPAgentConfigurationChange(const wchar_t *name, const wchar_t *value);
 
+void ReinitializeSyslogParser();
+void OnSyslogConfigurationChange(const wchar_t *name, const wchar_t *value);
+
 /**
  * Database connection parameters
  */
@@ -933,7 +936,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateServerFlag(AF_ENABLE_UNMATCHED_TRAP_EVENT, value);
    }
-   else if (!_tcsncmp(name, L"Syslog.", 7))
+   else if (!wcsncmp(name, L"Syslog.", 7))
    {
       OnSyslogConfigurationChange(name, value);
    }

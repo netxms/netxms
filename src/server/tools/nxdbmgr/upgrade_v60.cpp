@@ -25,6 +25,18 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.35 to 60.36
+ */
+static bool H_UpgradeFromV35()
+{
+   CHK_EXEC(CreateConfigParam(L"Syslog.ResolverCacheTTL", L"300",
+      L"TTL in seconds for syslog hostname resolver cache. Caches DNS resolution results to avoid repeated lookups for the same hostname. Set to 0 to disable caching.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(36));
+   return true;
+}
+
+/**
  * Upgrade from 60.34 to 60.35
  */
 static bool H_UpgradeFromV34()
@@ -1993,6 +2005,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 35, 60, 36, H_UpgradeFromV35 },
    { 34, 60, 35, H_UpgradeFromV34 },
    { 33, 60, 34, H_UpgradeFromV33 },
    { 32, 60, 33, H_UpgradeFromV32 },

@@ -1548,9 +1548,6 @@ void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessa
 uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);
 IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
 
-void ReinitializeSyslogParser();
-void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
-
 void InitializeWindowsEventParser();
 void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);
 

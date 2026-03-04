@@ -68,6 +68,9 @@ static bool s_enableStorage = true;
 static bool s_allowUnknownSources = false;
 static bool s_parseUnknownSources = false;
 static char s_syslogCodepage[16] = "";
+static int s_resolverCacheTTL = 300;
+static bool s_invalidateResolverCache = false;
+static std::unordered_map<std::string, std::pair<uint32_t, time_t>> s_resolverCache;
 
 /**
  * Parse timestamp field
@@ -268,20 +271,52 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
    if (hostName[0] == 0)
       return shared_ptr<Node>();
 
-   shared_ptr<Node> node;
-   InetAddress ipAddr = InetAddress::resolveHostName(hostName);
-   if (ipAddr.isValidUnicast())
+   // Check resolver cache
+   if (s_invalidateResolverCache)
    {
-      node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, ipAddr);
+      s_resolverCache.clear();
+      s_invalidateResolverCache = false;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolver cache invalidated"));
+   }
+   else if (s_resolverCacheTTL > 0)
+   {
+      auto it = s_resolverCache.find(hostName);
+      if (it != s_resolverCache.end())
+      {
+         if (time(nullptr) - it->second.second < s_resolverCacheTTL)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("Resolver cache hit for \"%hs\" → node ID %u"), hostName, it->second.first);
+            if (it->second.first != 0)
+               return static_pointer_cast<Node>(FindObjectById(it->second.first, OBJECT_NODE));
+            return shared_ptr<Node>();
+         }
+         s_resolverCache.erase(it);
+      }
    }
 
+   // Try fast in-memory name lookup first (no network I/O)
+   wchar_t wname[MAX_OBJECT_NAME];
+   mb_to_wchar(hostName, -1, wname, MAX_OBJECT_NAME);
+   wname[MAX_OBJECT_NAME - 1] = 0;
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByName(wname, OBJECT_NODE));
+
+   // Fall back to DNS resolution
    if (node == nullptr)
-	{
-      wchar_t wname[MAX_OBJECT_NAME];
-		mb_to_wchar(hostName, -1, wname, MAX_OBJECT_NAME);
-		wname[MAX_OBJECT_NAME - 1] = 0;
-		node = static_pointer_cast<Node>(FindObjectByName(wname, OBJECT_NODE));
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Resolving host name \"%hs\" for node lookup"), hostName);
+      InetAddress ipAddr = InetAddress::resolveHostName(hostName);
+      if (ipAddr.isValidUnicast())
+      {
+         node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, ipAddr);
+      }
    }
+
+   // Cache the result (node ID 0 = negative cache)
+   if (s_resolverCacheTTL > 0)
+   {
+      s_resolverCache[std::string(hostName)] = std::make_pair((node != nullptr) ? node->getId() : 0, time(nullptr));
+   }
+
    return node;
 }
 
@@ -785,32 +820,38 @@ void ReinitializeSyslogParser()
 /**
  * Handler for syslog related configuration changes
  */
-void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
+void OnSyslogConfigurationChange(const wchar_t *name, const wchar_t *value)
 {
-   if (!_tcscmp(name, _T("Syslog.AllowUnknownSources")))
+   if (!wcscmp(name, L"Syslog.AllowUnknownSources"))
    {
-      s_allowUnknownSources = _tcstol(value, nullptr, 0) ? true : false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Unknown syslog sources are %s"), s_allowUnknownSources ? _T("allowed") : _T("not allowed"));
+      s_allowUnknownSources = wcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Unknown syslog sources are %s", s_allowUnknownSources ? L"allowed" : L"not allowed");
    }
-   else if (!_tcscmp(name, _T("Syslog.Codepage")))
+   else if (!wcscmp(name, L"Syslog.Codepage"))
    {
-      tchar_to_utf8(value, -1, s_syslogCodepage, sizeof(s_syslogCodepage));
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Server syslog default codepage is set as: %s"), value);
+      wchar_to_utf8(value, -1, s_syslogCodepage, sizeof(s_syslogCodepage));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Syslog default codepage set to \"%s\"", value);
    }
-   else if (!_tcscmp(name, _T("Syslog.EnableStorage")))
+   else if (!wcscmp(name, L"Syslog.EnableStorage"))
    {
-      s_enableStorage = _tcstol(value, nullptr, 0) ? true : false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Local syslog storage is %s"), s_enableStorage ? _T("enabled") : _T("disabled"));
+      s_enableStorage = wcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Local syslog storage is %s", s_enableStorage ? L"enabled" : L"disabled");
    }
-   else if (!_tcscmp(name, _T("Syslog.IgnoreMessageTimestamp")))
+   else if (!wcscmp(name, L"Syslog.IgnoreMessageTimestamp"))
    {
-      s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
+      s_alwaysUseServerTime = wcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Ignore message timestamp option set to %s", s_alwaysUseServerTime ? L"ON" : L"OFF");
    }
-   else if (!_tcscmp(name, _T("Syslog.ParseUnknownSourceMessages")))
+   else if (!wcscmp(name, L"Syslog.ParseUnknownSourceMessages"))
    {
-      s_parseUnknownSources = _tcstol(value, nullptr, 0) ? true : false;
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Parsing of messages from unknown syslog sources is %s"), s_parseUnknownSources ? _T("allowed") : _T("not allowed"));
+      s_parseUnknownSources = wcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Parsing of messages from unknown syslog sources is %s", s_parseUnknownSources ? L"allowed" : L"not allowed");
+   }
+   else if (!wcscmp(name, L"Syslog.ResolverCacheTTL"))
+   {
+      s_resolverCacheTTL = wcstol(value, nullptr, 0);
+      s_invalidateResolverCache = true;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Syslog resolver cache TTL set to %d seconds", s_resolverCacheTTL);
    }
 }
 
@@ -896,6 +937,7 @@ void StartSyslogServer()
    s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
    s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
    s_nodeMatchingPolicy = static_cast<NodeMatchingPolicy>(ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME));
+   s_resolverCacheTTL = ConfigReadInt(_T("Syslog.ResolverCacheTTL"), 300);
 
    // Determine first available message id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeSyslogId"), s_msgId);
