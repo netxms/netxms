@@ -5322,7 +5322,7 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dBm"), _T("rpm") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dBm"), _T("rpm"), _T("RPM") };
 
 /**
  * Format DCI value based on Unit and value.
