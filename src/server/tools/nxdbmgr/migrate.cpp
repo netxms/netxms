@@ -175,12 +175,15 @@ static COLUMN_IDENTIFIER s_integerFixColumns[] =
  */
 static COLUMN_IDENTIFIER s_timestampColumns[] =
 {
+   { _T("ai_task_execution_log"), "execution_timestamp" },
    { _T("asset_change_log"), "operation_timestamp" },
    { _T("certificate_action_log"), "operation_timestamp" },
    { _T("event_log"), "event_timestamp" },
    { _T("maintenance_journal"), "creation_time" },
    { _T("maintenance_journal"), "modification_time" },
    { _T("notification_log"), "notification_timestamp" },
+   { _T("package_deployment_log"), "completion_time" },
+   { _T("package_deployment_log"), "execution_time" },
    { _T("server_action_execution_log"), "action_timestamp" },
    { _T("syslog"), "msg_timestamp" },
    { _T("snmp_trap_log"), "trap_timestamp" },
