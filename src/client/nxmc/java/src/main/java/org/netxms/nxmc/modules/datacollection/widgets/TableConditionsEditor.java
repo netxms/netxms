@@ -64,6 +64,7 @@ public class TableConditionsEditor extends Composite
 	{
 		super(parent, style);
       this.columnEnumerator = columnEnumerator;
+      this.columnList = (columnEnumerator != null) ? columnEnumerator.getColumns() : null;
 
 		setLayout(new FillLayout());
 
@@ -78,7 +79,7 @@ public class TableConditionsEditor extends Composite
             scroller.setMinSize(editorsArea.computeSize(scroller.getClientArea().width, SWT.DEFAULT));
          }
       });
-		
+
 		editorsArea = new Composite(scroller, SWT.NONE);
       GridLayout layout = new GridLayout();
       editorsArea.setLayout(layout);
@@ -144,10 +145,10 @@ public class TableConditionsEditor extends Composite
 		   editorsArea.layout(true);
 		}
 	}
-	
+
 	/**
 	 * Delete condition group
-	 * 
+	 *
 	 * @param editor
 	 */
 	private void deleteGroup(final GroupEditor editor)
@@ -156,7 +157,7 @@ public class TableConditionsEditor extends Composite
 		editor.dispose();
 		editorsArea.layout(true);
 	}
-	
+
 	/**
 	 * Group editor widget
 	 */
@@ -164,7 +165,7 @@ public class TableConditionsEditor extends Composite
 	{
 		private Composite content;
 		private List<ConditionEditor> conditions = new ArrayList<ConditionEditor>();
-		
+
 		public GroupEditor(Composite parent)
 		{
 			super(parent, SWT.BORDER);
@@ -215,7 +216,7 @@ public class TableConditionsEditor extends Composite
 
 		/**
        * Get configured conditions
-       * 
+       *
        * @return configured conditions
        */
 		public List<TableCondition> getConditions()
@@ -246,7 +247,7 @@ public class TableConditionsEditor extends Composite
 			   editorsArea.layout(true);
 			}
 		}
-		
+
 		/**
 		 * @param editor
 		 */
@@ -257,7 +258,7 @@ public class TableConditionsEditor extends Composite
 			editorsArea.layout(true);
 		}
 	}
-	
+
 	/**
 	 * Condition editor widget
 	 */
@@ -266,14 +267,13 @@ public class TableConditionsEditor extends Composite
 		private CCombo column;
 		private CCombo operation;
 		private Text value;
-		
+
 		public ConditionEditor(Composite parent, final GroupEditor group)
 		{
 			column = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			column.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			if(columnEnumerator != null)
+			if (columnList != null)
 			{
-            columnList = columnEnumerator.getColumns();
    			for(String s : columnList)
    			{
    			   column.add(s);
@@ -326,6 +326,6 @@ public class TableConditionsEditor extends Composite
 		public TableCondition getCondition()
 		{
 			return new TableCondition(columnEnumerator == null? column.getText() : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
-		}	
+		}
 	}
 }
