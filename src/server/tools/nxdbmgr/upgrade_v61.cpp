@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.11 to 61.12
+ */
+static bool H_UpgradeFromV11()
+{
+   if (GetSchemaLevelForMajorVersion(60) < 36)
+   {
+      CHK_EXEC(CreateConfigParam(L"Syslog.ResolverCacheTTL", L"300",
+         L"TTL in seconds for syslog hostname resolver cache. Caches DNS resolution results to avoid repeated lookups for the same hostname. Set to 0 to disable caching.",
+         L"seconds", 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(60, 36));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 61.10 to 61.11
  */
 static bool H_UpgradeFromV10()
@@ -284,6 +300,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 61, 12,  H_UpgradeFromV11 },
    { 10, 61, 11,  H_UpgradeFromV10 },
    { 9,  61, 10,  H_UpgradeFromV9  },
    { 8,  61,  9,  H_UpgradeFromV8  },
