@@ -144,6 +144,7 @@ public class ObjectOverviewView extends ObjectView
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.minimumWidth = SWT.DEFAULT;
       rightColumn.setLayoutData(gd);
 
       // Left column
