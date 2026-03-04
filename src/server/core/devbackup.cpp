@@ -50,7 +50,7 @@ const TCHAR *GetDeviceBackupApiErrorMessage(DeviceBackupApiStatus status)
 /**
  * Register device for backup
  */
-DeviceBackupApiStatus DevBackupRegisterDevice(Node *node)
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupRegisterDevice(Node *node)
 {
    return (s_provider != nullptr) ? s_provider->RegisterDevice(node) : DeviceBackupApiStatus::PROVIDER_UNAVAILABLE;
 }
@@ -58,7 +58,7 @@ DeviceBackupApiStatus DevBackupRegisterDevice(Node *node)
 /**
  * Delete device from backup service
  */
-DeviceBackupApiStatus DevBackupDeleteDevice(Node *node)
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupDeleteDevice(Node *node)
 {
    return (s_provider != nullptr) ? s_provider->DeleteDevice(node) : DeviceBackupApiStatus::PROVIDER_UNAVAILABLE;
 }
@@ -66,7 +66,7 @@ DeviceBackupApiStatus DevBackupDeleteDevice(Node *node)
 /**
  * Check if device is registered for backup
  */
-bool DevBackupIsDeviceRegistered(const Node& node)
+bool NXCORE_EXPORTABLE DevBackupIsDeviceRegistered(const Node& node)
 {
    return (s_provider != nullptr) ? s_provider->IsDeviceRegistered(node) : false;
 }
@@ -74,7 +74,7 @@ bool DevBackupIsDeviceRegistered(const Node& node)
 /**
  * Validate device registration
  */
-DeviceBackupApiStatus DevBackupValidateDeviceRegistration(Node *node)
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupValidateDeviceRegistration(Node *node)
 {
    return (s_provider != nullptr) ? s_provider->ValidateDeviceRegistration(node) : DeviceBackupApiStatus::PROVIDER_UNAVAILABLE;
 }
@@ -82,7 +82,7 @@ DeviceBackupApiStatus DevBackupValidateDeviceRegistration(Node *node)
 /**
  * Initiate immediate device backup
  */
-DeviceBackupApiStatus DevBackupStartJob(const Node& node)
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupStartJob(const Node& node)
 {
    return (s_provider != nullptr) ? s_provider->StartJob(node) : DeviceBackupApiStatus::PROVIDER_UNAVAILABLE;
 }
@@ -90,7 +90,7 @@ DeviceBackupApiStatus DevBackupStartJob(const Node& node)
 /**
  * Get status of last backup job
  */
-std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> DevBackupGetLastJobStatus(const Node& node)
+std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> NXCORE_EXPORTABLE DevBackupGetLastJobStatus(const Node& node)
 {
    return (s_provider != nullptr) ? s_provider->GetLastJobStatus(node) : std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, DeviceBackupJobInfo());
 }
@@ -98,7 +98,7 @@ std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> DevBackupGetLastJobStatus(
 /**
  * Get latest device backup
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetLatestBackup(const Node& node)
+std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetLatestBackup(const Node& node)
 {
    return (s_provider != nullptr) ? s_provider->GetLatestBackup(node) : std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, BackupData());
 }
@@ -106,7 +106,7 @@ std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetLatestBackup(const Node
 /**
  * Get list of device backups (metadata only)
  */
-std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList(const Node& node)
+std::pair<DeviceBackupApiStatus, std::vector<BackupData>> NXCORE_EXPORTABLE DevBackupGetBackupList(const Node& node)
 {
    return (s_provider != nullptr) ? s_provider->GetBackupList(node) : std::pair<DeviceBackupApiStatus, std::vector<BackupData>>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, std::vector<BackupData>());
 }
@@ -114,7 +114,7 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList
 /**
  * Get device backup by ID (with full config content)
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(const Node& node, int64_t id)
+std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetBackupById(const Node& node, int64_t id)
 {
    return (s_provider != nullptr) ? s_provider->GetBackupById(node, id) : std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::PROVIDER_UNAVAILABLE, BackupData());
 }

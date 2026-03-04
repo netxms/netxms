@@ -38,6 +38,9 @@ import com.netxms.mcp.docbook.DocBookSearch;
 import com.netxms.mcp.resources.ServerResource;
 import com.netxms.mcp.tools.Alarms;
 import com.netxms.mcp.tools.ConnectedNodes;
+import com.netxms.mcp.tools.DeviceConfigBackups;
+import com.netxms.mcp.tools.GetDeviceConfigBackup;
+import com.netxms.mcp.tools.StartDeviceConfigBackup;
 import com.netxms.mcp.tools.EnterMaintenance;
 import com.netxms.mcp.tools.ExecuteScript;
 import com.netxms.mcp.tools.FindConnectionPoint;
@@ -199,6 +202,8 @@ public class Startup
       List<SyncToolSpecification> tools = new ArrayList<>();
       registerTool(tools, new Alarms());
       registerTool(tools, new ConnectedNodes());
+      registerTool(tools, new DeviceConfigBackups());
+      registerTool(tools, new GetDeviceConfigBackup());
       registerTool(tools, new EnterMaintenance());
       registerTool(tools, new ExecuteScript());
       registerTool(tools, new FindConnectionPoint());
@@ -218,6 +223,7 @@ public class Startup
       registerTool(tools, new ServerVersion());
       registerTool(tools, new SetObjectManagedState());
       registerTool(tools, new SoftwareInventory());
+      registerTool(tools, new StartDeviceConfigBackup());
       if (!mainDocBookArticles.isEmpty())
       {
          registerTool(tools, new DocBookSearch(mainDocBookArticles, "netxms", "NetXMS concepts and operation"));

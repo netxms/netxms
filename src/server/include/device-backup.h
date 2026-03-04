@@ -155,7 +155,7 @@ struct NXCORE_EXPORTABLE BackupData
 /**
  * Last backup job info
  */
-struct DeviceBackupJobInfo
+struct NXCORE_EXPORTABLE DeviceBackupJobInfo
 {
    DeviceBackupJobStatus status;
    time_t timestamp;
@@ -213,51 +213,51 @@ public:
 /**
  * Get error message for given status
  */
-const TCHAR *GetDeviceBackupApiErrorMessage(DeviceBackupApiStatus status);
+const TCHAR NXCORE_EXPORTABLE *GetDeviceBackupApiErrorMessage(DeviceBackupApiStatus status);
 
 /**
  * Register device for backup
  */
-DeviceBackupApiStatus DevBackupRegisterDevice(Node *node);
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupRegisterDevice(Node *node);
 
 /**
  * Delete device from backup service
  */
-DeviceBackupApiStatus DevBackupDeleteDevice(Node *node);
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupDeleteDevice(Node *node);
 
 /**
  * Check if device is registered for backup
  */
-bool DevBackupIsDeviceRegistered(const Node& node);
+bool NXCORE_EXPORTABLE DevBackupIsDeviceRegistered(const Node& node);
 
 /**
  * Validate device registration
  */
-DeviceBackupApiStatus DevBackupValidateDeviceRegistration(Node *node);
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupValidateDeviceRegistration(Node *node);
 
 /**
  * Start backup job immediately
  */
-DeviceBackupApiStatus DevBackupStartJob(const Node& node);
+DeviceBackupApiStatus NXCORE_EXPORTABLE DevBackupStartJob(const Node& node);
 
 /**
  * Get status of last backup job
  */
-std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> DevBackupGetLastJobStatus(const Node& node);
+std::pair<DeviceBackupApiStatus, DeviceBackupJobInfo> NXCORE_EXPORTABLE DevBackupGetLastJobStatus(const Node& node);
 
 /**
  * Get latest device backup
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetLatestBackup(const Node& node);
+std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetLatestBackup(const Node& node);
 
 /**
  * Get list of device backups (metadata only, config content pointers will be NULL)
  */
-std::pair<DeviceBackupApiStatus, std::vector<BackupData>> DevBackupGetBackupList(const Node& node);
+std::pair<DeviceBackupApiStatus, std::vector<BackupData>> NXCORE_EXPORTABLE DevBackupGetBackupList(const Node& node);
 
 /**
  * Get device backup by ID (with full config content)
  */
-std::pair<DeviceBackupApiStatus, BackupData> DevBackupGetBackupById(const Node& node, int64_t id);
+std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetBackupById(const Node& node, int64_t id);
 
 #endif   /* _device_backup_h_ */

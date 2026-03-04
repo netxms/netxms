@@ -2,7 +2,7 @@
    <modelVersion>4.0.0</modelVersion>
    <groupId>com.netxms</groupId>
    <artifactId>netxms-mcp-server</artifactId>
-   <version>5.3-SNAPSHOT</version>
+   <version>6.1-SNAPSHOT</version>
    <packaging>jar</packaging>
    <name>netxms-mcp-server</name>
    <description>MCP server for NetXMS</description>

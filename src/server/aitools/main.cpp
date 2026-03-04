@@ -78,6 +78,11 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId);
 std::string F_GetLogStatistics(json_t *arguments, uint32_t userId);
 std::string F_CorrelateLogs(json_t *arguments, uint32_t userId);
 std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId);
+std::string F_GetBackupStatus(json_t *arguments, uint32_t userId);
+std::string F_GetBackupList(json_t *arguments, uint32_t userId);
+std::string F_GetBackupContent(json_t *arguments, uint32_t userId);
+std::string F_StartBackup(json_t *arguments, uint32_t userId);
+std::string F_CompareBackups(json_t *arguments, uint32_t userId);
 
 /**
  * Module metadata
@@ -648,6 +653,53 @@ static void CreateAssistantSkillList()
                { "pattern_type", "pattern type: frequency, burst, recurring, new, all (default: all)" }
             },
             F_AnalyzeLogPatterns)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "device-backup",
+      "Provides device configuration backup management capabilities for NetXMS monitored network devices. Use this skill to check backup registration status, list available backups, retrieve configuration content, trigger on-demand backups, and compare configurations across backup versions for change analysis, compliance auditing, and troubleshooting.",
+      "@device-backup.md",
+      {
+         AssistantFunction(
+            "get-backup-status",
+            "Check if a device is registered for configuration backup and get last backup job status.",
+            {
+               { "object", "name or ID of a node (mandatory)" }
+            },
+            F_GetBackupStatus),
+         AssistantFunction(
+            "get-backup-list",
+            "Get list of available configuration backups for a device with timestamps, sizes, and SHA-256 hashes.",
+            {
+               { "object", "name or ID of a node (mandatory)" }
+            },
+            F_GetBackupList),
+         AssistantFunction(
+            "get-backup-content",
+            "Get full configuration content from a specific backup or the latest backup. Returns both running and startup configs.",
+            {
+               { "object", "name or ID of a node (mandatory)" },
+               { "backupId", "backup ID to retrieve (optional, defaults to latest backup)" }
+            },
+            F_GetBackupContent),
+         AssistantFunction(
+            "start-backup",
+            "Trigger an immediate device configuration backup job. Device must be registered for backup.",
+            {
+               { "object", "name or ID of a node (mandatory)" }
+            },
+            F_StartBackup),
+         AssistantFunction(
+            "compare-backups",
+            "Get two backup configurations side by side for diff comparison.",
+            {
+               { "object", "name or ID of a node (mandatory)" },
+               { "backupId1", "first backup ID (mandatory)" },
+               { "backupId2", "second backup ID (mandatory)" },
+               { "configType", "config type to compare: running or startup (default: running)" }
+            },
+            F_CompareBackups)
       }
    );
 }
