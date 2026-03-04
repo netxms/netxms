@@ -632,8 +632,18 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          }
       }
 
+      if ((status == ITEM_STATUS_NOT_SUPPORTED) || (status == ITEM_STATUS_DISABLED))
+         clearRelatedObjectData();
+
       m_status = static_cast<BYTE>(status);
    }
+}
+
+/**
+ * Default implementation of clearRelatedObjectData (does nothing)
+ */
+void DCObject::clearRelatedObjectData()
+{
 }
 
 /**

@@ -832,10 +832,41 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 }
 
 /**
+ * Clear interface utilization if this DCI is an interface traffic indicator
+ */
+void DCItem::clearInterfaceUtilization()
+{
+   if ((m_relatedObject != 0) && !m_systemTag.isEmpty())
+   {
+      String tag(m_systemTag.str());
+      if (tag.startsWith(L"iface-inbound-") || tag.startsWith(L"iface-outbound-"))
+      {
+         shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(m_relatedObject, OBJECT_INTERFACE));
+         if (iface != nullptr)
+         {
+            if (tag.startsWith(L"iface-inbound-"))
+               iface->setInboundUtilization(-1);
+            else
+               iface->setOutboundUtilization(-1);
+         }
+      }
+   }
+}
+
+/**
+ * Clear related object data (called on status change to NOT_SUPPORTED or DISABLED)
+ */
+void DCItem::clearRelatedObjectData()
+{
+   clearInterfaceUtilization();
+}
+
+/**
  * Delete item and collected data from database
  */
 void DCItem::deleteFromDatabase()
 {
+   clearInterfaceUtilization();
 	DCObject::deleteFromDatabase();
 
    TCHAR query[256];
@@ -1193,6 +1224,8 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
 void DCItem::processNewError(bool noInstance, Timestamp timestamp)
 {
    lock();
+
+   clearInterfaceUtilization();
 
    m_errorCount++;
 

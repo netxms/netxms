@@ -362,6 +362,7 @@ protected:
 
 	virtual bool isCacheLoaded();
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const;
+   virtual void clearRelatedObjectData();
 
 	// --- constructors ---
    DCObject(const shared_ptr<DataCollectionOwner>& owner);
@@ -556,6 +557,7 @@ protected:
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
    void updateCacheSizeInternal(bool allowLoad);
    void clearCache();
+   void clearInterfaceUtilization();
 
    bool hasScriptThresholds() const;
    Threshold *getThresholdById(uint32_t id) const;
@@ -571,6 +573,7 @@ protected:
 
 	virtual bool isCacheLoaded() override;
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const override;
+   virtual void clearRelatedObjectData() override;
 
    using DCObject::updateFromMessage;
 
