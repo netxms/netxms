@@ -22,7 +22,6 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.SubtreeType;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -34,7 +33,7 @@ public class BusinessServicesPerspective extends ObjectsPerspective
 
    public BusinessServicesPerspective()
    {
-      super("objects.business-services", i18n.tr("Business Services"), ResourceManager.getSVGImage("icons/perspectives/business-services.svg"), SubtreeType.BUSINESS_SERVICES, null);
+      super("objects.business-services", i18n.tr("Business Services"), "icons/perspectives/business-services.svg", SubtreeType.BUSINESS_SERVICES, null);
    }
 
    /**

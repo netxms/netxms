@@ -19,6 +19,7 @@
 package org.netxms.nxmc.resources;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -87,6 +88,27 @@ public final class ResourceManager
    {
       ImageDescriptor d = getImageDescriptor(path);
       return (d != null) ? d.getImageData(100) : null;
+   }
+
+   /**
+    * Get resource content as string.
+    *
+    * @param path resource path
+    * @return resource content as string or null if resource cannot be loaded
+    */
+   public static String getResourceAsString(String path)
+   {
+      try (InputStream stream = ResourceManager.class.getResourceAsStream(path.startsWith("/") ? path : "/" + path))
+      {
+         if (stream == null)
+            return null;
+         return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+      }
+      catch(Exception e)
+      {
+         logger.warn("Cannot load resource " + path, e);
+         return null;
+      }
    }
 
    /**

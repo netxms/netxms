@@ -25,7 +25,6 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.GraphBrowser;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -42,7 +41,7 @@ public class GraphsPerspective extends Perspective
     */
    public GraphsPerspective()
    {
-      super("graphs", i18n.tr("Graphs"), ResourceManager.getSVGImage("icons/perspectives/graphs.svg"));
+      super("graphs", i18n.tr("Graphs"), "icons/perspectives/graphs.svg");
    }
 
    /**

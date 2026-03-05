@@ -46,7 +46,6 @@ import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.tools.ImageCache;
-import org.netxms.ui.svg.SVGImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +58,7 @@ public abstract class Perspective
 
    private String id;
    private String name;
-   private SVGImage image;
+   private String imagePath;
    private PerspectiveConfiguration configuration = new PerspectiveConfiguration();
    private Window window;
    private Composite content;
@@ -83,13 +82,13 @@ public abstract class Perspective
     *
     * @param id perspective ID
     * @param name perspective display name
-    * @param image perspective image
+    * @param imagePath path to perspective SVG image resource
     */
-   protected Perspective(String id, String name, SVGImage image)
+   protected Perspective(String id, String name, String imagePath)
    {
       this.id = id;
       this.name = name;
-      this.image = image;
+      this.imagePath = imagePath;
 
       navigationSelectionListener = new ISelectionChangedListener() {
          @Override
@@ -519,13 +518,13 @@ public abstract class Perspective
    }
 
    /**
-    * Get perspective image
-    * 
-    * @return perspective image
+    * Get path to perspective SVG image resource.
+    *
+    * @return path to perspective SVG image resource
     */
-   public SVGImage getImage()
+   public String getImagePath()
    {
-      return image;
+      return imagePath;
    }
 
    /**

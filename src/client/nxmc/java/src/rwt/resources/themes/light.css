@@ -2396,6 +2396,62 @@ FileUpload-FocusIndicator {
    opacity: 1;
   }
 
+/* Perspective Switcher */
+
+Composite.PerspectiveSwitcher,
+ScrolledComposite.PerspectiveSwitcher,
+Label.PerspectiveSwitcher {
+   background-color: #5A6D80;
+}
+
+Composite.SVGCanvas {
+   background-color: transparent;
+}
+
+Composite.PerspectiveSwitcherItem {
+   background-color: #5A6D80;
+}
+
+Composite.PerspectiveSwitcherItem:hover {
+   background-color: #1A7A9E;
+}
+
+Composite.PerspectiveSwitcherItemSelected {
+   background-color: #005A82;
+}
+
+Label.PerspectiveSwitcherItemText {
+   background-color: transparent;
+   color: #ffffff;
+   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.PerspectiveSwitcherItemTextSelected {
+   background-color: transparent;
+   color: #ffffff;
+   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.PerspectiveSwitcherSectionHeader {
+   background-color: transparent;
+   color: #96B4C8;
+   font: bold 12px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.PerspectiveSwitcherAccent {
+   background-color: #5A6D80;
+}
+
+Label.PerspectiveSwitcherAccentSelected {
+   background-color: #ffffff;
+}
+
+Label.PerspectiveSwitcherToggle {
+   background-color: transparent;
+   color: #96B4C8;
+   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
 /* Wait indicator */
 
 SystemMessage-DisplayOverlay {

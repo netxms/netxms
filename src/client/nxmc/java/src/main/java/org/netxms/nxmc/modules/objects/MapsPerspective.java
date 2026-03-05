@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.objects;
 
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -32,7 +31,7 @@ public class MapsPerspective extends ObjectsPerspective
 
    public MapsPerspective()
    {
-      super("objects.maps", i18n.tr("Maps"), ResourceManager.getSVGImage("icons/perspectives/maps.svg"), SubtreeType.MAPS, null);
+      super("objects.maps", i18n.tr("Maps"), "icons/perspectives/maps.svg", SubtreeType.MAPS, null);
    }
 
    /**

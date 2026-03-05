@@ -24,7 +24,6 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.LogDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,7 @@ public class LogViewerPerspective extends Perspective
     */
    public LogViewerPerspective()
    {
-      super("logs", LocalizationHelper.getI18n(LogViewerPerspective.class).tr("Logs"), ResourceManager.getSVGImage("icons/perspectives/logs.svg"));
+      super("logs", LocalizationHelper.getI18n(LogViewerPerspective.class).tr("Logs"), "icons/perspectives/logs.svg");
    }
 
    /**

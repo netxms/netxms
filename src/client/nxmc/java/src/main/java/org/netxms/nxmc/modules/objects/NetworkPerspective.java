@@ -26,7 +26,6 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -40,7 +39,7 @@ public class NetworkPerspective extends ObjectsPerspective
 
    public NetworkPerspective()
    {
-      super("objects.network", i18n.tr("Network"), ResourceManager.getSVGImage("icons/perspectives/network.svg"), SubtreeType.NETWORK,
+      super("objects.network", i18n.tr("Network"), "icons/perspectives/network.svg", SubtreeType.NETWORK,
             (AbstractObject o) -> {
                if ((o instanceof Interface) || (o instanceof VPNConnector))
                   return false;

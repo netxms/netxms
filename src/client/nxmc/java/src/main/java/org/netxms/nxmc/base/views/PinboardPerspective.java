@@ -26,7 +26,6 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class PinboardPerspective extends Perspective
     */
    public PinboardPerspective()
    {
-      super("pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), ResourceManager.getSVGImage("icons/perspectives/pinboard.svg"));
+      super("pinboard", LocalizationHelper.getI18n(PinboardPerspective.class).tr("Pinboard"), "icons/perspectives/pinboard.svg");
    }
 
    /**

@@ -152,7 +152,6 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.netxms.ui.svg.SVGImage;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -193,13 +192,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     *
     * @param id perspective ID
     * @param name perspective name
-    * @param image perspective icon
+    * @param imagePath path to perspective SVG image resource
     * @param subtreeType object subtree type
     * @param objectFilter additional filter for top level objects (optional, can be null)
     */
-   protected ObjectsPerspective(String id, String name, SVGImage image, SubtreeType subtreeType, ObjectFilter objectFilter)
+   protected ObjectsPerspective(String id, String name, String imagePath, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
-      super(id, name, image);
+      super(id, name, imagePath);
       this.subtreeType = subtreeType;
       this.objectFilter = objectFilter;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");

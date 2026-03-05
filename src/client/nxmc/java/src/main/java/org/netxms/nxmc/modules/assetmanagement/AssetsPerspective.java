@@ -22,7 +22,6 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.SubtreeType;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -34,7 +33,7 @@ public class AssetsPerspective extends ObjectsPerspective
 
    public AssetsPerspective()
    {
-      super("objects.assets", i18n.tr("Assets"), ResourceManager.getSVGImage("icons/perspectives/assets.svg"), SubtreeType.ASSETS, null);
+      super("objects.assets", i18n.tr("Assets"), "icons/perspectives/assets.svg", SubtreeType.ASSETS, null);
    }
 
    /**

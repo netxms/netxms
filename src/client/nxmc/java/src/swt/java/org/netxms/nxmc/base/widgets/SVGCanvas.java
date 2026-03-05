@@ -22,6 +22,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.ui.svg.SVGImage;
 
 /**
@@ -62,6 +63,16 @@ public class SVGCanvas extends Canvas
    public void setImage(SVGImage image)
    {
       this.image = image;
+   }
+
+   /**
+    * Set image from resource path.
+    *
+    * @param path resource path to SVG image
+    */
+   public void setImageResource(String path)
+   {
+      setImage(ResourceManager.getSVGImage(path));
    }
 
    /**

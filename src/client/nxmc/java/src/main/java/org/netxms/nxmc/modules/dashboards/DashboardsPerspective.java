@@ -22,7 +22,6 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.SubtreeType;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -34,7 +33,7 @@ public class DashboardsPerspective extends ObjectsPerspective
 
    public DashboardsPerspective()
    {
-      super("objects.dashboards", i18n.tr("Dashboards"), ResourceManager.getSVGImage("icons/perspectives/dashboards.svg"), SubtreeType.DASHBOARDS, null);
+      super("objects.dashboards", i18n.tr("Dashboards"), "icons/perspectives/dashboards.svg", SubtreeType.DASHBOARDS, null);
    }
 
    /**

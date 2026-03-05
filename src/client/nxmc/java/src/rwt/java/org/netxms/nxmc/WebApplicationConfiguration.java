@@ -68,6 +68,7 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       addJsLibrary("/js/longpress.js");
       addJsLibrary("/js/msgproxy.js");
       addJsLibrary("/js/rwt-util.js");
+      addJsLibrary("/js/svgcanvas.js");
       app.addResource(SWT.getVersion() + "/nxmc-library.js", new ResourceLoader() {
          @Override
          public InputStream getResourceAsStream(String resourceName)

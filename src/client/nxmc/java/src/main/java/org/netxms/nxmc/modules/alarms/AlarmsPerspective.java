@@ -22,7 +22,6 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
-import org.netxms.nxmc.resources.ResourceManager;
 
 /**
  * Alarm browser perspective
@@ -34,7 +33,7 @@ public class AlarmsPerspective extends Perspective
     */
    public AlarmsPerspective()
    {
-      super("alarms", LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Alarms"), ResourceManager.getSVGImage("icons/perspectives/alarms.svg"));
+      super("alarms", LocalizationHelper.getI18n(AlarmsPerspective.class).tr("Alarms"), "icons/perspectives/alarms.svg");
    }
 
    /**

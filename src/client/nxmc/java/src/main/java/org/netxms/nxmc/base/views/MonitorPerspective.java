@@ -24,7 +24,6 @@ import java.util.ServiceLoader;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.MonitorDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ public class MonitorPerspective extends Perspective
     */
    public MonitorPerspective()
    {
-      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), ResourceManager.getSVGImage("icons/perspectives/monitor.svg"));
+      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), "icons/perspectives/monitor.svg");
 
       ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
       for(MonitorDescriptor e : loader)

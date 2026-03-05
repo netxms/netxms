@@ -22,7 +22,6 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.incidents.views.IncidentsView;
-import org.netxms.nxmc.resources.ResourceManager;
 
 /**
  * Incident management perspective
@@ -34,7 +33,7 @@ public class IncidentsPerspective extends Perspective
     */
    public IncidentsPerspective()
    {
-      super("incidents", LocalizationHelper.getI18n(IncidentsPerspective.class).tr("Incidents"), ResourceManager.getSVGImage("icons/perspectives/incidents.svg"));
+      super("incidents", LocalizationHelper.getI18n(IncidentsPerspective.class).tr("Incidents"), "icons/perspectives/incidents.svg");
    }
 
    /**

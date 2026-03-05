@@ -24,7 +24,6 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.reporting.views.ReportNavigationView;
 import org.netxms.nxmc.modules.reporting.views.ReportView;
-import org.netxms.nxmc.resources.ResourceManager;
 
 /**
  * Reporting perspective
@@ -36,7 +35,7 @@ public class ReportingPerspective extends Perspective
     */
    public ReportingPerspective()
    {
-      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), ResourceManager.getSVGImage("icons/perspectives/reporting.svg"));
+      super("reporting", LocalizationHelper.getI18n(ReportingPerspective.class).tr("Reporting"), "icons/perspectives/reporting.svg");
    }
 
    /**

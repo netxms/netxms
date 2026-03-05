@@ -18,18 +18,19 @@
  */
 package org.netxms.nxmc.base.widgets;
 
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.remote.RemoteObject;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.svg.SVGImage;
+import org.netxms.nxmc.resources.ResourceManager;
 
 /**
- * Canvas that displays SVG image.
+ * Canvas that displays SVG image using native browser SVG rendering via RAP custom widget.
  */
-public class SVGCanvas extends Canvas
+public class SVGCanvas extends Composite
 {
-   private SVGImage image = null;
+   private RemoteObject remoteObject;
    private Color defaultColor = null;
 
    /**
@@ -39,29 +40,32 @@ public class SVGCanvas extends Canvas
    public SVGCanvas(Composite parent, int style)
    {
       super(parent, style);
-      addPaintListener((e) -> {
-         if (image != null)
-         {
-            Point size = getSize();
-            image.render(e.gc, 0, 0, size.x, size.y, defaultColor);
-         }
-      });
+      setData(RWT.CUSTOM_VARIANT, "SVGCanvas");
+      remoteObject = RWT.getUISession().getConnection().createRemoteObject("netxms.SVGCanvas");
+      remoteObject.set("parent", WidgetUtil.getId(this));
    }
 
    /**
-    * @return the image
+    * Set SVG content directly.
+    *
+    * @param svgContent raw SVG markup string
     */
-   public SVGImage getImage()
+   public void setImage(String svgContent)
    {
-      return image;
+      if (svgContent != null)
+         remoteObject.set("svgContent", svgContent);
    }
 
    /**
-    * @param image the image to set
+    * Set image from resource path.
+    *
+    * @param path resource path to SVG image
     */
-   public void setImage(SVGImage image)
+   public void setImageResource(String path)
    {
-      this.image = image;
+      String content = ResourceManager.getResourceAsString(path);
+      if (content != null)
+         setImage(content);
    }
 
    /**
@@ -78,5 +82,21 @@ public class SVGCanvas extends Canvas
    public void setDefaultColor(Color defaultColor)
    {
       this.defaultColor = defaultColor;
+      if (defaultColor != null)
+      {
+         String cssColor = String.format("#%02x%02x%02x", defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue());
+         remoteObject.set("svgColor", cssColor);
+      }
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (remoteObject != null)
+         remoteObject.destroy();
+      super.dispose();
    }
 }

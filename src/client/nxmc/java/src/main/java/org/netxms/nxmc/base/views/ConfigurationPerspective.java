@@ -38,7 +38,6 @@ import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.netxms.nxmc.tools.ImageCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -63,7 +62,7 @@ public class ConfigurationPerspective extends Perspective
     */
    public ConfigurationPerspective()
    {
-      super("configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), ResourceManager.getSVGImage("icons/perspectives/configuration.svg"));
+      super("configuration", LocalizationHelper.getI18n(ConfigurationPerspective.class).tr("Configuration"), "icons/perspectives/configuration.svg");
 
       ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class, getClass().getClassLoader());
       for(ConfigurationPerspectiveElement e : loader)

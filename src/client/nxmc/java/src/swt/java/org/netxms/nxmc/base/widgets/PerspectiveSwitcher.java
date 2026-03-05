@@ -460,7 +460,7 @@ public class PerspectiveSwitcher extends Composite
 
          iconLabel.setBackground(backgroundColor);
          iconLabel.setDefaultColor(foregroundColor);
-         iconLabel.setImage(perspective.getImage());
+         iconLabel.setImageResource(perspective.getImagePath());
 
          // Tooltip
          KeyStroke shortcut = perspective.getKeyboardShortcut();
