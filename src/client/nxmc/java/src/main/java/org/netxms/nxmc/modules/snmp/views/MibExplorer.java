@@ -64,6 +64,8 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
+import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpTableDci;
+import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpTableDciFromWalk;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
@@ -112,6 +114,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    private Action actionShowResultFilter;
    private Action actionShortTextualNames;
 	private CreateSnmpDci actionCreateSnmpDci;
+	private CreateSnmpTableDci actionCreateSnmpTableDci;
+	private CreateSnmpTableDciFromWalk actionCreateSnmpTableDciFromWalk;
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
    private boolean toolView;
@@ -262,6 +266,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
             IStructuredSelection selection = viewer.getStructuredSelection();
 				actionSelect.setEnabled(selection.size() == 1);
 				actionCreateSnmpDci.selectionChanged(viewer.getSelection());
+				actionCreateSnmpTableDciFromWalk.selectionChanged(viewer.getSelection());
 			}
 		});
       viewer.addDoubleClickListener((e) -> selectInTree());
@@ -445,6 +450,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 
 		actionCreateSnmpDci = new CreateSnmpDci(this);
+		actionCreateSnmpTableDci = new CreateSnmpTableDci(this);
+		actionCreateSnmpTableDciFromWalk = new CreateSnmpTableDciFromWalk(this);
 
       actionShortTextualNames = new Action("S&hort textual names", Action.AS_CHECK_BOX) {
          @Override
@@ -552,6 +559,13 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 	{
 		manager.add(actionWalk);
 		manager.add(new Separator());
+		MibObject selectedObject = mibBrowser.getSelection();
+		if (CreateSnmpTableDci.isTableColumn(selectedObject))
+		{
+		   actionCreateSnmpTableDci.setMibObject(selectedObject);
+		   manager.add(actionCreateSnmpTableDci);
+		   manager.add(new Separator());
+		}
 		manager.add(actionCopyObjectName);
 		manager.add(new Separator());
 	}
@@ -594,6 +608,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		manager.add(actionSelect);
 		manager.add(new Separator());
       manager.add(actionCreateSnmpDci);
+      manager.add(actionCreateSnmpTableDciFromWalk);
 	}
 
 	/**

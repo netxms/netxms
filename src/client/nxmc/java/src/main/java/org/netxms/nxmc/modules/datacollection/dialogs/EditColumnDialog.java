@@ -45,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
 public class EditColumnDialog extends Dialog
 {
    private final I18n i18n = LocalizationHelper.getI18n(EditColumnDialog.class);
-   
+
 	private ColumnDefinition column;
    private Set<String> existingNames;
 	private LabeledText name;
@@ -102,7 +102,7 @@ public class EditColumnDialog extends Dialog
 		displayName.setLabel(i18n.tr("Display name"));
 		displayName.setText(column.getDisplayName());
 		displayName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		
+
 		dataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Data type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
       dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
       dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
@@ -113,29 +113,29 @@ public class EditColumnDialog extends Dialog
       dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
       dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
 		dataType.select(getDataTypePosition(column.getDataType()));
-		
+
 		aggregationFunction = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Aggregation function"), new GridData(SWT.FILL, SWT.CENTER, true, false));
 		aggregationFunction.add(i18n.tr("SUM"));
 		aggregationFunction.add(i18n.tr("AVG"));
 		aggregationFunction.add(i18n.tr("MIN"));
 		aggregationFunction.add(i18n.tr("MAX"));
 		aggregationFunction.select(column.getAggregationFunction());
-		
+
 		checkInstanceColumn = new Button(dialogArea, SWT.CHECK);
 		checkInstanceColumn.setText(i18n.tr("This column is instance (key) column"));
 		checkInstanceColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceColumn.setSelection(column.isInstanceColumn());
-		
+
       checkSnmpHexString = new Button(dialogArea, SWT.CHECK);
       checkSnmpHexString.setText("Convert SNMP value to &hexadecimal string");
       checkSnmpHexString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       checkSnmpHexString.setSelection(column.isConvertSnmpStringToHex());
-      
+
 		snmpOid = new LabeledText(dialogArea, SWT.NONE);
 		snmpOid.setLabel(i18n.tr("SNMP Object ID"));
 		snmpOid.setText((column.getSnmpObjectId() != null) ? column.getSnmpObjectId().toString() : "");  //$NON-NLS-1$
 		snmpOid.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		
+
 		return dialogArea;
 	}
 
@@ -188,11 +188,11 @@ public class EditColumnDialog extends Dialog
 
    /**
     * Get selector position for given data type
-    * 
+    *
     * @param type data type
     * @return corresponding selector's position
     */
-   private static int getDataTypePosition(DataType type)
+   static int getDataTypePosition(DataType type)
    {
       switch(type)
       {
@@ -220,14 +220,14 @@ public class EditColumnDialog extends Dialog
    /**
     * Data type positions in selector
     */
-   private static final DataType[] TYPES = {
+   static final DataType[] TYPES = {
       DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
       DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
    };
 
    /**
     * Get data type by selector position
-    *  
+    *
     * @param position selector position
     * @return corresponding data type
     */
