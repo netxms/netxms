@@ -47,6 +47,7 @@ import org.netxms.nxmc.modules.objects.views.elements.Communications;
 import org.netxms.nxmc.modules.objects.views.elements.Connection;
 import org.netxms.nxmc.modules.objects.views.elements.DeviceBackup;
 import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
+import org.netxms.nxmc.modules.objects.views.elements.InterfaceTrafficChart;
 import org.netxms.nxmc.modules.objects.views.elements.Inventory;
 import org.netxms.nxmc.modules.objects.views.elements.LastValues;
 import org.netxms.nxmc.modules.objects.views.elements.Location;
@@ -55,7 +56,6 @@ import org.netxms.nxmc.modules.objects.views.elements.ObjectState;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.modules.objects.views.elements.Topology;
-import org.netxms.nxmc.modules.objects.views.elements.InterfaceTrafficChart;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -263,6 +263,7 @@ public class ObjectOverviewView extends ObjectView
          }
       }
       ((GridLayout)viewArea.getLayout()).makeColumnsEqualWidth = equalColumnWidth;
+      ((GridData)rightColumn.getLayoutData()).minimumWidth = equalColumnWidth ? 0 : SWT.DEFAULT;
 
       for(OverviewPageElement element : elements)
          element.fixPlacement();
