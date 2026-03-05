@@ -27,16 +27,9 @@
 #define DEBUG_TAG _T("2fa")
 
 /**
- * Trusted device token - issued by server to the client after successful 2FA authentication to allow 2FA bypass for configured period of time
+ * Size of trusted device token in bytes
  */
-struct TrustedDeviceToken
-{
-   uint64_t timestamp;
-   uint32_t userId;
-   uint32_t padding1;
-   char userName[MAX_USER_NAME + 16];
-   BYTE hash[SHA256_DIGEST_SIZE];
-};
+#define TRUSTED_DEVICE_TOKEN_SIZE 32
 
 /**
  * TOTP token constructor
@@ -512,18 +505,33 @@ bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, 
 
    if (success && (trustedDeviceToken != nullptr))
    {
-      TrustedDeviceToken token;
-      memset(&token, 0, sizeof(TrustedDeviceToken));
-      token.timestamp = time(nullptr);
-      token.userId = userId;
+      BYTE rawToken[TRUSTED_DEVICE_TOKEN_SIZE];
+      GenerateRandomBytes(rawToken, TRUSTED_DEVICE_TOKEN_SIZE);
 
-      TCHAR userName[MAX_USER_NAME];
-      ResolveUserId(userId, userName, true);
-      tchar_to_utf8(userName, -1, token.userName, MAX_USER_NAME + 16);
+      BYTE tokenHash[SHA256_DIGEST_SIZE];
+      CalculateSHA256Hash(rawToken, TRUSTED_DEVICE_TOKEN_SIZE, tokenHash);
 
-      CalculateSHA256Hash(&token, offsetof(TrustedDeviceToken, hash), token.hash);
+      TCHAR tokenHashHex[SHA256_DIGEST_SIZE * 2 + 1];
+      BinToStr(tokenHash, SHA256_DIGEST_SIZE, tokenHashHex);
 
-      *trustedDeviceToken = RSAPublicEncrypt(&token, sizeof(TrustedDeviceToken), trustedDeviceTokenSize, g_serverKey, RSA_PKCS1_OAEP_PADDING);
+      uint32_t id = CreateUniqueId(IDG_TRUSTED_DEVICE);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_devices (id,user_id,token_hash,creation_time) VALUES (?,?,?,?)"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, tokenHashHex, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+         if (DBExecute(hStmt))
+         {
+            *trustedDeviceToken = MemCopyBlock(rawToken, TRUSTED_DEVICE_TOKEN_SIZE);
+            *trustedDeviceTokenSize = TRUSTED_DEVICE_TOKEN_SIZE;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Trusted device token created for user %u (id=%u)"), userId, id);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    return success;
 }
@@ -533,33 +541,88 @@ bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, 
  */
 bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId)
 {
-   if (token == nullptr)
+   if ((token == nullptr) || (size != TRUSTED_DEVICE_TOKEN_SIZE))
       return false;
 
-   size_t decryptionBufferSize = RSASize(g_serverKey);
-   TrustedDeviceToken *decryptedToken = static_cast<TrustedDeviceToken*>(MemAllocLocal(decryptionBufferSize));
-   ssize_t decryptedSize = RSAPrivateDecrypt(token, size, decryptedToken, decryptionBufferSize, g_serverKey, RSA_PKCS1_OAEP_PADDING);
-   if (decryptedSize != sizeof(TrustedDeviceToken))
-      return false;
+   BYTE tokenHash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(token, TRUSTED_DEVICE_TOKEN_SIZE, tokenHash);
 
-   BYTE hash[SHA256_DIGEST_SIZE];
-   CalculateSHA256Hash(decryptedToken, offsetof(TrustedDeviceToken, hash), hash);
-   if (memcmp(hash, decryptedToken->hash, SHA256_DIGEST_SIZE))
-      return false;
+   TCHAR tokenHashHex[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStr(tokenHash, SHA256_DIGEST_SIZE, tokenHashHex);
 
-   if (decryptedToken->userId != userId)
-      return false;
+   bool valid = false;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,creation_time FROM trusted_devices WHERE token_hash=? AND user_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, tokenHashHex, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            uint32_t recordId = DBGetFieldULong(hResult, 0, 0);
+            uint32_t creationTime = DBGetFieldULong(hResult, 0, 1);
+            uint32_t trustedDeviceTTL = ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0);
+            if ((trustedDeviceTTL == 0) || (static_cast<time_t>(creationTime + trustedDeviceTTL) >= time(nullptr)))
+            {
+               valid = true;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Trusted device token validated for user %u (id=%u)"), userId, recordId);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Trusted device token expired for user %u (id=%u), deleting"), userId, recordId);
+               DB_STATEMENT hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM trusted_devices WHERE id=?"));
+               if (hDeleteStmt != nullptr)
+               {
+                  DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, recordId);
+                  DBExecute(hDeleteStmt);
+                  DBFreeStatement(hDeleteStmt);
+               }
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return valid;
+}
 
-   TCHAR userName[MAX_USER_NAME];
-   ResolveUserId(userId, userName, true);
+/**
+ * Revoke all trusted devices for a user
+ */
+void NXCORE_EXPORTABLE RevokeTrustedDevices(uint32_t userId)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM trusted_devices WHERE user_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("All trusted device tokens revoked for user %u"), userId);
+}
 
-   char userNameUtf8[MAX_USER_NAME + 16];
-   tchar_to_utf8(userName, -1, userNameUtf8, MAX_USER_NAME + 16);
-   if (strcmp(userNameUtf8, decryptedToken->userName))
-      return false;
+/**
+ * Cleanup expired trusted device tokens
+ */
+void CleanupExpiredTrustedDevices(DB_HANDLE hdb)
+{
+   uint32_t trustedDeviceTTL = ConfigReadULong(L"Server.Security.2FA.TrustedDeviceTTL", 0);
+   if (trustedDeviceTTL == 0)
+      return;
 
-   uint32_t trustedDeviceTTL = ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0);
-   return static_cast<time_t>(decryptedToken->timestamp + trustedDeviceTTL) >= time(nullptr);
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM trusted_devices WHERE creation_time<?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr) - trustedDeviceTTL));
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 }
 
 /**

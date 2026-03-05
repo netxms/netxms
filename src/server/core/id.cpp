@@ -38,7 +38,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   36
+#define NUMBER_OF_GROUPS   37
 
 /**
  * Static data
@@ -54,7 +54,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -66,7 +67,8 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE
    };
 static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -105,7 +107,8 @@ static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
    L"Incidents",
    L"Incident Comments",
    L"Incident Activity Records",
-   L"Storage Class Migrations"
+   L"Storage Class Migrations",
+   L"Trusted Devices"
 };
 
 /**
@@ -475,6 +478,15 @@ bool InitIdTable()
             s_freeIdTable[IDG_SC_MIGRATION_TASK] = std::max(s_freeIdTable[IDG_SC_MIGRATION_TASK], DBGetFieldULong(hResult, 0, 0) + 1);
          DBFreeResult(hResult);
       }
+   }
+
+   // Get first available trusted device id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM trusted_devices"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_TRUSTED_DEVICE] = std::max(s_freeIdTable[IDG_TRUSTED_DEVICE], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
    }
 
    LoadLastEventId(hdb);

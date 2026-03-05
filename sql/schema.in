@@ -110,6 +110,21 @@ CREATE TABLE auth_tokens
 CREATE INDEX idx_auth_tokens_user_id ON auth_tokens(user_id);
 
 /**
+ * Trusted device tokens for 2FA bypass
+ */
+CREATE TABLE trusted_devices
+(
+  id integer not null,
+  user_id integer not null,
+  token_hash char(64) not null,
+  description varchar(255) null,
+  creation_time integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_trusted_devices_user_id ON trusted_devices(user_id);
+
+/**
  * User groups
  */
 CREATE TABLE user_groups

@@ -30,6 +30,11 @@
 void RemoveExpiredPackageDeploymentJobs(DB_HANDLE hdb);
 
 /**
+ * Remove expired trusted device tokens
+ */
+void CleanupExpiredTrustedDevices(DB_HANDLE hdb);
+
+/**
  * Process pending storage class migrations
  */
 void ProcessStorageClassMigrations();
@@ -490,6 +495,10 @@ static void HouseKeeper()
          if (!ThrottleHousekeeper())
             break;
       }
+
+      // Cleanup expired trusted device tokens
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Cleaning up expired trusted device tokens"));
+      CleanupExpiredTrustedDevices(hdb);
 
 		// Delete empty subnets if needed
 		if (g_flags & AF_DELETE_EMPTY_SUBNETS)

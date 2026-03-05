@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.12 to 61.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE trusted_devices ("
+      L"  id integer not null,"
+      L"  user_id integer not null,"
+      L"  token_hash char(64) not null,"
+      L"  description varchar(255) null,"
+      L"  creation_time integer not null,"
+      L"  PRIMARY KEY(id))"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_trusted_devices_user_id ON trusted_devices(user_id)"));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 61.11 to 61.12
  */
 static bool H_UpgradeFromV11()
@@ -300,6 +318,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 61, 13,  H_UpgradeFromV12 },
    { 11, 61, 12,  H_UpgradeFromV11 },
    { 10, 61, 11,  H_UpgradeFromV10 },
    { 9,  61, 10,  H_UpgradeFromV9  },

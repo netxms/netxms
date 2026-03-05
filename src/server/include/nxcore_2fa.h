@@ -92,6 +92,7 @@ void LoadTwoFactorAuthenticationMethods();
 TwoFactorAuthenticationToken NXCORE_EXPORTABLE *Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
 bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize);
 bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId);
+void NXCORE_EXPORTABLE RevokeTrustedDevices(uint32_t userId);
 void Get2FADrivers(NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *Get2FADriversAsJson();
 void Get2FAMethods(NXCPMessage *msg);
