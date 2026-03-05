@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2024 Victor Kirhenshtein
 **
@@ -146,6 +146,15 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
 int InitDatabase(const char *initFile)
 {
    TCHAR query[256];
+
+   // Check if database is already initialized
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value FROM metadata WHERE var_name='SchemaVersion'"));
+   if (hResult != nullptr)
+   {
+      DBFreeResult(hResult);
+      _tprintf(_T("ERROR: Database is already initialized\n"));
+      return 1;
+   }
 
    _tprintf(_T("Initializing database...\n"));
    if (!ExecSQLBatch(initFile, false))
