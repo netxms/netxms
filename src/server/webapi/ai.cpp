@@ -47,6 +47,26 @@ int H_AiChatCreate(Context *context)
       return 500;
    }
 
+   // Check client capabilities
+   if (request != nullptr)
+   {
+      json_t *capabilities = json_object_get(request, "capabilities");
+      if (json_is_array(capabilities))
+      {
+         size_t index;
+         json_t *value;
+         json_array_foreach(capabilities, index, value)
+         {
+            const char *cap = json_string_value(value);
+            if ((cap != nullptr) && !strcmp(cap, "visualizations"))
+            {
+               chat->enableVisualizationOutput();
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CreateChat: visualization output enabled for chat %u"), chat->getId());
+            }
+         }
+      }
+   }
+
    nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CreateChat: created chat %u for user %u"), chat->getId(), context->getUserId());
 
    json_t *response = json_object();

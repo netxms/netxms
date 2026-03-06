@@ -799,6 +799,56 @@ void Chat::bindToIncident(uint32_t incidentId)
 }
 
 /**
+ * Enable structured visualization output for rich clients
+ */
+void Chat::enableVisualizationOutput()
+{
+   LockGuard lockGuard(m_mutex);
+
+   addMessage("system",
+      "VISUALIZATION OUTPUT:\n"
+      "The client supports rich visualizations. When your response includes data suitable for visual "
+      "presentation, emit structured visualization blocks using fenced code blocks with the language "
+      "tag `netxms-viz`. Each block contains a single JSON object.\n\n"
+      "Supported visualization types:\n\n"
+      "1. LINE/AREA CHART - time-series data:\n"
+      "```netxms-viz\n"
+      "{\"type\":\"chart\",\"title\":\"...\",\"chartType\":\"line|area\","
+      "\"series\":[{\"name\":\"...\",\"unit\":\"...\",\"data\":[[timestamp,value],...]}],"
+      "\"thresholds\":[{\"value\":80,\"label\":\"Warning\",\"color\":\"#f59e0b\"}]}\n"
+      "```\n\n"
+      "2. TABLE - tabular data:\n"
+      "```netxms-viz\n"
+      "{\"type\":\"table\",\"title\":\"...\","
+      "\"columns\":[{\"field\":\"name\",\"header\":\"Name\",\"type\":\"text|severity|datetime\"}],"
+      "\"rows\":[{\"name\":\"value\",...}]}\n"
+      "```\n"
+      "Column type `severity` renders as colored badge (0=Normal,1=Warning,2=Minor,3=Major,4=Critical).\n\n"
+      "3. GAUGE - single current value:\n"
+      "```netxms-viz\n"
+      "{\"type\":\"gauge\",\"title\":\"...\",\"value\":78.4,\"unit\":\"%\","
+      "\"min\":0,\"max\":100,\"thresholds\":{\"warning\":75,\"critical\":90}}\n"
+      "```\n\n"
+      "4. BAR/PIE CHART - categorical data:\n"
+      "```netxms-viz\n"
+      "{\"type\":\"bar|pie\",\"title\":\"...\",\"orientation\":\"horizontal|vertical\","
+      "\"categories\":[\"A\",\"B\"],\"values\":[10,20],"
+      "\"colors\":[\"#22c55e\",\"#f59e0b\"]}\n"
+      "```\n\n"
+      "RULES:\n"
+      "- Always include explanatory text BEFORE or AFTER visualization blocks\n"
+      "- Use visualizations when data has 3+ data points or rows; use plain text for simple answers\n"
+      "- Choose the most appropriate visualization type for the data\n"
+      "- Each fenced block must contain exactly one valid JSON object\n"
+      "- You may include multiple visualization blocks in a single response\n"
+      "- For time-series data use UNIX timestamps (seconds) in the data arrays\n"
+      "- Always provide a descriptive title for each visualization\n"
+   );
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u] visualization output enabled"), m_id);
+}
+
+/**
  * Initialize functions for chat
  */
 void Chat::initializeFunctions()

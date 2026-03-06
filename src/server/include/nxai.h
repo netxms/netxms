@@ -216,6 +216,7 @@ public:
    void setSlot(const char *slot) { strlcpy(m_slot, slot, sizeof(m_slot)); }
 
    void bindToIncident(uint32_t incidentId);
+   void enableVisualizationOutput();
 
    char *sendRequest(const char *prompt, int maxIterations, const char *context = nullptr);
 
