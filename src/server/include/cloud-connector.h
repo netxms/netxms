@@ -167,6 +167,11 @@ struct CloudConnectorInterface
 CloudConnectorInterface NXCORE_EXPORTABLE *FindCloudConnector(const wchar_t *name);
 
 /**
+ * Get names of available cloud connectors
+ */
+StringList NXCORE_EXPORTABLE GetCloudConnectorNames();
+
+/**
  * Get error message for given status
  */
 const wchar_t NXCORE_EXPORTABLE *GetCloudConnectorErrorMessage(CloudConnectorStatus status);

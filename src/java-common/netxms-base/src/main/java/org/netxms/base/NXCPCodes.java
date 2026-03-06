@@ -531,6 +531,7 @@ public class NXCPCodes
    public static final int CMD_GET_DEVICE_CONFIG_BACKUPS = 0x0201;
    public static final int CMD_GET_DEVICE_CONFIG_BACKUP = 0x0202;
    public static final int CMD_GET_L2_NETWORK_PATH = 0x0203;
+   public static final int CMD_GET_CLOUD_CONNECTOR_NAMES = 0x0204;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

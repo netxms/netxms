@@ -49,9 +49,17 @@ const wchar_t *GetCloudConnectorErrorMessage(CloudConnectorStatus status)
 /**
  * Find cloud connector by name
  */
-CloudConnectorInterface *FindCloudConnector(const wchar_t *name)
+CloudConnectorInterface NXCORE_EXPORTABLE *FindCloudConnector(const wchar_t *name)
 {
    return s_connectors.get(name);
+}
+
+/**
+ * Get list of available cloud connectors
+ */
+StringList NXCORE_EXPORTABLE GetCloudConnectorNames()
+{
+   return s_connectors.keys();
 }
 
 /**

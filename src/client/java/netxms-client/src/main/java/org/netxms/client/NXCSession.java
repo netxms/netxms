@@ -16066,4 +16066,19 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Get names of available cloud connectors.
+    * 
+    * @return names of available cloud connectors
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> getCloudConnectorNames() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CLOUD_CONNECTOR_NAMES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
+   }
 }

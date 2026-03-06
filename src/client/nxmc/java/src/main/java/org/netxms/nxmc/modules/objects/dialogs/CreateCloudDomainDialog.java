@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.objects.dialogs;
 
+import java.util.Collections;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -25,6 +28,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ObjectNameValidator;
@@ -40,7 +47,7 @@ public class CreateCloudDomainDialog extends Dialog
 
    private LabeledText nameField;
    private LabeledText aliasField;
-   private LabeledText connectorNameField;
+   private LabeledCombo connectorNameField;
    private LabeledText credentialsField;
 
    private String name;
@@ -78,7 +85,6 @@ public class CreateCloudDomainDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
       nameField = new LabeledText(dialogArea, SWT.NONE);
@@ -88,7 +94,6 @@ public class CreateCloudDomainDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 400;
-      gd.horizontalSpan = 2;
       nameField.setLayoutData(gd);
 
       aliasField = new LabeledText(dialogArea, SWT.NONE);
@@ -97,18 +102,39 @@ public class CreateCloudDomainDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
       aliasField.setLayoutData(gd);
 
-      connectorNameField = new LabeledText(dialogArea, SWT.NONE);
-      connectorNameField.setLabel(i18n.tr("Connector name"));
-      connectorNameField.getTextControl().setTextLimit(255);
-      connectorNameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      connectorNameField = new LabeledCombo(dialogArea, SWT.NONE);
+      connectorNameField.setLabel(i18n.tr("Connector"));
+      connectorNameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      credentialsField = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
+      credentialsField = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
       credentialsField.setLabel(i18n.tr("Credentials"));
       credentialsField.getTextControl().setTextLimit(255);
-      credentialsField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.heightHint = 160;
+      credentialsField.setLayoutData(gd);
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Reading list of available cloud connectors"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<String> connectors = session.getCloudConnectorNames();
+            Collections.sort(connectors);
+            runInUIThread(() -> {
+               for(String c : connectors)
+                  connectorNameField.add(c);
+               connectorNameField.select(0);
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot read list of available cloud connectors");
+         }
+      }.start();
 
       return dialogArea;
    }
@@ -127,7 +153,7 @@ public class CreateCloudDomainDialog extends Dialog
 
       name = nameField.getText().trim();
       alias = aliasField.getText().trim();
-      connectorName = connectorNameField.getText().trim();
+      connectorName = connectorNameField.getText();
       credentials = credentialsField.getText();
 
       super.okPressed();

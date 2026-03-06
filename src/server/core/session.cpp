@@ -41,6 +41,7 @@
 #include <nxai.h>
 #include <ai_messages.h>
 #include <device-backup.h>
+#include <cloud-connector.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -2127,6 +2128,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_DELETE_AI_MESSAGE:
          deleteAIMessage(*request);
+         break;
+      case CMD_GET_CLOUD_CONNECTOR_NAMES:
+         getCloudConnectorNames(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -19621,5 +19625,19 @@ void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Get names of available cloud connectors
+ *
+ * Called by:
+ * CMD_GET_CLOUD_CONNECTOR_NAMES
+ */
+void ClientSession::getCloudConnectorNames(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   GetCloudConnectorNames().fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
