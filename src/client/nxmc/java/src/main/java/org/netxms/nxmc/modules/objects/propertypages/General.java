@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectCategorySelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -43,9 +43,9 @@ public class General extends ObjectPropertyPage
 {
    private I18n i18n = LocalizationHelper.getI18n(General.class);
 
-   private Text name;
-   private Text alias;
-   private Text aiHint;
+   private LabeledText name;
+   private LabeledText alias;
+   private LabeledText aiHint;
    private ObjectCategorySelector categorySelector;
    private Button checkHidden;
 	private String initialName;
@@ -95,29 +95,29 @@ public class General extends ObjectPropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
-      // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
-           i18n.tr("Object ID"), Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
-            i18n.tr("Object class"), object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-		
-		// Object name
+
+      // Object name
       initialName = object.getObjectName();
-      name = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"),
-            initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+      name = new LabeledText(dialogArea, SWT.NONE);
+      name.setLabel(i18n.tr("Name"));
+      name.setText(initialName);
+      name.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       // Object alias
       initialAlias = object.getAlias();
-      alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"),
-            initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      alias = new LabeledText(dialogArea, SWT.NONE);
+      alias.setLabel(i18n.tr("Alias"));
+      alias.setText(initialAlias);
+      alias.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       // AI hint
       initialAiHint = (object.getAiHint() != null) ? object.getAiHint() : "";
-      aiHint = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("AI Hint"),
-            initialAiHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      aiHint = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
+      aiHint.setLabel(i18n.tr("AI Hint"));
+      aiHint.setText(initialAiHint);
+      GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.heightHint = 160;
+      aiHint.setLayoutData(gd);
 
       // Category selector
       initialCategory = object.getCategoryId();
