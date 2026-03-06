@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -187,23 +187,30 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData)
 }
 
 /**
+ * Syncer wakeup condition
+ */
+static Condition s_syncerWakeup(false);
+
+/**
  * Syncer thread
  */
 void Syncer()
 {
    ThreadSetName("Syncer");
 
-   int syncInterval = ConfigReadInt(_T("Objects.SyncInterval"), 60);
-   uint32_t watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
+   uint32_t syncInterval = ConfigReadInt(L"Objects.SyncInterval", 60);
+   uint32_t watchdogId = WatchdogAddThread(L"Syncer Thread", 30);
 
-   nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread started, sync_interval = %d"), syncInterval);
+   nxlog_debug_tag(DEBUG_TAG_SYNC, 1, L"Syncer thread started, sync_interval %u seconds", syncInterval);
+   syncInterval *= 1000;
 
    // Main syncer loop
    WatchdogStartSleep(watchdogId);
-   while(!SleepAndCheckForShutdown(syncInterval))
+   while(!(g_flags & AF_SHUTDOWN))
    {
+      s_syncerWakeup.wait(syncInterval);
       WatchdogNotify(watchdogId);
-      nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer wakeup"));
+      nxlog_debug_tag(DEBUG_TAG_SYNC, 7, L"Syncer wakeup");
 
       // Don't try to save if DB connection is lost or server not fully initialized yet
       if ((g_flags & (AF_DB_CONNECTION_LOST | AF_SERVER_INITIALIZED)) == AF_SERVER_INITIALIZED)
@@ -226,4 +233,12 @@ void Syncer()
    }
 
    nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread terminated"));
+}
+
+/**
+ * Wakeup syncer thread
+ */
+void WakeupSyncerThread()
+{
+   s_syncerWakeup.set();
 }

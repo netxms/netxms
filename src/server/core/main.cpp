@@ -116,6 +116,7 @@ void InitializeCloudConnectors();
 void LoadWellKnownPortList();
 bool InitAIAssistant();
 void ShutdownAIMessageManager();
+void WakeupSyncerThread();
 
 void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1610,6 +1611,8 @@ void NXCORE_EXPORTABLE Shutdown()
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
    InterlockedOr64(&g_flags, AF_SHUTDOWN);     // Set shutdown flag
    InitiateProcessShutdown();
+
+   WakeupSyncerThread();
 
    NXSL_VM::stopAll();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("All NXSL VMs signalled to stop"));

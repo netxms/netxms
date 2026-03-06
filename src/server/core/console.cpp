@@ -57,6 +57,7 @@ void ShowAuthenticationTokens(ServerConsole *console);
 void RunHouseKeeper(ServerConsole *console);
 void ShowActiveDiscoveryState(ServerConsole *console);
 void RunThreadPoolLoadTest(const TCHAR *poolName, int numTasks, ServerConsole *console);
+void WakeupSyncerThread();
 
 /**
  * Format string to show value of global flag
@@ -1902,6 +1903,11 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
       if (libraryLocked)
          scriptLibrary->unlock();
    }
+   else if (IsCommand(_T("SYNC"), szBuffer, 3))
+   {
+      console->print(L"Signaling syncer thread\n");
+      WakeupSyncerThread();
+   }
    else if (IsCommand(_T("TCPPING"), szBuffer, 4))
    {
       pArg = ExtractWord(pArg, szBuffer);
@@ -2133,6 +2139,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show version                      - Show NetXMS server version\n")
             _T("   show vlans <node>                 - Show cached VLAN information for node\n")
             _T("   show watchdog                     - Display watchdog information\n")
+            _T("   sync                              - Wakeup syncer thread immediately\n")
             _T("   tcpping <address> <port>          - TCP ping on given address and port\n")
             _T("   tp loadtest <pool> <tasks>        - Start test tasks in given thread pool\n")
             _T("   trace <node1> <node2>             - Show network path trace between two nodes\n")
