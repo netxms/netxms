@@ -1694,6 +1694,7 @@ typedef struct
 #define VID_NUM_TAGS                ((uint32_t)966)
 #define VID_NUM_MAPPING_TABLES      ((uint32_t)967)
 #define VID_MAPPING_TABLE_LIST      ((uint32_t)968)
+#define VID_MAX_DATA_POINTS         ((uint32_t)969)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

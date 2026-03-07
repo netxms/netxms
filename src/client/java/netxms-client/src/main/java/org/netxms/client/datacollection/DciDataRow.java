@@ -28,6 +28,10 @@ public class DciDataRow
 	private Date timestamp;
 	private Object value;
    private String rawValue;
+   private boolean aggregated;
+   private double avgValue;
+   private double minValue;
+   private double maxValue;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
@@ -35,6 +39,27 @@ public class DciDataRow
 		this.timestamp = timestamp;
 		this.value = value;
 		this.rawValue = null;
+		this.aggregated = false;
+	}
+
+	/**
+	 * Create aggregated data row with avg/min/max values.
+	 *
+	 * @param timestamp bucket timestamp
+	 * @param avg average value
+	 * @param min minimum value
+	 * @param max maximum value
+	 */
+	public DciDataRow(Date timestamp, double avg, double min, double max)
+	{
+		super();
+		this.timestamp = timestamp;
+		this.value = Double.valueOf(avg);
+		this.rawValue = null;
+		this.aggregated = true;
+		this.avgValue = avg;
+		this.minValue = min;
+		this.maxValue = max;
 	}
 
 	/**
@@ -143,11 +168,51 @@ public class DciDataRow
    }
 
    /**
+    * Check if this row contains aggregated data.
+    *
+    * @return true if aggregated
+    */
+   public boolean isAggregated()
+   {
+      return aggregated;
+   }
+
+   /**
+    * Get average value (only valid for aggregated rows).
+    *
+    * @return average value
+    */
+   public double getAvgValue()
+   {
+      return avgValue;
+   }
+
+   /**
+    * Get minimum value (only valid for aggregated rows).
+    *
+    * @return minimum value
+    */
+   public double getMinValue()
+   {
+      return minValue;
+   }
+
+   /**
+    * Get maximum value (only valid for aggregated rows).
+    *
+    * @return maximum value
+    */
+   public double getMaxValue()
+   {
+      return maxValue;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + ", rawValue=" + rawValue + "]";
+      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + ", rawValue=" + rawValue + ", aggregated=" + aggregated + "]";
    }
 }

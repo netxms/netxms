@@ -5210,85 +5210,31 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
    sendMessage(response);
 }
 
-#define SELECTION_COLUMNS (historicalDataType != HDT_RAW) ? tablePrefix : _T(""), (historicalDataType == HDT_RAW_AND_PROCESSED) ? _T("_value,raw_value") : ((historicalDataType == HDT_PROCESSED) || (historicalDataType == HDT_FULL_TABLE)) ?  _T("_value") : _T("raw_value")
-
 /**
- * Prepare statement for reading data from idata/tdata table
+ * Process results from aggregated SELECT statement for DCI data
  */
-static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciType, DCObjectStorageClass storageClass,
-         uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition)
+static void ProcessAggregatedDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId)
 {
-   const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
-	TCHAR query[512];
-	if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-	{
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %u %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     maxRows, tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT timestamptz_to_ms(%s_timestamp),%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %u ROWS ONLY"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         default:
-            nxlog_write(NXLOG_WARNING, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
-            return nullptr;   // Unsupported database
-      }
-	}
-	else
-	{
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %u %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     maxRows, tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %u ROWS ONLY"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         default:
-            nxlog_write(NXLOG_WARNING, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
-            return nullptr;	// Unsupported database
-      }
-	}
-	return DBPrepare(hdb, query);
+   ByteStream data(32768);
+   data.writeB(static_cast<int32_t>(0));  // Placeholder for number of rows
+   data.writeB(static_cast<int16_t>(DCI_DT_FLOAT));  // Aggregated data is always double
+   data.writeB(static_cast<uint16_t>(0x0002));  // Options: aggregated flag
+
+   int32_t rows = 0;
+   while(DBFetch(hResult))
+   {
+      rows++;
+      data.writeB(DBGetFieldInt64(hResult, 0));   // Bucket timestamp
+      data.writeB(DBGetFieldDouble(hResult, 1));  // Average
+      data.writeB(DBGetFieldDouble(hResult, 2));  // Min
+      data.writeB(DBGetFieldDouble(hResult, 3));  // Max
+   }
+   data.seek(0, SEEK_SET);
+   data.writeB(rows);
+
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
+   session->sendRawMessage(msg);
+   MemFree(msg);
 }
 
 /**
@@ -5470,8 +5416,14 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 
 	// Get request parameters
 	uint32_t maxRows = request.getFieldAsUInt32(VID_MAX_ROWS);
+	uint32_t maxDataPoints = request.getFieldAsUInt32(VID_MAX_DATA_POINTS);
 	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
 	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
+
+	// Check if aggregation is applicable (only for numeric single-value DCIs)
+	bool useAggregation = (maxDataPoints > 0) && (dciType == DCO_TYPE_ITEM) &&
+	   (static_cast<DCItem&>(*dci).getTransformedDataType() != DCI_DT_STRING) &&
+	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5622,7 +5574,20 @@ read_from_db:
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget.getId(), dciType, dci->getStorageClass(), maxRows, historicalDataType, condition);
+
+	DB_STATEMENT hStmt;
+	if (useAggregation)
+	{
+	   int64_t bucketSizeMs = (timeTo - timeFrom) / maxDataPoints;
+	   if (bucketSizeMs < 1)
+	      bucketSizeMs = 1;
+	   hStmt = PrepareAggregatedDataSelect(hdb, dcTarget.getId(), dci->getStorageClass(), bucketSizeMs, condition);
+	}
+	else
+	{
+	   hStmt = PrepareDataSelect(hdb, dcTarget.getId(), dciType, dci->getStorageClass(), maxRows, historicalDataType, condition);
+	}
+
 	if (hStmt != nullptr)
 	{
 		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
@@ -5657,9 +5622,12 @@ read_from_db:
 	      response->setField(VID_DCI_NAME, dci->getName());
 	      response->setField(VID_DESCRIPTION, dci->getDescription());
 	      response->setField(VID_POLLING_INTERVAL, dci->getEffectivePollingInterval());
+	      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
 	      sendMessage(response);
 
-			if (historicalDataType == HDT_FULL_TABLE)
+			if (useAggregation)
+			   ProcessAggregatedDataSelectResults(hResult, this, request.getId());
+			else if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());
 			else
 			   ProcessDataSelectResults(hResult, this, request.getId(), dci, historicalDataType, dataColumn, instance);

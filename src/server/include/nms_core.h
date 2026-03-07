@@ -1323,6 +1323,14 @@ public:
 };
 
 /**
+ * DCI data query functions
+ */
+DB_STATEMENT NXCORE_EXPORTABLE PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciType, DCObjectStorageClass storageClass,
+         uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition);
+DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32_t nodeId, DCObjectStorageClass storageClass,
+         int64_t bucketSizeMs, const TCHAR *condition);
+
+/**
  * Functions
  */
 void ConfigPreLoad();

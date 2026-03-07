@@ -43,6 +43,7 @@ public class DataSeries
    private Threshold[] thresholds = null;
    private int pollingInterval;
    private boolean storeChangesOnly;
+   private boolean aggregated;
 
    /**
     * Create empty data series
@@ -99,6 +100,7 @@ public class DataSeries
       this.thresholds = src.thresholds;
       this.pollingInterval = src.pollingInterval;
       this.storeChangesOnly = src.storeChangesOnly;
+      this.aggregated = src.aggregated;
    }
 
    /**
@@ -366,6 +368,26 @@ public class DataSeries
    public boolean isStoreChangesOnly()
    {
       return storeChangesOnly;
+   }
+
+   /**
+    * Check if this series contains aggregated data.
+    *
+    * @return true if data is aggregated
+    */
+   public boolean isAggregated()
+   {
+      return aggregated;
+   }
+
+   /**
+    * Set aggregated flag.
+    *
+    * @param aggregated true if data is aggregated
+    */
+   public void setAggregated(boolean aggregated)
+   {
+      this.aggregated = aggregated;
    }
 
    /**

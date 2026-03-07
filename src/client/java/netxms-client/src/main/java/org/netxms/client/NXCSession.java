@@ -6201,40 +6201,54 @@ public class NXCSession
          data.setDataType(dataType);
          short flags = inputStream.readShort();
 
+         boolean isAggregated = (flags & 0x02) != 0;
+         if (isAggregated)
+            data.setAggregated(true);
+
          for(int i = 0; i < rows; i++)
          {
             long timestamp = inputStream.readLong();
-            Object value;
-            switch(dataType)
+            if (isAggregated)
             {
-               case INT32:
-                  value = Long.valueOf(inputStream.readInt());
-                  break;
-               case UINT32:
-               case COUNTER32:
-                  value = Long.valueOf(inputStream.readUnsignedInt());
-                  break;
-               case INT64:
-               case UINT64:
-               case COUNTER64:
-                  value = Long.valueOf(inputStream.readLong());
-                  break;
-               case FLOAT:
-                  value = Double.valueOf(inputStream.readDouble());
-                  break;
-               case STRING:
-                  value = inputStream.readUTF();
-                  break;
-               default:
-                  value = null;
-                  break;
+               double avg = inputStream.readDouble();
+               double min = inputStream.readDouble();
+               double max = inputStream.readDouble();
+               row = new DciDataRow(new Date(timestamp), avg, min, max);
             }
-            row = new DciDataRow(new Date(timestamp), value);
+            else
+            {
+               Object value;
+               switch(dataType)
+               {
+                  case INT32:
+                     value = Long.valueOf(inputStream.readInt());
+                     break;
+                  case UINT32:
+                  case COUNTER32:
+                     value = Long.valueOf(inputStream.readUnsignedInt());
+                     break;
+                  case INT64:
+                  case UINT64:
+                  case COUNTER64:
+                     value = Long.valueOf(inputStream.readLong());
+                     break;
+                  case FLOAT:
+                     value = Double.valueOf(inputStream.readDouble());
+                     break;
+                  case STRING:
+                     value = inputStream.readUTF();
+                     break;
+                  default:
+                     value = null;
+                     break;
+               }
+               row = new DciDataRow(new Date(timestamp), value);
+               if ((flags & 0x01) != 0) // raw value present
+               {
+                  row.setRawValue(inputStream.readUTF());
+               }
+            }
             data.addDataRow(row);
-            if ((flags & 0x01) != 0) // raw value present
-            {
-               row.setRawValue(inputStream.readUTF());
-            }
          }
       }
       catch(IOException e)
@@ -6266,6 +6280,12 @@ public class NXCSession
    private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, HistoricalDataType valueType, long delegateReadObject) throws IOException, NXCException
    {
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject, 0);
+   }
+
+   private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows, HistoricalDataType valueType, long delegateReadObject, int maxDataPoints) throws IOException, NXCException
+   {
       NXCPMessage msg;
       if (instance != null) // table DCI
       {
@@ -6281,6 +6301,8 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
       msg.setFieldInt16(NXCPCodes.VID_HISTORICAL_DATA_TYPE, valueType.getValue());
       msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateReadObject);
+      if (maxDataPoints > 0)
+         msg.setFieldUInt32(NXCPCodes.VID_MAX_DATA_POINTS, maxDataPoints);
 
       DataSeries data = new DataSeries(nodeId, dciId);
 
@@ -6390,6 +6412,27 @@ public class NXCSession
          throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0);
+   }
+
+   /**
+    * Get collected DCI data from server with optional aggregation. When maxDataPoints is set,
+    * data will be aggregated into time buckets with avg/min/max values.
+    *
+    * @param nodeId        Node ID
+    * @param dciId         DCI ID
+    * @param from          Start of time range or null for no limit
+    * @param to            End of time range or null for no limit
+    * @param maxRows       Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType     historical data type to retrieve
+    * @param maxDataPoints Maximum number of data points (enables aggregation); 0 for raw data
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType, int maxDataPoints)
+         throws IOException, NXCException
+   {
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0, maxDataPoints);
    }
 
    /**

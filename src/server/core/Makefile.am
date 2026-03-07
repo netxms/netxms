@@ -12,7 +12,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
 			ccy.cpp cdp.cpp cert.cpp chassis.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp \
 			columnfilter.cpp condition.cpp config.cpp console.cpp container.cpp correlate.cpp \
-			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dci_recalc.cpp dcitem.cpp \
+			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dci_data_query.cpp dci_recalc.cpp dcitem.cpp \
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
 			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devbackup.cpp \
 			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \

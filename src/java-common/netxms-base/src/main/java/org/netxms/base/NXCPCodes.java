@@ -1503,6 +1503,7 @@ public class NXCPCodes
    public static final long VID_NUM_TAGS = 966;
    public static final long VID_NUM_MAPPING_TABLES = 967;
    public static final long VID_MAPPING_TABLE_LIST = 968;
+   public static final long VID_MAX_DATA_POINTS = 969;
 
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;

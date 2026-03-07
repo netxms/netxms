@@ -141,87 +141,6 @@ std::string F_GetMetrics(json_t *arguments, uint32_t userId)
    return JsonToString(output);
 }
 
-#define SELECTION_COLUMNS (historicalDataType != HDT_RAW) ? tablePrefix : _T(""), (historicalDataType == HDT_RAW_AND_PROCESSED) ? _T("_value,raw_value") : ((historicalDataType == HDT_PROCESSED) || (historicalDataType == HDT_FULL_TABLE)) ?  _T("_value") : _T("raw_value")
-
-/**
- * Prepare statement for reading data from idata/tdata table
- */
-static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciType, DCObjectStorageClass storageClass,
-         uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition)
-{
-   const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
-   TCHAR query[512];
-   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-   {
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %u %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     maxRows, tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT timestamptz_to_ms(%s_timestamp),%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %u ROWS ONLY"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, condition, tablePrefix, maxRows);
-            break;
-         default:
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
-            return nullptr;   // Unsupported database
-      }
-   }
-   else
-   {
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %u %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     maxRows, tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%u WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %u ROWS ONLY"),
-                     tablePrefix, SELECTION_COLUMNS,
-                     tablePrefix, nodeId, condition, tablePrefix, maxRows);
-            break;
-         default:
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
-            return nullptr;   // Unsupported database
-      }
-   }
-   return DBPrepare(hdb, query);
-}
-
 /**
  * Get historical data for data collection item
  */
@@ -296,6 +215,14 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
       return std::string(buffer);
    }
 
+   // Parse maxDataPoints (default 500 for AI requests)
+   int maxDataPoints = json_object_get_int32(arguments, "maxDataPoints", 500);
+
+   // Determine if aggregation is applicable (numeric DCIs with valid time range)
+   bool isNumeric = (static_cast<DCItem&>(*dci).getTransformedDataType() != DCI_DT_STRING);
+   bool useAggregation = (maxDataPoints > 0) && isNumeric && !timeFrom.isNull() && !timeTo.isNull() &&
+      (timeTo.asMilliseconds() > timeFrom.asMilliseconds());
+
    // Get historical data
    wchar_t condition[256] = L"";
    if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
@@ -315,7 +242,21 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
 
    json_t *output = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = PrepareDataSelect(hdb, object->getId(), DCO_TYPE_ITEM, dci->getStorageClass(), MAX_DCI_DATA_RECORDS, HDT_PROCESSED, condition);
+
+   DB_STATEMENT hStmt;
+   int64_t bucketSizeMs = 0;
+   if (useAggregation)
+   {
+      bucketSizeMs = (timeTo.asMilliseconds() - timeFrom.asMilliseconds()) / maxDataPoints;
+      if (bucketSizeMs < 1)
+         bucketSizeMs = 1;
+      hStmt = PrepareAggregatedDataSelect(hdb, object->getId(), dci->getStorageClass(), bucketSizeMs, condition);
+   }
+   else
+   {
+      hStmt = PrepareDataSelect(hdb, object->getId(), DCO_TYPE_ITEM, dci->getStorageClass(), MAX_DCI_DATA_RECORDS, HDT_PROCESSED, condition);
+   }
+
    if (hStmt != nullptr)
    {
       int pos = 1;
@@ -328,7 +269,6 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
       DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
       if (hResult != nullptr)
       {
-         // Convert to JSON
          output = json_object();
          json_object_set_new(output, "objectId", json_integer(object->getId()));
          json_object_set_new(output, "objectName", json_string_t(object->getName()));
@@ -338,17 +278,36 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
          json_object_set_new(output, "timeFrom", timeFrom.asJson());
          json_object_set_new(output, "timeTo", timeTo.asJson());
 
-         json_t *dataPoints = json_array();
-         wchar_t textBuffer[MAX_DCI_STRING_VALUE];
-         while(DBFetch(hResult))
+         if (useAggregation)
          {
-            json_t *dataPoint = json_object();
-            json_object_set_new(dataPoint, "timestamp", DBGetFieldTimestamp(hResult, 0).asJson());
-            json_object_set_new(dataPoint, "value", json_string_t(DBGetField(hResult, 1, textBuffer, MAX_DCI_STRING_VALUE)));
-            json_array_append_new(dataPoints, dataPoint);
+            json_object_set_new(output, "aggregated", json_true());
+            json_object_set_new(output, "bucketSize", json_integer(bucketSizeMs));
+            json_t *dataPoints = json_array();
+            while(DBFetch(hResult))
+            {
+               json_t *dataPoint = json_object();
+               json_object_set_new(dataPoint, "timestamp", DBGetFieldTimestamp(hResult, 0).asJson());
+               json_object_set_new(dataPoint, "avg", json_real(DBGetFieldDouble(hResult, 1)));
+               json_object_set_new(dataPoint, "min", json_real(DBGetFieldDouble(hResult, 2)));
+               json_object_set_new(dataPoint, "max", json_real(DBGetFieldDouble(hResult, 3)));
+               json_array_append_new(dataPoints, dataPoint);
+            }
+            json_object_set_new(output, "dataPoints", dataPoints);
+         }
+         else
+         {
+            json_t *dataPoints = json_array();
+            wchar_t textBuffer[MAX_DCI_STRING_VALUE];
+            while(DBFetch(hResult))
+            {
+               json_t *dataPoint = json_object();
+               json_object_set_new(dataPoint, "timestamp", DBGetFieldTimestamp(hResult, 0).asJson());
+               json_object_set_new(dataPoint, "value", json_string_t(DBGetField(hResult, 1, textBuffer, MAX_DCI_STRING_VALUE)));
+               json_array_append_new(dataPoints, dataPoint);
+            }
+            json_object_set_new(output, "dataPoints", dataPoints);
          }
          DBFreeResult(hResult);
-         json_object_set_new(output, "dataPoints", dataPoints);
       }
       DBFreeStatement(hStmt);
    }
