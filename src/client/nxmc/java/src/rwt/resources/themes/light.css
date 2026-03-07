@@ -2317,8 +2317,9 @@ Label.CardHeader {
 }
 
 Label.RoundedLabel {
-   border-radius: 4px;
-   padding: 4px 4px;
+   border-radius: 5px;
+   border: 1px solid #cccccc;
+   padding: 3px 8px;
 }
 
 Button.DashboardEditorButton[PUSH] {

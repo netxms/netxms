@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2023-2024 Victor Kirhenshtein
+ * Copyright (C) 2023-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,33 +23,26 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.topology.HopInfo;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.nxmc.Memento;
-import org.netxms.nxmc.base.actions.CopyTableRowsAction;
-import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.helpers.RouteLabelProvider;
+import org.netxms.nxmc.modules.objects.widgets.NetworkPathStepper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -58,12 +51,6 @@ import org.xnap.commons.i18n.I18n;
 public class RouteView extends AdHocObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(RouteView.class);
-
-   public static final int COLUMN_HOP = 0;
-   public static final int COLUMN_NODE = 1;
-   public static final int COLUMN_NEXT_HOP = 2;
-   public static final int COLUMN_TYPE = 3;
-   public static final int COLUMN_NAME = 4;
 
    /**
     * Generate name for the view.
@@ -83,20 +70,16 @@ public class RouteView extends AdHocObjectView
    }
 
    private CLabel status;
-   private SortableTableViewer viewer;
+   private NetworkPathStepper stepper;
    private AbstractNode source;
    private AbstractNode destination;
+   private NetworkPath currentPath;
    private Action actionExportToCsv;
-   private Action actionExportAllToCsv;
-   private Action actionCopyRowToClipboard;
 
    /**
-    * @param name
-    * @param image
-    * @param baseId
-    * @param objectId
-    * @param contextId
-    * @param hasFilter
+    * @param source source node
+    * @param destination destination node
+    * @param contextId context object ID
     */
    public RouteView(AbstractNode source, AbstractNode destination, long contextId)
    {
@@ -153,29 +136,16 @@ public class RouteView extends AdHocObjectView
 
       new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-      final String[] names = { i18n.tr("Hop"), i18n.tr("Node"), i18n.tr("Next hop"), i18n.tr("Type"), i18n.tr("Name") };
-      final int[] widths = { 80, 150, 150, 150, 150 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.disableSorting();
-      viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new RouteLabelProvider());
-      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      stepper = new NetworkPathStepper(parent);
+      stepper.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
-      actionExportToCsv = new ExportToCsvAction(this, viewer, true);
-      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
-
-      viewer.enableColumnReordering();
-      WidgetHelper.restoreColumnOrder(viewer, getBaseId());
-      viewer.getTable().addDisposeListener(new DisposeListener() {
+      actionExportToCsv = new Action(i18n.tr("E&xport to CSV..."), SharedIcons.CSV) {
          @Override
-         public void widgetDisposed(DisposeEvent e)
+         public void run()
          {
-            WidgetHelper.saveColumnOrder(viewer, getBaseId());
+            exportToCsv();
          }
-      });
-
-      createContextMenu();
+      };
    }
 
    /**
@@ -194,13 +164,7 @@ public class RouteView extends AdHocObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(actionExportAllToCsv);
-      Action resetAction = viewer.getResetColumnOrderAction();
-      if (resetAction != null)
-         manager.add(resetAction);
-      Action showAllAction = viewer.getShowAllColumnsAction();
-      if (showAllAction != null)
-         manager.add(showAllAction);
+      manager.add(actionExportToCsv);
    }
 
    /**
@@ -209,32 +173,6 @@ public class RouteView extends AdHocObjectView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionExportAllToCsv);
-   }
-
-   /**
-    * Create pop-up menu
-    */
-   private void createContextMenu()
-   {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener((m) -> fillContextMenu(m));
-
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
-      viewer.getControl().setMenu(menu);
-   }
-
-   /**
-    * Fill context menu
-    *
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(IMenuManager manager)
-   {
-      manager.add(actionCopyRowToClipboard);
       manager.add(actionExportToCsv);
    }
 
@@ -259,18 +197,17 @@ public class RouteView extends AdHocObjectView
          {
             final NetworkPath path = session.getNetworkPath(source.getObjectId(), destination.getObjectId());
             runInUIThread(() -> {
+               currentPath = path;
                List<HopInfo> hops = path.getPath();
                if (!hops.isEmpty())
                {
                   status.setImage(StatusDisplayInfo.getStatusImage(path.isComplete() ? Severity.NORMAL : Severity.MINOR));
                   if (hops.size() == 2)
                   {
-                     // Use separate code for singular form because gettext fallback bundle do not handle it correctly
                      status.setText(i18n.tr("{0}; 1 hop", path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete")));
                   }
                   else
                   {
-                     // TODO: check that it works in translated bundles
                      status.setText(i18n.trn("{0}; {1} hops", "{0}; {1} hops", hops.size() - 1, path.isComplete() ? i18n.tr("Complete") : i18n.tr("Incomplete"), hops.size() - 1));
                   }
                }
@@ -279,12 +216,7 @@ public class RouteView extends AdHocObjectView
                   status.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
                   status.setText(i18n.tr("No route from source"));
                }
-               if (!path.isComplete())
-               {
-                  hops.add(new HopInfo(hops.size()));
-               }
-               viewer.setInput(hops);
-               viewer.packColumns();
+               stepper.setNetworkPath(path);
             });
          }
 
@@ -292,6 +224,41 @@ public class RouteView extends AdHocObjectView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot retrieve network path between {0} and {1}", source.getObjectName(), destination.getObjectName());
+         }
+      }.start();
+   }
+
+   /**
+    * Export path data to CSV file.
+    */
+   private void exportToCsv()
+   {
+      if (currentPath == null)
+         return;
+
+      FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.SAVE);
+      dlg.setFilterExtensions(new String[] { "*.csv", "*.*" });
+      dlg.setFilterNames(new String[] { i18n.tr("CSV files"), i18n.tr("All files") });
+      dlg.setOverwrite(true);
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+
+      final String csv = NetworkPathStepper.toCSV(currentPath);
+      final String file = fileName;
+      new Job(i18n.tr("Exporting to CSV"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            java.io.FileWriter writer = new java.io.FileWriter(file);
+            writer.write(csv);
+            writer.close();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot export data to CSV file");
          }
       }.start();
    }

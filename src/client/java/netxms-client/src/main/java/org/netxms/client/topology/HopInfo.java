@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ public class HopInfo
    public static final int ROUTE = 0;
    public static final int VPN = 1;
    public static final int PROXY = 2;
-   public static final int DUMMY = 3;
+   public static final int DESTINATION = 3;
    public static final int L2_LINK = 4;
 
    private int index;
@@ -50,7 +50,7 @@ public class HopInfo
       nodeId = -1;
       nextHop = null;
       ifIndex = 0;
-      type = DUMMY;
+      type = DESTINATION;
       name = "";
    }
 

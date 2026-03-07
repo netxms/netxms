@@ -845,7 +845,7 @@ void Chat::enableVisualizationOutput()
       "Use this when presenting network path or trace route results. "
       "Pass the path data from tool results directly, adding type \"route\" and a descriptive title. "
       "Hop types: ROUTE (ifIndex, nextHop, route, name), VPN (vpnConnectorId, vpnConnectorName), "
-      "PROXY (proxyNodeId, proxyNodeName), DUMMY, L2_LINK (ifIndex, name).\n\n"
+      "PROXY (proxyNodeId, proxyNodeName), DESTINATION, L2_LINK (ifIndex, name).\n\n"
       "RULES:\n"
       "- Always include explanatory text BEFORE or AFTER visualization blocks\n"
       "- Use visualizations when data has 3+ data points or rows; use plain text for simple answers\n"

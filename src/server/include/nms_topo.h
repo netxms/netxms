@@ -71,7 +71,7 @@ enum class NetworkPathElementType
    ROUTE = 0,
    VPN = 1,
    PROXY = 2,
-   DUMMY = 3,
+   DESTINATION = 3,
    L2_LINK = 4
 };
 

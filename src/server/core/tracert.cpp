@@ -118,8 +118,8 @@ json_t *NetworkPath::toJson() const
             json_object_set_new(jsonHop, "nextHop", e->nextHop.toJson());
             json_object_set_new(jsonHop, "route", e->route.toJson());
             break;
-         case NetworkPathElementType::DUMMY:
-            json_object_set_new(jsonHop, "type", json_string("DUMMY"));
+         case NetworkPathElementType::DESTINATION:
+            json_object_set_new(jsonHop, "type", json_string("DESTINATION"));
             break;
          case NetworkPathElementType::L2_LINK:
             json_object_set_new(jsonHop, "type", json_string("L2_LINK"));
@@ -147,7 +147,7 @@ void NetworkPath::print(ServerConsole *console, int padding) const
       NetworkPathElement *hop = m_path.get(i);
       switch(hop->type)
       {
-         case NetworkPathElementType::DUMMY:
+         case NetworkPathElementType::DESTINATION:
             console->printf(_T("%*s[%u] %s\n"),
                   padding, _T(""),
                   hop->object->getId(),
@@ -247,7 +247,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src
    }
    if (curr == dest)
    {
-      path->addHop(curr, NetworkPathElementType::DUMMY, 0, _T(""));
+      path->addHop(curr, NetworkPathElementType::DESTINATION, 0, _T(""));
       path->setComplete();
    }
 
@@ -275,7 +275,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
       if (iface->getPeerNodeId() == dest->getId())
       {
          path->addHop(src, NetworkPathElementType::L2_LINK, 0, iface->getName());
-         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->addHop(dest, NetworkPathElementType::DESTINATION, 0, L"");
          path->setComplete();
          return path;
       }
@@ -354,7 +354,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
    {
       if (currentNodeId == dest->getId())
       {
-         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->addHop(dest, NetworkPathElementType::DESTINATION, 0, L"");
          path->setComplete();
          return path;
       }
@@ -386,7 +386,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
       uint32_t nextNodeId = outIface->getPeerNodeId();
       if (nextNodeId == dest->getId())
       {
-         path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+         path->addHop(dest, NetworkPathElementType::DESTINATION, 0, L"");
          path->setComplete();
          return path;
       }
@@ -396,7 +396,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
          if (fdb->isSingleMacOnPort(ifIndex))
          {
             // Single MAC on port — likely direct connection to destination
-            path->addHop(dest, NetworkPathElementType::DUMMY, 0, L"");
+            path->addHop(dest, NetworkPathElementType::DESTINATION, 0, L"");
             path->setComplete();
          }
          return path;
