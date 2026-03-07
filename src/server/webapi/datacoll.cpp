@@ -53,7 +53,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
                      tablePrefix, condition, tablePrefix, maxRows);
             break;
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT date_part('epoch',%s_timestamp)::int,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
+            _sntprintf(query, 512, _T("SELECT timestamptz_to_ms(%s_timestamp),%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %u"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, maxRows);
             break;
