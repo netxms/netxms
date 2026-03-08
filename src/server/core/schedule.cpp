@@ -371,10 +371,13 @@ json_t *ScheduledTask::toJson() const
    json_object_set_new(root, "taskHandlerId", json_string_t(m_taskHandlerId));
    json_object_set_new(root, "schedule", json_string_t(m_schedule));
    json_object_set_new(root, "parameters", json_string_t(m_parameters->m_persistentData));
-   json_object_set_new(root, "scheduledExecutionTime", json_integer(static_cast<int64_t>(m_scheduledExecutionTime)));
-   json_object_set_new(root, "lastExecutionTime", json_integer(static_cast<int64_t>(m_lastExecutionTime)));
-   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "scheduledExecutionTime", (m_scheduledExecutionTime > 0) ? json_time_string(m_scheduledExecutionTime) : json_null());
+   json_object_set_new(root, "lastExecutionTime", (m_lastExecutionTime > 0) ? json_time_string(m_lastExecutionTime) : json_null());
    json_object_set_new(root, "recurrent", json_boolean(m_recurrent));
+   json_object_set_new(root, "disabled", json_boolean((m_flags & SCHEDULED_TASK_DISABLED) != 0));
+   json_object_set_new(root, "completed", json_boolean((m_flags & SCHEDULED_TASK_COMPLETED) != 0));
+   json_object_set_new(root, "running", json_boolean((m_flags & SCHEDULED_TASK_RUNNING) != 0));
+   json_object_set_new(root, "system", json_boolean((m_flags & SCHEDULED_TASK_SYSTEM) != 0));
    json_object_set_new(root, "userId", json_integer(m_parameters->m_userId));
    json_object_set_new(root, "objectId", json_integer(m_parameters->m_objectId));
    json_object_set_new(root, "comments", json_string_t(m_parameters->m_comments));
@@ -1160,6 +1163,23 @@ void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
       }
    }
    msg->setField(VID_CALLBACK_COUNT, count);
+}
+
+/**
+ * Get task handlers as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetSchedulerTaskHandlersAsJson(uint64_t accessRights)
+{
+   json_t *handlers = json_array();
+   StringList keyList = s_callbacks.keys();
+   for(int i = 0; i < keyList.size(); i++)
+   {
+      if (accessRights & s_callbacks.get(keyList.get(i))->m_accessRight)
+      {
+         json_array_append_new(handlers, json_string_t(keyList.get(i)));
+      }
+   }
+   return handlers;
 }
 
 /**

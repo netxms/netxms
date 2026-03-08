@@ -94,6 +94,12 @@ int H_ObjectToolExecute(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
 int H_ObjectToolsForObject(Context *context);
+int H_ScheduledTaskCreate(Context *context);
+int H_ScheduledTaskDelete(Context *context);
+int H_ScheduledTaskDetails(Context *context);
+int H_ScheduledTaskHandlers(Context *context);
+int H_ScheduledTasks(Context *context);
+int H_ScheduledTaskUpdate(Context *context);
 int H_ScriptLibrary(Context *context);
 int H_ScriptDetails(Context *context);
 int H_ScriptCreate(Context *context);
@@ -323,6 +329,18 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/search")
       .POST(H_ObjectSearch)
+      .build();
+   RouteBuilder("v1/scheduled-task-handlers")
+      .GET(H_ScheduledTaskHandlers)
+      .build();
+   RouteBuilder("v1/scheduled-tasks")
+      .GET(H_ScheduledTasks)
+      .POST(H_ScheduledTaskCreate)
+      .build();
+   RouteBuilder("v1/scheduled-tasks/:task-id")
+      .GET(H_ScheduledTaskDetails)
+      .PUT(H_ScheduledTaskUpdate)
+      .DELETE(H_ScheduledTaskDelete)
       .build();
    RouteBuilder("v1/script-library")
       .GET(H_ScriptLibrary)

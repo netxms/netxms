@@ -15,6 +15,8 @@ tags:
     description: TCP proxy for remote access (VNC, SSH, etc.)
   - name: Grafana
     description: Grafana integration endpoints
+  - name: Scheduled Tasks
+    description: Scheduled task management
   - name: Script Library
     description: NXSL script library management
   - name: Server Actions
@@ -1964,6 +1966,166 @@ paths:
           description: Unauthorized.
       security:
         - BearerAuth: []
+  /v1/scheduled-task-handlers:
+    get:
+      summary: List available task handlers
+      description: Retrieve a list of registered scheduled task handler names accessible to the current user.
+      responses:
+        '200':
+          description: Handler list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have any scheduled task access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
+  /v1/scheduled-tasks:
+    get:
+      summary: List all accessible scheduled tasks
+      description: Retrieve all scheduled tasks accessible to the current user based on system access rights.
+      responses:
+        '200':
+          description: Task list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduledTask'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have any scheduled task access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
+    post:
+      summary: Create a new scheduled task
+      description: Create a recurrent (cron-based) or one-time scheduled task. Provide `schedule` for recurrent tasks or `executionTime` for one-time tasks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduledTaskCreateUpdate'
+      responses:
+        '201':
+          description: Task created successfully
+        '400':
+          description: Invalid request body or missing required fields
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient access rights
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
+  /v1/scheduled-tasks/{task-id}:
+    get:
+      summary: Get scheduled task details
+      description: Retrieve details of a specific scheduled task by ID.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Task details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTask'
+        '400':
+          description: Invalid task ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Task not found or not accessible
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
+    put:
+      summary: Update a scheduled task
+      description: Update an existing scheduled task. Provide `schedule` for recurrent tasks or `executionTime` for one-time tasks.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduledTaskCreateUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTask'
+        '400':
+          description: Invalid request body or missing required fields
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Task not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
+    delete:
+      summary: Delete a scheduled task
+      description: Delete a scheduled task by ID.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Task deleted successfully
+        '400':
+          description: Invalid task ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Task not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Scheduled Tasks
   /v1/script-library:
     get:
       summary: List all scripts
@@ -3696,6 +3858,92 @@ paths:
         - Two-Factor Authentication
 components:
   schemas:
+    ScheduledTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique task identifier
+        taskHandlerId:
+          type: string
+          description: Task handler identifier
+        schedule:
+          type: string
+          description: Cron-style schedule expression (for recurrent tasks)
+        parameters:
+          type: string
+          description: Task-specific persistent data
+        scheduledExecutionTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Scheduled execution time in ISO 8601 format, or null if not set
+        lastExecutionTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last execution time in ISO 8601 format, or null if never executed
+        recurrent:
+          type: boolean
+          description: Whether this is a recurrent (cron-based) task
+        disabled:
+          type: boolean
+          description: Whether the task is disabled
+        completed:
+          type: boolean
+          description: Whether the task has completed
+        running:
+          type: boolean
+          description: Whether the task is currently running
+        system:
+          type: boolean
+          description: Whether this is a system task
+        userId:
+          type: integer
+          description: Owner user ID
+        objectId:
+          type: integer
+          description: Associated NetXMS object ID
+        comments:
+          type: string
+          description: Task comments
+        taskKey:
+          type: string
+          description: Optional task key for identification
+    ScheduledTaskCreateUpdate:
+      type: object
+      required:
+        - taskHandlerId
+      properties:
+        taskHandlerId:
+          type: string
+          description: Task handler identifier
+        schedule:
+          type: string
+          description: Cron-style schedule expression (for recurrent tasks)
+        executionTime:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+              format: date-time
+          description: Execution time for one-time tasks. Accepts Unix timestamp (integer) or ISO 8601 string.
+        parameters:
+          type: string
+          description: Task-specific persistent data
+        objectId:
+          type: integer
+          description: Associated NetXMS object ID
+        comments:
+          type: string
+          description: Task comments
+        taskKey:
+          type: string
+          description: Optional task key for identification
+        disabled:
+          type: boolean
+          description: Whether the task should be disabled
     NotificationChannel:
       type: object
       properties:
