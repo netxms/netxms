@@ -95,6 +95,12 @@ static inline json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "comments", json_string_t(object.getComments()));
    json_object_set_new(jsonObject, "aiHint", json_string_t(object.getAIHint()));
 
+   const GeoLocation& geoLocation = object.getGeoLocation();
+   if (geoLocation.getType() != GL_UNSET)
+   {
+      json_object_set_new(jsonObject, "geoLocation", geoLocation.toJson());
+   }
+
    if (object.getObjectClass() == OBJECT_NODE)
    {
       const Node& node = static_cast<const Node&>(object);
