@@ -68,17 +68,11 @@ static const char *InterfaceOperStateToText(uint16_t state)
  */
 std::string F_GetObject(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    return JsonToString(object->toJson());
 }
@@ -221,17 +215,11 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
  */
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
       return std::string("Access denied");
@@ -252,17 +240,11 @@ std::string F_StartMaintenance(json_t *arguments, uint32_t userId)
  */
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
       return std::string("Access denied");
@@ -279,17 +261,11 @@ std::string F_EndMaintenance(json_t *arguments, uint32_t userId)
  */
 std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
+   if (object == nullptr)
+      return std::string("Node not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    Node *node = static_cast<Node*>(object.get());
    json_t *components = node->getHardwareComponentsAsJSON();
@@ -306,17 +282,11 @@ std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
  */
 std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
+   if (object == nullptr)
+      return std::string("Node not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    Node *node = static_cast<Node*>(object.get());
    unique_ptr<SharedObjectArray<NetObj>> interfaces = node->getChildren(OBJECT_INTERFACE);
@@ -334,17 +304,11 @@ std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
  */
 std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName, OBJECT_NODE);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
+   if (object == nullptr)
+      return std::string("Node not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    String filter(json_object_get_string_utf8(arguments, "filter", ""), "utf-8");
 
@@ -363,26 +327,20 @@ std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
  */
 std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
    json_t *value = json_object_get(arguments, "value");
 
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-   
    if ((key == nullptr) || (key[0] == 0))
       return std::string("Key must be provided");
-   
+
    if (value == nullptr)
       return std::string("Value must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
       return std::string("Access denied");
@@ -425,19 +383,13 @@ std::string F_SetObjectAIData(json_t *arguments, uint32_t userId)
  */
 std::string F_GetObjectAIData(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
 
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    json_t *data;
    if ((key == nullptr) || (key[0] == 0))
@@ -467,22 +419,16 @@ std::string F_GetObjectAIData(json_t *arguments, uint32_t userId)
  */
 std::string F_RemoveObjectAIData(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *key = json_object_get_string_utf8(arguments, "key", nullptr);
-
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
 
    if ((key == nullptr) || (key[0] == 0))
       return std::string("Key must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
       return std::string("Access denied");
@@ -499,18 +445,11 @@ std::string F_RemoveObjectAIData(json_t *arguments, uint32_t userId)
  */
 std::string F_ListObjectAIDataKeys(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    json_t *keys = object->getAIDataKeys();
    if (keys == nullptr)

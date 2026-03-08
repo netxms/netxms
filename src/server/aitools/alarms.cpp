@@ -31,17 +31,12 @@ std::string F_AlarmList(json_t *arguments, uint32_t userId)
    uint64_t systemAccessRights = GetEffectiveSystemRights(userId);
 
    uint32_t rootId = 0;
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> rootObject = FindObjectByNameOrId(arguments, "object");
+   if (rootObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-         return std::string(buffer);
-      }
-      rootId = object->getId();
+      if (!rootObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      rootId = rootObject->getId();
    }
 
    json_t *output = json_array();

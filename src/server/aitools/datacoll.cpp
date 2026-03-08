@@ -114,24 +114,14 @@ static shared_ptr<DCObject> FindDCIByNameOrId(DataCollectionTarget *target, cons
  */
 std::string F_GetMetrics(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    wchar_t nameFilter[256];
    utf8_to_wchar(json_object_get_string_utf8(arguments, "filter", ""), -1, nameFilter, 256);
@@ -227,39 +217,25 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId, int dciTyp
  */
 std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    String metricName(json_object_get_string_utf8(arguments, "metric", nullptr), "utf-8");
    if (metricName.isEmpty())
       return std::string("Metric name must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
-   
+
    // Find the DCI by name
    shared_ptr<DCObject> dci = target->getDCObjectByName(metricName, userId);
    if (dci == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%ls\" not found on object \"%s\"", metricName.cstr(), objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    if (dci->getType() != DCO_TYPE_ITEM)
    {
@@ -365,10 +341,6 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
  */
 std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    String metricName(json_object_get_string_utf8(arguments, "metric", nullptr), "utf-8");
    if (metricName.isEmpty())
       return std::string("Metric name must be provided");
@@ -468,27 +440,17 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
    else if (stricmp(anomalyStr, "none") != 0)
       return std::string("Invalid anomaly detection mode specified");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to modify data collection settings on object \"%s\"", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Access denied");
 
    DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), metricName, origin, dataType,
          pollingScheduleType, (pollingInterval[0] != 0) ? pollingInterval : nullptr,
@@ -525,51 +487,29 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
  */
 std::string F_EditMetric(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
       return std::string("Metric name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to modify data collection settings on object \"%s\"", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%s\" not found on object \"%s\"", metricNameOrId, objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object \"%s\" is not a data collection item", metricNameOrId);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
 
@@ -648,44 +588,26 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
  */
 std::string F_DeleteMetric(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
       return std::string("Metric name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to modify data collection settings on object \"%s\"", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%s\" not found on object \"%s\"", metricNameOrId, objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    uint32_t dciId = dco->getId();
    uint32_t rcc = 0;
@@ -706,44 +628,26 @@ std::string F_DeleteMetric(json_t *arguments, uint32_t userId)
  */
 std::string F_GetThresholds(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
       return std::string("Metric name or ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%s\" not found on object \"%s\"", metricNameOrId, objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object \"%s\" is not a data collection item", metricNameOrId);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
    json_t *output = json_array();
@@ -772,10 +676,6 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId)
  */
 std::string F_AddThreshold(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
       return std::string("Metric name or ID must be provided");
@@ -784,43 +684,25 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
    if ((valueStr == nullptr) || (valueStr[0] == 0))
       return std::string("Threshold value must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to modify data collection settings on object \"%s\"", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%s\" not found on object \"%s\"", metricNameOrId, objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object \"%s\" is not a data collection item", metricNameOrId);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
 
@@ -873,10 +755,6 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
  */
 std::string F_DeleteThreshold(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
       return std::string("Metric name or ID must be provided");
@@ -885,51 +763,29 @@ std::string F_DeleteThreshold(json_t *arguments, uint32_t userId)
    if (thresholdId == 0)
       return std::string("Threshold ID must be provided");
 
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not a data collection target", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to modify data collection settings on object \"%s\"", objectName);
-      return std::string(buffer);
-   }
+      return std::string("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Metric \"%s\" not found on object \"%s\"", metricNameOrId, objectName);
-      return std::string(buffer);
-   }
+      return std::string("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object \"%s\" is not a data collection item", metricNameOrId);
-      return std::string(buffer);
-   }
+      return std::string("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
    if (!dci->deleteThresholdById(thresholdId))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Threshold with ID %u not found on metric \"%s\"", thresholdId, metricNameOrId);
-      return std::string(buffer);
-   }
+      return std::string("Threshold not found");
 
    dci->updateCacheSize();
    dci->getOwner()->markAsModified(MODIFY_DATA_COLLECTION);

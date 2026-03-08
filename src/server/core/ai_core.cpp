@@ -393,6 +393,33 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int 
 }
 
 /**
+ * Find object by its name or ID extracted from a JSON object attribute.
+ * Handles both string and integer JSON values (LLM may pass object ID as integer).
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(json_t *parent, const char *tag, int objectClassHint)
+{
+   json_t *value = json_object_get(parent, tag);
+   if (value == nullptr)
+      return shared_ptr<NetObj>();
+
+   if (json_is_string(value))
+   {
+      const char *s = json_string_value(value);
+      if ((s == nullptr) || (s[0] == 0))
+         return shared_ptr<NetObj>();
+      return FindObjectByNameOrId(s, objectClassHint);
+   }
+
+   if (json_is_integer(value))
+   {
+      uint32_t id = static_cast<uint32_t>(json_integer_value(value));
+      return FindObjectById(id, objectClassHint);
+   }
+
+   return shared_ptr<NetObj>();
+}
+
+/**
  * Strip thinking tags from LLM response.
  * Removes content between <think> and </think> tags (case-insensitive).
  * Handles multiple thinking blocks and trims leading whitespace after removal.

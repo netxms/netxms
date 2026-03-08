@@ -358,6 +358,7 @@ static inline std::string JsonToString(json_t *json)
  * Find object by its name or ID
  */
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(const char *name, int objectClassHint = -1);
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByNameOrId(json_t *parent, const char *tag, int objectClassHint = -1);
 
 /**
  * Spawn background AI analysis for an incident

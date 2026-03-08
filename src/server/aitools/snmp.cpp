@@ -27,17 +27,11 @@
  */
 std::string F_SNMPRead(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(objectName, OBJECT_NODE));
-   if ((node == nullptr) || !node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
+   if (node == nullptr)
+      return std::string("Node not found");
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!node->isSNMPSupported())
       return std::string("SNMP is not supported on the specified node");
@@ -90,17 +84,11 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
  */
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(objectName, OBJECT_NODE));
-   if ((node == nullptr) || !node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
+   if (node == nullptr)
+      return std::string("Node not found");
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    if (!node->isSNMPSupported())
       return std::string("SNMP is not supported on the specified node");
