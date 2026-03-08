@@ -527,7 +527,6 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
       return std::string("User does not have permission to access this log");
 
    // Parse common parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
@@ -575,16 +574,15 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t objectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0) && (log->relatedObjectIdColumn != nullptr))
+   if (log->relatedObjectIdColumn != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+      if (filterObject != nullptr)
       {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
+         if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            return std::string("Access denied");
+         objectId = filterObject->getId();
       }
-      objectId = object->getId();
    }
 
    // Build query
@@ -837,7 +835,6 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
       return std::string("User does not have permission to view syslog");
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
@@ -852,16 +849,12 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t sourceObjectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      sourceObjectId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      sourceObjectId = filterObject->getId();
    }
 
    // Parse severity filter
@@ -1067,7 +1060,6 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
       return std::string("User does not have permission to view event log");
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *logName = json_object_get_string_utf8(arguments, "log_name", nullptr);
@@ -1083,16 +1075,12 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t nodeId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      nodeId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      nodeId = filterObject->getId();
    }
 
    // Parse severity filter
@@ -1302,7 +1290,6 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
       return std::string("User does not have permission to view trap log");
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *trapOid = json_object_get_string_utf8(arguments, "trap_oid", nullptr);
@@ -1318,16 +1305,12 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t objectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      objectId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      objectId = filterObject->getId();
    }
 
    // Build query
@@ -1488,7 +1471,6 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
       return std::string("User does not have permission to view event log");
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
@@ -1504,16 +1486,12 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t sourceObjectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      sourceObjectId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      sourceObjectId = filterObject->getId();
    }
 
    // Parse severity filter
@@ -1796,7 +1774,6 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    }
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-24h");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *groupBy = json_object_get_string_utf8(arguments, "group_by", "hour");
@@ -1807,16 +1784,12 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t objectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      objectId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      objectId = filterObject->getId();
    }
 
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
@@ -2040,10 +2013,6 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
 std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 {
    // Get required parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("object parameter is required");
-
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", nullptr);
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    if ((timeFromStr == nullptr) || (timeToStr == nullptr))
@@ -2061,13 +2030,11 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
       limitPerSource = 200;
 
    // Resolve primary object
-   shared_ptr<NetObj> primaryObject = FindObjectByNameOrId(objectName);
-   if ((primaryObject == nullptr) || !primaryObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-   {
-      char buffer[256];
-      snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-      return std::string(buffer);
-   }
+   shared_ptr<NetObj> primaryObject = FindObjectByNameOrId(arguments, "object");
+   if (primaryObject == nullptr)
+      return std::string("Object not found");
+   if (!primaryObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
 
    // Check system access rights for all log types
    uint64_t systemRights = GetEffectiveSystemRights(userId);
@@ -2681,7 +2648,6 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    }
 
    // Parse parameters
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-24h");
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *patternType = json_object_get_string_utf8(arguments, "pattern_type", "all");
@@ -2692,16 +2658,12 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
 
    // Resolve object if specified
    uint32_t objectId = 0;
-   if ((objectName != nullptr) && (objectName[0] != 0))
+   shared_ptr<NetObj> filterObject = FindObjectByNameOrId(arguments, "object");
+   if (filterObject != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-      if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      {
-         char buffer[256];
-         snprintf(buffer, 256, "Object with name or ID \"%s\" is not known or not accessible", objectName);
-         return std::string(buffer);
-      }
-      objectId = object->getId();
+      if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Access denied");
+      objectId = filterObject->getId();
    }
 
    time_t windowDuration = timeTo - timeFrom;

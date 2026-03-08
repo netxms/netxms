@@ -31,28 +31,18 @@
 /**
  * Find node by name or ID and check access rights
  */
-static shared_ptr<Node> FindAndValidateNode(const char *objectName, uint32_t userId, uint32_t accessRights, std::string *errorMessage)
+static shared_ptr<Node> FindAndValidateNode(json_t *arguments, uint32_t userId, uint32_t accessRights, std::string *errorMessage)
 {
-   if ((objectName == nullptr) || (objectName[0] == 0))
-   {
-      *errorMessage = "Object name or ID must be provided";
-      return shared_ptr<Node>();
-   }
-
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(objectName, OBJECT_NODE));
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
    {
-      char buffer[256];
-      snprintf(buffer, 256, "Node with name or ID \"%s\" is not known", objectName);
-      *errorMessage = buffer;
+      *errorMessage = "Node not found";
       return shared_ptr<Node>();
    }
 
    if (!node->checkAccessRights(userId, accessRights))
    {
-      char buffer[256];
-      snprintf(buffer, 256, "Insufficient rights to access node \"%s\"", objectName);
-      *errorMessage = buffer;
+      *errorMessage = "Access denied";
       return shared_ptr<Node>();
    }
 
@@ -138,7 +128,7 @@ static void AddConfigToJson(json_t *json, const char *fieldName, const BYTE *con
 std::string F_GetBackupStatus(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(json_object_get_string_utf8(arguments, "object", nullptr), userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
       return error;
 
@@ -177,7 +167,7 @@ std::string F_GetBackupStatus(json_t *arguments, uint32_t userId)
 std::string F_GetBackupList(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(json_object_get_string_utf8(arguments, "object", nullptr), userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
       return error;
 
@@ -215,7 +205,7 @@ std::string F_GetBackupList(json_t *arguments, uint32_t userId)
 std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(json_object_get_string_utf8(arguments, "object", nullptr), userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
       return error;
 
@@ -251,7 +241,7 @@ std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
 std::string F_StartBackup(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(json_object_get_string_utf8(arguments, "object", nullptr), userId, OBJECT_ACCESS_CONTROL, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_CONTROL, &error);
    if (node == nullptr)
       return error;
 
@@ -275,7 +265,7 @@ std::string F_StartBackup(json_t *arguments, uint32_t userId)
 std::string F_CompareBackups(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(json_object_get_string_utf8(arguments, "object", nullptr), userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
       return error;
 

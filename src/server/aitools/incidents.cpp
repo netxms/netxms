@@ -285,13 +285,11 @@ static std::string QueryObjectIncidents(const shared_ptr<NetObj>& object, bool o
  */
 std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Object not found or access denied");
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      return std::string("Access denied");
 
    uint32_t maxCount = json_object_get_uint32(arguments, "max_count", 20);
    if (maxCount > 100)
@@ -713,13 +711,11 @@ std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId)
  */
 std::string F_GetOpenIncidents(json_t *arguments, uint32_t userId)
 {
-   const char *objectName = json_object_get_string_utf8(arguments, "object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
-   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Object not found or access denied");
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
+      return std::string("Access denied");
 
    return QueryObjectIncidents(object, true, 0);
 }
@@ -733,11 +729,7 @@ std::string F_CreateIncident(json_t *arguments, uint32_t userId)
    if ((title == nullptr) || (title[0] == 0))
       return std::string("Incident title must be provided");
 
-   const char *objectName = json_object_get_string_utf8(arguments, "source_object", nullptr);
-   if ((objectName == nullptr) || (objectName[0] == 0))
-      return std::string("Source object name or ID must be provided");
-
-   shared_ptr<NetObj> object = FindObjectByNameOrId(objectName);
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "source_object");
    if (object == nullptr)
       return std::string("Source object not found");
 
