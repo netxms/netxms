@@ -43,4 +43,11 @@ When creating metrics, select the appropriate data origin based on what is avail
 - Data aggregation and statistical analysis
 - Performance baseline establishment
 
+### Efficient Visualization
+When the client supports visualizations and the user asks to **show**, **display**, or **plot** historical data for known DCI(s) without requesting analysis, calculations, or comparisons with other data:
+- Do NOT call `get-historical-data` to fetch the data points
+- Instead, use `get-metrics` to find the DCI ID, then return a `dci-chart` visualization block so the client fetches data directly from the server
+- This is significantly more efficient because raw data points don't pass through the conversation
+- Use `get-historical-data` only when you need to **analyze**, **calculate**, **compare**, or **process** the data before presenting it
+
 Use this skill when you need to monitor system performance, track resource utilization, analyze trends, detect anomalies, or establish monitoring for new infrastructure components.
