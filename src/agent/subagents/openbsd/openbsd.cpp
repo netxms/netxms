@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for OpenBSD
 ** Copyright (C) 2004-2020 Raden Solutions
 **
@@ -86,6 +86,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 #endif
 
 	{ _T("Net.IP.Forwarding"), H_NetIpForwarding, (const TCHAR *)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
+	{ _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+	{ _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
 	{ _T("Net.IP6.Forwarding"), H_NetIpForwarding, (const TCHAR *)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },
 
 	{ _T("Process.Count(*)"),             H_ProcessCount,    (const TCHAR *)0,

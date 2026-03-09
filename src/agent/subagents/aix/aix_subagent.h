@@ -36,7 +36,7 @@
 /**
  * CPU stats
  */
-enum 
+enum
 {
 	CPU_USAGE_OVERALL,
 	CPU_USAGE_USER,
@@ -217,6 +217,8 @@ void ShutdownIOStatCollector();
 void ClearLvmData();
 
 void ClearNetworkData();
+
+LONG H_NetTCPConnections(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 // Global variables
 extern BOOL g_bShutdown;

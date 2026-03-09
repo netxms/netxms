@@ -177,6 +177,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+   { _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
 
    { _T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
    { _T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
@@ -392,7 +394,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *value)
 {
    return H_NetInterfaceList(_T("Net.InterfaceList"), nullptr, value, nullptr) == SYSINFO_RC_SUCCESS;
-}  
+}
 
 /**
  * Entry point for server: get ARP cache

@@ -312,7 +312,7 @@ retry_ifconf:
          int j;
          for(j = 0; j < nifs; j++)
 				if (!strcmp(ifl[j].name, ifc.ifc_req[i].ifr_name) &&
-				    (((ifc.ifc_req[i].ifr_addr.sa_family == AF_INET) && 
+				    (((ifc.ifc_req[i].ifr_addr.sa_family == AF_INET) &&
 				      (((struct sockaddr_in *)&ifc.ifc_req[i].ifr_addr)->sin_addr.s_addr == ifl[j].ip)) ||
 				     (ifc.ifc_req[i].ifr_addr.sa_family != AF_INET) ||
 				     (ifl[j].ip == 0)))
@@ -328,7 +328,7 @@ retry_ifconf:
 			if (ifc.ifc_req[i].ifr_addr.sa_family == AF_INET)
 			{
 				ifl[j].ip = ((struct sockaddr_in *)&ifc.ifc_req[i].ifr_addr)->sin_addr.s_addr;
-	         
+
             struct ifreq ifr;
 				strcpy(ifr.ifr_name, ifc.ifc_req[i].ifr_name);
 				ifr.ifr_addr.sa_family = AF_INET;
@@ -528,5 +528,151 @@ LONG H_NetRoutingTable(const TCHAR *param, const TCHAR *arg, StringList *value, 
    }
 
    MemFree(rt);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * TCP connection state codes (MIB-II / RFC 2012)
+ */
+enum
+{
+   TCP_STATE_CLOSED = 1,
+   TCP_STATE_LISTEN = 2,
+   TCP_STATE_SYN_SENT = 3,
+   TCP_STATE_SYN_RECEIVED = 4,
+   TCP_STATE_ESTABLISHED = 5,
+   TCP_STATE_FIN_WAIT1 = 6,
+   TCP_STATE_FIN_WAIT2 = 7,
+   TCP_STATE_CLOSE_WAIT = 8,
+   TCP_STATE_LAST_ACK = 9,
+   TCP_STATE_CLOSING = 10,
+   TCP_STATE_TIME_WAIT = 11
+};
+
+/**
+ * Parse TCP state name to MIB-II state code
+ */
+static int TCPStateFromName(const TCHAR *name)
+{
+   static struct { const TCHAR *name; int code; } stateMap[] =
+   {
+      { _T("ESTABLISHED"), TCP_STATE_ESTABLISHED },
+      { _T("SYN_SENT"), TCP_STATE_SYN_SENT },
+      { _T("SYN_RECV"), TCP_STATE_SYN_RECEIVED },
+      { _T("FIN_WAIT1"), TCP_STATE_FIN_WAIT1 },
+      { _T("FIN_WAIT2"), TCP_STATE_FIN_WAIT2 },
+      { _T("TIME_WAIT"), TCP_STATE_TIME_WAIT },
+      { _T("CLOSE"), TCP_STATE_CLOSED },
+      { _T("CLOSE_WAIT"), TCP_STATE_CLOSE_WAIT },
+      { _T("LAST_ACK"), TCP_STATE_LAST_ACK },
+      { _T("LISTEN"), TCP_STATE_LISTEN },
+      { _T("CLOSING"), TCP_STATE_CLOSING },
+      { nullptr, 0 }
+   };
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!_tcsicmp(name, stateMap[i].name))
+         return stateMap[i].code;
+   }
+   return -1;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ * Uses netstat command to count TCP connections by state on AIX
+ */
+/**
+ * Parse netstat output line and return state code, or -1 if not a TCP line
+ */
+static int ParseNetstatTCPState(const char *line)
+{
+   char state[32];
+   if (sscanf(line, " tcp%*[46] %*d %*d %*s %*s %31s", state) != 1)
+      return -1;
+
+   if (!strcasecmp(state, "ESTABLISHED"))
+      return TCP_STATE_ESTABLISHED;
+   if (!strcasecmp(state, "SYN_SENT"))
+      return TCP_STATE_SYN_SENT;
+   if (!strcasecmp(state, "SYN_RCVD") || !strcasecmp(state, "SYN_RECV"))
+      return TCP_STATE_SYN_RECEIVED;
+   if (!strcasecmp(state, "FIN_WAIT_1") || !strcasecmp(state, "FIN_WAIT1"))
+      return TCP_STATE_FIN_WAIT1;
+   if (!strcasecmp(state, "FIN_WAIT_2") || !strcasecmp(state, "FIN_WAIT2"))
+      return TCP_STATE_FIN_WAIT2;
+   if (!strcasecmp(state, "TIME_WAIT"))
+      return TCP_STATE_TIME_WAIT;
+   if (!strcasecmp(state, "CLOSED") || !strcasecmp(state, "CLOSE"))
+      return TCP_STATE_CLOSED;
+   if (!strcasecmp(state, "CLOSE_WAIT"))
+      return TCP_STATE_CLOSE_WAIT;
+   if (!strcasecmp(state, "LAST_ACK"))
+      return TCP_STATE_LAST_ACK;
+   if (!strcasecmp(state, "LISTEN"))
+      return TCP_STATE_LISTEN;
+   if (!strcasecmp(state, "CLOSING"))
+      return TCP_STATE_CLOSING;
+   return -1;
+}
+
+/**
+ * Count TCP connections from netstat output for given address family
+ */
+static int CountTCPConnectionsFromNetstat(const char *family, int targetState)
+{
+   char cmd[128];
+   snprintf(cmd, sizeof(cmd), "/usr/bin/netstat -an -f %s -p tcp 2>/dev/null", family);
+
+   FILE *hFile = popen(cmd, "r");
+   if (hFile == nullptr)
+      return 0;
+
+   int count = 0;
+   char line[256];
+   while (fgets(line, sizeof(line), hFile) != nullptr)
+   {
+      int lineState = ParseNetstatTCPState(line);
+      if (lineState != -1 && (targetState == -1 || lineState == targetState))
+         count++;
+   }
+   pclose(hFile);
+   return count;
+}
+
+LONG H_NetTCPConnections(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == _T('O'))
+   {
+      OptionList options(param);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int count = 0;
+   if (ipVersion != 6)
+      count += CountTCPConnectionsFromNetstat("inet", targetState);
+   if (ipVersion != 4)
+      count += CountTCPConnectionsFromNetstat("inet6", targetState);
+
+   ret_int(value, count);
    return SYSINFO_RC_SUCCESS;
 }

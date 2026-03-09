@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
@@ -36,6 +36,8 @@
 #include <net/route.h>
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
+#include <netinet/tcp_var.h>
+#include <netinet/tcp_fsm.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <kvm.h>
@@ -451,7 +453,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, Abs
 					pList[nIfCount-1].addr = pTmp;
 					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
 						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
+					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask =
 						BitsInMask(htonl(((struct sockaddr_in *)
 										(pNext->ifa_netmask))->sin_addr.s_addr));
 				}
@@ -628,6 +630,106 @@ LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue, Ab
 	}
 
 	return nRet;
+}
+
+/**
+ * Parse TCP state name to BSD tcp_fsm.h state code
+ */
+static int TCPStateFromName(const char *name)
+{
+   static struct { const char *name; int code; } stateMap[] =
+   {
+      { "ESTABLISHED", TCPS_ESTABLISHED },
+      { "SYN_SENT", TCPS_SYN_SENT },
+      { "SYN_RECV", TCPS_SYN_RECEIVED },
+      { "FIN_WAIT1", TCPS_FIN_WAIT_1 },
+      { "FIN_WAIT2", TCPS_FIN_WAIT_2 },
+      { "TIME_WAIT", TCPS_TIME_WAIT },
+      { "CLOSE", TCPS_CLOSED },
+      { "CLOSE_WAIT", TCPS_CLOSE_WAIT },
+      { "LAST_ACK", TCPS_LAST_ACK },
+      { "LISTEN", TCPS_LISTEN },
+      { "CLOSING", TCPS_CLOSING },
+      { nullptr, 0 }
+   };
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!strcasecmp(name, stateMap[i].name))
+         return stateMap[i].code;
+   }
+   return -1;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ * Uses sysctl to get TCP PCB list
+ */
+/**
+ * Count TCP connections from sysctl pcblist for given address family
+ */
+static int CountTCPConnectionsFromPCBList(int family, int targetState)
+{
+   int mib[] = { CTL_NET, family, IPPROTO_TCP, TCPCTL_PCBLIST };
+   size_t len = 0;
+   if (sysctl(mib, 4, nullptr, &len, nullptr, 0) != 0)
+      return 0;
+
+   char *buf = static_cast<char*>(MemAlloc(len));
+   if (sysctl(mib, 4, buf, &len, nullptr, 0) != 0)
+   {
+      MemFree(buf);
+      return 0;
+   }
+
+   int count = 0;
+   struct kinfo_pcb *kp = reinterpret_cast<struct kinfo_pcb*>(buf);
+   int nEntries = static_cast<int>(len / sizeof(struct kinfo_pcb));
+   for (int i = 0; i < nEntries; i++)
+   {
+      if (targetState == -1 || kp[i].ki_tstate == targetState)
+         count++;
+   }
+
+   MemFree(buf);
+   return count;
+}
+
+LONG H_NetTCPConnections(const char *param, const char *arg, char *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == 'O')
+   {
+      OptionList options(param);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int count = 0;
+   if (ipVersion != 6)
+      count += CountTCPConnectionsFromPCBList(PF_INET, targetState);
+   if (ipVersion != 4)
+      count += CountTCPConnectionsFromPCBList(PF_INET6, targetState);
+
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

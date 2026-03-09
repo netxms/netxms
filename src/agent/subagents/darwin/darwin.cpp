@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for Darwin
 ** Copyright (C) 2012 Alex Kirhenshtein
 **
@@ -164,6 +164,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.IO.WriteRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
 
    { _T("Net.IP.Forwarding"),            H_NetIpForwarding, (const TCHAR *)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
+   { _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+   { _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
    { _T("Net.IP6.Forwarding"),           H_NetIpForwarding, (const TCHAR *)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },
    { _T("Net.Interface.BytesIn(*)"),     H_NetIfInfo,       (const TCHAR *)IF_INFO_BYTES_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESIN },
    { _T("Net.Interface.BytesIn64(*)"),   H_NetIfInfo,       (const TCHAR *)IF_INFO_BYTES_IN_64, DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_BYTESIN },

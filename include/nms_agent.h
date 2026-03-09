@@ -457,6 +457,8 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_NET_INTERFACE_PACKETSOUT             _T("Number of output packets on interface {instance}")
 #define DCIDESC_NET_INTERFACE_SPEED                  _T("Speed of interface {instance}")
 #define DCIDESC_NET_IP_FORWARDING                    _T("IP forwarding status")
+#define DCIDESC_NET_IP_STATS_TCPCONNECTIONS          _T("Number of TCP connections")
+#define DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F        _T("Number of TCP connections (filtered by state and/or IP version)")
 #define DCIDESC_NET_IP6_FORWARDING                   _T("IPv6 forwarding status")
 #define DCIDESC_NET_RESOLVER_ADDRBYNAME              _T("Resolver: address for name {instance}")
 #define DCIDESC_NET_RESOLVER_NAMEBYADDR              _T("Resolver: name for address {instance}")

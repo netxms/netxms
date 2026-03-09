@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004-2025 Raden Solutions
 **
@@ -135,7 +135,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
 /**
  * Parameters provided by subagent
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] = 
+static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Agent.SourcePackageSupport"), H_SourcePkgSupport, nullptr, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
@@ -231,6 +231,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetIfInfoSpeed, _T("S"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
    { _T("Net.IP.Forwarding"), H_NetIpForwarding, (TCHAR*)4, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
+   { _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+   { _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
    { _T("Net.IP6.Forwarding"), H_NetIpForwarding, (TCHAR*)6, DCI_DT_INT, DCIDESC_NET_IP6_FORWARDING },
 
 #if SIZEOF_LONG > 4

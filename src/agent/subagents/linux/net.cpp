@@ -1,4 +1,4 @@
-/* 
+/*
  ** NetXMS subagent for GNU/Linux
  ** Copyright (C) 2004-2025 Raden Solutions
  **
@@ -575,7 +575,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
       if ((attribute->rta_type == IFA_LOCAL) || (attribute->rta_type == IFA_ADDRESS))
       {
          delete addr;  // if it was created from IFA_ADDRESS
-         addr = (addrMsg->ifa_family == AF_INET) ? 
+         addr = (addrMsg->ifa_family == AF_INET) ?
                new InetAddress(ntohl(*static_cast<uint32_t*>(RTA_DATA(attribute)))) :
                new InetAddress(static_cast<BYTE*>(RTA_DATA(attribute)));
          if (attribute->rta_type == IFA_LOCAL)
@@ -1368,4 +1368,100 @@ LONG H_NetIpNeighborsTable(const TCHAR *param, const TCHAR *arg, Table *value, A
 LONG H_NetIpNeighborsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    return IPNeighborsImpl(nullptr, value);
+}
+
+/**
+ * Parse TCP state name to /proc/net/tcp state code
+ */
+static int TCPStateFromName(const TCHAR *name)
+{
+   static struct { const TCHAR *name; int code; } stateMap[] =
+   {
+      { _T("ESTABLISHED"), 1 },
+      { _T("SYN_SENT"), 2 },
+      { _T("SYN_RECV"), 3 },
+      { _T("FIN_WAIT1"), 4 },
+      { _T("FIN_WAIT2"), 5 },
+      { _T("TIME_WAIT"), 6 },
+      { _T("CLOSE"), 7 },
+      { _T("CLOSE_WAIT"), 8 },
+      { _T("LAST_ACK"), 9 },
+      { _T("LISTEN"), 10 },
+      { _T("CLOSING"), 11 },
+      { nullptr, 0 }
+   };
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!_tcsicmp(name, stateMap[i].name))
+         return stateMap[i].code;
+   }
+   return -1;
+}
+
+/**
+ * Count TCP connections in a /proc/net/tcp file
+ */
+static int CountTCPConnectionsInFile(const char *fileName, int targetState)
+{
+   int count = 0;
+   FILE *hFile = fopen(fileName, "r");
+   if (hFile != nullptr)
+   {
+      char line[256];
+      if (fgets(line, sizeof(line), hFile) != nullptr) // Skip header
+      {
+         while (fgets(line, sizeof(line), hFile) != nullptr)
+         {
+            unsigned int state;
+            if (sscanf(line, " %*u: %*s %*s %x", &state) == 1)
+            {
+               if (targetState == -1 || static_cast<int>(state) == targetState)
+                  count++;
+            }
+         }
+      }
+      fclose(hFile);
+   }
+   return count;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ */
+LONG H_NetTCPConnections(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == _T('O'))
+   {
+      OptionList options(param);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int count = 0;
+   if (ipVersion != 6)
+      count += CountTCPConnectionsInFile("/proc/net/tcp", targetState);
+   if (ipVersion != 4)
+      count += CountTCPConnectionsInFile("/proc/net/tcp6", targetState);
+
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
@@ -57,5 +57,6 @@ LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommS
 LONG H_NetIfInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetInterface64bitSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetIfInfoSpeed(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
+LONG H_NetTCPConnections(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __NET_H__

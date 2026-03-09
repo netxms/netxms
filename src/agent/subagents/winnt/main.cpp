@@ -60,6 +60,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetTCPConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
@@ -283,6 +284,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_SPEED, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_SPEED },
 
    { _T("Net.IP.Forwarding"), H_NetIPStats, (TCHAR *)NETINFO_IP_FORWARDING, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
+   { _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+   { _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
 
 	{ _T("Net.RemoteShareStatus(*)"), H_RemoteShareStatus, _T("C"), DCI_DT_INT, _T("Status of remote shared resource") },
 	{ _T("Net.RemoteShareStatusText(*)"), H_RemoteShareStatus, _T("T"), DCI_DT_STRING, _T("Status of remote shared resource as text") },
@@ -318,7 +321,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("System.CPU.Interrupts"), H_CpuInterrupts, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
 	{ _T("System.CPU.Interrupts(*)"), H_CpuInterrupts, _T("C"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS_EX },
 	{ _T("System.CPU.ContextSwitches"), H_CpuContextSwitches, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
-   
+
    { _T("System.CPU.Count"), H_CpuCount, nullptr, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
 
    { _T("System.CPU.CurrentUsage"), H_CpuUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR },
@@ -338,31 +341,31 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.CPU.Usage.Irq"), H_CpuUsage, _T("T1q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IRQ },
    { _T("System.CPU.Usage.System"), H_CpuUsage, _T("T1s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM },
    { _T("System.CPU.Usage.User"), H_CpuUsage, _T("T1u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER },
-	
+
    { _T("System.CPU.Usage(*)"), H_CpuUsage, _T("C1U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
    { _T("System.CPU.Usage.Idle(*)"), H_CpuUsage, _T("C1I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
    { _T("System.CPU.Usage.Irq(*)"), H_CpuUsage, _T("C1q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IRQ_EX },
    { _T("System.CPU.Usage.System(*)"), H_CpuUsage, _T("C1s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX },
    { _T("System.CPU.Usage.User(*)"), H_CpuUsage, _T("C1u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER_EX },
-   
+
    { _T("System.CPU.Usage5"), H_CpuUsage, _T("T2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
    { _T("System.CPU.Usage5.Idle"), H_CpuUsage, _T("T2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
    { _T("System.CPU.Usage5.Irq"), H_CpuUsage, _T("T2q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IRQ },
    { _T("System.CPU.Usage5.System"), H_CpuUsage, _T("T2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM },
    { _T("System.CPU.Usage5.User"), H_CpuUsage, _T("T2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER },
-   
+
    { _T("System.CPU.Usage5(*)"), H_CpuUsage, _T("C2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage5.Idle(*)"), H_CpuUsage, _T("C2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
    { _T("System.CPU.Usage5.Irq(*)"), H_CpuUsage, _T("C2q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IRQ_EX },
    { _T("System.CPU.Usage5.System(*)"), H_CpuUsage, _T("C2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
    { _T("System.CPU.Usage5.User(*)"), H_CpuUsage, _T("C2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
-   
+
    { _T("System.CPU.Usage15"), H_CpuUsage, _T("T3U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
    { _T("System.CPU.Usage15.Idle"), H_CpuUsage, _T("T3I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
    { _T("System.CPU.Usage15.Irq"), H_CpuUsage, _T("T3q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IRQ },
    { _T("System.CPU.Usage15.System"), H_CpuUsage, _T("T3s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM },
    { _T("System.CPU.Usage15.User"), H_CpuUsage, _T("T3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER },
-   
+
    { _T("System.CPU.Usage15(*)"), H_CpuUsage, _T("C3U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
    { _T("System.CPU.Usage15.Idle(*)"), H_CpuUsage, _T("C3I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
    { _T("System.CPU.Usage15.Irq(*)"), H_CpuUsage, _T("C3q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IRQ_EX },

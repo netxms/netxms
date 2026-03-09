@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
@@ -41,6 +41,7 @@ LONG H_NetArpCache(const char *, const char *, StringList *, AbstractCommSession
 LONG H_NetIfList(const char *, const char *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const char *, const char *, StringList *, AbstractCommSession *);
 LONG H_NetIfInfoFromKVM(const char *, const char *, char *, AbstractCommSession *);
+LONG H_NetTCPConnections(const char *, const char *, char *, AbstractCommSession *);
 
 #endif // __NET_H__
 

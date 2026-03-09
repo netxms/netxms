@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for MINIX 3
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
@@ -89,6 +89,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT,
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ "Net.IP.Stats.TCPConnections", H_NetTCPConnections, "T", DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+	{ "Net.IP.Stats.TCPConnections(*)", H_NetTCPConnections, "O", DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
 
 	{ "Process.Count(*)",             H_ProcessCount,    "P",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
 	{ "Process.CountEx(*)",           H_ProcessCount,    "E",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },

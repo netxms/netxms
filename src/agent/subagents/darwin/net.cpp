@@ -29,6 +29,10 @@
 #include <net/if_dl.h>
 #include <net/route.h>
 #include <netinet/if_ether.h>
+#include <netinet/in.h>
+#include <netinet/in_pcb.h>
+#include <netinet/tcp_var.h>
+#include <netinet/tcp_fsm.h>
 #include <ifaddrs.h>
 #include <nlist.h>
 
@@ -588,4 +592,99 @@ LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 
    freeifaddrs(ifaddr);
    return result;
+}
+
+/**
+ * Parse TCP state name to BSD tcp_fsm.h state code
+ */
+static int TCPStateFromName(const TCHAR *name)
+{
+   static struct { const TCHAR *name; int code; } stateMap[] =
+   {
+      { _T("ESTABLISHED"), TCPS_ESTABLISHED },
+      { _T("SYN_SENT"), TCPS_SYN_SENT },
+      { _T("SYN_RECV"), TCPS_SYN_RECEIVED },
+      { _T("FIN_WAIT1"), TCPS_FIN_WAIT_1 },
+      { _T("FIN_WAIT2"), TCPS_FIN_WAIT_2 },
+      { _T("TIME_WAIT"), TCPS_TIME_WAIT },
+      { _T("CLOSE"), TCPS_CLOSED },
+      { _T("CLOSE_WAIT"), TCPS_CLOSE_WAIT },
+      { _T("LAST_ACK"), TCPS_LAST_ACK },
+      { _T("LISTEN"), TCPS_LISTEN },
+      { _T("CLOSING"), TCPS_CLOSING },
+      { nullptr, 0 }
+   };
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!_tcsicmp(name, stateMap[i].name))
+         return stateMap[i].code;
+   }
+   return -1;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ * Uses sysctlbyname("net.inet.tcp.pcblist") to enumerate TCP connections
+ */
+LONG H_NetTCPConnections(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == _T('O'))
+   {
+      OptionList options(param);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int count = 0;
+   size_t len = 0;
+   if (sysctlbyname("net.inet.tcp.pcblist", nullptr, &len, nullptr, 0) != 0)
+      return SYSINFO_RC_ERROR;
+
+   char *buf = static_cast<char*>(MemAlloc(len));
+   if (sysctlbyname("net.inet.tcp.pcblist", buf, &len, nullptr, 0) != 0)
+   {
+      MemFree(buf);
+      return SYSINFO_RC_ERROR;
+   }
+
+   struct xinpgen *xig = reinterpret_cast<struct xinpgen*>(buf);
+   struct xinpgen *end = reinterpret_cast<struct xinpgen*>(buf + len);
+
+   // Skip the first xinpgen (header)
+   xig = reinterpret_cast<struct xinpgen*>(reinterpret_cast<char*>(xig) + xig->xig_len);
+
+   while (xig < end && xig->xig_len > sizeof(struct xinpgen))
+   {
+      struct xtcpcb *tp = reinterpret_cast<struct xtcpcb*>(xig);
+      bool matchState = (targetState == -1 || tp->xt_tp.t_state == targetState);
+      bool matchVersion = (ipVersion == 0) ||
+                          (ipVersion == 4 && (tp->xt_inp.inp_vflag & INP_IPV4)) ||
+                          (ipVersion == 6 && (tp->xt_inp.inp_vflag & INP_IPV6));
+      if (matchState && matchVersion)
+         count++;
+      xig = reinterpret_cast<struct xinpgen*>(reinterpret_cast<char*>(xig) + xig->xig_len);
+   }
+
+   MemFree(buf);
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
 }

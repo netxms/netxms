@@ -117,7 +117,7 @@ LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractC
          for(j = 0; j < arpCache->table[i].dwPhysAddrLen; j++)
             _sntprintf(&szBuffer[j << 1], 4, _T("%02X"), arpCache->table[i].bPhysAddr[j]);
          _sntprintf(&szBuffer[j << 1], 25, _T(" %d.%d.%d.%d %d"), arpCache->table[i].dwAddr & 255,
-                    (arpCache->table[i].dwAddr >> 8) & 255, 
+                    (arpCache->table[i].dwAddr >> 8) & 255,
                     (arpCache->table[i].dwAddr >> 16) & 255, arpCache->table[i].dwAddr >> 24,
                     arpCache->table[i].dwIndex);
 			value->add(szBuffer);
@@ -228,8 +228,8 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
             {
                InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
                addr.setMaskBits(pAddr->OnLinkPrefixLength);
-               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex, 
-                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, 
+               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex,
+                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType,
                           iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
                value->add(adapterInfo);
             }
@@ -300,6 +300,113 @@ LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
    }
 
    return iResult;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ */
+/**
+ * Parse TCP state name to Windows MIB_TCP_STATE code
+ */
+static int TCPStateFromName(const TCHAR *name)
+{
+   static struct { const TCHAR *name; DWORD code; } stateMap[] =
+   {
+      { _T("ESTABLISHED"), MIB_TCP_STATE_ESTAB },
+      { _T("SYN_SENT"), MIB_TCP_STATE_SYN_SENT },
+      { _T("SYN_RECV"), MIB_TCP_STATE_SYN_RCVD },
+      { _T("FIN_WAIT1"), MIB_TCP_STATE_FIN_WAIT1 },
+      { _T("FIN_WAIT2"), MIB_TCP_STATE_FIN_WAIT2 },
+      { _T("TIME_WAIT"), MIB_TCP_STATE_TIME_WAIT },
+      { _T("CLOSE"), MIB_TCP_STATE_CLOSED },
+      { _T("CLOSE_WAIT"), MIB_TCP_STATE_CLOSE_WAIT },
+      { _T("LAST_ACK"), MIB_TCP_STATE_LAST_ACK },
+      { _T("LISTEN"), MIB_TCP_STATE_LISTEN },
+      { _T("CLOSING"), MIB_TCP_STATE_CLOSING },
+      { nullptr, 0 }
+   };
+
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!_tcsicmp(name, stateMap[i].name))
+         return static_cast<int>(stateMap[i].code);
+   }
+   return -1;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ */
+LONG H_NetTCPConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == _T('O'))
+   {
+      OptionList options(cmd);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int count = 0;
+
+   // Count IPv4 TCP connections
+   if (ipVersion != 6)
+   {
+      DWORD size = 0;
+      if (GetExtendedTcpTable(nullptr, &size, FALSE, AF_INET, TCP_TABLE_BASIC_ALL, 0) == ERROR_INSUFFICIENT_BUFFER)
+      {
+         MIB_TCPTABLE *tcpTable = static_cast<MIB_TCPTABLE*>(MemAlloc(size));
+         if (GetExtendedTcpTable(tcpTable, &size, FALSE, AF_INET, TCP_TABLE_BASIC_ALL, 0) == NO_ERROR)
+         {
+            for (DWORD i = 0; i < tcpTable->dwNumEntries; i++)
+            {
+               if (targetState == -1 || static_cast<int>(tcpTable->table[i].dwState) == targetState)
+                  count++;
+            }
+         }
+         MemFree(tcpTable);
+      }
+   }
+
+   // Count IPv6 TCP connections
+   if (ipVersion != 4)
+   {
+      DWORD size = 0;
+      if (GetExtendedTcpTable(nullptr, &size, FALSE, AF_INET6, TCP_TABLE_BASIC_ALL, 0) == ERROR_INSUFFICIENT_BUFFER)
+      {
+         MIB_TCP6TABLE *tcp6Table = static_cast<MIB_TCP6TABLE*>(MemAlloc(size));
+         if (GetExtendedTcpTable(tcp6Table, &size, FALSE, AF_INET6, TCP_TABLE_BASIC_ALL, 0) == NO_ERROR)
+         {
+            for (DWORD i = 0; i < tcp6Table->dwNumEntries; i++)
+            {
+               if (targetState == -1 || static_cast<int>(tcp6Table->table[i].State) == targetState)
+                  count++;
+            }
+         }
+         MemFree(tcp6Table);
+      }
+   }
+
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -479,7 +586,7 @@ LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value,
       if ((proto == MIB_IPPROTO_NT_AUTOSTATIC) || (proto == MIB_IPPROTO_NT_STATIC) || (proto == MIB_IPPROTO_NT_STATIC_NON_DOD))
          proto = MIB_IPPROTO_LOCAL;
 
-      _sntprintf(buffer, 256, _T("%s/%d %s %u %u %u %u"), 
+      _sntprintf(buffer, 256, _T("%s/%d %s %u %u %u %u"),
                  IpToStr(ntohl(routingTable->table[i].dwForwardDest), destAddr),
                  BitsInMask(ntohl(routingTable->table[i].dwForwardMask)),
                  IpToStr(ntohl(routingTable->table[i].dwForwardNextHop), nextHop),

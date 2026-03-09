@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
@@ -59,5 +59,6 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSes
 #else
 LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 #endif
+LONG H_NetTCPConnections(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __NET_H__

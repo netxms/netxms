@@ -24,6 +24,9 @@
 #include <net/if.h>
 #include <sys/sockio.h>
 #include <sys/utsname.h>
+#include <stropts.h>
+#include <sys/tihdr.h>
+#include <inet/mib2.h>
 
 #ifndef LIFC_ALLZONES
 #define LIFC_ALLZONES 0
@@ -332,7 +335,7 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
    {
       nFd = socket(AF_INET, SOCK_DGRAM, 0);
       if (nFd >= 0)
-      {			  
+      {
          strcpy(rq.lifr_name, szIfName);
          if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
          {
@@ -343,7 +346,7 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
          {
             AgentWriteDebugLog(5, _T("SunOS: H_NetIfAdminStatus: call to ioctl() failed (%s)"), _tcserror(errno));
          }
-         close(nFd);				  
+         close(nFd);
       }
       else
       {
@@ -500,7 +503,7 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
       {
          nFd = socket(AF_INET, SOCK_DGRAM, 0);
          if (nFd >= 0)
-         {			  
+         {
             strcpy(rq.lifr_name, szIfName);
             if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
             {
@@ -513,4 +516,177 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
    }
 
    return nRet;
+}
+
+/**
+ * Parse TCP state name to MIB-II state code
+ */
+static int TCPStateFromName(const TCHAR *name)
+{
+   static struct { const TCHAR *name; int code; } stateMap[] =
+   {
+      { _T("ESTABLISHED"), MIB2_TCP_established },
+      { _T("SYN_SENT"), MIB2_TCP_synSent },
+      { _T("SYN_RECV"), MIB2_TCP_synReceived },
+      { _T("FIN_WAIT1"), MIB2_TCP_finWait1 },
+      { _T("FIN_WAIT2"), MIB2_TCP_finWait2 },
+      { _T("TIME_WAIT"), MIB2_TCP_timeWait },
+      { _T("CLOSE"), MIB2_TCP_closed },
+      { _T("CLOSE_WAIT"), MIB2_TCP_closeWait },
+      { _T("LAST_ACK"), MIB2_TCP_lastAck },
+      { _T("LISTEN"), MIB2_TCP_listen },
+      { _T("CLOSING"), MIB2_TCP_closing },
+      { nullptr, 0 }
+   };
+   for (int i = 0; stateMap[i].name != nullptr; i++)
+   {
+      if (!_tcsicmp(name, stateMap[i].name))
+         return stateMap[i].code;
+   }
+   return -1;
+}
+
+/**
+ * Count TCP connections in MIB2 response data buffer
+ */
+static int CountTCPConnectionsInBuffer(const char *data, int dataLen, int entrySize, int stateOffset, int targetState)
+{
+   int count = 0;
+   int nEntries = dataLen / entrySize;
+   for (int i = 0; i < nEntries; i++)
+   {
+      int state = *reinterpret_cast<const int*>(data + (i * entrySize) + stateOffset);
+      if (targetState == -1 || state == targetState)
+         count++;
+   }
+   return count;
+}
+
+/**
+ * Handler for Net.IP.Stats.TCPConnections and Net.IP.Stats.TCPConnections(*)
+ * Uses STREAMS MIB2 interface to enumerate TCP connections
+ */
+LONG H_NetTCPConnections(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int targetState = -1;
+   int ipVersion = 0; // 0 = both, 4 = IPv4 only, 6 = IPv6 only
+
+   if (arg[0] == _T('O'))
+   {
+      OptionList options(param);
+      if (!options.isValid())
+         return SYSINFO_RC_UNSUPPORTED;
+
+      const TCHAR *state = options.get(_T("state"));
+      if (state != nullptr)
+      {
+         targetState = TCPStateFromName(state);
+         if (targetState == -1)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+
+      const TCHAR *version = options.get(_T("version"));
+      if (version != nullptr)
+      {
+         ipVersion = _tcstol(version, nullptr, 10);
+         if (ipVersion != 4 && ipVersion != 6)
+            return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   int sd = open("/dev/arp", O_RDWR);
+   if (sd < 0)
+      return SYSINFO_RC_ERROR;
+
+   // Push tcp module onto the stream
+   if (ioctl(sd, I_PUSH, "tcp") < 0)
+   {
+      close(sd);
+      return SYSINFO_RC_ERROR;
+   }
+
+   // Request MIB2 TCP data
+   struct {
+      struct T_optmgmt_req req;
+      struct opthdr opt;
+   } treq;
+
+   treq.req.PRIM_type = T_SVR4_OPTMGMT_REQ;
+   treq.req.OPT_offset = (char *)&treq.opt - (char *)&treq;
+   treq.req.OPT_length = sizeof(struct opthdr);
+   treq.req.MGMT_flags = T_CURRENT;
+   treq.opt.level = MIB2_TCP;
+   treq.opt.name = 0;
+   treq.opt.len = 0;
+
+   struct strbuf ctlbuf;
+   ctlbuf.buf = reinterpret_cast<char*>(&treq);
+   ctlbuf.len = sizeof(treq);
+
+   if (putmsg(sd, &ctlbuf, nullptr, 0) < 0)
+   {
+      close(sd);
+      return SYSINFO_RC_ERROR;
+   }
+
+   int count = 0;
+   bool success = false;
+
+   struct {
+      struct T_optmgmt_ack ack;
+      struct opthdr opt;
+   } tack;
+
+   struct strbuf ctlrsp;
+   ctlrsp.buf = reinterpret_cast<char*>(&tack);
+   ctlrsp.maxlen = sizeof(tack);
+
+   char *data = static_cast<char*>(MemAlloc(65536));
+   struct strbuf datarsp;
+   datarsp.buf = data;
+   datarsp.maxlen = 65536;
+
+   int flags = 0;
+   int rc;
+   while ((rc = getmsg(sd, &ctlrsp, &datarsp, &flags)) >= 0)
+   {
+      if (tack.ack.PRIM_type != T_OPTMGMT_ACK)
+         break;
+
+      if (tack.opt.level == MIB2_TCP && datarsp.len > 0)
+      {
+         // IPv4 TCP connection entries
+         if (tack.opt.name == MIB2_TCP_CONN && ipVersion != 6)
+         {
+            count += CountTCPConnectionsInBuffer(data, datarsp.len,
+               sizeof(mib2_tcpConnEntry_t),
+               offsetof(mib2_tcpConnEntry_t, tcpConnState),
+               targetState);
+            success = true;
+         }
+#ifdef MIB2_TCP6_CONN
+         // IPv6 TCP connection entries
+         else if (tack.opt.name == MIB2_TCP6_CONN && ipVersion != 4)
+         {
+            count += CountTCPConnectionsInBuffer(data, datarsp.len,
+               sizeof(mib2_tcp6ConnEntry_t),
+               offsetof(mib2_tcp6ConnEntry_t, tcp6ConnState),
+               targetState);
+            success = true;
+         }
+#endif
+      }
+
+      if (rc == 0)
+         flags = 0;
+   }
+
+   MemFree(data);
+   close(sd);
+
+   if (!success)
+      return SYSINFO_RC_ERROR;
+
+   ret_int(value, count);
+   return SYSINFO_RC_SUCCESS;
 }

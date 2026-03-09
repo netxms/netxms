@@ -59,6 +59,7 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_NetTCPConnections(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_OSInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
 LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
@@ -128,8 +129,8 @@ static bool SubAgentInit(Config *config)
 {
    if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
       return false;
-  
-   char tmp[64]; 
+
+   char tmp[64];
    if(sysinfo(SI_VERSION, tmp, 64) != -1)
    {
       if(!memcmp(tmp, "11", 2))
@@ -268,6 +269,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets", DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.PacketsOut64(*)"), H_NetInterfaceStats, (const TCHAR*)"opackets64", DCI_DT_COUNTER64, DCIDESC_NET_INTERFACE_PACKETSOUT },
    { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (const TCHAR*)"ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.IP.Stats.TCPConnections"), H_NetTCPConnections, _T("T"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS },
+   { _T("Net.IP.Stats.TCPConnections(*)"), H_NetTCPConnections, _T("O"), DCI_DT_INT, DCIDESC_NET_IP_STATS_TCPCONNECTIONS_F },
 
    {_T("Process.Count(*)"), H_ProcessCount, _T("S"), DCI_DT_INT, DCIDESC_PROCESS_COUNT },
    {_T("Process.CountEx(*)"), H_ProcessCount, _T("E"), DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },

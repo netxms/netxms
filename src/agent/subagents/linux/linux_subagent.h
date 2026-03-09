@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004-2024 Raden Solutions
 **
@@ -221,6 +221,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
 LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session);
+LONG H_NetTCPConnections(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);

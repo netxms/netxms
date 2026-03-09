@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for Darwin
 ** Copyright (C) 2012 Alex Kirhenshtein
 **
@@ -51,5 +51,6 @@ LONG H_NetIfInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetTCPConnections(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __NET_H__
