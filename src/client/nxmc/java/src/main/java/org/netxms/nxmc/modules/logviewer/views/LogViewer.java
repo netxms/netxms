@@ -45,9 +45,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
@@ -188,7 +190,7 @@ public class LogViewer extends ViewWithContext
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		table.setLayoutData(fd);
-		
+
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -198,6 +200,8 @@ public class LogViewer extends ViewWithContext
 		createActions();
 		createPopupMenu();
 
+      actionExecute.setEnabled(false);
+      actionShowSql.setEnabled(false);
       enableRefresh(false);
    }
 
@@ -222,7 +226,7 @@ public class LogViewer extends ViewWithContext
       super.postContentCreate();
       openServerLog(false);
    }
-   
+
    /**
     * Open server log
     */
@@ -238,6 +242,8 @@ public class LogViewer extends ViewWithContext
                public void run()
                {
                   logHandle = handle;
+                  actionExecute.setEnabled(true);
+                  actionShowSql.setEnabled(true);
                   setupLogViewer(onClone);
                   if (delayedQueryFilter != null)
                   {
@@ -282,7 +288,7 @@ public class LogViewer extends ViewWithContext
 
 	/**
 	 * Setup log viewer after successful log open
-	 * @param onClone 
+	 * @param onClone
 	 */
 	protected void setupLogViewer(boolean onClone)
 	{
@@ -324,13 +330,13 @@ public class LogViewer extends ViewWithContext
             orderingColumns.add(new OrderingColumn(orderingColumn.getName(), orderingColumn.getDescription(), true));
             filter.setOrderingColumns(orderingColumns);
          }
-         filterBuilder.setFilter(filter);         
+         filterBuilder.setFilter(filter);
       }
 	}
 
 	/**
 	 * Create label provider
-	 * 
+	 *
 	 * @return
 	 */
 	protected ITableLabelProvider createLabelProvider(Log logHandle)
@@ -392,7 +398,7 @@ public class LogViewer extends ViewWithContext
 
 	/**
 	 * Fill context menu
-	 * 
+	 *
 	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
@@ -481,7 +487,7 @@ public class LogViewer extends ViewWithContext
 
 	/**
 	 * Query log with given filter
-	 * 
+	 *
 	 * @param filter
 	 */
 	public void queryWithFilter(LogFilter filter)
@@ -508,7 +514,17 @@ public class LogViewer extends ViewWithContext
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				logHandle.query(filter);
+            try
+            {
+               logHandle.query(filter);
+            }
+            catch(NXCException e)
+            {
+               if (e.getErrorCode() != RCC.INVALID_LOG_HANDLE)
+                  throw e;
+               logHandle = session.openServerLog(logName);
+               logHandle.query(filter);
+            }
 				final Table data = logHandle.retrieveData(0, PAGE_SIZE);
             runInUIThread(() -> {
                resultSet = data;
@@ -779,7 +795,7 @@ public class LogViewer extends ViewWithContext
    public boolean isValidForContext(Object context)
    {
       return true;
-   } 
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#getFullName()
@@ -792,12 +808,12 @@ public class LogViewer extends ViewWithContext
 
    /**
     * Memento to load context
-    * 
+    *
     * @param memento
     */
    @Override
    public Object restoreContext(Memento memento)
-   {      
+   {
       return null;
    }
 
@@ -807,7 +823,7 @@ public class LogViewer extends ViewWithContext
    public String getLogName()
    {
       return logName;
-   }   
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#saveState(org.netxms.nxmc.Memento)
@@ -834,7 +850,7 @@ public class LogViewer extends ViewWithContext
     */
    @Override
    public void restoreState(Memento memento) throws ViewNotRestoredException
-   {      
+   {
       super.restoreState(memento);
       logName = memento.getAsString("logName");
       recordDetailsViewer = LogRecordDetailsViewerRegistry.get(logName);
