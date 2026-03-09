@@ -40,6 +40,7 @@ public class EventSelector extends AbstractSelector
 
    private int eventCode = 0;
    private String eventName = null;
+   private EventTemplate defaultNewTemplate = null;
 
 	/**
 	 * @param parent
@@ -68,6 +69,8 @@ public class EventSelector extends AbstractSelector
 	{
       EventSelectionDialog dlg = new EventSelectionDialog(getShell());
       dlg.enableMultiSelection(false);
+      if (defaultNewTemplate != null)
+         dlg.setDefaultNewTemplate(defaultNewTemplate);
 		if (dlg.open() == Window.OK)
 		{
          int prevEventCode = eventCode;
@@ -101,7 +104,7 @@ public class EventSelector extends AbstractSelector
 	{
 		if (eventCode == 0)
 			return;
-		
+
 		eventCode = 0;
 		eventName = null;
       setText(i18n.tr("None"));
@@ -112,7 +115,7 @@ public class EventSelector extends AbstractSelector
 
 	/**
 	 * Get code of selected event
-	 * 
+	 *
 	 * @return Selected event's code
 	 */
    public int getEventCode()
@@ -122,7 +125,7 @@ public class EventSelector extends AbstractSelector
 
    /**
     * Get name of selected event
-    * 
+    *
     * @return Selected event's name
     */
    public String getEventName()
@@ -166,6 +169,16 @@ public class EventSelector extends AbstractSelector
 		}
 		fireModifyListeners();
 	}
+
+   /**
+    * Set default template for new event creation. If set, new events created from the selection dialog will be pre-populated from this template.
+    *
+    * @param defaultNewTemplate default template for new events (can be null)
+    */
+   public void setDefaultNewTemplate(EventTemplate defaultNewTemplate)
+   {
+      this.defaultNewTemplate = defaultNewTemplate;
+   }
 
 	/**
     * Generate tooltip text for event

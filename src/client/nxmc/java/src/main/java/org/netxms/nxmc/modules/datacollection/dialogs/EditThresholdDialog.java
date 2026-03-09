@@ -37,7 +37,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.EventSelector;
@@ -184,6 +186,7 @@ public class EditThresholdDialog extends Dialog
 		activationEvent = new EventSelector(eventGroup, SWT.NONE);
       activationEvent.setLabel(i18n.tr("Activation event"));
 		activationEvent.setEventCode(threshold.getFireEvent());
+      activationEvent.setDefaultNewTemplate(createDefaultActivationEventTemplate());
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -193,6 +196,7 @@ public class EditThresholdDialog extends Dialog
       deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
       deactivationEvent.setLabel(i18n.tr("Deactivation event"));
 		deactivationEvent.setEventCode(threshold.getRearmEvent());
+      deactivationEvent.setDefaultNewTemplate(createDefaultDeactivationEventTemplate());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -259,7 +263,7 @@ public class EditThresholdDialog extends Dialog
 
 	/**
     * Create "operation" group
-    * 
+    *
     * @param function selected function
     */
    private void createOperGroup(int function)
@@ -278,7 +282,7 @@ public class EditThresholdDialog extends Dialog
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
       operation.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 
-      value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, i18n.tr("Value"), 
+      value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, i18n.tr("Value"),
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
       value.setEnabled((function != Threshold.F_ERROR) && (function != Threshold.F_ANOMALY));
 	}
@@ -293,7 +297,7 @@ public class EditThresholdDialog extends Dialog
 	   operation.getParent().dispose();
 	   value.getParent().dispose();
 	}
-	
+
 	/**
 	 * Create "script" group
 	 */
@@ -307,14 +311,14 @@ public class EditThresholdDialog extends Dialog
       scriptLayout.marginWidth = 0;
       scriptLayout.horizontalSpacing = WidgetHelper.INNER_SPACING;
       scriptGroup.setLayout(scriptLayout);
-      
+
       script = new LabeledText(scriptGroup, SWT.NONE);
       script.setLabel(i18n.tr("Script"));
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.widthHint = 400;  // Prevent excessive field growth if script is big
       script.setLayoutData(gd);
       script.setText(savedScript != null ? savedScript : threshold.getScript());
-      
+
       final Button editButton = new Button(scriptGroup, SWT.PUSH);
       editButton.setImage(SharedIcons.IMG_EDIT);
       gd = new GridData();
@@ -365,7 +369,7 @@ public class EditThresholdDialog extends Dialog
     */
 	private void openScriptEditor()
 	{
-      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
+      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(),
             "Variables:\n\t$1\t\t\tcurrent DCI value;\n\t$2\t\t\tthreshold value;\n\t$dci\t\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value: true if threshold violated.");
       if (dlg.open() == Window.OK)
       {
@@ -441,4 +445,65 @@ public class EditThresholdDialog extends Dialog
 
 		super.okPressed();
 	}
+
+   /**
+    * Create default event template for threshold activation events.
+    *
+    * @return default event template
+    */
+   private static EventTemplate createDefaultActivationEventTemplate()
+   {
+      EventTemplate tmpl = new EventTemplate(0);
+      tmpl.setSeverity(Severity.WARNING);
+      tmpl.setMessage("Threshold reached for data collection item \"%<dciDescription>\" (Metric: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)");
+      tmpl.setDescription("Generated when threshold value reached for specific data collection item.\n" +
+            "Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\n\n" +
+            "Parameters:\n" +
+            "   1) dciName - Metric name\n" +
+            "   2) dciDescription - Item description\n" +
+            "   3) thresholdValue - Threshold value\n" +
+            "   4) currentValue - Actual value which is compared to threshold value\n" +
+            "   5) dciId - Data collection item ID\n" +
+            "   6) instance - Instance\n" +
+            "   7) isRepeatedEvent - Repeat flag\n" +
+            "   8) dciValue - Last collected DCI value\n" +
+            "   9) operation - Threshold's operation code\n" +
+            "   10) function - Threshold's function code\n" +
+            "   11) pollCount - Threshold's required poll count\n" +
+            "   12) thresholdDefinition - Threshold's textual definition\n" +
+            "   13) instanceValue - Instance value\n" +
+            "   14) instanceName - Instance name same as instance\n" +
+            "   15) thresholdId - Threshold's ID");
+      return tmpl;
+   }
+
+   /**
+    * Create default event template for threshold deactivation (rearm) events.
+    *
+    * @return default event template
+    */
+   private static EventTemplate createDefaultDeactivationEventTemplate()
+   {
+      EventTemplate tmpl = new EventTemplate(0);
+      tmpl.setSeverity(Severity.NORMAL);
+      tmpl.setMessage("Threshold rearmed for data collection item %<dciDescription> (Metric: %<dciName>)");
+      tmpl.setDescription("Generated when threshold check is rearmed for specific data collection item.\n" +
+            "Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\n\n" +
+            "Parameters:\n" +
+            "   1) dciName - Metric name\n" +
+            "   2) dciDescription - Item description\n" +
+            "   3) dciId - Data collection item ID\n" +
+            "   4) instance - Instance\n" +
+            "   5) thresholdValue - Threshold value\n" +
+            "   6) currentValue - Actual value which is compared to threshold value\n" +
+            "   7) dciValue - Last collected DCI value\n" +
+            "   8) operation - Threshold's operation code\n" +
+            "   9) function - Threshold's function code\n" +
+            "   10) pollCount - Threshold's required poll count\n" +
+            "   11) thresholdDefinition - Threshold's textual definition\n" +
+            "   12) instanceValue - Instance value\n" +
+            "   13) instanceName - Instance name same as instance\n" +
+            "   14) thresholdId - Threshold's ID");
+      return tmpl;
+   }
 }
