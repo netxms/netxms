@@ -100,6 +100,7 @@ void StopDataCollection();
 void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
 void LoadObjectQueries();
+void LoadSshKeys();
 THREAD StartEventProcessor();
 void StartHouseKeeper();
 void StopHouseKeeper();

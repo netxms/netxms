@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2024 Raden Solutions
+** Copyright (C) 2021-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 #define MAX_SSH_KEY_NAME 255
 
-static unsigned char s_sshHeader[11] = { 0x00, 0x00, 0x00, 0x07, 0x73, 0x73, 0x68, 0x2D, 0x72, 0x73, 0x61};
+static unsigned char s_sshHeader[11] = { 0x00, 0x00, 0x00, 0x07, 0x73, 0x73, 0x68, 0x2D, 0x72, 0x73, 0x61 };
 
 /**
  * SSH key data structure
@@ -33,13 +33,11 @@ class SshKeyPair
 {
 private:
    uint32_t m_id;
-   TCHAR m_name[MAX_SSH_KEY_NAME];
-   TCHAR *m_publicKey;
+   wchar_t m_name[MAX_SSH_KEY_NAME];
+   char *m_publicKey;
    char *m_privateKey;
 
 public:
-   static shared_ptr<SshKeyPair> generate(const TCHAR *name);
-
    SshKeyPair();
    SshKeyPair(const NXCPMessage& msg);
    SshKeyPair(DB_RESULT result, int row);
@@ -49,11 +47,13 @@ public:
    void deleteFromDatabase();
 
    uint32_t getId() const { return m_id; }
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getPublicKey() const { return m_publicKey; }
+   const wchar_t *getName() const { return m_name; }
+   const char *getPublicKey() const { return m_publicKey; }
    const char *getPrivateKey() const { return m_privateKey; }
 
    void updateKeys(const shared_ptr<SshKeyPair> &data);
+
+   static shared_ptr<SshKeyPair> generate(const wchar_t *name);
 };
 
 static SynchronizedSharedHashMap<uint32_t, SshKeyPair> s_sshKeys;
@@ -79,8 +79,8 @@ SshKeyPair::SshKeyPair(const NXCPMessage& msg)
    else
       m_id = CreateUniqueId(IDG_SSH_KEY);
    msg.getFieldAsString(VID_NAME, m_name, MAX_SSH_KEY_NAME);
-   m_publicKey = msg.getFieldAsString(VID_PUBLIC_KEY);
-   m_privateKey = msg.getFieldAsMBString(VID_PRIVATE_KEY);
+   m_publicKey = msg.getFieldAsUtf8String(VID_PUBLIC_KEY);
+   m_privateKey = msg.getFieldAsUtf8String(VID_PRIVATE_KEY);
 }
 
 /**
@@ -90,8 +90,8 @@ SshKeyPair::SshKeyPair(DB_RESULT result, int row)
 {
    m_id = DBGetFieldULong(result, row, 0);
    DBGetField(result, row, 1, m_name, MAX_SSH_KEY_NAME);
-   m_publicKey = DBGetField(result, row, 2, nullptr, 0);
-   m_privateKey = DBGetFieldA(result, row, 3, nullptr, 0);
+   m_publicKey = DBGetFieldUTF8(result, row, 2, nullptr, 0);
+   m_privateKey = DBGetFieldUTF8(result, row, 3, nullptr, 0);
 }
 
 /**
@@ -130,7 +130,7 @@ static int SshEncodeBuffer(unsigned char *encoding, int bufferLen, unsigned char
 /**
  * Generate SSH key
  */
-shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
+shared_ptr<SshKeyPair> SshKeyPair::generate(const wchar_t *name)
 {
    shared_ptr<SshKeyPair> data = make_shared<SshKeyPair>();
    _tcslcpy(data->m_name, name, MAX_SSH_KEY_NAME);
@@ -204,20 +204,21 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    int index = SshEncodeBuffer(&binaryData[11], eLen, eBytes);
    SshEncodeBuffer(&binaryData[11 + index], nLen, nBytes);
 
-   StringBuffer publicKey;
-   publicKey.append(_T("ssh-rsa "));
+   std::string publicKey("ssh-rsa ");
    char *out;
    size_t len = base64_encode_alloc(reinterpret_cast<const char*>(binaryData), binaryDataLength, &out);
-   publicKey.appendUtf8String(out, len);
+   publicKey.append(out, len);
 
    MemFree(nBytes);
    MemFree(eBytes);
    MemFree(binaryData);
    MemFree(out);
 
-   publicKey.append(_T(" "));
-   publicKey.append(name);
-   data->m_publicKey = MemCopyString(publicKey.getBuffer());
+   publicKey.append(" ");
+   char utf8name[MAX_SSH_KEY_NAME * 4];
+   wchar_to_utf8(name, -1, utf8name, MAX_SSH_KEY_NAME * 4);
+   publicKey.append(utf8name);
+   data->m_publicKey = MemCopyStringA(publicKey.c_str());
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
    BN_free(n);
@@ -234,13 +235,13 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
 void SshKeyPair::saveToDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   static const TCHAR *columns[] = { _T("name"), _T("public_key"), _T("private_key"), nullptr };
-   DB_STATEMENT stmt =  DBPrepareMerge(hdb, _T("ssh_keys"), _T("id"), m_id, columns);
+   static const wchar_t *columns[] = { L"name", L"public_key", L"private_key", nullptr };
+   DB_STATEMENT stmt =  DBPrepareMerge(hdb, L"ssh_keys", L"id", m_id, columns);
    if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(stmt, 2, DB_SQLTYPE_VARCHAR, m_publicKey, DB_BIND_STATIC);
-      DBBind(stmt, 3, DB_CTYPE_STRING, TStringFromUTF8String(m_privateKey), DB_BIND_DYNAMIC);
+      DBBind(stmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_publicKey, DB_BIND_STATIC);
+      DBBind(stmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_privateKey, DB_BIND_STATIC);
       DBBind(stmt, 4, DB_SQLTYPE_INTEGER, m_id);
       DBExecute(stmt);
       DBFreeStatement(stmt);
@@ -254,7 +255,7 @@ void SshKeyPair::saveToDatabase()
 void SshKeyPair::deleteFromDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ssh_keys WHERE id=?"));
+   ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ssh_keys WHERE id=?");
    DBConnectionPoolReleaseConnection(hdb);
 }
 
@@ -263,7 +264,7 @@ void SshKeyPair::deleteFromDatabase()
  */
 void SshKeyPair::updateKeys(const shared_ptr<SshKeyPair> &data)
 {
-   m_publicKey = MemCopyString(data->m_publicKey);
+   m_publicKey = MemCopyStringA(data->m_publicKey);
    m_privateKey = MemCopyStringA(data->m_privateKey);
 }
 
@@ -286,7 +287,7 @@ static EnumerationCallbackResult FillMessageSshKeys(const uint32_t &key, const s
    msg->setField(data->baseId++, value->getId());
    msg->setField(data->baseId++, value->getName());
    if (data->withPublicKey)
-      msg->setField(data->baseId++, value->getPublicKey());
+      msg->setFieldFromUtf8String(data->baseId++, value->getPublicKey());
    else
       data->baseId++;
    data->baseId+=2;
@@ -313,7 +314,7 @@ void FillMessageWithSshKeys(NXCPMessage *msg, bool withPublicKey)
 void LoadSshKeys()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelect(hdb, _T("SELECT id,name,public_key,private_key FROM ssh_keys"));
+   DB_RESULT result = DBSelect(hdb, L"SELECT id,name,public_key,private_key FROM ssh_keys");
    if (result != nullptr)
    {
       int count = DBGetNumRows(result);
@@ -334,14 +335,14 @@ void LoadSshKeys()
 /**
  * Generate SSH key
  */
-uint32_t GenerateSshKey(const TCHAR *name)
+uint32_t NXCORE_EXPORTABLE GenerateSshKey(const wchar_t *name)
 {
    shared_ptr<SshKeyPair> key = SshKeyPair::generate(name);
    if (key != nullptr)
    {
       s_sshKeys.set(key->getId(), key);
-      TCHAR threadKey[32];
-      _sntprintf(threadKey, 32, _T("SshKey_%d"), key->getId());
+      wchar_t threadKey[32] = L"ssh-key-";
+      IntegerToString(key->getId(), &threadKey[8]);
       ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, key, &SshKeyPair::saveToDatabase);
       NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
       return RCC_SUCCESS;
@@ -365,8 +366,8 @@ void CreateOrEditSshKey(const NXCPMessage& request)
       shared_ptr<SshKeyPair> oldKey = s_sshKeys.getShared(id);
       newKey->updateKeys(oldKey);
    }
-   TCHAR threadKey[32];
-   _sntprintf(threadKey, 32, _T("SshKey_%d"), newKey->getId());
+   wchar_t threadKey[32] = L"ssh-key-";
+   IntegerToString(newKey->getId(), &threadKey[8]);
    ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, newKey, &SshKeyPair::saveToDatabase);
    s_sshKeys.set(newKey->getId(), newKey);
    NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
@@ -383,38 +384,30 @@ static bool CheckIfSshKeyIsUsed(NetObj *object, uint32_t *data)
 /**
  * Delete SSH key from database
  */
-void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete)
+uint32_t NXCORE_EXPORTABLE DeleteSshKey(uint32_t id, bool forceDelete, SharedObjectArray<NetObj> **references)
 {
    shared_ptr<SshKeyPair> key = s_sshKeys.getShared(id);
-   if (key != nullptr)
+   if (key == nullptr)
+      return RCC_INVALID_SSH_KEY_ID;
+
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxNodeById.findAll(CheckIfSshKeyIsUsed, &id);
+   if (objects->isEmpty() || forceDelete)
    {
-      unique_ptr<SharedObjectArray<NetObj>> objects = g_idxNodeById.findAll(CheckIfSshKeyIsUsed, &id);
-      if (objects->isEmpty() || forceDelete)
+      for (int i = 0; i < objects->size(); i++)
       {
-         for (int i = 0; i < objects->size(); i++)
-         {
-            static_cast<Node *>(objects->get(i))->clearSshKey();
-         }
-         TCHAR threadKey[32];
-         _sntprintf(threadKey, 32, _T("SshKey_%d"), key->getId());
-         ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, key, &SshKeyPair::deleteFromDatabase);
-         s_sshKeys.remove(key->getId());
-         NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
-         response->setField(VID_RCC, RCC_SUCCESS);
+         static_cast<Node *>(objects->get(i))->clearSshKey();
       }
-      else
-      {
-         IntegerArray<uint32_t> ids;
-         for (int i = 0; i < objects->size(); i ++)
-            ids.add(objects->get(i)->getId());
-         response->setFieldFromInt32Array(VID_OBJECT_LIST, ids);
-         response->setField(VID_RCC, RCC_SSH_KEY_IN_USE);
-      }
+      wchar_t threadKey[32] = L"ssh-key-";
+      IntegerToString(id, &threadKey[8]);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, key, &SshKeyPair::deleteFromDatabase);
+      s_sshKeys.remove(id);
+      NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
+      return RCC_SUCCESS;
    }
-   else
-   {
-      response->setField(VID_RCC, RCC_INVALID_SSH_KEY_ID);
-   }
+
+   if (references != nullptr)
+      *references = objects.release();
+   return RCC_SSH_KEY_IN_USE;
 }
 
 /**
@@ -425,7 +418,7 @@ void FindSshKeyById(uint32_t id, NXCPMessage *msg)
    shared_ptr<SshKeyPair> key = s_sshKeys.getShared(id);
    if (key != nullptr)
    {
-      msg->setField(VID_PUBLIC_KEY, key->getPublicKey());
+      msg->setFieldFromUtf8String(VID_PUBLIC_KEY, key->getPublicKey());
       msg->setFieldFromUtf8String(VID_PRIVATE_KEY, key->getPrivateKey());
       msg->setField(VID_RCC, ERR_SUCCESS);
    }

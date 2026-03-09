@@ -6193,11 +6193,10 @@ void GeoAreasToMessage(NXCPMessage *msg);
 void LoadGeoAreas();
 
 void FillMessageWithSshKeys(NXCPMessage *msg, bool withPublicKey);
-uint32_t GenerateSshKey(const TCHAR *name);
+uint32_t NXCORE_EXPORTABLE GenerateSshKey(const TCHAR *name);
 void CreateOrEditSshKey(const NXCPMessage& request);
-void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete);
+uint32_t NXCORE_EXPORTABLE DeleteSshKey(uint32_t id, bool forceDelete, SharedObjectArray<NetObj> **references);
 void FindSshKeyById(uint32_t id, NXCPMessage *msg);
-void LoadSshKeys();
 
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to);
 void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage* msg);

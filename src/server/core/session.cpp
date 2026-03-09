@@ -17337,13 +17337,28 @@ void ClientSession::getSshKeys(const NXCPMessage& request)
 void ClientSession::deleteSshKey(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t keyId = request.getFieldAsInt32(VID_SSH_KEY_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
-      DeleteSshKey(&response, request.getFieldAsInt32(VID_SSH_KEY_ID), request.getFieldAsBoolean(VID_FORCE_DELETE));
+      SharedObjectArray<NetObj> *references = nullptr;
+      uint32_t rcc = DeleteSshKey(keyId, request.getFieldAsBoolean(VID_FORCE_DELETE), &references);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"SSH key [%u] deleted", keyId);
+      }
+      else if ((rcc == RCC_SSH_KEY_IN_USE) && (references != nullptr))
+      {
+         IntegerArray<uint32_t> ids;
+         for (int i = 0; i < references->size(); i ++)
+            ids.add(references->get(i)->getId());
+         response.setFieldFromInt32Array(VID_OBJECT_LIST, ids);
+      }
+      delete references;
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete SSH key"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on delete SSH key [%u]", keyId);
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
