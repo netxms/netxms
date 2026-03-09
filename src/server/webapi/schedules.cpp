@@ -131,7 +131,7 @@ int H_ScheduledTaskCreate(Context *context)
    if (json_is_string(jsonParams))
       utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4096);
 
-   uint32_t objectId = json_integer_value(json_object_get(request, "objectId"));
+   uint32_t objectId = json_object_get_uint32(request, "objectId", 0);
 
    TCHAR comments[256] = L"";
    json_t *jsonComments = json_object_get(request, "comments");
@@ -215,7 +215,7 @@ int H_ScheduledTaskUpdate(Context *context)
    if (json_is_string(jsonParams))
       utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4096);
 
-   uint32_t objectId = json_integer_value(json_object_get(request, "objectId"));
+   uint32_t objectId = json_object_get_uint32(request, "objectId", 0);
 
    TCHAR comments[256] = L"";
    json_t *jsonComments = json_object_get(request, "comments");

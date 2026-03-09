@@ -585,6 +585,9 @@
     <ClCompile Include="resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dci_data_query.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
