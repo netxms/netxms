@@ -36,6 +36,7 @@ struct Route
    RouteHandler handlers[5];
    MHD_UpgradeHandler upgradeHandler;
    bool auth;
+   bool acceptProtobuf;
    char scope[32];
 };
 
@@ -93,6 +94,7 @@ void RouteBuilder::build()
       memcpy(s_root->handlers, m_handlers, sizeof(m_handlers));
       s_root->upgradeHandler = m_upgradeHandler;
       s_root->auth = m_auth;
+      s_root->acceptProtobuf = m_acceptProtobuf;
       strlcpy(s_root->scope, m_scope, sizeof(s_root->scope));
       return;
    }
@@ -144,6 +146,7 @@ void RouteBuilder::build()
    memcpy(r->handlers, m_handlers, sizeof(m_handlers));
    r->upgradeHandler = m_upgradeHandler;
    r->auth = m_auth;
+   r->acceptProtobuf = m_acceptProtobuf;
    strlcpy(r->scope, m_scope, sizeof(r->scope));
 }
 
@@ -222,7 +225,14 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    if ((methodId == Method::POST) || (methodId == Method::PUT) || (methodId == Method::PATCH))
    {
       const char *contentType = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE);
-      if ((contentType == nullptr) || (strcmp(contentType, "application/json") && strncmp(contentType, "application/json;", 17)))
+      bool validContentType = (contentType != nullptr) &&
+         (!strcmp(contentType, "application/json") || !strncmp(contentType, "application/json;", 17));
+      if (!validContentType && curr->acceptProtobuf)
+      {
+         validContentType = (contentType != nullptr) &&
+            (!strcmp(contentType, "application/x-protobuf") || !strncmp(contentType, "application/x-protobuf;", 23));
+      }
+      if (!validContentType)
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Unsupported media type \"%hs\"", CHECK_NULL_A(contentType));
          *responseCode = 415;  // Unsupported Media Type
