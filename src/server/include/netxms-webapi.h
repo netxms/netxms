@@ -118,6 +118,7 @@ class NXCORE_EXPORTABLE RouteBuilder
 private:
    const char *m_path;
    bool m_auth;
+   bool m_acceptProtobuf;
    char m_scope[32];
    RouteHandler m_handlers[5];
    MHD_UpgradeHandler m_upgradeHandler;
@@ -127,6 +128,7 @@ public:
    {
       m_path = path;
       m_auth = true;
+      m_acceptProtobuf = false;
       m_scope[0] = 0;
       memset(m_handlers, 0, sizeof(m_handlers));
    }
@@ -170,6 +172,12 @@ public:
    RouteBuilder& scope(const char *s)
    {
       strlcpy(m_scope, s, sizeof(m_scope));
+      return *this;
+   }
+
+   RouteBuilder& acceptProtobuf()
+   {
+      m_acceptProtobuf = true;
       return *this;
    }
 
@@ -303,6 +311,16 @@ public:
    const char *getRequestData() const
    {
       return reinterpret_cast<const char*>(m_requestData.buffer());
+   }
+
+   size_t getRequestDataSize() const
+   {
+      return (m_requestData.size() > 0) ? m_requestData.size() - 1 : 0;
+   }
+
+   const char *getRequestHeader(const char *name) const
+   {
+      return MHD_lookup_connection_value(m_connection, MHD_HEADER_KIND, name);
    }
 
    json_t *getRequestDocument();
