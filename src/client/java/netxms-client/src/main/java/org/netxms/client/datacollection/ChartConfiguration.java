@@ -39,7 +39,7 @@ import org.simpleframework.xml.convert.Convert;
 @Root(name="chart", strict=false)
 public class ChartConfiguration
 {
-	public static final int MAX_GRAPH_ITEM_COUNT = 16;
+   public static final int DEFAULT_PALETTE_SIZE = 16;
 
    public static final int POSITION_LEFT = 1;
    public static final int POSITION_RIGHT = 2;
@@ -58,7 +58,7 @@ public class ChartConfiguration
 
 	@Element(required = false)
    protected int legendPosition = POSITION_BOTTOM;
-	
+
 	@Element(required = false)
 	protected boolean showLegend = true;
 
@@ -182,7 +182,7 @@ public class ChartConfiguration
 
 	/**
 	 * Create chart settings object from XML document
-	 * 
+	 *
 	 * @param xml XML document
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
@@ -261,7 +261,7 @@ public class ChartConfiguration
 
 	/**
 	 * Create XML from configuration.
-	 * 
+	 *
 	 * @return XML document
 	 * @throws Exception if the schema for the object is not valid
 	 */
@@ -275,7 +275,7 @@ public class ChartConfiguration
 
 	/**
 	 * Get time range covered by graph in milliseconds
-	 * 
+	 *
 	 * @return The time range
 	 */
 	public long getTimeRangeMillis()
@@ -320,7 +320,7 @@ public class ChartConfiguration
 
    /**
     * Set Y axis label (empty string or null to hide).
-    * 
+    *
     * @param yAxisLabel new Y axis label
     */
    public void setYAxisLabel(String yAxisLabel)
@@ -391,7 +391,7 @@ public class ChartConfiguration
 	{
 		this.refreshRate = refreshRate;
 	}
-	
+
 	/**
     * @return true if title is visible
     */
@@ -712,24 +712,24 @@ public class ChartConfiguration
 
    /**
     * Add change listener
-    * 
+    *
     * @param listener change listener
     */
    public void addChangeListener(ChartConfigurationChangeListener listener)
    {
       changeListeners.add(listener);
    }
-   
+
    /**
     * Remove change listener
-    * 
+    *
     * @param listener change listener to remove
     */
    public void removeChangeListener(ChartConfigurationChangeListener listener)
    {
       changeListeners.remove(listener);
    }
-   
+
    /**
     * Fire change notification
     */
@@ -738,10 +738,10 @@ public class ChartConfiguration
       for(ChartConfigurationChangeListener l : changeListeners)
          l.onChartConfigurationChange(this);
    }
-  
+
    /**
     * Set modify Y base
-    * 
+    *
     * @param modifyYBase if true, use min DCI value as Y base
     */
    public void setModifyYBase(boolean modifyYBase)
@@ -751,7 +751,7 @@ public class ChartConfiguration
 
    /**
     * Check if "modify Y base" flag is set
-    * 
+    *
     * @return true if "modify Y base" flag is set
     */
    public boolean isModifyYBase()
@@ -797,7 +797,7 @@ public class ChartConfiguration
 
    /**
     * Set rotation angle for chart types where it applicable (like pie chart)
-    * 
+    *
     * @param angle rotation angle
     */
    public void setRotation(double angle)
@@ -807,7 +807,7 @@ public class ChartConfiguration
 
    /**
     * Get currently set rotation angle
-    * 
+    *
     * @return currently set rotation angle
     */
    public double getRotation()

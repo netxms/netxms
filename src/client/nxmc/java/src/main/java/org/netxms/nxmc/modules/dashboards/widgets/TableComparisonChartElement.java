@@ -51,10 +51,10 @@ public abstract class TableComparisonChartElement extends ElementWidget
    protected Chart chart;
 	protected NXCSession session;
 	protected TableComparisonChartConfig config;
-	
+
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
-   private Map<String, Integer> instanceMap = new HashMap<String, Integer>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
+   private Map<String, Integer> instanceMap = new HashMap<String, Integer>();
 	private boolean chartInitialized = false;
 
 	/**
@@ -96,9 +96,9 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
-		
+
       Job job = new Job(i18n.tr("Reading DCI values for table comparision chart"), view, this) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -116,7 +116,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			{
             return i18n.tr("Cannot get DCI values for comparision chart");
 			}
-	
+
 			@Override
          protected void jobFailureHandler(Exception e)
 			{
@@ -130,7 +130,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 
 	/**
 	 * Update chart with new data
-	 * 
+	 *
 	 * @param data
 	 */
 	private void updateChart(final Table data)
@@ -155,7 +155,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 
                String s1 = (c1 != null) ? c1.getValue() : "";
                String s2 = (c2 != null) ? c2.getValue() : "";
-               
+
                int result = 0;
                try
                {
@@ -170,7 +170,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
                return config.isSortDescending() ? -result : result;
             }
          });
-		   
+
 		   // Sorting may reorder instances, so clear everything
 		   instanceMap.clear();
 		   chart.removeAllParameters();
@@ -192,12 +192,11 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			{
 				value = 0.0;
 			}
-			
+
 			Integer index = instanceMap.get(instance);
 			if (index == null)
 			{
-            if ((instanceMap.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT) ||
-				    ((value == 0) && config.isIgnoreZeroValues()))
+            if ((value == 0) && config.isIgnoreZeroValues())
 					continue;
 
             ChartDciConfig item = new ChartDciConfig();

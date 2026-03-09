@@ -321,8 +321,8 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 				    (getOrientation() == SWT.VERTICAL && axis.getDirection() == Direction.Y))
 				{
 					range = selection.getHorizontalRange();
-				} 
-				else 
+				}
+				else
 				{
 					range = selection.getVerticalRange();
 				}
@@ -342,7 +342,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
    /**
     * Sets the axis range.
-    * 
+    *
     * @param range
     *            the axis range in pixels
     * @param axis
@@ -357,7 +357,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
 	/**
 	 * Return line style object matching given label. If no match found, LineStyle.NONE is returned.
-	 * 
+	 *
 	 * @param name Line style label
 	 * @return Line style object
 	 */
@@ -372,7 +372,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
 	/**
 	 * Add line series to chart
-	 * 
+	 *
 	 * @param description Description
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
@@ -386,7 +386,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       series.setDescription(description);
 		series.setSymbolType(PlotSymbolType.NONE);
       series.setLineWidth(configuration.getLineWidth());
-      series.setLineColor(ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString(index + 1)));
+      series.setLineColor(ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString((index % ChartConfiguration.DEFAULT_PALETTE_SIZE) + 1)));
 
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
@@ -560,7 +560,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
 	/**
 	 * Adjust upper border of current range
-	 * 
+	 *
 	 * @param upper
 	 * @return
 	 */
@@ -680,12 +680,12 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
    /**
     * Get data point closest to given point in plot area
-    * 
+    *
     * @param px
     * @param py
     * @return
     */
-   public DataPoint getClosestDataPoint(int px, int py) 
+   public DataPoint getClosestDataPoint(int px, int py)
    {
       IAxis xAxis = getAxisSet().getXAxis(0);
       IAxis yAxis = getAxisSet().getYAxis(0);
@@ -706,13 +706,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
           double[] yS = s.getYSeries();
 
           /* check all data points */
-          for (int i = 0; i < xS.length; i++) 
+          for (int i = 0; i < xS.length; i++)
           {
               /* compute distance to mouse position */
               double newDist = Math.sqrt(Math.pow((x - xS[i]), 2) + Math.pow((y - yS[i]), 2));
 
               /* if closer to mouse, remember */
-              if (newDist < minDist) 
+              if (newDist < minDist)
               {
                   minDist = newDist;
                   closestX = xS[i];
@@ -727,7 +727,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
    /**
     * Get series at given point
-    * 
+    *
     * @param px
     * @param py
     * @return
@@ -754,7 +754,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
    /**
     * Calculate distance from point to line.
     * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-    * 
+    *
     * @param x
     * @param y
     * @param p1
@@ -765,7 +765,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
    {
       int dx = p2.x - p1.x;
       int dy = p2.y - p1.y;
-      
+
       double area2 = (double)Math.abs(dy * x - dx * y + p2.x * p1.y - p2.y * p1.x);
       double dist = Math.sqrt(dx * dx + dy * dy);
       return area2 / dist;

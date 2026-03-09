@@ -66,8 +66,8 @@ public class Chart extends Composite
    private ChartType type = ChartType.LINE;
    private ChartConfiguration configuration;
    protected ChartColor[] palette = null;
-   private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
-   private List<DataSeries> dataSeries = new ArrayList<DataSeries>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
+   private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
+   private List<DataSeries> dataSeries = new ArrayList<DataSeries>();
    private long drillDownObjectId = 0;
    private ColorCache colorCache;
    private Label title;
@@ -413,7 +413,7 @@ public class Chart extends Composite
 
    /**
     * Set palette.
-    * 
+    *
     * @param colors colors for series or null to set default
     */
    public void setPalette(ChartColor[] colors)
@@ -426,24 +426,19 @@ public class Chart extends Composite
 
    /**
     * Get single palette element.
-    * 
+    *
     * @param index element index
     */
    public ChartColor getPaletteEntry(int index)
    {
-      try
-      {
+      if ((index >= 0) && (index < palette.length))
          return palette[index];
-      }
-      catch(ArrayIndexOutOfBoundsException e)
-      {
-         return null;
-      }
+      return ChartColor.getDefaultColor(index);
    }
 
    /**
     * Set single palette element.
-    * 
+    *
     * @param index element index
     * @param color color for series
     */
@@ -463,8 +458,8 @@ public class Chart extends Composite
     */
    protected void createDefaultPalette()
    {
-      palette = new ChartColor[ChartConfiguration.MAX_GRAPH_ITEM_COUNT];
-      for(int i = 0; i < ChartConfiguration.MAX_GRAPH_ITEM_COUNT; i++)
+      palette = new ChartColor[ChartConfiguration.DEFAULT_PALETTE_SIZE];
+      for(int i = 0; i < ChartConfiguration.DEFAULT_PALETTE_SIZE; i++)
       {
          palette[i] = ChartColor.getDefaultColor(i);
       }
@@ -472,16 +467,12 @@ public class Chart extends Composite
 
    /**
     * Add metric
-    * 
-    * @param parameter DCI information
-    * @param value parameter's initial value
-    * @return parameter's index (0 .. MAX_CHART_ITEMS-1)
+    *
+    * @param metric DCI information
+    * @return parameter's index
     */
    public int addParameter(ChartDciConfig metric)
    {
-      if (items.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
-         return -1;
-
       items.add(metric);
       dataSeries.add(new DataSeries());
       return items.size() - 1;
@@ -507,7 +498,7 @@ public class Chart extends Composite
 
    /**
     * Get threshold configuraiton for item
-    * 
+    *
     * @param i time index
     * @return
     */
@@ -518,16 +509,16 @@ public class Chart extends Composite
 
    /**
     * Update values for parameter
-    * 
+    *
     * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
     * @param value parameter's value
     * @param updateChart if true, chart will be updated (repainted)
     */
    public void updateParameter(int index, DataSeries values, boolean updateChart)
    {
-      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+      if (index >= dataSeries.size())
          return;
-      
+
       dataSeries.set(index, new DataSeries(values));
       if (updateChart)
          refresh();
@@ -535,16 +526,16 @@ public class Chart extends Composite
 
    /**
     * Update value for parameter
-    * 
-    * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
+    *
+    * @param index parameter's index
     * @param value parameter's value
     * @param updateChart if true, chart will be updated (repainted)
     */
    public void updateParameter(int index, double value, boolean updateChart)
    {
-      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+      if (index >= dataSeries.size())
          return;
-      
+
       dataSeries.set(index, new DataSeries(value));
       if (updateChart)
          refresh();
@@ -552,7 +543,7 @@ public class Chart extends Composite
 
    /**
     * Set time range for chart.
-    * 
+    *
     * @param from start time
     * @param to end time
     */
@@ -564,7 +555,7 @@ public class Chart extends Composite
 
    /**
     * Adjust X axis to fit all data
-    * 
+    *
     * @param repaint if true, chart will be repainted after change
     */
    public void adjustXAxis(boolean repaint)
@@ -575,7 +566,7 @@ public class Chart extends Composite
 
    /**
     * Adjust Y axis to fit all data
-    * 
+    *
     * @param repaint if true, chart will be repainted after change
     */
    public void adjustYAxis(boolean repaint)
@@ -654,7 +645,7 @@ public class Chart extends Composite
 
    /**
     * Set ID of drill-down object for this gauge (dashboard or network map)
-    * 
+    *
     * @param objectId ID of drill-down object or 0 to disable drill-down functionality
     */
    public void setDrillDownObjectId(long drillDownObjectId)
@@ -747,7 +738,7 @@ public class Chart extends Composite
 
    /**
     * Save as image file
-    * 
+    *
     * @param parentShellparent shell for file save dialog
     */
    public void saveAsImage(Shell parentShell)

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.charts.widgets;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
@@ -61,7 +62,7 @@ public class ChartLegend extends Composite
 
    private Chart chart;
    private Label[] headerLabels = new Label[4];
-   private Label[][] dataLabels = new Label[ChartConfiguration.MAX_GRAPH_ITEM_COUNT][4];
+   private List<Label[]> dataLabels = new ArrayList<>();
    private Font headerFont = null;
    private boolean vertical;
    private MouseListener mouseListener;
@@ -116,7 +117,7 @@ public class ChartLegend extends Composite
    @Override
    public void setBackground(Color color)
    {
-      Color effectiveColor = (color != null) ? color : chart.getBackground(); 
+      Color effectiveColor = (color != null) ? color : chart.getBackground();
       super.setBackground(effectiveColor);
       updateChildren(this, (c) -> c.setBackground(effectiveColor));
    }
@@ -179,6 +180,8 @@ public class ChartLegend extends Composite
       if (configuration == null)
          return;
 
+      dataLabels.clear();
+
       if (configuration.isExtendedLegend() && (chart.getType() == ChartType.LINE))
       {
          GridLayout layout = new GridLayout();
@@ -223,18 +226,20 @@ public class ChartLegend extends Composite
          {
             int color = metrics.get(i).getColorAsInt();
             new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
+            Label[] row = new Label[4];
             for(int j = 0; j < 4; j++)
             {
-               dataLabels[i][j] = new Label(this, SWT.NONE);
-               dataLabels[i][j].setBackground(getBackground());
-               dataLabels[i][j].setForeground(getForeground());
+               row[j] = new Label(this, SWT.NONE);
+               row[j].setBackground(getBackground());
+               row[j].setForeground(getForeground());
                if (j == 0)
                {
                   gd = new GridData();
                   gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-                  dataLabels[i][j].setLayoutData(gd);
+                  row[j].setLayoutData(gd);
                }
             }
+            dataLabels.add(row);
          }
 
          refresh();
@@ -271,18 +276,20 @@ public class ChartLegend extends Composite
          {
             int color = metrics.get(i).getColorAsInt();
             new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
+            Label[] row = new Label[2];
             for(int j = 0; j < 2; j++)
             {
-               dataLabels[i][j] = new Label(this, SWT.NONE);
-               dataLabels[i][j].setBackground(getBackground());
-               dataLabels[i][j].setForeground(getForeground());
+               row[j] = new Label(this, SWT.NONE);
+               row[j].setBackground(getBackground());
+               row[j].setForeground(getForeground());
                if (j == 0)
                {
                   gd = new GridData();
                   gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-                  dataLabels[i][j].setLayoutData(gd);
+                  row[j].setLayoutData(gd);
                }
             }
+            dataLabels.add(row);
          }
 
          refresh();
@@ -326,6 +333,10 @@ public class ChartLegend extends Composite
       int row = 0;
       for(DataSeries s : chart.getDataSeries())
       {
+         if (row >= dataLabels.size())
+            break;
+
+         Label[] labels = dataLabels.get(row);
          ChartDciConfig item = chart.getItem(row);
          DataFormatter formatter = s.getDataFormatter()
                .setDefaultFormatString("%{u}.3f", "%{m,u}.3f")
@@ -333,16 +344,16 @@ public class ChartLegend extends Composite
                .setDataType(DataType.FLOAT)
                .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
-         dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
+         labels[0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)
          {
-            dataLabels[row][1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));
-            dataLabels[row][2].setText(formatter.format(Double.toString(s.getMaxValue()), timeFormatter));
-            dataLabels[row][3].setText(formatter.format(Double.toString(s.getAverageValue()), timeFormatter));
+            labels[1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));
+            labels[2].setText(formatter.format(Double.toString(s.getMaxValue()), timeFormatter));
+            labels[3].setText(formatter.format(Double.toString(s.getAverageValue()), timeFormatter));
          }
          else
          {
-            dataLabels[row][1].setText(String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
+            labels[1].setText(String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
          }
          row++;
       }
