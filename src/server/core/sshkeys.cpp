@@ -41,6 +41,7 @@ public:
    SshKeyPair();
    SshKeyPair(const NXCPMessage& msg);
    SshKeyPair(DB_RESULT result, int row);
+   SshKeyPair(uint32_t id, const wchar_t *name, const char *publicKey, const char *privateKey);
    ~SshKeyPair();
 
    void saveToDatabase();
@@ -50,6 +51,8 @@ public:
    const wchar_t *getName() const { return m_name; }
    const char *getPublicKey() const { return m_publicKey; }
    const char *getPrivateKey() const { return m_privateKey; }
+
+   json_t *toJson(bool includePublicKey) const;
 
    void updateKeys(const shared_ptr<SshKeyPair> &data);
 
@@ -95,12 +98,39 @@ SshKeyPair::SshKeyPair(DB_RESULT result, int row)
 }
 
 /**
+ * Constructor form JSON object
+ */
+SshKeyPair::SshKeyPair(uint32_t id, const wchar_t *name, const char *publicKey, const char *privateKey)
+{
+   if (id != 0)
+      m_id = id;
+   else
+      m_id = CreateUniqueId(IDG_SSH_KEY);
+   wcslcpy(m_name, name, MAX_SSH_KEY_NAME);
+   m_publicKey = MemCopyStringA(publicKey);
+   m_privateKey = MemCopyStringA(privateKey);
+}
+
+/**
  * SSH key data destructor
  */
 SshKeyPair::~SshKeyPair()
 {
    MemFree(m_publicKey);
    MemFree(m_privateKey);
+}
+
+/**
+ * Convert SSH key data to JSON object
+ */
+json_t *SshKeyPair::toJson(bool includePublicKey) const
+{
+   json_t *object = json_object();
+   json_object_set_new(object, "id", json_integer(m_id));
+   json_object_set_new(object, "name", json_string_w(m_name));
+   if (includePublicKey)
+      json_object_set_new(object, "publicKey", json_string(m_publicKey));
+   return object;
 }
 
 /**
@@ -335,11 +365,13 @@ void LoadSshKeys()
 /**
  * Generate SSH key
  */
-uint32_t NXCORE_EXPORTABLE GenerateSshKey(const wchar_t *name)
+uint32_t NXCORE_EXPORTABLE GenerateSshKey(const wchar_t *name, uint32_t *newKeyId)
 {
    shared_ptr<SshKeyPair> key = SshKeyPair::generate(name);
    if (key != nullptr)
    {
+      if (newKeyId != nullptr)
+         *newKeyId = key->getId();
       s_sshKeys.set(key->getId(), key);
       wchar_t threadKey[32] = L"ssh-key-";
       IntegerToString(key->getId(), &threadKey[8]);
@@ -354,7 +386,7 @@ uint32_t NXCORE_EXPORTABLE GenerateSshKey(const wchar_t *name)
 }
 
 /**
- * Generate SSH key
+ * Create or edit SSH key from NXCP message
  */
 void CreateOrEditSshKey(const NXCPMessage& request)
 {
@@ -371,6 +403,50 @@ void CreateOrEditSshKey(const NXCPMessage& request)
    ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, newKey, &SshKeyPair::saveToDatabase);
    s_sshKeys.set(newKey->getId(), newKey);
    NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
+}
+
+/**
+ * Create or edit SSH key from JSON
+ */
+uint32_t NXCORE_EXPORTABLE CreateOrEditSshKey(uint32_t id, json_t *json, uint32_t *keyId)
+{
+   json_t *jsonName = json_object_get(json, "name");
+   if (!json_is_string(jsonName))
+      return RCC_INVALID_ARGUMENT;
+
+   if (id != 0)
+   {
+      shared_ptr<SshKeyPair> oldKey = s_sshKeys.getShared(id);
+      if (oldKey == nullptr)
+         return RCC_INVALID_SSH_KEY_ID;
+   }
+
+   wchar_t name[MAX_SSH_KEY_NAME];
+   utf8_to_wchar(json_string_value(jsonName), -1, name, MAX_SSH_KEY_NAME);
+
+   json_t *jsonPublicKey = json_object_get(json, "publicKey");
+   json_t *jsonPrivateKey = json_object_get(json, "privateKey");
+
+   shared_ptr<SshKeyPair> newKey = make_shared<SshKeyPair>(id, name,
+         json_is_string(jsonPublicKey) ? json_string_value(jsonPublicKey) : nullptr,
+         json_is_string(jsonPrivateKey) ? json_string_value(jsonPrivateKey) : nullptr);
+
+   if (!json_is_string(jsonPrivateKey) && (id != 0))
+   {
+      shared_ptr<SshKeyPair> oldKey = s_sshKeys.getShared(id);
+      if (oldKey != nullptr)
+         newKey->updateKeys(oldKey);
+   }
+
+   if (keyId != nullptr)
+      *keyId = newKey->getId();
+
+   wchar_t threadKey[32] = L"ssh-key-";
+   IntegerToString(newKey->getId(), &threadKey[8]);
+   ThreadPoolExecuteSerialized(g_mainThreadPool, threadKey, newKey, &SshKeyPair::saveToDatabase);
+   s_sshKeys.set(newKey->getId(), newKey);
+   NotifyClientSessions(NX_NOTIFY_SSH_KEY_DATA_CHAGED, 0);
+   return RCC_SUCCESS;
 }
 
 /**
@@ -426,4 +502,28 @@ void FindSshKeyById(uint32_t id, NXCPMessage *msg)
    {
       msg->setField(VID_RCC, ERR_INVALID_SSH_KEY_ID);
    }
+}
+
+/**
+ * Get all SSH keys as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetSshKeysAsJson(bool includePublicKey)
+{
+   json_t *output = json_array();
+   s_sshKeys.forEach(
+      [output, includePublicKey](const uint32_t &id, const shared_ptr<SshKeyPair> &key) -> EnumerationCallbackResult
+      {
+         json_array_append_new(output, key->toJson(includePublicKey));
+         return _CONTINUE;
+      });
+   return output;
+}
+
+/**
+ * Get SSH key by ID as JSON
+ */
+json_t NXCORE_EXPORTABLE *GetSshKeyByIdAsJson(uint32_t id)
+{
+   shared_ptr<SshKeyPair> key = s_sshKeys.getShared(id);
+   return (key != nullptr) ? key->toJson(true) : nullptr;
 }

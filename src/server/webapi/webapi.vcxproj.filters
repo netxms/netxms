@@ -54,6 +54,9 @@
     <ClCompile Include="scripts.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sshkeys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="tcpproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

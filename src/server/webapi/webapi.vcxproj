@@ -341,6 +341,7 @@
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="schedules.cpp" />
     <ClCompile Include="scripts.cpp" />
+    <ClCompile Include="sshkeys.cpp" />
     <ClCompile Include="tcpproxy.cpp" />
     <ClCompile Include="users.cpp" />
   </ItemGroup>

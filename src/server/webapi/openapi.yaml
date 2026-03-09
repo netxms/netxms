@@ -39,6 +39,8 @@ tags:
     description: User group management
   - name: Notification Channels
     description: Notification channel and driver management
+  - name: SSH Keys
+    description: SSH key management
   - name: Two-Factor Authentication
     description: Two-factor authentication method management and user bindings
 paths:
@@ -2572,6 +2574,162 @@ paths:
         - BearerAuth: []
       tags:
         - Notification Channels
+  /v1/ssh-keys:
+    get:
+      summary: List SSH keys
+      description: Retrieve a list of all SSH keys. Optionally include public key data.
+      parameters:
+        - name: includePublicKey
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Include public key data in the response
+      responses:
+        '200':
+          description: SSH keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SshKey'
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - SSH Keys
+    post:
+      summary: Create SSH key
+      description: |
+        Create a new SSH key. If only a name is provided, a new RSA key pair is generated.
+        If publicKey and privateKey fields are also provided, the key pair is imported.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SshKeyCreate'
+      responses:
+        '201':
+          description: SSH key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SshKey'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SSH key configuration access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - SSH Keys
+  /v1/ssh-keys/{key-id}:
+    get:
+      summary: Get SSH key details
+      description: Retrieve details of a specific SSH key including its public key.
+      parameters:
+        - name: key-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: SSH key ID
+      responses:
+        '200':
+          description: SSH key details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SshKey'
+        '400':
+          description: Invalid key ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: SSH key not found
+      security:
+        - BearerAuth: []
+      tags:
+        - SSH Keys
+    put:
+      summary: Update SSH key
+      description: Update an existing SSH key's name and optionally its key data.
+      parameters:
+        - name: key-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: SSH key ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SshKeyUpdate'
+      responses:
+        '200':
+          description: SSH key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SshKey'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SSH key configuration access rights
+        '404':
+          description: SSH key not found
+      security:
+        - BearerAuth: []
+      tags:
+        - SSH Keys
+    delete:
+      summary: Delete SSH key
+      description: |
+        Delete an SSH key. If the key is in use by nodes, returns 409 with the list of node IDs.
+        Use force=true to delete the key even if it is in use.
+      parameters:
+        - name: key-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: SSH key ID
+        - name: force
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Force delete even if the key is in use by nodes
+      responses:
+        '204':
+          description: SSH key deleted successfully
+        '400':
+          description: Invalid key ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SSH key configuration access rights
+        '404':
+          description: SSH key not found
+        '409':
+          description: SSH key is in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SshKeyInUse'
+      security:
+        - BearerAuth: []
+      tags:
+        - SSH Keys
   /v1/server-actions:
     get:
       summary: List server actions
@@ -5031,6 +5189,57 @@ components:
         notificationChannelName:
           type: string
           description: Notification channel name
+    SshKey:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: SSH key ID
+        name:
+          type: string
+          description: SSH key name
+        publicKey:
+          type: string
+          description: Public key in OpenSSH format (included in details and when includePublicKey=true)
+    SshKeyCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: SSH key name
+        publicKey:
+          type: string
+          description: Public key to import (omit to generate a new key pair)
+        privateKey:
+          type: string
+          description: Private key to import (required if publicKey is provided)
+    SshKeyUpdate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: SSH key name
+        publicKey:
+          type: string
+          description: New public key
+        privateKey:
+          type: string
+          description: New private key
+    SshKeyInUse:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Error description
+        nodesInUse:
+          type: array
+          items:
+            type: integer
+          description: List of node IDs using the key
   securitySchemes:
     BearerAuth:
       type: http

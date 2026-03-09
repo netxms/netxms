@@ -105,6 +105,11 @@ int H_ScriptDetails(Context *context);
 int H_ScriptCreate(Context *context);
 int H_ScriptUpdate(Context *context);
 int H_ScriptDelete(Context *context);
+int H_SshKeys(Context *context);
+int H_SshKeyDetails(Context *context);
+int H_SshKeyCreate(Context *context);
+int H_SshKeyUpdate(Context *context);
+int H_SshKeyDelete(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
@@ -350,6 +355,15 @@ static bool InitModule(Config *config)
       .GET(H_ScriptDetails)
       .PUT(H_ScriptUpdate)
       .DELETE(H_ScriptDelete)
+      .build();
+   RouteBuilder("v1/ssh-keys")
+      .GET(H_SshKeys)
+      .POST(H_SshKeyCreate)
+      .build();
+   RouteBuilder("v1/ssh-keys/:key-id")
+      .GET(H_SshKeyDetails)
+      .PUT(H_SshKeyUpdate)
+      .DELETE(H_SshKeyDelete)
       .build();
    RouteBuilder("v1/server-actions")
       .GET(H_ServerActions)
