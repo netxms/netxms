@@ -19,21 +19,32 @@
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.Arrays;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentListDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -43,22 +54,23 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InstanceDiscovery extends AbstractDCIPropertyPage
 {
-   private final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
+   private final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
    private static final String[] DCI_VARIABLES = { "$dci", "$node" };
 
 	private DataCollectionObject dco;
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
+   private Button selectButton;
    private LabeledText instanceNameColumn;
 	private ScriptEditor filterScript;
 	private Group groupRetention;
    private Combo instanceRetentionMode;
 	private Spinner instanceRetentionTime;
-   
+
    /**
     * Constructor
-    * 
+    *
     * @param editor
     */
    public InstanceDiscovery(DataCollectionObjectEditor editor)
@@ -74,7 +86,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dco = editor.getObject();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -103,6 +115,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 				int method = discoveryMethod.getSelectionIndex();
 		      discoveryData.setLabel(getDataLabel(method));
 		      discoveryData.setEnabled(method != DataCollectionObject.IDM_NONE);
+            selectButton.setEnabled(hasSelector(method));
             instanceNameColumn.setEnabled((method == DataCollectionObject.IDM_AGENT_TABLE) || (method == DataCollectionObject.IDM_INTERNAL_TABLE));
 		      filterScript.setEnabled(method != DataCollectionObject.IDM_NONE);
             instanceRetentionMode.setEnabled(method != DataCollectionObject.IDM_NONE);
@@ -110,17 +123,43 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 			}
 		});
 
-      boolean isTableSource = (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_AGENT_TABLE) || 
+      boolean isTableSource = (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_AGENT_TABLE) ||
             (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_INTERNAL_TABLE);
 
-      discoveryData = new LabeledText(dialogArea, SWT.NONE);
+      Composite discoveryDataArea = new Composite(dialogArea, SWT.NONE);
+      GridLayout discoveryDataLayout = new GridLayout();
+      discoveryDataLayout.numColumns = 2;
+      discoveryDataLayout.marginWidth = 0;
+      discoveryDataLayout.marginHeight = 0;
+      discoveryDataLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      discoveryDataArea.setLayout(discoveryDataLayout);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      discoveryDataArea.setLayoutData(gd);
+
+      discoveryData = new LabeledText(discoveryDataArea, SWT.NONE);
       discoveryData.setLabel(getDataLabel(dco.getInstanceDiscoveryMethod()));
       discoveryData.setText(isTableSource ? getTableName(dco.getInstanceDiscoveryData()) : dco.getInstanceDiscoveryData());
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       discoveryData.setLayoutData(gd);
       discoveryData.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
+
+      selectButton = new Button(discoveryDataArea, SWT.PUSH);
+      selectButton.setImage(SharedIcons.IMG_FIND);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      selectButton.setLayoutData(gd);
+      selectButton.setEnabled(hasSelector(dco.getInstanceDiscoveryMethod()));
+      selectButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectDiscoveryData();
+         }
+      });
 
       instanceNameColumn = new LabeledText(dialogArea, SWT.NONE);
       instanceNameColumn.setLabel(i18n.tr("Instance name column"));
@@ -178,7 +217,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
-				return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL,  
+				return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL,
 				      "Variables:\n\t$1\t\t\tInstance to test;\n\t$2\t\t\tInstance data (value for given OID for SNMP Walk - Values method, secondary value for Script method);\n\t$dci\t\tthis DCI object;\n\t$isCluster\ttrue if DCI is on cluster;\n\t$node\t\tcurrent node object (null if DCI is not on the node);\n\t$object\t\tcurrent object.\n\nReturn value:\n\ttrue/false to accept or reject instance without additional changes or\n\tarray of one, two or three elements to accept instance while modifying it:\n\t\t1st element - new instance name;\n\t\t2nd element - new instance display name;\n\t\t3rd element - object related to this DCI.");
 			}
       };
@@ -224,13 +263,13 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 
 	/**
 	 * Get label for data field
-	 * 
+	 *
 	 * @param method
 	 * @return
 	 */
 	private static String getDataLabel(int method)
 	{
-	   I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
+	   I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);
 		switch(method)
 		{
 			case DataCollectionObject.IDM_NONE:
@@ -257,6 +296,104 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 		}
       return "";
 	}
+
+   /**
+    * Check if given discovery method has a selection dialog available
+    *
+    * @param method instance discovery method
+    * @return true if selection dialog is available
+    */
+   private static boolean hasSelector(int method)
+   {
+      switch(method)
+      {
+         case DataCollectionObject.IDM_AGENT_LIST:
+         case DataCollectionObject.IDM_AGENT_TABLE:
+         case DataCollectionObject.IDM_SNMP_WALK_VALUES:
+         case DataCollectionObject.IDM_SNMP_WALK_OIDS:
+         case DataCollectionObject.IDM_INTERNAL_TABLE:
+         case DataCollectionObject.IDM_SCRIPT:
+         case DataCollectionObject.IDM_WEB_SERVICE:
+            return true;
+         default:
+            return false;
+      }
+   }
+
+   /**
+    * Open selection dialog for discovery data based on current discovery method
+    */
+   private void selectDiscoveryData()
+   {
+      int method = discoveryMethod.getSelectionIndex();
+      long nodeId = dco.getNodeId();
+
+      switch(method)
+      {
+         case DataCollectionObject.IDM_AGENT_LIST:
+         {
+            SelectAgentListDlg dlg = new SelectAgentListDlg(getShell(), nodeId);
+            if (dlg.open() == Window.OK)
+               discoveryData.setText(dlg.getSelectedListName());
+            break;
+         }
+         case DataCollectionObject.IDM_SNMP_WALK_VALUES:
+         case DataCollectionObject.IDM_SNMP_WALK_OIDS:
+         {
+            SnmpObjectId oid;
+            try
+            {
+               oid = SnmpObjectId.parseSnmpObjectId(discoveryData.getText().trim());
+            }
+            catch(Exception ex)
+            {
+               oid = null;
+            }
+            SelectSnmpParamDlg snmpDlg = new SelectSnmpParamDlg(getShell(), oid, nodeId);
+            if (snmpDlg.open() == Window.OK)
+               discoveryData.setText(snmpDlg.getParameterName());
+            break;
+         }
+         case DataCollectionObject.IDM_AGENT_TABLE:
+         {
+            SelectAgentParamDlg dlg = new SelectAgentParamDlg(getShell(), nodeId, DataOrigin.AGENT, true);
+            if (dlg.open() == Window.OK)
+            {
+               discoveryData.setText(dlg.getParameterName());
+               String instanceColumn = dlg.getInstanceColumn();
+               if ((instanceColumn != null) && !instanceColumn.isEmpty())
+                  instanceNameColumn.setText(instanceColumn);
+            }
+            break;
+         }
+         case DataCollectionObject.IDM_INTERNAL_TABLE:
+         {
+            SelectInternalParamDlg dlg = new SelectInternalParamDlg(getShell(), nodeId, true);
+            if (dlg.open() == Window.OK)
+            {
+               discoveryData.setText(dlg.getParameterName());
+               String instanceColumn = dlg.getInstanceColumn();
+               if ((instanceColumn != null) && !instanceColumn.isEmpty())
+                  instanceNameColumn.setText(instanceColumn);
+            }
+            break;
+         }
+         case DataCollectionObject.IDM_SCRIPT:
+         {
+            SelectParameterScriptDialog dlg = new SelectParameterScriptDialog(getShell());
+            if (dlg.open() == Window.OK)
+               discoveryData.setText(dlg.getParameterName());
+            break;
+         }
+         case DataCollectionObject.IDM_WEB_SERVICE:
+         {
+            SelectWebServiceDlg dlg = new SelectWebServiceDlg(getShell(), false);
+            if (dlg.open() == Window.OK)
+               discoveryData.setText(dlg.getParameterDescription());
+            break;
+         }
+      }
+   }
 
    /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
@@ -297,6 +434,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 		discoveryData.setLabel(getDataLabel(DataCollectionObject.IDM_NONE));
       discoveryData.setText("");
 		discoveryData.setEnabled(false);
+      selectButton.setEnabled(false);
       instanceNameColumn.setText("");
       instanceNameColumn.setEnabled(false);
       filterScript.setText("");
