@@ -39,6 +39,7 @@
 //
 
 LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session);
@@ -418,6 +419,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
    { _T("Net.InterfaceList"), H_NetIfList, nullptr },
    { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
    { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };

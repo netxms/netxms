@@ -1,4 +1,4 @@
-/* 
+/*
 ** netxms subagent for darwin
 ** copyright (c) 2012 alex kirhenshtein
 **
@@ -29,7 +29,7 @@
 // CPU stats
 //
 
-enum 
+enum
 {
    CPU_USAGE_USER,
    CPU_USAGE_SYSTEM,
@@ -46,5 +46,6 @@ LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuInstanceList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __cpu__h__

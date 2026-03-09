@@ -110,7 +110,7 @@ void CPUStatCollector()
    {
       kstat_unlock();
       AgentWriteLog(NXLOG_ERROR,
-            _T("SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected"), 
+            _T("SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected"),
             _tcserror(errno));
       return;
    }
@@ -171,7 +171,7 @@ void CPUStatCollector()
       counter++;
       if (counter == 60)
          counter = 0;
-      
+
       // Re-open kstat handle if some processor data cannot be read
       if (readFailures && (counter == 0))
       {
@@ -182,7 +182,7 @@ void CPUStatCollector()
          {
             kstat_unlock();
             AgentWriteLog(NXLOG_ERROR,
-                          _T("SunOS: Unable to re-open kstat() context (%s), CPU statistics collection aborted"), 
+                          _T("SunOS: Unable to re-open kstat() context (%s), CPU statistics collection aborted"),
                           _tcserror(errno));
             return;
          }
@@ -307,6 +307,23 @@ void CPUStatCollector()
    kstat_close(kc);
    kstat_unlock();
    AgentWriteDebugLog(1, _T("CPU stat collector thread stopped"));
+}
+
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for (int i = 0; i < s_cpuCount; i++)
+   {
+      if (s_instanceMap[i] != -1)
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("%d"), s_instanceMap[i]);
+         value->add(buffer);
+      }
+   }
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

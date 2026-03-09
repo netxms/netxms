@@ -1,4 +1,4 @@
-/* 
+/*
 ** netxms subagent for darwin
 ** copyright (c) 2021 Raden Solutions
 **
@@ -353,6 +353,20 @@ void StartCpuUsageCollector(void)
 
    // Start collector
    m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
+}
+
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for (unsigned int i = 0; i < s_maxCPU; i++)
+   {
+      TCHAR buffer[32];
+      _sntprintf(buffer, 32, _T("%u"), i);
+      value->add(buffer);
+   }
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

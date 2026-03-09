@@ -350,6 +350,20 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstract
    return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for (int i = 0; i < m_cpuCount; i++)
+   {
+      TCHAR buffer[32];
+      _sntprintf(buffer, 32, _T("%d"), i);
+      value->add(buffer);
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
 /*
  * Handler for CPU Context Switch parameter
  */

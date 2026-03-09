@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004-2024 Raden Solutions
 **
@@ -283,6 +283,30 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
          return SYSINFO_RC_UNSUPPORTED;
    }
 
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   FILE *hStat = fopen("/proc/stat", "r");
+   if (hStat == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   char buffer[1024];
+   while(fgets(buffer, sizeof(buffer), hStat) != nullptr)
+   {
+      uint32_t cpuIndex;
+      if (sscanf(buffer, "cpu%u ", &cpuIndex) == 1)
+      {
+         TCHAR instanceName[32];
+         _sntprintf(instanceName, 32, _T("%u"), cpuIndex);
+         value->add(instanceName);
+      }
+   }
+   fclose(hStat);
    return SYSINFO_RC_SUCCESS;
 }
 

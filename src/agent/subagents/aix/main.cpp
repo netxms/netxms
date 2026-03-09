@@ -27,6 +27,7 @@
  * Hanlder functions
  */
 LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuUsageEx(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -344,6 +345,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Net.InterfaceList"), H_NetInterfaceList, nullptr },
    { _T("Net.InterfaceNames"), H_NetInterfaceNames, nullptr },
    { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },
    { _T("System.ProcessList"), H_ProcessList, _T("1") }
 };

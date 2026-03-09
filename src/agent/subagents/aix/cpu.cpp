@@ -94,7 +94,7 @@ static void CpuUsageCollector()
 			nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("Call to perfstat_cpu failed (%s)"), _tcserror(errno));
 			cpuCount = 0;
 		}
-		
+
 		// update collected data
 		for(cpu = 0; cpu <= cpuCount; cpu++)
 		{
@@ -112,13 +112,13 @@ static void CpuUsageCollector()
 				idle = m_cpuStats[cpu - 1].idle;
 				iowait = m_cpuStats[cpu - 1].wait;
 			}
-			
+
 			uint64_t userDelta = user - m_lastUser[cpu];
 			uint64_t systemDelta = system - m_lastSystem[cpu];
 			uint64_t idleDelta = idle - m_lastIdle[cpu];
 			uint64_t iowaitDelta = iowait - m_lastIoWait[cpu];
 			uint64_t totalDelta = userDelta + systemDelta + idleDelta + iowaitDelta;
-			
+
          if (totalDelta > 0)
          {
             double onePercent = (double)totalDelta / 100.0; // 1% of total
@@ -407,7 +407,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
-		
+
 	cpu = _tcstol(buffer, &eptr, 0);
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
@@ -427,6 +427,20 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 
 	GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), cpu + 1, count, pValue);
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for (int i = 0; i < m_maxCPU; i++)
+   {
+      TCHAR buffer[32];
+      _sntprintf(buffer, 32, _T("%d"), i);
+      value->add(buffer);
+   }
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

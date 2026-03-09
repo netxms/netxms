@@ -140,7 +140,7 @@ static void CPUStatCollector()
          s_bpos = 0;
 
       UnlockMutex(&s_lock);
-      
+
       // swap buffers
       if (curr == s_cpuTimes)
       {
@@ -311,6 +311,20 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
    ret_uint(value, s_interruptCount[cpuIndex]);
    UnlockMutex(&s_lock);
 
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.CPU.Instances list
+ */
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for (uint32_t i = 0; i < s_cpuCount; i++)
+   {
+      TCHAR buffer[32];
+      _sntprintf(buffer, 32, _T("%u"), i);
+      value->add(buffer);
+   }
    return SYSINFO_RC_SUCCESS;
 }
 

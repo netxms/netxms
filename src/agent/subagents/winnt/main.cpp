@@ -37,6 +37,7 @@ LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractC
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuContextSwitches(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuInstanceList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuVendorId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -450,6 +451,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("Net.InterfaceNames"), H_InterfaceNames, nullptr },
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, nullptr },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, nullptr },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
 	{ _T("System.Desktops(*)"), H_Desktops, nullptr },
    { _T("System.IO.Devices"), H_IoDeviceList, nullptr },
    { _T("System.Processes"), H_ProcessList, _T("2") },

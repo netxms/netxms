@@ -191,6 +191,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
    { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
    { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
    { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
+   { _T("System.CPU.Instances"),          H_CpuInstanceList, NULL },
    { _T("System.IO.Devices"),            H_IODeviceList,    NULL },
 };
 
