@@ -43,6 +43,8 @@ tags:
     description: SSH key management
   - name: Two-Factor Authentication
     description: Two-factor authentication method management and user bindings
+  - name: Web Service Definitions
+    description: Web service definition management
 paths:
   /:
     get:
@@ -2730,6 +2732,147 @@ paths:
         - BearerAuth: []
       tags:
         - SSH Keys
+  /v1/web-service-definitions:
+    get:
+      summary: List web service definitions
+      description: Retrieve a list of all web service definitions.
+      responses:
+        '200':
+          description: Web service definitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebServiceDefinition'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have web service definitions access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - Web Service Definitions
+    post:
+      summary: Create web service definition
+      description: Create a new web service definition. Name and URL are required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebServiceDefinitionCreate'
+      responses:
+        '201':
+          description: Web service definition created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebServiceDefinition'
+        '400':
+          description: Invalid request (missing name or url)
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have web service definitions access rights
+        '409':
+          description: Web service definition with this name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Web Service Definitions
+  /v1/web-service-definitions/{definition-id}:
+    get:
+      summary: Get web service definition details
+      description: Retrieve details of a specific web service definition.
+      parameters:
+        - name: definition-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Web service definition ID
+      responses:
+        '200':
+          description: Web service definition details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebServiceDefinition'
+        '400':
+          description: Invalid definition ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have web service definitions access rights
+        '404':
+          description: Web service definition not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Web Service Definitions
+    put:
+      summary: Update web service definition
+      description: Update an existing web service definition.
+      parameters:
+        - name: definition-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Web service definition ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebServiceDefinitionCreate'
+      responses:
+        '200':
+          description: Web service definition updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebServiceDefinition'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have web service definitions access rights
+        '404':
+          description: Web service definition not found
+        '409':
+          description: Web service definition with this name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Web Service Definitions
+    delete:
+      summary: Delete web service definition
+      description: Delete a web service definition.
+      parameters:
+        - name: definition-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Web service definition ID
+      responses:
+        '204':
+          description: Web service definition deleted successfully
+        '400':
+          description: Invalid definition ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have web service definitions access rights
+        '404':
+          description: Web service definition not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Web Service Definitions
   /v1/server-actions:
     get:
       summary: List server actions
@@ -5240,6 +5383,107 @@ components:
           items:
             type: integer
           description: List of node IDs using the key
+    WebServiceDefinition:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Web service definition ID
+        guid:
+          type: string
+          description: Web service definition GUID
+        name:
+          type: string
+          description: Definition name
+        description:
+          type: string
+          description: Definition description
+        url:
+          type: string
+          description: Web service URL (may contain %1, %2, etc. for parameter substitution)
+        httpRequestMethod:
+          type: integer
+          description: "HTTP request method (0=GET, 1=POST, 2=PUT, 3=DELETE, 4=PATCH)"
+        requestData:
+          type: string
+          description: Request body data
+        flags:
+          type: integer
+          description: "Flags (bit mask: 1=verify certificate, 2=verify host, 4=force plain text parser, 8=follow location)"
+        authType:
+          type: integer
+          description: "Authentication type (0=none, 1=basic, 2=digest, 3=NTLM, 4=bearer, 5=any)"
+        login:
+          type: string
+          description: Login name or token
+        password:
+          type: string
+          description: Password
+        cacheRetentionTime:
+          type: integer
+          description: Cache retention time in milliseconds
+        requestTimeout:
+          type: integer
+          description: Request timeout in milliseconds
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+          description: HTTP headers
+    WebServiceDefinitionCreate:
+      type: object
+      required:
+        - name
+        - url
+      properties:
+        name:
+          type: string
+          description: Definition name
+        description:
+          type: string
+          description: Definition description
+        url:
+          type: string
+          description: Web service URL
+        httpRequestMethod:
+          type: integer
+          description: "HTTP request method (0=GET, 1=POST, 2=PUT, 3=DELETE, 4=PATCH)"
+        requestData:
+          type: string
+          description: Request body data
+        flags:
+          type: integer
+          description: "Flags (bit mask: 1=verify certificate, 2=verify host, 4=force plain text parser, 8=follow location)"
+        authType:
+          type: integer
+          description: "Authentication type (0=none, 1=basic, 2=digest, 3=NTLM, 4=bearer, 5=any)"
+        login:
+          type: string
+          description: Login name or token
+        password:
+          type: string
+          description: Password
+        cacheRetentionTime:
+          type: integer
+          description: Cache retention time in milliseconds
+        requestTimeout:
+          type: integer
+          description: Request timeout in milliseconds (default 30000)
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+          description: HTTP headers
   securitySchemes:
     BearerAuth:
       type: http

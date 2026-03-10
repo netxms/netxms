@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 /**
  * Web service definition
  */
-class WebServiceDefinition
+class NXCORE_EXPORTABLE WebServiceDefinition
 {
 private:
    uint32_t m_id;
@@ -91,9 +91,13 @@ public:
 
 void LoadWebServiceDefinitions();
 SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions();
-shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
-uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
-uint32_t DeleteWebServiceDefinition(uint32_t id);
+json_t NXCORE_EXPORTABLE *GetWebServiceDefinitionsAsJson();
+json_t NXCORE_EXPORTABLE *GetWebServiceDefinitionAsJson(uint32_t id);
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(uint32_t id);
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(const uuid& guid);
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(const wchar_t *name);
+uint32_t NXCORE_EXPORTABLE ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
+uint32_t NXCORE_EXPORTABLE DeleteWebServiceDefinition(uint32_t id);
 void CreateWebServiceDefinitionExportRecord(json_t *array, uint32_t count, uint32_t *list);
 bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context);
 bool ImportWebServiceDefinition(json_t *config, bool overwrite, ImportContext *context);

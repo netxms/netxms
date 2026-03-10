@@ -110,6 +110,11 @@ int H_SshKeyDetails(Context *context);
 int H_SshKeyCreate(Context *context);
 int H_SshKeyUpdate(Context *context);
 int H_SshKeyDelete(Context *context);
+int H_WebServiceDefinitions(Context *context);
+int H_WebServiceDefinitionDetails(Context *context);
+int H_WebServiceDefinitionCreate(Context *context);
+int H_WebServiceDefinitionUpdate(Context *context);
+int H_WebServiceDefinitionDelete(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
@@ -407,6 +412,15 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/users/:user-id/2fa-bindings/:method-name")
       .PUT(H_User2FABindingUpdate)
       .DELETE(H_User2FABindingDelete)
+      .build();
+   RouteBuilder("v1/web-service-definitions")
+      .GET(H_WebServiceDefinitions)
+      .POST(H_WebServiceDefinitionCreate)
+      .build();
+   RouteBuilder("v1/web-service-definitions/:definition-id")
+      .GET(H_WebServiceDefinitionDetails)
+      .PUT(H_WebServiceDefinitionUpdate)
+      .DELETE(H_WebServiceDefinitionDelete)
       .build();
    RouteBuilder("v1/tcp-proxy")
       .POST(H_TcpProxyCreate)  // Create session, get token

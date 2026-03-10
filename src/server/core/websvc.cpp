@@ -402,7 +402,7 @@ void LoadWebServiceDefinitions()
 /**
  * Find web service definition by UUID
  */
-shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const uuid guid)
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(const uuid& guid)
 {
    shared_ptr<WebServiceDefinition> result;
    s_webServiceDefinitionLock.lock();
@@ -422,7 +422,7 @@ shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const uuid guid)
 /**
  * Find web service definition by name
  */
-shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name)
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(const wchar_t *name)
 {
    shared_ptr<WebServiceDefinition> result;
    s_webServiceDefinitionLock.lock();
@@ -451,6 +451,58 @@ SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions()
 }
 
 /**
+ * Get all web service definitions as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetWebServiceDefinitionsAsJson()
+{
+   json_t *output = json_array();
+   s_webServiceDefinitionLock.lock();
+   for (int i = 0; i < s_webServiceDefinitions.size(); i++)
+      json_array_append_new(output, s_webServiceDefinitions.get(i)->toJson());
+   s_webServiceDefinitionLock.unlock();
+   return output;
+}
+
+/**
+ * Get web service definition by ID as JSON
+ */
+json_t NXCORE_EXPORTABLE *GetWebServiceDefinitionAsJson(uint32_t id)
+{
+   json_t *result = nullptr;
+   s_webServiceDefinitionLock.lock();
+   for (int i = 0; i < s_webServiceDefinitions.size(); i++)
+   {
+      if (s_webServiceDefinitions.get(i)->getId() == id)
+      {
+         result = s_webServiceDefinitions.get(i)->toJson();
+         break;
+      }
+   }
+   s_webServiceDefinitionLock.unlock();
+   return result;
+}
+
+/**
+ * Find web service definition by ID
+ */
+shared_ptr<WebServiceDefinition> NXCORE_EXPORTABLE FindWebServiceDefinition(uint32_t id)
+{
+   shared_ptr<WebServiceDefinition> result;
+   s_webServiceDefinitionLock.lock();
+   for (int i = 0; i < s_webServiceDefinitions.size(); i++)
+   {
+      auto d = s_webServiceDefinitions.getShared(i);
+      if (d->getId() == id)
+      {
+         result = d;
+         break;
+      }
+   }
+   s_webServiceDefinitionLock.unlock();
+   return result;
+}
+
+/**
  * Save single header to database
  */
 static EnumerationCallbackResult SaveHeader(const TCHAR *key, const TCHAR *value, DB_STATEMENT hStmt)
@@ -463,7 +515,7 @@ static EnumerationCallbackResult SaveHeader(const TCHAR *key, const TCHAR *value
 /**
  * Modify web service definition. Returns client RCC.
  */
-uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
+uint32_t NXCORE_EXPORTABLE ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
 {
    uint32_t rcc;
 
@@ -552,7 +604,7 @@ uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition)
 /**
  * Delete web service definition. Returns client RCC.
  */
-uint32_t DeleteWebServiceDefinition(uint32_t id)
+uint32_t NXCORE_EXPORTABLE DeleteWebServiceDefinition(uint32_t id)
 {
    uint32_t rcc = RCC_INVALID_WEB_SERVICE_ID;
    shared_ptr<WebServiceDefinition> definition;
