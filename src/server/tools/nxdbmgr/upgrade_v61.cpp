@@ -191,13 +191,13 @@ static bool H_UpgradeFromV4()
       L"CREATE TABLE cloud_domains ("
       L"  id integer not null,"
       L"  connector_name varchar(63) not null,"
-      L"  credentials varchar(4096) null,"
-      L"  discovery_filter varchar(4096) null,"
+      L"  credentials varchar(4000) null,"
+      L"  discovery_filter varchar(4000) null,"
       L"  removal_policy smallint not null,"
       L"  grace_period integer not null,"
       L"  last_discovery_status smallint not null,"
       L"  last_discovery_time integer not null,"
-      L"  last_discovery_msg varchar(4096) null,"
+      L"  last_discovery_msg varchar(4000) null,"
       L"  PRIMARY KEY(id))"));
 
    CHK_EXEC(CreateTable(

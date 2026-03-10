@@ -2656,13 +2656,13 @@ CREATE TABLE cloud_domains
 (
    id integer not null,
    connector_name varchar(63) not null,
-   credentials varchar(4096) null,
-   discovery_filter varchar(4096) null,
+   credentials varchar(4000) null,
+   discovery_filter varchar(4000) null,
    removal_policy smallint not null,
    grace_period integer not null,
    last_discovery_status smallint not null,
    last_discovery_time integer not null,
-   last_discovery_msg varchar(4096) null,
+   last_discovery_msg varchar(4000) null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 
