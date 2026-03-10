@@ -152,7 +152,7 @@ bool QtechSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
       v = response->getVariable(3);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         v->getValueAsString(hwInfo->serialNumber, 32);
+         v->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;

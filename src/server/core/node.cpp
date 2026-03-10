@@ -1181,7 +1181,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
          DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
-         DBBind(hStmt, 65, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 65, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 127);
          DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipDeviceType);
          DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipStatus);
          DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_cipState);

@@ -25,11 +25,21 @@
 #include <netxms-xml.h>
 
 /**
- * Upgrade from 60.36 to 61.0
+ * Upgrade from 60.37 to 61.0
+ */
+static bool H_UpgradeFromV37()
+{
+   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 60.36 to 60.37
  */
 static bool H_UpgradeFromV36()
 {
-   CHK_EXEC(SetMajorSchemaVersion(61, 0));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"nodes", L"serial_number", 127, true));
+   CHK_EXEC(SetMinorSchemaVersion(37));
    return true;
 }
 
@@ -2014,7 +2024,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 36, 61, 0,  H_UpgradeFromV36 },
+   { 37, 61, 0,  H_UpgradeFromV37 },
+   { 36, 60, 37, H_UpgradeFromV36 },
    { 35, 60, 36, H_UpgradeFromV35 },
    { 34, 60, 35, H_UpgradeFromV34 },
    { 33, 60, 34, H_UpgradeFromV33 },

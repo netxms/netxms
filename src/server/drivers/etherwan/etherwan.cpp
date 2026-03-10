@@ -98,7 +98,7 @@ bool EtherWanDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->serialNumber, v->getValueAsMACAddr().toString(MacAddressNotation::FLAT_STRING), 32);
+         wcslcpy(hwInfo->serialNumber, v->getValueAsMACAddr().toString(MacAddressNotation::FLAT_STRING), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       v = response->getVariable(3);

@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.14 to 61.15
+ */
+static bool H_UpgradeFromV14()
+{
+   if (GetSchemaLevelForMajorVersion(60) < 37)
+   {
+      CHK_EXEC(DBResizeColumn(g_dbHandle, L"nodes", L"serial_number", 127, true));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(60, 37));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 61.13 to 61.14
  */
 static bool H_UpgradeFromV13()
@@ -349,21 +363,22 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 13, 61, 14,  H_UpgradeFromV13 },
-   { 12, 61, 13,  H_UpgradeFromV12 },
-   { 11, 61, 12,  H_UpgradeFromV11 },
-   { 10, 61, 11,  H_UpgradeFromV10 },
-   { 9,  61, 10,  H_UpgradeFromV9  },
-   { 8,  61,  9,  H_UpgradeFromV8  },
-   { 7,  61,  8,  H_UpgradeFromV7  },
-   { 6,  61,  7,  H_UpgradeFromV6  },
-   { 5,  61,  6,  H_UpgradeFromV5  },
-   { 4,  61,  5,  H_UpgradeFromV4  },
-   { 3,  61,  4,  H_UpgradeFromV3  },
-   { 2,  61,  3,  H_UpgradeFromV2  },
-   { 1,  61,  2,  H_UpgradeFromV1  },
-   { 0,  61,  1,  H_UpgradeFromV0  },
-   { 0,  0,  0,  nullptr }
+   { 14, 61, 15, H_UpgradeFromV14 },
+   { 13, 61, 14, H_UpgradeFromV13 },
+   { 12, 61, 13, H_UpgradeFromV12 },
+   { 11, 61, 12, H_UpgradeFromV11 },
+   { 10, 61, 11, H_UpgradeFromV10 },
+   { 9,  61, 10, H_UpgradeFromV9  },
+   { 8,  61,  9, H_UpgradeFromV8  },
+   { 7,  61,  8, H_UpgradeFromV7  },
+   { 6,  61,  7, H_UpgradeFromV6  },
+   { 5,  61,  6, H_UpgradeFromV5  },
+   { 4,  61,  5, H_UpgradeFromV4  },
+   { 3,  61,  4, H_UpgradeFromV3  },
+   { 2,  61,  3, H_UpgradeFromV2  },
+   { 1,  61,  2, H_UpgradeFromV1  },
+   { 0,  61,  1, H_UpgradeFromV0  },
+   { 0,  0,   0, nullptr }
 };
 
 /**

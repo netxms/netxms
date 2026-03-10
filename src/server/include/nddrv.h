@@ -160,7 +160,7 @@ struct DeviceHardwareInfo
    wchar_t productCode[32];
    wchar_t productName[128];
    wchar_t productVersion[16];
-   wchar_t serialNumber[32];
+   wchar_t serialNumber[128];
 };
 
 /**
