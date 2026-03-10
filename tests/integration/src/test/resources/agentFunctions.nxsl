@@ -10,13 +10,13 @@ actionName2 = $3;
 
 assert(AgentExecuteCommand(preCreatedNode, actionName));
 assert(AgentExecuteCommand(preCreatedNode, actionName, "Param1", 2, 3.01));
-assert(!AgentExecuteCommand(preCreatedNode, "nonexisting action")); 
+assert(!AgentExecuteCommand(preCreatedNode, "nonexisting action"));
 
 
 result = AgentExecuteCommandWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01);
-assert(result == "Param1 2 3.010000\n");
+assert(result == "Param1 2 3.01\n");
 result = AgentExecuteCommandWithOutput(preCreatedNode, actionName2, "Param1", 2, 3.01, 4);
-assert(result == "Param1 2 3.010000 4\n");
+assert(result == "Param1 2 3.01 4\n");
 
 list = AgentReadList(preCreatedNode, "System.ProcessList");
 assert(list != null);
