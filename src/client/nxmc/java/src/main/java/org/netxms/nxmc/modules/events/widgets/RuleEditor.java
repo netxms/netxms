@@ -647,8 +647,8 @@ public class RuleEditor extends Composite
          gd.grabExcessHorizontalSpace = true;
          scriptEditor.setLayoutData(gd);
          scriptEditor.setText(rule.getFilterScript());
-         scriptEditor.getTextWidget().setEditable(false);
-         scriptEditor.getTextWidget().addMouseListener(listener);
+         scriptEditor.setEditable(false);
+         scriptEditor.addMouseListener(listener);
       }
 
       return clientArea;
@@ -964,8 +964,8 @@ public class RuleEditor extends Composite
          gd.grabExcessHorizontalSpace = true;
          scriptEditor.setLayoutData(gd);
          scriptEditor.setText(rule.getActionScript());
-         scriptEditor.getTextWidget().setEditable(false);
-         scriptEditor.getTextWidget().addMouseListener(listener);
+         scriptEditor.setEditable(false);
+         scriptEditor.addMouseListener(listener);
       }
 
       /* timer cancellations */

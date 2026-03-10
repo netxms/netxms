@@ -18,25 +18,30 @@
  */
 package org.netxms.nxmc.modules.nxsl.widgets;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.json.JsonArray;
+import org.eclipse.rap.json.JsonObject;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.remote.AbstractOperationHandler;
+import org.eclipse.rap.rwt.remote.RemoteObject;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -48,9 +53,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScriptCompilationResult;
@@ -59,8 +63,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.keyboard.KeyBindingManager;
-import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -75,19 +77,22 @@ public class ScriptEditor extends CompositeWithMessageArea
    private final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
    private Composite content;
-   private Text editor;
-	private String hintText;
-	private Composite hintArea;
-	private Text hintTextControl = null;
-	private Label hintsExpandButton = null;
-	private Button compileButton;
-   private KeyBindingManager keyBindingManager;
-   private Action actionGoToLine;
-   private Action actionSelectAll;
-   private Action actionCut;
-   private Action actionCopy;
-   private Action actionPaste;
-   private Action actionDeleteLine;
+   private Composite editorContainer;
+   private RemoteObject remoteObject;
+   private String cachedText = "";
+   private boolean editable = true;
+   private Set<String> functions = new HashSet<>();
+   private Set<String> variables = new HashSet<>();
+   private Set<String> constants = new HashSet<>();
+   private List<Integer> errorLines = new ArrayList<>();
+   private List<Integer> warningLines = new ArrayList<>();
+   private List<ModifyListener> modifyListeners = new ArrayList<>();
+   private List<MouseListener> mouseListeners = new ArrayList<>();
+   private String hintText;
+   private Composite hintArea;
+   private Text hintTextControl = null;
+   private Label hintsExpandButton = null;
+   private Button compileButton;
 
    /**
     * @param parent
@@ -151,95 +156,34 @@ public class ScriptEditor extends CompositeWithMessageArea
          createHintsArea();
       }
 
-      editor = new Text(content, editorStyle | SWT.MULTI);
-      editor.setData(RWT.CUSTOM_VARIANT, "monospace");
-      editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      editorContainer = new Composite(content, SWT.NONE);
+      editorContainer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      editor.addTraverseListener((e) -> {
-         if (e.detail == SWT.TRAVERSE_TAB_NEXT)
+      remoteObject = RWT.getUISession().getConnection().createRemoteObject("netxms.CodeMirror");
+      remoteObject.set("parent", WidgetUtil.getId(editorContainer));
+      remoteObject.set("lineNumbers", true);
+      remoteObject.setHandler(new AbstractOperationHandler() {
+         @Override
+         public void handleNotify(String event, JsonObject properties)
          {
-            e.doit = false; // Prevent default tab traversal
-
-            Point selection = editor.getSelection();
-            if (selection.x == selection.y)
+            if ("textChanged".equals(event))
             {
-               // Insert tab character at current caret position
-               editor.insert("\t");
-               editor.setSelection(editor.getCaretPosition() + 1); // Move caret after the inserted tab
+               cachedText = properties.get("text").asString();
+               fireModifyListeners();
             }
-            else
+            else if ("textSync".equals(event))
             {
-               // Find each line starting within selection and indent it
-               String text = editor.getText();
-               int startLineOffset = text.lastIndexOf('\n', selection.x - 1);
-               if (startLineOffset == -1)
-                  startLineOffset = 0;
-               else
-                  startLineOffset++; // Move to the first character of the line
-               int endLineOffset = text.indexOf('\n', selection.y - 1);
-               if (endLineOffset == -1)
-                  endLineOffset = text.length();
-               StringBuilder newText = new StringBuilder();
-               int lineStart = startLineOffset;
-               while(lineStart < endLineOffset)
-               {
-                  int lineEnd = text.indexOf('\n', lineStart);
-                  if (lineEnd == -1 || lineEnd > endLineOffset)
-                     lineEnd = endLineOffset;
-                  newText.append("\t").append(text, lineStart, lineEnd);
-                  if (lineEnd < endLineOffset)
-                     newText.append('\n');
-                  lineStart = lineEnd + 1;
-               }
-               editor.setText(text.substring(0, startLineOffset) + newText.toString() + text.substring(endLineOffset));
-               editor.setSelection(selection.x, selection.x + newText.length());
+               cachedText = properties.get("text").asString();
             }
-
-            editor.setFocus();
-         }
-         else if (e.detail == SWT.TRAVERSE_TAB_PREVIOUS)
-         {
-            Point selection = editor.getSelection();
-            if (selection.x == selection.y)
-               return; // No selection - nothing to unindent
-
-            e.doit = false; // Prevent default tab traversal
-
-            // Find each line starting within selection and unindent it
-            String text = editor.getText();
-            int startLineOffset = text.lastIndexOf('\n', selection.x - 1);
-            if (startLineOffset == -1)
-               startLineOffset = 0;
-            else
-               startLineOffset++; // Move to the first character of the line
-            int endLineOffset = text.indexOf('\n', selection.y - 1);
-            if (endLineOffset == -1)
-               endLineOffset = text.length();
-            StringBuilder newText = new StringBuilder();
-            int lineStart = startLineOffset;
-            while(lineStart < endLineOffset)
+            else if ("mouseDown".equals(event))
             {
-               int lineEnd = text.indexOf('\n', lineStart);
-               if (lineEnd == -1 || lineEnd > endLineOffset)
-                  lineEnd = endLineOffset;
-               if (text.startsWith("\t", lineStart))
-               {
-                  newText.append(text, lineStart + 1, lineEnd);
-               }
-               else
-               {
-                  newText.append(text, lineStart, lineEnd);
-               }
-               if (lineEnd < endLineOffset)
-                  newText.append('\n');
-               lineStart = lineEnd + 1;
+               fireMouseDownListeners();
             }
-            editor.setText(text.substring(0, startLineOffset) + newText.toString() + text.substring(endLineOffset));
-            editor.setSelection(selection.x, selection.x + newText.length());
-
-            editor.setFocus();
          }
       });
+      remoteObject.listen("textChanged", true);
+      remoteObject.listen("textSync", true);
+      remoteObject.listen("mouseDown", true);
 
       if (showCompileButton)
       {
@@ -259,7 +203,7 @@ public class ScriptEditor extends CompositeWithMessageArea
          gd.exclude = true;
          compileButton.setLayoutData(gd);
 
-         editor.addControlListener(new ControlListener() {
+         editorContainer.addControlListener(new ControlListener() {
             @Override
             public void controlResized(ControlEvent e)
             {
@@ -290,20 +234,7 @@ public class ScriptEditor extends CompositeWithMessageArea
          compileButton.setSize(compileButton.computeSize(SWT.DEFAULT, SWT.DEFAULT));
          positionCompileButton();
       }
-
-      keyBindingManager = new KeyBindingManager();
-
-      createActions();
-      createContextMenu();
-
-      editor.addKeyListener(new KeyAdapter() {
-         @Override
-         public void keyPressed(KeyEvent e)
-         {
-            keyBindingManager.processKeyStroke(new KeyStroke(e.stateMask, e.keyCode));
-         }
-      });
-	}
+   }
 
    /**
     * Position "Compile" button
@@ -311,11 +242,8 @@ public class ScriptEditor extends CompositeWithMessageArea
    private void positionCompileButton()
    {
       compileButton.moveAbove(null);
-      Point location = editor.getLocation();
-      int editorWidth = editor.getSize().x;
-      ScrollBar sb = editor.getVerticalBar();
-      if (sb != null)
-         editorWidth -= sb.getSize().x;
+      Point location = editorContainer.getLocation();
+      int editorWidth = editorContainer.getSize().x;
       compileButton.setLocation(location.x + editorWidth - compileButton.getSize().x - 3, location.y + 3);
    }
 
@@ -387,112 +315,83 @@ public class ScriptEditor extends CompositeWithMessageArea
    }
 
    /**
-    * Create actions
+    * Fire registered modify listeners.
     */
-   private void createActions()
+   private void fireModifyListeners()
    {
-      actionGoToLine = new Action(i18n.tr("&Go to line..."), ResourceManager.getImageDescriptor("icons/nxsl/go-to-line.png")) {
-         @Override
-         public void run()
-         {
-            goToLine();
-         }
-      };
-      keyBindingManager.addBinding("M1+G", actionGoToLine);
-
-      actionSelectAll = new Action(i18n.tr("Select &all")) {
-         @Override
-         public void run()
-         {
-            selectAll();
-         }
-      };
-      keyBindingManager.addBinding("M1+A", actionSelectAll);
-
-      actionDeleteLine = new Action(i18n.tr("&Delete line")) {
-         @Override
-         public void run()
-         {
-            deleteLine();
-         }
-      };
-      keyBindingManager.addBinding("M1+M2+K", actionDeleteLine);
-
-      // Do not require key bindings (handled by StyledText widget)
-      actionCut = new Action(i18n.tr("C&ut") + "\t" + KeyStroke.parse("M1+X").toString(), SharedIcons.CUT) {
-         @Override
-         public void run()
-         {
-            cut();
-         }
-      };
-      actionCut.setEnabled(false);
-
-      actionCopy = new Action(i18n.tr("&Copy") + "\t" + KeyStroke.parse("M1+C").toString(), SharedIcons.COPY) {
-         @Override
-         public void run()
-         {
-            copy();
-         }
-      };
-      actionCopy.setEnabled(false);
-
-      actionPaste = new Action(i18n.tr("&Paste") + "\t" + KeyStroke.parse("M1+P").toString(), SharedIcons.PASTE) {
-         @Override
-         public void run()
-         {
-            paste();
-         }
-      };
-      actionPaste.setEnabled(false);
+      Event e = new Event();
+      e.display = getDisplay();
+      e.widget = this;
+      ModifyEvent me = new ModifyEvent(e);
+      for(ModifyListener l : modifyListeners)
+         l.modifyText(me);
    }
 
    /**
-    * Create context menu
+    * Fire registered mouse down listeners.
     */
-   private void createContextMenu()
+   private void fireMouseDownListeners()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener((m) -> fillContextMenu(m));
-
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(editor);
-      editor.setMenu(menu);
+      Event e = new Event();
+      e.display = getDisplay();
+      e.widget = this;
+      e.button = 1;
+      MouseEvent me = new MouseEvent(e);
+      for(MouseListener l : mouseListeners)
+         l.mouseDown(me);
    }
 
    /**
-    * Fill context menu.
+    * Convert a set of strings to a JSON array.
+    */
+   private static JsonArray toJsonArray(Set<String> set)
+   {
+      JsonArray array = new JsonArray();
+      for(String s : set)
+         array.add(s);
+      return array;
+   }
+
+   /**
+    * Convert a list of integers to a JSON array.
+    */
+   private static JsonArray toJsonArray(List<Integer> list)
+   {
+      JsonArray array = new JsonArray();
+      for(Integer n : list)
+         array.add(n.intValue());
+      return array;
+   }
+
+   /**
+    * Add modify listener to the editor.
     *
-    * @param manager menu manager
+    * @param listener modify listener
     */
-   protected void fillContextMenu(IMenuManager manager)
+   public void addModifyListener(ModifyListener listener)
    {
-      manager.add(actionSelectAll);
-      manager.add(new Separator());
-      manager.add(actionCopy);
-      manager.add(actionCut);
-      manager.add(actionPaste);
-      manager.add(new Separator());
-      manager.add(actionDeleteLine);
-      manager.add(new Separator());
-      manager.add(actionGoToLine);
-
-      int selectionLength = editor.getSelectionCount();
-      actionCut.setEnabled(selectionLength > 0);
-      actionCopy.setEnabled(selectionLength > 0);
-      actionPaste.setEnabled(canPaste());
+      modifyListeners.add(listener);
    }
 
-	/**
-	 * Get underlying text widget
-	 * @return text widget
-	 */
-   public Text getTextWidget()
-	{
-      return editor;
-	}
+   /**
+    * Set editor's editable state.
+    *
+    * @param editable true to make editor editable
+    */
+   public void setEditable(boolean editable)
+   {
+      this.editable = editable;
+      remoteObject.set("readOnly", !editable);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#addMouseListener(org.eclipse.swt.events.MouseListener)
+    */
+   @Override
+   public void addMouseListener(MouseListener listener)
+   {
+      mouseListeners.add(listener);
+   }
 	
 	/**
 	 * Set text for editing
@@ -500,7 +399,8 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public void setText(String text)
 	{
-      editor.setText(text != null ? text : "");
+      cachedText = (text != null) ? text : "";
+      remoteObject.set("text", cachedText);
 	}
 
 	/**
@@ -509,7 +409,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public String getText()
 	{
-      return editor.getText();
+      return cachedText;
 	}
 
 	/**
@@ -517,15 +417,19 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public void setFunctions(Set<String> functions)
 	{
+      this.functions = functions;
+      remoteObject.set("functions", toJsonArray(functions));
 	}
-	
+
 	/**
 	 * Add functions
-	 * 
-	 * @param fc
+	 *
+	 * @param fc functions to add
 	 */
 	public void addFunctions(Collection<String> fc)
 	{
+      functions.addAll(fc);
+      remoteObject.set("functions", toJsonArray(functions));
 	}
 
 	/**
@@ -533,15 +437,19 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public void setVariables(Set<String> variables)
 	{
+      this.variables = variables;
+      remoteObject.set("variables", toJsonArray(variables));
 	}
 
 	/**
 	 * Add variables
-	 * 
-	 * @param vc
+	 *
+	 * @param vc variables to add
 	 */
 	public void addVariables(Collection<String> vc)
 	{
+      variables.addAll(vc);
+      remoteObject.set("variables", toJsonArray(variables));
 	}
 
    /**
@@ -549,39 +457,43 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public void setConstants(Set<String> constants)
    {
+      this.constants = constants;
+      remoteObject.set("constants", toJsonArray(constants));
    }
 
    /**
     * Add constants
-    * 
+    *
     * @param cc constants to add
     */
    public void addConstants(Collection<String> cc)
    {
+      constants.addAll(cc);
+      remoteObject.set("constants", toJsonArray(constants));
    }
 
 	/**
-	 * @return the functionsCache
+	 * @return the functions
 	 */
 	public String[] getFunctions()
 	{
-      return new String[0];
+      return functions.toArray(new String[0]);
 	}
 
 	/**
-	 * @return the variablesCache
+	 * @return the variables
 	 */
 	public String[] getVariables()
 	{
-      return new String[0];
+      return variables.toArray(new String[0]);
 	}
 
    /**
-    * @return constants cache
+    * @return the constants
     */
    public String[] getConstants()
    {
-      return new String[0];
+      return constants.toArray(new String[0]);
    }
 
    /**
@@ -590,7 +502,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-      Point p = editor.computeSize(wHint, hHint, changed);
+      Point p = editorContainer.computeSize(wHint, hHint, changed);
 		p.y += 4;
 		return p;
 	}
@@ -601,7 +513,7 @@ public class ScriptEditor extends CompositeWithMessageArea
    @Override
    public boolean setFocus()
    {
-      return !editor.isDisposed() ? editor.setFocus() : super.setFocus();
+      return !editorContainer.isDisposed() ? editorContainer.setFocus() : super.setFocus();
    }
 
    /**
@@ -611,6 +523,7 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
 	public void showLineNumbers(boolean show)
 	{
+      remoteObject.set("lineNumbers", show);
 	}
 
 	/**
@@ -643,7 +556,7 @@ public class ScriptEditor extends CompositeWithMessageArea
    public void compileScript()
    {
       final String source = getText();
-      editor.setEditable(false);
+      setEditable(false);
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Compile script"), null) {
          @Override
@@ -654,6 +567,8 @@ public class ScriptEditor extends CompositeWithMessageArea
                @Override
                public void run()
                {
+                  clearHighlighting();
+
                   if (result.success)
                   {
                      clearMessages();
@@ -663,14 +578,17 @@ public class ScriptEditor extends CompositeWithMessageArea
                   {
                      clearMessages();
                      addMessage(MessageArea.ERROR, result.errorMessage, true);
+                     highlightErrorLine(result.errorLine);
                   }
 
                   for(ScriptCompilationWarning w : result.warnings)
                   {
                      addMessage(MessageArea.WARNING, i18n.tr("Warning in line {0}: {1}", Integer.toString(w.lineNumber), w.message), true);
+                     if (w.lineNumber != result.errorLine)
+                        highlightWarningLine(w.lineNumber);
                   }
 
-                  editor.setEditable(true);
+                  setEditable(true);
                }
             });
          }
@@ -720,6 +638,8 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public void highlightErrorLine(int lineNumber)
    {
+      errorLines.add(lineNumber);
+      remoteObject.set("errorLines", toJsonArray(errorLines));
    }
 
    /**
@@ -729,6 +649,8 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public void highlightWarningLine(int lineNumber)
    {
+      warningLines.add(lineNumber);
+      remoteObject.set("warningLines", toJsonArray(warningLines));
    }
 
    /**
@@ -736,6 +658,10 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public void clearHighlighting()
    {
+      errorLines.clear();
+      warningLines.clear();
+      remoteObject.set("errorLines", toJsonArray(errorLines));
+      remoteObject.set("warningLines", toJsonArray(warningLines));
    }
 
    /**
@@ -745,107 +671,54 @@ public class ScriptEditor extends CompositeWithMessageArea
     */
    public int getLineCount()
    {
-      String text = editor.getText();
-      if (text.isEmpty())
-         return 0;
-      return text.split(editor.getLineDelimiter()).length + 1;
+      if (cachedText.isEmpty())
+         return 1;
+      int count = 1;
+      for(int i = 0; i < cachedText.length(); i++)
+         if (cachedText.charAt(i) == '\n')
+            count++;
+      return count;
    }
 
    /**
     * Get current line number.
     *
-    * @return current line number
+    * @return current line number (1-based)
     */
    public int getCurrentLine()
    {
-      return getLineAtOffset(editor.getCaretPosition());
-   }
-
-   /**
-    * Get line number at given caret position
-    *
-    * @param offset caret position
-    * @return line number
-    */
-   private int getLineAtOffset(int offset)
-   {
-      String text = editor.getText().substring(0, offset);
-      if (text.isEmpty())
-         return 0;
-      return text.split(editor.getLineDelimiter()).length + 1;
+      return 1;
    }
 
    /**
     * Set caret to line with given number.
     *
-    * @param lineNumber line number
+    * @param lineNumber line number (1-based)
     */
    public void setCaretToLine(int lineNumber)
    {
-      // TODO: implement if possible
+      // Caret position is managed by CodeMirror on the client side
    }
 
    /**
-    * Select whole text
+    * Fill context menu. Can be overridden by subclasses to add extra items.
+    * CodeMirror provides its own context menu, so this is only used for
+    * server-side menu contributions added via SWT Menu on the container.
+    *
+    * @param manager menu manager
     */
-   public void selectAll()
+   protected void fillContextMenu(IMenuManager manager)
    {
-      editor.selectAll();
    }
 
    /**
-    * Delete current line
+    * @see org.eclipse.swt.widgets.Widget#dispose()
     */
-   public void deleteLine()
+   @Override
+   public void dispose()
    {
-      String d = editor.getLineDelimiter();
-      char de = d.charAt(d.length() - 1);
-
-      String text = editor.getText();
-      int start = editor.getCaretPosition();
-      while((start > 0) && (text.charAt(start) != de))
-         start--;
-      if (text.charAt(start) == de)
-         start++;
-
-      int end = editor.getCaretPosition();
-      while((end < text.length()) && (text.charAt(end) != de))
-         end++;
-
-      editor.setText(text.substring(0, start) + text.substring(end));
-   }
-
-   /**
-    * Cut selected text
-    */
-   public void cut()
-   {
-      editor.cut();
-   }
-
-   /**
-    * Copy selected text
-    */
-   public void copy()
-   {
-      editor.copy();
-   }
-
-   /**
-    * Paste text from clipboard
-    */
-   public void paste()
-   {
-      editor.paste();
-   }
-
-   /**
-    * Check if paste action can work
-    * 
-    * @return
-    */
-   public boolean canPaste()
-   {
-      return true; // TODO: can we determine if client-side clipboard is available?
+      if (remoteObject != null)
+         remoteObject.destroy();
+      super.dispose();
    }
 }

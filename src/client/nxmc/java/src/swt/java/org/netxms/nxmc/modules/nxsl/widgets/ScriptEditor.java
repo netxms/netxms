@@ -747,15 +747,36 @@ public class ScriptEditor extends CompositeWithMessageArea
       actionPaste.setEnabled(canPaste());
    }
 
-	/**
-	 * Get underlying text widget
-	 * @return text widget
-	 */
-	public StyledText getTextWidget()
-	{
-      return editor;
-	}
-	
+   /**
+    * Add modify listener to the editor.
+    *
+    * @param listener modify listener
+    */
+   public void addModifyListener(ModifyListener listener)
+   {
+      editor.addModifyListener(listener);
+   }
+
+   /**
+    * Set editor's editable state.
+    *
+    * @param editable true to make editor editable
+    */
+   public void setEditable(boolean editable)
+   {
+      editor.setEditable(editable);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#addMouseListener(org.eclipse.swt.events.MouseListener)
+    */
+   @Override
+   public void addMouseListener(MouseListener listener)
+   {
+      editor.addMouseListener(listener);
+   }
+
+
 	/**
 	 * Set text for editing
 	 * @param text

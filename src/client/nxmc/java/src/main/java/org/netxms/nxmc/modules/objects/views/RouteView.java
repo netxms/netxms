@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.io.FileWriter;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -28,7 +29,6 @@ import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractNode;
@@ -43,6 +43,7 @@ import org.netxms.nxmc.modules.objects.widgets.NetworkPathStepper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -236,31 +237,19 @@ public class RouteView extends AdHocObjectView
       if (currentPath == null)
          return;
 
-      FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.SAVE);
-      dlg.setFilterExtensions(new String[] { "*.csv", "*.*" });
-      dlg.setFilterNames(new String[] { i18n.tr("CSV files"), i18n.tr("All files") });
-      dlg.setOverwrite(true);
-      String fileName = dlg.open();
-      if (fileName == null)
-         return;
-
-      final String csv = NetworkPathStepper.toCSV(currentPath);
-      final String file = fileName;
-      new Job(i18n.tr("Exporting to CSV"), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            java.io.FileWriter writer = new java.io.FileWriter(file);
-            writer.write(csv);
-            writer.close();
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot export data to CSV file");
-         }
-      }.start();
+      WidgetHelper.exportFile(this, null, new String[] { "*.csv", "*.*" }, new String[] { i18n.tr("CSV files"), i18n.tr("All files") }, "text/csv",
+         (outputFileName) -> {
+            final String csv = NetworkPathStepper.toCSV(currentPath);
+            try (FileWriter writer = new FileWriter(outputFileName))
+            {
+               writer.write(csv);
+               writer.close();
+            }
+            catch(Exception e)
+            {
+               throw new RuntimeException(i18n.tr("Cannot export data to CSV file"), e);
+            }
+         });
    }
 
    /**

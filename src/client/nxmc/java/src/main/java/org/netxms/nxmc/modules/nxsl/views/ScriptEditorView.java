@@ -263,7 +263,7 @@ public class ScriptEditorView extends ConfigurationView
          }
       };
       editor.showLineNumbers(showLineNumbers);
-      editor.getTextWidget().addModifyListener(new ModifyListener() {
+      editor.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -405,7 +405,7 @@ public class ScriptEditorView extends ConfigurationView
    private void saveScript()
    {
       final String source = editor.getText();
-      editor.getTextWidget().setEditable(false);
+      editor.setEditable(false);
       new Job(i18n.tr("Save script"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -448,7 +448,7 @@ public class ScriptEditorView extends ConfigurationView
                      if (editor.isDisposed())
                         return;
 
-                     editor.getTextWidget().setEditable(true);
+                     editor.setEditable(true);
                      actionSave.setEnabled(false);
                      modified = false;
 
@@ -469,7 +469,7 @@ public class ScriptEditorView extends ConfigurationView
                   @Override
                   public void run()
                   {
-                     editor.getTextWidget().setEditable(true);
+                     editor.setEditable(true);
                   }
                });
             }

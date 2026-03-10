@@ -200,7 +200,7 @@ public class ScriptExecutorView extends AdHocObjectView
 
       scriptEditor = new ScriptEditor(container, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       scriptEditor.setText("");
-      scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
+      scriptEditor.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {

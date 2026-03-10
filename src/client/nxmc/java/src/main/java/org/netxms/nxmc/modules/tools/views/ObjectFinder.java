@@ -600,7 +600,7 @@ public class ObjectFinder extends View
       queryEditor = new ScriptEditor(queryArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
-      queryEditor.getTextWidget().addModifyListener(new ModifyListener() {
+      queryEditor.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {

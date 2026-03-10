@@ -63,6 +63,8 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
    @Override
    public void configure(Application app)
    {
+      addJsLibrary("/js/codemirror/codemirror-nxsl.min.js");
+      addJsLibrary("/js/codemirror/codemirror-widget.js");
       addJsLibrary("/js/dom-to-image-more.js");
       addJsLibrary("/js/download.js");
       addJsLibrary("/js/longpress.js");
