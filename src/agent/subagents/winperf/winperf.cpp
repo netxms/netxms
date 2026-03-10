@@ -357,9 +357,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C") },
-   { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I") },
-   { _T("PDH.Objects"), H_PdhObjects, nullptr }
+   { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C"), _T("List of counters for PDH object") },
+   { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I"), _T("List of instances for PDH object") },
+   { _T("PDH.Objects"), H_PdhObjects, nullptr, _T("List of available PDH objects") }
 };
 
 /**

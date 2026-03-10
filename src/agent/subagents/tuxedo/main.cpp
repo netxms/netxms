@@ -251,7 +251,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("EnduroX.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Enduro/X client {instance} machine") },
    { _T("EnduroX.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
    { _T("EnduroX.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
-   { _T("EnduroX.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance} state") },	
+   { _T("EnduroX.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance} state") },
    { _T("EnduroX.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Enduro/X domain ID") },
    { _T("EnduroX.Domain.Queues"), H_DomainInfo, _T("Q"), DCI_DT_INT,  _T("Enduro/X: number of queues") },
    { _T("EnduroX.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Enduro/X: number of servers") },
@@ -362,21 +362,21 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
 #ifdef NDRX_VERSION
-   { _T("EnduroX.Clients"), H_ClientsList, NULL },
-   { _T("EnduroX.Machines"), H_MachinesList, NULL },
-   { _T("EnduroX.Queues"), H_QueuesList, NULL },
-   { _T("EnduroX.ServerInstances"), H_ServerInstancesList, NULL },
-   { _T("EnduroX.Servers"), H_ServersList, NULL },
-   { _T("EnduroX.ServiceGroups"), H_ServiceGroupsList, NULL },
-   { _T("EnduroX.Services"), H_ServicesList, NULL }
+   { _T("EnduroX.Clients"), H_ClientsList, NULL, _T("List of EnduroX clients") },
+   { _T("EnduroX.Machines"), H_MachinesList, NULL, _T("List of EnduroX machines") },
+   { _T("EnduroX.Queues"), H_QueuesList, NULL, _T("List of EnduroX queues") },
+   { _T("EnduroX.ServerInstances"), H_ServerInstancesList, NULL, _T("List of EnduroX server instances") },
+   { _T("EnduroX.Servers"), H_ServersList, NULL, _T("List of EnduroX servers") },
+   { _T("EnduroX.ServiceGroups"), H_ServiceGroupsList, NULL, _T("List of EnduroX service groups") },
+   { _T("EnduroX.Services"), H_ServicesList, NULL, _T("List of EnduroX services") }
 #else
-   { _T("Tuxedo.Clients"), H_ClientsList, NULL },
-   { _T("Tuxedo.Machines"), H_MachinesList, NULL },
-   { _T("Tuxedo.Queues"), H_QueuesList, NULL },
-   { _T("Tuxedo.ServerInstances"), H_ServerInstancesList, NULL },
-   { _T("Tuxedo.Servers"), H_ServersList, NULL },
-   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL },
-   { _T("Tuxedo.Services"), H_ServicesList, NULL }
+   { _T("Tuxedo.Clients"), H_ClientsList, NULL, _T("List of Tuxedo clients") },
+   { _T("Tuxedo.Machines"), H_MachinesList, NULL, _T("List of Tuxedo machines") },
+   { _T("Tuxedo.Queues"), H_QueuesList, NULL, _T("List of Tuxedo queues") },
+   { _T("Tuxedo.ServerInstances"), H_ServerInstancesList, NULL, _T("List of Tuxedo server instances") },
+   { _T("Tuxedo.Servers"), H_ServersList, NULL, _T("List of Tuxedo servers") },
+   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL, _T("List of Tuxedo service groups") },
+   { _T("Tuxedo.Services"), H_ServicesList, NULL, _T("List of Tuxedo services") }
 #endif
 };
 

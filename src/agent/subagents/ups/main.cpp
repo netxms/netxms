@@ -389,7 +389,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ _T("UPS.DeviceList"), H_DeviceList, nullptr }
+	{ _T("UPS.DeviceList"), H_DeviceList, nullptr, _T("List of configured UPS devices") }
 };
 
 /**

@@ -152,10 +152,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "Net.ArpCache",                 H_NetArpCache,     NULL },
-	{ "Net.InterfaceList",            H_NetIfList,       NULL },
-	{ "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
-	{ "System.ProcessList",           H_ProcessList,     NULL },
+	{ "Net.ArpCache",                 H_NetArpCache,     NULL, "ARP cache" },
+	{ "Net.InterfaceList",            H_NetIfList,       NULL, "List of network interfaces" },
+	{ "Net.IP.RoutingTable",          H_NetRoutingTable, NULL, "IP routing table" },
+	{ "System.ProcessList",           H_ProcessList,     NULL, "List of processes" },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =

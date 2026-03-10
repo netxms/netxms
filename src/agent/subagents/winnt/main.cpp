@@ -441,25 +441,25 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
-   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
-   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
-   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
-   { _T("Hardware.StorageDevices"), H_StorageDeviceList, nullptr },
-   { _T("Net.ArpCache"), H_ArpCache, nullptr },
-   { _T("Net.InterfaceList"), H_InterfaceList, nullptr },
-   { _T("Net.InterfaceNames"), H_InterfaceNames, nullptr },
-   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, nullptr },
-	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, nullptr },
-   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
-	{ _T("System.Desktops(*)"), H_Desktops, nullptr },
-   { _T("System.IO.Devices"), H_IoDeviceList, nullptr },
-   { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") },
-   { _T("System.Registry.Keys(*)"), H_RegistryKeyList, nullptr },
-   { _T("System.Registry.Values(*)"), H_RegistryValueList, nullptr },
-   { _T("System.Services"), H_ServiceList, nullptr },
-	{ _T("System.WindowStations"), H_WindowStations, nullptr }
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr, _T("List of file system mount points") },
+   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B"), _T("List of hardware batteries") },
+   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M"), _T("List of memory devices") },
+   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P"), _T("List of processors") },
+   { _T("Hardware.StorageDevices"), H_StorageDeviceList, nullptr, _T("List of storage devices") },
+   { _T("Net.ArpCache"), H_ArpCache, nullptr, _T("ARP cache") },
+   { _T("Net.InterfaceList"), H_InterfaceList, nullptr, _T("List of network interfaces") },
+   { _T("Net.InterfaceNames"), H_InterfaceNames, nullptr, _T("List of network interface names") },
+   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, nullptr, _T("IP routing table") },
+	{ _T("System.ActiveUserSessions"), H_ActiveUserSessionsList, nullptr, _T("List of active user sessions") },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr, _T("List of CPU instances") },
+	{ _T("System.Desktops(*)"), H_Desktops, nullptr, _T("List of desktops in window station") },
+   { _T("System.IO.Devices"), H_IoDeviceList, nullptr, _T("List of I/O devices") },
+   { _T("System.Processes"), H_ProcessList, _T("2"), _T("List of processes (detailed)") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1"), _T("List of processes") },
+   { _T("System.Registry.Keys(*)"), H_RegistryKeyList, nullptr, _T("List of registry keys") },
+   { _T("System.Registry.Values(*)"), H_RegistryValueList, nullptr, _T("List of registry values") },
+   { _T("System.Services"), H_ServiceList, nullptr, _T("List of system services") },
+	{ _T("System.WindowStations"), H_WindowStations, nullptr, _T("List of window stations") }
 };
 
 /**

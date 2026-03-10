@@ -69,7 +69,7 @@ static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("Net.InterfaceList"), H_InterfaceList, nullptr }
+   { _T("Net.InterfaceList"), H_InterfaceList, nullptr, _T("List of network interfaces") }
 };
 
 /**

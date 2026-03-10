@@ -203,7 +203,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
     {
-        {_T("Redis.Databases"), H_DatabaseList, nullptr}};
+        {_T("Redis.Databases"), H_DatabaseList, nullptr, _T("List of monitored Redis databases")}};
 
 /**
  * Subagent information

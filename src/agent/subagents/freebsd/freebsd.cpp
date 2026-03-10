@@ -329,15 +329,15 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
-   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
-   { _T("System.IO.Devices"),            H_IODeviceList,    NULL },
-   { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
-   { _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
-   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
-   { _T("System.CPU.Instances"),          H_CpuInstanceList, NULL },
-   { _T("System.Processes"),             H_ProcessList,     _T("2") },
-   { _T("System.ProcessList"),           H_ProcessList,     _T("1") },
+   { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL, _T("List of file system mount points") },
+   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL, _T("ARP cache") },
+   { _T("System.IO.Devices"),            H_IODeviceList,    NULL, _T("List of I/O devices") },
+   { _T("Net.InterfaceList"),            H_NetIfList,       NULL, _T("List of network interfaces") },
+   { _T("Net.InterfaceNames"),           H_NetIfNames,      NULL, _T("List of network interface names") },
+   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL, _T("IP routing table") },
+   { _T("System.CPU.Instances"),          H_CpuInstanceList, NULL, _T("List of CPU instances") },
+   { _T("System.Processes"),             H_ProcessList,     _T("2"), _T("List of processes (detailed)") },
+   { _T("System.ProcessList"),           H_ProcessList,     _T("1"), _T("List of processes") },
 };
 
 /**

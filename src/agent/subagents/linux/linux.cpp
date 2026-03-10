@@ -438,24 +438,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("DRBD.DeviceList"), H_DRBDDeviceList, nullptr },
-   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
-   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
-   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
-   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
-   { _T("Net.ArpCache"), H_NetArpCache, nullptr },
-   { _T("Net.IP.Neighbors"), H_NetIpNeighborsList, nullptr },
-   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
-   { _T("Net.InterfaceList"), H_NetIfList, nullptr },
-   { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
-   { _T("System.ActiveUserSessions"), H_UserSessionList, nullptr },
-   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
-   { _T("System.IO.Devices"), H_IoDevices, nullptr },
-   { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
-   { _T("System.PowerZones"), H_PowerZoneList, nullptr },
-   { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") },
-   { _T("System.Services"), H_ServiceList, nullptr }
+   { _T("DRBD.DeviceList"), H_DRBDDeviceList, nullptr, _T("List of DRBD devices") },
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr, _T("List of file system mount points") },
+   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B"), _T("List of hardware batteries") },
+   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M"), _T("List of memory devices") },
+   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P"), _T("List of processors") },
+   { _T("Net.ArpCache"), H_NetArpCache, nullptr, _T("ARP cache") },
+   { _T("Net.IP.Neighbors"), H_NetIpNeighborsList, nullptr, _T("List of IP neighbors") },
+   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr, _T("IP routing table") },
+   { _T("Net.InterfaceList"), H_NetIfList, nullptr, _T("List of network interfaces") },
+   { _T("Net.InterfaceNames"), H_NetIfNames, nullptr, _T("List of network interface names") },
+   { _T("System.ActiveUserSessions"), H_UserSessionList, nullptr, _T("List of active user sessions") },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr, _T("List of CPU instances") },
+   { _T("System.IO.Devices"), H_IoDevices, nullptr, _T("List of I/O devices") },
+   { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr, _T("List of logical I/O devices") },
+   { _T("System.PowerZones"), H_PowerZoneList, nullptr, _T("List of power zones") },
+   { _T("System.Processes"), H_ProcessList, _T("2"), _T("List of processes (detailed)") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1"), _T("List of processes") },
+   { _T("System.Services"), H_ServiceList, nullptr, _T("List of system services") }
 };
 
 /**

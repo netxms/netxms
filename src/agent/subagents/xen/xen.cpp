@@ -148,7 +148,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("XEN.Domains"), H_XenDomainList, NULL }
+	{ _T("XEN.Domains"), H_XenDomainList, NULL, _T("List of Xen domains") }
 };
 
 /**

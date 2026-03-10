@@ -619,23 +619,23 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
  */
 static NETXMS_SUBAGENT_LIST s_standardLists[] =
 {
-   { _T("Agent.ActionList"), H_ActionList, nullptr },
-   { _T("Agent.PushValues"), H_PushValues, nullptr },
-   { _T("Agent.RunningConfig"), H_RunningConfigList, nullptr },
-   { _T("Agent.SubAgentList"), H_SubAgentList, nullptr },
-   { _T("Agent.SupportedLists"), H_ListOfLists, nullptr },
-   { _T("Agent.SupportedParameters"), H_MetricList, nullptr },
-   { _T("Agent.SupportedPushParameters"), H_PushMetricList, nullptr },
-   { _T("Agent.SupportedTables"), H_TableList, nullptr },
-   { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
+   { _T("Agent.ActionList"), H_ActionList, nullptr, _T("List of configured agent actions") },
+   { _T("Agent.PushValues"), H_PushValues, nullptr, _T("List of push parameter values") },
+   { _T("Agent.RunningConfig"), H_RunningConfigList, nullptr, _T("Running agent configuration") },
+   { _T("Agent.SubAgentList"), H_SubAgentList, nullptr, _T("List of loaded subagents") },
+   { _T("Agent.SupportedLists"), H_ListOfLists, nullptr, _T("List of supported lists") },
+   { _T("Agent.SupportedParameters"), H_MetricList, nullptr, _T("List of supported parameters") },
+   { _T("Agent.SupportedPushParameters"), H_PushMetricList, nullptr, _T("List of supported push parameters") },
+   { _T("Agent.SupportedTables"), H_TableList, nullptr, _T("List of supported tables") },
+   { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr, _T("List of agent thread pools") },
 #if WITH_MODBUS
-   { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr },
+   { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr, _T("Modbus device identification objects") },
 #endif
-   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
-   { _T("PhysicalDisk.Devices"), H_PhysicalDiskList, nullptr },
-   { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr },
-   { _T("TCP.ScanAddressRange(*)"), H_TCPAddressRangeScan, nullptr },
-   { _T("TFTP.Get(*)"), H_TFTPGet, nullptr }
+   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr, _T("IP addresses resolved from host name") },
+   { _T("PhysicalDisk.Devices"), H_PhysicalDiskList, nullptr, _T("List of physical disk devices") },
+   { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr, _T("SNMP address range scan results") },
+   { _T("TCP.ScanAddressRange(*)"), H_TCPAddressRangeScan, nullptr, _T("TCP address range scan results") },
+   { _T("TFTP.Get(*)"), H_TFTPGet, nullptr, _T("Content of file retrieved from TFTP server") }
 };
 
 /**

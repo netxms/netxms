@@ -77,7 +77,7 @@ void VariantToTableCell(VARIANT *v, Table *t, int column)
 TCHAR *VariantToString(VARIANT *v, TCHAR *buffer, size_t size)
 {
    TCHAR *b = buffer;
-   switch(v->vt) 
+   switch(v->vt)
    {
 		case VT_NULL:
          if (b == NULL)
@@ -165,9 +165,9 @@ LONG VariantToInt(VARIANT *pValue)
 {
    LONG val;
 
-   switch (pValue->vt) 
+   switch (pValue->vt)
    {
-	   case VT_BOOL: 
+	   case VT_BOOL:
 			val = pValue->boolVal ? 1 : 0;
          break;
 	   case VT_UI1:
@@ -560,11 +560,11 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("ACPI.ThermalZones"), H_ACPIThermalZones, nullptr },
-   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, nullptr },
-   { _T("WMI.Classes(*)"), H_WMIClasses, nullptr },
-   { _T("WMI.NameSpaces"), H_WMINameSpaces, nullptr },
-   { _T("WMI.Query(*)"), H_WMIListQuery, nullptr }
+   { _T("ACPI.ThermalZones"), H_ACPIThermalZones, nullptr, _T("List of ACPI thermal zones") },
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, nullptr, _T("List of network adapters") },
+   { _T("WMI.Classes(*)"), H_WMIClasses, nullptr, _T("List of WMI classes in namespace") },
+   { _T("WMI.NameSpaces"), H_WMINameSpaces, nullptr, _T("List of WMI namespaces") },
+   { _T("WMI.Query(*)"), H_WMIListQuery, nullptr, _T("Result of WMI query") }
 };
 
 /**

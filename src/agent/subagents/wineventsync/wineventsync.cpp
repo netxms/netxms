@@ -78,7 +78,7 @@ static LONG H_EventLogs(const TCHAR *param, const TCHAR *arg, StringList *value,
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("WinEventSync.EventLogs"), H_EventLogs, nullptr }
+   { _T("WinEventSync.EventLogs"), H_EventLogs, nullptr, _T("List of Windows event logs") }
 };
 
 /**

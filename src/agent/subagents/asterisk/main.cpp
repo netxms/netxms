@@ -272,16 +272,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("Asterisk.Channels"), H_ChannelList, nullptr },
-   { _T("Asterisk.Channels(*)"), H_ChannelList, nullptr },
-   { _T("Asterisk.CommandOutput(*)"), H_CommandOutput, nullptr },
-   { _T("Asterisk.SIP.Peers"), H_SIPPeerList, nullptr },
-   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerList, nullptr },
-   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestList, nullptr },
-   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestList, nullptr },
-   { _T("Asterisk.Systems"), H_SystemList, nullptr },
-   { _T("Asterisk.TaskProcessors"), H_TaskProcessorList, nullptr },
-   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorList, nullptr }
+	{ _T("Asterisk.Channels"), H_ChannelList, nullptr, _T("List of active channels on default system") },
+   { _T("Asterisk.Channels(*)"), H_ChannelList, nullptr, _T("List of active channels on system") },
+   { _T("Asterisk.CommandOutput(*)"), H_CommandOutput, nullptr, _T("Output of Asterisk CLI command") },
+   { _T("Asterisk.SIP.Peers"), H_SIPPeerList, nullptr, _T("List of SIP peers on default system") },
+   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerList, nullptr, _T("List of SIP peers on system") },
+   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestList, nullptr, _T("List of SIP registration tests on default system") },
+   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestList, nullptr, _T("List of SIP registration tests on system") },
+   { _T("Asterisk.Systems"), H_SystemList, nullptr, _T("List of configured Asterisk systems") },
+   { _T("Asterisk.TaskProcessors"), H_TaskProcessorList, nullptr, _T("List of task processors on default system") },
+   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorList, nullptr, _T("List of task processors on system") }
 };
 
 /**

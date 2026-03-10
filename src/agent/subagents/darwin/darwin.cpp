@@ -187,12 +187,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-   { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
-   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
-   { _T("Net.InterfaceList"),            H_NetIfList,       NULL },
-   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
-   { _T("System.CPU.Instances"),          H_CpuInstanceList, NULL },
-   { _T("System.IO.Devices"),            H_IODeviceList,    NULL },
+   { _T("FileSystem.MountPoints"),       H_MountPoints,     NULL, _T("List of file system mount points") },
+   { _T("Net.ArpCache"),                 H_NetArpCache,     NULL, _T("ARP cache") },
+   { _T("Net.InterfaceList"),            H_NetIfList,       NULL, _T("List of network interfaces") },
+   { _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL, _T("IP routing table") },
+   { _T("System.CPU.Instances"),          H_CpuInstanceList, NULL, _T("List of CPU instances") },
+   { _T("System.IO.Devices"),            H_IODeviceList,    NULL, _T("List of I/O devices") },
 };
 
 static NETXMS_SUBAGENT_TABLE m_tables[] =

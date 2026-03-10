@@ -37,7 +37,7 @@ static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("MongoDB.ListDatabases(*)"), H_Databases, NULL }
+   { _T("MongoDB.ListDatabases(*)"), H_Databases, NULL, _T("List of databases on MongoDB server") }
 };
 
 /**
@@ -250,4 +250,3 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 }
 
 #endif
-

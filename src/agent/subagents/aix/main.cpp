@@ -336,18 +336,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
-   { _T("LVM.LogicalVolumes"), H_LvmAllLogicalVolumes, nullptr },
-   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, nullptr },
-   { _T("LVM.PhysicalVolumes"), H_LvmAllPhysicalVolumes, nullptr },
-   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, nullptr },
-   { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, nullptr },
-   { _T("Net.InterfaceList"), H_NetInterfaceList, nullptr },
-   { _T("Net.InterfaceNames"), H_NetInterfaceNames, nullptr },
-   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
-   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
-   { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") }
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr, _T("List of file system mount points") },
+   { _T("LVM.LogicalVolumes"), H_LvmAllLogicalVolumes, nullptr, _T("List of all logical volumes") },
+   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, nullptr, _T("List of logical volumes in volume group") },
+   { _T("LVM.PhysicalVolumes"), H_LvmAllPhysicalVolumes, nullptr, _T("List of all physical volumes") },
+   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, nullptr, _T("List of physical volumes in volume group") },
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, nullptr, _T("List of LVM volume groups") },
+   { _T("Net.InterfaceList"), H_NetInterfaceList, nullptr, _T("List of network interfaces") },
+   { _T("Net.InterfaceNames"), H_NetInterfaceNames, nullptr, _T("List of network interface names") },
+   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr, _T("IP routing table") },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr, _T("List of CPU instances") },
+   { _T("System.Processes"), H_ProcessList, _T("2"), _T("List of processes (detailed)") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1"), _T("List of processes") }
 };
 
 /**

@@ -413,15 +413,15 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr },
-   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
-   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
-   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
-   { _T("Net.InterfaceList"), H_NetIfList, nullptr },
-   { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
-   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr },
-   { _T("System.Processes"), H_ProcessList, _T("2") },
-   { _T("System.ProcessList"), H_ProcessList, _T("1") }
+   { _T("FileSystem.MountPoints"), H_MountPoints, nullptr, _T("List of file system mount points") },
+   { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B"), _T("List of hardware batteries") },
+   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M"), _T("List of memory devices") },
+   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P"), _T("List of processors") },
+   { _T("Net.InterfaceList"), H_NetIfList, nullptr, _T("List of network interfaces") },
+   { _T("Net.InterfaceNames"), H_NetIfNames, nullptr, _T("List of network interface names") },
+   { _T("System.CPU.Instances"), H_CpuInstanceList, nullptr, _T("List of CPU instances") },
+   { _T("System.Processes"), H_ProcessList, _T("2"), _T("List of processes (detailed)") },
+   { _T("System.ProcessList"), H_ProcessList, _T("1"), _T("List of processes") }
 };
 
 /**

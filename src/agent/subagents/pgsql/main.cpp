@@ -673,7 +673,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 	{ _T("PostgreSQL.DBServers"), H_DBServersList, nullptr, _T("PostgreSQL: database servers being monitored") },
 	{ _T("PostgreSQL.Databases(*)"), H_TagList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: databases on the specific server") },
 	{ _T("PostgreSQL.AllDatabases"), H_AllDatabasesList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: all databases on all monitored servers") },
-	{ _T("PostgreSQL.DataTags(*)"), H_TagList, _T("^(.*)$") }
+	{ _T("PostgreSQL.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("List of PostgreSQL data collection tags") }
 };
 
 /**

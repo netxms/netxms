@@ -818,8 +818,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("LogWatch.Metrics"), H_MetricList, nullptr },
-	{ _T("LogWatch.Parsers"), H_ParserList, nullptr }
+   { _T("LogWatch.Metrics"), H_MetricList, nullptr, _T("List of log watch metrics") },
+	{ _T("LogWatch.Parsers"), H_ParserList, nullptr, _T("List of log watch parsers") }
 };
 
 /**

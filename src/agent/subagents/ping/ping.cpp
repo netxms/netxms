@@ -669,8 +669,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("Icmp.ScanRange(*)"), H_ScanRange, nullptr },
-	{ _T("Icmp.Targets"), H_TargetList, nullptr }
+   { _T("Icmp.ScanRange(*)"), H_ScanRange, nullptr, _T("ICMP scan results for address range") },
+	{ _T("Icmp.Targets"), H_TargetList, nullptr, _T("List of configured ICMP targets") }
 };
 
 /**

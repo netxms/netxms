@@ -185,8 +185,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("VMGR.VMHost"), H_GetHostList, nullptr },
-	{ _T("VMGR.VMList(*)"), H_GetVMList, nullptr }
+	{ _T("VMGR.VMHost"), H_GetHostList, nullptr, _T("List of virtual machine hosts") },
+	{ _T("VMGR.VMList(*)"), H_GetVMList, nullptr, _T("List of virtual machines on host") }
 };
 
 /**
