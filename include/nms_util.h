@@ -528,6 +528,16 @@ public:
       return Timestamp(ms);
    }
 
+   static Timestamp fromMicroseconds(int64_t us)
+   {
+      return Timestamp(us / _LL(1000));
+   }
+
+   static Timestamp fromNanoseconds(int64_t ns)
+   {
+      return Timestamp(ns / _LL(1000000));
+   }
+
    static Timestamp fromTime(time_t t)
    {
       return Timestamp(static_cast<int64_t>(t) * 1000);
