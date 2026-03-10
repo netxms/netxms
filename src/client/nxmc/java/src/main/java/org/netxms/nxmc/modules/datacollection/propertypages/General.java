@@ -181,6 +181,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("Modbus"));
       origin.add(i18n.tr("EtherNet/IP"));
       origin.add(i18n.tr("Cloud Connector"));
+      origin.add(i18n.tr("OTLP"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -194,7 +195,7 @@ public class General extends AbstractDCIPropertyPage
       sourceNode.setLabel("Source node override");
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
-      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH);
+      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -330,7 +331,7 @@ public class General extends AbstractDCIPropertyPage
       pollingIntervalComposite.setLayout(layout);
       pollingInterval = new Text(pollingIntervalComposite, SWT.BORDER);
       pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
-      pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH));
+      pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH) && (dco.getOrigin() != DataOrigin.OTLP));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       pollingInterval.setLayoutData(gd);
       pollingIntervalLabel = new Label(pollingIntervalComposite, SWT.NONE);
@@ -480,9 +481,9 @@ public class General extends AbstractDCIPropertyPage
 	private void onOriginChange()
 	{
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
-		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
+		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH && dataOrigin != DataOrigin.OTLP);
 
-      boolean enableSchedule = (dataOrigin != DataOrigin.PUSH);
+      boolean enableSchedule = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.OTLP);
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);

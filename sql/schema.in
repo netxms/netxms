@@ -1430,6 +1430,20 @@ SELECT create_hypertable('notification_log', 'notification_timestamp', chunk_tim
 #endif
 
 /**
+ * OTLP matching rules
+ */
+CREATE TABLE otlp_matching_rules
+(
+  id integer not null,
+  sequence_number integer not null,
+  otel_attribute varchar(255) not null,
+  regex_transform varchar(255) null,
+  node_property integer not null,
+  custom_attr_name varchar(127) null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
  * Server action execution log
  */
 CREATE TABLE server_action_execution_log

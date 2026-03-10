@@ -317,6 +317,13 @@ AC_ARG_WITH(agent,
 	COMPONENTS="$COMPONENTS sqlite ethernetip snmp agent sqlite_drv"
 ])
 
+AC_ARG_WITH(otel,
+[AS_HELP_STRING(--with-otel,build OpenTelemetry OTLP receiver for server)],
+[
+	COMPONENTS="$COMPONENTS otel"
+	REQUIRE_PROTOBUF="yes"
+])
+
 AC_ARG_WITH(prometheus,
 [AS_HELP_STRING(--with-prometheus,build Prometheus remote write support for agent)],
 [
@@ -4565,6 +4572,12 @@ if test "x$REQUIRE_PROTOBUF" = "xyes"; then
 		fi
 	fi
 
+	if test "x$PROTOBUF_SUPPORT" = "xyes"; then
+		if check_substr "$COMPONENTS" "otel"; then
+			SERVER_COMPONENTS="otlp $SERVER_COMPONENTS"
+		fi
+	fi
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
@@ -5088,6 +5101,7 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/ntcb/Makefile
+	src/server/otlp/Makefile
 	src/server/oxidized/Makefile
 	src/server/nxreportd/Makefile
 	src/server/nxreportd/java/Makefile

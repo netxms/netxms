@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.13 to 61.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(CreateConfigParam(L"OTLP.MatchCacheTTL", L"300",
+      L"TTL in seconds for OTLP resource-to-node match cache.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"OTLP.LogUnmatchedResources", L"0",
+      L"Log warning when OTLP resources cannot be matched to any node.",
+      nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE otlp_matching_rules ("
+      L"  id integer not null,"
+      L"  sequence_number integer not null,"
+      L"  otel_attribute varchar(255) not null,"
+      L"  regex_transform varchar(255) null,"
+      L"  node_property integer not null,"
+      L"  custom_attr_name varchar(127) null,"
+      L"  PRIMARY KEY(id))"));
+
+   // Seed default matching rules
+   CHK_EXEC(SQLQuery(L"INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (1,1,'host.name',NULL,0,NULL)"));
+   CHK_EXEC(SQLQuery(L"INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (2,2,'host.name',NULL,1,NULL)"));
+   CHK_EXEC(SQLQuery(L"INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (3,3,'host.ip',NULL,2,NULL)"));
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 61.12 to 61.13
  */
 static bool H_UpgradeFromV12()
@@ -318,6 +349,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 61, 14,  H_UpgradeFromV13 },
    { 12, 61, 13,  H_UpgradeFromV12 },
    { 11, 61, 12,  H_UpgradeFromV11 },
    { 10, 61, 11,  H_UpgradeFromV10 },

@@ -253,6 +253,8 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Subnets.DefaultSubnetMaskIPv6','64','64',1,0,'I','Default mask for synthetic IPv6 subnets.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Subnets.DeleteEmpty','0','0',1,0,'B','Enable/disable automatic deletion of subnet objects without any nodes within.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.SyncInterval','60','60',1,1,'I','Interval in seconds between writing object changes to the database.','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('OTLP.LogUnmatchedResources','0','0',1,0,'B','Log warning when OTLP resources cannot be matched to any node.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('OTLP.MatchCacheTTL','300','300',1,0,'I','TTL in seconds for OTLP resource-to-node match cache.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('PackageDeployment.JobRetentionTime','7','7',1,0,'I','Retention time in days for completed package deployment jobs. All completed jobs older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('PackageDeployment.LogRetentionTime','90','90',1,0,'I','Retention time in days for package deployment log. All records older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('PackageDeployment.MaxThreads','25','25',1,1,'I','Maximum number of threads used for package deployment.','threads');
@@ -524,6 +526,13 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,67108863)
 ** Default community string
 */
 INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
+
+/*
+** Default OTLP matching rules
+*/
+INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (1,1,'host.name',NULL,0,NULL);
+INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (2,2,'host.name',NULL,1,NULL);
+INSERT INTO otlp_matching_rules (id,sequence_number,otel_attribute,regex_transform,node_property,custom_attr_name) VALUES (3,3,'host.ip',NULL,2,NULL);
 
 /*
 **Notification channels

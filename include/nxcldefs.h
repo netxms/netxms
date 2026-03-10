@@ -1129,6 +1129,7 @@ enum HistoricalDataType
 #define DS_MODBUS             11
 #define DS_ETHERNET_IP        12
 #define DS_CLOUD_CONNECTOR    13
+#define DS_OTLP               14
 
 /**
  * Resource state
@@ -1235,6 +1236,7 @@ enum AggregationFunction
 #define IDM_SMCLP_TARGETS               9
 #define IDM_SMCLP_PROPERTIES           10
 #define IDM_PUSH                       11
+#define IDM_OTLP                       12
 
 /**
  * Event policy rule flags

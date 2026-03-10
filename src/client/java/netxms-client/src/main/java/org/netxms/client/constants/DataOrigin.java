@@ -41,7 +41,8 @@ public enum DataOrigin
    DEVICE_DRIVER(10),
    MODBUS(11),
    ETHERNET_IP(12),
-   CLOUD_CONNECTOR(13);
+   CLOUD_CONNECTOR(13),
+   OTLP(14);
 
    private static Logger logger = LoggerFactory.getLogger(DataOrigin.class);
    private static Map<Integer, DataOrigin> lookupTable = new HashMap<Integer, DataOrigin>();

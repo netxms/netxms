@@ -1815,7 +1815,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
       if (allowLoad &&
           (m_ownerId != 0) &&
           (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) ||
-           (m_source == DS_PUSH_AGENT) ||
+           (m_source == DS_PUSH_AGENT) || (m_source == DS_OTLP) ||
            (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)))
       {
          m_cacheLoaded = false;

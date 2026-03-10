@@ -165,6 +165,8 @@ obj.query       Object queries
 obj.relations	Object relation related
 obj.sync	Object synchronization
 
+otlp		OpenTelemetry OTLP metrics receiver, node matching, and instance discovery
+
 pdsdrv.*	Performance data storage drivers
 pdsdrv.influxdb	InfluxDB performance data storage driver
 

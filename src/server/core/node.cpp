@@ -7593,6 +7593,9 @@ StringMap *Node::getInstanceList(DCObject *dco)
       case IDM_SMCLP_PROPERTIES:
          node->getPropertyListFromSmclp(dco->getInstanceDiscoveryData(), &instances);
          break;
+      case IDM_OTLP:
+         // OTLP instance discovery is push-based, handled in OTLP module
+         break;
       default:
          instances = nullptr;
          break;

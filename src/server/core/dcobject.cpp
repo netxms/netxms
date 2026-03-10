@@ -514,10 +514,10 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 			}
 			else
 			{
-            dst.append(_T("(error)"));
+            dst.append(L"(error)");
 			}
 		}
-		else if (!_tcsncmp(macro, _T("script:"), 7))
+		else if (!wcsncmp(macro, L"script:", 7))
 		{
 			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner.lock(), createDescriptorInternal());
 			if (vm != nullptr)
@@ -538,7 +538,7 @@ StringBuffer DCObject::expandMacros(const TCHAR *src, size_t dstLen)
 			}
 			else
 			{
-			   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, _T("DCObject::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
+			   nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 4, L"DCObject::expandMacros(%d,\"%s\"): Cannot find script %s", m_id, src, &macro[7]);
 			}
 		}
 		dst.append(rest);
@@ -613,21 +613,21 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const TCHAR *originName[14] =
+            static const wchar_t *originName[15] =
             {
-               _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
-               _T("Web Service"), _T("Push"), _T("WinPerf"),
-               _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
-               _T("Device Driver"), _T("Modbus"), _T("EtherNet/IP"),
-               _T("Cloud Connector")
+               L"Internal", L"NetXMS Agent", L"SNMP",
+               L"Web Service", L"Push", L"WinPerf",
+               L"iLO", L"Script", L"SSH", L"MQTT",
+               L"Device Driver", L"Modbus", L"EtherNet/IP",
+               L"Cloud Connector", L"OTLP"
             };
             EventBuilder(eventCode[status], owner->getId())
                .dci(m_id)
-               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-               .param(_T("metric"), m_name)
-               .param(_T("description"), m_description)
-               .param(_T("originCode"), m_source)
-               .param(_T("origin"), originName[m_source])
+               .param(L"dciId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"metric", m_name)
+               .param(L"description", m_description)
+               .param(L"originCode", m_source)
+               .param(L"origin", originName[m_source])
                .post();
          }
       }
@@ -757,7 +757,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    if (m_doForcePoll && !m_busy)
    {
       if ((m_status != ITEM_STATUS_DISABLED) &&
-          isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
+          isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) &&
           matchClusterResource() && hasValue()) // Ignore agent cache mode for forced polls and always request data as if cache is off
       {
          unlock();
@@ -776,7 +776,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
 
    bool result;
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
-       isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
+       isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF) &&
        (m_nextPollTime <= currTime))
    {
@@ -1942,8 +1942,8 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud" };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_CLOUD_CONNECTOR)) ? names[dataProvider] : L"unknown";
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_OTLP)) ? names[dataProvider] : L"unknown";
 }
 
 /**

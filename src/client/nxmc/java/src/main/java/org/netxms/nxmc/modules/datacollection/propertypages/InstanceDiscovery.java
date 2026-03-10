@@ -63,6 +63,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 	private LabeledText discoveryData;
    private Button selectButton;
    private LabeledText instanceNameColumn;
+   private LabeledText instanceNameFormat;
 	private ScriptEditor filterScript;
 	private Group groupRetention;
    private Combo instanceRetentionMode;
@@ -107,6 +108,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryMethod.add(i18n.tr("SM-CLP Targets"));
       discoveryMethod.add(i18n.tr("SM-CLP Properties"));
       discoveryMethod.add(i18n.tr("Push"));
+      discoveryMethod.add(i18n.tr("OTLP"));
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -116,7 +118,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 		      discoveryData.setLabel(getDataLabel(method));
 		      discoveryData.setEnabled(method != DataCollectionObject.IDM_NONE);
             selectButton.setEnabled(hasSelector(method));
-            instanceNameColumn.setEnabled((method == DataCollectionObject.IDM_AGENT_TABLE) || (method == DataCollectionObject.IDM_INTERNAL_TABLE));
+            boolean isTableSource = (method == DataCollectionObject.IDM_AGENT_TABLE) || (method == DataCollectionObject.IDM_INTERNAL_TABLE);
+            boolean isOtlp = (method == DataCollectionObject.IDM_OTLP);
+            instanceNameColumn.setLabel(isOtlp ? i18n.tr("Instance key attributes") : i18n.tr("Instance name column"));
+            instanceNameColumn.setEnabled(isTableSource || isOtlp);
+            instanceNameFormat.setEnabled(isOtlp);
 		      filterScript.setEnabled(method != DataCollectionObject.IDM_NONE);
             instanceRetentionMode.setEnabled(method != DataCollectionObject.IDM_NONE);
 		      instanceRetentionTime.setEnabled(method != DataCollectionObject.IDM_NONE && instanceRetentionMode.getSelectionIndex() > 0);
@@ -125,6 +131,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 
       boolean isTableSource = (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_AGENT_TABLE) ||
             (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_INTERNAL_TABLE);
+      boolean isOtlp = (dco.getInstanceDiscoveryMethod() == DataCollectionObject.IDM_OTLP);
 
       Composite discoveryDataArea = new Composite(dialogArea, SWT.NONE);
       GridLayout discoveryDataLayout = new GridLayout();
@@ -138,9 +145,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       gd.grabExcessHorizontalSpace = true;
       discoveryDataArea.setLayoutData(gd);
 
+      String[] otlpParts = isOtlp ? dco.getInstanceDiscoveryData().split(";", 3) : null;
+
       discoveryData = new LabeledText(discoveryDataArea, SWT.NONE);
       discoveryData.setLabel(getDataLabel(dco.getInstanceDiscoveryMethod()));
-      discoveryData.setText(isTableSource ? getTableName(dco.getInstanceDiscoveryData()) : dco.getInstanceDiscoveryData());
+      discoveryData.setText(isTableSource ? getTableName(dco.getInstanceDiscoveryData()) : (isOtlp && otlpParts != null && otlpParts.length > 0 ? otlpParts[0] : dco.getInstanceDiscoveryData()));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -162,13 +171,22 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       });
 
       instanceNameColumn = new LabeledText(dialogArea, SWT.NONE);
-      instanceNameColumn.setLabel(i18n.tr("Instance name column"));
-      instanceNameColumn.setText(isTableSource ? getColumnName(dco.getInstanceDiscoveryData()) : "");
+      instanceNameColumn.setLabel(isOtlp ? i18n.tr("Instance key attributes") : i18n.tr("Instance name column"));
+      instanceNameColumn.setText(isTableSource ? getColumnName(dco.getInstanceDiscoveryData()) : (isOtlp && otlpParts != null && otlpParts.length > 1 ? otlpParts[1] : ""));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       instanceNameColumn.setLayoutData(gd);
-      instanceNameColumn.setEnabled(isTableSource);
+      instanceNameColumn.setEnabled(isTableSource || isOtlp);
+
+      instanceNameFormat = new LabeledText(dialogArea, SWT.NONE);
+      instanceNameFormat.setLabel(i18n.tr("Instance name format (optional)"));
+      instanceNameFormat.setText(isOtlp && otlpParts != null && otlpParts.length > 2 ? otlpParts[2] : "");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      instanceNameFormat.setLayoutData(gd);
+      instanceNameFormat.setEnabled(isOtlp);
 
       groupRetention = new Group(dialogArea, SWT.NONE);
       groupRetention.setText("Instance retention");
@@ -293,6 +311,8 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
             return i18n.tr("Target");
          case DataCollectionObject.IDM_PUSH:
             return i18n.tr("Pattern");
+         case DataCollectionObject.IDM_OTLP:
+            return i18n.tr("Metric name pattern");
 		}
       return "";
 	}
@@ -410,6 +430,18 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
          String column = instanceNameColumn.getText().trim();
          dco.setInstanceDiscoveryData(column.isEmpty() ? data : data + ":" + column);
       }
+      else if (method == DataCollectionObject.IDM_OTLP)
+      {
+         // For OTLP, combine metric pattern, optional key attributes, and optional name format with ";" separator
+         String keyAttrs = instanceNameColumn.getText().trim();
+         String nameFormat = instanceNameFormat.getText().trim();
+         String combined = data;
+         if (!keyAttrs.isEmpty() || !nameFormat.isEmpty())
+            combined += ";" + keyAttrs;
+         if (!nameFormat.isEmpty())
+            combined += ";" + nameFormat;
+         dco.setInstanceDiscoveryData(combined);
+      }
       else
       {
          dco.setInstanceDiscoveryData(data);
@@ -435,8 +467,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryData.setText("");
 		discoveryData.setEnabled(false);
       selectButton.setEnabled(false);
+      instanceNameColumn.setLabel(i18n.tr("Instance name column"));
       instanceNameColumn.setText("");
       instanceNameColumn.setEnabled(false);
+      instanceNameFormat.setText("");
+      instanceNameFormat.setEnabled(false);
       filterScript.setText("");
 		filterScript.setEnabled(false);
 		instanceRetentionMode.select(0);

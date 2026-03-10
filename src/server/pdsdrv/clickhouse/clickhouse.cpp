@@ -322,6 +322,9 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, 
       case DS_PUSH_AGENT:
          record.dataSource = "push";
          break;
+      case DS_OTLP:
+         record.dataSource = "otlp";
+         break;
       case DS_SCRIPT:
          record.dataSource = "script";
          break;

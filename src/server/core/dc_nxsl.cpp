@@ -693,7 +693,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 
    bool success = false;
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-   if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
+   if ((dci != nullptr) && ((dci->getDataSource() == DS_PUSH_AGENT) || (dci->getDataSource() == DS_OTLP)) && (dci->getType() == DCO_TYPE_ITEM))
    {
       Timestamp t = (argc == 3) ? Timestamp::now() : Timestamp::fromMilliseconds(argv[3]->getValueAsInt64());
       if (dci->getLastValueTimestamp() == t)

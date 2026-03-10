@@ -252,6 +252,7 @@ target
 /src/server/nxreportd/java/.project
 /src/server/nxreportd/java/.settings
 /src/server/nxreportd/nxreportd
+/src/server/otlp/generated
 /src/server/tools/nddload/nddload
 /src/server/tools/nxaction/nxaction
 /src/server/tools/nxadm/nxadm
