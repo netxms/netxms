@@ -214,8 +214,8 @@ bool CambiumEPMPDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 
    _tcscpy(hwInfo->vendor, _T("Cambium"));
 
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(TCHAR));
+   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
+   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
 
    SNMP_Variable *v = response->getVariable(2);
    if (v->getType() == ASN_INTEGER)

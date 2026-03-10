@@ -194,7 +194,7 @@ bool EltexDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, Dr
       v = response->getVariable(3);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
+         wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;

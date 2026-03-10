@@ -485,7 +485,7 @@ CREATE TABLE nodes
   product_name varchar(127) null,
   product_version varchar(15) null,
   product_code varchar(31) null,
-  serial_number varchar(31) null,
+  serial_number varchar(127) null,
   eip_port integer not null,
   cip_device_type integer not null,
   cip_status integer not null,
