@@ -75,9 +75,8 @@ DeviceBackupApiStatus OxidizedValidateDeviceRegistration(Node *node)
       return DeviceBackupApiStatus::DEVICE_NOT_REGISTERED;
    }
 
-   // Update model from vendor mapping if it changed
-   SharedString vendor = node->getVendor();
-   std::string resolvedModel = ResolveOxidizedModel(vendor.cstr());
+   // Update model from driver/vendor mapping if it changed
+   std::string resolvedModel = ResolveOxidizedModel(node);
    if (!resolvedModel.empty())
    {
       WCHAR wmodel[64];
@@ -85,8 +84,8 @@ DeviceBackupApiStatus OxidizedValidateDeviceRegistration(Node *node)
       if (wcscmp(model.cstr(), wmodel))
       {
          node->setCustomAttribute(L"$oxidized.model", wmodel, StateChange::IGNORE);
-         nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedValidateDeviceRegistration(%s [%u]): updated model to %hs (vendor: %s)",
-            node->getName(), node->getId(), resolvedModel.c_str(), vendor.cstr());
+         nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedValidateDeviceRegistration(%s [%u]): updated model to %hs (driver: %s, vendor: %s)",
+            node->getName(), node->getId(), resolvedModel.c_str(), node->getDriverName(), node->getVendor().cstr());
          ReloadOxidizedNodeList();
       }
    }
@@ -101,12 +100,11 @@ DeviceBackupApiStatus OxidizedValidateDeviceRegistration(Node *node)
  */
 DeviceBackupApiStatus OxidizedRegisterDevice(Node *node)
 {
-   SharedString vendor = node->getVendor();
-   std::string model = ResolveOxidizedModel(vendor.cstr());
+   std::string model = ResolveOxidizedModel(node);
    if (model.empty())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): cannot register - no model mapping for vendor \"%s\" and no DefaultModel configured",
-         node->getName(), node->getId(), vendor.cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): cannot register - no model mapping for driver \"%s\", vendor \"%s\", and no DefaultModel configured",
+         node->getName(), node->getId(), node->getDriverName(), node->getVendor().cstr());
       return DeviceBackupApiStatus::EXTERNAL_API_ERROR;
    }
 
@@ -122,13 +120,13 @@ DeviceBackupApiStatus OxidizedRegisterDevice(Node *node)
 
    if (isNew)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): registered with model %hs (vendor: %s)",
-         node->getName(), node->getId(), model.c_str(), vendor.cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): registered with model %hs (driver: %s, vendor: %s)",
+         node->getName(), node->getId(), model.c_str(), node->getDriverName(), node->getVendor().cstr());
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): updated model to %hs (vendor: %s)",
-         node->getName(), node->getId(), model.c_str(), vendor.cstr());
+      nxlog_debug_tag(DEBUG_TAG, 4, L"OxidizedRegisterDevice(%s [%u]): updated model to %hs (driver: %s, vendor: %s)",
+         node->getName(), node->getId(), model.c_str(), node->getDriverName(), node->getVendor().cstr());
    }
 
    ReloadOxidizedNodeList();

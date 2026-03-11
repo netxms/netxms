@@ -61,11 +61,14 @@ void InvalidateNodeCache();
  */
 json_t *FindOxidizedNodeByName(json_t *nodeList, const char *nodeName);
 
+class Node;
+
 /**
- * Resolve Oxidized model name from node vendor string.
+ * Resolve Oxidized model name from node properties.
+ * Checks NDD driver name first, then falls back to vendor mapping.
  * Returns empty string if no mapping found and no default model configured.
  */
-std::string ResolveOxidizedModel(const TCHAR *vendor);
+std::string ResolveOxidizedModel(const Node *node);
 
 /**
  * Global configuration variables

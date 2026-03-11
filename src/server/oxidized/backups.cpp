@@ -345,46 +345,29 @@ std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetBackupById(const Node& n
       return std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::EXTERNAL_API_ERROR, BackupData());
    }
 
-   // Fetch config for specific version using version view endpoint
-   char encodedName[512], encodedGroup[256];
-   URLEncode(name, encodedName, sizeof(encodedName));
-   URLEncode(group, encodedGroup, sizeof(encodedGroup));
+   // Fetch config for specific version using node/fetch with version parameter
+   // (avoids JSON serialization issues with binary content in version/view.json)
    char fetchEndpoint[1024];
-   snprintf(fetchEndpoint, sizeof(fetchEndpoint), "node/version/view.json?node=%s&group=%s&oid=%s",
-      encodedName, encodedGroup, vi.oid.c_str());
+   BuildNodePath("node/fetch", name, group, "", fetchEndpoint, sizeof(fetchEndpoint));
 
-   json_t *lines = OxidizedApiRequest(fetchEndpoint);
-   if (lines == nullptr || !json_is_array(lines))
+   // Append version (git OID) as query parameter
+   size_t endpointLen = strlen(fetchEndpoint);
+   snprintf(fetchEndpoint + endpointLen, sizeof(fetchEndpoint) - endpointLen, "?version=%s", vi.oid.c_str());
+
+   size_t configSize = 0;
+   char *configText = OxidizedApiRequestText(fetchEndpoint, &configSize);
+   if (configText == nullptr || configSize == 0)
    {
-      if (lines != nullptr)
-         json_decref(lines);
+      MemFree(configText);
       return std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::EXTERNAL_API_ERROR, BackupData());
    }
-
-   // Join JSON array of lines into a single string
-   ByteStream configStream(32768);
-   size_t index;
-   json_t *line;
-   json_array_foreach(lines, index, line)
-   {
-      const char *lineStr = json_string_value(line);
-      if (lineStr != nullptr)
-         configStream.write(lineStr, strlen(lineStr));
-   }
-   json_decref(lines);
-
-   size_t configSize = configStream.size();
-   if (configSize == 0)
-      return std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::EXTERNAL_API_ERROR, BackupData());
-
-   configStream.write('\0');
 
    BackupData backup;
    backup.id = id;
    backup.timestamp = vi.timestamp;
    backup.lastCheckTime = vi.timestamp;
    backup.isBinary = false;
-   backup.runningConfig = configStream.takeBuffer();
+   backup.runningConfig = reinterpret_cast<BYTE*>(configText);
    backup.runningConfigSize = configSize;
    CalculateSHA256Hash(backup.runningConfig, backup.runningConfigSize, backup.runningConfigHash);
 

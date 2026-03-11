@@ -20,6 +20,7 @@
 **/
 
 #include "oxidized.h"
+#include <nms_objects.h>
 #include <netxms-version.h>
 
 /**
@@ -52,93 +53,228 @@ char g_oxidizedPassword[128] = "";
 char g_oxidizedDefaultModel[64] = "";
 
 /**
- * Vendor to Oxidized model mapping (case-insensitive vendor match)
+ * NDD driver name to Oxidized model mapping (case-insensitive, checked first)
+ */
+static StringMap s_driverModelMap;
+
+/**
+ * sysDescr substring to Oxidized model mapping (case-insensitive, checked after driver)
+ */
+struct SysDescrMapping
+{
+   TCHAR pattern[128];
+   TCHAR model[64];
+};
+static ObjectArray<SysDescrMapping> s_sysDescrMappings(16, 16, Ownership::True);
+
+/**
+ * Vendor to Oxidized model mapping (case-insensitive, used as fallback)
  */
 static StringMap s_vendorModelMap;
 
 /**
- * Initialize default vendor-to-model mappings
+ * Initialize default driver-to-model mappings
+ */
+static void InitializeDriverModelMap()
+{
+   // Cisco
+   s_driverModelMap.set(L"CISCO-GENERIC", L"ios");
+   s_driverModelMap.set(L"CATALYST-GENERIC", L"ios");
+   s_driverModelMap.set(L"CATALYST-2900XL", L"ios");
+   s_driverModelMap.set(L"CISCO-NEXUS", L"nxos");
+   s_driverModelMap.set(L"CISCO-SB", L"ciscosmb");
+   s_driverModelMap.set(L"CISCO-ESW", L"ios");
+   s_driverModelMap.set(L"CISCO-WLC", L"aireos");
+   // Juniper
+   s_driverModelMap.set(L"JUNIPER", L"junos");
+   s_driverModelMap.set(L"NETSCREEN", L"screenos");
+   // MikroTik
+   s_driverModelMap.set(L"MIKROTIK", L"routeros");
+   // Huawei
+   s_driverModelMap.set(L"HUAWEI-SW", L"vrp");
+   s_driverModelMap.set(L"OPTIX", L"vrp");
+   // Fortinet
+   s_driverModelMap.set(L"FORTIGATE", L"fortios");
+   // HPE / Aruba
+   s_driverModelMap.set(L"ARUBA-SW", L"aoscx");
+   s_driverModelMap.set(L"PROCURVE", L"procurve");
+   s_driverModelMap.set(L"H3C", L"comware");
+   s_driverModelMap.set(L"HPSW", L"procurve");
+   // Extreme
+   s_driverModelMap.set(L"EXTREME", L"xos");
+   // Dell
+   s_driverModelMap.set(L"DELL-PWC", L"powerconnect");
+   // Ubiquiti
+   s_driverModelMap.set(L"UBNT-AIRMAX", L"airos");
+   s_driverModelMap.set(L"UBNT-EDGESW", L"edgeswitch");
+   // Hirschmann
+   s_driverModelMap.set(L"HIRSCHMANN-HIOS", L"hirschmann");
+   s_driverModelMap.set(L"HIRSCHMANN-CLASSIC", L"hirschmann");
+   // D-Link
+   s_driverModelMap.set(L"DLINK", L"dlink");
+   // TP-Link
+   s_driverModelMap.set(L"TPLINK", L"tplink");
+   // Eltex
+   s_driverModelMap.set(L"ELTEX", L"eltex");
+   // Edgecore
+   s_driverModelMap.set(L"EDGECORE-ESW", L"edgecos");
+   // Teltonika
+   s_driverModelMap.set(L"TELTONIKA", L"openwrt");
+}
+
+/**
+ * Add sysDescr mapping entry
+ */
+static void AddSysDescrMapping(const TCHAR *pattern, const TCHAR *model)
+{
+   auto *m = new SysDescrMapping();
+   _tcslcpy(m->pattern, pattern, 128);
+   _tcslcpy(m->model, model, 64);
+   s_sysDescrMappings.add(m);
+}
+
+/**
+ * Initialize default sysDescr-to-model mappings
+ */
+static void InitializeSysDescrModelMap()
+{
+   // Cisco OS variants
+   AddSysDescrMapping(L"Adaptive Security Appliance", L"asa");
+   AddSysDescrMapping(L"IOS-XR", L"iosxr");
+   AddSysDescrMapping(L"IOS XR", L"iosxr");
+   AddSysDescrMapping(L"NX-OS", L"nxos");
+   // Dell OS variants
+   AddSysDescrMapping(L"Dell EMC Networking OS10", L"os10");
+   AddSysDescrMapping(L"OS10 Enterprise", L"os10");
+   AddSysDescrMapping(L"Force10", L"ftos");
+   AddSysDescrMapping(L"FTOS", L"ftos");
+}
+
+/**
+ * Initialize default vendor-to-model mappings (fallback for devices using GENERIC driver)
  */
 static void InitializeVendorModelMap()
 {
-   // Cisco
    s_vendorModelMap.set(L"Cisco", L"ios");
    s_vendorModelMap.set(L"Cisco Systems Inc.", L"ios");
-   // Juniper
    s_vendorModelMap.set(L"Juniper Networks", L"junos");
-   // MikroTik
    s_vendorModelMap.set(L"MikroTik", L"routeros");
-   // Huawei
    s_vendorModelMap.set(L"Huawei", L"vrp");
-   // Fortinet
    s_vendorModelMap.set(L"Fortinet", L"fortios");
-   // HPE / Aruba
    s_vendorModelMap.set(L"HPE Aruba Networking", L"arubaos");
    s_vendorModelMap.set(L"Hewlett Packard Enterprise", L"procurve");
-   // Extreme
    s_vendorModelMap.set(L"Extreme Networks", L"xos");
-   // D-Link
    s_vendorModelMap.set(L"D-Link", L"dlink");
-   // TP-Link
    s_vendorModelMap.set(L"TP-Link", L"tplink");
-   // Dell
    s_vendorModelMap.set(L"Dell", L"powerconnect");
-   // Ubiquiti
    s_vendorModelMap.set(L"Ubiquiti", L"edgeos");
    s_vendorModelMap.set(L"Ubiquiti, Inc.", L"airos");
-   // Eltex
    s_vendorModelMap.set(L"Eltex Ltd.", L"eltex");
-   // Moxa
    s_vendorModelMap.set(L"Moxa", L"moxa");
-   // Hirschmann
    s_vendorModelMap.set(L"Hirschmann", L"hirschmann");
-   // Teltonika
-   s_vendorModelMap.set(L"Teltonika", L"routeros");
-   // Edgecore
+   s_vendorModelMap.set(L"Teltonika", L"openwrt");
    s_vendorModelMap.set(L"Edgecore", L"edgecos");
 }
 
 /**
- * Callback for case-insensitive vendor search
+ * Callback for case-insensitive map search
  */
-struct VendorSearchData
+struct MapSearchData
 {
-   const TCHAR *vendor;
-   const TCHAR *model;
+   const TCHAR *key;
+   const TCHAR *value;
 };
 
-static EnumerationCallbackResult VendorSearchCallback(const TCHAR *key, const void *value, void *userData)
+static EnumerationCallbackResult CaseInsensitiveSearchCallback(const TCHAR *key, const void *value, void *userData)
 {
-   VendorSearchData *data = static_cast<VendorSearchData*>(userData);
-   if (!wcsicmp(key, data->vendor))
+   MapSearchData *data = static_cast<MapSearchData*>(userData);
+   if (!wcsicmp(key, data->key))
    {
-      data->model = static_cast<const TCHAR*>(value);
+      data->value = static_cast<const TCHAR*>(value);
       return _STOP;
    }
    return _CONTINUE;
 }
 
 /**
- * Resolve Oxidized model name from node vendor string.
+ * Case-insensitive lookup in a StringMap, returns nullptr if not found
+ */
+static const TCHAR *CaseInsensitiveLookup(StringMap& map, const TCHAR *key)
+{
+   if ((key == nullptr) || (key[0] == 0))
+      return nullptr;
+
+   MapSearchData data;
+   data.key = key;
+   data.value = nullptr;
+   map.forEach(CaseInsensitiveSearchCallback, &data);
+   return data.value;
+}
+
+/**
+ * Resolve Oxidized model name from node properties.
+ * Priority: user override (oxidized.model custom attribute) > NDD driver > sysDescr > vendor > default.
  * Returns empty string if no mapping found and no default model configured.
  */
-std::string ResolveOxidizedModel(const TCHAR *vendor)
+std::string ResolveOxidizedModel(const Node *node)
 {
-   if ((vendor != nullptr) && (vendor[0] != 0))
+   // Tier 0: user-set custom attribute override
+   SharedString userModel = node->getCustomAttribute(L"oxidized.model");
+   if (!userModel.isEmpty())
    {
-      VendorSearchData data;
-      data.vendor = vendor;
-      data.model = nullptr;
-      s_vendorModelMap.forEach(VendorSearchCallback, &data);
+      char result[64];
+      wchar_to_utf8(userModel.cstr(), -1, result, sizeof(result));
+      nxlog_debug_tag(DEBUG_TAG, 5, L"ResolveOxidizedModel(%s [%u]): using user-set model \"%hs\" from custom attribute",
+         node->getName(), node->getId(), result);
+      return std::string(result);
+   }
 
-      if (data.model != nullptr)
+   // Tier 1: NDD driver name (skip GENERIC - it matches everything and is not useful for mapping)
+   const TCHAR *driverName = node->getDriverName();
+   if ((driverName != nullptr) && wcsicmp(driverName, L"GENERIC"))
+   {
+      const TCHAR *model = CaseInsensitiveLookup(s_driverModelMap, driverName);
+      if (model != nullptr)
       {
          char result[64];
-         wchar_to_utf8(data.model, -1, result, sizeof(result));
+         wchar_to_utf8(model, -1, result, sizeof(result));
+         nxlog_debug_tag(DEBUG_TAG, 5, L"ResolveOxidizedModel(%s [%u]): resolved model \"%hs\" via driver \"%s\"",
+            node->getName(), node->getId(), result, driverName);
          return std::string(result);
       }
    }
 
+   // Tier 2: sysDescr substring match
+   const TCHAR *sysDescr = node->getSysDescription();
+   if ((sysDescr != nullptr) && (sysDescr[0] != 0))
+   {
+      for (int i = 0; i < s_sysDescrMappings.size(); i++)
+      {
+         SysDescrMapping *m = s_sysDescrMappings.get(i);
+         if (wcsistr(sysDescr, m->pattern) != nullptr)
+         {
+            char result[64];
+            wchar_to_utf8(m->model, -1, result, sizeof(result));
+            nxlog_debug_tag(DEBUG_TAG, 5, L"ResolveOxidizedModel(%s [%u]): resolved model \"%hs\" via sysDescr pattern \"%s\"",
+               node->getName(), node->getId(), result, m->pattern);
+            return std::string(result);
+         }
+      }
+   }
+
+   // Tier 3: vendor name
+   SharedString vendor = node->getVendor();
+   const TCHAR *model = CaseInsensitiveLookup(s_vendorModelMap, vendor.cstr());
+   if (model != nullptr)
+   {
+      char result[64];
+      wchar_to_utf8(model, -1, result, sizeof(result));
+      nxlog_debug_tag(DEBUG_TAG, 5, L"ResolveOxidizedModel(%s [%u]): resolved model \"%hs\" via vendor \"%s\"",
+         node->getName(), node->getId(), result, vendor.cstr());
+      return std::string(result);
+   }
+
+   // Tier 4: default model
    if (g_oxidizedDefaultModel[0] != 0)
       return std::string(g_oxidizedDefaultModel);
 
@@ -164,22 +300,10 @@ static bool OxidizedInitializeModule(Config *config)
       return false;
    }
 
-   // Initialize default vendor-to-model mappings, then override with config
+   // Initialize built-in mappings
+   InitializeDriverModelMap();
+   InitializeSysDescrModelMap();
    InitializeVendorModelMap();
-   ConfigEntry *vendorMapEntry = config->getEntry(L"/OXIDIZED/VendorModelMap");
-   if (vendorMapEntry != nullptr)
-   {
-      unique_ptr<ObjectArray<ConfigEntry>> entries(vendorMapEntry->getSubEntries(L"*"));
-      if (entries != nullptr)
-      {
-         for (int i = 0; i < entries->size(); i++)
-         {
-            ConfigEntry *e = entries->get(i);
-            s_vendorModelMap.set(e->getName(), e->getValue());
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Vendor model mapping: \"%s\" -> \"%s\"", e->getName(), e->getValue());
-         }
-      }
-   }
 
    if (strncmp(g_oxidizedBaseURL, "https://", 8) && strncmp(g_oxidizedBaseURL, "http://", 7))
    {
