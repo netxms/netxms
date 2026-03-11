@@ -280,6 +280,20 @@ UINT32 *Subnet::buildAddressMap(int *length)
       return nullptr;
    UINT32 *map = MemAllocArrayNoInit<UINT32>(*length);
 
+   auto findObjectByIP = [this] (uint32_t ipv4Addr) -> uint32_t
+   {
+      shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, ipv4Addr);
+      if (node != nullptr)
+         return node->getId();
+
+      uint32_t clusterId = 0;
+      bool isResource = false;
+      if (IsClusterIP(m_zoneUIN, InetAddress(ipv4Addr), &clusterId, &isResource) && isResource)
+         return clusterId;
+
+      return 0;
+   };
+
    if (m_ipAddress.getHostBits() > 1)
    {
       map[0] = 0xFFFFFFFF; // subnet
@@ -287,8 +301,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
       uint32_t addr = m_ipAddress.getAddressV4() + 1;
       for(int i = 1; i < *length - 1; i++, addr++)
       {
-         shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr);
-         map[i] = (node != nullptr) ? node->getId() : 0;
+         map[i] = findObjectByIP(addr);
       }
    }
    else
@@ -296,8 +309,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
       uint32_t addr = m_ipAddress.getAddressV4();
       for(int i = 0; i < 2; i++)
       {
-         shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr++);
-         map[i] = (node != nullptr) ? node->getId() : 0;
+         map[i] = findObjectByIP(addr++);
       }
    }
    return map;
