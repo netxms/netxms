@@ -1287,10 +1287,10 @@ shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
  */
 bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr, uint32_t *clusterId, bool *isResource)
 {
-	return g_idxObjectById.find(
+	return g_idxClusterById.find(
 	   [zoneUIN, ipAddr, clusterId, isResource] (NetObj *object) -> bool
 	   {
-         if ((object->getObjectClass() != OBJECT_CLUSTER) || object->isDeleted() || (static_cast<Cluster*>(object)->getZoneUIN() != zoneUIN))
+         if (object->isDeleted() || (static_cast<Cluster*>(object)->getZoneUIN() != zoneUIN))
 	         return false;
          if (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr))
          {
