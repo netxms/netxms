@@ -46,7 +46,7 @@ public class AlarmPreferences extends FieldEditorPreferencePage
 	protected void createFieldEditors()
 	{
 		addField(new BooleanFieldEditor("AlarmList.BlinkOutstandingAlarm", i18n.tr("Blinking outstanding alarms"), getFieldEditorParent()));
-		addField(new BooleanFieldEditor("TrayIcon.ShowAlarmPopups", i18n.tr("Show tray pop-ups on new alarms"), getFieldEditorParent()));
+		addField(new BooleanFieldEditor("TrayIcon.ShowAlarmPopups", i18n.tr("Show pop-up notifications on new alarms"), getFieldEditorParent()));
 		addField(new BooleanFieldEditor("AlarmNotifier.OutstandingAlarmsReminder", i18n.tr("Show pop-up reminder for outstanding alarms"), getFieldEditorParent()));
       if ((Registry.getSession()).isTimedAlarmAckEnabled())
       {

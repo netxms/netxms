@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.sound.sampled.Clip;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
@@ -36,12 +37,14 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmReminderDialog;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +59,7 @@ public class AlarmNotifier implements DisposableSingleton
    public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
    private static final String LOCAL_SOUND_ID = "AlarmNotifier.LocalSound";
    private static final int MAX_PLAY_QUEUE_LINE = 5;
+   private static final int MAX_POPUP_COUNT = 10;
    private static final String STOP_INDICATOR = "--STOP--";
 
    /**
@@ -92,6 +96,7 @@ public class AlarmNotifier implements DisposableSingleton
    private File soundFilesDirectory;
    private Map<Long, Long> alarmNotificationTimestamp = new HashMap<Long, Long>();
    private long lastNotificationTimestamp;
+   private AtomicInteger popupCount = new AtomicInteger(0);
    private Thread reminderThread;
    private Thread playerThread;
    private boolean disposed = false;
@@ -124,6 +129,7 @@ public class AlarmNotifier implements DisposableSingleton
          soundFilesDirectory.mkdirs();
 
       checkSounds();
+      initializePopupSupport();
 
       lastReminderTime = System.currentTimeMillis();
 
@@ -447,6 +453,163 @@ public class AlarmNotifier implements DisposableSingleton
       if (outstandingAlarms == 0)
          lastReminderTime = System.currentTimeMillis();
       outstandingAlarms++;
+
+      if (ps.getAsBoolean("TrayIcon.ShowAlarmPopups", false))
+      {
+         showAlarmPopup(alarm);
+      }
+   }
+
+   /**
+    * Initialize popup notification support by injecting toast container and requesting browser notification permission.
+    */
+   private void initializePopupSupport()
+   {
+      display.asyncExec(() -> {
+         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+         if (executor == null)
+            return;
+
+         StringBuilder js = new StringBuilder();
+
+         // Create in-app toast container
+         js.append("(function(){");
+         js.append("if(document.getElementById('nxmc-toast-container'))return;");
+         js.append("var c=document.createElement('div');");
+         js.append("c.id='nxmc-toast-container';");
+         js.append("c.style.cssText='position:fixed;top:10px;right:10px;z-index:100000;max-width:400px;pointer-events:none;';");
+         js.append("document.body.appendChild(c);");
+
+         // Define toast display function
+         js.append("window.nxmcShowToast=function(title,message,severity){");
+         js.append("var colors=['#00c000','#cccc00','#ff8000','#ff4000','#e00000'];");
+         js.append("var t=document.createElement('div');");
+         js.append("t.style.cssText='pointer-events:auto;background:#fff;border-left:4px solid '+(colors[severity]||'#888')");
+         js.append("+';box-shadow:0 2px 8px rgba(0,0,0,.2);padding:12px 16px;margin-bottom:8px;border-radius:4px;cursor:pointer;");
+         js.append("opacity:0;transition:opacity 0.3s;font-family:sans-serif;';");
+         js.append("t.innerHTML='<div style=\"font-weight:bold;font-size:13px;margin-bottom:4px\">'+title+'</div>'");
+         js.append("+'<div style=\"color:#555;font-size:12px\">'+message+'</div>';");
+         js.append("t.onclick=function(){t.remove();};");
+         js.append("c.appendChild(t);");
+         js.append("setTimeout(function(){t.style.opacity='1';},10);");
+         js.append("setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},500);},10000);");
+         js.append("};");
+
+         // Define browser notification function
+         js.append("window.nxmcShowBrowserNotification=function(title,message,tag){");
+         js.append("if(window.Notification&&Notification.permission==='granted'){");
+         js.append("var n=new Notification(title,{body:message,tag:tag,requireInteraction:false});");
+         js.append("setTimeout(function(){n.close();},10000);");
+         js.append("n.onclick=function(){window.focus();n.close();};");
+         js.append("}};");
+
+         // Request notification permission
+         js.append("if(window.Notification&&Notification.permission==='default'){");
+         js.append("Notification.requestPermission();");
+         js.append("}");
+
+         js.append("})();");
+         executor.execute(js.toString());
+      });
+   }
+
+   /**
+    * Show alarm popup notification (browser notification + in-app toast).
+    *
+    * @param alarm the alarm to show notification for
+    */
+   private void showAlarmPopup(final Alarm alarm)
+   {
+      if (popupCount.incrementAndGet() > MAX_POPUP_COUNT)
+      {
+         popupCount.decrementAndGet();
+         logger.info("Skipping alarm popup - too many consecutive alarms");
+         return;
+      }
+
+      display.asyncExec(() -> {
+         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+         if (executor == null)
+         {
+            popupCount.decrementAndGet();
+            return;
+         }
+
+         String severityText = StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity());
+         AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+         String sourceName = (object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId());
+
+         String title = escapeJavaScript(i18n.tr("NetXMS Alarm") + " (" + severityText + ")");
+         String body = escapeJavaScript(sourceName + ": " + alarm.getMessage());
+         int severityValue = alarm.getCurrentSeverity().getValue();
+
+         StringBuilder js = new StringBuilder();
+
+         // Show in-app toast
+         js.append("if(window.nxmcShowToast)nxmcShowToast('");
+         js.append(title).append("','");
+         js.append(body).append("',");
+         js.append(severityValue).append(");");
+
+         // Show browser notification (for background tabs)
+         js.append("if(window.nxmcShowBrowserNotification)nxmcShowBrowserNotification('");
+         js.append(title).append("','");
+         js.append(body).append("','nxalarm-");
+         js.append(alarm.getId()).append("');");
+
+         executor.execute(js.toString());
+
+         // Decrement popup count after auto-dismiss timeout
+         display.timerExec(11000, () -> popupCount.decrementAndGet());
+      });
+   }
+
+   /**
+    * Escape string for safe use in JavaScript string literals.
+    *
+    * @param s input string
+    * @return escaped string
+    */
+   private static String escapeJavaScript(String s)
+   {
+      if (s == null)
+         return "";
+      StringBuilder sb = new StringBuilder(s.length() + 16);
+      for(int i = 0; i < s.length(); i++)
+      {
+         char c = s.charAt(i);
+         switch(c)
+         {
+            case '\\':
+               sb.append("\\\\");
+               break;
+            case '\'':
+               sb.append("\\'");
+               break;
+            case '"':
+               sb.append("\\\"");
+               break;
+            case '<':
+               sb.append("\\x3c");
+               break;
+            case '>':
+               sb.append("\\x3e");
+               break;
+            case '&':
+               sb.append("\\x26");
+               break;
+            case '\n':
+               sb.append("\\n");
+               break;
+            case '\r':
+               sb.append("\\r");
+               break;
+            default:
+               sb.append(c);
+               break;
+         }
+      }
+      return sb.toString();
    }
 
    /**
