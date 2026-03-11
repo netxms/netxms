@@ -19,7 +19,9 @@
 package org.netxms.nxmc.modules.objects.views;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -40,6 +42,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.MeasurementUnit;
@@ -51,6 +54,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -68,15 +72,25 @@ public class ProcessesView extends ObjectView
    public static final int COLUMN_HANDLES = 4;
    public static final int COLUMN_VMSIZE = 5;
    public static final int COLUMN_RSS = 6;
-   public static final int COLUMN_MEMORY_USAGE = 7;
-   public static final int COLUMN_PAGE_FAULTS = 8;
-   public static final int COLUMN_KTIME = 9;
-   public static final int COLUMN_UTIME = 10;
-   public static final int COLUMN_CMDLINE = 11;
+   public static final int COLUMN_CPU_USAGE = 7;
+   public static final int COLUMN_MEMORY_USAGE = 8;
+   public static final int COLUMN_PAGE_FAULTS = 9;
+   public static final int COLUMN_KTIME = 10;
+   public static final int COLUMN_UTIME = 11;
+   public static final int COLUMN_CMDLINE = 12;
+
+   private static final int AUTOREFRESH_INTERVAL = 5;
 
    private SortableTableViewer viewer;
+   private ViewRefreshController refreshController;
    private Action actionTerminate;
+   private Action actionAutoRefresh;
+   private boolean autoRefreshEnabled = true;
    private String filterString = null;
+   private Map<Long, long[]> previousCpuTimes = new HashMap<>();
+   private long previousTimestamp = 0;
+   private int cpuCount = 0;
+   private long currentNodeId = 0;
 
    /**
     * Create "Processes" view
@@ -110,20 +124,14 @@ public class ProcessesView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      previousCpuTimes.clear();
+      previousTimestamp = 0;
+      cpuCount = 0;
+      currentNodeId = 0;
       if (isActive())
          refresh();
       else
          viewer.setInput(new Object[0]);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      super.activate();
-      refresh();
    }
 
    /**
@@ -132,9 +140,9 @@ public class ProcessesView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      final String[] names = { i18n.tr("PID"), i18n.tr("Name"), i18n.tr("User"), i18n.tr("Threads"), i18n.tr("Handles"), i18n.tr("VM Size"), i18n.tr("RSS"), i18n.tr("Memory %"),
-            i18n.tr("Page faults"), i18n.tr("System time"), i18n.tr("User time"), i18n.tr("Command line") };
-      final int[] widths = { 90, 200, 140, 90, 90, 90, 90, 90, 90, 90, 90, 500 };
+      final String[] names = { i18n.tr("PID"), i18n.tr("Name"), i18n.tr("User"), i18n.tr("Threads"), i18n.tr("Handles"), i18n.tr("VM Size"), i18n.tr("RSS"), i18n.tr("CPU %"),
+            i18n.tr("Memory %"), i18n.tr("Page faults"), i18n.tr("System time"), i18n.tr("User time"), i18n.tr("Command line") };
+      final int[] widths = { 90, 200, 140, 90, 90, 90, 90, 90, 90, 90, 90, 90, 500 };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ProcessLabelProvider());
@@ -152,6 +160,14 @@ public class ProcessesView extends ObjectView
 
       createActions();
       createContextMenu();
+
+      refreshController = new ViewRefreshController(this, autoRefreshEnabled ? AUTOREFRESH_INTERVAL : -1, new Runnable() {
+         @Override
+         public void run()
+         {
+            refresh();
+         }
+      });
    }
 
    /**
@@ -166,6 +182,16 @@ public class ProcessesView extends ObjectView
             terminateProcess();
          }
       };
+
+      actionAutoRefresh = new Action(i18n.tr("Refresh &automatically"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            autoRefreshEnabled = actionAutoRefresh.isChecked();
+            refreshController.setInterval(autoRefreshEnabled ? AUTOREFRESH_INTERVAL : -1);
+         }
+      };
+      actionAutoRefresh.setChecked(autoRefreshEnabled);
    }
 
    /**
@@ -202,6 +228,7 @@ public class ProcessesView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionAutoRefresh);
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
@@ -221,37 +248,76 @@ public class ProcessesView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
+            if (cpuCount == 0 || currentNodeId != nodeId)
+            {
+               currentNodeId = nodeId;
+               try
+               {
+                  cpuCount = Integer.parseInt(session.queryMetric(nodeId, DataOrigin.AGENT, "System.CPU.Count").trim());
+               }
+               catch(Exception e)
+               {
+                  cpuCount = 1;
+               }
+            }
+
             final Table processTable = session.queryAgentTable(nodeId, "System.Processes");
+            long currentTimestamp = System.currentTimeMillis();
 
-            int[] indexes = new int[12];
-            indexes[COLUMN_PID] = processTable.getColumnIndex("PID");
-            indexes[COLUMN_NAME] = processTable.getColumnIndex("NAME");
-            indexes[COLUMN_USER] = processTable.getColumnIndex("USER");
-            indexes[COLUMN_THREADS] = processTable.getColumnIndex("THREADS");
-            indexes[COLUMN_HANDLES] = processTable.getColumnIndex("HANDLES");
-            indexes[COLUMN_VMSIZE] = processTable.getColumnIndex("VMSIZE");
-            indexes[COLUMN_RSS] = processTable.getColumnIndex("RSS");
-            indexes[COLUMN_MEMORY_USAGE] = processTable.getColumnIndex("MEMORY_USAGE");
-            indexes[COLUMN_PAGE_FAULTS] = processTable.getColumnIndex("PAGE_FAULTS");
-            indexes[COLUMN_KTIME] = processTable.getColumnIndex("KTIME");
-            indexes[COLUMN_UTIME] = processTable.getColumnIndex("UTIME");
-            indexes[COLUMN_CMDLINE] = processTable.getColumnIndex("CMDLINE");
+            int idxPid = processTable.getColumnIndex("PID");
+            int idxName = processTable.getColumnIndex("NAME");
+            int idxUser = processTable.getColumnIndex("USER");
+            int idxThreads = processTable.getColumnIndex("THREADS");
+            int idxHandles = processTable.getColumnIndex("HANDLES");
+            int idxVmSize = processTable.getColumnIndex("VMSIZE");
+            int idxRss = processTable.getColumnIndex("RSS");
+            int idxMemUsage = processTable.getColumnIndex("MEMORY_USAGE");
+            int idxPageFaults = processTable.getColumnIndex("PAGE_FAULTS");
+            int idxKTime = processTable.getColumnIndex("KTIME");
+            int idxUTime = processTable.getColumnIndex("UTIME");
+            int idxCmdLine = processTable.getColumnIndex("CMDLINE");
 
+            long deltaTime = currentTimestamp - previousTimestamp;
+            boolean hasPreviousData = (previousTimestamp > 0) && (deltaTime > 0);
+
+            Map<Long, long[]> currentCpuTimes = new HashMap<>();
             final Process[] processes = new Process[processTable.getRowCount()];
             for(int i = 0; i < processTable.getRowCount(); i++)
             {
                TableRow r = processTable.getRow(i);
                Process process = new Process();
-               for(int j = 0; j < indexes.length; j++)
-                  process.data[j] = r.getValueAsLong(indexes[j]);
-               process.name = (indexes[COLUMN_NAME] != -1) ? r.getValue(indexes[COLUMN_NAME]) : "";
-               process.user = (indexes[COLUMN_USER] != -1) ? r.getValue(indexes[COLUMN_USER]) : "";
-               process.commandLine = (indexes[COLUMN_CMDLINE] != -1) ? r.getValue(indexes[COLUMN_CMDLINE]) : "";
-               process.rss = (indexes[COLUMN_RSS] != -1) ? r.getValue(indexes[COLUMN_RSS]) : "0";
-               process.vmsize = (indexes[COLUMN_VMSIZE] != -1) ? r.getValue(indexes[COLUMN_VMSIZE]) : "0";
-               process.memoryUsage = (indexes[COLUMN_MEMORY_USAGE] != -1) ? r.getValueAsDouble(indexes[COLUMN_MEMORY_USAGE]) : null;
+               process.pid = (idxPid != -1) ? r.getValueAsLong(idxPid) : 0;
+               process.name = (idxName != -1) ? r.getValue(idxName) : "";
+               process.user = (idxUser != -1) ? r.getValue(idxUser) : "";
+               process.threads = (idxThreads != -1) ? r.getValueAsLong(idxThreads) : 0;
+               process.handles = (idxHandles != -1) ? r.getValueAsLong(idxHandles) : 0;
+               process.commandLine = (idxCmdLine != -1) ? r.getValue(idxCmdLine) : "";
+               process.rss = (idxRss != -1) ? r.getValue(idxRss) : "0";
+               process.vmsize = (idxVmSize != -1) ? r.getValue(idxVmSize) : "0";
+               process.memoryUsage = (idxMemUsage != -1) ? r.getValueAsDouble(idxMemUsage) : null;
+               process.pageFaults = (idxPageFaults != -1) ? r.getValueAsLong(idxPageFaults) : 0;
+               process.ktime = (idxKTime != -1) ? r.getValueAsLong(idxKTime) : 0;
+               process.utime = (idxUTime != -1) ? r.getValueAsLong(idxUTime) : 0;
+
+               long totalCpuTime = process.ktime + process.utime;
+               currentCpuTimes.put(process.pid, new long[] { process.ktime, process.utime });
+
+               if (hasPreviousData)
+               {
+                  long[] prev = previousCpuTimes.get(process.pid);
+                  if (prev != null)
+                  {
+                     long deltaCpu = totalCpuTime - (prev[0] + prev[1]);
+                     if (deltaCpu >= 0)
+                        process.cpuUsage = (double)deltaCpu / (deltaTime * cpuCount) * 100.0;
+                  }
+               }
+
                processes[i] = process;
             }
+
+            previousCpuTimes = currentCpuTimes;
+            previousTimestamp = currentTimestamp;
 
             runInUIThread(() -> {
                if (!viewer.getControl().isDisposed())
@@ -288,7 +354,7 @@ public class ProcessesView extends ObjectView
 
       final List<Long> processes = new ArrayList<Long>(selection.size());
       for(Object o : selection.toList())
-         processes.add(((Process)o).data[COLUMN_PID]);
+         processes.add(((Process)o).pid);
 
       final long nodeId = getObjectId();
       new Job(i18n.tr("Terminating process"), this) {
@@ -319,17 +385,33 @@ public class ProcessesView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      refreshController.dispose();
+      super.dispose();
+   }
+
+   /**
     * Process representation
     */
    private static class Process
    {
-      long[] data = new long[12];
+      long pid;
       String name;
-      String commandLine;
       String user;
-      String rss;
+      long threads;
+      long handles;
       String vmsize;
+      String rss;
+      Double cpuUsage;
       Double memoryUsage;
+      long pageFaults;
+      long ktime;
+      long utime;
+      String commandLine;
    }
 
    /**
@@ -354,22 +436,37 @@ public class ProcessesView extends ObjectView
       @Override
       public String getColumnText(Object element, int columnIndex)
       {
+         Process p = (Process)element;
          switch(columnIndex)
          {
-            case COLUMN_CMDLINE:
-               return ((Process)element).commandLine;
-            case COLUMN_MEMORY_USAGE:
-               return (((Process)element).memoryUsage != null) ? String.format("%,.2f", ((Process)element).memoryUsage) : "";
+            case COLUMN_PID:
+               return Long.toString(p.pid);
             case COLUMN_NAME:
-               return ((Process)element).name;
-            case COLUMN_RSS:
-               return formatter.format(((Process)element).rss, null);
+               return p.name;
             case COLUMN_USER:
-               return ((Process)element).user;
+               return p.user;
+            case COLUMN_THREADS:
+               return Long.toString(p.threads);
+            case COLUMN_HANDLES:
+               return Long.toString(p.handles);
             case COLUMN_VMSIZE:
-               return formatter.format(((Process)element).vmsize, null);
+               return formatter.format(p.vmsize, null);
+            case COLUMN_RSS:
+               return formatter.format(p.rss, null);
+            case COLUMN_CPU_USAGE:
+               return (p.cpuUsage != null) ? String.format("%.2f", p.cpuUsage) : "";
+            case COLUMN_MEMORY_USAGE:
+               return (p.memoryUsage != null) ? String.format("%.2f", p.memoryUsage) : "";
+            case COLUMN_PAGE_FAULTS:
+               return Long.toString(p.pageFaults);
+            case COLUMN_KTIME:
+               return Long.toString(p.ktime);
+            case COLUMN_UTIME:
+               return Long.toString(p.utime);
+            case COLUMN_CMDLINE:
+               return p.commandLine;
             default:
-               return Long.toString(((Process)element).data[columnIndex]);
+               return "";
          }
       }
    }
@@ -386,31 +483,58 @@ public class ProcessesView extends ObjectView
       public int compare(Viewer viewer, Object e1, Object e2)
       {
          final int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
+         Process p1 = (Process)e1;
+         Process p2 = (Process)e2;
          int result;
          switch(column)
          {
-            case COLUMN_CMDLINE:
-               result = ((Process)e1).commandLine.compareToIgnoreCase(((Process)e2).commandLine);
-               break;
-            case COLUMN_MEMORY_USAGE:
-               if (((Process)e1).memoryUsage == null)
-                  result = (((Process)e2).memoryUsage == null) ? 0 : -1;
-               else if (((Process)e2).memoryUsage == null)
-                  result = 1;
-               else
-                  result = Double.compare(((Process)e1).memoryUsage, ((Process)e2).memoryUsage);
+            case COLUMN_PID:
+               result = Long.compare(p1.pid, p2.pid);
                break;
             case COLUMN_NAME:
-               result = ((Process)e1).name.compareToIgnoreCase(((Process)e2).name);
+               result = p1.name.compareToIgnoreCase(p2.name);
                break;
             case COLUMN_USER:
-               result = ((Process)e1).user.compareToIgnoreCase(((Process)e2).user);
+               result = p1.user.compareToIgnoreCase(p2.user);
+               break;
+            case COLUMN_THREADS:
+               result = Long.compare(p1.threads, p2.threads);
+               break;
+            case COLUMN_HANDLES:
+               result = Long.compare(p1.handles, p2.handles);
+               break;
+            case COLUMN_CPU_USAGE:
+               result = compareNullableDoubles(p1.cpuUsage, p2.cpuUsage);
+               break;
+            case COLUMN_MEMORY_USAGE:
+               result = compareNullableDoubles(p1.memoryUsage, p2.memoryUsage);
+               break;
+            case COLUMN_PAGE_FAULTS:
+               result = Long.compare(p1.pageFaults, p2.pageFaults);
+               break;
+            case COLUMN_KTIME:
+               result = Long.compare(p1.ktime, p2.ktime);
+               break;
+            case COLUMN_UTIME:
+               result = Long.compare(p1.utime, p2.utime);
+               break;
+            case COLUMN_CMDLINE:
+               result = p1.commandLine.compareToIgnoreCase(p2.commandLine);
                break;
             default:
-               result = Long.signum(((Process)e1).data[column] - ((Process)e2).data[column]);
+               result = 0;
                break;
          }
          return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+      }
+
+      private static int compareNullableDoubles(Double d1, Double d2)
+      {
+         if (d1 == null)
+            return (d2 == null) ? 0 : -1;
+         if (d2 == null)
+            return 1;
+         return Double.compare(d1, d2);
       }
    }
 
