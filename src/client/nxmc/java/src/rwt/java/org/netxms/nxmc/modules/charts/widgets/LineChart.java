@@ -528,8 +528,8 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       int pollingInterval = data.getPollingInterval();
       if ((pollingInterval > 0) && !data.isStoreChangesOnly())
       {
-         // Use 3x polling interval as gap threshold (X-axis is in milliseconds)
-         series.setLineGapThreshold(pollingInterval * 3.0 * 1000.0);
+         // Use 4x polling interval as gap threshold (X-axis is in milliseconds)
+         series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
       }
 	}
 
