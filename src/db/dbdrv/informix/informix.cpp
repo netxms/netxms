@@ -943,7 +943,7 @@ static DBDriverCallTable s_callTable =
    Prepare,
    FreeStatement,
    nullptr, // OpenBatch
-   nullptr, // NextBatchRow
+   nullptr, // AddBatchRow
    Bind,
    Execute,
    Query,

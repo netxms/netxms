@@ -456,9 +456,9 @@ static bool OpenBatch(DBDRV_STATEMENT hStmt)
 }
 
 /**
- * Start next batch row
+ * Add new batch row
  */
-static void NextBatchRow(DBDRV_STATEMENT hStmt)
+static void AddBatchRow(DBDRV_STATEMENT hStmt)
 {
    auto stmt = static_cast<ORACLE_STATEMENT*>(hStmt);
    if (!stmt->batchMode)
@@ -636,6 +636,7 @@ OracleBatchBind::OracleBatchBind(int cType, int sqlType)
       m_oraType = (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR;
       m_data = nullptr;
       m_strings = MemAllocArray<UCS2CHAR*>(m_allocated);
+      m_bound = MemAllocArray<bool>(m_allocated);
    }
    else
    {
@@ -644,6 +645,7 @@ OracleBatchBind::OracleBatchBind(int cType, int sqlType)
       m_oraType = s_oracleType[cType];
       m_data = MemAllocZeroed(m_allocated * m_elementSize);
       m_strings = nullptr;
+      m_bound = nullptr;
    }
 }
 
@@ -658,6 +660,7 @@ OracleBatchBind::~OracleBatchBind()
          MemFree(m_strings[i]);
       MemFree(m_strings);
    }
+   MemFree(m_bound);
    MemFree(m_data);
 }
 
@@ -673,6 +676,8 @@ void OracleBatchBind::addRow()
       {
          m_strings = MemRealloc(m_strings, m_allocated * sizeof(UCS2CHAR *));
          memset(m_strings + m_size, 0, (m_allocated - m_size) * sizeof(UCS2CHAR *));
+         m_bound = MemRealloc(m_bound, m_allocated * sizeof(bool));
+         memset(m_bound + m_size, 0, (m_allocated - m_size) * sizeof(bool));
       }
       else
       {
@@ -680,18 +685,9 @@ void OracleBatchBind::addRow()
          memset((char *)m_data + m_size * m_elementSize, 0, (m_allocated - m_size) * m_elementSize);
       }
    }
-   if (m_size > 0)
+   if (m_size > 0 && !m_string)
    {
-      // clone last element
-      if (m_string)
-      {
-         UCS2CHAR *p = m_strings[m_size - 1];
-         m_strings[m_size] = (p != nullptr) ? ucs2_strdup(p) : nullptr;
-      }
-      else
-      {
-         memcpy((char *)m_data + m_size * m_elementSize, (char *)m_data + (m_size - 1) * m_elementSize, m_elementSize);
-      }
+      memcpy((char *)m_data + m_size * m_elementSize, (char *)m_data + (m_size - 1) * m_elementSize, m_elementSize);
    }
    m_size++;
 }
@@ -705,7 +701,8 @@ void OracleBatchBind::set(void *value)
    {
       MemFree(m_strings[m_size - 1]);
       m_strings[m_size - 1] = (UCS2CHAR *)value;
-      if (value != NULL)
+      m_bound[m_size - 1] = true;
+      if (value != nullptr)
       {
          int l = (int)(ucs2_strlen((UCS2CHAR *)value) + 1) * sizeof(UCS2CHAR);
          if (l > m_elementSize)
@@ -726,14 +723,27 @@ void *OracleBatchBind::getData()
    if (!m_string)
       return m_data;
 
+   // Propagate sticky values for unbound rows
+   UCS2CHAR *lastBound = nullptr;
+   for(int i = 0; i < m_size; i++)
+   {
+      if (m_bound[i])
+      {
+         lastBound = m_strings[i];
+      }
+      else if (lastBound != nullptr)
+      {
+         m_strings[i] = ucs2_strdup(lastBound);
+      }
+   }
+
    MemFree(m_data);
    m_data = MemAllocZeroed(m_size * m_elementSize);
    char *p = (char *)m_data;
    for(int i = 0; i < m_size; i++)
    {
-      if (m_strings[i] == nullptr)
-         continue;
-      memcpy(p, m_strings[i], ucs2_strlen(m_strings[i]) * sizeof(UCS2CHAR));
+      if (m_strings[i] != nullptr)
+         memcpy(p, m_strings[i], ucs2_strlen(m_strings[i]) * sizeof(UCS2CHAR));
       p += m_elementSize;
    }
    return m_data;
@@ -745,7 +755,11 @@ void *OracleBatchBind::getData()
 static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
    if (stmt->batchSize == 0)
+   {
+      if (allocType == DB_BIND_DYNAMIC)
+         MemFree(buffer);
       return;  // no batch rows added yet
+   }
 
 	OracleBatchBind *bind = stmt->batchBindings->get(pos - 1);
    if (bind == nullptr)
@@ -757,7 +771,11 @@ static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, v
    }
 
    if (bind->getCType() != cType)
+   {
+      if (allocType == DB_BIND_DYNAMIC)
+         MemFree(buffer);
       return;
+   }
 
 	void *sqlBuffer;
    switch(bind->getCType())
@@ -862,7 +880,7 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
             continue;
 
          OCIBind *handleBind = nullptr;
-         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, i + 1, b->getData(), 
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, i + 1, b->getData(),
                b->getElementSize(), b->getOraType(), nullptr, nullptr, nullptr, 0, nullptr, OCI_DEFAULT);
       }
    }
@@ -1097,12 +1115,12 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
                   ub4 amount = length;
 #if UNICODE_UCS4
                   UCS2CHAR *ucs2buffer = MemAllocArrayNoInit<UCS2CHAR>(length);
-                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1,
                              ucs2buffer, length * sizeof(UCS2CHAR), nullptr, nullptr, OCI_UCS2ID, SQLCS_IMPLICIT);
 						ucs2_to_ucs4(ucs2buffer, amount, pResult->pData[nPos], length + 1);
                   MemFree(ucs2buffer);
 #else
-                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1,
                              pResult->pData[nPos], (length + 1) * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
 #endif
 						pResult->pData[nPos][amount] = 0;
@@ -1713,7 +1731,7 @@ static DBDriverCallTable s_callTable =
    Prepare,
    FreeStatement,
    OpenBatch,
-   NextBatchRow,
+   AddBatchRow,
    Bind,
    Execute,
    Query,

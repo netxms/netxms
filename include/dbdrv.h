@@ -67,7 +67,7 @@ struct DBDriverCallTable
    DBDRV_STATEMENT (*Prepare)(DBDRV_CONNECTION, const WCHAR *, bool, uint32_t *, WCHAR *);
    void (*FreeStatement)(DBDRV_STATEMENT);
    bool (*OpenBatch)(DBDRV_STATEMENT);
-   void (*NextBatchRow)(DBDRV_STATEMENT);
+   void (*AddBatchRow)(DBDRV_STATEMENT);
    void (*Bind)(DBDRV_STATEMENT, int, int, int, void *, int);
    uint32_t (*Execute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
    uint32_t (*Query)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);

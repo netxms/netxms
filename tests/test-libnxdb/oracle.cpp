@@ -60,7 +60,7 @@ void TestOracleBatch(const TCHAR *server, const TCHAR *login, const TCHAR *passw
    AssertTrueEx(DBOpenBatch(hStmt), _T("Call to DBOpenBatch() failed"));
    for(INT32 i = 1; i <= 110; i++)
    {
-      DBNextBatchRow(hStmt);
+      DBAddBatchRow(hStmt);
       if (i == 1)
       {
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)42);
