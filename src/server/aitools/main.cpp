@@ -32,6 +32,7 @@ std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId);
 std::string F_CreateMetric(json_t *arguments, uint32_t userId);
 std::string F_EditMetric(json_t *arguments, uint32_t userId);
 std::string F_DeleteMetric(json_t *arguments, uint32_t userId);
+std::string F_GetMetricDetails(json_t *arguments, uint32_t userId);
 std::string F_GetThresholds(json_t *arguments, uint32_t userId);
 std::string F_AddThreshold(json_t *arguments, uint32_t userId);
 std::string F_DeleteThreshold(json_t *arguments, uint32_t userId);
@@ -224,7 +225,7 @@ static void CreateAssistantSkillList()
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script)" },
                { "description", "optional metric description, if not provided then name will be used" },
-               { "origin", "data collection origin: agent, snmp, or script (default: agent)" },
+               { "origin", "data collection origin: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal (default: agent)" },
                { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" },
                { "pollingInterval", "polling interval in seconds (optional, uses system default if not specified)" },
                { "retentionTime", "retention time in days (optional, uses system default if not specified)" },
@@ -232,20 +233,50 @@ static void CreateAssistantSkillList()
                { "sampleCount", "number of samples for threshold functions (default: 1)" },
                { "multiplier", "value multiplier (default: 0)" },
                { "unitName", "unit name for display (optional)" },
+               { "transformationScript", "NXSL transformation script source code (optional)" },
                { "status", "status: active, disabled (default: active)" },
-               { "anomalyDetection", "anomaly detection: none, iforest, ai, both (default: none)" }
+               { "anomalyDetection", "anomaly detection: none, iforest, ai, both (default: none)" },
+               { "comments", "notes or comments about the metric (optional)" },
+               { "userTag", "user-defined tag for categorization (optional)" },
+               { "sourceNode", "name or ID of proxy node for data collection (optional)" },
+               { "snmpPort", "custom SNMP port (optional, uses node default if not set)" },
+               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)" },
+               { "showInObjectOverview", "show value in object overview (optional, boolean)" },
+               { "calculateNodeStatus", "use for node status calculation (optional, boolean)" },
+               { "storeChangesOnly", "store only changed values (optional, boolean)" },
+               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)" }
             },
             F_CreateMetric),
          AssistantFunction(
             "edit-metric",
-            "Edit existing data collection item (metric) properties.",
+            "Edit existing data collection item (metric) properties. Only specified properties are changed, others remain unchanged. Use get-metric-details first to see current configuration.",
             {
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric to edit (mandatory)" },
+               { "name", "new metric name (optional, renames the metric)" },
+               { "description", "new metric description (optional)" },
+               { "origin", "new data collection origin: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal (optional)" },
+               { "dataType", "new data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (optional)" },
                { "pollingInterval", "new polling interval in seconds (optional)" },
                { "retentionTime", "new retention time in days (optional)" },
+               { "deltaCalculation", "new delta calculation: original, delta, averagePerSecond, averagePerMinute (optional)" },
+               { "sampleCount", "new number of samples for threshold functions (optional)" },
+               { "multiplier", "new value multiplier (optional)" },
+               { "unitName", "new unit name for display (optional)" },
+               { "transformationScript", "new NXSL transformation script source code (optional)" },
                { "status", "new status: active, disabled (optional)" },
-               { "unitName", "new unit name for display (optional)" }
+               { "anomalyDetection", "anomaly detection: none, iforest, ai, both (optional)" },
+               { "comments", "new notes or comments (optional)" },
+               { "userTag", "new user-defined tag (optional)" },
+               { "systemTag", "new system tag (optional)" },
+               { "sourceNode", "name or ID of proxy node, or 'none' to clear (optional)" },
+               { "snmpPort", "custom SNMP port, 0 to reset to default (optional)" },
+               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)" },
+               { "showInObjectOverview", "show value in object overview (optional, boolean)" },
+               { "calculateNodeStatus", "use for node status calculation (optional, boolean)" },
+               { "storeChangesOnly", "store only changed values (optional, boolean)" },
+               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)" },
+               { "aggregateOnCluster", "aggregate on cluster (optional, boolean)" }
             },
             F_EditMetric),
          AssistantFunction(
@@ -256,6 +287,14 @@ static void CreateAssistantSkillList()
                { "metric", "name or ID of the metric to delete (mandatory)" }
             },
             F_DeleteMetric),
+         AssistantFunction(
+            "get-metric-details",
+            "Get full configuration details of a single data collection item (metric), including all properties, flags, thresholds count, transformation script, and metadata. Use this before editing a metric to see its current configuration.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric (mandatory)" }
+            },
+            F_GetMetricDetails),
          AssistantFunction(
             "get-metrics",
             "Get data collection items (metrics) and their current values for given object",

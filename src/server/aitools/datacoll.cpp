@@ -110,6 +110,279 @@ static shared_ptr<DCObject> FindDCIByNameOrId(DataCollectionTarget *target, cons
 }
 
 /**
+ * Helper: Parse origin string to constant
+ */
+static int ParseOrigin(const char *str)
+{
+   if (str == nullptr || !stricmp(str, "agent"))
+      return DS_NATIVE_AGENT;
+   if (!stricmp(str, "snmp"))
+      return DS_SNMP_AGENT;
+   if (!stricmp(str, "script"))
+      return DS_SCRIPT;
+   if (!stricmp(str, "ssh"))
+      return DS_SSH;
+   if (!stricmp(str, "push"))
+      return DS_PUSH_AGENT;
+   if (!stricmp(str, "webService"))
+      return DS_WEB_SERVICE;
+   if (!stricmp(str, "deviceDriver"))
+      return DS_DEVICE_DRIVER;
+   if (!stricmp(str, "mqtt"))
+      return DS_MQTT;
+   if (!stricmp(str, "modbus"))
+      return DS_MODBUS;
+   if (!stricmp(str, "internal"))
+      return DS_INTERNAL;
+   return -1;
+}
+
+/**
+ * Helper: Origin constant to string
+ */
+static const char *OriginToString(int origin)
+{
+   switch(origin)
+   {
+      case DS_INTERNAL: return "internal";
+      case DS_NATIVE_AGENT: return "agent";
+      case DS_SNMP_AGENT: return "snmp";
+      case DS_WEB_SERVICE: return "webService";
+      case DS_PUSH_AGENT: return "push";
+      case DS_WINPERF: return "windowsPerformance";
+      case DS_SMCLP: return "smclp";
+      case DS_SCRIPT: return "script";
+      case DS_SSH: return "ssh";
+      case DS_MQTT: return "mqtt";
+      case DS_DEVICE_DRIVER: return "deviceDriver";
+      case DS_MODBUS: return "modbus";
+      case DS_ETHERNET_IP: return "ethernetIp";
+      case DS_CLOUD_CONNECTOR: return "cloudConnector";
+      case DS_OTLP: return "otlp";
+      default: return "unknown";
+   }
+}
+
+/**
+ * Helper: Data type constant to string
+ */
+static const char *DataTypeToString(int dataType)
+{
+   switch(dataType)
+   {
+      case DCI_DT_INT: return "int";
+      case DCI_DT_UINT: return "unsigned-int";
+      case DCI_DT_INT64: return "int64";
+      case DCI_DT_UINT64: return "unsigned-int64";
+      case DCI_DT_FLOAT: return "float";
+      case DCI_DT_STRING: return "string";
+      case DCI_DT_COUNTER32: return "counter32";
+      case DCI_DT_COUNTER64: return "counter64";
+      default: return "unknown";
+   }
+}
+
+/**
+ * Helper: Parse data type string to constant
+ */
+static int ParseDataType(const char *str)
+{
+   if (str == nullptr || !stricmp(str, "string"))
+      return DCI_DT_STRING;
+   if (!stricmp(str, "int") || !stricmp(str, "integer"))
+      return DCI_DT_INT;
+   if (!stricmp(str, "unsigned-int") || !stricmp(str, "unsigned-integer"))
+      return DCI_DT_UINT;
+   if (!stricmp(str, "int64") || !stricmp(str, "integer64"))
+      return DCI_DT_INT64;
+   if (!stricmp(str, "uint64") || !stricmp(str, "unsigned-int64") || !stricmp(str, "unsigned-integer64"))
+      return DCI_DT_UINT64;
+   if (!stricmp(str, "counter32"))
+      return DCI_DT_COUNTER32;
+   if (!stricmp(str, "counter64"))
+      return DCI_DT_COUNTER64;
+   if (!stricmp(str, "float"))
+      return DCI_DT_FLOAT;
+   return -1;
+}
+
+/**
+ * Helper: Delta calculation constant to string
+ */
+static const char *DeltaCalculationToString(int delta)
+{
+   switch(delta)
+   {
+      case DCM_ORIGINAL_VALUE: return "original";
+      case DCM_SIMPLE: return "delta";
+      case DCM_AVERAGE_PER_SECOND: return "averagePerSecond";
+      case DCM_AVERAGE_PER_MINUTE: return "averagePerMinute";
+      default: return "unknown";
+   }
+}
+
+/**
+ * Helper: Set or clear a flag on a DCObject based on a boolean argument
+ */
+static void ApplyFlagFromArguments(DCObject *dco, json_t *arguments, const char *argName, uint32_t flag)
+{
+   json_t *value = json_object_get(arguments, argName);
+   if (value != nullptr)
+   {
+      if (json_is_true(value))
+         dco->setFlag(flag);
+      else
+         dco->clearFlag(flag);
+   }
+}
+
+/**
+ * Get detailed configuration of a single metric
+ */
+std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
+{
+   const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
+   if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
+      return std::string("Metric name or ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
+
+   if (!object->isDataCollectionTarget())
+      return std::string("Object is not a data collection target");
+
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
+   shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
+   if (dco == nullptr)
+      return std::string("Metric not found");
+
+   json_t *output = json_object();
+   json_object_set_new(output, "id", json_integer(dco->getId()));
+   json_object_set_new(output, "name", json_string_t(dco->getName().cstr()));
+   json_object_set_new(output, "description", json_string_t(dco->getDescription().cstr()));
+   json_object_set_new(output, "type", json_string(dco->getType() == DCO_TYPE_ITEM ? "item" : "table"));
+   json_object_set_new(output, "origin", json_string(OriginToString(dco->getDataSource())));
+   json_object_set_new(output, "status", json_string(dco->getStatus() == ITEM_STATUS_ACTIVE ? "active" : (dco->getStatus() == ITEM_STATUS_DISABLED ? "disabled" : "notSupported")));
+
+   // Polling settings
+   if (dco->getPollingScheduleType() == DC_POLLING_SCHEDULE_DEFAULT)
+      json_object_set_new(output, "pollingInterval", json_string("default"));
+   else
+      json_object_set_new(output, "pollingInterval", json_integer(dco->getEffectivePollingInterval()));
+
+   // Retention settings
+   if (dco->getEffectiveRetentionTime() == 0 && !dco->isDataStorageEnabled())
+      json_object_set_new(output, "retentionTime", json_string("none"));
+   else
+      json_object_set_new(output, "retentionTime", json_integer(dco->getEffectiveRetentionTime()));
+
+   // Comments, tags
+   SharedString comments = dco->getComments();
+   if (!comments.isEmpty())
+      json_object_set_new(output, "comments", json_string_t(comments.cstr()));
+
+   SharedString userTag = dco->getUserTag();
+   if (!userTag.isEmpty())
+      json_object_set_new(output, "userTag", json_string_t(userTag.cstr()));
+
+   SharedString systemTag = dco->getSystemTag();
+   if (!systemTag.isEmpty())
+      json_object_set_new(output, "systemTag", json_string_t(systemTag.cstr()));
+
+   // Proxy/source node
+   if (dco->getSourceNode() != 0)
+      json_object_set_new(output, "sourceNode", json_integer(dco->getSourceNode()));
+
+   // SNMP settings
+   if (dco->getSnmpPort() != 0)
+      json_object_set_new(output, "snmpPort", json_integer(dco->getSnmpPort()));
+
+   // Transformation script
+   SharedString transformScript = dco->getTransformationScriptSource();
+   if (!transformScript.isEmpty())
+      json_object_set_new(output, "transformationScript", json_string_t(transformScript.cstr()));
+
+   // Template info
+   if (dco->getTemplateId() != 0)
+   {
+      json_object_set_new(output, "templateId", json_integer(dco->getTemplateId()));
+      json_object_set_new(output, "templateItemId", json_integer(dco->getTemplateItemId()));
+   }
+
+   // Related object
+   if (dco->getRelatedObject() != 0)
+      json_object_set_new(output, "relatedObject", json_integer(dco->getRelatedObject()));
+
+   // Instance discovery
+   if (dco->getInstanceDiscoveryMethod() != IDM_NONE)
+   {
+      json_object_set_new(output, "instanceDiscoveryMethod", json_integer(dco->getInstanceDiscoveryMethod()));
+      SharedString instData = dco->getInstanceDiscoveryData();
+      if (!instData.isEmpty())
+         json_object_set_new(output, "instanceDiscoveryData", json_string_t(instData.cstr()));
+   }
+
+   // Flags
+   json_t *flags = json_object();
+   json_object_set_new(flags, "showOnObjectTooltip", json_boolean(dco->isShowOnObjectTooltip()));
+   json_object_set_new(flags, "showInObjectOverview", json_boolean(dco->isShowInObjectOverview()));
+   json_object_set_new(flags, "aggregateOnCluster", json_boolean(dco->isAggregateOnCluster()));
+   json_object_set_new(flags, "calculateNodeStatus", json_boolean(dco->isStatusDCO()));
+   json_object_set_new(flags, "aggregateWithErrors", json_boolean(dco->isAggregateWithErrors()));
+   json_object_set_new(flags, "storeChangesOnly", json_boolean(dco->isStoreChangesOnly()));
+   json_object_set_new(flags, "unsupportedAsError", json_boolean(dco->isUnsupportedAsError()));
+   json_object_set_new(flags, "hideOnLastValuesPage", json_boolean((dco->getFlags() & DCF_HIDE_ON_LAST_VALUES_PAGE) != 0));
+   json_object_set_new(output, "flags", flags);
+
+   // Last poll/value timestamps
+   if (!dco->getLastPollTime().isNull())
+      json_object_set_new(output, "lastPollTime", dco->getLastPollTime().asJson());
+   if (!dco->getLastValueTimestamp().isNull())
+      json_object_set_new(output, "lastValueTimestamp", dco->getLastValueTimestamp().asJson());
+   json_object_set_new(output, "errorCount", json_integer(dco->getErrorCount()));
+
+   // DCItem-specific fields
+   if (dco->getType() == DCO_TYPE_ITEM)
+   {
+      DCItem *dci = static_cast<DCItem*>(dco.get());
+      json_object_set_new(output, "dataType", json_string(DataTypeToString(dci->getDataType())));
+      json_object_set_new(output, "deltaCalculation", json_string(DeltaCalculationToString(dci->getDeltaCalculationMethod())));
+      json_object_set_new(output, "sampleCount", json_integer(dci->getSampleCount()));
+
+      if (dci->getMultiplier() != 0)
+         json_object_set_new(output, "multiplier", json_integer(dci->getMultiplier()));
+
+      SharedString unitName = dci->getUnitName();
+      if (!unitName.isEmpty())
+         json_object_set_new(output, "unitName", json_string_t(unitName.cstr()));
+
+      if (dci->getSampleSaveInterval() > 1)
+         json_object_set_new(output, "sampleSaveInterval", json_integer(dci->getSampleSaveInterval()));
+
+      // Anomaly detection
+      bool iforest = (dci->getFlags() & DCF_DETECT_ANOMALIES_IFOREST) != 0;
+      bool ai = (dci->getFlags() & DCF_DETECT_ANOMALIES_AI) != 0;
+      if (iforest && ai)
+         json_object_set_new(output, "anomalyDetection", json_string("both"));
+      else if (iforest)
+         json_object_set_new(output, "anomalyDetection", json_string("iforest"));
+      else if (ai)
+         json_object_set_new(output, "anomalyDetection", json_string("ai"));
+      else
+         json_object_set_new(output, "anomalyDetection", json_string("none"));
+
+      // Thresholds summary
+      int thresholdCount = dci->getThresholdCount();
+      json_object_set_new(output, "thresholdCount", json_integer(thresholdCount));
+   }
+
+   return JsonToString(output);
+}
+
+/**
  * Get data collection items and their current values for given object
  */
 std::string F_GetMetrics(json_t *arguments, uint32_t userId)
@@ -306,36 +579,12 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 
    String metricDescription(json_object_get_string_utf8(arguments, "description", json_object_get_string_utf8(arguments, "metric", nullptr)), "utf-8");
 
-   const char *originStr = json_object_get_string_utf8(arguments, "origin", "agent");
-   int origin = DS_NATIVE_AGENT;
-   if (!stricmp(originStr, "agent"))
-      origin = DS_NATIVE_AGENT;
-   else if (!stricmp(originStr, "snmp"))
-      origin = DS_SNMP_AGENT;
-   else if (!stricmp(originStr, "script"))
-      origin = DS_SCRIPT;
-   else
-      return std::string("Invalid origin specified");
+   int origin = ParseOrigin(json_object_get_string_utf8(arguments, "origin", "agent"));
+   if (origin < 0)
+      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal");
 
-   const char *dataTypeStr = json_object_get_string_utf8(arguments, "dataType", "string");
-   int dataType = DCI_DT_STRING;
-   if (!stricmp(dataTypeStr, "int") || !stricmp(dataTypeStr, "integer"))
-      dataType = DCI_DT_INT;
-   else if (!stricmp(dataTypeStr, "unsigned-int") || !stricmp(dataTypeStr, "unsigned-integer"))
-      dataType = DCI_DT_UINT;
-   else if (!stricmp(dataTypeStr, "int64") || !stricmp(dataTypeStr, "integer64"))
-      dataType = DCI_DT_INT64;
-   else if (!stricmp(dataTypeStr, "uint64") || !stricmp(dataTypeStr, "unsigned-int64") || !stricmp(dataTypeStr, "unsigned-integer64"))
-      dataType = DCI_DT_UINT64;
-   else if (!stricmp(dataTypeStr, "counter32"))
-      dataType = DCI_DT_COUNTER32;
-   else if (!stricmp(dataTypeStr, "counter64"))
-      dataType = DCI_DT_COUNTER64;
-   else if (!stricmp(dataTypeStr, "float"))
-      dataType = DCI_DT_FLOAT;
-   else if (!stricmp(dataTypeStr, "string"))
-      dataType = DCI_DT_STRING;
-   else
+   int dataType = ParseDataType(json_object_get_string_utf8(arguments, "dataType", "string"));
+   if (dataType < 0)
       return std::string("Invalid data type specified");
 
    // Parse new optional parameters
@@ -430,6 +679,37 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
       dci->setTransformationScript(transformationScript);
    if (anomalyFlags != 0)
       dci->setFlag(anomalyFlags);
+
+   // Comments and tags
+   const char *commentsStr = json_object_get_string_utf8(arguments, "comments", nullptr);
+   if (commentsStr != nullptr)
+      dci->setComments(String(commentsStr, "utf-8"));
+
+   const char *userTagStr = json_object_get_string_utf8(arguments, "userTag", nullptr);
+   if (userTagStr != nullptr)
+      dci->setUserTag(String(userTagStr, "utf-8"));
+
+   // Source node (proxy)
+   const char *sourceNodeStr = json_object_get_string_utf8(arguments, "sourceNode", nullptr);
+   if (sourceNodeStr != nullptr)
+   {
+      shared_ptr<NetObj> sourceNode = FindObjectByNameOrId(arguments, "sourceNode");
+      if (sourceNode == nullptr)
+         { delete dci; return std::string("Source node not found"); }
+      dci->setSourceNode(sourceNode->getId());
+   }
+
+   // SNMP settings
+   int snmpPort = json_object_get_int32(arguments, "snmpPort", 0);
+   if (snmpPort > 0)
+      dci->setSnmpPort(static_cast<uint16_t>(snmpPort));
+
+   // Boolean flags
+   ApplyFlagFromArguments(dci, arguments, "showOnObjectTooltip", DCF_SHOW_ON_OBJECT_TOOLTIP);
+   ApplyFlagFromArguments(dci, arguments, "showInObjectOverview", DCF_SHOW_IN_OBJECT_OVERVIEW);
+   ApplyFlagFromArguments(dci, arguments, "calculateNodeStatus", DCF_CALCULATE_NODE_STATUS);
+   ApplyFlagFromArguments(dci, arguments, "storeChangesOnly", DCF_STORE_CHANGES_ONLY);
+   ApplyFlagFromArguments(dci, arguments, "hideOnLastValuesPage", DCF_HIDE_ON_LAST_VALUES_PAGE);
 
    if (!static_cast<DataCollectionOwner&>(*object).addDCObject(dci, false, true))
    {
@@ -530,10 +810,122 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
 
    const char *unitNameStr = json_object_get_string_utf8(arguments, "unitName", nullptr);
    if (unitNameStr != nullptr)
+      dci->setUnitName(SharedString(String(unitNameStr, "utf-8")));
+
+   // Name (rename)
+   const char *newName = json_object_get_string_utf8(arguments, "name", nullptr);
+   if (newName != nullptr)
+      dci->setName(String(newName, "utf-8"));
+
+   // Description
+   const char *descStr = json_object_get_string_utf8(arguments, "description", nullptr);
+   if (descStr != nullptr)
+      dci->setDescription(String(descStr, "utf-8"));
+
+   // Origin (data source)
+   const char *originStr = json_object_get_string_utf8(arguments, "origin", nullptr);
+   if (originStr != nullptr)
    {
-      String unitName(unitNameStr, "utf-8");
-      dci->setUnitName(unitName);
+      int origin = ParseOrigin(originStr);
+      if (origin < 0)
+         return std::string("Invalid origin specified");
+      dci->setSource(static_cast<BYTE>(origin));
    }
+
+   // Data type
+   const char *dataTypeStr = json_object_get_string_utf8(arguments, "dataType", nullptr);
+   if (dataTypeStr != nullptr)
+   {
+      int dataType = ParseDataType(dataTypeStr);
+      if (dataType < 0)
+         return std::string("Invalid data type specified");
+      dci->setDataType(static_cast<BYTE>(dataType));
+   }
+
+   // Delta calculation
+   const char *deltaStr = json_object_get_string_utf8(arguments, "deltaCalculation", nullptr);
+   if (deltaStr != nullptr)
+   {
+      int delta = ParseDeltaCalculation(deltaStr);
+      if (delta < 0)
+         return std::string("Invalid delta calculation specified");
+      dci->setDeltaCalculation(static_cast<BYTE>(delta));
+   }
+
+   // Sample count
+   json_t *sampleCountJson = json_object_get(arguments, "sampleCount");
+   if (sampleCountJson != nullptr && json_is_integer(sampleCountJson))
+      dci->setSampleCount(static_cast<int>(json_integer_value(sampleCountJson)));
+
+   // Multiplier
+   json_t *multiplierJson = json_object_get(arguments, "multiplier");
+   if (multiplierJson != nullptr && json_is_integer(multiplierJson))
+      dci->setMultiplier(static_cast<int>(json_integer_value(multiplierJson)));
+
+   // Transformation script
+   const char *scriptStr = json_object_get_string_utf8(arguments, "transformationScript", nullptr);
+   if (scriptStr != nullptr)
+      dci->setTransformationScript(String(scriptStr, "utf-8"));
+
+   // Comments
+   const char *commentsStr = json_object_get_string_utf8(arguments, "comments", nullptr);
+   if (commentsStr != nullptr)
+      dci->setComments(String(commentsStr, "utf-8"));
+
+   // User tag
+   const char *userTagStr = json_object_get_string_utf8(arguments, "userTag", nullptr);
+   if (userTagStr != nullptr)
+      dci->setUserTag(String(userTagStr, "utf-8"));
+
+   // System tag
+   const char *systemTagStr = json_object_get_string_utf8(arguments, "systemTag", nullptr);
+   if (systemTagStr != nullptr)
+      dci->setSystemTag(String(systemTagStr, "utf-8"));
+
+   // Source node (proxy)
+   const char *sourceNodeStr = json_object_get_string_utf8(arguments, "sourceNode", nullptr);
+   if (sourceNodeStr != nullptr)
+   {
+      if (sourceNodeStr[0] == 0 || !stricmp(sourceNodeStr, "none"))
+      {
+         dci->setSourceNode(0);
+      }
+      else
+      {
+         shared_ptr<NetObj> sourceNode = FindObjectByNameOrId(arguments, "sourceNode");
+         if (sourceNode == nullptr)
+            return std::string("Source node not found");
+         dci->setSourceNode(sourceNode->getId());
+      }
+   }
+
+   // SNMP port
+   json_t *snmpPortJson = json_object_get(arguments, "snmpPort");
+   if (snmpPortJson != nullptr)
+      dci->setSnmpPort(static_cast<uint16_t>(json_integer_value(snmpPortJson)));
+
+   // Anomaly detection
+   const char *anomalyStr = json_object_get_string_utf8(arguments, "anomalyDetection", nullptr);
+   if (anomalyStr != nullptr)
+   {
+      dci->clearFlag(DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI);
+      if (!stricmp(anomalyStr, "iforest"))
+         dci->setFlag(DCF_DETECT_ANOMALIES_IFOREST);
+      else if (!stricmp(anomalyStr, "ai"))
+         dci->setFlag(DCF_DETECT_ANOMALIES_AI);
+      else if (!stricmp(anomalyStr, "both"))
+         dci->setFlag(DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI);
+      else if (stricmp(anomalyStr, "none") != 0)
+         return std::string("Invalid anomaly detection mode specified");
+   }
+
+   // Boolean flags
+   ApplyFlagFromArguments(dci, arguments, "showOnObjectTooltip", DCF_SHOW_ON_OBJECT_TOOLTIP);
+   ApplyFlagFromArguments(dci, arguments, "showInObjectOverview", DCF_SHOW_IN_OBJECT_OVERVIEW);
+   ApplyFlagFromArguments(dci, arguments, "calculateNodeStatus", DCF_CALCULATE_NODE_STATUS);
+   ApplyFlagFromArguments(dci, arguments, "storeChangesOnly", DCF_STORE_CHANGES_ONLY);
+   ApplyFlagFromArguments(dci, arguments, "hideOnLastValuesPage", DCF_HIDE_ON_LAST_VALUES_PAGE);
+   ApplyFlagFromArguments(dci, arguments, "aggregateOnCluster", DCF_AGGREGATE_ON_CLUSTER);
 
    dci->getOwner()->markAsModified(MODIFY_DATA_COLLECTION);
 

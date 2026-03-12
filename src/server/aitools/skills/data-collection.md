@@ -3,16 +3,23 @@
 This skill provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to:
 
 - **Create new metrics**: Set up data collection items (DCIs) to monitor specific parameters on nodes, devices, and other objects
-- **Monitor current values**: Retrieve real-time metric values and status information  
+- **Edit existing metrics**: Modify any property of existing DCIs including name, description, origin, data type, polling, retention, thresholds, flags, and more
+- **Inspect metric configuration**: Get full configuration details of individual metrics before making changes
+- **Monitor current values**: Retrieve real-time metric values and status information
 - **Analyze historical data**: Access time series data for trend analysis, anomaly detection, and performance monitoring
+- **Manage thresholds**: Add, view, and remove alerting thresholds on metrics
 - **Performance optimization**: Identify performance bottlenecks and capacity planning opportunities
 
 ## Key Capabilities
 
 ### Metric Creation
-- Support for multiple data sources: SNMP, agent-based monitoring, and custom scripts
+- Support for multiple data sources: agent, SNMP, script, SSH, push, web service, device driver, MQTT, Modbus, and internal
 - Flexible data types: integers, counters, floats, strings
-- Automatic threshold configuration and alerting setup
+- Transformation scripts for value processing
+- Anomaly detection (Isolation Forest, AI, or both)
+- Proxy polling via source node
+- Custom SNMP port configuration
+- Display flags: tooltip, overview, status calculation
 
 ### Data Origin Selection
 
@@ -32,7 +39,19 @@ When creating metrics, select the appropriate data origin based on what is avail
 
 4. **When in doubt, ask**: If you don't know how to collect the requested data with the available data sources, inform the user instead of creating a metric that won't work. Explain what data sources are available and ask for guidance.
 
-### Real-time Monitoring  
+### Metric Editing
+
+The `edit-metric` tool supports modifying nearly all DCI properties. Always use `get-metric-details` first to see the current configuration before making changes. Only specified properties are changed; others remain unchanged.
+
+Editable properties include:
+- **Basic**: name, description, status, comments, tags
+- **Collection**: origin, polling interval, retention time, delta calculation, sample count
+- **Display**: unit name, multiplier, anomaly detection mode
+- **Processing**: transformation script, data type
+- **Network**: source node (proxy), SNMP port
+- **Flags**: tooltip display, overview display, node status calculation, store changes only, hide on last values, cluster aggregation
+
+### Real-time Monitoring
 - Current metric values with timestamps
 - Data collection status and error information
 - Filtering capabilities for specific metrics

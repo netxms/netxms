@@ -495,13 +495,24 @@ public:
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
    void setRelatedObject(uint32_t relatedObject) { m_relatedObject = relatedObject; }
+   void setName(const TCHAR *name) { SetAttributeWithLock(m_name, SharedString(name), m_mutex); }
+   void setDescription(const TCHAR *description) { SetAttributeWithLock(m_description, SharedString(description), m_mutex); }
+   void setComments(const TCHAR *comments) { SetAttributeWithLock(m_comments, SharedString(comments), m_mutex); }
+   void setUserTag(const TCHAR *userTag) { SetAttributeWithLock(m_userTag, SharedString(userTag), m_mutex); }
+   void setSystemTag(const TCHAR *systemTag) { SetAttributeWithLock(m_systemTag, SharedString(systemTag), m_mutex); }
+   void setSource(BYTE source) { m_source = source; }
+   void setSnmpPort(uint16_t port) { m_snmpPort = port; }
+   void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
+   void setSourceNode(uint32_t sourceNode) { m_sourceNode = sourceNode; }
    void setPollingIntervalType(BYTE pollingScheduleType);
    void setPollingInterval(const TCHAR *interval);
    void setRetentionType(BYTE retentionType);
    void setRetention(const TCHAR *retention);
    void setThresholdDisableEndTime(time_t thresholdDisableEndTime);
+   uint32_t getFlags() const { return m_flags; }
    void setFlag(uint32_t flag) { lock(); m_flags |= flag; unlock(); }
    void clearFlag(uint32_t flag) { lock(); m_flags &= ~flag; unlock(); }
+   SharedString getTransformationScriptSource() const { return GetAttributeWithLock(m_transformationScriptSource, m_mutex); }
    void setTransformationScript(const wchar_t *source) { lock(); setTransformationScriptInternal(source); unlock(); }
 
 	static int m_defaultRetentionTime;
