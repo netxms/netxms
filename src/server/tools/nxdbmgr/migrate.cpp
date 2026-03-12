@@ -418,6 +418,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
          int rows = 0;
          while (DBFetch(hResult))
          {
+            DBAddBatchRow(hStmt);
             for (int i = 0; i < columnCount; i++)
             {
                TCHAR *value = DBGetField(hResult, i, nullptr, 0);
@@ -431,7 +432,6 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
                   DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_DYNAMIC);
                }
             }
-            DBNextBatchRow(hStmt);
 
             rows++;
             totalRows++;
