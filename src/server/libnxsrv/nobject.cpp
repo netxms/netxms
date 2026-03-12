@@ -735,7 +735,6 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
          if (!value.second.isNull()) //Redefine may come from different node
          {
             ca->sourceObject = value.first;
-            ca->value = value.second;
          }
          else
          {

@@ -1152,4 +1152,78 @@ public class CustomAttributeInheritance extends AbstractSessionTest
       assertTrue(containerJ.getCustomAttribute(CA_NAME_2).isInherited());
    }
 
+   // Verifies that deleting an inherited custom attribute from the parent does not
+   // clear the redefined value on a child that has multiple parents.
+   //
+   // Topology:
+   //       A (CA: 1 A, Inheritable)
+   //      / \
+   //     B   V
+   //      \ /
+   //       C (overrides CA: 1 -> "C")
+   //
+   // Steps:
+   // 1. Create containers A, B, V, C.
+   // 2. Set inheritable CA "1"="A" on A.
+   // 3. Build hierarchy: A->B->C, A->V->C.
+   // 4. Override CA "1" on C with value "C".
+   // 5. Delete CA from A.
+   // 6. Verify C still has CA "1" with value "C".
+   @Test
+   public void testCaInheritance18() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      session.syncObjects();
+
+      TestHelper.findAndDeleteContainer(session, containers);
+
+      TestHelper.createContainer(session, CONTAINER_A);
+      TestHelper.createContainer(session, CONTAINER_B);
+      TestHelper.createContainer(session, CONTAINER_V);
+      TestHelper.createContainer(session, CONTAINER_C);
+
+      Container containerA = (Container)session.findObjectByName(CONTAINER_A);
+      Container containerB = (Container)session.findObjectByName(CONTAINER_B);
+      Container containerV = (Container)session.findObjectByName(CONTAINER_V);
+      Container containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      assertNull(containerA.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerB.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerV.getCustomAttributeValue(CA_NAME_1));
+      assertNull(containerC.getCustomAttributeValue(CA_NAME_1));
+
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, CA_VALUE_A, 1, containerA.getObjectId());
+
+      session.bindObject(containerA.getObjectId(), containerB.getObjectId());
+      session.bindObject(containerA.getObjectId(), containerV.getObjectId());
+      session.bindObject(containerB.getObjectId(), containerC.getObjectId());
+      session.bindObject(containerV.getObjectId(), containerC.getObjectId());
+
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+      assertEquals(CA_VALUE_A, containerC.getCustomAttributeValue(CA_NAME_1));
+      assertTrue(containerC.getCustomAttribute(CA_NAME_1).isInherited());
+
+      // Override (redefine) CA on C
+      TestHelper.changeCustomAttributes(session, CA_NAME_1, "C", 1, containerC.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+      assertEquals("C", containerC.getCustomAttributeValue(CA_NAME_1));
+      assertTrue(containerC.getCustomAttribute(CA_NAME_1).isRedefined());
+
+      // Delete CA from A - propagates through B and V to C
+      TestHelper.changeCustomAttributes(session, null, null, 0, containerA.getObjectId());
+      Thread.sleep(MILLIS_300);
+
+      containerC = (Container)session.findObjectByName(CONTAINER_C);
+
+      // C's redefined value must be preserved, not overwritten by inherited empty/other value
+      assertNotNull(containerC.getCustomAttributeValue(CA_NAME_1));
+      assertEquals("C", containerC.getCustomAttributeValue(CA_NAME_1));
+      assertFalse(containerC.getCustomAttribute(CA_NAME_1).isInherited());
+      assertFalse(containerC.getCustomAttribute(CA_NAME_1).isRedefined());
+   }
+
 }
