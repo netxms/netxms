@@ -138,6 +138,7 @@ private:
    int m_elementSize;
    bool m_string;
    UCS2CHAR **m_strings;
+   bool *m_bound;
    void *m_data;
 
 public:

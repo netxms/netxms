@@ -133,7 +133,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt);
 const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt);
 bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt);
-void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt);
+void LIBNXDB_EXPORTABLE DBAddBatchRow(DB_STATEMENT hStmt);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, const void *buffer, int allocType);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType, int maxLen);

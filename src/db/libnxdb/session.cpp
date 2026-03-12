@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1324,7 +1324,8 @@ const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
 }
 
 /**
- * Open batch
+ * Open batch. Must be called before binding parameters for batch execution.
+ * Initially batch is empty - DBAddBatchRow() must be called to add first row to batch.
  */
 bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
 {
@@ -1334,12 +1335,12 @@ bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
 }
 
 /**
- * Start next batch row batch
+ * Add new batch row
  */
-void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt)
+void LIBNXDB_EXPORTABLE DBAddBatchRow(DB_STATEMENT hStmt)
 {
-   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_callTable.NextBatchRow != nullptr))
-      hStmt->m_driver->m_callTable.NextBatchRow(hStmt->m_statement);
+   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_callTable.AddBatchRow != nullptr))
+      hStmt->m_driver->m_callTable.AddBatchRow(hStmt->m_statement);
 }
 
 /**
