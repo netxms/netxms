@@ -15716,7 +15716,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<String, String> executeScriptedComparisonChartElement(long dashboardId, long elementId, long objectId) throws IOException, NXCException
+   public Map<String, String> executeDashboardScript(long dashboardId, long elementId, long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_DASHBOARD_SCRIPT);
       msg.setFieldUInt32(NXCPCodes.VID_DASHBOARD_ID, dashboardId);
