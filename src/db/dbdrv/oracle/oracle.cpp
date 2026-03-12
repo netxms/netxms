@@ -1,4 +1,4 @@
-/* 
+/*
 ** Oracle Database Driver
 ** Copyright (C) 2007-2022 Victor Kirhenshtein
 **
@@ -680,19 +680,6 @@ void OracleBatchBind::addRow()
          memset((char *)m_data + m_size * m_elementSize, 0, (m_allocated - m_size) * m_elementSize);
       }
    }
-   if (m_size > 0)
-   {
-      // clone last element
-      if (m_string)
-      {
-         UCS2CHAR *p = m_strings[m_size - 1];
-         m_strings[m_size] = (p != nullptr) ? ucs2_strdup(p) : nullptr;
-      }
-      else
-      {
-         memcpy((char *)m_data + m_size * m_elementSize, (char *)m_data + (m_size - 1) * m_elementSize, m_elementSize);
-      }
-   }
    m_size++;
 }
 
@@ -744,15 +731,12 @@ void *OracleBatchBind::getData()
  */
 static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
-   if (stmt->batchSize == 0)
-      return;  // no batch rows added yet
-
 	OracleBatchBind *bind = stmt->batchBindings->get(pos - 1);
    if (bind == nullptr)
    {
       bind = new OracleBatchBind(cType, sqlType);
       stmt->batchBindings->set(pos - 1, bind);
-      for(int i = 0; i < stmt->batchSize; i++)
+      for(int i = 0; i <= stmt->batchSize; i++)
          bind->addRow();
    }
 
@@ -862,7 +846,7 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
             continue;
 
          OCIBind *handleBind = nullptr;
-         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, i + 1, b->getData(), 
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, i + 1, b->getData(),
                b->getElementSize(), b->getOraType(), nullptr, nullptr, nullptr, 0, nullptr, OCI_DEFAULT);
       }
    }
@@ -1033,7 +1017,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
                OCIDescriptorAlloc(s_handleEnv, (void **)&pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, nullptr);
 				   handleDefine = nullptr;
 				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
-                                        &pBuffers[i].lobLocator, 0, SQLT_CLOB, &pBuffers[i].isNull, 
+                                        &pBuffers[i].lobLocator, 0, SQLT_CLOB, &pBuffers[i].isNull,
                                         nullptr, nullptr, OCI_DEFAULT);
             }
             else
@@ -1097,12 +1081,12 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
                   ub4 amount = length;
 #if UNICODE_UCS4
                   UCS2CHAR *ucs2buffer = MemAllocArrayNoInit<UCS2CHAR>(length);
-                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1,
                              ucs2buffer, length * sizeof(UCS2CHAR), nullptr, nullptr, OCI_UCS2ID, SQLCS_IMPLICIT);
 						ucs2_to_ucs4(ucs2buffer, amount, pResult->pData[nPos], length + 1);
                   MemFree(ucs2buffer);
 #else
-                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1,
                              pResult->pData[nPos], (length + 1) * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
 #endif
 						pResult->pData[nPos][amount] = 0;
