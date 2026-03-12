@@ -272,13 +272,6 @@ static void ProcessEvent(Event *event, int processorId)
    CALL_ALL_MODULES(pfEventHandler, (event));
 
    shared_ptr<NetObj> sourceObject = FindObjectById(event->getSourceId());
-   if (sourceObject == nullptr)
-   {
-      sourceObject = FindObjectById(g_dwMgmtNode);
-      if (sourceObject == nullptr)
-         sourceObject = g_entireNetwork;
-   }
-
    ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::EventProcessor"), sourceObject);
    if (vm.isValid())
    {

@@ -1358,6 +1358,13 @@ static inline DB_STATEMENT PrepareObjectLoadStatement(DB_HANDLE hdb, DB_STATEMEN
 }
 
 /**
+ * Expand text with macros
+ */
+StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const shared_ptr<NetObj>& object, const Alarm *alarm,
+   const Event *event, shared_ptr<DCObjectInfo> dci, const TCHAR *userName,
+   const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args);
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj : public NObject
@@ -1653,9 +1660,12 @@ public:
 
    void sendPollerMsg(const wchar_t *format, ...);
 
-   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
-            const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args);
-   StringBuffer expandText(const TCHAR *textTemplate)
+   StringBuffer expandText(const wchar_t *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
+            const wchar_t *userName, const wchar_t *objectName, const wchar_t *instance, const StringMap *inputFields, const StringList *args)
+   {
+      return ExpandText(textTemplate, self(), alarm, event, dci, userName, objectName, instance, inputFields, args);
+   }
+   StringBuffer expandText(const wchar_t *textTemplate)
    {
       return expandText(textTemplate, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
    }

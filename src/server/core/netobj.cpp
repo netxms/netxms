@@ -3370,10 +3370,98 @@ json_t *NetObj::toJson()
 }
 
 /**
- * Expand text
+ * Expand script macro - free function version accepting shared_ptr<NetObj>
  */
-StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
-         const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args)
+static void ExpandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event,
+   const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
+{
+   wchar_t name[256];
+   wcslcpy(name, scriptName, 256);
+
+   const wchar_t *objName = (object != nullptr) ? object->getName() : L"<no object>";
+   uint32_t objId = (object != nullptr) ? object->getId() : 0;
+
+   // Arguments can be provided as script_name(arg1, arg2, ... argN)
+   wchar_t *p = wcschr(name, L'(');
+   if (p != nullptr)
+   {
+      size_t l = wcslen(name) - 1;
+      if (name[l] != L')')
+      {
+         nxlog_debug_tag(L"obj.macro", 6, L"ExpandText(%s [%u], %s): missing closing parenthesis in macro \"%%[%s]\"", objName, objId, (event != nullptr) ? event->getName() : L"<no event>", name);
+         return;
+      }
+      name[l] = 0;
+      *p = 0;
+      Trim(name);
+   }
+
+   // Entry point can be given in form script.entry_point or script/entry_point
+   char entryPoint[MAX_IDENTIFIER_LENGTH];
+   ExtractScriptEntryPoint(name, entryPoint);
+
+   shared_ptr<DCObjectInfo> effectiveDCI(dci);
+   if ((effectiveDCI == nullptr) && (event != nullptr) && (event->getDciId() != 0) && (object != nullptr) && object->isDataCollectionTarget())
+   {
+      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(event->getDciId(), 0);
+      if (dcObject != nullptr)
+         effectiveDCI = dcObject->createDescriptor();
+      else
+         nxlog_debug_tag(L"obj.macro", 5, L"DCI ID is set to %u for event %s [" UINT64_FMT L"] but no such DCI exists", event->getDciId(), event->getName(), event->getId());
+   }
+   NXSL_VM *vm = CreateServerScriptVM(name, object, effectiveDCI);
+   if (vm != nullptr)
+   {
+      if (event != nullptr)
+         vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
+      if (alarm != nullptr)
+      {
+         vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm, true)));
+         vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
+         vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
+      }
+
+      ObjectRefArray<NXSL_Value> args(16, 16);
+      if ((p == nullptr) || ParseValueList(vm, &p, args, true))
+      {
+         if (vm->run(args, (entryPoint[0] != 0) ? entryPoint : nullptr))
+         {
+            NXSL_Value *result = vm->getResult();
+            const TCHAR *temp = result->getValueAsCString();
+            if (temp != nullptr)
+            {
+               output->append(temp);
+               nxlog_debug_tag(L"obj.macro", 6, L"ExpandText(%s [%u], %s): Script \"%s\" executed successfully",
+                  objName, objId, (event != nullptr) ? event->getName() : L"<no event>", name);
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(L"obj.macro", 6, L"ExpandText(%s [%u], %s): Script \"%s\" execution error (%s)",
+                  objName, objId, (event != nullptr) ? event->getName() : L"<no event>", name, vm->getErrorText());
+            if (object != nullptr)
+               ReportScriptError(SCRIPT_CONTEXT_OBJECT, object.get(), 0, vm->getErrorText(), name);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(_T("obj.macro"), 6, _T("ExpandText(%s [%u], %s): cannot parse argument list in macro \"%%[%s]\""),
+            objName, objId, (event != nullptr) ? event->getName() : _T("<no event>"), scriptName);
+      }
+      delete vm;
+   }
+   else
+   {
+      nxlog_debug_tag(_T("obj.macro"), 6, _T("ExpandText(%s [%u], %s): Cannot find script \"%s\""), objName, objId, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+   }
+}
+
+/**
+ * Expand text with macros
+ */
+StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const shared_ptr<NetObj>& object, const Alarm *alarm,
+   const Event *event, shared_ptr<DCObjectInfo> dci, const TCHAR *userName,
+   const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args)
 {
    if (textTemplate == nullptr)
       return StringBuffer();
@@ -3381,8 +3469,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    TCHAR buffer[256];
    int i;
 
-   nxlog_debug_tag(_T("obj.macro"), 7, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(" instance='%s')"),
-             m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId(),
+   nxlog_debug_tag(L"obj.macro", 7, L"ExpandText(sourceObject=%u template='%s' alarm=%u event=" UINT64_FMT L" instance='%s')",
+             (object != nullptr) ? object->getId() : 0, CHECK_NULL(textTemplate),
+             (alarm == nullptr) ? 0 : alarm->getAlarmId(), (event == nullptr) ? 0 : event->getId(),
              CHECK_NULL(instance));
 
    bool eventNotFound = false;
@@ -3434,7 +3523,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
       };
 
    StringBuffer output;
-   for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
+   for(const wchar_t *curr = textTemplate; *curr != 0; curr++)
    {
       if (*curr != '%')
       {
@@ -3455,7 +3544,8 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             output.append(_T('%'));
             break;
          case 'a':   // IP address of event source
-            output.append(getPrimaryIpAddress().toString(buffer));
+            if (object != nullptr)
+               output.append(object->getPrimaryIpAddress().toString(buffer));
             break;
          case 'A':   // Associated alarm message
             if (alarm != nullptr)
@@ -3471,7 +3561,8 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             output.append((loadEvent()) ? event->getCode() : 0);
             break;
          case 'C':   // Object comments
-            output.append(getComments().cstr());
+            if (object != nullptr)
+               output.append(object->getComments().cstr());
             break;
          case 'd':   // DCI description
             if (findDCI())
@@ -3488,13 +3579,20 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             }
             break;
          case 'g':   // Source object's GUID
-            output.append(m_guid);
+            if (object != nullptr)
+               output.append(object->getGuid());
             break;
          case 'i':   // Source object identifier in form 0xhhhhhhhh
-            output.append(m_id, _T("0x%08X"));
+            if (object != nullptr)
+               output.append(object->getId(), L"0x%08X");
+            else if (event != nullptr)
+               output.append(event->getSourceId(), L"0x%08X");
             break;
          case 'I':   // Source object identifier in decimal form
-            output.append(m_id);
+            if (object != nullptr)
+               output.append(object->getId());
+            else if (event != nullptr)
+               output.append(event->getSourceId());
             break;
          case 'K':   // Associated alarm key
             if (alarm != nullptr)
@@ -3507,7 +3605,8 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             }
             break;
          case 'L':   // Object alias
-            output.append(getAlias().cstr());
+            if (object != nullptr)
+               output.append(object->getAlias().cstr());
             break;
          case 'm':
             if (loadEvent())
@@ -3522,7 +3621,12 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             }
             break;
          case 'n':   // Name of event source
-            output.append((objectName != nullptr) ? objectName : getName());
+            if (objectName != nullptr)
+               output.append(objectName);
+            else if (object != nullptr)
+               output.append(object->getName());
+            else
+               output.append(L"[unknown]");
             break;
          case 'N':   // Event name
             if (loadEvent())
@@ -3549,15 +3653,18 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             output.append(static_cast<int64_t>((loadEvent()) ? event->getTimestamp() : time(nullptr)));
             break;
          case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
-            if (getPrimaryIpAddress().getFamily() == AF_INET6)
+            if (object != nullptr)
             {
-               output.append(_T('['));
-               output.append(getPrimaryIpAddress().toString(buffer));
-               output.append(_T(']'));
-            }
-            else
-            {
-               output.append(getPrimaryIpAddress().toString(buffer));
+               if (object->getPrimaryIpAddress().getFamily() == AF_INET6)
+               {
+                  output.append(_T('['));
+                  output.append(object->getPrimaryIpAddress().toString(buffer));
+                  output.append(_T(']'));
+               }
+               else
+               {
+                  output.append(object->getPrimaryIpAddress().toString(buffer));
+               }
             }
             break;
          case 'U':   // User name
@@ -3579,12 +3686,15 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             }
             break;
          case 'z':   // Zone UIN
-            output.append(getZoneUIN());
+            if (object != nullptr)
+               output.append(object->getZoneUIN());
+            else
+               output.append(static_cast<int32_t>(0));
             break;
          case 'Z':   // Zone name
-            if (IsZoningEnabled())
+            if (object != nullptr && IsZoningEnabled())
             {
-               shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
+               shared_ptr<Zone> zone = FindZoneByUIN(object->getZoneUIN());
                if (zone != nullptr)
                {
                   output.append(zone->getName());
@@ -3592,7 +3702,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                else
                {
                   output.append(_T('['));
-                  output.append(getZoneUIN());
+                  output.append(object->getZoneUIN());
                   output.append(_T(']'));
                }
             }
@@ -3636,7 +3746,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             {
                buffer[i] = 0;
                loadEvent();
-               expandScriptMacro(buffer, alarm, event, dci, &output);
+               if (object != nullptr)
+                  ExpandScriptMacro(buffer, alarm, event, object, dci, &output);
+               else
+                  nxlog_debug_tag(L"obj.macro", 6, L"ExpandText: skipping script macro \"%s\" - no object context", buffer);
             }
             break;
          case '{':   // Custom attribute
@@ -3651,35 +3764,38 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
             else
             {
                buffer[i] = 0;
-               TCHAR *defaultValue = _tcschr(buffer, _T(':'));
+               wchar_t *defaultValue = wcschr(buffer, L':');
                if (defaultValue != nullptr)
                {
                   *defaultValue = 0;
                   defaultValue++;
                }
-               Trim(buffer);
-               TCHAR *v = nullptr;
-               if (instance != nullptr)
+               TrimW(buffer);
+               wchar_t *v = nullptr;
+               if (object != nullptr)
                {
-                  TCHAR tmp[256];
-                  _sntprintf(tmp, 256, _T("%s::%s"), buffer, instance);
-                  tmp[255] = 0;
-                  v = getCustomAttributeCopy(tmp);
-               }
-               else if (loadEvent())
-               {
-                  const StringList *names = event->getParameterNames();
-                  int index = names->indexOfIgnoreCase(_T("instance"));
-                  if (index != -1)
+                  if (instance != nullptr)
                   {
-                     TCHAR tmp[256];
-                     _sntprintf(tmp, 256, _T("%s::%s"), buffer, event->getParameter(index));
+                     wchar_t tmp[256];
+                     nx_swprintf(tmp, 256, L"%s::%s", buffer, instance);
                      tmp[255] = 0;
-                     v = getCustomAttributeCopy(tmp);
+                     v = object->getCustomAttributeCopy(tmp);
                   }
+                  else if (loadEvent())
+                  {
+                     const StringList *names = event->getParameterNames();
+                     int index = names->indexOfIgnoreCase(L"instance");
+                     if (index != -1)
+                     {
+                        wchar_t tmp[256];
+                        nx_swprintf(tmp, 256, L"%s::%s", buffer, event->getParameter(index));
+                        tmp[255] = 0;
+                        v = object->getCustomAttributeCopy(tmp);
+                     }
+                  }
+                  if (v == nullptr)
+                     v = object->getCustomAttributeCopy(buffer);
                }
-               if (v == nullptr)
-                  v = getCustomAttributeCopy(buffer);
                if (v != nullptr)
                   output.appendPreallocated(v);
                else if (defaultValue != nullptr)
@@ -3758,9 +3874,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 
                const StringList *names = event->getParameterNames();
                shared_ptr<DCObjectInfo> formatDci(dci); // DCI used for formatting value
-               if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
+               if ((list != nullptr) && (formatDci == nullptr) && (event->getDciId() != 0) && (object != nullptr) && object->isDataCollectionTarget())
                {
-                  shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
+                  shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(event->getDciId(), 0);
                   if (dcObject != nullptr)
                      formatDci = dcObject->createDescriptor();
                   else
@@ -3788,85 +3904,11 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 }
 
 /**
- * Expand script macro
+ * Expand script macro - NetObj method delegating to free function
  */
 void NetObj::expandScriptMacro(const wchar_t *scriptName, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
 {
-   wchar_t name[256];
-   wcslcpy(name, scriptName, 256);
-
-   // Arguments can be provided as script_name(arg1, arg2, ... argN)
-   wchar_t *p = wcschr(name, L'(');
-   if (p != nullptr)
-   {
-      size_t l = wcslen(name) - 1;
-      if (name[l] != L')')
-      {
-         nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): missing closing parenthesis in macro \"%%[%s]\"", m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name);
-         return;
-      }
-      name[l] = 0;
-      *p = 0;
-      Trim(name);
-   }
-
-   // Entry point can be given in form script.entry_point or script/entry_point
-   char entryPoint[MAX_IDENTIFIER_LENGTH];
-   ExtractScriptEntryPoint(name, entryPoint);
-
-   shared_ptr<DCObjectInfo> effectiveDCI(dci);
-   if ((effectiveDCI == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget())
-   {
-      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0);
-      if (dcObject != nullptr)
-         effectiveDCI = dcObject->createDescriptor();
-      else
-         nxlog_debug_tag(L"obj.macro", 5, L"DCI ID is set to %u for event %s [" UINT64_FMT L"] but no such DCI exists", event->getDciId(), event->getName(), event->getId());
-   }
-   NXSL_VM *vm = CreateServerScriptVM(name, self(), effectiveDCI);
-   if (vm != nullptr)
-   {
-      if (event != nullptr)
-         vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
-      if (alarm != nullptr)
-      {
-         vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm, true)));
-         vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
-         vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
-      }
-
-      ObjectRefArray<NXSL_Value> args(16, 16);
-      if ((p == nullptr) || ParseValueList(vm, &p, args, true))
-      {
-         if (vm->run(args, (entryPoint[0] != 0) ? entryPoint : nullptr))
-         {
-            NXSL_Value *result = vm->getResult();
-            const TCHAR *temp = result->getValueAsCString();
-            if (temp != nullptr)
-            {
-               output->append(temp);
-               nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): Script \"%s\" executed successfully",
-                  m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name);
-            }
-         }
-         else
-         {
-            nxlog_debug_tag(L"obj.macro", 6, L"NetObj::ExpandText(%s [%u], %s): Script \"%s\" execution error (%s)",
-                  m_name, m_id, (event != nullptr) ? event->getName() : L"<no event>", name, vm->getErrorText());
-            ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), name);
-         }
-      }
-      else
-      {
-         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): cannot parse argument list in macro \"%%[%s]\""),
-            m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), scriptName);
-      }
-      delete vm;
-   }
-   else
-   {
-      nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Cannot find script \"%s\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
-   }
+   ExpandScriptMacro(scriptName, alarm, event, self(), dci, output);
 }
 
 /**

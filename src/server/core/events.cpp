@@ -538,7 +538,7 @@ void Event::expandMessageText()
 /**
  * Substitute % macros in given text with actual values
  */
-StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
+StringBuffer Event::expandText(const wchar_t *textTemplate, const Alarm *alarm) const
 {
    if (textTemplate == nullptr)
       return StringBuffer();
@@ -546,12 +546,10 @@ StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) co
    shared_ptr<NetObj> object = FindObjectById(m_sourceId);
    if (object == nullptr)
    {
-     object = FindObjectById(g_dwMgmtNode);
-     if (object == nullptr)
-        object = g_entireNetwork;
+      nxlog_debug_tag(L"event.macro", 4, L"Event::expandText: source object [%u] not found, expanding without object context", m_sourceId);
    }
 
-   return object->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
+   return ExpandText(textTemplate, object, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
 }
 
 /**

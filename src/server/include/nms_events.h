@@ -213,20 +213,20 @@ public:
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm = nullptr) const;
-   void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
+   StringBuffer expandText(const wchar_t *textTemplate, const Alarm *alarm = nullptr) const;
+   void setMessage(const wchar_t *text) { MemFree(m_messageText); m_messageText = MemCopyStringW(text); }
 
-   bool hasTag(const TCHAR *tag) const { return m_tags.contains(tag); }
-   void addTag(const TCHAR *tag) { if (*tag != 0) m_tags.add(tag); }
-   void removeTag(const TCHAR *tag) { m_tags.remove(tag); }
+   bool hasTag(const wchar_t *tag) const { return m_tags.contains(tag); }
+   void addTag(const wchar_t *tag) { if (*tag != 0) m_tags.add(tag); }
+   void removeTag(const wchar_t *tag) { m_tags.remove(tag); }
 
    int getParametersCount() const { return m_parameters.size(); }
-   const TCHAR *getParameter(int index, const TCHAR *defaultValue = nullptr) const
+   const wchar_t *getParameter(int index, const wchar_t *defaultValue = nullptr) const
    {
-      const TCHAR *v = m_parameters.get(index);
+      const wchar_t *v = m_parameters.get(index);
       return (v != nullptr) ? v : defaultValue;
    }
-   const TCHAR *getParameterName(int index) const { return m_parameterNames.get(index); }
+   const wchar_t *getParameterName(int index) const { return m_parameterNames.get(index); }
    int32_t getParameterAsInt32(int index, int32_t defaultValue = 0) const
    {
       const TCHAR *v = m_parameters.get(index);
