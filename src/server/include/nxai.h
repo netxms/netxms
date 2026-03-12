@@ -203,6 +203,7 @@ private:
    void initializeFunctions();
    std::string callFunction(const char *name, json_t *arguments);
    std::string loadSkill(const char *skillName);
+   std::string delegateToSkill(const char *skillName, const char *task);
 
 public:
    Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr, bool isInteractive = true);
@@ -234,6 +235,15 @@ public:
 };
 
 /**
+ * Skill execution mode
+ */
+enum class SkillExecutionMode
+{
+   LOADED = 0,      // Load into caller's context
+   DELEGATED = 1    // Run in separate context
+};
+
+/**
  * AI assistant skill
  */
 struct AssistantSkill
@@ -242,14 +252,18 @@ struct AssistantSkill
    std::string description;
    std::string prompt;
    std::vector<AssistantFunction> functions;
+   bool supportsDelegation;
+   SkillExecutionMode defaultMode;
 
-   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt) :
-      name(_name), description(_description), prompt(_prompt)
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt,
+      bool _supportsDelegation = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOADED) :
+      name(_name), description(_description), prompt(_prompt), supportsDelegation(_supportsDelegation), defaultMode(_defaultMode)
    {
    }
 
-   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AssistantFunction>& _functions) :
-      name(_name), description(_description), prompt(_prompt), functions(_functions)
+   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AssistantFunction>& _functions,
+      bool _supportsDelegation = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOADED) :
+      name(_name), description(_description), prompt(_prompt), functions(_functions), supportsDelegation(_supportsDelegation), defaultMode(_defaultMode)
    {
    }
 };
@@ -278,6 +292,18 @@ void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *de
  * Register AI assistant skill with functions. This function intended to be called only during server core or module initialization.
  */
 void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt, const std::vector<AssistantFunction>& functions);
+
+/**
+ * Register AI assistant skill with delegation support. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
+   bool supportsDelegation, SkillExecutionMode defaultMode);
+
+/**
+ * Register AI assistant skill with functions and delegation support. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
+   const std::vector<AssistantFunction>& functions, bool supportsDelegation, SkillExecutionMode defaultMode);
 
 /**
  * Add custom prompt

@@ -29,6 +29,16 @@
 json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared_ptr<AssistantFunction>>& functions);
 
 /**
+ * System prompt for delegated skill execution
+ */
+static const char *s_delegationSystemPrompt =
+   "You are executing a delegated task as a specialized agent within NetXMS. "
+   "Complete the task described below using the available functions. "
+   "When done, provide a concise summary of what was accomplished and any relevant results. "
+   "Do not ask questions - make reasonable decisions based on the information provided. "
+   "Focus only on the specific task given.";
+
+/**
  * Skills
  */
 static std::unordered_map<std::string, shared_ptr<AssistantSkill>> s_skills;
@@ -126,6 +136,8 @@ std::string GetRegisteredSkills()
       json_t *skillObject = json_object();
       json_object_set_new(skillObject, "name", json_string(skill.name.c_str()));
       json_object_set_new(skillObject, "description", json_string(skill.description.c_str()));
+      json_object_set_new(skillObject, "supports_delegation", json_boolean(skill.supportsDelegation));
+      json_object_set_new(skillObject, "default_mode", json_string(skill.defaultMode == SkillExecutionMode::DELEGATED ? "delegated" : "loaded"));
       json_array_append_new(output, skillObject);
    }
    s_skillsMutex.unlock();
@@ -160,5 +172,114 @@ std::string Chat::loadSkill(const char *skillName)
    m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
 
    return skill.prompt;
+}
+
+/**
+ * Delegate task to a skill running in a separate ephemeral chat context
+ */
+std::string Chat::delegateToSkill(const char *skillName, const char *task)
+{
+   s_skillsMutex.lock();
+   auto it = s_skills.find(skillName);
+   if (it == s_skills.end())
+   {
+      s_skillsMutex.unlock();
+      return std::string("Error: skill not found");
+   }
+
+   shared_ptr<AssistantSkill> skill = it->second;
+   if (!skill->supportsDelegation)
+   {
+      s_skillsMutex.unlock();
+      return std::string("Error: skill does not support delegation");
+   }
+   s_skillsMutex.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Delegating task to skill \"%hs\"", skillName);
+
+   // Create temporary non-interactive chat with delegation system prompt
+   Chat delegationChat(nullptr, nullptr, m_userId, s_delegationSystemPrompt, false);
+   delegationChat.setSlot("delegation");
+
+   // Remove delegate-to-skill from delegation chat to prevent nesting
+   delegationChat.m_functions.erase("delegate-to-skill");
+   json_decref(delegationChat.m_functionDeclarations);
+   delegationChat.m_functionDeclarations = RebuildFunctionDeclarations(delegationChat.m_functions);
+
+   // Load skill into delegation chat
+   std::string loadResult = delegationChat.loadSkill(skillName);
+   if (loadResult.find("Error:") == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Failed to load skill \"%hs\" into delegation chat: %hs", skillName, loadResult.c_str());
+      return loadResult;
+   }
+
+   // Add skill prompt as system message
+   delegationChat.addMessage("system", loadResult.c_str());
+
+   // Execute the task
+   char *result = delegationChat.sendRequest(task, 16);
+   std::string output;
+   if (result != nullptr)
+   {
+      output = result;
+      MemFree(result);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Skill \"%hs\" delegation completed successfully", skillName);
+   }
+   else
+   {
+      output = "Error: delegation failed - no response from skill";
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Skill \"%hs\" delegation failed - no response", skillName);
+   }
+
+   return output;
+}
+
+/**
+ * Register AI assistant skill with delegation support. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
+   bool supportsDelegation, SkillExecutionMode defaultMode)
+{
+   if (s_skills.find(name) != s_skills.end())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant skill \"%hs\" already registered", name);
+      return;
+   }
+
+   if (prompt[0] == '@')
+   {
+      std::string fileContent = LoadSkillFile(&prompt[1]);
+      if (fileContent.empty())
+         return;
+      s_skills.emplace(name, make_shared<AssistantSkill>(name, description, fileContent, supportsDelegation, defaultMode));
+      return;
+   }
+
+   s_skills.emplace(name, make_shared<AssistantSkill>(name, description, prompt, supportsDelegation, defaultMode));
+}
+
+/**
+ * Register AI assistant skill with functions and delegation support. This function intended to be called only during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
+   const std::vector<AssistantFunction>& functions, bool supportsDelegation, SkillExecutionMode defaultMode)
+{
+   if (s_skills.find(name) != s_skills.end())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI assistant skill \"%hs\" already registered", name);
+      return;
+   }
+
+   if (prompt[0] == '@')
+   {
+      std::string fileContent = LoadSkillFile(&prompt[1]);
+      if (fileContent.empty())
+         return;
+      s_skills.emplace(name, make_shared<AssistantSkill>(name, description, fileContent, functions, supportsDelegation, defaultMode));
+      return;
+   }
+
+   s_skills.emplace(name, make_shared<AssistantSkill>(name, description, prompt, functions, supportsDelegation, defaultMode));
 }
 

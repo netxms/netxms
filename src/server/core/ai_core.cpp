@@ -124,13 +124,20 @@ static const char *s_systemPrompt =
          "- When functions return empty results, check skills before concluding the task cannot be completed\n"
          "- Skills can provide entirely new function sets - always explore them when facing limitations\n"
          "- If a user request mentions any domain or task type, check if skills exist for that domain\n"
-         "- Pattern: Request → Check Skills → Load Relevant Skills → Attempt Task → Report Results\n"
-         "- If user request matches an available skill's description, automatically invoke load-skill for that skill before generating any other response\n"
+         "- Pattern: Request → Check Skills → Load/Delegate Relevant Skills → Attempt Task → Report Results\n"
+         "- If user request matches an available skill's description, automatically invoke the skill before generating any other response\n"
          "- Use get-available-skills function to discover what skills are available\n"
-         "- Load relevant skills using load-skill function when needed\n"
          "- Skills extend your functionality for specific domains or complex operations\n"
-         "- Mentioning a skill without loading it provides no value\n"
-         "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
+         "- Mentioning a skill without loading or delegating provides no value\n"
+         "- Load skills proactively when you recognize a need for specialized capabilities\n"
+         "- SKILL EXECUTION MODES:\n"
+         "  - delegate-to-skill: Run the skill in a separate context for one-shot, self-contained tasks. "
+         "The skill executes autonomously and returns only a concise result, preserving this conversation's context window. "
+         "Prefer this for tasks where you do not need the skill's functions afterwards.\n"
+         "  - load-skill: Load the skill into this conversation for ongoing access to its prompt and functions. "
+         "Use this when you need the skill's capabilities for multiple interactions or follow-up questions.\n"
+         "  - Each skill declares a default_mode (loaded or delegated) and supports_delegation flag in the skills list. "
+         "Respect the default_mode unless the situation clearly calls for the other mode.\n\n"
          "AGENT TOOLS:\n"
          "- Network nodes may have AI tools available on their agents for diagnostics, log analysis, file operations, etc.\n"
          "- WORKFLOW: (1) Call get-node-ai-tools ONCE to discover available tools on a node, "
@@ -186,13 +193,20 @@ static const char *s_systemPromptBackground =
          "- Load skills proactively based on task context, not reactively after failure\n"
          "- When functions return empty results, check skills before concluding the task cannot be completed\n"
          "- Skills can provide entirely new function sets - always explore them when facing limitations\n"
-         "- Pattern: Task → Check Skills → Load Relevant Skills → Attempt Task → Report Results\n"
-         "- If task matches an available skill's description, automatically invoke load-skill for that skill before generating any other response\n"
+         "- Pattern: Task → Check Skills → Load/Delegate Relevant Skills → Attempt Task → Report Results\n"
+         "- If task matches an available skill's description, automatically invoke the skill before generating any other response\n"
          "- Use get-available-skills function to discover what skills are available\n"
-         "- Load relevant skills using load-skill function when needed\n"
          "- Skills extend your functionality for specific domains or complex operations\n"
-         "- Mentioning a skill without loading it provides no value\n"
-         "- Load skills proactively when you recognize a need for specialized capabilities\n\n"
+         "- Mentioning a skill without loading or delegating provides no value\n"
+         "- Load skills proactively when you recognize a need for specialized capabilities\n"
+         "- SKILL EXECUTION MODES:\n"
+         "  - delegate-to-skill: Run the skill in a separate context for one-shot, self-contained tasks. "
+         "The skill executes autonomously and returns only a concise result, preserving this conversation's context window. "
+         "Prefer this for tasks where you do not need the skill's functions afterwards.\n"
+         "  - load-skill: Load the skill into this conversation for ongoing access to its prompt and functions. "
+         "Use this when you need the skill's capabilities for multiple interactions or follow-up tasks.\n"
+         "  - Each skill declares a default_mode (loaded or delegated) and supports_delegation flag in the skills list. "
+         "Respect the default_mode unless the situation clearly calls for the other mode.\n\n"
          "AGENT TOOLS:\n"
          "- Network nodes may have AI tools available on their agents for diagnostics, log analysis, file operations, etc.\n"
          "- WORKFLOW: (1) Call get-node-ai-tools ONCE to discover available tools on a node, "
@@ -929,13 +943,31 @@ void Chat::initializeFunctions()
 
    m_functions.emplace("load-skill", make_shared<AssistantFunction>(
       "load-skill",
-      "Load AI assistant skill by name. Returns skill prompt on success or error message on failure.",
+      "Load AI assistant skill into the current chat context. The skill's prompt and functions become permanently available in this conversation. "
+      "Use this when you need ongoing access to the skill's capabilities throughout the conversation, or when the skill does not support delegation.",
       std::vector<std::pair<std::string, std::string>>{
          {"name", "Name of the skill to load"}
       },
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
          return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
+      }
+   ));
+
+   m_functions.emplace("delegate-to-skill", make_shared<AssistantFunction>(
+      "delegate-to-skill",
+      "Execute a skill in a separate context. The skill handles the task autonomously and returns a concise result. "
+      "Use this instead of load-skill when the task is self-contained and does not require ongoing skill knowledge in this conversation. "
+      "This preserves context window space by not loading the skill's prompt and functions into the current chat.",
+      std::vector<std::pair<std::string, std::string>>{
+         {"name", "Name of the skill to delegate to"},
+         {"task", "Description of the task for the skill to perform, including all necessary context"}
+      },
+      [this] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return this->delegateToSkill(
+            json_object_get_string_utf8(arguments, "name", ""),
+            json_object_get_string_utf8(arguments, "task", ""));
       }
    ));
 
