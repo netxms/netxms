@@ -127,6 +127,17 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 		return nullptr;
 	}
 
+	// Mark internal service interfaces as excluded from topology
+	for(int i = 0; i < ifList->size(); i++)
+	{
+	   InterfaceInfo *iface = ifList->get(i);
+	   if (!_tcsnicmp(iface->name, _T("bme"), 3) || !_tcsnicmp(iface->name, _T("jsrv"), 4) || !_tcsnicmp(iface->name, _T("esi"), 3))
+	   {
+	      iface->excludeFromTopology = true;
+	      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: marking internal service interface \"%s\" as excluded from topology"), iface->name);
+	   }
+	}
+
 	// Update physical port locations
 	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
 	if (chassisTable != nullptr)

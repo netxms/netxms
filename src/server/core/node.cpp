@@ -2168,6 +2168,7 @@ shared_ptr<Interface> Node::createInterfaceObject(const InterfaceInfo& info, boo
    iface->setPhysicalLocation(info.location);
    iface->setPhysicalPortFlag(info.isPhysicalPort);
    iface->setManualCreationFlag(manuallyCreated);
+   iface->setExcludeFromTopology(info.excludeFromTopology);
    iface->setMTU(info.mtu);
    iface->setSpeed(info.speed);
    iface->setIfTableSuffix(info.ifTableSuffixLength, info.ifTableSuffix);

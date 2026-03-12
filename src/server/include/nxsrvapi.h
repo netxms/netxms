@@ -354,23 +354,25 @@ private:
       bridgePort = 0;
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
+      excludeFromTopology = false;
       parentIndex = 0;
    }
 
 public:
    uint32_t index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
-	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-	TCHAR alias[MAX_DB_STRING];	// Value of ifAlias MIB variable for SNMP agents
-	uint32_t type;
-	uint32_t mtu;
+   TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+   TCHAR alias[MAX_DB_STRING];	// Value of ifAlias MIB variable for SNMP agents
+   uint32_t type;
+   uint32_t mtu;
    uint64_t speed;  // interface speed in bits/sec
    uint64_t maxSpeed;
    uint32_t bridgePort;
-	InterfacePhysicalLocation location;
+   InterfacePhysicalLocation location;
    InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
-	bool isPhysicalPort;
+   bool isPhysicalPort;
+   bool excludeFromTopology;
    uint32_t ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
    uint32_t parentIndex;
