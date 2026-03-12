@@ -1475,6 +1475,7 @@ protected:
    }
 
    virtual void prepareForDeletion();
+   virtual uint32_t getDeleteEventCode() const;
    virtual void onObjectDelete(const NetObj& object);
 
    virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr);
@@ -3138,6 +3139,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
+   virtual uint32_t getDeleteEventCode() const override;
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -3240,6 +3242,7 @@ public:
    shared_ptr<const Cluster> self() const { return static_pointer_cast<const Cluster>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CLUSTER; }
+   virtual uint32_t getDeleteEventCode() const override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
@@ -3413,6 +3416,7 @@ public:
    shared_ptr<const Sensor> self() const { return static_pointer_cast<const Sensor>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_SENSOR; }
+   virtual uint32_t getDeleteEventCode() const override;
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -4103,6 +4107,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_NODE; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
+   virtual uint32_t getDeleteEventCode() const override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
@@ -4510,8 +4515,6 @@ protected:
    InetAddress m_ipAddress;
    int32_t m_zoneUIN;
 
-   virtual void prepareForDeletion() override;
-
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
 
 public:
@@ -4525,6 +4528,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_SUBNET; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
+   virtual uint32_t getDeleteEventCode() const override;
    virtual bool isContainerObject() const override { return true; }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;

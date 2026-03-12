@@ -629,6 +629,14 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
 }
 
 /**
+ * Get event code for object deletion event
+ */
+uint32_t Sensor::getDeleteEventCode() const
+{
+   return EVENT_SENSOR_DELETED;
+}
+
+/**
  * Prepare sensor object for deletion
  */
 void Sensor::prepareForDeletion()

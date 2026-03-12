@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,17 +316,11 @@ UINT32 *Subnet::buildAddressMap(int *length)
 }
 
 /**
- * Prepare node object for deletion
+ * Get event code for object deletion event
  */
-void Subnet::prepareForDeletion()
+uint32_t Subnet::getDeleteEventCode() const
 {
-   EventBuilder(EVENT_SUBNET_DELETED, g_dwMgmtNode)
-      .param(_T("subnetObjectId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-      .param(_T("subnetName"), m_name)
-      .param(_T("ipAddress"), m_ipAddress)
-      .param(_T("networkMask"), m_ipAddress.getMaskBits())
-      .post();
-   super::prepareForDeletion();
+   return EVENT_SUBNET_DELETED;
 }
 
 /**

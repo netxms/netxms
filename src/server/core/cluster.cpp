@@ -58,6 +58,14 @@ Cluster::~Cluster()
 }
 
 /**
+ * Get event code for object deletion event
+ */
+uint32_t Cluster::getDeleteEventCode() const
+{
+   return EVENT_CLUSTER_DELETED;
+}
+
+/**
  * Prepare cluster for deletion
  */
 void Cluster::prepareForDeletion()

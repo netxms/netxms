@@ -24,6 +24,82 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 61.15 to 61.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_NODE_DELETED, _T("SYS_NODE_DELETED"),
+      EVENT_SEVERITY_NORMAL, 0, _T("b88fedba-faeb-4a06-b671-e7cf515c2e69"),
+      _T("Node %<objectName> deleted"),
+      _T("Generated when node object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_CLUSTER_DELETED, _T("SYS_CLUSTER_DELETED"),
+      EVENT_SEVERITY_NORMAL, 0, _T("f926f25c-4cfc-4fdc-811b-add87ae33d2e"),
+      _T("Cluster %<objectName> deleted"),
+      _T("Generated when cluster object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_SENSOR_DELETED, _T("SYS_SENSOR_DELETED"),
+      EVENT_SEVERITY_NORMAL, 0, _T("05eadb63-76d5-4cbc-82e5-a23af1ca5b7b"),
+      _T("Sensor %<objectName> deleted"),
+      _T("Generated when sensor object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ACCESSPOINT_DELETED, _T("SYS_ACCESSPOINT_DELETED"),
+      EVENT_SEVERITY_NORMAL, 0, _T("50cda310-4277-4168-8cb2-873e9dd93c01"),
+      _T("Access point %<objectName> deleted"),
+      _T("Generated when access point object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_OBJECT_DELETED, _T("SYS_OBJECT_DELETED"),
+      EVENT_SEVERITY_NORMAL, 0, _T("0c9f0861-6546-48b5-9622-ea085261ba7a"),
+      _T("Object %<objectName> deleted"),
+      _T("Generated when object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address")));
+
+   // Update existing SYS_SUBNET_DELETED event to use common parameters
+   CHK_EXEC(SQLQuery(
+      _T("UPDATE event_cfg SET ")
+      _T("message='Subnet %<objectName> deleted',")
+      _T("description='Generated when subnet object deleted from the database.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) objectId - Object ID\r\n")
+      _T("   2) objectName - Object name\r\n")
+      _T("   3) objectClassName - Object class name\r\n")
+      _T("   4) primaryIpAddress - Primary IP address' ")
+      _T("WHERE event_code=19")));
+
+   // Add Hook::ObjectDelete script
+   CHK_EXEC(SQLQuery(
+      _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+      _T("VALUES ('ab3547c6-ec79-4ff8-83f4-cb8708fae3dd',28,'Hook::ObjectDelete','')")));
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 61.14 to 61.15
  */
 static bool H_UpgradeFromV14()
@@ -363,6 +439,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 61, 16, H_UpgradeFromV15 },
    { 14, 61, 15, H_UpgradeFromV14 },
    { 13, 61, 14, H_UpgradeFromV13 },
    { 12, 61, 13, H_UpgradeFromV12 },

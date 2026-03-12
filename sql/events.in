@@ -322,13 +322,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_SUBNET_DELETED, 'SYS_SUBNET_DELETED', 'af188eb3-e84f-4fd9-aecf-f1ba934a9f1a',
 		EVENT_SEVERITY_NORMAL, 0,
-		'Subnet %2 deleted',
+		'Subnet %<objectName> deleted',
 		'Generated when subnet object deleted from the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) subnetObjectId - Subnet object ID' CONCAT CRLF CONCAT
-		'   2) subnetName - Subnet name' CONCAT CRLF CONCAT
-		'   3) ipAddress - IP address' CONCAT CRLF CONCAT
-		'   4) networkMask - Network mask'
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1975,6 +1975,66 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) newHardwareId - Hardware ID of the new device' CONCAT CRLF CONCAT
 		'   5) oldSnmpObjectId - SNMP object ID of the old device' CONCAT CRLF CONCAT
 		'   6) newSnmpObjectId - SNMP object ID of the new device'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_NODE_DELETED, 'SYS_NODE_DELETED', 'b88fedba-faeb-4a06-b671-e7cf515c2e69',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Node %<objectName> deleted',
+		'Generated when node object deleted from the database.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_DELETED, 'SYS_CLUSTER_DELETED', 'f926f25c-4cfc-4fdc-811b-add87ae33d2e',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Cluster %<objectName> deleted',
+		'Generated when cluster object deleted from the database.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SENSOR_DELETED, 'SYS_SENSOR_DELETED', '05eadb63-76d5-4cbc-82e5-a23af1ca5b7b',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Sensor %<objectName> deleted',
+		'Generated when sensor object deleted from the database.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ACCESSPOINT_DELETED, 'SYS_ACCESSPOINT_DELETED', '50cda310-4277-4168-8cb2-873e9dd93c01',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Access point %<objectName> deleted',
+		'Generated when access point object deleted from the database.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_OBJECT_DELETED, 'SYS_OBJECT_DELETED', '0c9f0861-6546-48b5-9622-ea085261ba7a',
+		EVENT_SEVERITY_NORMAL, 0,
+		'Object %<objectName> deleted',
+		'Generated when object deleted from the database.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) objectId - Object ID' CONCAT CRLF CONCAT
+		'   2) objectName - Object name' CONCAT CRLF CONCAT
+		'   3) objectClassName - Object class name' CONCAT CRLF CONCAT
+		'   4) primaryIpAddress - Primary IP address'
 	);
 
 /*

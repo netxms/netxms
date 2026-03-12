@@ -38,3 +38,5 @@ INSERT INTO script_library (guid,script_id,script_name,script_code)
 	VALUES ('f8bfa009-d4e4-4443-8bad-3ded09bdeb92',26,'Hook::Login','');
 INSERT INTO script_library (guid,script_id,script_name,script_code)
 	VALUES ('b322c142-fdd5-433f-a820-05b2aa3daa39',27,'Hook::RegisterForConfigurationBackup','return $node.isSNMP;');
+INSERT INTO script_library (guid,script_id,script_name,script_code)
+	VALUES ('ab3547c6-ec79-4ff8-83f4-cb8708fae3dd',28,'Hook::ObjectDelete','');

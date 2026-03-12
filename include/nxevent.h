@@ -212,6 +212,11 @@
 #define EVENT_RUNNING_CONFIG_CHANGED                158
 #define EVENT_STARTUP_CONFIG_CHANGED                159
 #define EVENT_DEVICE_REPLACED                       160
+#define EVENT_NODE_DELETED                          161
+#define EVENT_CLUSTER_DELETED                        162
+#define EVENT_SENSOR_DELETED                         163
+#define EVENT_ACCESSPOINT_DELETED                    164
+#define EVENT_OBJECT_DELETED                         165
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

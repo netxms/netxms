@@ -74,6 +74,14 @@ AccessPoint::~AccessPoint()
 }
 
 /**
+ * Get event code for object deletion event
+ */
+uint32_t AccessPoint::getDeleteEventCode() const
+{
+   return EVENT_ACCESSPOINT_DELETED;
+}
+
+/**
  * Create object from database data
  */
 bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)

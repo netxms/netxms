@@ -10908,6 +10908,14 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
 }
 
 /**
+ * Get event code for object deletion event
+ */
+uint32_t Node::getDeleteEventCode() const
+{
+   return EVENT_NODE_DELETED;
+}
+
+/**
  * Prepare node object for deletion
  */
 void Node::prepareForDeletion()

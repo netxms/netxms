@@ -2408,11 +2408,28 @@ int NetObj::getPropagatedStatus()
 }
 
 /**
+ * Get event code for object deletion event
+ */
+uint32_t NetObj::getDeleteEventCode() const
+{
+   return EVENT_OBJECT_DELETED;
+}
+
+/**
  * Prepare object for deletion. Method should return only
  * when object deletion is safe
  */
 void NetObj::prepareForDeletion()
 {
+   executeHookScript(L"ObjectDelete");
+
+   EventBuilder(getDeleteEventCode(), g_dwMgmtNode)
+      .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(L"objectName", m_name)
+      .param(L"objectClassName", getObjectClassName())
+      .param(L"primaryIpAddress", getPrimaryIpAddress())
+      .post();
+
    if (m_assetId != 0)
    {
       shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(m_assetId, OBJECT_ASSET));
