@@ -952,19 +952,19 @@ TCHAR *NXCPMessage::getFieldAsString(uint32_t fieldId, MemoryPool *pool, TCHAR *
  */
 char *NXCPMessage::getFieldAsMBString(uint32_t fieldId, char *buffer, size_t bufferSize) const
 {
-   if ((buffer != NULL) && (bufferSize == 0))
-      return NULL;   // non-sense combination
+   if ((buffer != nullptr) && (bufferSize == 0))
+      return nullptr;   // non-sense combination
 
-   char *str = NULL;
+   char *str = nullptr;
    BYTE ftype;
    void *value = get(fieldId, 0xFF, &ftype);
-   if (value != NULL)
+   if (value != nullptr)
    {
       if (ftype == NXCP_DT_STRING)
       {
-         if (buffer == NULL)
+         if (buffer == nullptr)
          {
-            str = static_cast<char*>(MemAlloc(*static_cast<UINT32*>(value) / 2 + 1));
+            str = static_cast<char*>(MemAlloc(*static_cast<uint32_t*>(value) / 2 + 1));
          }
          else
          {
@@ -979,7 +979,7 @@ char *NXCPMessage::getFieldAsMBString(uint32_t fieldId, char *buffer, size_t buf
       }
       else if (ftype == NXCP_DT_UTF8_STRING)
       {
-         if (buffer == NULL)
+         if (buffer == nullptr)
          {
             str = static_cast<char*>(MemAlloc(*static_cast<UINT32*>(value) + 1));
          }
@@ -988,19 +988,19 @@ char *NXCPMessage::getFieldAsMBString(uint32_t fieldId, char *buffer, size_t buf
             str = buffer;
          }
 
-         size_t length = (buffer == NULL) ?
+         size_t length = (buffer == nullptr) ?
                static_cast<size_t>(*static_cast<UINT32*>(value)) :
                std::min(static_cast<size_t>(*static_cast<UINT32*>(value)), bufferSize - 1);
          length = utf8_to_mb(static_cast<char*>(value) + 4, (int)length, str, (int)length + 1);
          str[length] = 0;
       }
-      else if (buffer != NULL)
+      else if (buffer != nullptr)
       {
          str = buffer;
          str[0] = 0;
       }
    }
-   else if (buffer != NULL)
+   else if (buffer != nullptr)
    {
       str = buffer;
       str[0] = 0;
@@ -1150,6 +1150,21 @@ uuid NXCPMessage::getFieldAsGUID(uint32_t fieldId) const
       return uuid::parse(buffer);
    }
    return uuid::NULL_UUID;
+}
+
+/**
+ * Get field as JSON object
+ * Returns nullptr if field not found, is not an UTF-8 string, or on JSON parsing error
+ */
+json_t *NXCPMessage::getFieldAsJson(uint32_t fieldId) const
+{
+   void *value = get(fieldId, NXCP_DT_UTF8_STRING, nullptr);
+   if (value == nullptr)
+      return nullptr;
+
+   uint32_t length = *static_cast<uint32_t*>(value);
+   json_error_t error;
+   return json_loadb(static_cast<char*>(value) + 4, length, 0, &error);
 }
 
 /**
@@ -1338,6 +1353,16 @@ void NXCPMessage::setField(uint32_t fieldId, const StringSet &data)
       stream.writeNXCPString(item);
    }
    set(fieldId, NXCP_DT_BINARY, stream.buffer(), false, stream.size());
+}
+
+/**
+ * set string field to a JSON object
+ */
+void NXCPMessage::setField(uint32_t fieldId, json_t *json)
+{
+   char *s = json_dumps(json, 0);
+   setFieldFromUtf8String(fieldId, s);
+   MemFree(s);
 }
 
 /**
