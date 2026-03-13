@@ -1154,6 +1154,20 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClass
 }
 
 /**
+ * Find object by ID
+ */
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, std::initializer_list<int> objectClassHints)
+{
+   shared_ptr<NetObj> object = g_idxObjectById.get(id);
+   if (object == nullptr)
+      return object;
+   for(int objectClassHint : objectClassHints)
+      if (objectClassHint == object->getObjectClass())
+         return object;
+   return shared_ptr<NetObj>();
+}
+
+/**
  * Filter for matching object name by regex and its class
  *
  * @param object
