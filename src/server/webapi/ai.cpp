@@ -180,6 +180,11 @@ int H_AiChatGetStatus(Context *context)
             json_t *question = chat->getPendingQuestion();
             json_object_set_new(response, "pendingQuestion", question != nullptr ? question : json_null());
          }
+         // Include currently executing function name if any
+         {
+            const char *currentFunction = chat->getCurrentFunction();
+            json_object_set_new(response, "currentFunction", currentFunction != nullptr ? json_string(currentFunction) : json_null());
+         }
          break;
 
       case AsyncRequestState::COMPLETED:

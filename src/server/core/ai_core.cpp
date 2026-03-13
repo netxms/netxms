@@ -736,6 +736,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    m_pendingQuestion = nullptr;
    m_asyncState = AsyncRequestState::IDLE;
    m_asyncResult = nullptr;
+   m_currentFunction = nullptr;
    m_isInteractive = isInteractive;
    strlcpy(m_slot, isInteractive ? "interactive" : "background", sizeof(m_slot));
 
@@ -1378,6 +1379,7 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
    }
    nxlog_debug_tag(DEBUG_TAG, 5, L"Final LLM response %s", (answer != nullptr) ? L"received" : L"not received");
 
+   m_currentFunction = nullptr;
    s_currentChat = nullptr;
    return answer;
 }
@@ -1452,6 +1454,7 @@ std::string Chat::callFunction(const char *name, json_t *arguments)
    if (it != m_functions.end())
    {
       shared_ptr<AssistantFunction> function = it->second;
+      m_currentFunction = function->name.c_str();
       return CallAIAssistantFunction(function, name, arguments, m_userId);
    }
    return std::string("Error: function not found");

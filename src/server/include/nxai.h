@@ -177,6 +177,7 @@ private:
    Mutex m_questionMutex;
    AsyncRequestState m_asyncState;
    char *m_asyncResult;
+   const char *m_currentFunction;
    Mutex m_asyncMutex;
    bool m_isInteractive;
    char m_slot[32];  // Provider slot (e.g., "interactive", "background", "fast", "analytical")
@@ -223,6 +224,7 @@ public:
 
    bool startAsyncRequest(const char *prompt, int maxIterations, const char *context = nullptr);
    AsyncRequestState getAsyncState() const { return m_asyncState; }
+   const char *getCurrentFunction() const { return m_currentFunction; }
    char *takeAsyncResult();
 
    void clear();

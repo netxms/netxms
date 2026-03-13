@@ -439,6 +439,10 @@ paths:
                   pendingQuestion:
                     description: Pending question from AI (present when status is processing)
                     nullable: true
+                  currentFunction:
+                    type: string
+                    description: Name of the function currently being executed by AI (present when status is processing)
+                    nullable: true
                   response:
                     type: string
                     description: AI response text (present when status is completed)
