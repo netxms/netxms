@@ -1229,6 +1229,80 @@ paths:
                       description: Textual description of agent error code (if applicable)
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/execute-dashboard-script:
+    post:
+      summary: Execute dashboard element script within context of given object
+      description: Execute an NXSL script embedded in a dashboard element against a context object and return the result as a string map.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Dashboard or dashboard template object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - objectId
+                - elementIndex
+              properties:
+                objectId:
+                  type: integer
+                  description: Context object ID for script execution
+                elementIndex:
+                  type: integer
+                  description: Index of the dashboard element containing the script
+      responses:
+        '200':
+          description: Script executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Map of string key-value pairs with script execution results
+        '400':
+          description: Invalid arguments or script compilation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  diagnostic:
+                    type: object
+                    description: Additional diagnostic information, if available
+                  reason:
+                    type: string
+                    description: Failure reason
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the dashboard or context object
+        '404':
+          description: Dashboard or context object with given ID does not exist
+        '500':
+          description: Script execution failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  diagnostic:
+                    type: object
+                    description: Additional diagnostic information, if available
+                  reason:
+                    type: string
+                    description: Failure reason
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/execute-script:
     post:
       summary: Execute script within context of given object

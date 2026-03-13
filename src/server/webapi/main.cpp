@@ -81,6 +81,7 @@ int H_GrafanaGetObjectsStatus(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
+int H_ObjectExecuteDashboardScript(Context *context);
 int H_ObjectExecuteScript(Context *context);
 int H_ObjectExpandText(Context *context);
 int H_ObjectQuery(Context *context);
@@ -306,6 +307,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
+      .build();
+   RouteBuilder("v1/objects/:object-id/execute-dashboard-script")
+      .POST(H_ObjectExecuteDashboardScript)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-script")
       .POST(H_ObjectExecuteScript)

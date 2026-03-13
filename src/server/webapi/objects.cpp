@@ -458,6 +458,153 @@ int H_ObjectExecuteAgentCommand(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/execute-dashboard-script
+ */
+int H_ObjectExecuteDashboardScript(Context *context)
+{
+   uint32_t dashboardId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (dashboardId == 0)
+      return 400;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteDashboardScript: empty request"));
+      return 400;
+   }
+
+   uint32_t objectId = json_object_get_uint32(request, "objectId", 0);
+   if (objectId == 0)
+   {
+      objectId = dashboardId;
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteDashboardScript: using dashboard object as context object"));
+   }
+
+   int elementIndex = json_object_get_int32(request, "elementIndex", -1);
+   if (elementIndex < 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteDashboardScript: missing or invalid elementIndex"));
+      context->setErrorResponse("Missing or invalid elementIndex");
+      return 400;
+   }
+
+   shared_ptr<NetObj> dashboard = FindObjectById(dashboardId, { OBJECT_DASHBOARD, OBJECT_DASHBOARDTEMPLATE });
+   if (dashboard == nullptr)
+   {
+      context->setErrorResponse("Object not found or is not a dashboard");
+      return 404;
+   }
+
+   shared_ptr<NetObj> contextObject = FindObjectById(objectId);
+   if (contextObject == nullptr)
+   {
+      context->setErrorResponse("Context object not found");
+      return 400;
+   }
+
+   if (!((contextObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ) ||
+          (contextObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DELEGATED_READ) &&
+           static_cast<DashboardBase&>(*dashboard).isElementContextObject(elementIndex, contextObject->getId()))) &&
+         dashboard->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ)))
+   {
+      if (contextObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      {
+         context->writeAuditLog(AUDIT_OBJECTS, false, contextObject->getId(), _T("Access denied on dashboard script execution for context object %s [%u]"), contextObject->getName(), contextObject->getId());
+         context->setErrorResponse("Access denied on context object");
+      }
+      else if (dashboard->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      {
+         context->writeAuditLog(AUDIT_OBJECTS, false, dashboard->getId(), _T("Access denied on dashboard script execution for dashboard %s [%u]"), dashboard->getName(), dashboard->getId());
+         context->setErrorResponse("Access denied on dashboard");
+      }
+      return 403;
+   }
+
+   String script = static_cast<DashboardBase&>(*dashboard).getElementScript(elementIndex);
+   if (script.isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteDashboardScript: empty script at element index %d"), elementIndex);
+      context->setErrorResponse("Script is empty or element is not a scripted element");
+      return 400;
+   }
+
+   NXSL_CompilationDiagnostic diag;
+   NXSL_VM *vm = NXSLCompileAndCreateVM(script, new NXSL_ServerEnv(), &diag);
+   if (vm == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectExecuteDashboardScript: script compilation error (%s)"), diag.errorText.cstr());
+      json_t *response = json_object();
+      json_object_set_new(response, "reason", json_string("Script compilation failed"));
+      json_object_set_new(response, "diagnostic", diag.toJson());
+      context->setResponseData(response);
+      json_decref(response);
+      return 400;
+   }
+
+   SetupServerScriptVM(vm, contextObject, shared_ptr<DCObjectInfo>());
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, contextObject->getId(), nullptr, script, 'T',
+      _T("Executed %s [%u] dashboard element %d script for object %s [%u]"),
+      dashboard->getName(), dashboard->getId(), elementIndex, contextObject->getName(), contextObject->getId());
+
+   int responseCode;
+   if (vm->run())
+   {
+      responseCode = 200;
+      json_t *response = json_object();
+      NXSL_Value *result = vm->getResult();
+      if (result->isHashMap())
+      {
+         json_object_set_new(response, "result", result->toJson());
+      }
+      else if (result->isArray())
+      {
+         json_t *map = json_object();
+         NXSL_Array *a = result->getValueAsArray();
+         for(int i = 0; i < a->size(); i++)
+         {
+            NXSL_Value *e = a->getByPosition(i);
+            char key[16];
+            snprintf(key, 16, "%d", i + 1);
+            if (e->isHashMap())
+            {
+               json_t *json = e->toJson();
+               char *jsonText = json_dumps(json, 0);
+               json_object_set_new(map, key, json_string(jsonText));
+               MemFree(jsonText);
+               json_decref(json);
+            }
+            else
+            {
+               json_object_set_new(map, key, json_string_t(e->getValueAsCString()));
+            }
+         }
+         json_object_set_new(response, "result", map);
+      }
+      else
+      {
+         json_t *map = json_object();
+         json_object_set_new(map, "1", json_string_t(result->getValueAsCString()));
+         json_object_set_new(response, "result", map);
+      }
+      context->setResponseData(response);
+      json_decref(response);
+   }
+   else
+   {
+      responseCode = 500;
+      json_t *response = json_object();
+      json_object_set_new(response, "reason", json_string("Script execution failed"));
+      json_object_set_new(response, "diagnostic", vm->getErrorJson());
+      context->setResponseData(response);
+      json_decref(response);
+   }
+
+   delete vm;
+   return responseCode;
+}
+
+/**
  * Handler for /v1/objects/:object-id/execute-script
  */
 int H_ObjectExecuteScript(Context *context)
