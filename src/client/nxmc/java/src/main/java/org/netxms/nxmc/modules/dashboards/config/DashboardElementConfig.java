@@ -35,7 +35,7 @@ import com.google.gson.Gson;
 @Root(name = "element", strict = false)
 public class DashboardElementConfig
 {
-	private DashboardElementLayout layout;
+	private transient DashboardElementLayout layout;
 
    @Element(required = false)
    private String title = ""; //$NON-NLS-1$
