@@ -159,8 +159,15 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(descriptor->expirationTime));
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, descriptor->description, DB_BIND_STATIC);
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, BinToStr(descriptor->hash, SHA256_DIGEST_SIZE, hashText), DB_BIND_STATIC);
-         DBExecute(hStmt);
+         if (!DBExecute(hStmt))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to save persistent authentication token [%u] for user [%u] to database"), descriptor->tokenId, descriptor->userId);
+         }
          DBFreeStatement(hStmt);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to save persistent authentication token [%u] for user [%u] to database"), descriptor->tokenId, descriptor->userId);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
@@ -291,11 +298,12 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
    }
    if (validFor > 0)
    {
-      // Extend expiration time but do not exceed maximum expiration time (if set)
+      // Extend expiration time but do not exceed maximum expiration time (if set) and never shorten existing expiration
       time_t newExpiration = now + validFor;
       if ((descriptor->maxExpirationTime > 0) && (newExpiration > descriptor->maxExpirationTime))
          newExpiration = descriptor->maxExpirationTime;
-      descriptor->expirationTime = newExpiration;
+      if (newExpiration > descriptor->expirationTime)
+         descriptor->expirationTime = newExpiration;
    }
    *userId = descriptor->userId;
    if (serviceToken != nullptr)

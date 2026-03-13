@@ -141,7 +141,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       if (type == AuthenticationTokenType::PERSISTENT)
          maxExpirationTime = expirationTime;
       else if (maxLifetime > 0)
-         maxExpirationTime = issuingTime + ((validFor < maxLifetime) ? validFor : maxLifetime);
+         maxExpirationTime = issuingTime + maxLifetime;
       else
          maxExpirationTime = 0;  // No absolute limit
       persistent = (type == AuthenticationTokenType::PERSISTENT);
