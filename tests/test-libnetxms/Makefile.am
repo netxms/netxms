@@ -14,4 +14,10 @@ test_libnetxms_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/bui
 test_libnetxms_LDFLAGS = @EXEC_LDFLAGS@
 test_libnetxms_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 
+if USE_INTERNAL_JANSSON
+test_libnetxms_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+test_libnetxms_LDADD += -ljansson
+endif
+
 EXTRA_DIST = test-libnetxms.vcxproj test-libnetxms.vcxproj.filters

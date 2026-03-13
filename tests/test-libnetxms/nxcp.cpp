@@ -156,6 +156,21 @@ void TestMessageClass()
    AssertTrue(!safe_strcmp(msg.getFieldAsMBString(12, buffer2, 64), "test text 3"));
    AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(12, buffer2, 64), "test text 3"));
 
+   // Test JSON serialization
+   json_t *json = json_object();
+   json_object_set_new(json, "key1", json_string("value1"));
+   json_object_set_new(json, "key2", json_integer(42));
+   msg.setField(100, json);
+   json_decref(json);
+   json_t *jsonOut = msg.getFieldAsJson(100);
+   AssertNotNull(jsonOut);
+   const char *s = json_object_get_string_utf8(jsonOut, "key1", nullptr);
+   AssertNotNull(s);
+   AssertTrue(!strcmp(s, "value1"));
+   int i = json_object_get_int32(jsonOut, "key2");
+   AssertTrue(i == 42);
+   json_decref(jsonOut);
+
    // Test UTF8-STRING to STRING conversion on protocol version change
    msg.setProtocolVersion(4);
    AssertTrue(!safe_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text 2")));
