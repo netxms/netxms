@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include "netxms-regex.h"
-
-static PCRE *nodeRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("\"(?:nodeId|objectId|baseObjectId|rootObjectId|contextObjectId)\"\\s*:\\s*(\\d+)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
-static PCRE *dciRegexp = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("\"dciId\"\\s*:\\s*(\\d+)")), PCRE_COMMON_FLAGS | PCRE_CASELESS, nullptr, nullptr, nullptr);
-
 
 /**
  * Default constructor
@@ -101,8 +96,8 @@ bool DashboardBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *p
 
    m_status = STATUS_NORMAL;
 
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT element_type,element_data,layout_data FROM dashboard_elements WHERE dashboard_id=%u ORDER BY element_id"), id);
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"SELECT element_type,element_data,layout_data FROM dashboard_elements WHERE dashboard_id=%u ORDER BY element_id", id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
@@ -112,8 +107,8 @@ bool DashboardBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *p
    {
       DashboardElement *e = new DashboardElement;
       e->m_type = DBGetFieldInt32(hResult, i, 0);
-      e->m_data = DBGetField(hResult, i, 1, nullptr, 0);
-      e->m_layout = DBGetField(hResult, i, 2, nullptr, 0);
+      e->m_data = DBGetFieldJson(hResult, i, 1);
+      e->m_layout = DBGetFieldJson(hResult, i, 2);
       m_elements.add(e);
       updateObjectAndDciList(e);
    }
@@ -192,8 +187,8 @@ void DashboardBase::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    {
       DashboardElement *element = m_elements.get(i);
       msg->setField(fieldId++, static_cast<uint16_t>(element->m_type));
-      msg->setField(fieldId++, CHECK_NULL_EX(element->m_data));
-      msg->setField(fieldId++, CHECK_NULL_EX(element->m_layout));
+      msg->setField(fieldId++, element->m_data);
+      msg->setField(fieldId++, element->m_layout);
       fieldId += 7;
    }
 }
@@ -225,14 +220,14 @@ uint32_t DashboardBase::modifyFromMessageInternal(const NXCPMessage& msg, Client
       m_objectSet.clear();
       m_dciSet.clear();
 
-      int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
+      int32_t count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          DashboardElement *e = new DashboardElement;
          e->m_type = msg.getFieldAsInt16(fieldId++);
-         e->m_data = msg.getFieldAsString(fieldId++);
-         e->m_layout = msg.getFieldAsString(fieldId++);
+         e->m_data = msg.getFieldAsJson(fieldId++);
+         e->m_layout = msg.getFieldAsJson(fieldId++);
          fieldId += 7;
          m_elements.add(e);
          updateObjectAndDciList(e);
@@ -242,62 +237,55 @@ uint32_t DashboardBase::modifyFromMessageInternal(const NXCPMessage& msg, Client
    return super::modifyFromMessageInternal(msg, session);
 }
 
+/**
+ * Scan element data for object and DCI IDs and update corresponding lists
+ */
 void DashboardBase::updateObjectAndDciList(DashboardElement *e)
 {
-   if (nodeRegexp != nullptr)
+   if (e->m_data == nullptr)
+      return;
+
+   std::function<void (json_t *)> scan = [this, &scan](json_t *node) -> void
    {
-      int cgcount = 0;
-      int ofset = 0;
-      do
+      if (json_is_object(node))
       {
-         int offsets[9];
-         cgcount = _pcre_exec_t(nodeRegexp, nullptr, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
-         if (cgcount > 0)
+         const char *key;
+         json_t *value;
+         json_object_foreach(node, key, value)
          {
-            int i = offsets[2] == -1 ? 2 : 1;
-            TCHAR num[16];
-            int len = MIN(offsets[i * 2 + 1] - offsets[i * 2], 15);
-            memcpy(num, &e->m_data[offsets[i * 2]], len * sizeof(TCHAR));
-            num[len] = 0;
-
-            TCHAR *eptr;
-            uint32_t n = _tcstoul(num, &eptr, 10);
-            if (*eptr == 0)
+            if (json_is_integer(value))
             {
-               m_objectSet.put(n);
+               if (!strcmp(key, "nodeId") || !strcmp(key, "objectId") || !strcmp(key, "baseObjectId") ||
+                   !strcmp(key, "rootObjectId") || !strcmp(key, "contextObjectId"))
+               {
+                  m_objectSet.put(static_cast<uint32_t>(json_integer_value(value)));
+               }
+               else if (!strcmp(key, "dciId"))
+               {
+                  m_dciSet.put(static_cast<uint32_t>(json_integer_value(value)));
+               }
             }
-            ofset = offsets[1];
+            else if (json_is_object(value) || json_is_array(value))
+            {
+               scan(value);
+            }
          }
-
-      } while(cgcount > 0);
-   }
-
-   if (dciRegexp != nullptr)
-   {
-      int cgcount = 0;
-      int ofset = 0;
-      do
+      }
+      else if (json_is_array(node))
       {
-         int offsets[9];
-         cgcount = _pcre_exec_t(dciRegexp, nullptr, reinterpret_cast<const PCRE_TCHAR*>(e->m_data), static_cast<int>(_tcslen(e->m_data)), ofset, 0, offsets, 9);
-         if (cgcount > 0)
+         size_t index;
+         json_t *value;
+         json_array_foreach(node, index, value)
          {
-            TCHAR num[16];
-            int i = offsets[2] == -1 ? 2 : 1;
-            int len = MIN(offsets[i * 2 + 1] - offsets[i * 2], 15);
-            memcpy(num, &e->m_data[offsets[i * 2]], len * sizeof(TCHAR));
-            num[len] = 0;
-
-            TCHAR *eptr;
-            uint32_t n = _tcstoul(num, &eptr, 10);
-            if (*eptr == 0)
+            if (json_is_object(value) || json_is_array(value))
             {
-               m_dciSet.put(n);
+               scan(value);
             }
-            ofset = offsets[1];
          }
-      } while(cgcount > 0);
-   }
+      }
+   };
+
+   scan(e->m_data);
 }
 
 /**
@@ -334,22 +322,10 @@ String DashboardBase::getElementScript(int index) const
    if (m_elements.size() > index)
    {
       DashboardElement *e = m_elements.get(index);
-      if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
+      if ((e->m_type == 30 || e->m_type == 31 || e->m_type == 6) && json_is_object(e->m_data))
       {
-         char *data = UTF8StringFromTString(e->m_data);
-         json_error_t error;
-         json_t *element = json_loads(data, 0, &error);
-         if (element != nullptr)
-         {
-            const char *source = json_object_get_string_utf8(element, "script", "");
-            script.appendUtf8String(source);
-            json_decref(element);
-         }
-         else
-         {
-            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::getElementScript(%s [%u]): failed to load JSON for %d element (%hs)"), m_name, m_id, index, error.text);
-         }
-         MemFree(data);
+         const char *source = json_object_get_string_utf8(e->m_data, "script", "");
+         script.appendUtf8String(source);
       }
       else
       {
@@ -374,22 +350,10 @@ bool DashboardBase::isElementContextObject(int index, uint32_t contextObject) co
    if (m_elements.size() > index)
    {
       DashboardElement *e = m_elements.get(index);
-      if (e->m_type == 30 || e->m_type == 31 || e->m_type == 6)
+      if ((e->m_type == 30 || e->m_type == 31 || e->m_type == 6) && json_is_object(e->m_data))
       {
-         char *data = UTF8StringFromTString(e->m_data);
-         json_error_t error;
-         json_t *element = json_loads(data, 0, &error);
-         if (element != nullptr)
-         {
-            uint32_t objectId = json_object_get_uint32(element, "objectId", 0);
-            isContextObject = (objectId == contextObject);
-            json_decref(element);
-         }
-         else
-         {
-            nxlog_debug_tag(_T("dashboard"), 1, _T("Dashboard::isElementContextObject(%s [%u]): failed to load JSON for %d element"), m_name, m_id, index);
-         }
-         MemFree(data);
+         uint32_t objectId = json_object_get_uint32(e->m_data, "objectId", 0);
+         isContextObject = (objectId == contextObject);
       }
       else
       {
@@ -445,8 +409,8 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 	if (!super::loadFromDatabase(hdb, id, preparedStatements))
 		return false;
 
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT num_columns,display_priority,forced_context_object_id FROM dashboards WHERE id=%u"), id);
+	wchar_t query[256];
+	nx_swprintf(query, 256, L"SELECT num_columns,display_priority,forced_context_object_id FROM dashboards WHERE id=%u", id);
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == nullptr)
 		return false;

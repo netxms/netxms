@@ -5472,8 +5472,8 @@ public:
 struct NXCORE_EXPORTABLE DashboardElement
 {
    int m_type;
-   wchar_t *m_data;
-   wchar_t *m_layout;
+   json_t *m_data;
+   json_t *m_layout;
 
    DashboardElement()
    {
@@ -5485,22 +5485,22 @@ struct NXCORE_EXPORTABLE DashboardElement
    DashboardElement(const DashboardElement &element)
    {
       m_type = element.m_type;
-      m_data = MemCopyString(element.m_data);
-      m_layout = MemCopyString(element.m_layout);
+      m_data = json_deep_copy(element.m_data);
+      m_layout = json_deep_copy(element.m_layout);
    }
 
    ~DashboardElement()
    {
-      MemFree(m_data);
-      MemFree(m_layout);
+      json_decref(m_data);
+      json_decref(m_layout);
    }
 
    json_t *toJson()
    {
       json_t *root = json_object();
       json_object_set_new(root, "type", json_integer(m_type));
-      json_object_set_new(root, "data", json_string_t(m_data));
-      json_object_set_new(root, "layout", json_string_t(m_layout));
+      json_object_set_new(root, "data", json_deep_copy(m_data));
+      json_object_set_new(root, "layout", json_deep_copy(m_layout));
       return root;
    }
 };
