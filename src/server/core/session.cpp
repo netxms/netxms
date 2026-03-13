@@ -12611,9 +12611,7 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
    uint32_t executorId;
 
    shared_ptr<NetObj> contextObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARD);
-   if (dashboard == nullptr)
-      dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), OBJECT_DASHBOARDTEMPLATE);
+   shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), { OBJECT_DASHBOARD, OBJECT_DASHBOARDTEMPLATE });
    int elementIndex = request.getFieldAsUInt32(VID_ELEMENT_INDEX);
    if (dashboard != nullptr && contextObject != nullptr)
    {
@@ -14524,9 +14522,8 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Get object id and check object class and access rights
-	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr && (object->getObjectClass() == OBJECT_NODE || object->getObjectClass() == OBJECT_ACCESSPOINT))
+	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), { OBJECT_NODE, OBJECT_ACCESSPOINT });
+   if (object != nullptr)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
@@ -14579,10 +14576,10 @@ void ClientSession::getSummaryTables(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT id,menu_path,title,flags,guid FROM dci_summary_tables");
    if (hResult != nullptr)
    {
-      TCHAR buffer[256];
+      wchar_t buffer[256];
       int32_t count = DBGetNumRows(hResult);
       response.setField(VID_NUM_ELEMENTS, count);
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -14617,7 +14614,7 @@ void ClientSession::getSummaryTableDetails(const NXCPMessage& request)
 	{
       LONG id = (LONG)request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns,guid,table_dci_name FROM dci_summary_tables WHERE id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT menu_path,title,node_filter,flags,columns,guid,table_dci_name FROM dci_summary_tables WHERE id=?");
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
