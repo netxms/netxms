@@ -445,12 +445,20 @@ public class ObjectQueryManager extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             monitor.beginTask(getName(), 100);
+            final StringBuilder outputBuffer = new StringBuilder();
             final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), 0, null, null, inputValues, 0, true, 0, (p) -> {
                monitor.worked(p - progress);
                progress = p;
-            }, null);
+            }, null, new org.netxms.client.TextOutputAdapter() {
+               @Override
+               public void messageReceived(String text)
+               {
+                  outputBuffer.append(text);
+               }
+            });
             monitor.done();
-            runInUIThread(() -> openView(new ObjectQueryResultView(query.getName(), resultSet)));
+            final String output = outputBuffer.toString();
+            runInUIThread(() -> openView(new ObjectQueryResultView(query.getName(), resultSet, output)));
          }
 
          /**

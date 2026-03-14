@@ -3278,6 +3278,14 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
          sendMessage(msg);
       } : std::function<void(int)>();
 
+   NXCPMessage outputMsg(CMD_EXECUTE_SCRIPT_UPDATE, requestId);
+   std::function<void(const TCHAR*)> outputCallback =
+      [&outputMsg, this] (const TCHAR *text) -> void
+      {
+         outputMsg.setField(VID_MESSAGE, text);
+         sendMessage(outputMsg);
+      };
+
    wchar_t *query = request.getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
@@ -3286,7 +3294,11 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
    StringMap metadata;
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId,
       errorMessage, 1024, progressCallback, request.getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields,
-      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT), &metadata);
+      request.getFieldAsUInt32(VID_CONTEXT_OBJECT_ID), request.getFieldAsUInt32(VID_RECORD_LIMIT), &metadata, outputCallback);
+
+   outputMsg.setEndOfSequence();
+   sendMessage(outputMsg);
+
    if (objects != nullptr)
    {
       Buffer<uint32_t, 1024> idList(objects->size());

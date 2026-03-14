@@ -4446,6 +4446,32 @@ public class NXCSession
    public List<ObjectQueryResult> queryObjectDetails(String query, long rootObjectId, List<String> properties, List<String> orderBy, Map<String, String> inputFields, long contextObjectId,
          boolean readAllComputedProperties, int limit, Consumer<Integer> progressCallback, Map<String, String> metadata) throws IOException, NXCException
    {
+      return queryObjectDetails(query, rootObjectId, properties, orderBy, inputFields, contextObjectId, readAllComputedProperties, limit, progressCallback, metadata, null);
+   }
+
+   /**
+    * Query objects on server side and read certain object properties, with optional text output listener for receiving script
+    * output (from print/trace calls). All other parameters are the same as in
+    * {@link #queryObjectDetails(String, long, List, List, Map, long, boolean, int, Consumer, Map)}.
+    *
+    * @param query query to execute
+    * @param rootObjectId ID of root object or 0 to query all objects
+    * @param properties object properties to read
+    * @param orderBy list of properties for ordering result set (can be null)
+    * @param inputFields set of input fields provided by user (can be null)
+    * @param contextObjectId ID of context object, 0 if none
+    * @param readAllComputedProperties if set to true, query will return all computed properties
+    * @param limit limit number of records (0 for unlimited)
+    * @param progressCallback optional progress callback
+    * @param metadata optional map to receive query metadata (can be null)
+    * @param outputListener optional listener for script output (can be null)
+    * @return list of matching objects
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ObjectQueryResult> queryObjectDetails(String query, long rootObjectId, List<String> properties, List<String> orderBy, Map<String, String> inputFields, long contextObjectId,
+         boolean readAllComputedProperties, int limit, Consumer<Integer> progressCallback, Map<String, String> metadata, TextOutputListener outputListener) throws IOException, NXCException
+   {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       request.setField(NXCPCodes.VID_QUERY, query);
       request.setFieldUInt32(NXCPCodes.VID_ROOT, rootObjectId);
@@ -4471,11 +4497,22 @@ public class NXCSession
          });
       }
 
+      ScriptExecutionUpdateHandler outputHandler = null;
+      if (outputListener != null)
+      {
+         outputHandler = new ScriptExecutionUpdateHandler(outputListener);
+         addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, request.getMessageId(), outputHandler);
+      }
+
       try
       {
          sendMessage(request);
 
          NXCPMessage response = waitForRCC(request.getMessageId());
+
+         if (outputHandler != null)
+            outputHandler.waitForCompletion();
+
          long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
          syncMissingObjects(objects, NXCSession.OBJECT_SYNC_WAIT);
          List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
@@ -4500,6 +4537,8 @@ public class NXCSession
       finally
       {
          removeMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId());
+         if (outputListener != null)
+            removeMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, request.getMessageId());
       }
    }
 

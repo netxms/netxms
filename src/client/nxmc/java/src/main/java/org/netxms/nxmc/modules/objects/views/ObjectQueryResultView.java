@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
@@ -49,21 +50,31 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.TextConsole;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryResultLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Result view for object query
  */
 public class ObjectQueryResultView extends ConfigurationView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectQueryResultView.class);
+
    private List<ObjectQueryResult> resultSet;
+   private String consoleOutput;
+   private Composite contentArea;
+   private SashForm sashForm;
    private SortableTableViewer viewer;
+   private TextConsole console;
    private Action actionExportToCSV;
    private Action actionCopyToClipboard;
    private Action actionCopySelectionToClipboard;
+   private Action actionToggleConsole;
 
    /**
     * Default constructor for cloning.
@@ -78,11 +89,13 @@ public class ObjectQueryResultView extends ConfigurationView
     *
     * @param queryName query name
     * @param resultSet query result set
+    * @param consoleOutput script output text (can be null or empty)
     */
-   public ObjectQueryResultView(String queryName, List<ObjectQueryResult> resultSet)
+   public ObjectQueryResultView(String queryName, List<ObjectQueryResult> resultSet, String consoleOutput)
    {
       super(queryName, ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results." + queryName + "." + System.currentTimeMillis(), false);
       this.resultSet = resultSet;
+      this.consoleOutput = consoleOutput;
    }
 
    /**
@@ -93,6 +106,7 @@ public class ObjectQueryResultView extends ConfigurationView
    {
       ObjectQueryResultView view = (ObjectQueryResultView)super.cloneView();
       view.resultSet = this.resultSet;
+      view.consoleOutput = this.consoleOutput;
       return view;
    }
 
@@ -117,6 +131,8 @@ public class ObjectQueryResultView extends ConfigurationView
          memento.set("result." + i + ".object", r.getObject().getObjectId());
       }
       memento.set("result.size", resultSet.size());
+      if (consoleOutput != null && !consoleOutput.isEmpty())
+         memento.set("consoleOutput", consoleOutput);
    }
 
    /**
@@ -146,6 +162,7 @@ public class ObjectQueryResultView extends ConfigurationView
          }
          resultSet.add(new ObjectQueryResult(object, properties));
       }
+      consoleOutput = memento.getAsString("consoleOutput");
    }
 
    /**
@@ -154,6 +171,8 @@ public class ObjectQueryResultView extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
+      contentArea = parent;
+
       viewer = new SortableTableViewer(parent, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectQueryResultLabelProvider(viewer.getTable()));
@@ -204,6 +223,59 @@ public class ObjectQueryResultView extends ConfigurationView
 
       actionCopySelectionToClipboard = new CopyTableRowsAction(viewer, true);
       actionCopySelectionToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
+
+      actionToggleConsole = new Action(i18n.tr("Show &output console"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            toggleConsole();
+         }
+      };
+      actionToggleConsole.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"));
+   }
+
+   /**
+    * Show output console
+    */
+   private void showConsole()
+   {
+      if (console != null)
+         return;
+
+      sashForm = new SashForm(contentArea, SWT.VERTICAL);
+      viewer.getTable().setParent(sashForm);
+      console = new TextConsole(sashForm, SWT.BORDER);
+      if (consoleOutput != null && !consoleOutput.isEmpty())
+         console.append(consoleOutput);
+      sashForm.setWeights(new int[] { 700, 300 });
+      contentArea.layout(true, true);
+   }
+
+   /**
+    * Hide output console
+    */
+   private void hideConsole()
+   {
+      if (console == null)
+         return;
+
+      viewer.getTable().setParent(contentArea);
+      console.dispose();
+      console = null;
+      sashForm.dispose();
+      sashForm = null;
+      contentArea.layout(true, true);
+   }
+
+   /**
+    * Toggle console visibility
+    */
+   private void toggleConsole()
+   {
+      if (console != null)
+         hideConsole();
+      else
+         showConsole();
    }
 
    /**
@@ -214,6 +286,7 @@ public class ObjectQueryResultView extends ConfigurationView
    {
       manager.add(actionCopyToClipboard);
       manager.add(actionExportToCSV);
+      manager.add(actionToggleConsole);
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
@@ -230,6 +303,7 @@ public class ObjectQueryResultView extends ConfigurationView
    {
       manager.add(actionCopyToClipboard);
       manager.add(actionExportToCSV);
+      manager.add(actionToggleConsole);
    }
 
    /**

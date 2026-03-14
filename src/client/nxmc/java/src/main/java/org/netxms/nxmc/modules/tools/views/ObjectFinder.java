@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,6 +98,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
@@ -310,7 +311,12 @@ public class ObjectFinder extends View
    private Action actionSaveAs;
    private Action actionExportToCSV;
    private Action actionExportAllToCSV;
+   private Action actionToggleConsole;
    private IntermediateSelectionProvider resultSelectionProvider;
+   private Composite resultArea;
+   private SashForm resultSashForm;
+   private TextConsole console;
+   private String lastConsoleOutput;
    private List<ObjectQueryResult> searchResult = new ArrayList<ObjectQueryResult>();
    private Map<String, String> savedMetadata = new HashMap<String, String>();
    private boolean showStandardAttributes = true;
@@ -707,7 +713,7 @@ public class ObjectFinder extends View
 
       /*** Result view ***/
 
-      Composite resultArea = new Composite(splitter, SWT.NONE);
+      resultArea = new Composite(splitter, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -725,13 +731,15 @@ public class ObjectFinder extends View
       gd.horizontalAlignment = SWT.FILL;
       separator.setLayoutData(gd);
 
-      results = new SortableTableViewer(resultArea, defaultNames, defaultWidths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
+      resultSashForm = new SashForm(resultArea, SWT.VERTICAL);
+      resultSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      results = new SortableTableViewer(resultSashForm, defaultNames, defaultWidths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       if (!session.isZoningEnabled())
          results.removeColumnById(COL_ZONE);
       results.setContentProvider(new ArrayContentProvider());
       results.setLabelProvider(new ObjectSearchResultLabelProvider(results));
       results.setComparator(new ObjectSearchResultComparator());
-      results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       results.enableColumnReordering();
       WidgetHelper.restoreTableViewerSettings(results, "ResultTable");
 
@@ -827,6 +835,15 @@ public class ObjectFinder extends View
 
       actionExportToCSV = new ExportToCsvAction(this, results, true);
       actionExportAllToCSV = new ExportToCsvAction(this, results, false);
+
+      actionToggleConsole = new Action(i18n.tr("Show &output console"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            toggleConsole();
+         }
+      };
+      actionToggleConsole.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"));
    }
 
    /**
@@ -843,6 +860,7 @@ public class ObjectFinder extends View
          manager.add(showAllAction);
       manager.add(actionStartSearch);
       manager.add(actionSaveAs);
+      manager.add(actionToggleConsole);
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
@@ -855,6 +873,7 @@ public class ObjectFinder extends View
    {
       manager.add(actionStartSearch);
       manager.add(actionSaveAs);
+      manager.add(actionToggleConsole);
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
@@ -951,6 +970,7 @@ public class ObjectFinder extends View
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final Map<String, String> metadata = new HashMap<>();
+            final StringBuilder outputBuffer = new StringBuilder();
             final List<ObjectQueryResult> objects = session.queryObjectDetails(query, 0, null, null, null, 0, true, 0, (p) -> runInUIThread(() -> {
                long now = System.currentTimeMillis();
                if (now - lastUpdate > 1000)
@@ -960,10 +980,24 @@ public class ObjectFinder extends View
                   queryProgress.setSelection(p);
                   queryHeader.layout();
                }
-            }), metadata);
+            }), metadata, new org.netxms.client.TextOutputAdapter() {
+               @Override
+               public void messageReceived(String text)
+               {
+                  outputBuffer.append(text);
+               }
+            });
+            final String output = outputBuffer.toString();
             runInUIThread(() -> {
                queryStats.setText(i18n.tr("Query completed in {0} milliseconds, {1} objects found", System.currentTimeMillis() - startTime, objects.size()));
                updateResultTable(objects, metadata);
+               lastConsoleOutput = output;
+               if (console != null)
+               {
+                  console.clear();
+                  if (!output.isEmpty())
+                     console.append(output);
+               }
                queryEditor.setFocus();
             });
          }
@@ -997,6 +1031,26 @@ public class ObjectFinder extends View
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Toggle console visibility
+    */
+   private void toggleConsole()
+   {
+      if (console != null)
+      {
+         console.dispose();
+         console = null;
+      }
+      else
+      {
+         console = new TextConsole(resultSashForm, SWT.NONE);
+         if (lastConsoleOutput != null && !lastConsoleOutput.isEmpty())
+            console.append(lastConsoleOutput);
+         resultSashForm.setWeights(new int[] { 700, 300 });
+      }
+      resultArea.layout(true, true);
    }
 
    /**

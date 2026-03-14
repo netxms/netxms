@@ -25,6 +25,38 @@
 #define DEBUG_TAG _T("obj.query")
 
 /**
+ * NXSL environment with output redirected via callback
+ */
+class NXSL_OutputCallbackEnv : public NXSL_ServerEnv
+{
+private:
+   std::function<void(const TCHAR*)> m_callback;
+
+public:
+   NXSL_OutputCallbackEnv(std::function<void(const TCHAR*)> callback) : NXSL_ServerEnv(), m_callback(callback) {}
+
+   virtual void print(const TCHAR *text) override
+   {
+      if (m_callback != nullptr)
+         m_callback(text);
+   }
+
+   virtual void trace(int level, const TCHAR *text) override
+   {
+      if (m_callback != nullptr)
+      {
+         size_t len = wcslen(text);
+         Buffer<wchar_t, 1024> line(len + 2);
+         memcpy(line.buffer(), text, len * sizeof(TCHAR));
+         line[len] = L'\n';
+         line[len + 1] = 0;
+         m_callback(line);
+      }
+      NXSL_ServerEnv::trace(level, text);
+   }
+};
+
+/**
  * Index of predefined object queries
  */
 static SharedPointerIndex<ObjectQuery> s_objectQueries;
@@ -457,10 +489,12 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjec
  */
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const wchar_t *query, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
       std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,
-      const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit, StringMap *metadata)
+      const StringMap *inputFields, uint32_t contextObjectId, uint32_t limit, StringMap *metadata,
+      std::function<void(const TCHAR*)> outputCallback)
 {
    NXSL_CompilationDiagnostic diag;
-   NXSL_VM *vm = NXSLCompileAndCreateVM(query, new NXSL_ServerEnv(), &diag);
+   NXSL_Environment *env = (outputCallback != nullptr) ? static_cast<NXSL_Environment*>(new NXSL_OutputCallbackEnv(outputCallback)) : static_cast<NXSL_Environment*>(new NXSL_ServerEnv());
+   NXSL_VM *vm = NXSLCompileAndCreateVM(query, env, &diag);
    if (vm == nullptr)
    {
       wcslcpy(errorMessage, diag.errorText, errorMessageLen);
