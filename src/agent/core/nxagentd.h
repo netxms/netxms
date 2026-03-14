@@ -915,11 +915,13 @@ bool IsVNCServerRunning(const InetAddress& addr, uint16_t port);
 
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp);
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &parameters);
+void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &parameters, uint64_t targetServerId);
 void ForwardEvent(NXCPMessage *msg);
 void StartEventConnector();
 
 void StartPushConnector();
 bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp);
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp, uint64_t targetServerId);
 
 void StartControlConnector();
 bool SendControlMessage(NXCPMessage *msg);

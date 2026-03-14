@@ -38,6 +38,27 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V17 to V18
+ */
+static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(
+      _T("CREATE TABLE agent_policy_new (")
+      _T("  guid varchar(36) not null,")
+      _T("  type varchar(31) not null,")
+      _T("  server_info varchar(64) null,")
+      _T("  server_id number(20) not null,")
+      _T("  version integer not null,")
+      _T("  content_hash varchar(32) not null,")
+      _T("  PRIMARY KEY(guid,server_id))")));
+   CHK_EXEC(Query(_T("INSERT INTO agent_policy_new (guid,type,server_info,server_id,version,content_hash) SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy")));
+   CHK_EXEC(Query(_T("DROP TABLE agent_policy")));
+   CHK_EXEC(Query(_T("ALTER TABLE agent_policy_new RENAME TO agent_policy")));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 18));
+   return TRUE;
+}
+
+/**
  * Upgrade from V16 to V17
  */
 static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
@@ -539,6 +560,7 @@ static struct
    { 14, 15, H_UpgradeFromV14 },
    { 15, 16, H_UpgradeFromV15 },
    { 16, 17, H_UpgradeFromV16 },
+   { 17, 18, H_UpgradeFromV17 },
    { 0, 0, nullptr }
 };
 

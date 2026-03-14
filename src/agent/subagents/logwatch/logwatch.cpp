@@ -496,9 +496,6 @@ static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap
 
       LogParser *p = new LogParser(templateParser);
       p->setFileName(path);
-      p->setCallback(LogParserMatch);
-      p->setDataPushCallback(AgentPushParameterData);
-      p->setActionCallback(ExecuteAction);
       p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? RestoreParserFilePosition(p) : static_cast<off_t>(0)));
       activeParsers->set(matchingFiles.get(i), p);
    }
@@ -548,6 +545,107 @@ static void TemplateParserThread(LogParser *parser)
 }
 
 /**
+ * Look up server IDs for a given policy GUID
+ */
+static IntegerArray<uint64_t> LookupPolicyServerIds(const uuid& guid)
+{
+   IntegerArray<uint64_t> serverIds;
+   if (guid.isNull())
+      return serverIds;
+
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return serverIds;
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT server_id FROM agent_policy WHERE guid=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+            serverIds.add(DBGetFieldUInt64(hResult, i, 0));
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   return serverIds;
+}
+
+/**
+ * Build event callback targeting specific server IDs
+ */
+static std::function<void(const LogParserCallbackData&)> BuildTargetedEventCallback(const IntegerArray<uint64_t>& serverIds)
+{
+   // Copy server IDs into a shared_ptr so the lambda can share ownership
+   auto ids = make_shared<IntegerArray<uint64_t>>(serverIds);
+   return [ids](const LogParserCallbackData& data)
+   {
+      StringMap parameters;
+      data.captureGroups->addAllToMap(&parameters);
+      if (data.eventTag != nullptr)
+         parameters.set(_T("eventTag"), data.eventTag);
+      if (data.source != nullptr)
+      {
+         parameters.set(_T("source"), data.source);
+         parameters.set(_T("eventId"), data.windowsEventId);
+         parameters.set(_T("severity"), data.severity);
+         parameters.set(_T("recordId"), data.recordId);
+      }
+      parameters.set(_T("repeatCount"), data.repeatCount);
+      if (data.variables != nullptr)
+      {
+         for(int j = 0; j < data.variables->size(); j++)
+         {
+            TCHAR buffer[32];
+            _sntprintf(buffer, 32, _T("variable%d"), j + 1);
+            parameters.set(buffer, data.variables->get(j));
+         }
+      }
+      parameters.set(_T("fileName"), data.logName);
+
+      for(int i = 0; i < ids->size(); i++)
+         AgentPostEvent(data.eventCode, data.eventName, data.logRecordTimestamp, parameters, ids->get(i));
+   };
+}
+
+/**
+ * Build data push callback targeting specific server IDs
+ */
+static std::function<bool(const TCHAR*, const TCHAR*)> BuildTargetedPushCallback(const IntegerArray<uint64_t>& serverIds)
+{
+   auto ids = make_shared<IntegerArray<uint64_t>>(serverIds);
+   return [ids](const TCHAR *parameter, const TCHAR *value) -> bool
+   {
+      bool result = true;
+      for(int i = 0; i < ids->size(); i++)
+         result = AgentPushParameterData(parameter, value, ids->get(i)) && result;
+      return result;
+   };
+}
+
+/**
+ * Set callbacks on parser based on policy GUID (targeted if policy, broadcast otherwise)
+ */
+static void SetParserCallbacks(LogParser *parser, const uuid& guid)
+{
+   IntegerArray<uint64_t> serverIds = LookupPolicyServerIds(guid);
+   if (!guid.isNull() && !serverIds.isEmpty())
+   {
+      parser->setCallback(BuildTargetedEventCallback(serverIds));
+      parser->setDataPushCallback(BuildTargetedPushCallback(serverIds));
+   }
+   else
+   {
+      parser->setCallback(LogParserMatch);
+      parser->setDataPushCallback(static_cast<bool(*)(const TCHAR*, const TCHAR*)>(AgentPushParameterData));
+   }
+   parser->setActionCallback(ExecuteAction);
+}
+
+/**
  * Add parser from config parameter
  */
 static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
@@ -568,15 +666,14 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 				{
                if (_tcscspn(parserFileName + 1, _T("*?")) != _tcslen(parserFileName + 1))
                {
+                  SetParserCallbacks(parser, guid);
                   parser->setGuid(guid);
                   s_templateParsers.add(parser);
                   nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\" (GUID = %s)"), parserFileName, guid.toString().cstr());
                }
                else
                {
-                  parser->setCallback(LogParserMatch);
-                  parser->setDataPushCallback(AgentPushParameterData);
-                  parser->setActionCallback(ExecuteAction);
+                  SetParserCallbacks(parser, guid);
                   parser->setGuid(guid);
                   s_parsers.add(parser);
                   nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\" (GUID = %s)"), parserFileName, guid.toString().cstr());

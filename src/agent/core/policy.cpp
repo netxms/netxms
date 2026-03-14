@@ -119,10 +119,11 @@ static void RegisterPolicy(const TCHAR *type, const uuid& guid, uint32_t version
    DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if (hdb != nullptr)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT type FROM agent_policy WHERE guid=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT type FROM agent_policy WHERE guid=? AND server_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, serverId);
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          {
@@ -141,21 +142,33 @@ static void RegisterPolicy(const TCHAR *type, const uuid& guid, uint32_t version
       else
       {
          hStmt = DBPrepare(hdb,
-                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=?,content_hash=?")
-                       _T(" WHERE guid=?"));
+                       _T("UPDATE agent_policy SET type=?,server_info=?,version=?,content_hash=?")
+                       _T(" WHERE guid=? AND server_id=?"));
       }
 
       if (hStmt == nullptr)
          return;
 
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, serverInfo, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, serverId);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, version);
       TCHAR hashAsText[33];
       BinToStr(hash, MD5_DIGEST_SIZE, hashAsText);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, hashAsText, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guid);
+      if (isNew)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, serverInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, serverId);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, version);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, hashAsText, DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guid);
+      }
+      else
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, serverInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, version);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, hashAsText, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, guid);
+         DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, serverId);
+      }
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -163,7 +176,26 @@ static void RegisterPolicy(const TCHAR *type, const uuid& guid, uint32_t version
 }
 
 /**
- * Register policy in persistent storage
+ * Unregister policy for a specific server from persistent storage
+ */
+static void UnregisterPolicy(const uuid& guid, uint64_t serverId)
+{
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   if (hdb != nullptr)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM agent_policy WHERE guid=? AND server_id=?"));
+      if (hStmt == nullptr)
+         return;
+
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+      DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, serverId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+}
+
+/**
+ * Unregister all server registrations for a policy from persistent storage
  */
 static void UnregisterPolicy(const uuid& guid)
 {
@@ -178,6 +210,32 @@ static void UnregisterPolicy(const uuid& guid)
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
+}
+
+/**
+ * Check if other servers still have policy with given GUID registered
+ */
+static bool IsPolicyRegisteredByOtherServers(const uuid& guid, uint64_t serverId)
+{
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return false;
+
+   bool result = false;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT count(*) FROM agent_policy WHERE guid=? AND server_id<>?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+      DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, serverId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         result = DBGetFieldLong(hResult, 0, 0) > 0;
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   return result;
 }
 
 /**
@@ -378,7 +436,7 @@ static uint32_t RemovePolicy(const uuid& guid, const TCHAR *dir)
 /**
  * Uninstall policy from agent
  */
-uint32_t UninstallPolicy(NXCPMessage *request)
+uint32_t UninstallPolicy(NXCPMessage *request, uint64_t serverId)
 {
    uint32_t rcc;
 
@@ -386,6 +444,19 @@ uint32_t UninstallPolicy(NXCPMessage *request)
 	const String type = GetPolicyType(guid);
 	if(!_tcscmp(type, _T("")))
       return ERR_SUCCESS;
+
+   // Unregister this server's registration first
+   UnregisterPolicy(guid, serverId);
+
+   // Only delete the policy file if no other servers still reference this GUID
+   if (IsPolicyRegisteredByOtherServers(guid, serverId))
+   {
+      TCHAR buffer[64];
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Policy %s of type %s unregistered for server ") UINT64_FMT _T(" (file retained for other servers)"),
+         guid.toString(buffer), type.cstr(), serverId);
+      ThreadPoolExecuteSerialized(g_commThreadPool, _T("SyncPolicies"), SyncPoliciesWithExtSubagents);
+      return ERR_SUCCESS;
+   }
 
    if (!_tcscmp(type, _T("AgentConfig")))
    {
@@ -413,7 +484,6 @@ uint32_t UninstallPolicy(NXCPMessage *request)
    TCHAR buffer[64];
 	if (rcc == ERR_SUCCESS)
 	{
-		UnregisterPolicy(guid);
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Policy %s of type %s uninstalled successfully"), guid.toString(buffer), type.cstr());
       ThreadPoolExecuteSerialized(g_commThreadPool, _T("SyncPolicies"), SyncPoliciesWithExtSubagents);
 	}

@@ -136,9 +136,11 @@ extern TCHAR g_windowsServiceDisplayName[];
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent)(uint32_t, const TCHAR *, time_t),
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, const StringMap &),
+      void (*postEvent3)(uint32_t, const TCHAR *, time_t, const StringMap &, uint64_t),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
       bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp),
+      bool (*pushData2)(const TCHAR *, const TCHAR *, uint32_t, Timestamp, uint64_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
@@ -1217,8 +1219,8 @@ BOOL Initialize()
    s_timerThreadPool = ThreadPoolCreate(_T("TIMER"), 2, 16);
 
    // Initialize API for subagents
-   InitSubAgentAPI(PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
-      PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction, GetScreenInfoForUserSession, QueueNotificationMessage,
+   InitSubAgentAPI(PostEvent, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
+      PushData, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction, GetScreenInfoForUserSession, QueueNotificationMessage,
       RegisterProblem, UnregisterProblem, s_timerThreadPool);
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Subagent API initialized"));
 

@@ -1377,12 +1377,14 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int i
 
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp);
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args);
+void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args, uint64_t targetServerId);
 void LIBNXAGENT_EXPORTABLE AgentQueueNotificationMessage(NXCPMessage *msg);
 
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uint64_t serverId);
 
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value, uint64_t targetServerId);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, uint32_t value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, int64_t value);

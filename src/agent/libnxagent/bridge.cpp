@@ -27,9 +27,11 @@
  */
 static void (*s_fpPostEvent1)(uint32_t, const TCHAR*, time_t) = nullptr;
 static void (*s_fpPostEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&) = nullptr;
+static void (*s_fpPostEvent3)(uint32_t, const TCHAR*, time_t, const StringMap&, uint64_t) = nullptr;
 static shared_ptr<AbstractCommSession> (*s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (*s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
 static bool (*s_fpPushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp) = nullptr;
+static bool (*s_fpPushData2)(const TCHAR *, const TCHAR *, uint32_t, Timestamp, uint64_t) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
 static void (*s_fpExecuteAction)(const TCHAR*, const StringList&) = nullptr;
@@ -45,9 +47,11 @@ static ThreadPool *s_timerThreadPool = nullptr;
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent1)(uint32_t, const TCHAR*, time_t),
       void (*postEvent2)(uint32_t, const TCHAR*, time_t, const StringMap&),
+      void (*postEvent3)(uint32_t, const TCHAR*, time_t, const StringMap&, uint64_t),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
       bool (*pushData)(const TCHAR *, const TCHAR *, uint32_t, Timestamp),
+      bool (*pushData2)(const TCHAR *, const TCHAR *, uint32_t, Timestamp, uint64_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
@@ -59,9 +63,11 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
 {
    s_fpPostEvent1 = postEvent1;
    s_fpPostEvent2 = postEvent2;
+   s_fpPostEvent3 = postEvent3;
 	s_fpEnumerateSessions = enumerateSessions;
    s_fpFindServerSession = findServerSession;
 	s_fpPushData = pushData;
+   s_fpPushData2 = pushData2;
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
    s_fpExecuteAction = executeAction;
@@ -91,6 +97,15 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *event
 }
 
 /**
+ * Send event from agent to a specific server
+ */
+void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args, uint64_t targetServerId)
+{
+   if (s_fpPostEvent3 != nullptr)
+      s_fpPostEvent3(eventCode, eventName, timestamp, args, targetServerId);
+}
+
+/**
  * Enumerates active agent sessions. Callback will be called for each valid session.
  * Callback must return _STOP to stop enumeration or _CONTINUE to continue.
  *
@@ -109,6 +124,16 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const 
 	if (s_fpPushData == nullptr)
 		return FALSE;
 	return s_fpPushData(parameter, value, 0, Timestamp::fromMilliseconds(0));
+}
+
+/**
+ * Push parameter's value to a specific server
+ */
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value, uint64_t targetServerId)
+{
+   if (s_fpPushData2 == nullptr)
+      return false;
+   return s_fpPushData2(parameter, value, 0, Timestamp::fromMilliseconds(0), targetServerId);
 }
 
 /**

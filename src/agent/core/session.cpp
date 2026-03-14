@@ -29,7 +29,7 @@
  */
 void UnregisterSession(uint32_t id);
 uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serverInfo);
-uint32_t UninstallPolicy(NXCPMessage *request);
+uint32_t UninstallPolicy(NXCPMessage *request, uint64_t serverId);
 uint32_t GetPolicyInventory(NXCPMessage *msg, uint64_t serverId);
 void ClearDataCollectionConfiguration();
 uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
@@ -696,7 +696,7 @@ void CommSession::processCommand(NXCPMessage *request)
             if (m_masterServer)
             {
                debugPrintf(3, _T("Processing policy uninstall request"));
-               response.setField(VID_RCC, UninstallPolicy(request));
+               response.setField(VID_RCC, UninstallPolicy(request, getServerId()));
             }
             else
             {

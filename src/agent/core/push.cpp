@@ -62,6 +62,36 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Tim
 }
 
 /**
+ * Push parameter's data to a specific server
+ */
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, Timestamp timestamp, uint64_t targetServerId)
+{
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("PushData: \"%s\" = \"%s\" (target_server=") UINT64_FMT _T(")"), parameter, value, targetServerId);
+
+   NXCPMessage *msg = new NXCPMessage(CMD_PUSH_DCI_DATA, 0, 4); // Use version 4 to avoid compatibility issues
+   msg->setField(VID_NAME, parameter);
+   msg->setField(VID_VALUE, value);
+   msg->setField(VID_OBJECT_ID, objectId);
+   msg->setField(VID_TIMESTAMP_MS, timestamp);
+   msg->setFieldFromTime(VID_TIMESTAMP, timestamp.asTime());   // for compatibility with older servers
+   msg->setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
+   if (targetServerId != 0)
+      msg->setField(VID_SERVER_ID, targetServerId);
+
+   if (g_dwFlags & AF_SUBAGENT_LOADER)
+   {
+      bool success = SendMessageToMasterAgent(msg);
+      delete msg;
+      return success;
+   }
+   else
+   {
+      QueueNotificationMessage(msg);  // Takes ownership of msg
+      return true;
+   }
+}
+
+/**
  * Pushed value
  */
 struct PushDataEntry

@@ -104,6 +104,8 @@ static void MasterNotificationProcessor()
 
       nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationProcessor: new message received"));
 
+      uint64_t targetServerId = msg->getFieldAsUInt64(VID_SERVER_ID);
+
       DB_STATEMENT hStmt = nullptr;
 
       s_serverSyncStatusLock.lock();
@@ -112,6 +114,8 @@ static void MasterNotificationProcessor()
       {
          bool sent = false;
          ServerRegistration *server = s_serverSyncStatus.get(i);
+         if ((targetServerId != 0) && (server->serverId != targetServerId))
+            continue;
          if (server->status == SyncStatus::ONLINE)
          {
             g_sessionLock.lock();
