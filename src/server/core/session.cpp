@@ -8351,18 +8351,22 @@ void ClientSession::editTrap(const NXCPMessage& request, int operation)
             response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
             {
-               response.setField(VID_TRAP_ID, trapMappingId);   // Send id of new trap mapping to client
-               //TODO: witre audit log
+               response.setField(VID_TRAP_ID, trapMappingId);
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Trap mapping [%u] created"), trapMappingId);
             }
             break;
          case TRAP_UPDATE:
-            response.setField(VID_RCC, UpdateTrapMappingFromMsg(request));
-            //TODO: witre audit log
+            rcc = UpdateTrapMappingFromMsg(request);
+            response.setField(VID_RCC, rcc);
+            if (rcc == RCC_SUCCESS)
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Trap mapping [%u] updated"), request.getFieldAsUInt32(VID_TRAP_ID));
             break;
          case TRAP_DELETE:
             trapMappingId = request.getFieldAsUInt32(VID_TRAP_ID);
-            response.setField(VID_RCC, DeleteTrapMapping(trapMappingId));
-            //TODO: witre audit log
+            rcc = DeleteTrapMapping(trapMappingId);
+            response.setField(VID_RCC, rcc);
+            if (rcc == RCC_SUCCESS)
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Trap mapping [%u] deleted"), trapMappingId);
             break;
          default:
 				response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
