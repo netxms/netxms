@@ -353,6 +353,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableActions"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, nullptr },
    { _T("EnableControlConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_CONTROL_CONNECTOR, 0, &s_startupFlags, nullptr },
+   { _T("EnableEtherNetIPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ETHERNET_IP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableEventConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_EVENT_CONNECTOR, 0, &s_startupFlags, nullptr },
    { _T("EnableModbusProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_MODBUS_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, nullptr },

@@ -77,6 +77,8 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
  * Get attribute via EtherNet/IP
  */
 DataCollectionError GetEtherNetIPAttribute(const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, uint32_t timeout, TCHAR *buffer, size_t size);
+DataCollectionError GetEtherNetIPAttributeViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, TCHAR *buffer, size_t size);
+CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status);
 
 /**
  * Poll cancellation checkpoint
@@ -3034,8 +3036,24 @@ restart_status_poll:
       uint32_t eipProxy = getEffectiveEtherNetIPProxy();
       if (eipProxy != 0)
       {
-         // TODO: implement proxy request
-         status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+         shared_ptr<Node> proxyNode = (eipProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(eipProxy));
+         if (proxyNode != nullptr)
+         {
+            shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(ETHERNET_IP_PROXY);
+            if (conn != nullptr)
+            {
+               InetAddress targetAddr = (eipProxy == m_id) ? InetAddress::LOOPBACK : getEffectiveEtherNetIPAddress();
+               identity = EIP_ListIdentityViaProxy(conn, targetAddr, m_eipPort, &status);
+            }
+            else
+            {
+               status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+            }
+         }
+         else
+         {
+            status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+         }
       }
       else
       {
@@ -6128,8 +6146,24 @@ bool Node::confPollEthernetIP()
    uint32_t eipProxy = getEffectiveEtherNetIPProxy();
    if (eipProxy != 0)
    {
-      // TODO: implement proxy request
-      status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+      shared_ptr<Node> proxyNode = (eipProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(eipProxy));
+      if (proxyNode != nullptr)
+      {
+         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(ETHERNET_IP_PROXY);
+         if (conn != nullptr)
+         {
+            InetAddress targetAddr = (eipProxy == m_id) ? InetAddress::LOOPBACK : getEffectiveEtherNetIPAddress();
+            identity = EIP_ListIdentityViaProxy(conn, targetAddr, m_eipPort, &status);
+         }
+         else
+         {
+            status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+         }
+      }
+      else
+      {
+         status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+      }
    }
    else
    {
@@ -8942,8 +8976,34 @@ DataCollectionError Node::getMetricFromEtherNetIP(const TCHAR *metric, TCHAR *bu
       return DCE_COMM_ERROR;
    }
 
-   DataCollectionError result = GetEtherNetIPAttribute(getEffectiveEtherNetIPAddress(), m_eipPort, metric, 5000, buffer, size);
-   nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromEtherNetIP(%s): result=%d"), m_name, metric, result);
+   DataCollectionError result;
+   uint32_t eipProxy = getEffectiveEtherNetIPProxy();
+   if (eipProxy != 0)
+   {
+      shared_ptr<Node> proxyNode = (eipProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(eipProxy));
+      if (proxyNode != nullptr)
+      {
+         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(ETHERNET_IP_PROXY);
+         if (conn != nullptr)
+         {
+            InetAddress targetAddr = (eipProxy == m_id) ? InetAddress::LOOPBACK : getEffectiveEtherNetIPAddress();
+            result = GetEtherNetIPAttributeViaProxy(conn, targetAddr, m_eipPort, metric, buffer, size);
+         }
+         else
+         {
+            result = DCE_COMM_ERROR;
+         }
+      }
+      else
+      {
+         result = DCE_COMM_ERROR;
+      }
+   }
+   else
+   {
+      result = GetEtherNetIPAttribute(getEffectiveEtherNetIPAddress(), m_eipPort, metric, 5000, buffer, size);
+   }
+   nxlog_debug_tag(DEBUG_TAG_DC_EIP, 7, _T("Node(%s)->getMetricFromEtherNetIP(%s): result=%d"), m_name, metric, result);
    return result;
 }
 

@@ -103,6 +103,7 @@
 #define AF_ENABLE_MODBUS_PROXY      0x00400000
 #define AF_DISABLE_HEARTBEAT        0x00800000
 #define AF_SYNC_TIME_WITH_SERVER    0x01000000
+#define AF_ENABLE_ETHERNET_IP_PROXY 0x02000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001

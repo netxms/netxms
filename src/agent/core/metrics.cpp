@@ -93,6 +93,9 @@ LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
+LONG H_EtherNetIPAttribute(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_EtherNetIPListIdentity(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
 #if WITH_MODBUS
 LONG H_ModbusCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ModbusConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -560,6 +563,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.UserAgentCount"), H_SessionAgentCount, _T("U"), DCI_DT_UINT, DCIDESC_AGENT_USER_AGENTS_COUNT },
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("Agent.WebServiceProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_WEBSVC_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_WEBSVCPROXY_ISENABLED },
+   { _T("EtherNetIP.Attribute(*)"), H_EtherNetIPAttribute, nullptr, DCI_DT_STRING, _T("Value of EtherNet/IP CIP attribute {instance}") },
    { _T("ExternalDataProvider.State(*)"), H_ExternalDataProviderState, nullptr, DCI_DT_INT, _T("State of external data provider {instance} (0 = disabled, 1 = enabled)") },
    { _T("File.Content(*)"), H_FileContent, nullptr, DCI_DT_STRING, _T("Content of file {instance}") },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
@@ -644,6 +648,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedPushParameters"), H_PushMetricList, nullptr, _T("List of supported push parameters") },
    { _T("Agent.SupportedTables"), H_TableList, nullptr, _T("List of supported tables") },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr, _T("List of agent thread pools") },
+   { _T("EtherNetIP.ListIdentity(*)"), H_EtherNetIPListIdentity, nullptr, _T("EtherNet/IP device identity") },
 #if WITH_MODBUS
    { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr, _T("Modbus device identification objects") },
 #endif

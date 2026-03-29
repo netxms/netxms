@@ -23,6 +23,117 @@
 #include <ethernet_ip.h>
 
 /**
+ * Parse value from key=value list entry
+ */
+static const TCHAR *GetListValue(const StringList *list, const TCHAR *key)
+{
+   size_t keyLen = _tcslen(key);
+   for (int i = 0; i < list->size(); i++)
+   {
+      const TCHAR *entry = list->get(i);
+      if (!_tcsncmp(entry, key, keyLen) && (entry[keyLen] == _T('=')))
+         return entry + keyLen + 1;
+   }
+   return nullptr;
+}
+
+/**
+ * Parse CIP_Identity from agent list response
+ */
+CIP_Identity *ParseCIPIdentityFromList(const StringList *list)
+{
+   const TCHAR *productName = GetListValue(list, _T("productName"));
+   if (productName == nullptr)
+      productName = _T("");
+
+   auto identity = static_cast<CIP_Identity*>(MemAlloc(sizeof(CIP_Identity) + (_tcslen(productName) + 1) * sizeof(TCHAR)));
+   identity->productName = reinterpret_cast<TCHAR*>(reinterpret_cast<uint8_t*>(identity) + sizeof(CIP_Identity));
+   _tcscpy(identity->productName, productName);
+
+   const TCHAR *v;
+
+   v = GetListValue(list, _T("vendor"));
+   identity->vendor = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("deviceType"));
+   identity->deviceType = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("productCode"));
+   identity->productCode = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("productRevisionMajor"));
+   identity->productRevisionMajor = (v != nullptr) ? static_cast<uint8_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("productRevisionMinor"));
+   identity->productRevisionMinor = (v != nullptr) ? static_cast<uint8_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("serialNumber"));
+   identity->serialNumber = (v != nullptr) ? _tcstoul(v, nullptr, 10) : 0;
+
+   v = GetListValue(list, _T("ipAddress"));
+   identity->ipAddress = (v != nullptr) ? InetAddress::parse(v) : InetAddress();
+
+   v = GetListValue(list, _T("tcpPort"));
+   identity->tcpPort = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("protocolVersion"));
+   identity->protocolVersion = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("status"));
+   identity->status = (v != nullptr) ? static_cast<uint16_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   v = GetListValue(list, _T("state"));
+   identity->state = (v != nullptr) ? static_cast<uint8_t>(_tcstoul(v, nullptr, 10)) : 0;
+
+   return identity;
+}
+
+/**
+ * Get EtherNet/IP identity via proxy agent
+ */
+CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status)
+{
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("EtherNetIP.ListIdentity(%s,%u)"), addr.toString(ipAddrText), port);
+
+   StringList *list;
+   uint32_t rcc = conn->getList(metric, &list);
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_EIP, 5, _T("EIP_ListIdentityViaProxy(%s:%d): agent request failed (error %u)"), ipAddrText, port, rcc);
+      *status = EIP_Status::callFailure((rcc == ERR_REQUEST_TIMEOUT) ? EIP_CALL_TIMEOUT : EIP_CALL_COMM_ERROR);
+      return nullptr;
+   }
+
+   CIP_Identity *identity = ParseCIPIdentityFromList(list);
+   delete list;
+
+   *status = EIP_Status::success();
+   nxlog_debug_tag(DEBUG_TAG_DC_EIP, 5, _T("EIP_ListIdentityViaProxy(%s:%d): identity retrieved successfully"), ipAddrText, port);
+   return identity;
+}
+
+/**
+ * Get EtherNet/IP attribute via proxy agent
+ */
+DataCollectionError GetEtherNetIPAttributeViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, TCHAR *buffer, size_t size)
+{
+   TCHAR metric[512], ipAddrText[64];
+   _sntprintf(metric, 512, _T("EtherNetIP.Attribute(%s,%u,%s)"), addr.toString(ipAddrText), port, symbolicPath);
+
+   TCHAR result[MAX_RESULT_LENGTH];
+   uint32_t rcc = conn->getParameter(metric, result, MAX_RESULT_LENGTH);
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_EIP, 5, _T("GetEtherNetIPAttributeViaProxy(%s:%d, %s): agent request failed (error %u)"), ipAddrText, port, symbolicPath, rcc);
+      return (rcc == ERR_REQUEST_TIMEOUT) ? DCE_COMM_ERROR : DCE_COMM_ERROR;
+   }
+
+   _tcslcpy(buffer, result, size);
+   return DCE_SUCCESS;
+}
+
+/**
  * Get attribute from device
  */
 DataCollectionError GetEtherNetIPAttribute(const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, uint32_t timeout, TCHAR *buffer, size_t size)
