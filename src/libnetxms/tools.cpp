@@ -1755,10 +1755,11 @@ const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *fileName)
  * Extended send() - send all data even if single call to send()
  * cannot handle them all
  */
-ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex)
+ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex, uint32_t timeout)
 {
    ssize_t nLeft = len;
 	int nRet;
+	int64_t deadline = GetMonotonicClockTime() + timeout;
 
 	if (mutex != nullptr)
 		mutex->lock();
@@ -1779,10 +1780,12 @@ retry:
 #endif
 			   )
 			{
-				// Wait until socket becomes available for writing
+				int64_t remaining = deadline - GetMonotonicClockTime();
+				if (remaining <= 0)
+					break;
 			   SocketPoller p(true);
 			   p.add(hSocket);
-				nRet = p.poll(60000);
+				nRet = p.poll(static_cast<uint32_t>(remaining));
 #ifdef _WIN32
 				if (nRet > 0)
 #else
