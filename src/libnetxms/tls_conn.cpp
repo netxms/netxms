@@ -223,17 +223,32 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
 
    if (sniServerName != nullptr)
    {
-      nxlog_debug_tag(m_debugTag, 7, _T("Using SNI server name \"%hs\""), sniServerName);
-      SSL_set_tlsext_host_name(m_ssl, sniServerName);
+      struct in_addr ipv4;
+      struct in6_addr ipv6;
+      bool isIP = (inet_pton(AF_INET, sniServerName, &ipv4) == 1) || (inet_pton(AF_INET6, sniServerName, &ipv6) == 1);
+
+      if (!isIP)
+      {
+         nxlog_debug_tag(m_debugTag, 7, _T("Using SNI server name \"%hs\""), sniServerName);
+         SSL_set_tlsext_host_name(m_ssl, sniServerName);
+      }
 
       if (m_verifyPeer)
       {
+         if (isIP)
+         {
+            X509_VERIFY_PARAM *param = SSL_get0_param(m_ssl);
+            X509_VERIFY_PARAM_set1_ip_asc(param, sniServerName);
+         }
+         else
+         {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-         SSL_set1_host(m_ssl, sniServerName);
+            SSL_set1_host(m_ssl, sniServerName);
 #else
-         X509_VERIFY_PARAM *param = SSL_get0_param(m_ssl);
-         X509_VERIFY_PARAM_set1_host(param, sniServerName, 0);
+            X509_VERIFY_PARAM *param = SSL_get0_param(m_ssl);
+            X509_VERIFY_PARAM_set1_host(param, sniServerName, 0);
 #endif
+         }
       }
    }
 

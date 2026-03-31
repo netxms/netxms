@@ -13,7 +13,6 @@ aix		AIX platform subagent messages
 
 alarm.*		Alarm management
 
-asterisk	Asterisk subagent messages
 auth		Authentication
 
 beacon		Beacon poller

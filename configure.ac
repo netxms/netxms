@@ -210,7 +210,6 @@ DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
-ASTERISK_LIBS=""
 VMGR_CPPFLAGS=""
 VMGR_LDFLAGS=""
 VMGR_LIBS=""
@@ -548,12 +547,6 @@ AC_ARG_WITH(redis,
 		REDIS_LDFLAGS="-L${withval}/lib"
 	fi
 	COMPONENTS="$COMPONENTS redis"
-fi ])
-
-AC_ARG_WITH(asterisk,
-[AS_HELP_STRING(--with-asterisk,build Asterisk subagent)],
-[ if test "x$withval" != "xno" ; then
-	COMPONENTS="$COMPONENTS asterisk"
 fi ])
 
 AC_ARG_WITH(vmgr,
@@ -1183,16 +1176,15 @@ if test $? = 0; then
 
 	SUBAGENT_LIBS="../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/ups/ups.la"
 
-	check_substr "$STATIC_SUBAGENT_LIST" "asterisk"
-	if test $? = 0; then
-		COMPONENTS="$COMPONENTS asterisk"
-		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/asterisk/asterisk.la"
-	fi
-
 	check_substr "$STATIC_SUBAGENT_LIST" "oracle"
 	if test $? = 0; then
 		COMPONENTS="$COMPONENTS oracle"
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/oracle/oracle.la"
+	fi
+
+	check_substr "$STATIC_SUBAGENT_LIST" "asterisk"
+	if test $? = 0; then
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/asterisk/asterisk.la"
 	fi
 
 	check_substr "$STATIC_SUBAGENT_LIST" "informix"
@@ -1433,11 +1425,6 @@ fi
 check_substr "$COMPONENTS" "xen"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS xen"
-fi
-
-check_substr "$COMPONENTS" "asterisk"
-if test $? = 0; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS asterisk"
 fi
 
 check_substr "$COMPONENTS" "sdk"
@@ -4446,25 +4433,6 @@ AC_SUBST(REDIS_LIBS)
 
 
 #--------------------------------------------------------------------
-# Asterisk
-#--------------------------------------------------------------------
-
-check_substr "$COMPONENTS" "asterisk"
-if test $? = 0; then
-	OLD_CPPFLAGS="$CPPFLAGS"
-	OLD_LDFLAGS="$LDFLAGS"
-	OLD_LIBS="$LIBS"
-
-	AC_CHECK_HEADER(eXosip2/eXosip.h,,AC_MSG_ERROR([*** Cannot find eXosip.h - check your libeXosip2 installation ***]))
-	AC_CHECK_LIB(eXosip2, eXosip_malloc, [ ASTERISK_LIBS="$ASTERISK_LIBS -leXosip2" ])
-
-	CPPFLAGS="$OLD_CPPFLAGS"
-	LDFLAGS="$OLD_LDFLAGS"
-	LIBS="$OLD_LIBS"
-fi
-
-
-#--------------------------------------------------------------------
 # VMGR
 #--------------------------------------------------------------------
 
@@ -4841,7 +4809,6 @@ AC_SUBST(ABSEIL_LDFLAGS)
 AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(AGENT_UNIT_TESTS)
-AC_SUBST(ASTERISK_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(BUILD_SDK)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -5520,9 +5487,6 @@ if test "x${MONGODB_LDFLAGS}" != "x"; then
 	echo "MongoDB LDFLAGS         : ${MONGODB_LDFLAGS}"
 fi
 
-if test "x${ASTERISK_LIBS}" != "x"; then
-	echo "Asterisk LIBS           :${ASTERISK_LIBS}"
-fi
 
 if test "x${VMGR_CPPFLAGS}" != "x"; then
 	echo "Vmgr CPPFLAGS           : ${VMGR_CPPFLAGS}"

@@ -55,8 +55,9 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
       unique_ptr<ObjectArray<ConfigEntry>> registrations = registrationsRoot->getSubEntries(NULL);
       for(int i = 0; i < registrations->size(); i++)
       {
-         char defaultProxy[128] = "sip:";
-         as->m_ipAddress.toStringA(&defaultProxy[4]);
+         char defaultProxy[128], ipStr[64];
+         as->m_ipAddress.toStringA(ipStr);
+         snprintf(defaultProxy, sizeof(defaultProxy), (as->m_ipAddress.getFamily() == AF_INET6) ? "sip:[%s]" : "sip:%s", ipStr);
          SIPRegistrationTest *r = new SIPRegistrationTest(registrations->get(i), defaultProxy);
          as->m_registrationTests.set(r->getName(), r);
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Added SIP registration test %s (%hs@%hs via %hs every %d seconds)"),
