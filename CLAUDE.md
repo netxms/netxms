@@ -40,8 +40,7 @@ This monorepo has component-specific CLAUDE.md files:
 
 ```bash
 # First-time setup after clone
-./tools/updatetag.pl    # Generate version.h (run once)
-./reconf                # Run autoconf/automake (run once)
+./init-source-tree # generate build-tag files and do autoreconf
 
 # Configure with desired options
 ./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug
