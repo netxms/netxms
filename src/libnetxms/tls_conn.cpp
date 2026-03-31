@@ -36,7 +36,7 @@ bool TLSConnection::connect(const InetAddress& addr, uint16_t port, bool tls, co
    bool result = m_socket != INVALID_SOCKET;
 
    if (result && tls)
-      result = startTLS(0, sniServerName);
+      result = startTLS(timeout, sniServerName);
 
    return result;
 }
@@ -46,6 +46,7 @@ bool TLSConnection::connect(const InetAddress& addr, uint16_t port, bool tls, co
  */
 ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t timeout)
 {
+   int64_t deadline = GetMonotonicClockTime() + timeout;
    bool canRetry;
    ssize_t bytes;
    do
@@ -57,9 +58,12 @@ ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t tim
          int err = SSL_get_error(m_ssl, static_cast<int>(bytes));
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
-            SocketPoller sp(err == SSL_ERROR_WANT_READ);
+            int64_t remaining = deadline - GetMonotonicClockTime();
+            if (remaining <= 0)
+               break;
+            SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
-            if (sp.poll(timeout) > 0)
+            if (sp.poll(static_cast<uint32_t>(remaining)) > 0)
                canRetry = true;
          }
          else
@@ -79,6 +83,7 @@ ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t tim
  */
 ssize_t TLSConnection::tlsSend(const void* data, const size_t size, const uint32_t timeout)
 {
+   int64_t deadline = GetMonotonicClockTime() + timeout;
    bool canRetry;
    ssize_t bytes;
    do
@@ -90,9 +95,12 @@ ssize_t TLSConnection::tlsSend(const void* data, const size_t size, const uint32
          int err = SSL_get_error(m_ssl, static_cast<int>(bytes));
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
+            int64_t remaining = deadline - GetMonotonicClockTime();
+            if (remaining <= 0)
+               break;
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
-            if (sp.poll(timeout) > 0)
+            if (sp.poll(static_cast<uint32_t>(remaining)) > 0)
                canRetry = true;
          }
          else
@@ -170,7 +178,8 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
    if (timeout == 0)
       timeout = m_defaultTimeout;
 
-      // Setup secure connection
+   int64_t deadline = GetMonotonicClockTime() + timeout;
+
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    const SSL_METHOD* method = TLS_method();
 #else
@@ -196,8 +205,14 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
 #ifdef SSL_OP_NO_COMPRESSION
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
 #else
-   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+   SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 #endif
+
+   if (m_verifyPeer)
+   {
+      SSL_CTX_set_default_verify_paths(m_context);
+      SSL_CTX_set_verify(m_context, SSL_VERIFY_PEER, nullptr);
+   }
 
    m_ssl = SSL_new(m_context);
    if (m_ssl == nullptr)
@@ -210,6 +225,16 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
    {
       nxlog_debug_tag(m_debugTag, 7, _T("Using SNI server name \"%hs\""), sniServerName);
       SSL_set_tlsext_host_name(m_ssl, sniServerName);
+
+      if (m_verifyPeer)
+      {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+         SSL_set1_host(m_ssl, sniServerName);
+#else
+         X509_VERIFY_PARAM *param = SSL_get0_param(m_ssl);
+         X509_VERIFY_PARAM_set1_host(param, sniServerName, 0);
+#endif
+      }
    }
 
    SSL_set_connect_state(m_ssl);
@@ -223,9 +248,15 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
          int sslErr = SSL_get_error(m_ssl, rc);
          if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
          {
+            int64_t remaining = deadline - GetMonotonicClockTime();
+            if (remaining <= 0)
+            {
+               nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (deadline exceeded)"));
+               goto failure;
+            }
             SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
             poller.add(m_socket);
-            if (poller.poll(timeout) > 0)
+            if (poller.poll(static_cast<uint32_t>(remaining)) > 0)
             {
                nxlog_debug_tag(m_debugTag, 8, _T("TLS handshake: %s wait completed"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
                continue;
@@ -254,6 +285,6 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
    return true;
 
 failure:
-   stopTLS();  // Will destroy SSL context and SSL connection
+   stopTLS();
    return false;
 }

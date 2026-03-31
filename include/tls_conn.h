@@ -24,6 +24,7 @@
 #define _tls_conn_h_
 
 #include "nms_util.h"
+#include <nxcrypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
@@ -47,6 +48,7 @@ private:
    SSL_CTX* m_context;
    TCHAR m_debugTag[20];
    bool m_enableSSLTrace;
+   bool m_verifyPeer;
    uint32_t m_defaultTimeout;
 
    ssize_t tlsRecv(void* data, size_t size, uint32_t timeout);
@@ -60,6 +62,7 @@ public:
    {
       _tcslcpy(m_debugTag, CHECK_NULL_EX(debugTag), sizeof(m_debugTag) / sizeof(TCHAR));
       m_enableSSLTrace = enableSSLTrace;
+      m_verifyPeer = false;
       m_defaultTimeout = defaultTimeout;
       m_socket = INVALID_SOCKET;
       m_ssl = nullptr;
@@ -98,7 +101,7 @@ public:
    {
       if (timeout == 0)
          timeout = m_defaultTimeout;
-      return isTLS() ? tlsSend(data, size, timeout) : SendEx(m_socket, data, size, 0, nullptr);
+      return isTLS() ? tlsSend(data, size, timeout) : SendEx(m_socket, data, size, 0, nullptr, timeout);
    }
 
    /**
@@ -139,6 +142,16 @@ public:
    void setDefaultTimeout(uint32_t timeout)
    {
       m_defaultTimeout = timeout;
+   }
+
+   void enablePeerVerification()
+   {
+      m_verifyPeer = true;
+   }
+
+   SOCKET getSocket() const
+   {
+      return m_socket;
    }
 };
 
