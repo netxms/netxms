@@ -33,13 +33,39 @@ static const char *GetLabelValue(const prometheus::TimeSeries& ts, const char *n
    return nullptr;
 }
 
+static void AppendEscapedValue(StringBuffer& result, const TCHAR *value)
+{
+   bool needsQuoting = false;
+   for (const TCHAR *p = value; *p != 0; p++)
+   {
+      if (*p == _T('(') || *p == _T(')') || *p == _T(',') || *p == _T('"') || *p == _T('\''))
+      {
+         needsQuoting = true;
+         break;
+      }
+   }
+
+   if (!needsQuoting)
+   {
+      result.append(value);
+      return;
+   }
+
+   result.append(_T('"'));
+   for (const TCHAR *p = value; *p != 0; p++)
+   {
+      if (*p == _T('"'))
+         result.append(_T('"'));
+      result.append(*p);
+   }
+   result.append(_T('"'));
+}
+
 static String BuildMetricName(const MetricMapping& mapping, const prometheus::TimeSeries& ts)
 {
    StringBuffer result;
    result.append(mapping.netxmsName);
    result.append(_T('('));
-
-   // TODO: Add escaping for special characters in argument values (parentheses, commas, quotes)
 
    bool first = true;
    for(int i = 0; i < mapping.nameArguments.size(); i++)
@@ -55,13 +81,13 @@ static String BuildMetricName(const MetricMapping& mapping, const prometheus::Ti
       {
          WCHAR valueBuffer[1024];
          MultiByteToWideCharSysLocale(value, valueBuffer, 1024);
-         result.append(valueBuffer);
+         AppendEscapedValue(result, valueBuffer);
       }
 #else
       const char *value = GetLabelValue(ts, mapping.nameArguments.get(i));
       if (value != nullptr)
       {
-         result.append(value);
+         AppendEscapedValue(result, value);
       }
 #endif
       first = false;
