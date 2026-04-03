@@ -693,15 +693,24 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
             continue;
 
          Node *node = static_cast<Node*>(pollList.get(i));
-         InterfaceList *ifList = node->getInterfaceList();
-         if (ifList != nullptr)
+
+         if (node->isDown())
          {
+            // For unreachable nodes, use cached interface objects to avoid
+            // blocking on agent connection timeouts (see issue #3164)
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): node %s is down, using cached interface data"),
+                     m_name, node->getName());
             lockProperties();
-            for(int j = 0; j < ifList->size(); j++)
+            node->readLockChildList();
+            for(int j = 0; j < node->getChildList().size(); j++)
             {
+               if (node->getChildList().get(j)->getObjectClass() != OBJECT_INTERFACE)
+                  continue;
+
+               Interface *iface = static_cast<Interface*>(node->getChildList().get(j));
                for(uint32_t k = 0; k < m_dwNumResources; k++)
                {
-                  if (ifList->get(j)->hasAddress(m_pResourceList[k].ipAddr))
+                  if (iface->hasIpAddress(m_pResourceList[k].ipAddr))
                   {
                      if (detectedOwner[k] == 0)
                      {
@@ -714,14 +723,41 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
                   }
                }
             }
+            node->unlockChildList();
             unlockProperties();
-            delete ifList;
          }
          else
          {
-            sendPollerMsg(_T("Cannot get interface list from %s\r\n"), node->getName());
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Cannot get interface list from %s"),
-                     m_name, node->getName());
+            InterfaceList *ifList = node->getInterfaceList();
+            if (ifList != nullptr)
+            {
+               lockProperties();
+               for(int j = 0; j < ifList->size(); j++)
+               {
+                  for(uint32_t k = 0; k < m_dwNumResources; k++)
+                  {
+                     if (ifList->get(j)->hasAddress(m_pResourceList[k].ipAddr))
+                     {
+                        if (detectedOwner[k] == 0)
+                        {
+                           detectedOwner[k] = node->getId();
+                        }
+                        else if (detectedOwner[k] != node->getId())
+                        {
+                           ambiguousResource[k] = true;
+                        }
+                     }
+                  }
+               }
+               unlockProperties();
+               delete ifList;
+            }
+            else
+            {
+               sendPollerMsg(_T("Cannot get interface list from %s\r\n"), node->getName());
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Cannot get interface list from %s"),
+                        m_name, node->getName());
+            }
          }
       }
 
