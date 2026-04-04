@@ -700,14 +700,11 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
             // blocking on agent connection timeouts (see issue #3164)
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): node %s is down, using cached interface data"),
                      m_name, node->getName());
+            unique_ptr<SharedObjectArray<NetObj>> interfaces = node->getChildren(OBJECT_INTERFACE);
             lockProperties();
-            node->readLockChildList();
-            for(int j = 0; j < node->getChildList().size(); j++)
+            for(int j = 0; j < interfaces->size(); j++)
             {
-               if (node->getChildList().get(j)->getObjectClass() != OBJECT_INTERFACE)
-                  continue;
-
-               Interface *iface = static_cast<Interface*>(node->getChildList().get(j));
+               Interface *iface = static_cast<Interface*>(interfaces->get(j));
                for(uint32_t k = 0; k < m_dwNumResources; k++)
                {
                   if (iface->hasIpAddress(m_pResourceList[k].ipAddr))
@@ -723,7 +720,6 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
                   }
                }
             }
-            node->unlockChildList();
             unlockProperties();
          }
          else
