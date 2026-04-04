@@ -34,7 +34,18 @@ static char s_cpuVendorId[16] = "UNKNOWN";
 void ReadCPUVendorId()
 {
 #if _M_ARM64
-   // FIXME: read vendor ID from "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0" in registry
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      TCHAR buffer[256];
+      DWORD size = sizeof(buffer);
+      if (RegQueryValueEx(hKey, _T("VendorIdentifier"), nullptr, nullptr, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
+      {
+         tchar_to_utf8(buffer, -1, s_cpuVendorId, sizeof(s_cpuVendorId));
+         s_cpuVendorId[sizeof(s_cpuVendorId) - 1] = 0;
+      }
+      RegCloseKey(hKey);
+   }
 #else
    int cpuInfo[4];
    __cpuid(cpuInfo, 0);
