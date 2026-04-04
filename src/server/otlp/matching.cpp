@@ -282,23 +282,54 @@ shared_ptr<Node> MatchResourceToNode(const std::map<std::string, std::string>& a
       auto it = attributes.find(rule->otelAttribute);
       if (it == attributes.end())
          continue;
-      const std::string& value = it->second;
+      std::string matchValue = it->second;
 
-      // TODO: Apply regex transform if configured (rule->regexTransform)
+      // Apply regex transform if configured
+      if (rule->regexTransform[0] != 0)
+      {
+         const char *eptr;
+         int eoffset;
+         pcre *regex = pcre_compile(rule->regexTransform, PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
+         if (regex != nullptr)
+         {
+            int ovector[30];
+            int rc = pcre_exec(regex, nullptr, matchValue.c_str(), static_cast<int>(matchValue.length()), 0, 0, ovector, 30);
+            if (rc >= 1)
+            {
+               // Use first capture group if available, otherwise use whole match
+               int idx = (rc >= 2) ? 1 : 0;
+               matchValue = matchValue.substr(ovector[idx * 2], ovector[idx * 2 + 1] - ovector[idx * 2]);
+               nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform applied: \"%hs\" -> \"%hs\" (rule %u)",
+                  it->second.c_str(), matchValue.c_str(), rule->id);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform did not match value \"%hs\" (rule %u, pattern \"%hs\")",
+                  matchValue.c_str(), rule->id, rule->regexTransform);
+               pcre_free(regex);
+               continue;  // No match means this rule doesn't apply
+            }
+            pcre_free(regex);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_OTLP, 3, L"Failed to compile regex \"%hs\" in OTLP matching rule %u", rule->regexTransform, rule->id);
+         }
+      }
 
       switch (rule->nodeProperty)
       {
          case OTLP_MATCH_NODE_NAME:
-            node = MatchByNodeName(value.c_str());
+            node = MatchByNodeName(matchValue.c_str());
             break;
          case OTLP_MATCH_DNS_NAME:
-            node = MatchByDnsName(value.c_str());
+            node = MatchByDnsName(matchValue.c_str());
             break;
          case OTLP_MATCH_IP_ADDRESS:
-            node = MatchByIpAddress(value.c_str());
+            node = MatchByIpAddress(matchValue.c_str());
             break;
          case OTLP_MATCH_CUSTOM_ATTRIBUTE:
-            node = MatchByCustomAttribute(value.c_str(), rule->customAttrName);
+            node = MatchByCustomAttribute(matchValue.c_str(), rule->customAttrName);
             break;
       }
 
