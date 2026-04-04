@@ -296,6 +296,45 @@ void ProxyConnectionChecker()
 }
 
 /**
+ * Clear proxy configuration for given server (called when agent is no longer a zone proxy)
+ */
+void ClearProxyConfiguration(uint64_t serverId)
+{
+   g_proxyListLock.lock();
+
+   Iterator<DataCollectionProxy> it = g_proxyList.begin();
+   while (it.hasNext())
+   {
+      DataCollectionProxy *dcp = it.next();
+      if (dcp->getServerId() == serverId)
+         it.remove();
+   }
+
+   s_zoneList.remove(serverId);
+
+   g_proxyListLock.unlock();
+
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   TCHAR query[256];
+
+   DBBegin(hdb);
+
+   _sntprintf(query, 256, _T("DELETE FROM dc_proxy WHERE server_id=") UINT64_FMT, serverId);
+   if (DBQuery(hdb, query))
+   {
+      _sntprintf(query, 256, _T("DELETE FROM zone_config WHERE server_id=") UINT64_FMT, serverId);
+      if (DBQuery(hdb, query))
+      {
+         DBCommit(hdb);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Proxy configuration for server ") UINT64X_FMT(_T("016")) _T(" cleared"), serverId);
+         return;
+      }
+   }
+
+   DBRollback(hdb);
+}
+
+/**
  * Update proxy list on data collection configuration update
  */
 void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration& zone)
