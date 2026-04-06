@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2007-2026 Raden Solutions
 **
@@ -295,7 +295,7 @@ static bool CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
 	auto ucBuf = MemAllocArray<unsigned char>(pkeyLen + 1);
 	auto uctempBuf = ucBuf;
 	i2d_PublicKey(key, &uctempBuf);
-	
+
 	TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
 	BinToStr(ucBuf, pkeyLen, pkeyText);
 
@@ -833,9 +833,16 @@ static bool SaveCertificateAndKey(X509 *cert, EVP_PKEY *key, const TCHAR *certSu
    _tcscpy(keyPath, g_netxmsdDataDir);
    _tcscat(keyPath, keySuffix);
 
-   FILE *f = _tfopen(certPath, _T("w"));
+   int fd = _topen(certPath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+   if (fd == -1)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot write certificate to %s (%s)"), certPath, _tcserror(errno));
+      return false;
+   }
+   FILE *f = fdopen(fd, "w");
    if (f == nullptr)
    {
+      _close(fd);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot write certificate to %s (%s)"), certPath, _tcserror(errno));
       return false;
    }
@@ -847,9 +854,16 @@ static bool SaveCertificateAndKey(X509 *cert, EVP_PKEY *key, const TCHAR *certSu
       return false;
    }
 
-   f = _tfopen(keyPath, _T("w"));
+   fd = _topen(keyPath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+   if (fd == -1)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot write private key to %s (%s)"), keyPath, _tcserror(errno));
+      return false;
+   }
+   f = fdopen(fd, "w");
    if (f == nullptr)
    {
+      _close(fd);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot write private key to %s (%s)"), keyPath, _tcserror(errno));
       return false;
    }
