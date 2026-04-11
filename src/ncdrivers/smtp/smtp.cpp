@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification driver for SMTP protocol
-** Copyright (C) 2019-2024 Raden Solutions
+** Copyright (C) 2019-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <nms_util.h>
 #include <nxcldefs.h>
 #include <nxlibcurl.h>
+#include <jansson.h>
 
 #define DEBUG_TAG _T("ncd.smtp")
 
@@ -36,6 +37,15 @@ enum class TLSMode
    NONE,    // No TLS
    TLS,     // Enforced TLS
    STARTTLS // Opportunistic TLS
+};
+
+/**
+ * Authentication method
+ */
+enum class AuthMethod
+{
+   PLAIN,    // Regular username/password authentication
+   XOAUTH2   // OAuth2 with XOAUTH2 SASL mechanism
 };
 
 /**
@@ -53,35 +63,50 @@ private:
    bool m_isHtml;
    bool m_verifyPeer;
    TLSMode m_tlsMode;
+   AuthMethod m_authMethod;
+   char m_clientId[256];
+   char m_clientSecret[256];
+   char m_tokenEndpoint[512];
+   char m_scope[256];
+   char *m_accessToken;
+   time_t m_tokenExpiration;
 
    SmtpDriver();
 
    void prepareMailBody(ByteStream *data, const char *recipient, const TCHAR *subject, const TCHAR *body);
+   bool acquireOAuthToken();
 
 public:
+   virtual ~SmtpDriver();
    virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 
-   static SmtpDriver *createInstance(Config *config);
+   static SmtpDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
 };
 
 /**
  * Create driver instance
  */
-SmtpDriver *SmtpDriver::createInstance(Config *config)
+SmtpDriver *SmtpDriver::createInstance(Config *config, NCDriverStorageManager *storageManager)
 {
    SmtpDriver *driver = new SmtpDriver();
 
    TCHAR tlsModeBuff[9] = _T("NONE");
+   TCHAR authMethodBuff[9] = _T("PLAIN");
 
    NX_CFG_TEMPLATE configTemplate[] = {
+      { _T("AuthMethod"), CT_STRING, 0, 0, 9, 0, authMethodBuff },
+      { _T("ClientId"), CT_MB_STRING, 0, 0, sizeof(driver->m_clientId), 0, driver->m_clientId },
+      { _T("ClientSecret"), CT_MB_STRING, 0, 0, sizeof(driver->m_clientSecret), 0, driver->m_clientSecret },
       { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr), 0, driver->m_fromAddr },
       { _T("FromName"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromName), 0, driver->m_fromName },
       { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_isHtml },
       { _T("Login"), CT_MB_STRING, 0, 0, sizeof(driver->m_login), 0, driver->m_login },
       { _T("Password"), CT_MB_STRING, 0, 0, sizeof(driver->m_password), 0, driver->m_password },
       { _T("Port"), CT_WORD, 0, 0, 0, 0, &driver->m_port },
+      { _T("Scope"), CT_MB_STRING, 0, 0, sizeof(driver->m_scope), 0, driver->m_scope },
       { _T("Server"), CT_MB_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },
+      { _T("TokenEndpoint"), CT_MB_STRING, 0, 0, sizeof(driver->m_tokenEndpoint), 0, driver->m_tokenEndpoint },
       { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_verifyPeer },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
@@ -108,19 +133,46 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       return nullptr;
    }
 
+   if (!_tcsicmp(authMethodBuff, _T("XOAUTH2")))
+   {
+      driver->m_authMethod = AuthMethod::XOAUTH2;
+   }
+   else if (_tcsicmp(authMethodBuff, _T("PLAIN")))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid authentication method"));
+      delete driver;
+      return nullptr;
+   }
+
    if (driver->m_port == 0)
    {
       driver->m_port = driver->m_tlsMode == TLSMode::TLS ? 465 : 25;
    }
 
-   if ((driver->m_login[0] != 0) && (driver->m_password[0] != 0))
-      DecryptPasswordA(driver->m_login, driver->m_password, driver->m_password, sizeof(driver->m_password));
+   if (driver->m_authMethod == AuthMethod::XOAUTH2)
+   {
+      if (driver->m_clientId[0] == 0 || driver->m_clientSecret[0] == 0 ||
+          driver->m_tokenEndpoint[0] == 0 || driver->m_login[0] == 0)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("XOAUTH2 authentication requires Login, ClientId, ClientSecret, and TokenEndpoint"));
+         delete driver;
+         return nullptr;
+      }
+      DecryptPasswordA(driver->m_clientId, driver->m_clientSecret, driver->m_clientSecret, sizeof(driver->m_clientSecret));
+      if (driver->m_scope[0] == 0)
+         strlcpy(driver->m_scope, "https://outlook.office365.com/.default", sizeof(driver->m_scope));
+   }
+   else
+   {
+      if ((driver->m_login[0] != 0) && (driver->m_password[0] != 0))
+         DecryptPasswordA(driver->m_login, driver->m_password, driver->m_password, sizeof(driver->m_password));
+   }
 
    return driver;
 }
 
 /**
- * Constructor for SMTP diver
+ * Constructor for SMTP driver
  */
 SmtpDriver::SmtpDriver()
 {
@@ -133,6 +185,115 @@ SmtpDriver::SmtpDriver()
    m_isHtml = false;
    m_verifyPeer = true;
    m_tlsMode = TLSMode::NONE;
+   m_authMethod = AuthMethod::PLAIN;
+   m_clientId[0] = 0;
+   m_clientSecret[0] = 0;
+   m_tokenEndpoint[0] = 0;
+   m_scope[0] = 0;
+   m_accessToken = nullptr;
+   m_tokenExpiration = 0;
+}
+
+/**
+ * Destructor
+ */
+SmtpDriver::~SmtpDriver()
+{
+   MemFree(m_accessToken);
+}
+
+/**
+ * Acquire OAuth2 access token using client credentials flow
+ */
+bool SmtpDriver::acquireOAuthToken()
+{
+   if ((m_accessToken != nullptr) && (time(nullptr) < m_tokenExpiration - 60))
+      return true;
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Acquiring OAuth2 access token from %hs"), m_tokenEndpoint);
+
+   CURL *curl = curl_easy_init();
+   if (curl == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("curl_easy_init() failed for OAuth2 token request"));
+      return false;
+   }
+
+   char *encodedClientId = curl_easy_escape(curl, m_clientId, 0);
+   char *encodedClientSecret = curl_easy_escape(curl, m_clientSecret, 0);
+   char *encodedScope = curl_easy_escape(curl, m_scope, 0);
+
+   char postFields[2048];
+   snprintf(postFields, sizeof(postFields),
+      "grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s",
+      encodedClientId, encodedClientSecret, encodedScope);
+
+   curl_free(encodedClientId);
+   curl_free(encodedClientSecret);
+   curl_free(encodedScope);
+
+   curl_easy_setopt(curl, CURLOPT_URL, m_tokenEndpoint);
+   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields);
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+
+   ByteStream responseData(4096);
+   responseData.setAllocationStep(4096);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+
+   char errorBuffer[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
+   CURLcode rc = curl_easy_perform(curl);
+
+   memset(postFields, 0, sizeof(postFields));
+
+   bool success = false;
+   if (rc == CURLE_OK)
+   {
+      long httpCode = 0;
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+      if (httpCode == 200)
+      {
+         responseData.write('\0');
+         json_error_t error;
+         json_t *json = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
+         if (json != nullptr)
+         {
+            const char *token = json_object_get_string_utf8(json, "access_token", nullptr);
+            int64_t expiresIn = json_object_get_int64(json, "expires_in", 0);
+            if ((token != nullptr) && (expiresIn > 0))
+            {
+               MemFree(m_accessToken);
+               m_accessToken = MemCopyStringA(token);
+               m_tokenExpiration = time(nullptr) + static_cast<time_t>(expiresIn);
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("OAuth2 access token acquired, expires in ") INT64_FMT _T(" seconds"), expiresIn);
+               success = true;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("OAuth2 token response missing access_token or expires_in"));
+            }
+            json_decref(json);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to parse OAuth2 token response: %hs"), error.text);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("OAuth2 token endpoint returned HTTP %d"), static_cast<int>(httpCode));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("OAuth2 token request failed (%d: %hs)"), rc, (errorBuffer[0] != 0) ? errorBuffer : curl_easy_strerror(rc));
+   }
+
+   curl_easy_cleanup(curl);
+   return success;
 }
 
 /**
@@ -295,7 +456,26 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       EnableLibCURLUnexpectedEOFWorkaround(curl);
    }
 
-   if ((m_login[0] != 0) && (m_password[0] != 0))
+   if (m_authMethod == AuthMethod::XOAUTH2)
+   {
+#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER
+      if (!acquireOAuthToken())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to acquire OAuth2 token"));
+         curl_slist_free_all(recipients);
+         curl_easy_cleanup(curl);
+         return 30;
+      }
+      curl_easy_setopt(curl, CURLOPT_USERNAME, m_login);
+      curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, m_accessToken);
+#else
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("XOAUTH2 authentication not supported by this libcurl version"));
+      curl_slist_free_all(recipients);
+      curl_easy_cleanup(curl);
+      return -1;
+#endif
+   }
+   else if ((m_login[0] != 0) && (m_password[0] != 0))
    {
       curl_easy_setopt(curl, CURLOPT_USERNAME, m_login);
       curl_easy_setopt(curl, CURLOPT_PASSWORD, m_password);
@@ -366,7 +546,7 @@ DECLARE_NCD_ENTRY_POINT(SMTP, &s_config)
       return nullptr;
    }
 
-   return SmtpDriver::createInstance(config);
+   return SmtpDriver::createInstance(config, storageManager);
 }
 
 #ifdef _WIN32
