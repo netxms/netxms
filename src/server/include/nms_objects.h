@@ -439,12 +439,12 @@ private:
    }
 
 public:
-   SharedPointerIndex<T>() : AbstractIndexBase(Ownership::True)
+   SharedPointerIndex() : AbstractIndexBase(Ownership::True)
    {
       this->m_objectDestructor = destructor;
    }
    SharedPointerIndex(const SharedPointerIndex& src) = delete;
-   ~SharedPointerIndex<T>()
+   ~SharedPointerIndex()
    {
       clear(); // Delete all entries before memory pool is destroyed
    }
@@ -540,7 +540,7 @@ public:
 template<typename T> class AbstractIndex : public AbstractIndexBase
 {
 public:
-   AbstractIndex<T>(Ownership owner) : AbstractIndexBase(owner) { }
+   AbstractIndex(Ownership owner) : AbstractIndexBase(owner) { }
    AbstractIndex(const AbstractIndex& src) = delete;
 
    bool put(uint64_t key, T *object)
@@ -623,7 +623,7 @@ private:
    }
 
 public:
-   AbstractIndexWithDestructor<T>(Ownership owner) : AbstractIndex<T>(owner)
+   AbstractIndexWithDestructor(Ownership owner) : AbstractIndex<T>(owner)
    {
       this->m_objectDestructor = destructor;
    }
