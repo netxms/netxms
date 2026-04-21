@@ -23,6 +23,11 @@ INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp ' CONCAT SQL_INT64_TEXT CONCAT ' not null,idata_value varchar(255) null,raw_value varchar(255) null, PRIMARY KEY(item_id,idata_timestamp))');
 #endif
 
+#if defined(DB_MYSQL) || defined(DB_POSTGRESQL) || defined(DB_MSSQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)');
+#endif
+
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp ' CONCAT SQL_INT64_TEXT CONCAT ' not null,tdata_value ' CONCAT SQL_TEXT_TEXT CONCAT ' null, PRIMARY KEY(item_id,tdata_timestamp))');
 

@@ -25,6 +25,82 @@
 #include <nxtools.h>
 
 /**
+ * Check whether an index exists on the given table. Only supports MySQL, PostgreSQL, MSSQL.
+ */
+static bool IDataIndexExists(const wchar_t *tableName, const wchar_t *indexName)
+{
+   wchar_t query[512];
+   switch (g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         nx_swprintf(query, 512,
+               L"SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='%s' AND INDEX_NAME='%s'",
+               tableName, indexName);
+         break;
+      case DB_SYNTAX_PGSQL:
+         nx_swprintf(query, 512,
+               L"SELECT 1 FROM pg_indexes WHERE schemaname=current_schema() AND tablename='%s' AND indexname='%s'",
+               tableName, indexName);
+         break;
+      case DB_SYNTAX_MSSQL:
+         nx_swprintf(query, 512,
+               L"SELECT 1 FROM sys.indexes WHERE name='%s' AND object_id=OBJECT_ID('%s')",
+               indexName, tableName);
+         break;
+      default:
+         return false;
+   }
+
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+   bool exists = DBGetNumRows(hResult) > 0;
+   DBFreeResult(hResult);
+   return exists;
+}
+
+/**
+ * Upgrade from 62.4 to 62.5
+ */
+static bool H_UpgradeFromV4()
+{
+   // Per-DCI idata tables created after the 6.0 upgrade have only
+   // PRIMARY KEY(item_id, idata_timestamp), which cannot serve queries
+   // filtering/sorting by idata_timestamp alone. Restore the secondary
+   // (idata_timestamp, item_id) index for MySQL, PostgreSQL (non-TSDB),
+   // and MSSQL, and backfill it on existing idata_* tables.
+   if ((g_dbSyntax == DB_SYNTAX_MYSQL) || (g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_MSSQL))
+   {
+      CHK_EXEC(DBMgrMetaDataWriteStr(L"IDataIndexCreationCommand_0",
+            L"CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)"));
+
+      IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+      for(int i = 0; i < targets.size(); i++)
+      {
+         uint32_t id = targets.get(i);
+         wchar_t tableName[64], indexName[64];
+         nx_swprintf(tableName, 64, L"idata_%u", id);
+         nx_swprintf(indexName, 64, L"idx_idata_%u_timestamp_id", id);
+
+         if (DBIsTableExist(g_dbHandle, tableName) != DBIsTableExist_Found)
+            continue;
+
+         // Skip if the index already exists (e.g. on pre-6.0 PostgreSQL tables, which
+         // already have this exact index). Attempting CREATE INDEX here would fail and
+         // on PostgreSQL would poison the entire upgrade transaction.
+         if (IDataIndexExists(tableName, indexName))
+            continue;
+
+         wchar_t query[256];
+         nx_swprintf(query, 256, L"CREATE INDEX %s ON %s(idata_timestamp,item_id)", indexName, tableName);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 62.3 to 62.4
  */
 static bool H_UpgradeFromV3()
@@ -100,6 +176,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  62, 5,  H_UpgradeFromV4  },
    { 3,  62, 4,  H_UpgradeFromV3  },
    { 2,  62, 3,  H_UpgradeFromV2  },
    { 1,  62, 2,  H_UpgradeFromV1  },
