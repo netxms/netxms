@@ -354,14 +354,6 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	@Override
 	public void mouseDown(MouseEvent e)
 	{
-	}
-
-   /**
-    * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-    */
-	@Override
-	public void mouseUp(MouseEvent e)
-	{
 		PortInfo p = finder.findPortInfo(e.x, e.y);
 		if (p != null && p != selection)
 		{
@@ -370,6 +362,14 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 			for(PortSelectionListener listener : selectionListeners)
 				listener.portSelected(p);
 		}
+	}
+
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+    */
+	@Override
+	public void mouseUp(MouseEvent e)
+	{
 	}
 
    /**
