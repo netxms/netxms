@@ -468,7 +468,7 @@ bool InitIdTable()
    // Get first available storage class migration task id
    if (g_dbSyntax == DB_SYNTAX_TSDB)
    {
-      hResult = DBSelect(hdb, _T("SELECT max(task_id) FROM storage_class_migration_tasks"));
+      hResult = DBSelect(hdb, _T("SELECT max(id) FROM dc_storage_class_migrations"));
       if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
