@@ -1200,7 +1200,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    {
       m_instanceName = expandMacros(src->m_instanceName, MAX_ITEM_NAME);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-      m_instanceDiscoveryData = expandMacros(m_instanceDiscoveryData, MAX_ITEM_NAME);
+      m_instanceDiscoveryData = expandMacros(src->m_instanceDiscoveryData, MAX_ITEM_NAME);
       m_instanceFilterSource = src->m_instanceFilterSource;
       m_instanceFilter = src->m_instanceFilter;
    }
