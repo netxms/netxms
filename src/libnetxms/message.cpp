@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,6 +23,8 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 #include <zlib.h>
+
+#define DEBUG_TAG _T("nxcp")
 
 #undef uthash_malloc
 #define uthash_malloc(sz) m_pool.allocate(sz)
@@ -213,16 +215,26 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    if (m_flags & MF_BINARY)
    {
       m_controlData = 0;
+      size_t msgSize = (size_t)ntohl(msg->size);
       m_dataSize = (size_t)ntohl(msg->numFields);
       if ((m_flags & MF_COMPRESSED) && !(m_flags & MF_STREAM) && (m_version >= 4))
       {
          m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
 
+         if (msgSize < NXCP_HEADER_SIZE + 4)
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid size %u for compressed binary message %s with ID %u"),
+               static_cast<unsigned int>(msgSize), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
+
          z_stream stream;
          stream.zalloc = ZLibAlloc;
          stream.zfree = ZLibFree;
          stream.opaque = &m_pool;
-         stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.avail_in = (UINT32)(msgSize - NXCP_HEADER_SIZE - 4);
 #if ZLIB_CONST_INPUT
          stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
 #else
@@ -230,7 +242,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
 #endif
          if (inflateInit(&stream) != Z_OK)
          {
-            nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: inflateInit() failed"));
             m_version = -1;   // error indicator
             return;
          }
@@ -243,7 +255,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          {
             inflateEnd(&stream);
             TCHAR buffer[256];
-            nxlog_debug(6, _T("NXCPMessage: failed to decompress binary message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: failed to decompress binary message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
             m_version = -1;   // error indicator
             return;
          }
@@ -251,6 +263,15 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
       }
       else
       {
+         if (m_dataSize > msgSize - NXCP_HEADER_SIZE)
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: binary payload size %u exceeds message data size %u for %s with ID %u"),
+               static_cast<unsigned int>(m_dataSize), static_cast<unsigned int>(msgSize - NXCP_HEADER_SIZE),
+               NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
          m_data = m_pool.copyMemoryBlock(reinterpret_cast<const BYTE*>(msg->fields), m_dataSize);
       }
    }
@@ -269,13 +290,23 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
       if ((m_flags & MF_COMPRESSED) && (m_version >= 4))
       {
          m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
+
+         size_t msgSize = (size_t)ntohl(msg->size);
+         if (msgSize < NXCP_HEADER_SIZE + 4)
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid size %u for compressed message %s with ID %u"),
+               static_cast<unsigned int>(msgSize), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
          msgDataSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
 
          z_stream stream;
          stream.zalloc = ZLibAlloc;
          stream.zfree = ZLibFree;
          stream.opaque = &m_pool;
-         stream.avail_in = ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.avail_in = (UINT32)(msgSize - NXCP_HEADER_SIZE - 4);
 #if ZLIB_CONST_INPUT
          stream.next_in = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE + 4;
 #else
@@ -283,7 +314,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
 #endif
          if (inflateInit(&stream) != Z_OK)
          {
-            nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: inflateInit() failed"));
             m_version = -1;   // error indicator
             return;
          }
@@ -296,7 +327,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          {
             inflateEnd(&stream);
             TCHAR buffer[256];
-            nxlog_debug(6, _T("NXCPMessage: failed to decompress message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: failed to decompress message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
             m_version = -1;   // error indicator
             return;
          }
