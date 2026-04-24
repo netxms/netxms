@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -226,7 +226,7 @@ bool SNMP_PDU::parseVarBinds(const BYTE *pduData, size_t pduLength)
 
    while(bindingLength > 0)
    {
-      if (!BER_DecodeIdentifier(currPos, pduLength, &dataType, &length, &currPos, &idLength))
+      if (!BER_DecodeIdentifier(currPos, bindingLength, &dataType, &length, &currPos, &idLength))
          return false;
       if (dataType != ASN_SEQUENCE)
          return false;  // Every binding is a sequence
@@ -529,7 +529,7 @@ bool SNMP_PDU::parseV3SecurityUsm(const BYTE *data, size_t dataLength, const BYT
 	// Engine ID
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
       return false;
-   if (type != ASN_OCTET_STRING)
+   if ((type != ASN_OCTET_STRING) || (length > SNMP_MAX_ENGINEID_LEN))
       return false;
 	engineIdLen = length;
    if (!BER_DecodeContent(type, currPos, length, engineId))
@@ -894,7 +894,7 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 		pbCurrPos += dwLength;
 		dwPacketLength -= dwLength + idLength;
 
-		bResult = parsePdu(pbCurrPos, dwLength);
+		bResult = parsePdu(pbCurrPos, dwPacketLength);
 	}
 
    return bResult;

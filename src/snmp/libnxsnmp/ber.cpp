@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,48 +26,54 @@
 /**
  * Decode BER-encoded variable
  */
-bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, uint32_t *type, size_t *dataLength, const BYTE **data, size_t *idLength)
+bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, uint32_t *type, size_t *dataLength, const BYTE **outData, size_t *outIdLength)
 {
-   bool bResult = false;
+   // Need at least type byte and one length byte
+   if (rawSize < 2)
+      return false;
+
    const BYTE *pbCurrPos = rawData;
-   uint32_t dwIdLength = 0;
+   size_t idLength = 0;
 
    *type = (uint32_t)(*pbCurrPos);
    pbCurrPos++;
-   dwIdLength++;
+   idLength++;
 
    // Get length
    if ((*pbCurrPos & 0x80) == 0)
    {
       *dataLength = (size_t)(*pbCurrPos);
       pbCurrPos++;
-      dwIdLength++;
-      bResult = true;
+      idLength++;
    }
    else
    {
-      uint32_t length = 0;
       int numBytes = *pbCurrPos & 0x7F;
       pbCurrPos++;
-      dwIdLength++;
+      idLength++;
+      if ((numBytes < 1) || (numBytes > 4))
+         return false;
+      if (rawSize < idLength + (size_t)numBytes)
+         return false;   // Not enough bytes for long-form length prefix
+      uint32_t length = 0;
       BYTE *temp = ((BYTE *)&length) + (4 - numBytes);
-      if ((numBytes >= 1) && (numBytes <= 4))
+      while(numBytes > 0)
       {
-         while(numBytes > 0)
-         {
-            *temp++ = *pbCurrPos++;
-            dwIdLength++;
-            numBytes--;
-         }
-         *dataLength = (size_t)ntohl(length);
-         bResult = true;
+         *temp++ = *pbCurrPos++;
+         idLength++;
+         numBytes--;
       }
+      *dataLength = (size_t)ntohl(length);
    }
 
+   // Ensure declared content fits in remaining buffer
+   if (*dataLength > rawSize - idLength)
+      return false;
+
    // Set pointer to variable's data
-   *data = pbCurrPos;
-   *idLength = dwIdLength;
-   return bResult;
+   *outData = pbCurrPos;
+   *outIdLength = idLength;
+   return true;
 }
 
 /**
