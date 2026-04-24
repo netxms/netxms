@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -214,7 +214,7 @@ bool SNMP_Variable::decode(const BYTE *data, size_t varLength)
    }
 
    if (success)
-      success = decodeContent(pbCurrPos, varLength - length - dwIdLength, false);
+      success = decodeContent(pbCurrPos, varLength, false);
 
    return success;
 }
