@@ -322,6 +322,12 @@ static CallResponse SendTelegramRequest(const char *token, const StructArray<Pro
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+#else
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+#endif
+
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
@@ -755,6 +761,12 @@ void TelegramDriver::updateHandler(TelegramDriver *driver)
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
          curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+#endif
+
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+         curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+#else
+         curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 #endif
 
          curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data

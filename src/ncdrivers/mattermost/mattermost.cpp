@@ -210,6 +210,12 @@ int MattermostDriver::send(const TCHAR *recipient, const TCHAR *subject, const T
    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+#else
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
+
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
@@ -286,6 +292,12 @@ bool MattermostDriver::checkHealth()
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
+#endif
+
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+#else
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
 #endif
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
