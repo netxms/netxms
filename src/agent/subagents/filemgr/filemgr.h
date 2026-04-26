@@ -99,6 +99,7 @@ class RootFolder
 private:
    TCHAR *m_folder;
    bool m_readOnly;
+   bool m_followSymlinks;
 
 public:
    RootFolder(const TCHAR *folder);
@@ -109,6 +110,7 @@ public:
 
    const TCHAR *getFolder() const { return m_folder; }
    bool isReadOnly() const { return m_readOnly; }
+   bool followSymlinks() const { return m_followSymlinks; }
 };
 
 /**
