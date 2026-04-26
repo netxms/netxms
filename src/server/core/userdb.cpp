@@ -45,6 +45,8 @@
  * Externals
  */
 bool RadiusAuth(const wchar_t *login, const char *passwd);
+int RadiusAuthEx(const wchar_t *login, const char *passwd, RADIUSChallengeData *challengeData);
+int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);
 
 /**
  * Static data
@@ -420,10 +422,12 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
  * int pdwId. If password authentication is used, dwSigLen should be set to zero.
  * If user already authenticated by SSO server, ssoAuth must be set to true. Password expiration,
  * change flag and grace count ignored for SSO logins.
+ * If radiusChallengeData is not nullptr, RADIUS Access-Challenge is handled: the function will
+ * return RCC_RADIUS_ACCESS_CHALLENGE and populate radiusChallengeData for subsequent challenge-response.
  */
 uint32_t AuthenticateUser(const TCHAR *login, const char *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
-         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins)
+         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins, RADIUSChallengeData *radiusChallengeData)
 {
    s_userDatabaseLock.readLock();
    User *user = s_users.get(login);
@@ -489,7 +493,21 @@ uint32_t AuthenticateUser(const TCHAR *login, const char *password, size_t sigLe
          case UserAuthenticationMethod::RADIUS:
             if (sigLen == 0)
             {
-               passwordValid = RadiusAuth(login, password);
+               int radResult = RadiusAuthEx(login, password, radiusChallengeData);
+               if (radResult == RADIUS_RESULT_CHALLENGE)
+               {
+                  if (user->isDisabled())
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("User \"%s\" is disabled - denying RADIUS challenge"), user->getName());
+                     delete user;
+                     return RCC_ACCOUNT_DISABLED;
+                  }
+                  // Challenge received - set user ID for audit log and return intermediate state
+                  *pdwId = user->getId();
+                  delete user;
+                  return RCC_RADIUS_ACCESS_CHALLENGE;
+               }
+               passwordValid = (radResult == RADIUS_RESULT_OK);
             }
             else
             {

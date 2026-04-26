@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -44,6 +45,7 @@ public class TwoFactorResponseDialog extends Dialog
    private String challenge;
    private String qrText;
    private boolean trustedDevicesAllowed;
+   private int timeoutSeconds;
    private String response;
    private boolean trustedDevice;
    private LabeledText responseText;
@@ -56,13 +58,15 @@ public class TwoFactorResponseDialog extends Dialog
     * @param challenge challenge provided by server
     * @param qrText text to be displayed as QR code
     * @param trustedDevicesAllowed true if server allows trusted devices
+    * @param timeoutSeconds auto-cancel timeout in seconds (0 = no timeout)
     */
-   public TwoFactorResponseDialog(Shell parentShell, String challenge, String qrText, boolean trustedDevicesAllowed)
+   public TwoFactorResponseDialog(Shell parentShell, String challenge, String qrText, boolean trustedDevicesAllowed, int timeoutSeconds)
    {
       super(parentShell);
       this.challenge = challenge;
       this.qrText = qrText;
       this.trustedDevicesAllowed = trustedDevicesAllowed;
+      this.timeoutSeconds = timeoutSeconds;
    }
 
    /**
@@ -110,17 +114,8 @@ public class TwoFactorResponseDialog extends Dialog
          secretText.setLayoutData(gd);
       }
 
-      if ((challenge != null) && !challenge.isEmpty())
-      {
-         LabeledText challengeText = new LabeledText(dialogArea, SWT.NONE);
-         challengeText.setLabel(i18n.tr("Challenge"));
-         challengeText.setText(challenge);
-         challengeText.getTextControl().setEditable(false);
-         challengeText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      }
-
       responseText = new LabeledText(dialogArea, SWT.NONE);
-      responseText.setLabel("Response");
+      responseText.setLabel(((challenge != null) && !challenge.isEmpty()) ? challenge : i18n.tr("Response"));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -131,6 +126,29 @@ public class TwoFactorResponseDialog extends Dialog
       {
          checkTrustedDevice = new Button(dialogArea, SWT.CHECK);
          checkTrustedDevice.setText(i18n.tr("&Don't ask again on this computer"));
+      }
+
+      if (timeoutSeconds > 0)
+      {
+         final Shell dialogShell = parent.getShell();
+         final Display display = parent.getDisplay();
+         Thread timer = new Thread(() -> {
+            try
+            {
+               Thread.sleep(timeoutSeconds * 1000L);
+               display.asyncExec(() -> {
+                  if ((dialogShell != null) && !dialogShell.isDisposed())
+                     cancelPressed();
+               });
+            }
+            catch(InterruptedException e)
+            {
+               // Dialog was closed before timeout, nothing to do
+            }
+         }, "2FA-Timeout");
+         timer.setDaemon(true);
+         timer.start();
+         dialogShell.addDisposeListener(e -> timer.interrupt());
       }
 
       responseText.setFocus();

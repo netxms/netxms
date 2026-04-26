@@ -24,6 +24,7 @@
  **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 
 #include <nxcrypto.h>
 #include <openssl/des.h>
@@ -76,6 +77,9 @@ static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChal
    SHA1Final(&ctx, hash);
    memcpy(challenge, hash, 8);
 }
+
+// Return codes for RADIUS authentication (used across both non-radcli and radcli paths)
+// Note: RADIUS_RESULT_* constants are defined in nms_users.h
 
 #if !USE_RADCLI
 
@@ -604,9 +608,39 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 }
 
 /**
- * Receive result from server
+ * Parse TLV attributes from RADIUS response to extract Reply-Message (type 18) and State (type 24)
  */
-static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
+static void ParseChallengeAttributes(const BYTE *data, int length, RADIUSChallengeData *cd)
+{
+   const BYTE *p = data;
+   const BYTE *end = data + length;
+   while (p + 2 <= end)
+   {
+      BYTE type = p[0];
+      BYTE attrLen = p[1];
+      if ((attrLen < 2) || (p + attrLen > end))
+         break;
+      if ((type == PW_REPLY_MESSAGE) && (attrLen > 2))
+      {
+         int msgLen = std::min(static_cast<int>(attrLen - 2), static_cast<int>(sizeof(cd->replyMessage)) - 1);
+         memcpy(cd->replyMessage, p + 2, msgLen);
+         cd->replyMessage[msgLen] = 0;
+      }
+      else if ((type == PW_STATE) && (attrLen > 2))
+      {
+         cd->stateLength = std::min(static_cast<size_t>(attrLen - 2), sizeof(cd->state));
+         memcpy(cd->state, p + 2, cd->stateLength);
+      }
+      p += attrLen;
+   }
+}
+
+/**
+ * Receive result from server.
+ * Returns RADIUS_RESULT_OK, RADIUS_RESULT_REJECT, RADIUS_RESULT_CHALLENGE, or RADIUS_RESULT_ERROR.
+ * If challengeData is not nullptr and server responds with Access-Challenge, attributes are parsed into it.
+ */
+static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey, RADIUSChallengeData *challengeData = nullptr)
 {
 	AUTH_HDR *auth;
 	int totallen, secretlen;
@@ -620,7 +654,7 @@ static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int
 	if (totallen != length)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Received invalid reply length from RADIUS server (want %d - got %d)"), totallen, length);
-		return 8;
+		return RADIUS_RESULT_ERROR;
 	}
 
 	// Verify the reply digest
@@ -630,20 +664,45 @@ static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int
 	memcpy(buffer + length, secretkey, secretlen);
 	CalculateMD5Hash((BYTE *)auth, length + secretlen, (BYTE *)calc_digest);
 
-	if(memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0)
+	if (memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0)
 	{
-		nxlog_debug_tag(DEBUG_TAG, 3, _T("Received invalid reply digest from RADIUS server"));
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Received invalid reply digest from RADIUS server (fail-closed)"));
+		return RADIUS_RESULT_ERROR;
 	}
 
 	host.toString(szHostName);
 	nxlog_debug_tag(DEBUG_TAG, 3, _T("RADIUS packet from host %s code=%d, id=%d, length=%d"), szHostName, auth->code, auth->id, totallen);
-	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
+
+	switch(auth->code)
+	{
+		case PW_AUTHENTICATION_ACK:     // Access-Accept (2)
+			return RADIUS_RESULT_OK;
+		case PW_AUTHENTICATION_REJECT:  // Access-Reject (3)
+			return RADIUS_RESULT_REJECT;
+		case PW_ACCESS_CHALLENGE:       // Access-Challenge (11)
+			nxlog_debug_tag(DEBUG_TAG, 4, _T("RADIUS Access-Challenge received from server %s"), szHostName);
+			if (challengeData != nullptr)
+			{
+				int attrLen = totallen - AUTH_HDR_LEN;
+				if (attrLen > 0)
+					ParseChallengeAttributes(auth->data, attrLen, challengeData);
+				nxlog_debug_tag(DEBUG_TAG, 4, _T("RADIUS challenge: state_length=%zu, reply_message=\"%hs\""),
+						challengeData->stateLength, challengeData->replyMessage);
+			}
+			return RADIUS_RESULT_CHALLENGE;
+		default:
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("Unexpected RADIUS response code %d from server %s (fail-closed)"), auth->code, szHostName);
+			return RADIUS_RESULT_ERROR;
+	}
 }
 
 /**
- * Authenticate user via RADIUS using primary or secondary server
+ * Authenticate user via RADIUS using primary or secondary server.
+ * When stateAttr/stateAttrLen are provided, sends State attribute (challenge-response step).
+ * When challengeData is not nullptr, populated if server responds with Access-Challenge.
  */
-static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName)
+static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName,
+      const BYTE *stateAttr = nullptr, size_t stateAttrLen = 0, RADIUSChallengeData *challengeData = nullptr)
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
@@ -796,6 +855,17 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       pairadd(&req, vp);
    }
 
+   // Add State attribute if provided (challenge-response second step)
+   if ((stateAttr != nullptr) && (stateAttrLen > 0))
+   {
+      vp = paircreate(PW_STATE, PW_TYPE_STRING, "State");
+      size_t stateLen = std::min(stateAttrLen, static_cast<size_t>(AUTH_STRING_LEN));
+      memcpy(vp->strvalue, stateAttr, stateLen);
+      vp->length = static_cast<int>(stateLen);
+      pairadd(&req, vp);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending RADIUS State attribute (%zu bytes) for challenge-response"), stateLen);
+   }
+
 	// Resolve hostname.
 	InetAddress serverAddr = InetAddress::resolveHostName(serverName);
 	if (!serverAddr.isValidUnicast())
@@ -854,11 +924,11 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
 	if (result > 0 && i < nRetries)
 	{
-		result = result_recv(serverAddr, port, recv_buffer, result, vector, szSecret);
+		result = result_recv(serverAddr, port, recv_buffer, result, vector, szSecret, challengeData);
 	}
 	else
 	{
-		result = 7;
+		result = RADIUS_RESULT_TIMEOUT;
 	}
 
 	closesocket(sockfd);
@@ -870,7 +940,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
  */
 static bool CanRetry(int result)
 {
-   return (result == 3) || (result == 7) || (result == 10); // Bad server name, timeout, comm. error, or server not configured
+   return (result == 3) || (result == RADIUS_RESULT_TIMEOUT) || (result == 10); // Bad server name, timeout, comm. error, or server not configured
 }
 
 /**
@@ -878,7 +948,7 @@ static bool CanRetry(int result)
  */
 static bool IsTimeout(int result)
 {
-   return result == 7;
+   return result == RADIUS_RESULT_TIMEOUT;
 }
 
 #else /* USE_RADCLI */
@@ -903,7 +973,8 @@ if (rc_avpair_add(rh, &request, (type), (value), len, (vendor)) == NULL) \
 /**
  * Authenticate user via RADIUS using primary or secondary server
  */
-static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName)
+static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName,
+      const BYTE * /*stateAttr*/ = nullptr, size_t /*stateAttrLen*/ = 0, RADIUSChallengeData * /*challengeData*/ = nullptr)
 {
    ConfigReadStrA(useSecondaryServer ? _T("RADIUS.SecondaryServer") : _T("RADIUS.Server"), serverName, 256, "none");
    if (!strcmp(serverName, "none"))
@@ -1032,6 +1103,15 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    rc_destroy(rh);
    rc_avpair_free(request);
    rc_avpair_free(response);
+#ifdef CHALLENGE_RC
+   // Treat Access-Challenge as rejection since challenge-response is not supported with radcli
+   if (result == CHALLENGE_RC)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+            _T("RADIUS Access-Challenge received (radcli path) - challenge-response not supported with USE_RADCLI, denying access (fail-closed)"));
+      return REJECT_RC;
+   }
+#endif
    return result;
 }
 
@@ -1073,11 +1153,114 @@ bool RadiusAuth(const wchar_t *login, const char *passwd)
 	   nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
 	}
 	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
-	         (result == 0) ?
+	         (result == RADIUS_RESULT_OK) ?
 	                  _T("User %s was successfully authenticated by RADIUS server %hs") :
 	                  (IsTimeout(result) ?
                            _T("Authentication request for user %s timed out using RADIUS server %hs") :
 	                        _T("Authentication request for user %s was rejected by RADIUS server %hs")),
 	                  login, server);
-	return result == 0;
+	return result == RADIUS_RESULT_OK;
+}
+
+/**
+ * Authenticate user via RADIUS with Access-Challenge support.
+ * Returns RADIUS_RESULT_OK (0) on success, RADIUS_RESULT_REJECT (1) on reject,
+ * RADIUS_RESULT_CHALLENGE (2) if server issued Access-Challenge, or other value on error.
+ * On Access-Challenge, challengeData is populated with Reply-Message and State attributes.
+ * If challengeData is nullptr, an Access-Challenge response is downgraded to reject (fail-closed),
+ * since the caller has no way to complete the challenge-response exchange.
+ */
+int RadiusAuthEx(const wchar_t *login, const char *passwd, RADIUSChallengeData *challengeData)
+{
+   static bool useSecondary = false;
+
+   char server[256], rlogin[256];
+   wchar_to_utf8(login, -1, rlogin, 256);
+   rlogin[255] = 0;
+
+   int result = DoRadiusAuth(rlogin, passwd, useSecondary, server, nullptr, 0, challengeData);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
+   if (CanRetry(result))
+   {
+      useSecondary = !useSecondary;
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Unable to use %s RADIUS server, switching to %s"),
+            useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
+      result = DoRadiusAuth(rlogin, passwd, useSecondary, server, nullptr, 0, challengeData);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
+   }
+
+   if (result == RADIUS_RESULT_CHALLENGE)
+   {
+      if (challengeData == nullptr)
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+               _T("RADIUS Access-Challenge received for user %s from server %hs but caller cannot complete challenge-response, denying access (fail-closed)"),
+               login, server);
+         return RADIUS_RESULT_REJECT;
+      }
+      strlcpy(challengeData->serverName, server, sizeof(challengeData->serverName));
+      challengeData->useSecondary = useSecondary;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
+            _T("RADIUS Access-Challenge received for user %s from server %hs (reply-message: \"%hs\")"),
+            login, server, challengeData->replyMessage);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
+            (result == RADIUS_RESULT_OK) ?
+                  _T("User %s was successfully authenticated by RADIUS server %hs") :
+                  (IsTimeout(result) ?
+                        _T("Authentication request for user %s timed out using RADIUS server %hs") :
+                        _T("Authentication request for user %s was rejected by RADIUS server %hs")),
+            login, server);
+   }
+   return result;
+}
+
+/**
+ * Send RADIUS challenge response (OTP) using State attribute from Access-Challenge.
+ * The OTP is sent as User-Password (PAP-encoded) in the second Access-Request.
+ * Returns RADIUS_RESULT_OK (0) on access granted, RADIUS_RESULT_REJECT (1) on reject,
+ * or other value on error. A nested Access-Challenge is treated as rejection (fail-closed).
+ */
+int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData)
+{
+   if ((challengeData == nullptr) || (challengeData->stateLength == 0))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("RadiusChallengeResponse: missing State attribute, denying access (fail-closed)"));
+      return RADIUS_RESULT_REJECT;
+   }
+
+   char rlogin[256], rotp[256];
+   wchar_to_utf8(login, -1, rlogin, 256);
+   wchar_to_utf8(otp, -1, rotp, 256);
+   rlogin[255] = 0;
+   rotp[255] = 0;
+
+   char server[256];
+   strlcpy(server, challengeData->serverName, sizeof(server));
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending RADIUS challenge response for user %s to server %hs"), login, server);
+
+   // Send second Access-Request with State and OTP as User-Password (PAP)
+   // Note: challenge-response with non-PAP methods is not supported; the OTP is always
+   // sent as PAP User-Password for compatibility with NPS/Azure MFA.
+   int result = DoRadiusAuth(rlogin, rotp, challengeData->useSecondary, server,
+         challengeData->state, challengeData->stateLength);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("RADIUS challenge response result=%d for user %s"), result, login);
+
+   if (result == RADIUS_RESULT_CHALLENGE)
+   {
+      // Nested challenge - fail-closed
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+            _T("Nested RADIUS Access-Challenge received for user %s, denying access (fail-closed)"), login);
+      return RADIUS_RESULT_REJECT;
+   }
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
+         (result == RADIUS_RESULT_OK) ?
+               _T("User %s RADIUS challenge-response accepted by server %hs") :
+               _T("User %s RADIUS challenge-response rejected by server %hs"),
+         login, server);
+   return result;
 }

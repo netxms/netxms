@@ -70,6 +70,10 @@ struct LoginInfo
    bool closeOtherSessions;
    bool intruderLockout;
 
+   // RADIUS Access-Challenge state
+   bool radiusChallengeActive;
+   RADIUSChallengeData radiusChallenge;
+
    LoginInfo()
    {
       token = nullptr;
@@ -78,6 +82,7 @@ struct LoginInfo
       changePassword = false;
       closeOtherSessions = false;
       intruderLockout = false;
+      radiusChallengeActive = false;
    }
    ~LoginInfo()
    {
@@ -90,6 +95,8 @@ struct LoginInfo
  */
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
+
+int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);
 
 void UnregisterClientSession(session_id_t id);
 void ResetDiscoveryPoller();
@@ -2371,7 +2378,13 @@ uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, L
    char password[1024];
    request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
    uint32_t rcc = AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
-         &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
+         &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins, &loginInfo->radiusChallenge);
+   if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
+   {
+      loginInfo->radiusChallengeActive = true;
+      debugPrintf(4, _T("RADIUS Access-Challenge received for user %s (reply-message: \"%hs\")"),
+            loginInfo->loginName, loginInfo->radiusChallenge.replyMessage);
+   }
    SecureZeroMemory(password, sizeof(password));
    return rcc;
 }
@@ -2616,6 +2629,18 @@ void ClientSession::login(const NXCPMessage& request)
             delete_and_null(m_loginInfo);
          }
       }
+      else if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
+      {
+         // RADIUS Access-Challenge received - trigger 2FA-style flow using native 2FA UI
+         debugPrintf(4, _T("RADIUS Access-Challenge: presenting challenge to user via 2FA modal (reply-message: \"%hs\")"),
+               m_loginInfo->radiusChallenge.replyMessage);
+         rcc = RCC_NEED_2FA;
+         // Send a single synthetic method "RADIUS" so the client auto-selects it
+         response.setField(VID_2FA_METHOD_COUNT, static_cast<uint32_t>(1));
+         response.setField(VID_2FA_METHOD_LIST_BASE, _T("RADIUS"));
+         // Trusted devices are not applicable for RADIUS challenge-response
+         response.setField(VID_TRUSTED_DEVICES_ALLOWED, false);
+      }
       else
       {
          writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
@@ -2645,17 +2670,36 @@ void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
    {
       TCHAR method[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
-      delete m_loginInfo->token;
-      m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
-      if (m_loginInfo->token != nullptr)
+
+      if (!_tcscmp(method, _T("RADIUS")) && m_loginInfo->radiusChallengeActive)
       {
-         response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
-         response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
+         // RADIUS Access-Challenge: return Reply-Message as challenge text
+         // (will be shown in the 2FA dialog and used as window title)
+         TCHAR replyMsg[1024];
+         utf8_to_wchar(m_loginInfo->radiusChallenge.replyMessage, -1, replyMsg, 1024);
+         replyMsg[1023] = 0;
+         response.setField(VID_CHALLENGE, replyMsg);
+         uint32_t radiusTimeout = static_cast<uint32_t>(ConfigReadInt(_T("RADIUS.Timeout"), 3));
+         if (radiusTimeout > 0)
+            response.setField(VID_TIMEOUT, radiusTimeout);
          response.setField(VID_RCC, RCC_SUCCESS);
+         debugPrintf(4, _T("RADIUS challenge prepared for user %s (reply-message: \"%s\")"),
+               m_loginInfo->loginName, replyMsg);
       }
       else
       {
-         response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+         delete m_loginInfo->token;
+         m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
+         if (m_loginInfo->token != nullptr)
+         {
+            response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+            response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+         }
       }
    }
    else
@@ -2675,28 +2719,73 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
    {
       TCHAR userResponse[1024];
       request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
-      BYTE *trustedDeviceToken = nullptr;
-      size_t trustedDeviceTokenSize = 0;
-      if (Validate2FAResponse(m_loginInfo->token, userResponse, m_userId, &trustedDeviceToken, &trustedDeviceTokenSize))
+
+      if (m_loginInfo->radiusChallengeActive)
       {
-         uint32_t rcc = finalizeLogin(request, &response);
-         response.setField(VID_RCC, rcc);
-         if ((rcc == RCC_SUCCESS) && (trustedDeviceToken != nullptr))
+         // RADIUS Access-Challenge response: re-authenticate with RADIUS using State + OTP
+         int radResult = RadiusChallengeResponse(m_loginInfo->loginName, userResponse, &m_loginInfo->radiusChallenge);
+         if (radResult == RADIUS_RESULT_OK)
          {
-            response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
+            // Fetch effective system rights and re-check account status before finalizing.
+            // (m_systemAccessRights is not set by the challenge path in AuthenticateUser.)
+            uint32_t lookupRcc = RCC_SUCCESS;
+            if (!ValidateUserId(m_userId, m_loginInfo->loginName, &m_systemAccessRights, &lookupRcc))
+            {
+               writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response succeeded but account validation failed with error code %d (client info: %s)"),
+                     m_loginInfo->loginName, lookupRcc, m_clientInfo);
+               response.setField(VID_RCC, lookupRcc);
+               m_userId = INVALID_INDEX;
+            }
+            else
+            {
+               uint32_t rcc = finalizeLogin(request, &response);
+               response.setField(VID_RCC, rcc);
+               if (rcc != RCC_SUCCESS)
+               {
+                  writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response succeeded but finalize login failed with error code %d (client info: %s)"),
+                        m_loginInfo->loginName, rcc, m_clientInfo);
+               }
+               else
+               {
+                  writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" successfully authenticated via RADIUS challenge-response (client info: %s)"),
+                        m_loginInfo->loginName, m_clientInfo);
+               }
+            }
          }
-         if (rcc != RCC_SUCCESS)
+         else
          {
-            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response rejected (result=%d, client info: %s)"),
+                  m_loginInfo->loginName, radResult, m_clientInfo);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            m_userId = INVALID_INDEX;
          }
-         MemFree(trustedDeviceToken);
+         delete_and_null(m_loginInfo);
       }
       else
       {
-         writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed (client info: %s)"), m_loginInfo->loginName, m_clientInfo);
-         response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
+         BYTE *trustedDeviceToken = nullptr;
+         size_t trustedDeviceTokenSize = 0;
+         if (Validate2FAResponse(m_loginInfo->token, userResponse, m_userId, &trustedDeviceToken, &trustedDeviceTokenSize))
+         {
+            uint32_t rcc = finalizeLogin(request, &response);
+            response.setField(VID_RCC, rcc);
+            if ((rcc == RCC_SUCCESS) && (trustedDeviceToken != nullptr))
+            {
+               response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
+            }
+            if (rcc != RCC_SUCCESS)
+            {
+               writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+            }
+            MemFree(trustedDeviceToken);
+         }
+         else
+         {
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed (client info: %s)"), m_loginInfo->loginName, m_clientInfo);
+            response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
+         }
+         delete_and_null(m_loginInfo);
       }
-      delete_and_null(m_loginInfo);
    }
    else
    {

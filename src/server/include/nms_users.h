@@ -548,6 +548,35 @@ public:
 };
 
 /**
+ * RADIUS authentication result codes
+ */
+#define RADIUS_RESULT_OK        0  // Access-Accept
+#define RADIUS_RESULT_REJECT    1  // Access-Reject
+#define RADIUS_RESULT_CHALLENGE 2  // Access-Challenge
+#define RADIUS_RESULT_TIMEOUT   7  // Timeout
+#define RADIUS_RESULT_ERROR     8  // Protocol error or unexpected response
+
+/**
+ * RADIUS challenge data (attributes from Access-Challenge response)
+ */
+struct RADIUSChallengeData
+{
+   char replyMessage[1024];  // Reply-Message attribute (type 18), null-terminated UTF-8
+   BYTE state[253];          // State attribute (type 24), binary
+   size_t stateLength;       // Length of state data (0 if not present)
+   char serverName[256];     // RADIUS server that issued the challenge
+   bool useSecondary;        // Whether secondary server was used
+
+   RADIUSChallengeData()
+   {
+      replyMessage[0] = 0;
+      stateLength = 0;
+      serverName[0] = 0;
+      useSecondary = false;
+   }
+};
+
+/**
  * Functions
  */
 bool LoadUsers();
@@ -556,7 +585,7 @@ void SendUserDBUpdate(uint16_t code, uint32_t id, UserDatabaseObject *object);
 void SendUserDBUpdate(uint16_t code, uint32_t id);
 uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const char *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
-         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
+         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins, RADIUSChallengeData *radiusChallengeData = nullptr);
 
 uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const char *password, bool *isValid);
 uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const char *newPassword, const char *oldPassword, bool changeOwnPassword);

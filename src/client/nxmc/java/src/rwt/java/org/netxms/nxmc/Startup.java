@@ -450,6 +450,7 @@ public class Startup implements EntryPoint, StartupParameters
          }
 
          LoginJob job = new LoginJob(display, credentials, ignoreProtocolVersion, enableCompression);
+         job.setTwoFactorTimeout(appProperties.getPropertyAsInteger("twoFactorTimeout", 0));
 
          LoginProgressDialog monitorDialog = new LoginProgressDialog(appProperties);
          try

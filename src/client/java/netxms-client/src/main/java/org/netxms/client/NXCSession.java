@@ -339,6 +339,7 @@ public class NXCSession
    private int graceLogins;
    private boolean twoFASetupRequired;
    private int twoFAGraceLogins;
+   private int challengeTimeout = 0;
    private String authenticationToken = null;
 
    // Internal communication data
@@ -2543,6 +2544,7 @@ public class NXCSession
             {
                String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
                String qrLabel = response.getFieldAsString(NXCPCodes.VID_QR_LABEL);
+               challengeTimeout = response.getFieldAsInt32(NXCPCodes.VID_TIMEOUT);
                String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, qrLabel, trustedDevicesAllowed);
                if (userResponse == null)
                {
@@ -3401,6 +3403,16 @@ public class NXCSession
    public int getTwoFAGraceLogins()
    {
       return twoFAGraceLogins;
+   }
+
+   /**
+    * Get the timeout (in seconds) provided by the server for the last 2FA challenge, or 0 if not provided.
+    *
+    * @return challenge timeout in seconds, or 0 if not provided
+    */
+   public int getChallengeTimeout()
+   {
+      return challengeTimeout;
    }
 
    /**
