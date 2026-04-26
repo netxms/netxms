@@ -27,6 +27,7 @@ import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -71,9 +72,13 @@ public class LoginProgressDialog extends Dialog implements IRunnableContext
    protected void configureShell(Shell shell)
    {
       super.configureShell(shell);
-      shell.setText(String.format(i18n.tr("%s - Connecting"), BrandingManager.getProductName()));
+      String title = BrandingManager.getProductName() + " - " + i18n.tr("Connecting");
+      shell.setText(title);
       shell.setMaximized(true);
       shell.setFullScreen(true);
+      JavaScriptExecutor js = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (js != null)
+         js.execute("document.title='" + title.replace("'", "\\'") + "';");
    }
 
    /**
