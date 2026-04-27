@@ -25,6 +25,44 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.7 to 62.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(CreateConfigParam(L"Server.Security.PasswordHash.MemoryCostKB",
+            L"65536",
+            L"Argon2id memory cost in KiB used when hashing user passwords. Higher values strengthen resistance to GPU/ASIC cracking at the cost of login latency and server memory.",
+            L"KB", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"Server.Security.PasswordHash.TimeCost",
+            L"3",
+            L"Argon2id iteration count used when hashing user passwords.",
+            nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"Server.Security.PasswordHash.Parallelism",
+            L"1",
+            L"Argon2id parallelism (lanes) used when hashing user passwords.",
+            nullptr, 'I', true, false, false, false));
+
+   // Users still on legacy unsalted SHA-1 hashes cannot be migrated to Argon2id at-rest
+   // (the plaintext is needed). Force a password change on next login so dormant accounts
+   // do not remain on unsalted SHA-1 indefinitely.
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET flags=flags+8 WHERE BITAND(flags,8)=0 AND password NOT LIKE '$%' AND password<>''"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET flags=flags+8 WHERE (CAST(flags AS bigint) & CAST(8 AS bigint))=0 AND password NOT LIKE '$%' AND password<>''"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET flags=flags+8 WHERE (flags & 8)=0 AND password NOT LIKE '$%' AND password<>''"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 62.6 to 62.7
  */
 static bool H_UpgradeFromV6()
@@ -221,6 +259,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  62, 8,  H_UpgradeFromV7  },
    { 6,  62, 7,  H_UpgradeFromV6  },
    { 5,  62, 6,  H_UpgradeFromV5  },
    { 4,  62, 5,  H_UpgradeFromV4  },

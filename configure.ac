@@ -795,6 +795,16 @@ AC_ARG_WITH(pcre2,
 	fi
 ])
 
+AC_ARG_WITH(argon2,
+[AS_HELP_STRING(--with-argon2,specify libargon2 location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
 AC_ARG_WITH(bundled-openssl,
 [AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
 [
@@ -2329,6 +2339,18 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 #endif
 		])
 	fi
+fi
+
+
+#--------------------------------------------------------------------
+# Checks for libargon2 (password hashing, server only)
+#--------------------------------------------------------------------
+
+if test "x$BUILD_SERVER" = "xyes" ; then
+	AC_CHECK_HEADER(argon2.h, , AC_MSG_ERROR([libargon2 development headers are required (use --with-argon2=PATH for non-standard locations)]))
+	AC_CHECK_LIB(argon2, argon2id_hash_encoded, [
+		SERVER_LIBS="$SERVER_LIBS -largon2"
+	], AC_MSG_ERROR([libargon2 runtime library is required (use --with-argon2=PATH for non-standard locations)]))
 fi
 
 

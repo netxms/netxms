@@ -22,6 +22,8 @@
 #include "nxcore.h"
 #include <nxcore_2fa.h>
 #include <nms_users.h>
+#include <argon2.h>
+#include <openssl/crypto.h>
 
 #define DEBUG_TAG _T("userdb")
 
@@ -58,14 +60,36 @@ static int CompareUserId(const void *e1, const void *e2)
 }
 
 /**
+ * Read Argon2id cost parameters from configuration, clamped to sane minimums
+ */
+static void ReadArgon2Costs(uint32_t *tCost, uint32_t *mCost, uint32_t *parallelism)
+{
+   int32_t t = ConfigReadInt(L"Server.Security.PasswordHash.TimeCost", 3);
+   int32_t m = ConfigReadInt(L"Server.Security.PasswordHash.MemoryCostKB", 65536);
+   int32_t p = ConfigReadInt(L"Server.Security.PasswordHash.Parallelism", 1);
+   *tCost = (t < 1) ? 1 : static_cast<uint32_t>(t);
+   *mCost = (m < 8) ? 8 : static_cast<uint32_t>(m);
+   *parallelism = (p < 1) ? 1 : static_cast<uint32_t>(p);
+}
+
+/**
+ * Determine if an Argon2id encoded record was hashed with weaker parameters than current configuration
+ */
+static bool Argon2NeedsRehash(const char *encoded)
+{
+   uint32_t m, t, p;
+   if (sscanf(encoded, "$argon2id$v=%*u$m=%u,t=%u,p=%u$", &m, &t, &p) != 3)
+      return true;
+   uint32_t targetT, targetM, targetP;
+   ReadArgon2Costs(&targetT, &targetM, &targetP);
+   return (m < targetM) || (t < targetT) || (p != targetP);
+}
+
+/**
  * Generate hash for password
  */
-static void CalculatePasswordHash(const wchar_t *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = nullptr)
+static void CalculatePasswordHash(const char *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = nullptr)
 {
-	char mbPassword[1024];
-	wchar_to_utf8(password, -1, mbPassword, 1024);
-	mbPassword[1023] = 0;
-
    BYTE buffer[1024];
 
    memset(ph, 0, sizeof(PasswordHash));
@@ -73,17 +97,36 @@ static void CalculatePasswordHash(const wchar_t *password, PasswordHashType type
    switch(type)
    {
       case PWD_HASH_SHA1:
-      	CalculateSHA1Hash(mbPassword, strlen(mbPassword), ph->hash);
+      	CalculateSHA1Hash(password, strlen(password), ph->hash);
          break;
       case PWD_HASH_SHA256:
          if (salt != nullptr)
             memcpy(buffer, salt, PASSWORD_SALT_LENGTH);
          else
             GenerateRandomBytes(buffer, PASSWORD_SALT_LENGTH);
-         strcpy(reinterpret_cast<char*>(&buffer[PASSWORD_SALT_LENGTH]), mbPassword);
-         CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
+         strcpy(reinterpret_cast<char*>(&buffer[PASSWORD_SALT_LENGTH]), password);
+         CalculateSHA256Hash(buffer, strlen(password) + PASSWORD_SALT_LENGTH, ph->hash);
          memcpy(ph->salt, buffer, PASSWORD_SALT_LENGTH);
          break;
+      case PWD_HASH_ARGON2ID:
+      {
+         BYTE argonSalt[ARGON2_SALT_LENGTH];
+         GenerateRandomBytes(argonSalt, ARGON2_SALT_LENGTH);
+         uint32_t tCost, mCost, parallelism;
+         ReadArgon2Costs(&tCost, &mCost, &parallelism);
+         int rc = argon2id_hash_encoded(tCost, mCost, parallelism,
+            password, strlen(password),
+            argonSalt, ARGON2_SALT_LENGTH,
+            32 /* raw hash length */,
+            ph->encoded, ARGON2_ENCODED_LENGTH);
+         if (rc != ARGON2_OK)
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"argon2id_hash_encoded failed: %hs", argon2_error_message(rc));
+            ph->hashType = PWD_HASH_DISABLED;
+            ph->encoded[0] = 0;
+         }
+         break;
+      }
       default:
          break;
    }
@@ -532,7 +575,18 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    if (buffer[0] == _T('$'))
    {
       // new format - with hash type indicator
-      if (buffer[1] == 'A')
+      if (!_tcsncmp(buffer, _T("$argon2id$"), 10))
+      {
+         m_password.hashType = PWD_HASH_ARGON2ID;
+         size_t len = _tcslen(buffer);
+         if (len < ARGON2_ENCODED_LENGTH)
+         {
+            wchar_to_utf8(buffer, -1, m_password.encoded, ARGON2_ENCODED_LENGTH);
+            m_password.encoded[ARGON2_ENCODED_LENGTH - 1] = 0;
+            validHash = true;
+         }
+      }
+      else if (buffer[1] == 'A')
       {
          m_password.hashType = PWD_HASH_SHA256;
          if (_tcslen(buffer) >= 82)
@@ -557,8 +611,8 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    }
    if (!validHash && !noPassword)
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid password hash for user \"%s\"; password reset to default"), m_name);
-      CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Invalid password hash for user \"%s\"; password reset to default", m_name);
+      CalculatePasswordHash("netxms", PWD_HASH_ARGON2ID, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
 
@@ -592,13 +646,13 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 User::User() : UserDatabaseObject()
 {
 	m_id = 0;
-	_tcscpy(m_name, _T("system"));
+	wcscpy(m_name, L"system");
 	m_flags = UF_MODIFIED | UF_CHANGE_PASSWORD;
 	m_systemRights = SYSTEM_ACCESS_FULL;
 	m_fullName[0] = 0;
-	_tcscpy(m_description, _T("Built-in system account"));
-	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
-	m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);
+	wcscpy(m_description, L"Built-in system account");
+	CalculatePasswordHash("netxms", PWD_HASH_ARGON2ID, &m_password);
+	m_graceLogins = ConfigReadInt(L"Server.Security.GraceLoginCount", 5);
 	m_authMethod = UserAuthenticationMethod::LOCAL;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
@@ -623,7 +677,7 @@ User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) 
 	m_authMethod = authMethod;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
-	CalculatePasswordHash(_T(""), PWD_HASH_SHA256, &m_password);
+	CalculatePasswordHash("", PWD_HASH_ARGON2ID, &m_password);
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
 	m_minPasswordLength = -1;	// Use system-wide default
@@ -649,9 +703,7 @@ static EnumerationCallbackResult User2FAMethodsCopyCallback(const TCHAR* name, c
  */
 User::User(const User *src) : UserDatabaseObject(src)
 {
-   m_password.hashType = src->m_password.hashType;
-   memcpy(m_password.hash, src->m_password.hash, SHA256_DIGEST_SIZE);
-   memcpy(m_password.salt, src->m_password.salt, PASSWORD_SALT_LENGTH);
+   m_password = src->m_password;
 
    _tcslcpy(m_fullName, src->m_fullName, MAX_USER_FULLNAME);
    m_graceLogins = src->m_graceLogins;
@@ -690,7 +742,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    m_flags &= ~UF_MODIFIED;
 
    // Create or update record in database
-   TCHAR password[128];
+   TCHAR password[ARGON2_ENCODED_LENGTH];
    switch(m_password.hashType)
    {
       case PWD_HASH_SHA1:
@@ -700,6 +752,10 @@ bool User::saveToDatabase(DB_HANDLE hdb)
          _tcscpy(password, _T("$A"));
          BinToStr(m_password.salt, PASSWORD_SALT_LENGTH, &password[2]);
          BinToStr(m_password.hash, SHA256_DIGEST_SIZE, &password[18]);
+         break;
+      case PWD_HASH_ARGON2ID:
+         utf8_to_wchar(m_password.encoded, -1, password, ARGON2_ENCODED_LENGTH);
+         password[ARGON2_ENCODED_LENGTH - 1] = 0;
          break;
       default:
          _tcscpy(password, _T("$$"));
@@ -827,19 +883,25 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Validate user's password
  */
-bool User::validatePassword(const wchar_t *password)
+bool User::validatePassword(const char *password, bool *rehash)
 {
    if (m_password.hashType == PWD_HASH_DISABLED)
       return false;
 
-   PasswordHash ph;
-   CalculatePasswordHash(password, m_password.hashType, &ph, m_password.salt);
-   bool success = !memcmp(ph.hash, m_password.hash, PWD_HASH_SIZE(m_password.hashType));
-   if (success && m_password.hashType == PWD_HASH_SHA1)
+   bool success;
+   if (m_password.hashType == PWD_HASH_ARGON2ID)
    {
-      // regenerate password hash if old format is used
-      CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-         m_flags |= UF_MODIFIED;
+      success = (argon2id_verify(m_password.encoded, password, strlen(password)) == ARGON2_OK);
+      if (success)
+         *rehash = Argon2NeedsRehash(m_password.encoded);
+   }
+   else
+   {
+      PasswordHash ph;
+      CalculatePasswordHash(password, m_password.hashType, &ph, m_password.salt);
+      success = (CRYPTO_memcmp(ph.hash, m_password.hash, PWD_HASH_SIZE(m_password.hashType)) == 0);
+      if (success)
+         *rehash = true; // legacy hash, upgrade to Argon2id
    }
    return success;
 }
@@ -847,10 +909,11 @@ bool User::validatePassword(const wchar_t *password)
 /**
  * Set user's password
  */
-void User::setPassword(const wchar_t *password, bool clearChangePasswdFlag)
+void User::setPassword(const char *password, bool clearChangePasswdFlag, bool resetGraceLogins)
 {
-   CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-   m_graceLogins = ConfigReadInt(_T("Server.Security.GraceLoginCount"), 5);;
+   CalculatePasswordHash(password, PWD_HASH_ARGON2ID, &m_password);
+   if (resetGraceLogins)
+      m_graceLogins = ConfigReadInt(L"Server.Security.GraceLoginCount", 5);
    m_flags |= UF_MODIFIED;
    if (clearChangePasswdFlag)
       m_flags &= ~UF_CHANGE_PASSWORD;

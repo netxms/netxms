@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2024 Victor Kirhenshtein
+ ** Copyright (C) 2003-2026 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -1056,22 +1056,20 @@ static bool IsTimeout(int result)
 /**
  * Authenticate user via RADIUS
  */
-bool RadiusAuth(const wchar_t *login, const wchar_t *passwd)
+bool RadiusAuth(const wchar_t *login, const char *passwd)
 {
 	static bool useSecondary = false;
 
-	char server[256], rlogin[256], rpasswd[256];
+	char server[256], rlogin[256];
 	wchar_to_utf8(login, -1, rlogin, 256);
-	wchar_to_utf8(passwd, -1, rpasswd, 256);
    rlogin[255] = 0;
-   rpasswd[255] = 0;
-   int result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
+   int result = DoRadiusAuth(rlogin, passwd, useSecondary, server);
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
 	if (CanRetry(result))
 	{
 		useSecondary = !useSecondary;
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Unable to use %s RADIUS server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
-		result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
+		result = DoRadiusAuth(rlogin, passwd, useSecondary, server);
 	   nxlog_debug_tag(DEBUG_TAG, 4, _T("DoRadiusAuth returned %d for user %s"), result, login);
 	}
 	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG,
