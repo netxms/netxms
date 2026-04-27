@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -25,24 +27,34 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.MacAddress;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.ArpCacheEntry;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.CreateMultipleNodesDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -50,6 +62,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ArpCacheView extends ObjectView
 {
+   private static final Logger logger = LoggerFactory.getLogger(ArpCacheView.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(ArpCacheView.class);
 
    public static final int COLUMN_IP_ADDRESS = 0;
@@ -64,6 +78,7 @@ public class ArpCacheView extends ObjectView
    private Action actionExportAllToCsv;
    private Action actionCopyRowToClipboard;
    private Action actionCopyMACToClipboard;
+   private Action actionCreateNode;
 
    /**
     * Default constructor
@@ -142,6 +157,14 @@ public class ArpCacheView extends ObjectView
       };
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+
+      actionCreateNode = new Action(i18n.tr("&Create node..."), SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            createNodesFromSelection();
+         }
+      };
 	}
 
 	/**
@@ -168,11 +191,203 @@ public class ArpCacheView extends ObjectView
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+      @SuppressWarnings("unchecked")
+      List<ArpCacheEntry> selection = viewer.getStructuredSelection().toList();
+      if (hasUnknownNode(selection))
+      {
+         actionCreateNode.setText((countUnknownNodes(selection) > 1) ? i18n.tr("&Create nodes...") : i18n.tr("&Create node..."));
+         manager.add(actionCreateNode);
+         manager.add(new Separator());
+      }
       manager.add(actionCopyRowToClipboard);
       manager.add(actionCopyMACToClipboard);
       manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
 	}
+
+   /**
+    * Check if selection contains at least one entry with no associated node.
+    *
+    * @param selection list of selected ARP cache entries
+    * @return true if any entry has node id == 0
+    */
+   private static boolean hasUnknownNode(List<ArpCacheEntry> selection)
+   {
+      for(ArpCacheEntry e : selection)
+      {
+         if (e.getNodeId() == 0)
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * Count entries with no associated node.
+    *
+    * @param selection list of selected ARP cache entries
+    * @return number of entries with node id == 0
+    */
+   private static int countUnknownNodes(List<ArpCacheEntry> selection)
+   {
+      int count = 0;
+      for(ArpCacheEntry e : selection)
+      {
+         if (e.getNodeId() == 0)
+            count++;
+      }
+      return count;
+   }
+
+   /**
+    * Find first non-Subnet parent of given object, or 0 if none found.
+    *
+    * @param object source object
+    * @return parent object id suitable as a container, or 0
+    */
+   private long findContainerParent(AbstractObject object)
+   {
+      NXCSession session = Registry.getSession();
+      Iterator<Long> it = object.getParents();
+      while(it.hasNext())
+      {
+         long id = it.next();
+         AbstractObject parent = session.findObjectById(id);
+         if ((parent != null) && (parent.getObjectClass() != AbstractObject.OBJECT_SUBNET))
+            return id;
+      }
+      return 0;
+   }
+
+   /**
+    * Create node objects from the currently selected ARP cache entries.
+    * Entries that already reference an existing node are skipped.
+    */
+   private void createNodesFromSelection()
+   {
+      @SuppressWarnings("unchecked")
+      List<ArpCacheEntry> selection = viewer.getStructuredSelection().toList();
+      List<ArpCacheEntry> targets = new ArrayList<ArpCacheEntry>(selection.size());
+      for(ArpCacheEntry e : selection)
+      {
+         if ((e.getNodeId() == 0) && (e.getIpAddress() != null))
+            targets.add(e);
+      }
+      if (targets.isEmpty())
+         return;
+
+      AbstractObject contextObject = getObject();
+      long defaultParentId = (contextObject != null) ? findContainerParent(contextObject) : 0;
+      int defaultZoneUIN = (contextObject instanceof Node) ? ((Node)contextObject).getZoneId() : 0;
+
+      if (targets.size() == 1)
+      {
+         createSingleNode(targets.get(0), defaultParentId, defaultZoneUIN);
+      }
+      else
+      {
+         createMultipleNodes(targets, defaultParentId, defaultZoneUIN);
+      }
+   }
+
+   /**
+    * Create a single node using the full create node dialog, pre-filled from the ARP entry.
+    *
+    * @param entry ARP cache entry
+    * @param defaultParentId initial parent id for the dialog
+    * @param defaultZoneUIN initial zone UIN for the dialog
+    */
+   private void createSingleNode(ArpCacheEntry entry, long defaultParentId, int defaultZoneUIN)
+   {
+      String ipAddress = entry.getIpAddress().getHostAddress();
+      CreateNodeDialog dlg = new CreateNodeDialog(getWindow().getShell(), null);
+      dlg.setObjectName(ipAddress);
+      dlg.setEnableShowAgainFlag(false);
+      dlg.setZoneUIN(defaultZoneUIN);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), defaultParentId);
+      cd.setCreationFlags(dlg.getCreationFlags());
+      cd.setPrimaryName(dlg.getHostName());
+      cd.setObjectAlias(dlg.getObjectAlias());
+      cd.setAgentPort(dlg.getAgentPort());
+      cd.setAgentProxyId(dlg.getAgentProxy());
+      cd.setSnmpPort(dlg.getSnmpPort());
+      cd.setSnmpProxyId(dlg.getSnmpProxy());
+      cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
+      cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+      cd.setModbusTcpPort(dlg.getModbusTcpPort());
+      cd.setModbusUnitId(dlg.getModbusUnitId());
+      cd.setModbusProxyId(dlg.getModbusProxy());
+      cd.setIcmpProxyId(dlg.getIcmpProxy());
+      cd.setWebServiceProxyId(dlg.getWebServiceProxy());
+      cd.setSshPort(dlg.getSshPort());
+      cd.setSshProxyId(dlg.getSshProxy());
+      cd.setSshLogin(dlg.getSshLogin());
+      cd.setSshPassword(dlg.getSshPassword());
+      cd.setMqttProxyId(dlg.getMqttProxy());
+      cd.setZoneUIN(dlg.getZoneUIN());
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Creating node"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.createObject(cd);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format(i18n.tr("Cannot create node object %s"), cd.getName());
+         }
+      }.start();
+   }
+
+   /**
+    * Create multiple node objects with default settings using the lightweight batch dialog.
+    *
+    * @param entries ARP cache entries to create nodes for
+    * @param defaultParentId initial parent id for the dialog
+    * @param defaultZoneUIN initial zone UIN for the dialog
+    */
+   private void createMultipleNodes(final List<ArpCacheEntry> entries, long defaultParentId, int defaultZoneUIN)
+   {
+      CreateMultipleNodesDialog dlg = new CreateMultipleNodesDialog(getWindow().getShell(), defaultParentId, defaultZoneUIN);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final long parentId = dlg.getParentId();
+      final int zoneUIN = dlg.getZoneUIN();
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Creating nodes"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(ArpCacheEntry entry : entries)
+            {
+               String ipAddress = entry.getIpAddress().getHostAddress();
+               NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, ipAddress, parentId);
+               cd.setPrimaryName(ipAddress);
+               cd.setZoneUIN(zoneUIN);
+               try
+               {
+                  session.createObject(cd);
+               }
+               catch(Exception e)
+               {
+                  logger.error("Cannot create node object " + ipAddress, e);
+               }
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create node objects");
+         }
+      }.start();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
