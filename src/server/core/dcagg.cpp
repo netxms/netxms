@@ -18,8 +18,10 @@
 **
 ** File: dcagg.cpp
 **
-** DCI data aggregation (issue #419) - non-TSDB implementation.
-** TSDB uses native continuous aggregates and is handled separately.
+** DCI data aggregation (issue #419). Non-TSDB rollup is implemented in this
+** file directly; on TSDB the rollup is performed by per-storage-class
+** continuous aggregates whose refresh and retention policies are managed by
+** ReconcileTSDBAggregation() at server startup.
 **
 **/
 
@@ -760,4 +762,162 @@ void CleanDCIAggregates(DB_HANDLE hdb)
       PruneAggregateTable(hdb, target, false, dailyRetention, nowMs);
       ThrottleHousekeeper();
    }
+}
+
+/**
+ * Storage classes used for per-class continuous aggregates on TSDB. Order and
+ * names must match sql/schema.in and DCObject::getStorageClassName.
+ */
+static constexpr DCObjectStorageClass s_tsdbStorageClasses[] = {
+   DCObjectStorageClass::DEFAULT,
+   DCObjectStorageClass::BELOW_7,
+   DCObjectStorageClass::BELOW_30,
+   DCObjectStorageClass::BELOW_90,
+   DCObjectStorageClass::BELOW_180,
+   DCObjectStorageClass::OTHER
+};
+
+/**
+ * Detach refresh policies from all TSDB continuous aggregates. Retention
+ * policies are intentionally left in place so chunks continue to age out
+ * even when the master switch is off.
+ */
+static void DetachTSDBRefreshPolicies(DB_HANDLE hdb)
+{
+   wchar_t query[256];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"SELECT remove_continuous_aggregate_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 256, L"SELECT remove_continuous_aggregate_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+   }
+}
+
+/**
+ * Attach refresh and retention policies to all TSDB continuous aggregates,
+ * picking up current configuration values. Always remove-then-add so changes
+ * to the relevant config variables land on the next server restart.
+ */
+static void AttachTSDBPolicies(DB_HANDLE hdb)
+{
+   int refreshStartOffset = ConfigReadInt(L"DataCollection.Aggregation.TSDB.RefreshStartOffset", 30);
+   int refreshSchedule = ConfigReadInt(L"DataCollection.Aggregation.TSDB.RefreshScheduleInterval", 600);
+   int hourlyRetention = ConfigReadInt(L"DataCollection.Aggregation.DefaultHourlyRetentionTime", 365);
+   int dailyRetention = ConfigReadInt(L"DataCollection.Aggregation.DefaultDailyRetentionTime", 1825);
+
+   wchar_t query[512];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+
+      nx_swprintf(query, 512, L"SELECT remove_continuous_aggregate_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_continuous_aggregate_policy('idata_1h_sc_%ls', "
+         L"start_offset => INTERVAL '%d days', "
+         L"end_offset => INTERVAL '1 hour', "
+         L"schedule_interval => INTERVAL '%d seconds')",
+         cls, refreshStartOffset, refreshSchedule);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_continuous_aggregate_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_continuous_aggregate_policy('idata_1d_sc_%ls', "
+         L"start_offset => INTERVAL '%d days', "
+         L"end_offset => INTERVAL '1 day', "
+         L"schedule_interval => INTERVAL '%d seconds')",
+         cls, refreshStartOffset, refreshSchedule);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_retention_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_retention_policy('idata_1h_sc_%ls', drop_after => INTERVAL '%d days')",
+         cls, hourlyRetention);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_retention_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_retention_policy('idata_1d_sc_%ls', drop_after => INTERVAL '%d days')",
+         cls, dailyRetention);
+      DBQuery(hdb, query);
+   }
+}
+
+/**
+ * One-shot backfill that materializes all existing raw history into the
+ * continuous aggregates. Runs in a worker thread because on large installs
+ * it can take hours; the user-visible side effect is elevated DB load.
+ */
+static void BackfillTSDBAggregates()
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Backfilling TSDB continuous aggregates");
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   wchar_t query[256];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1h_sc_%ls', NULL, now())", cls);
+      DBQuery(hdb, query);
+   }
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1d_sc_%ls', NULL, now())", cls);
+      DBQuery(hdb, query);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB continuous aggregate backfill complete");
+}
+
+/**
+ * Reconcile TSDB-side aggregation state with the master switch. Called once
+ * during server startup. Aggregation.Enabled is need_server_restart=1 so we
+ * don't track its value at runtime - flipping the switch and restarting the
+ * server is the supported way to enable or disable aggregation.
+ *
+ * Detects the enable transition by checking whether a refresh policy is
+ * already attached on idata_1h_sc_default; if not and BackfillOnEnable is
+ * true, queues a one-shot backfill in a worker thread.
+ */
+void ReconcileTSDBAggregation()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return;
+
+   bool enabled = ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool policyAttached = false;
+   DB_RESULT hResult = DBSelect(hdb,
+      L"SELECT count(*) FROM timescaledb_information.jobs "
+      L"WHERE proc_name='policy_refresh_continuous_aggregate' "
+      L"AND hypertable_name='idata_1h_sc_default'");
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         policyAttached = (DBGetFieldLong(hResult, 0, 0) > 0);
+      DBFreeResult(hResult);
+   }
+
+   if (enabled)
+   {
+      AttachTSDBPolicies(hdb);
+      bool firstEnable = !policyAttached;
+      if (firstEnable && ConfigReadBoolean(L"DataCollection.Aggregation.BackfillOnEnable", true))
+         ThreadPoolExecute(g_mainThreadPool, BackfillTSDBAggregates);
+      nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB aggregation enabled%s", firstEnable ? L" (initial activation)" : L"");
+   }
+   else if (policyAttached)
+   {
+      DetachTSDBRefreshPolicies(hdb);
+      nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB aggregation refresh policies detached");
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
 }

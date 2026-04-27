@@ -1267,10 +1267,15 @@ bool NXCORE_EXPORTABLE Initialize()
             if (sscanf(version, "%d.%d.", &major, &minor) == 2)
             {
                nxlog_debug_tag(_T("db"), 1, _T("Detected TimescaleDB version %d.%d"), major, minor);
-               if (major >= 2)
+               if ((major < 2) || ((major == 2) && (minor < 10)))
                {
-                  g_flags |= AF_TSDB_DROP_CHUNKS_V2;
+                  nxlog_write_tag(NXLOG_ERROR, _T("db"),
+                     _T("TimescaleDB %d.%d detected; minimum supported version is 2.10"), major, minor);
+                  DBFreeResult(hResult);
+                  DBDisconnect(hdbBootstrap);
+                  return false;
                }
+               g_flags |= AF_TSDB_DROP_CHUNKS_V2;
             }
          }
          DBFreeResult(hResult);
@@ -1622,6 +1627,7 @@ retry_db_lock:
    // DCI data aggregation rollups (handlers exit immediately while master switch is disabled)
    AddUniqueRecurrentScheduledTask(L"DataCollection.Aggregation.HourlyRollup", L"5 * * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"DCI hourly data aggregation rollup", nullptr, true);
    AddUniqueRecurrentScheduledTask(L"DataCollection.Aggregation.DailyRollup", L"30 0 * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"DCI daily data aggregation rollup", nullptr, true);
+   ReconcileTSDBAggregation();
 
    // Send summary emails
    if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))

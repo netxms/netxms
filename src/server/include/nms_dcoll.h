@@ -1157,6 +1157,7 @@ void StopV5DataMigration();
  * DCI data aggregation
  */
 void CleanDCIAggregates(DB_HANDLE hdb);
+void ReconcileTSDBAggregation();
 
 /**
  * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.

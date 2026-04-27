@@ -2732,6 +2732,18 @@ bool DCItem::deleteAllData()
       _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%u"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
+   if (success && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      // Drop matching rows from per-storage-class aggregate continuous aggregates
+      const wchar_t *cls = getStorageClassName(getStorageClass());
+      _sntprintf(query, 256, _T("DELETE FROM idata_1h_sc_%s WHERE item_id=%u"), cls, m_id);
+      success = DBQuery(hdb, query);
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DELETE FROM idata_1d_sc_%s WHERE item_id=%u"), cls, m_id);
+         success = DBQuery(hdb, query);
+      }
+   }
 	clearCache();
 	updateCacheSizeInternal(true);
    unlock();
