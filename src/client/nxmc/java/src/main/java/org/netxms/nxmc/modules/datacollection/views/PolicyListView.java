@@ -403,7 +403,7 @@ public class PolicyListView extends ObjectView implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Error duplicationg policies on template: ", getObjectName());
+            return i18n.tr("Error duplicating policies on template: ", getObjectName());
          }
       }.start();
 
