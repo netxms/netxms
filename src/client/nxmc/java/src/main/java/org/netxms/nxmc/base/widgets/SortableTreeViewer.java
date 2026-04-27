@@ -150,6 +150,18 @@ public class SortableTreeViewer extends TreeViewer
    }
 
    /**
+    * @see org.eclipse.jface.viewers.AbstractTreeViewer#internalRefresh(java.lang.Object, boolean)
+    */
+   @Override
+   protected void internalRefresh(Object element, boolean updateLabels)
+   {
+      super.internalRefresh(element, updateLabels);
+      // refresh() in viewers using setInput() once and updating data via refresh() (e.g. AlarmList)
+      // would otherwise leave columns at their initial (often empty-input) packed widths
+      packColumns(false);
+   }
+
+   /**
     * Pack columns unconditionally (equivalent to {@link #packColumns(boolean) packColumns(true)}).
     */
    public void packColumns()
@@ -180,6 +192,9 @@ public class SortableTreeViewer extends TreeViewer
             // otherwise pack() on some platforms won't shrink columns that were previously wider.
             c.setWidth(0);
             c.pack();
+            // Add some padding for better readability
+            // Column 0 has extra padding because pack() may not count space needed for expand indicator
+            c.setWidth(c.getWidth() + ((i == 0) ? 20 : 4));
          }
       }
    }
