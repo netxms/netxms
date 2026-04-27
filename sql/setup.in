@@ -563,7 +563,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#Server=localhost' CONCAT CRLF CONCAT
       '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
       '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
-      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#VerifyPeer=yes' CONCAT CRLF CONCAT
       '#Login=' CONCAT CRLF CONCAT
       '#Password=' CONCAT CRLF CONCAT
       '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT
@@ -576,7 +576,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#Server=localhost' CONCAT CRLF CONCAT
       '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
       '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
-      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#VerifyPeer=yes' CONCAT CRLF CONCAT
       '#Login=' CONCAT CRLF CONCAT
       '#Password=' CONCAT CRLF CONCAT
       '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT
