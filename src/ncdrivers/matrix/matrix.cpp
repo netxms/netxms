@@ -223,6 +223,12 @@ json_t *MatrixDriver::doRequest(const char *method, const char *url, json_t *pay
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+#else
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
+
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0);
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);

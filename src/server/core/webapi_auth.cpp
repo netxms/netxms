@@ -161,7 +161,7 @@ int H_Login(Context *context)
       return 400;
    }
 
-   TCHAR *password = json_object_get_string_t(request, "password", nullptr);
+   const char *password = json_object_get_string_utf8(request, "password", nullptr);
    if (password == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Password missing in login request"));
@@ -174,7 +174,6 @@ int H_Login(Context *context)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Password missing in login request"));
       MemFree(username);
-      MemFree(password);
       context->setErrorResponse("Required license not installed");
       return 403;
    }
@@ -281,7 +280,6 @@ int H_Login(Context *context)
    json_decref(response);
 
    MemFree(username);
-   MemFree(password);
 
    return responseCode;
 }

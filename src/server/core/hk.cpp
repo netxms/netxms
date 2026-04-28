@@ -557,6 +557,13 @@ static void HouseKeeper()
                ThrottleHousekeeper();
             }
          }
+
+         // Prune expired DCI aggregate rows (non-TSDB only - TSDB uses chunk-drop retention)
+         if (g_dbSyntax != DB_SYNTAX_TSDB)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing expired DCI aggregate rows"));
+            CleanDCIAggregates(hdb);
+         }
       }
       else
       {

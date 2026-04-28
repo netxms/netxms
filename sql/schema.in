@@ -1226,6 +1226,183 @@ CREATE VIEW idata AS
    UNION ALL
    SELECT * FROM idata_sc_other;
 
+/**
+ * Hourly DCI data aggregates - per-storage-class continuous aggregates over the
+ * raw idata_sc_<class> hypertables. The regex in the WHERE clause excludes
+ * string DCIs whose idata_value cannot be cast to double precision.
+ *
+ * Created WITH NO DATA; refresh and retention policies are attached at runtime
+ * by the server when the DataCollection.Aggregation.Enabled master switch is on.
+ */
+CREATE MATERIALIZED VIEW idata_1h_sc_default WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_default
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1h_sc_7 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_7
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1h_sc_30 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_30
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1h_sc_90 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_90
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1h_sc_180 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_180
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1h_sc_other WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+          min(idata_value::double precision) AS min_value,
+          max(idata_value::double precision) AS max_value,
+          avg(idata_value::double precision) AS avg_value,
+          count(*) AS sample_count
+   FROM idata_sc_other
+   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+   WITH NO DATA;
+
+/**
+ * Daily DCI data aggregates - hierarchical continuous aggregates over the
+ * hourly aggregates (per storage class). The avg is sample-count-weighted
+ * so it stays equivalent to averaging the raw values directly.
+ */
+CREATE MATERIALIZED VIEW idata_1d_sc_default WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_default
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_7 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_7
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_30 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_30
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_90 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_90
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_180 WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_180
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_other WITH (timescaledb.continuous) AS
+   SELECT item_id,
+          time_bucket(interval '1 day', bucket_start) AS bucket_start,
+          min(min_value) AS min_value,
+          max(max_value) AS max_value,
+          sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+          sum(sample_count) AS sample_count
+   FROM idata_1h_sc_other
+   GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+   WITH NO DATA;
+
+CREATE VIEW idata_1h AS
+   SELECT * FROM idata_1h_sc_default
+   UNION ALL
+   SELECT * FROM idata_1h_sc_7
+   UNION ALL
+   SELECT * FROM idata_1h_sc_30
+   UNION ALL
+   SELECT * FROM idata_1h_sc_90
+   UNION ALL
+   SELECT * FROM idata_1h_sc_180
+   UNION ALL
+   SELECT * FROM idata_1h_sc_other;
+
+CREATE VIEW idata_1d AS
+   SELECT * FROM idata_1d_sc_default
+   UNION ALL
+   SELECT * FROM idata_1d_sc_7
+   UNION ALL
+   SELECT * FROM idata_1d_sc_30
+   UNION ALL
+   SELECT * FROM idata_1d_sc_90
+   UNION ALL
+   SELECT * FROM idata_1d_sc_180
+   UNION ALL
+   SELECT * FROM idata_1d_sc_other;
+
 #else
 
 CREATE TABLE idata

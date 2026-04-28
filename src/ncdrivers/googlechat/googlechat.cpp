@@ -96,6 +96,12 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+#else
+   curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+#endif
+
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);

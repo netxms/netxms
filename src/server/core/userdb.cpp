@@ -44,8 +44,8 @@
 /**
  * Externals
  */
-bool RadiusAuth(const wchar_t *login, const wchar_t *passwd);
-int RadiusAuthEx(const wchar_t *login, const wchar_t *passwd, RADIUSChallengeData *challengeData);
+bool RadiusAuth(const wchar_t *login, const char *passwd);
+int RadiusAuthEx(const wchar_t *login, const char *passwd, RADIUSChallengeData *challengeData);
 int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);
 
 /**
@@ -425,7 +425,7 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
  * If radiusChallengeData is not nullptr, RADIUS Access-Challenge is handled: the function will
  * return RCC_RADIUS_ACCESS_CHALLENGE and populate radiusChallengeData for subsequent challenge-response.
  */
-uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
+uint32_t AuthenticateUser(const TCHAR *login, const char *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins, RADIUSChallengeData *radiusChallengeData)
 {
@@ -458,7 +458,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    }
 
    uint32_t rcc = RCC_ACCESS_DENIED;
-   bool passwordValid = false;
+   bool passwordValid = false, rehash = false;
 
    // Determine authentication method to use
    UserAuthenticationMethod authMethod = user->getAuthMethod();
@@ -482,7 +482,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
          case UserAuthenticationMethod::LOCAL:
             if (sigLen == 0)
             {
-               passwordValid = user->validatePassword(password);
+               passwordValid = user->validatePassword(password, &rehash);
             }
             else
             {
@@ -572,6 +572,12 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    }
    if (passwordValid)
    {
+      if (rehash)
+      {
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Password hash has to be recomputed for user \"%s\"", user->getName());
+         user->setPassword(password, false, false);
+      }
+
       if (!user->isDisabled())
       {
          user->resetAuthFailures();
@@ -1593,17 +1599,17 @@ void SendUserDBUpdate(uint16_t code, uint32_t id)
 /**
  * Check if string contains subsequence of given sequence
  */
-static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence, int len)
+static bool IsStringContainsSubsequence(const char *str, const char *sequence, size_t len)
 {
-	int sequenceLen = (int)_tcslen(sequence);
+   size_t sequenceLen = strlen(sequence);
 	if ((sequenceLen < len) || (len > 255))
 		return false;
 
-	TCHAR subseq[256];
+	char subseq[256];
 	for(int i = 0; i < sequenceLen - len; i++)
 	{
-		_tcslcpy(subseq, &sequence[i], len + 1);
-		if (_tcsstr(str, subseq) != NULL)
+		strlcpy(subseq, &sequence[i], len + 1);
+		if (strstr(str, subseq) != nullptr)
 			return true;
 	}
 
@@ -1613,47 +1619,47 @@ static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence,
 /**
  * Check password's complexity
  */
-static bool CheckPasswordComplexity(const TCHAR *password)
+static bool CheckPasswordComplexity(const char *password)
 {
    int flags = ConfigReadInt(_T("Server.Security.PasswordComplexity"), 0);
 
-	if ((flags & PSWD_MUST_CONTAIN_DIGITS) && (_tcspbrk(password, _T("0123456789")) == NULL))
+	if ((flags & PSWD_MUST_CONTAIN_DIGITS) && (strpbrk(password, "0123456789") == nullptr))
 		return false;
 
-	if ((flags & PSWD_MUST_CONTAIN_UPPERCASE) && (_tcspbrk(password, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) == NULL))
+	if ((flags & PSWD_MUST_CONTAIN_UPPERCASE) && (strpbrk(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") == nullptr))
 		return false;
 
-	if ((flags & PSWD_MUST_CONTAIN_LOWERCASE) && (_tcspbrk(password, _T("abcdefghijklmnopqrstuvwxyz")) == NULL))
+	if ((flags & PSWD_MUST_CONTAIN_LOWERCASE) && (strpbrk(password, "abcdefghijklmnopqrstuvwxyz") == nullptr))
 		return false;
 
-	if ((flags & PSWD_MUST_CONTAIN_SPECIAL_CHARS) && (_tcspbrk(password, _T("`~!@#$%^&*()_-=+{}[]|\\'\";:,.<>/?")) == NULL))
+	if ((flags & PSWD_MUST_CONTAIN_SPECIAL_CHARS) && (strpbrk(password, "`~!@#$%^&*()_-=+{}[]|\\'\";:,.<>/?") == nullptr))
 		return false;
 
 	if (flags & PSWD_FORBID_ALPHABETICAL_SEQUENCE)
 	{
-		if (IsStringContainsSubsequence(password, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 3))
+		if (IsStringContainsSubsequence(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("abcdefghijklmnopqrstuvwxyz"), 3))
+		if (IsStringContainsSubsequence(password, "abcdefghijklmnopqrstuvwxyz", 3))
 			return false;
 	}
 
 	if (flags & PSWD_FORBID_KEYBOARD_SEQUENCE)
 	{
-		if (IsStringContainsSubsequence(password, _T("~!@#$%^&*()_+"), 3))
+		if (IsStringContainsSubsequence(password, "~!@#$%^&*()_+", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("1234567890-="), 3))
+		if (IsStringContainsSubsequence(password, "1234567890-=", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("qwertyuiop[]"), 3))
+		if (IsStringContainsSubsequence(password, "qwertyuiop[]", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("asdfghjkl;'"), 3))
+		if (IsStringContainsSubsequence(password, "asdfghjkl;'", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("zxcvbnm,./"), 3))
+		if (IsStringContainsSubsequence(password, "zxcvbnm,./", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("QWERTYUIOP{}"), 3))
+		if (IsStringContainsSubsequence(password, "QWERTYUIOP{}", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("ASDFGHJKL:\""), 3))
+		if (IsStringContainsSubsequence(password, "ASDFGHJKL:\"", 3))
 			return false;
-		if (IsStringContainsSubsequence(password, _T("ZXCVBNM<>?"), 3))
+		if (IsStringContainsSubsequence(password, "ZXCVBNM<>?", 3))
 			return false;
 	}
 
@@ -1663,7 +1669,7 @@ static bool CheckPasswordComplexity(const TCHAR *password)
 /**
  * Set user's password
  */
-uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPassword, const wchar_t *oldPassword, bool changeOwnPassword)
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const char *newPassword, const char *oldPassword, bool changeOwnPassword)
 {
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
@@ -1681,7 +1687,8 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
    uint32_t rcc = RCC_INVALID_USER_ID;
    if (changeOwnPassword)
    {
-      if (!user->canChangePassword() || !user->validatePassword(oldPassword))
+      bool rehash;
+      if (!user->canChangePassword() || !user->validatePassword(oldPassword, &rehash))
       {
          rcc = RCC_ACCESS_DENIED;
          goto finish;
@@ -1689,7 +1696,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
 
       // Check password length
       int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(L"Server.Security.MinPasswordLength", 0) : user->getMinMasswordLength();
-      if ((int)_tcslen(newPassword) < minLength)
+      if (static_cast<int>(strlen(newPassword)) < minLength)
       {
          rcc = RCC_WEAK_PASSWORD;
          goto finish;
@@ -1703,7 +1710,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
       }
 
       // Update password history
-      int passwordHistoryLength = ConfigReadInt(_T("Server.Security.PasswordHistoryLength"), 0);
+      int passwordHistoryLength = ConfigReadInt(L"Server.Security.PasswordHistoryLength", 0);
       if (passwordHistoryLength > 0)
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1724,9 +1731,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
          if (ph != nullptr)
          {
             BYTE newPasswdHash[SHA1_DIGEST_SIZE];
-            char *mb = UTF8StringFromWideString(newPassword);
-            CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
-            MemFree(mb);
+            CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
 
             int phLen = (int)_tcslen(ph) / (SHA1_DIGEST_SIZE * 2);
             if (phLen > passwordHistoryLength)
@@ -1756,7 +1761,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
                }
                BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);
 
-               _sntprintf(query, 8192, _T("UPDATE users SET password_history='%s' WHERE id=%d"), ph, id);
+               _sntprintf(query, 8192, L"UPDATE users SET password_history='%s' WHERE id=%d", ph, id);
                DBQuery(hdb, query);
             }
 
@@ -1774,7 +1779,7 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPasswo
 
       user->updatePasswordChangeTime();
    }
-   user->setPassword(newPassword, changeOwnPassword);
+   user->setPassword(newPassword, changeOwnPassword, true);
    rcc = RCC_SUCCESS;
 
 finish:
@@ -1785,12 +1790,14 @@ finish:
 /**
  * Validate user's password
  */
-uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const wchar_t *password, bool *isValid)
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const char *password, bool *isValid)
 {
 	if (userId & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
 	uint32_t rcc = RCC_INVALID_USER_ID;
+   bool rehash = false;
+
    s_userDatabaseLock.readLock();
 
    // Find user
@@ -1802,7 +1809,7 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *
       {
          case UserAuthenticationMethod::LOCAL:
          case UserAuthenticationMethod::CERTIFICATE_OR_LOCAL:
-            *isValid = user->validatePassword(password);
+            *isValid = user->validatePassword(password, &rehash);
             break;
          case UserAuthenticationMethod::RADIUS:
          case UserAuthenticationMethod::CERTIFICATE_OR_RADIUS:
@@ -1834,6 +1841,18 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *
    }
 
    s_userDatabaseLock.unlock();
+
+   if (*isValid && rehash)
+   {
+      s_userDatabaseLock.writeLock();
+      user = static_cast<User*>(s_userDatabase.get(userId));
+      if (user != nullptr)
+      {
+         user->setPassword(password, false, false);
+      }
+      s_userDatabaseLock.unlock();
+   }
+
    return rcc;
 }
 

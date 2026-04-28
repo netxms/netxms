@@ -660,6 +660,9 @@ public:
 	int32_t getDailyRetention() const { return m_dailyRetention; }
 	int64_t getAggregationWatermark() const { return m_aggregationWatermark; }
 	bool isAggregationEligible() const;
+	bool isAggregationActive(bool globalEnabled) const;
+	void pushBackAggregationWatermark(int64_t timestampMs);
+	bool tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWatermark, int64_t *currentOut);
 
 	void setAnomalyProfile(json_t *profile);
 	bool saveAnomalyProfileToDatabase();
@@ -1153,7 +1156,8 @@ void StopV5DataMigration();
 /**
  * DCI data aggregation
  */
-bool CreateAggregateTables(DB_HANDLE hdb, uint32_t objectId);
+void CleanDCIAggregates(DB_HANDLE hdb);
+void ReconcileTSDBAggregation();
 
 /**
  * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.

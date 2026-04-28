@@ -725,6 +725,81 @@ bool DCItem::isAggregationEligible() const
 }
 
 /**
+ * Is aggregation actively producing rows for this DCI right now?
+ *
+ * Combines eligibility (numeric, not too coarse) with the per-DCI mode and the global
+ * master switch. Callers should read the master switch once and pass it in to avoid
+ * repeated config lookups inside hot loops.
+ */
+bool DCItem::isAggregationActive(bool globalEnabled) const
+{
+   if (!isAggregationEligible())
+      return false;
+   switch (m_aggregationMode)
+   {
+      case DCI_AGGREGATION_ENABLED:
+         return true;
+      case DCI_AGGREGATION_DISABLED:
+         return false;
+      default:   // DCI_AGGREGATION_INHERIT
+         return globalEnabled;
+   }
+}
+
+/**
+ * Hot-path late-data handler: if a raw sample arrives with a timestamp older than the
+ * current watermark, push the watermark back to that timestamp so the next rollup pass
+ * re-aggregates any affected buckets.
+ *
+ * Must be called with the DCItem mutex held (same lock as processNewValue). The SQL
+ * UPDATE is queued via QueueSQLRequest, not executed synchronously.
+ *
+ * Design rationale: agents send cached data in chronological order on reconnect, so the
+ * first post-reconnect sample triggers one UPDATE; subsequent samples see the already
+ * pushed-back watermark and do nothing.
+ */
+void DCItem::pushBackAggregationWatermark(int64_t timestampMs)
+{
+   if (timestampMs <= 0)
+      return;
+   if (m_aggregationWatermark > 0 && timestampMs >= m_aggregationWatermark)
+      return;
+   if (m_aggregationWatermark == 0)
+      return;   // 0 means "no backlog" / first rollup will pick up everything newer than now-closeWindow
+
+   m_aggregationWatermark = timestampMs;
+
+   wchar_t query[256];
+   nx_swprintf(query, 256,
+      L"UPDATE items SET aggregation_watermark=" INT64_FMT
+      L" WHERE item_id=%u AND (aggregation_watermark IS NULL OR aggregation_watermark>" INT64_FMT L")",
+      timestampMs, m_id, timestampMs);
+   QueueSQLRequest(query);
+}
+
+/**
+ * Rollup-side watermark advance with in-memory compare-and-swap. Advances m_aggregationWatermark
+ * to newWatermark only if it still equals expectedStart (i.e., no hot-path push-back happened
+ * during the rollup pass). On CAS failure, writes the current in-memory value to *currentOut.
+ *
+ * Returns true on successful advance.
+ */
+bool DCItem::tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWatermark, int64_t *currentOut)
+{
+   lock();
+   if (m_aggregationWatermark != expectedStart)
+   {
+      if (currentOut != nullptr)
+         *currentOut = m_aggregationWatermark;
+      unlock();
+      return false;
+   }
+   m_aggregationWatermark = newWatermark;
+   unlock();
+   return true;
+}
+
+/**
  * Check last value for threshold violations. Original DCI is a pointer to source DCI
  * if threshold check is performed on shadow copy or nullptr otherwise.
  */
@@ -1155,7 +1230,15 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    {
       // Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
-           QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+      {
+         QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+
+         // If aggregation is active and this sample pre-dates our rollup watermark,
+         // push the watermark back so the next rollup pass re-aggregates the affected bucket.
+         if ((g_dbSyntax != DB_SYNTAX_TSDB) && !(g_flags & AF_SINGLE_TABLE_PERF_DATA) &&
+             isAggregationActive(ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false)))
+            pushBackAggregationWatermark(timestamp.asMilliseconds());
+      }
 
       if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       {
@@ -2649,6 +2732,18 @@ bool DCItem::deleteAllData()
       _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%u"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
+   if (success && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      // Drop matching rows from per-storage-class aggregate continuous aggregates
+      const wchar_t *cls = getStorageClassName(getStorageClass());
+      _sntprintf(query, 256, _T("DELETE FROM idata_1h_sc_%s WHERE item_id=%u"), cls, m_id);
+      success = DBQuery(hdb, query);
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DELETE FROM idata_1d_sc_%s WHERE item_id=%u"), cls, m_id);
+         success = DBQuery(hdb, query);
+      }
+   }
 	clearCache();
 	updateCacheSizeInternal(true);
    unlock();

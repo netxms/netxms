@@ -101,6 +101,11 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    if (curl != NULL)
    {
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+#else
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));

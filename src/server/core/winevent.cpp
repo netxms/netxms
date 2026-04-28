@@ -510,7 +510,7 @@ void InitializeWindowsEventParser()
             s_parser->restoreCounters(prev);
          else
             LoadWinEventAbsenceState();
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Windows evnet parser successfully created from config"));
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Windows event parser successfully created from config"));
       }
       else
       {

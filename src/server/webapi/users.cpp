@@ -252,26 +252,16 @@ int H_UserSetPassword(Context *context)
       return 400;
    }
 
-#ifdef UNICODE
-   WCHAR *newPassword = WideStringFromUTF8String(json_string_value(newPassField));
-#else
-   char *newPassword = MBStringFromUTF8String(json_string_value(newPassField));
-#endif
+   const char *newPassword = json_string_value(newPassField);
 
-   TCHAR *oldPassword = nullptr;
+   const char *oldPassword = nullptr;
    json_t *oldPassField = json_object_get(request, "oldPassword");
-   if (oldPassField != nullptr && json_is_string(oldPassField))
+   if (json_is_string(oldPassField))
    {
-#ifdef UNICODE
-      oldPassword = WideStringFromUTF8String(json_string_value(oldPassField));
-#else
-      oldPassword = MBStringFromUTF8String(json_string_value(oldPassField));
-#endif
+      oldPassword = json_string_value(oldPassField);
    }
 
    uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, isSelf);
-   MemFree(newPassword);
-   MemFree(oldPassword);
 
    if (rcc == RCC_SUCCESS)
    {

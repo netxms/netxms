@@ -261,6 +261,14 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATE
       nxlog_debug_tag(L"dc.v5migrate", 6, _T("DataCollectionTarget::loadFromDatabase(%s [%u]): Found tdata_v5 table"), m_name, m_id);
    }
 
+   nx_swprintf(tableName, 64, L"idata_1h_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+      m_runtimeFlags |= ODF_HAS_IDATA_1H_TABLE;
+
+   nx_swprintf(tableName, 64, L"idata_1d_%u", id);
+   if (DBIsTableExist(hdb2, tableName) == DBIsTableExist_Found)
+      m_runtimeFlags |= ODF_HAS_IDATA_1D_TABLE;
+
    DBConnectionPoolReleaseConnection(hdb2);
    return true;
 }
@@ -895,7 +903,7 @@ bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcOb
       // New item from template, just add it
 		DCObject *newObject = dcObject->clone();
       newObject->setTemplateId(templateId, dcObject->getId());
-      newObject->changeBinding(CreateUniqueId(IDG_ITEM), self(), TRUE);
+      newObject->changeBinding(CreateUniqueId(IDG_ITEM), self(), true);
       bResult = addDCObject(newObject, true);
    }
    else

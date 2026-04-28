@@ -2375,8 +2375,8 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
 uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
-   wchar_t password[1024];
-   request.getFieldAsString(VID_PASSWORD, password, 256);
+   char password[1024];
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
    uint32_t rcc = AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
          &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins, &loginInfo->radiusChallenge);
    if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
@@ -2403,7 +2403,7 @@ uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request
       const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
       if (signature != nullptr)
       {
-         rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const TCHAR*>(signature), sigLen,
+         rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const char*>(signature), sigLen,
                pCert, m_challenge, &m_userId, &m_systemAccessRights, &loginInfo->changePassword, &loginInfo->intruderLockout,
                &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
       }
@@ -4469,8 +4469,8 @@ void ClientSession::validatePassword(const NXCPMessage& request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   wchar_t password[256];
-   request.getFieldAsString(VID_PASSWORD, password, 256);
+   char password[256];
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_userId, m_loginName, password, &isValid));
@@ -4491,10 +4491,10 @@ void ClientSession::setPassword(const NXCPMessage& request)
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_userId))     // User can change password for itself
    {
-      wchar_t newPassword[1024], oldPassword[1024];
-      request.getFieldAsString(VID_PASSWORD, newPassword, 256);
+      char newPassword[1024], oldPassword[1024];
+      request.getFieldAsUtf8String(VID_PASSWORD, newPassword, 256);
 		if (request.isFieldExist(VID_OLD_PASSWORD))
-			request.getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
+			request.getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 256);
 		else
 			oldPassword[0] = 0;
 
@@ -4516,7 +4516,6 @@ void ClientSession::setPassword(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
    sendMessage(response);
 }
 
