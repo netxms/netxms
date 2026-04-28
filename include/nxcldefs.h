@@ -1303,6 +1303,24 @@ enum AggregationFunction
 #define MAP_LAYOUT_SPARSE_VTREE  4
 
 /**
+ * Network map canvas type
+ */
+enum class MapCanvasType
+{
+   GRAPH        = 0,
+   GEOGRAPHICAL = 1
+};
+
+/**
+ * Network map initial view mode (geographical canvas only)
+ */
+enum class MapInitialViewMode
+{
+   FIT_TO_SCREEN   = 0,
+   ZOOM_AND_CENTER = 1
+};
+
+/**
  * Core subscription channels
  */
 #define NXC_CHANNEL_AGENT_TUNNELS   L"Core.AgentTunnels"

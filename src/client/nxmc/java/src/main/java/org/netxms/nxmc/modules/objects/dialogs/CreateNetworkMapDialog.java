@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.maps.MapCanvasType;
 import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
@@ -49,10 +50,12 @@ public class CreateNetworkMapDialog extends Dialog
 	private Text textName;
    private Text textAlias;
 	private Combo mapType;
+	private Combo canvasType;
 	private ObjectSelector seedObjectSelector;
 	private String name;
    private String alias;
    private MapType type;
+   private MapCanvasType canvasTypeValue = MapCanvasType.GRAPH;
 	private long seedObject;
    private long templateMapId;
 
@@ -113,6 +116,15 @@ public class CreateNetworkMapDialog extends Dialog
 			}
       });
 
+      canvasType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Canvas type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      canvasType.add(i18n.tr("Graph"));
+      canvasType.add(i18n.tr("Geographical"));
+      canvasType.select(0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      canvasType.getParent().setLayoutData(gd);
+
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel(i18n.tr("Seed node"));
       seedObjectSelector.setObjectClass(AbstractObject.class);
@@ -159,8 +171,9 @@ public class CreateNetworkMapDialog extends Dialog
 				return;
 			}
 		}
-      
+
       templateMapId = templateMapSelector.getObjectId();
+      canvasTypeValue = (canvasType.getSelectionIndex() == 1) ? MapCanvasType.GEOGRAPHICAL : MapCanvasType.GRAPH;
 
 		super.okPressed();
 	}
@@ -205,5 +218,10 @@ public class CreateNetworkMapDialog extends Dialog
    public long getTemplateMapId()
    {
       return templateMapId;
+   }
+
+   public MapCanvasType getCanvasType()
+   {
+      return canvasTypeValue;
    }
 }

@@ -31,6 +31,8 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.maps.MapCanvasType;
+import org.netxms.client.maps.MapInitialViewMode;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.MapType;
@@ -90,6 +92,8 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
    private int autoBindFlags;
    private String autoBindFilter;
    private int displayPriority; // For maps shown in object context
+   private MapCanvasType canvasType;
+   private MapInitialViewMode initialViewMode;
 
 	/**
     * Create from NXCP message.
@@ -122,6 +126,8 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
       autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
       autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
       displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
+      canvasType = MapCanvasType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_MAP_CANVAS_TYPE));
+      initialViewMode = MapInitialViewMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_MAP_INITIAL_VIEW_MODE));
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -628,5 +634,21 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
    public int getAutoBindFlags()
    {
       return autoBindFlags;
+   }
+
+   /**
+    * @return the map canvas type (graph or geographical)
+    */
+   public MapCanvasType getCanvasType()
+   {
+      return canvasType;
+   }
+
+   /**
+    * @return the initial view mode for geographical canvas
+    */
+   public MapInitialViewMode getInitialViewMode()
+   {
+      return initialViewMode;
    }
 }

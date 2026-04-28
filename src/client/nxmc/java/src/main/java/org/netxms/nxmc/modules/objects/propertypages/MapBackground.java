@@ -21,23 +21,27 @@ package org.netxms.nxmc.modules.objects.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Scale;
-import org.eclipse.swt.widgets.Spinner;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapCanvasType;
+import org.netxms.client.maps.MapInitialViewMode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
@@ -45,7 +49,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
-import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LatLonZoomEditor;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.widgets.ImageSelector;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -61,19 +65,26 @@ public class MapBackground extends ObjectPropertyPage
    private I18n i18n = LocalizationHelper.getI18n(MapBackground.class);
    
    private NetworkMap map;
+   private Combo canvasTypeCombo;
+   private Composite pageStack;
+   private StackLayout pageStackLayout;
+   private Composite graphContainer;
+   private Group sizeGroup;
    private LabeledSpinner width;
    private LabeledSpinner height;
    private Button fitToScreen;
+   private Group typeGroup;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
 	private Button radioTypeGeoMap;
 	private ImageSelector image;
    private LabeledCombo comboImageFit;
-	private LabeledText latitude;
-	private LabeledText longitude;
-	private Scale zoomScale;
-	private Spinner zoomSpinner;
-	private Label zoomLabel;
+   private Group geomapGroup;
+   private LatLonZoomEditor graphGeoEditor;
+   private Group geoCanvasGroup;
+   private LabeledCombo initialViewMode;
+   private LatLonZoomEditor geoCanvasEditor;
+	private Composite colorArea;
 	private ColorSelector backgroundColor;
 	private boolean disableGeolocationBackground;
 
@@ -124,8 +135,35 @@ public class MapBackground extends ObjectPropertyPage
 		layout.marginHeight = 0;
 		layout.numColumns = 1;
 		dialogArea.setLayout(layout);
-      
-      Group sizeGroup = new Group(dialogArea, SWT.NONE);
+
+		GridData canvasTypeGd = new GridData();
+		canvasTypeGd.grabExcessHorizontalSpace = true;
+		canvasTypeGd.horizontalAlignment = SWT.FILL;
+		canvasTypeCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Canvas type"), canvasTypeGd);
+		canvasTypeCombo.add(i18n.tr("Graph"));
+		canvasTypeCombo.add(i18n.tr("Geographical"));
+		canvasTypeCombo.select((map.getCanvasType() == MapCanvasType.GEOGRAPHICAL) ? 1 : 0);
+
+		// One canvas-type's content visible at a time; both children fill pageStack.
+		pageStack = new Composite(dialogArea, SWT.NONE);
+		pageStackLayout = new StackLayout();
+		pageStack.setLayout(pageStackLayout);
+		GridData pageStackGd = new GridData();
+		pageStackGd.grabExcessHorizontalSpace = true;
+		pageStackGd.grabExcessVerticalSpace = true;
+		pageStackGd.horizontalAlignment = SWT.FILL;
+		pageStackGd.verticalAlignment = SWT.FILL;
+		pageStack.setLayoutData(pageStackGd);
+
+		graphContainer = new Composite(pageStack, SWT.NONE);
+		GridLayout graphLayout = new GridLayout();
+		graphLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		graphLayout.marginWidth = 0;
+		graphLayout.marginHeight = 0;
+		graphLayout.numColumns = 1;
+		graphContainer.setLayout(graphLayout);
+
+      sizeGroup = new Group(graphContainer, SWT.NONE);
       sizeGroup.setText(i18n.tr("Map size"));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -173,7 +211,7 @@ public class MapBackground extends ObjectPropertyPage
       height.setLayoutData(gd);
       height.setEnabled(!fitToScreen.getSelection());
       
-		Group typeGroup = new Group(dialogArea, SWT.NONE);
+		typeGroup = new Group(graphContainer, SWT.NONE);
       typeGroup.setText(i18n.tr("Background type"));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -213,7 +251,7 @@ public class MapBackground extends ObjectPropertyPage
             radioTypeNone.setSelection(true);
       }
 
-      image = new ImageSelector(dialogArea, SWT.NONE);
+      image = new ImageSelector(graphContainer, SWT.NONE);
       image.setLabel(i18n.tr("Background image"));
       if (radioTypeImage.getSelection())
          image.setImageGuid(map.getBackground(), true);
@@ -222,7 +260,7 @@ public class MapBackground extends ObjectPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       image.setLayoutData(gd);
       
-      comboImageFit = new LabeledCombo(dialogArea, SWT.NONE);
+      comboImageFit = new LabeledCombo(graphContainer, SWT.NONE);
       comboImageFit.setLabel("Image fit");
       comboImageFit.add("Default");
       comboImageFit.add("Center");
@@ -242,83 +280,23 @@ public class MapBackground extends ObjectPropertyPage
 
       if (!disableGeolocationBackground)
       {
-         Group geomapGroup = new Group(dialogArea, SWT.NONE);
+         geomapGroup = new Group(graphContainer, SWT.NONE);
          geomapGroup.setText(i18n.tr("Geographic map"));
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
          geomapGroup.setLayoutData(gd);
-         layout = new GridLayout();
-         geomapGroup.setLayout(layout);
-         
-         GeoLocation gl = map.getBackgroundLocation();
-   
-         latitude = new LabeledText(geomapGroup, SWT.NONE);
-         latitude.setLabel(i18n.tr("Latitude"));
-      	latitude.setText(gl.getLatitudeAsString());
+         geomapGroup.setLayout(new GridLayout());
+
+         graphGeoEditor = new LatLonZoomEditor(geomapGroup, SWT.NONE,
+               map.getBackgroundLocation(), map.getBackgroundZoom());
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
-         latitude.setLayoutData(gd);
-         
-         longitude = new LabeledText(geomapGroup, SWT.NONE);
-         longitude.setLabel(i18n.tr("Longitude"));
-         longitude.setText(gl.getLongitudeAsString());
-         gd = new GridData();
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalAlignment = SWT.FILL;
-         longitude.setLayoutData(gd);
-         
-         Composite zoomGroup = new Composite(geomapGroup, SWT.NONE);
-         layout = new GridLayout();
-         layout.numColumns = 2;
-         layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-         layout.marginHeight = 0;
-         layout.marginWidth = 0;
-         layout.marginTop = WidgetHelper.OUTER_SPACING;
-         zoomGroup.setLayout(layout);
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         zoomGroup.setLayoutData(gd);
-         
-         zoomLabel = new Label(zoomGroup, SWT.NONE);
-         zoomLabel.setText(i18n.tr("Zoom level"));
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.LEFT;
-         gd.horizontalSpan = 2;
-         zoomLabel.setLayoutData(gd);
-         
-         zoomScale = new Scale(zoomGroup, SWT.HORIZONTAL);
-         zoomScale.setMinimum(1);
-         zoomScale.setMaximum(18);
-         zoomScale.setSelection(map.getBackgroundZoom());
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         zoomScale.setLayoutData(gd);
-         zoomScale.addSelectionListener(new SelectionAdapter() {
-   			@Override
-   			public void widgetSelected(SelectionEvent e)
-   			{
-   				zoomSpinner.setSelection(zoomScale.getSelection());
-   			}
-         });
-         
-         zoomSpinner = new Spinner(zoomGroup, SWT.BORDER);
-         zoomSpinner.setMinimum(1);
-         zoomSpinner.setMaximum(18);
-         zoomSpinner.setSelection(map.getBackgroundZoom());
-         zoomSpinner.addSelectionListener(new SelectionAdapter() {
-   			@Override
-   			public void widgetSelected(SelectionEvent e)
-   			{
-   				zoomScale.setSelection(zoomSpinner.getSelection());
-   			}
-   		});
+         graphGeoEditor.setLayoutData(gd);
       }
       
-      Composite colorArea = new Composite(dialogArea, SWT.NONE);
+      colorArea = new Composite(graphContainer, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -335,10 +313,81 @@ public class MapBackground extends ObjectPropertyPage
       backgroundColor = new ColorSelector(colorArea);
       backgroundColor.setColorValue(ColorConverter.rgbFromInt(map.getBackgroundColor()));
 
+      // Geographical-canvas group. Replaces every other element on the page
+      // when canvas type is GEOGRAPHICAL. The original elements (size group,
+      // background-type group, image / geomap groups, color picker) are left
+      // intact for the GRAPH case and just hidden when GEOGRAPHICAL is active.
+      geoCanvasGroup = new Group(pageStack, SWT.NONE);
+      geoCanvasGroup.setText(i18n.tr("Geographical canvas"));
+      GridLayout geoCanvasLayout = new GridLayout();
+      geoCanvasGroup.setLayout(geoCanvasLayout);
+
+      GridData viewModeGd = new GridData();
+      viewModeGd.horizontalAlignment = SWT.FILL;
+      viewModeGd.grabExcessHorizontalSpace = true;
+      initialViewMode = new LabeledCombo(geoCanvasGroup, SWT.READ_ONLY);
+      initialViewMode.setLabel(i18n.tr("Initial view mode"));
+      initialViewMode.add(i18n.tr("Fit to screen"));
+      initialViewMode.add(i18n.tr("Zoom and center"));
+      initialViewMode.select((map.getInitialViewMode() == MapInitialViewMode.ZOOM_AND_CENTER) ? 1 : 0);
+      initialViewMode.setLayoutData(viewModeGd);
+
+      geoCanvasEditor = new LatLonZoomEditor(geoCanvasGroup, SWT.NONE,
+            map.getBackgroundLocation(), map.getBackgroundZoom());
+      GridData editorGd = new GridData();
+      editorGd.grabExcessHorizontalSpace = true;
+      editorGd.horizontalAlignment = SWT.FILL;
+      geoCanvasEditor.setLayoutData(editorGd);
+
+      initialViewMode.getComboControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            updateGeoCanvasCoordinateState();
+         }
+      });
+
+      canvasTypeCombo.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            updateCanvasTypeVisibility();
+         }
+      });
+
 		enableControls(radioTypeImage.getSelection(), disableGeolocationBackground ? false : radioTypeGeoMap.getSelection());
+		updateCanvasTypeVisibility();
       return dialogArea;
 	}
-	
+
+	/**
+	 * Switch the page between the GRAPH (original) and GEOGRAPHICAL layouts.
+	 * Uses a StackLayout so both children fill the same area — switching is
+	 * just changing topControl and laying out the stack, no exclude/visible
+	 * gymnastics and no size reflow up the dialog hierarchy.
+	 */
+	private void updateCanvasTypeVisibility()
+	{
+		boolean geo = (canvasTypeCombo.getSelectionIndex() == 1);
+		pageStackLayout.topControl = geo ? geoCanvasGroup : graphContainer;
+		pageStack.layout(true, true);
+		updateGeoCanvasCoordinateState();
+	}
+
+	/**
+	 * Centre coordinates and zoom level only have an effect when the initial
+	 * view mode is "Zoom and center" — for "Fit to screen" the viewport is
+	 * derived from the placed objects' bounding box, so grey out those inputs
+	 * to make the relationship clear.
+	 */
+	private void updateGeoCanvasCoordinateState()
+	{
+		if ((geoCanvasGroup == null) || (canvasTypeCombo.getSelectionIndex() != 1))
+			return;
+		boolean zoomAndCenter = (initialViewMode.getSelectionIndex() == 1);
+		geoCanvasEditor.setEnabled(zoomAndCenter);
+	}
+
 	/**
 	 * @param imageGroup
 	 * @param geoGroup
@@ -347,13 +396,7 @@ public class MapBackground extends ObjectPropertyPage
 	{
 		image.setEnabled(imageGroup);
 		if (!disableGeolocationBackground)
-		{
-   		latitude.setEnabled(geoGroup);
-   		longitude.setEnabled(geoGroup);
-   		zoomLabel.setEnabled(geoGroup);
-   		zoomScale.setEnabled(geoGroup);
-   		zoomSpinner.setEnabled(geoGroup);
-		}
+			graphGeoEditor.setEnabled(geoGroup);
 	}
 
 	/**
@@ -365,16 +408,43 @@ public class MapBackground extends ObjectPropertyPage
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 
+		boolean geographicalCanvas = (canvasTypeCombo.getSelectionIndex() == 1);
+		md.setMapCanvasType(geographicalCanvas ? MapCanvasType.GEOGRAPHICAL : MapCanvasType.GRAPH);
+
+		if (geographicalCanvas)
+		{
+			// Geographical canvas: only the canvas-specific settings apply —
+			// the tile background is implicit, map size / image / color are
+			// inapplicable here. Pass the map's currently-persisted background
+			// GUID and color through unchanged so toggling Canvas type to
+			// Geographical and back doesn't quietly wipe the user's saved
+			// image / "None" / GEOMAP choice on the graph side.
+			GeoLocation location;
+			try
+			{
+				location = GeoLocation.parseGeoLocation(geoCanvasEditor.getLatitudeText(), geoCanvasEditor.getLongitudeText());
+			}
+			catch(GeoLocationFormatException e)
+			{
+				MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Geolocation format error"));
+				return false;
+			}
+			md.setMapBackground(map.getBackground(), location, geoCanvasEditor.getZoom(), map.getBackgroundColor());
+			md.setMapInitialViewMode((initialViewMode.getSelectionIndex() == 1) ? MapInitialViewMode.ZOOM_AND_CENTER : MapInitialViewMode.FIT_TO_SCREEN);
+			submitModification(md, isApply);
+			return true;
+		}
+
       if (fitToScreen.getSelection())
       {
-         md.setObjectFlags(NetworkMap.MF_FIT_TO_SCREEN, NetworkMap.MF_FIT_TO_SCREEN);  
+         md.setObjectFlags(NetworkMap.MF_FIT_TO_SCREEN, NetworkMap.MF_FIT_TO_SCREEN);
       }
       else
       {
-         md.setObjectFlags(0, NetworkMap.MF_FIT_TO_SCREEN);           
+         md.setObjectFlags(0, NetworkMap.MF_FIT_TO_SCREEN);
          md.setMapSize(width.getSelection(), height.getSelection());
       }
-      
+
 		if (radioTypeNone.getSelection())
 		{
 			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
@@ -400,16 +470,27 @@ public class MapBackground extends ObjectPropertyPage
 			GeoLocation location;
 			try
 			{
-				location = GeoLocation.parseGeoLocation(latitude.getText(), longitude.getText());
+				location = GeoLocation.parseGeoLocation(graphGeoEditor.getLatitudeText(), graphGeoEditor.getLongitudeText());
 			}
 			catch(GeoLocationFormatException e)
 			{
 				MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Geolocation format error"));
 				return false;
 			}
-			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, zoomSpinner.getSelection(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));
+			md.setMapBackground(NetworkMap.GEOMAP_BACKGROUND, location, graphGeoEditor.getZoom(), ColorConverter.rgbToInt(backgroundColor.getColorValue()));
 		}
 		
+		submitModification(md, isApply);
+		return true;
+	}
+
+	/**
+	 * Submit the modification request to the server. Centralised so both the
+	 * graph-canvas and geographical-canvas paths in {@link #applyChanges} flow
+	 * through the same job + setValid handling.
+	 */
+	private void submitModification(final NXCObjectModificationData md, final boolean isApply)
+	{
 		if (isApply)
 			setValid(false);
 
@@ -434,7 +515,5 @@ public class MapBackground extends ObjectPropertyPage
                runInUIThread(() -> MapBackground.this.setValid(true));
 			}
 		}.start();
-		
-		return true;
 	}
 }

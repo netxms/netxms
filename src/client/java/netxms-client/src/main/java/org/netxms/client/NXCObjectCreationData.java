@@ -27,6 +27,7 @@ import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.constants.SensorDeviceClass;
+import org.netxms.client.maps.MapCanvasType;
 import org.netxms.client.maps.MapType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
@@ -76,6 +77,7 @@ public class NXCObjectCreationData
    private long vncProxyId;
    private long webServiceProxyId;
    private MapType mapType;
+   private MapCanvasType mapCanvasType = MapCanvasType.GRAPH;
 	private List<Long> seedObjectIds;
 	private int zoneUIN;
 	private int serviceType;
@@ -119,7 +121,7 @@ public class NXCObjectCreationData
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param objectClass Class of new object (one of NXCObject.OBJECT_xxx constants)
 	 * @see AbstractObject
 	 * @param name Name of new object
@@ -193,10 +195,10 @@ public class NXCObjectCreationData
       removalPolicy = 0;
       gracePeriod = 0;
 	}
-	
+
 	/**
 	 * Update creation data from modify object
-	 * 
+	 *
 	 * @param data modifyt data
 	 */
 	public void updateFromModificationData(NXCObjectModificationData data)
@@ -513,6 +515,22 @@ public class NXCObjectCreationData
 		this.mapType = mapType;
 	}
 
+   /**
+    * @return the canvas type for new network map objects
+    */
+   public MapCanvasType getMapCanvasType()
+   {
+      return mapCanvasType;
+   }
+
+   /**
+    * @param mapCanvasType the canvas type for new network map objects
+    */
+   public void setMapCanvasType(MapCanvasType mapCanvasType)
+   {
+      this.mapCanvasType = (mapCanvasType != null) ? mapCanvasType : MapCanvasType.GRAPH;
+   }
+
 	/**
 	 * @return the seedObjectIds
 	 */
@@ -529,7 +547,7 @@ public class NXCObjectCreationData
 		seedObjectIds.clear();
 		seedObjectIds.add(seedObjectId);
 	}
-	
+
 	/**
 	 * @param seedObjectIds the seed node object Ids to set
 	 */
@@ -1065,7 +1083,7 @@ public class NXCObjectCreationData
    {
       this.serialNumber = serialNumber;
    }
-   
+
    /**
     * @return the vendor
     */

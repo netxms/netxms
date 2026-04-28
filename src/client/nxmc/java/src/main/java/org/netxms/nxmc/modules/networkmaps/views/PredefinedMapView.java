@@ -37,6 +37,7 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -68,6 +69,7 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -104,6 +106,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	private Action actionAddObject;
    private Action actionAddObjectMenu;
+   private Action actionPlaceNodeHere;
+   private Action actionAddBendpointHere;
+   private Action actionRemoveBendpoint;
+   private Action actionClearBendpoints;
 	private Action actionAddDCIContainer;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
@@ -140,7 +146,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
    /**
     * Create new map view with ID extended by given sub ID. Intended for use by subclasses implementing ad-hoc views.
-    * 
+    *
     * @param id view ID
     */
    protected PredefinedMapView(String id)
@@ -165,13 +171,13 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       return 1;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
     */
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
-   {  
+   {
       if (bendpointEditor != null)
          bendpointEditor.stop();
       viewer.resetRefreshBlock();
@@ -196,7 +202,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       Boolean cachedFlag = readOnlyFlagsCache.get(object.getObjectId());
       actionLock.setChecked(true);
       lockObjectMove(true);
-      
+
       if (cachedFlag != null)
       {
          readOnly = cachedFlag;
@@ -240,6 +246,19 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
+      // Handle canvas-type changes (contextChanged doesn't fire — same object).
+      ensureCorrectCanvas();
+
+      if (isGeographicalCanvas())
+      {
+         super.onObjectUpdate(object);
+         applyGeoLinkDefaults();
+         geoViewer.redraw();
+         syncObjects();
+         updateWarningMessage(object);
+         return;
+      }
+
       if (viewer.isRefreshBlocked())
          return;
 
@@ -273,11 +292,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
    /**
     * Reconfigure viewer for given map object
-    * 
+    *
     * @param mapObject map object
     */
    private void reconfigureViewer(NetworkMap mapObject)
-   {      
+   {
       mapWidth = mapObject.getWidth();
       mapHeight = mapObject.getHeight();
       int width = mapWidth == 0 ? session.getNetworkMapDefaultWidth() : mapWidth;
@@ -285,7 +304,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
       if (mapObject.isFitToScreen())
       {
-         setMapSize(-1, -1);         
+         setMapSize(-1, -1);
       }
       else
       {
@@ -424,7 +443,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 				while(it.hasNext())
 				{
 					Object object = it.next();
-					if (!((object instanceof AbstractObject) && ((AbstractObject)object).isAllowedOnMap())) 
+					if (!((object instanceof AbstractObject) && ((AbstractObject)object).isAllowedOnMap()))
 						return false;
 				}
 
@@ -436,11 +455,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			public boolean performDrop(Object data)
 			{
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            Point p = viewer.getControl().toControl(x + viewer.getHorizontalBarSelection(), y + viewer.getVerticalBarSelection()); 
+            Point p = viewer.getControl().toControl(x + viewer.getHorizontalBarSelection(), y + viewer.getVerticalBarSelection());
             p.x = (int) Math.floor(p.x * 1/viewer.getZoom());
             p.y = (int) Math.floor(p.y * 1/viewer.getZoom());
-				addObjectsFromList(selection.toList(),  p); 	
-				
+				addObjectsFromList(selection.toList(),  p);
+
 				return true;
 			}
 
@@ -464,11 +483,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   if (mapObject != null)
 	   {
 	      disableLinkTextAutoUpdate = mapObject.isDontUpdateLinkText();
-	      mapPage = mapObject.createMapPage();	      
+	      mapPage = mapObject.createMapPage();
 	   }
 	   else
 	   {
-         mapPage = new NetworkMapPage("EMPTY");   	      
+         mapPage = new NetworkMapPage("EMPTY");
 	   }
 
       refreshDciRequestList(oldMapPage, true);
@@ -495,7 +514,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
                @Override
                public void run()
                {
-                  if (!viewer.getControl().isDisposed())
+                  boolean alive = isGeographicalCanvas()
+                        ? ((geoViewer != null) && !geoViewer.isDisposed())
+                        : !viewer.getControl().isDisposed();
+                  if (alive)
                      refresh();
                   mapObjectSyncer.addObjects(mapObject.getObjectId(), mapObjectIds, mapUtilizationObjets);
                }
@@ -532,7 +554,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	protected void createActions()
 	{
 		super.createActions();
-		
+
       actionAddObject = new Action(i18n.tr("&Add object..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -550,6 +572,38 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       };
 
+      actionPlaceNodeHere = new Action(i18n.tr("&Place node here..."), SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            placeNodeHereOnGeoMap();
+         }
+      };
+
+      actionAddBendpointHere = new Action(i18n.tr("&Add bendpoint here")) {
+         @Override
+         public void run()
+         {
+            addGeoBendpointHere();
+         }
+      };
+
+      actionRemoveBendpoint = new Action(i18n.tr("&Remove bendpoint")) {
+         @Override
+         public void run()
+         {
+            removeGeoBendpoint();
+         }
+      };
+
+      actionClearBendpoints = new Action(i18n.tr("&Clear bendpoints")) {
+         @Override
+         public void run()
+         {
+            clearGeoBendpoints();
+         }
+      };
+
       actionAddDCIContainer = new Action(i18n.tr("Add DCI &container...")) {
          @Override
          public void run()
@@ -558,7 +612,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       };
       addKeyBinding("M1+M3+C", actionAddDCIContainer);
-      
+
       actionAddDCIImage = new Action(i18n.tr("Add DCI &image...")) {
          @Override
          public void run()
@@ -566,7 +620,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             addDCIImage();
          }
       };
-		
+
       actionAddGroupBox = new Action(i18n.tr("&Group box...")) {
 			@Override
 			public void run()
@@ -635,7 +689,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             editDCIContainer();
          }
       };
-      
+
       actionDCIImageProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
@@ -659,7 +713,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 				showLinkProperties();
 			}
 		};
-		
+
       actionAddTextBox = new Action("Text box") {
          @Override
          public void run()
@@ -667,7 +721,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
             addTextBox();
          }
       };
-      
+
       actionTextBoxProperties = new Action(i18n.tr("&Properties"), SharedIcons.PROPERTIES) {
          @Override
          public void run()
@@ -679,7 +733,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	/**
 	 * Create "Add decoration" submenu
-	 * 
+	 *
 	 * @return menu manager for decoration submenu
 	 */
 	private IMenuManager createDecorationAdditionSubmenu()
@@ -699,11 +753,19 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 	   if (!readOnly)
 	   {
-   		manager.add(actionAddObjectMenu);
-   		manager.add(actionAddDCIContainer);		
-   		manager.add(actionAddDCIImage);  
-   		manager.add(createDecorationAdditionSubmenu());
-   		manager.add(new Separator());
+	      if (isGeographicalCanvas())
+	      {
+	         manager.add(actionPlaceNodeHere);
+	         manager.add(new Separator());
+	      }
+	      else
+	      {
+   		   manager.add(actionAddObjectMenu);
+   		   manager.add(actionAddDCIContainer);
+   		   manager.add(actionAddDCIImage);
+   		   manager.add(createDecorationAdditionSubmenu());
+   		   manager.add(new Separator());
+	      }
 	   }
 		super.fillMapContextMenu(manager);
 		manager.add(new Separator());
@@ -718,7 +780,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 	   if (!readOnly)
 	   {
-         int size = viewer.getStructuredSelection().size();
+         int size = currentSelection().size();
    		if (size >= 2)
    			manager.add(actionLinkObjects);
    		if (size >= 2 && getMapObject().getMapType() == MapType.CUSTOM)
@@ -741,9 +803,23 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	      return;
 	   }
 
-      int size = viewer.getStructuredSelection().size();
+      boolean geo = isGeographicalCanvas();
+      int size = currentSelection().size();
 		super.fillLinkContextMenu(manager);
       manager.add(new Separator());
+
+      if (geo && (geoViewer != null))
+      {
+         org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.LinkHitInfo hit = geoViewer.getRightClickLinkHit();
+         if ((hit != null) && (hit.segmentIndex >= 0))
+            manager.add(actionAddBendpointHere);
+         if ((hit != null) && (hit.bendpointIndex >= 0))
+            manager.add(actionRemoveBendpoint);
+         if ((hit != null) && (hit.link.getGeoBendPoints() != null) && (hit.link.getGeoBendPoints().length > 0))
+            manager.add(actionClearBendpoints);
+         manager.add(new Separator());
+      }
+
       manager.add(actionRemove);
 		if (size == 1)
 		{
@@ -760,7 +836,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   if (!readOnly)
 	   {
    		manager.add(actionRemove);
-         Object o = viewer.getStructuredSelection().getFirstElement();
+         Object o = currentSelection().getFirstElement();
    		if (o instanceof NetworkMapDCIContainer)
    		{
    		   manager.add(actionDCIContainerProperties);
@@ -826,20 +902,20 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	/**
 	 * Add object to map
-	 * @param useRightClickLocation 
+	 * @param useRightClickLocation
 	 */
 	private void addObjectToMap(boolean useRightClickLocation)
-	{      
+	{
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell());
 		if (dlg.open() != Window.OK)
 			return;
-      
+
 		addObjectsFromList(dlg.getSelectedObjects(), useRightClickLocation ? viewer.getRightClickLocation() : null);
 	}
 
 	/**
 	 * Add objects from list to map
-	 * 
+	 *
 	 * @param list
 	 *           object list
 	 */
@@ -868,12 +944,181 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		}
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#onGeoViewerCreated()
+    */
+   @Override
+   protected void onGeoViewerCreated()
+   {
+      if (readOnly)
+         return;
+      geoViewer.addDropSupport(new org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.DropHandler() {
+         @Override
+         public void onDrop(List<AbstractObject> objects, org.netxms.base.GeoLocation location)
+         {
+            handleGeoDrop(objects, location);
+         }
+      });
+   }
+
+   /**
+    * Handle a drag-and-drop of objects onto the geographical canvas. Objects
+    * that already have a usable geolocation are added silently; the rest
+    * trigger a confirmation dialog offering to set their location to the drop
+    * point. Cancelling the dialog drops only the already-located objects.
+    */
+   private void handleGeoDrop(List<AbstractObject> objects, org.netxms.base.GeoLocation location)
+   {
+      if (readOnly || objects.isEmpty())
+         return;
+      List<AbstractObject> needsLocation = new ArrayList<>();
+      List<AbstractObject> readyToAdd = new ArrayList<>();
+      for(AbstractObject o : objects)
+      {
+         org.netxms.base.GeoLocation g = o.getGeolocation();
+         if ((g != null) && (g.getType() != org.netxms.base.GeoLocation.UNSET))
+            readyToAdd.add(o);
+         else
+            needsLocation.add(o);
+      }
+
+      if (!needsLocation.isEmpty())
+      {
+         String message = (needsLocation.size() == 1)
+               ? i18n.tr("Object \"{0}\" has no geolocation set. Set location to drop point and add to map?", needsLocation.get(0).getObjectName())
+               : i18n.tr("{0} objects have no geolocation set. Set location to drop point and add to map?", needsLocation.size());
+         if (MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Set Location"), message))
+         {
+            updateObjectGeolocations(needsLocation, location);
+            readyToAdd.addAll(needsLocation);
+         }
+      }
+
+      addObjectsFromList(readyToAdd, null);
+   }
+
+   /**
+    * Run a server-side update setting each object's geolocation to {@code loc}
+    * (type {@code MANUAL}). Used by the drop "Set location and add" path and
+    * by the "Place node here" context-menu action.
+    */
+   private void updateObjectGeolocations(final List<AbstractObject> objects, final org.netxms.base.GeoLocation loc)
+   {
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Updating object geolocation"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(AbstractObject o : objects)
+            {
+               NXCObjectModificationData md = new NXCObjectModificationData(o.getObjectId());
+               md.setGeolocation(new org.netxms.base.GeoLocation(loc.getLatitude(), loc.getLongitude()));
+               session.modifyObject(md);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot update object geolocation");
+         }
+      }.start();
+   }
+
+   /**
+    * Implementation of the "Place node here" context-menu action on the
+    * geographical canvas. Resolves the right-click point to a lat/lon, opens
+    * an object selector, and for each selected object: sets its geolocation
+    * to the click point (overwriting any existing) and adds it to the map.
+    */
+   private void placeNodeHereOnGeoMap()
+   {
+      if (readOnly)
+         return;
+      org.netxms.base.GeoLocation loc = geoViewer.getRightClickLocation();
+      if (loc == null)
+         return;
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell());
+      if (dlg.open() != Window.OK)
+         return;
+      List<AbstractObject> objs = new ArrayList<>();
+      for(AbstractObject o : dlg.getSelectedObjects())
+      {
+         if (o.isAllowedOnMap())
+            objs.add(o);
+      }
+      if (objs.isEmpty())
+         return;
+      updateObjectGeolocations(objs, loc);
+      addObjectsFromList(objs, null);
+   }
+
+   /**
+    * Insert a new lat/lon bendpoint at the right-click position into the
+    * link's geographical bendpoint list, at the segment index reported by
+    * the most recent right-click hit-test. The link's existing pixel
+    * bendpoints are left untouched — both representations coexist on the
+    * link so switching canvas types preserves either side's authoring.
+    */
+   private void addGeoBendpointHere()
+   {
+      if (readOnly)
+         return;
+      org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.LinkHitInfo hit = geoViewer.getRightClickLinkHit();
+      if ((hit == null) || (hit.segmentIndex < 0))
+         return;
+      org.netxms.base.GeoLocation loc = geoViewer.getRightClickLocation();
+      if (loc == null)
+         return;
+      if (!hit.link.insertGeoBendPoint(hit.segmentIndex, loc.getLatitude(), loc.getLongitude()))
+         return; // bendpoint cap reached
+      // Bendpoints only render under BENDPOINTS routing.
+      if (hit.link.getRouting() != NetworkMapLink.ROUTING_BENDPOINTS)
+         hit.link.setRouting(NetworkMapLink.ROUTING_BENDPOINTS);
+      saveMap();
+      geoViewer.selectLink(hit.link);
+   }
+
+   /**
+    * Remove the bendpoint that was under the cursor at the most recent
+    * right-click. No-op if the right-click did not land on an existing
+    * bendpoint vertex.
+    */
+   private void removeGeoBendpoint()
+   {
+      if (readOnly)
+         return;
+      org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.LinkHitInfo hit = geoViewer.getRightClickLinkHit();
+      if ((hit == null) || (hit.bendpointIndex < 0))
+         return;
+      if (!hit.link.removeGeoBendPoint(hit.bendpointIndex))
+         return;
+      saveMap();
+      geoViewer.redraw();
+   }
+
+   /**
+    * Drop all geographical bendpoints from the link under the most recent
+    * right-click, leaving its pixel-space bendpoints (if any) untouched.
+    */
+   private void clearGeoBendpoints()
+   {
+      if (readOnly)
+         return;
+      org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.LinkHitInfo hit = geoViewer.getRightClickLinkHit();
+      if (hit == null)
+         return;
+      hit.link.setGeoBendPoints(null);
+      saveMap();
+      geoViewer.redraw();
+   }
+
 	/**
 	 * Remove currently selected map elements
 	 */
 	private void removeSelectedElements()
 	{
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
 
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Confirm Removal"),
             (selection.size() == 1) ? i18n.tr("Are you sure to remove selected element from map?") : i18n.tr("Are you sure to remove selected elements from map?")))
@@ -896,15 +1141,15 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		}
 		saveMap();
-		
-		// for some reason graph viewer does not clear selection 
+
+		// for some reason graph viewer does not clear selection
 		// after all selected elements was removed, so we have to do it manually
 		viewer.setSelection(StructuredSelection.EMPTY);
 	}
 
    /**
     * Update map size
-    * 
+    *
     * @param width
     * @param height
     */
@@ -921,14 +1166,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private void saveMap()
 	{
 		updateObjectPositions();
-		
+
       final NXCObjectModificationData md = new NXCObjectModificationData(getMapObject().getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
 		md.setMapObjectDisplayMode(labelProvider.getObjectFigureType());
       md.setMapSize(mapWidth, mapHeight);
-		
+
       int flags = getMapObject().getFlags();
 		if (labelProvider.isShowStatusIcons())
 			flags |= NetworkMap.MF_SHOW_STATUS_ICON;
@@ -1026,7 +1271,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	/**
 	 * Update existing element or show message if failed
-	 * 
+	 *
 	 * @param element element to update
 	 * @return true if was successfully updated
 	 */
@@ -1034,7 +1279,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
       if (mapPage.updateElement(element))
       {
-         saveMap(); 
+         saveMap();
          return true;
       }
 
@@ -1063,7 +1308,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       updateObjectPositions();
 
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIContainer))
          return;
 
@@ -1111,7 +1356,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       updateObjectPositions();
 
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIImage))
          return;
 
@@ -1153,16 +1398,16 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, id1, id2));
       saveMap();
    }
-   
+
    /**
     * Auto link nodes based on L2 connectivity
     */
    private void autoLinkSelectedObjects()
    {
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
       if (selection.size() < 2)
          return;
-      
+
       List<Long> nodes = new ArrayList<Long>(selection.size());
       for (Object object : selection.toList())
       {
@@ -1170,7 +1415,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          {
             nodes.add(((NetworkMapObject)object).getObjectId());
          }
-      }     
+      }
 
       new Job("Auto link network map nodes", this) {
          @Override
@@ -1194,7 +1439,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
 		updateObjectPositions();
 
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;
 
@@ -1220,7 +1465,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          if (link.getRoutingAlgorithm() != NetworkMapLink.ROUTING_BENDPOINTS && bendpointEditor != null)
          {
             bendpointEditor.stop();
-            bendpointEditor = null;            
+            bendpointEditor = null;
          }
          if (link.update(mapPage))
          {
@@ -1254,7 +1499,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       updateObjectPositions();
 
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
          return;
 
@@ -1267,7 +1512,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
 	/**
     * Show text box properties
-    * 
+    *
     * @return true if there were modifications
     */
    private boolean showTextBoxProperties(NetworkMapTextBox textBox)
@@ -1304,15 +1549,15 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private void editImageDecoration()
 	{
       updateObjectPositions();
-      
-      IStructuredSelection selection = viewer.getStructuredSelection();
+
+      IStructuredSelection selection = currentSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
          return;
-      
+
       ImageSelectionDialog dlg = new ImageSelectionDialog(getWindow().getShell());
       if (dlg.open() != Window.OK)
          return;
-      
+
       UUID imageGuid = dlg.getImageGuid();
       Rectangle imageBounds = ImageProvider.getInstance().getImage(imageGuid).getBounds();
 
@@ -1323,7 +1568,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
       saveMap();
 	}
-	
+
    /**
     * Add group box decoration
     */
@@ -1346,7 +1591,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	{
       updateObjectPositions();
 
-      IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = currentSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
          return;
 
@@ -1370,15 +1615,30 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    }
 
    /**
+    * Return the view's unified selection as an {@link IStructuredSelection}.
+    * On the graph canvas this mirrors the Zest viewer's selection; on the
+    * geographical canvas it mirrors the pin / link selection captured by
+    * {@code GeoNetworkMapViewer}. Action handlers should consult this — not
+    * {@code currentSelection()} — otherwise right-click on the
+    * geo canvas silently no-ops because the hidden Zest viewer's selection
+    * is empty / stale.
+    */
+   private IStructuredSelection currentSelection()
+   {
+      ISelection s = getSelection();
+      return (s instanceof IStructuredSelection) ? (IStructuredSelection)s : StructuredSelection.EMPTY;
+   }
+
+   /**
     * Schedule element save on move
-    * 
+    *
     * @param element
     */
    public void onElementMove(NetworkMapElement element)
    {
       if (!allowManualLayout)
          return;
-      
+
       synchronized(movedElementList)
       {
          movedElementList.add(element);
@@ -1395,14 +1655,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       }
    }
-   
+
    /**
     * Schedule link save on change
-    * 
+    *
     * @param link
     */
    public void onLinkChange(NetworkMapLink link)
-   {       
+   {
       synchronized(movedElementList)
       {
          changedLinkList.add(link);
@@ -1417,10 +1677,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
                }
             });
          }
-      } 
+      }
    }
-   
-   
+
+
 
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#refresh()
@@ -1443,7 +1703,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       if (!saveSchedulted)
          return;
-      
+
       final Set<NetworkMapElement> elementListLocalCopy;
       final Set<NetworkMapLink> linkListLocalCopy;
       synchronized(movedElementList)
@@ -1454,7 +1714,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          linkListLocalCopy = changedLinkList;
          changedLinkList = new HashSet<NetworkMapLink>();
       }
-      
+
       if (elementListLocalCopy.size() > 0)
          updateObjectPositions();
 
@@ -1475,7 +1735,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
    /**
     * Save network map zoom
-    * 
+    *
     * @return map id for saved settrings names
     */
    protected void saveZoom(AbstractObject object)
@@ -1486,7 +1746,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
    /**
     * Update zoom from storage
-    * 
+    *
     * @return map id for saved settrings names
     */
    protected void loadZoom(AbstractObject object)

@@ -596,7 +596,7 @@ typedef struct
 #define CMD_GET_FILE_SET_DETAILS          0x018C
 #define CMD_IMPORT_CONFIGURATION_FILE     0x018D
 #define CMD_GET_DEVICE_VIEW               0x018E
-#define CMD_MAP_ELEMENT_UPDATE            0x018F        
+#define CMD_MAP_ELEMENT_UPDATE            0x018F
 #define CMD_GET_BACKGROUND_TASK_STATE     0x0190
 #define CMD_QUERY_WEB_SERVICE             0x0191
 #define CMD_GET_WEB_SERVICES              0x0192
@@ -1723,6 +1723,8 @@ typedef struct
 #define VID_OS_PLATFORM_NAME        ((uint32_t)987)
 #define VID_AGENT_PLATFORM_NAME     ((uint32_t)988)
 #define VID_TRANSFER_ID             ((uint32_t)989)
+#define VID_MAP_CANVAS_TYPE         ((uint32_t)990)
+#define VID_MAP_INITIAL_VIEW_MODE   ((uint32_t)991)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

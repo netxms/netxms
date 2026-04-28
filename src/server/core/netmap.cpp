@@ -74,6 +74,8 @@ NetworkMap::NetworkMap() : super(), AutoBindTarget(this), Pollable(this, Pollabl
    m_linkStylingScript = nullptr;
    m_updateFailed = false;
    m_displayPriority = 0;
+   m_canvasType = MapCanvasType::GRAPH;
+   m_initialViewMode = MapInitialViewMode::FIT_TO_SCREEN;
 }
 
 /**
@@ -111,6 +113,8 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), AutoBindTarget(this), P
    m_isUnpublished = true;
    m_updateFailed = false;
    m_displayPriority = src.m_displayPriority;
+   m_canvasType = src.m_canvasType;
+   m_initialViewMode = src.m_initialViewMode;
    setCreationTime();
 }
 
@@ -150,6 +154,8 @@ NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(),
    m_updateFailed = false;
    m_isUnpublished = true;
    m_displayPriority = 0;
+   m_canvasType = MapCanvasType::GRAPH;
+   m_initialViewMode = MapInitialViewMode::FIT_TO_SCREEN;
    setCreationTime();
 }
 
@@ -300,7 +306,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       static const wchar_t *columns[] = {
          L"map_type", L"layout", L"radius", L"background", L"bg_latitude", L"bg_longitude", L"bg_zoom",
          L"link_color", L"link_color_source", L"link_routing", L"link_width", L"link_style", L"bg_color", L"object_display_mode",
-         L"filter", L"link_styling_script", L"width", L"height", L"display_priority", nullptr
+         L"filter", L"link_styling_script", L"width", L"height", L"display_priority", L"canvas_type", L"initial_view_mode", nullptr
       };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("network_maps"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
@@ -326,7 +332,9 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_width);
          DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_height);
          DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_displayPriority);
-         DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_canvasType));
+         DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_initialViewMode));
+         DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -518,7 +526,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
    {
 	   loadACLFromDB(hdb, preparedStatements);
 
-		DB_RESULT hResult = executeSelectOnObject(hdb, L"SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_color_source,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height,display_priority FROM network_maps WHERE id={id}");
+		DB_RESULT hResult = executeSelectOnObject(hdb, L"SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_color_source,link_routing,link_width,link_style,bg_color,object_display_mode,filter,link_styling_script,width,height,display_priority,canvas_type,initial_view_mode FROM network_maps WHERE id={id}");
 		if (hResult == nullptr)
 			return false;
 
@@ -548,6 +556,8 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prep
       m_width = DBGetFieldInt32(hResult, 0, 16);
       m_height = DBGetFieldInt32(hResult, 0, 17);
       m_displayPriority = DBGetFieldInt32(hResult, 0, 18);
+      m_canvasType = static_cast<MapCanvasType>(DBGetFieldUInt16(hResult, 0, 19));
+      m_initialViewMode = static_cast<MapInitialViewMode>(DBGetFieldUInt16(hResult, 0, 20));
 
       DBFreeResult(hResult);
 
@@ -711,6 +721,8 @@ void NetworkMap::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_LINK_STYLING_SCRIPT, CHECK_NULL_EX(m_linkStylingScriptSource));
    msg->setField(VID_UPDATE_FAILED, m_updateFailed);
    msg->setField(VID_DISPLAY_PRIORITY, m_displayPriority);
+   msg->setField(VID_MAP_CANVAS_TYPE, static_cast<uint16_t>(m_canvasType));
+   msg->setField(VID_MAP_INITIAL_VIEW_MODE, static_cast<uint16_t>(m_initialViewMode));
 
 	msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_mapContent.m_elements.size()));
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -813,6 +825,12 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
 
    if (msg.isFieldExist(VID_HEIGHT))
       m_height = msg.getFieldAsInt32(VID_HEIGHT);
+
+   if (msg.isFieldExist(VID_MAP_CANVAS_TYPE))
+      m_canvasType = static_cast<MapCanvasType>(msg.getFieldAsUInt16(VID_MAP_CANVAS_TYPE));
+
+   if (msg.isFieldExist(VID_MAP_INITIAL_VIEW_MODE))
+      m_initialViewMode = static_cast<MapInitialViewMode>(msg.getFieldAsUInt16(VID_MAP_INITIAL_VIEW_MODE));
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
@@ -2039,6 +2057,8 @@ json_t *NetworkMap::toJson(bool includeSensitiveData)
    json_object_set_new(root, "width", json_integer(m_width));
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "displayPriority", json_integer(m_displayPriority));
+   json_object_set_new(root, "canvasType", json_integer(static_cast<int>(m_canvasType)));
+   json_object_set_new(root, "initialViewMode", json_integer(static_cast<int>(m_initialViewMode)));
 
    unlockProperties();
    return root;

@@ -29,17 +29,18 @@ public class LinkConfig
    private List<Long> objectStatusList = new ArrayList<Long>();
    private int routing;
    private long[] bendPoints;
+   private double[][] geoBendPoints;
    private boolean useActiveThresholds;
    private boolean useInterfaceUtilization;
    private int labelPosition = 50;
-   private int style = 0;   
+   private int style = 0;
    private int width = 0;
 
    /**
     * Default constructor
     */
    public LinkConfig()
-   {           
+   {
       routing = NetworkMapLink.ROUTING_DEFAULT;
       bendPoints = null;
       dciList = null;
@@ -65,7 +66,7 @@ public class LinkConfig
       this.bendPoints = bendPoints;
       this.useActiveThresholds = useActiveThresholds;
       this.useInterfaceUtilization = useInterfaceUtilization;
-   }   
+   }
 
    /**
     * @return the objectStatusList
@@ -130,7 +131,28 @@ public class LinkConfig
    {
       this.bendPoints = bendPoints;
    }
-   
+
+   /**
+    * Get geographical bend points. Each entry is a two-element array
+    * {latitude, longitude}. Used only on geographical canvas type.
+    * Coexists with {@link #bendPoints} (pixel-based, graph canvas);
+    * switching canvas type does not convert or delete either list.
+    *
+    * @return the geo bend points or null if not configured
+    */
+   public double[][] getGeoBendPoints()
+   {
+      return geoBendPoints;
+   }
+
+   /**
+    * @param geoBendPoints geographical bend points to set
+    */
+   public void setGeoBendPoints(double[][] geoBendPoints)
+   {
+      this.geoBendPoints = geoBendPoints;
+   }
+
    /**
     * @param useActiveThresholds set use active thresholds
     */
@@ -138,7 +160,7 @@ public class LinkConfig
    {
       this.useActiveThresholds = useActiveThresholds;
    }
-   
+
    /**
     * @return are active thresholds used
     */
@@ -218,7 +240,8 @@ public class LinkConfig
    public String toString()
    {
       return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString() +
-            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", labelPosition=" + labelPosition + 
+            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) +
+            ", geoBendPoints=" + Arrays.deepToString(geoBendPoints) + ", labelPosition=" + labelPosition +
             ", lineStyle=" + style +", lineWidth=" + width + "]";
    }
 }

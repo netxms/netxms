@@ -7012,6 +7012,7 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType().getValue());
+            msg.setFieldInt16(NXCPCodes.VID_MAP_CANVAS_TYPE, data.getMapCanvasType().getValue());
             msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
             msg.setFieldUInt32(NXCPCodes.VID_FLAGS, data.getFlags());
             break;
@@ -8031,6 +8032,16 @@ public class NXCSession
       if (data.getDisplayPriority() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_DISPLAY_PRIORITY, data.getDisplayPriority());
+      }
+
+      if (data.getMapCanvasType() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_MAP_CANVAS_TYPE, data.getMapCanvasType().getValue());
+      }
+
+      if (data.getMapInitialViewMode() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_MAP_INITIAL_VIEW_MODE, data.getMapInitialViewMode().getValue());
       }
 
       if (data.getExpectedCapabilities() != null)

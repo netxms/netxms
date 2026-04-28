@@ -28,6 +28,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
+import org.netxms.client.maps.MapCanvasType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AssetGroup;
 import org.netxms.client.objects.AssetRoot;
@@ -76,7 +77,7 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectCreateMenuManager extends MenuManager
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectCreateMenuManager.class);
-   
+
    private Shell shell;
    private View view;
    private AbstractObject parent;
@@ -124,7 +125,7 @@ public class ObjectCreateMenuManager extends MenuManager
       this.view = view;
       this.parent = parent;
       parentId = parent.getObjectId();
-      setMenuText(i18n.tr("&Create"));     
+      setMenuText(i18n.tr("&Create"));
 
       createActions();
 
@@ -354,7 +355,7 @@ public class ObjectCreateMenuManager extends MenuManager
                protected void run(IProgressMonitor monitor) throws Exception
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_INTERFACE, dlg.getName(), parentId);
-                  cd.setObjectAlias(dlg.getAlias());                  
+                  cd.setObjectAlias(dlg.getAlias());
                   cd.setMacAddress(dlg.getMacAddress());
                   cd.setIpAddress(dlg.getIpAddress());
                   cd.setPhysicalPort(dlg.isPhysicalPort());
@@ -371,7 +372,7 @@ public class ObjectCreateMenuManager extends MenuManager
             }.start();
          }
       };
-      
+
       actionCreateNetworkService = new Action(i18n.tr("&Network service...")) {
          @Override
          public void run()
@@ -456,6 +457,7 @@ public class ObjectCreateMenuManager extends MenuManager
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
                   cd.setMapType(dlg.getType());
+                  cd.setMapCanvasType(dlg.getCanvasType());
                   cd.setSeedObjectId(dlg.getSeedObject());
                   cd.setObjectAlias(dlg.getAlias());
                   long newObjectId = session.createObject(cd);
@@ -465,7 +467,7 @@ public class ObjectCreateMenuManager extends MenuManager
                   {
                      NetworkMap templateMap = session.findObjectById(mapTemplateId, NetworkMap.class);
                      NXCObjectModificationData md = new NXCObjectModificationData(newObjectId);
-                     templateMap.updateWithTemplateData(md);                     
+                     templateMap.updateWithTemplateData(md);
                      session.modifyObject(md);
                   }
                }

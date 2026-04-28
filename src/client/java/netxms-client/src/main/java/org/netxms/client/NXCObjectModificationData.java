@@ -43,6 +43,8 @@ import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.maps.MapCanvasType;
+import org.netxms.client.maps.MapInitialViewMode;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
@@ -208,6 +210,8 @@ public class NXCObjectModificationData
    private String syslogCodepage;
    private String snmpCodepage;
    private Integer displayPriority;
+   private MapCanvasType mapCanvasType;
+   private MapInitialViewMode mapInitialViewMode;
    private Integer mapWidth;
    private Integer mapHeight;
    private Long expectedCapabilities;
@@ -2656,6 +2660,38 @@ public class NXCObjectModificationData
    public void setDisplayPriority(Integer displayPriority)
    {
       this.displayPriority = displayPriority;
+   }
+
+   /**
+    * @return the map canvas type
+    */
+   public MapCanvasType getMapCanvasType()
+   {
+      return mapCanvasType;
+   }
+
+   /**
+    * @param mapCanvasType the map canvas type to set
+    */
+   public void setMapCanvasType(MapCanvasType mapCanvasType)
+   {
+      this.mapCanvasType = mapCanvasType;
+   }
+
+   /**
+    * @return the map initial view mode
+    */
+   public MapInitialViewMode getMapInitialViewMode()
+   {
+      return mapInitialViewMode;
+   }
+
+   /**
+    * @param mapInitialViewMode the map initial view mode to set
+    */
+   public void setMapInitialViewMode(MapInitialViewMode mapInitialViewMode)
+   {
+      this.mapInitialViewMode = mapInitialViewMode;
    }
 
    /**

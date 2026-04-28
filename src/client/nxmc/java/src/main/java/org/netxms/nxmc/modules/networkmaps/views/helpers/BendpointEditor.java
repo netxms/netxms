@@ -153,7 +153,7 @@ public class BendpointEditor
 	 */
 	private void addBendPoint(int x, int y)
 	{
-		if (bendpoints.size() >= 16)
+		if (bendpoints.size() >= NetworkMapLink.MAX_BEND_POINTS)
 			return;
 		
 		AbsoluteBendpoint bp = new AbsoluteBendpoint(x, y);
