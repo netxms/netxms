@@ -87,7 +87,7 @@ public class Commands extends OverviewPageElement
 					@Override
 					protected String getErrorMessage()
 					{
-                  return i18n.tr("Cannot send wake-on-LAN packet to node");
+                  return i18n.tr("Cannot send Wake-on-LAN packet to node");
 					}
 				}.start();
 			}
