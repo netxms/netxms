@@ -251,21 +251,21 @@ void SNMP_SecurityContext::recalculateKeys()
       case SNMP_AUTH_SHA1:
          GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
          GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
-         if ((m_privMethod == SNMP_ENCRYPT_AES_192) || (m_privMethod== SNMP_ENCRYPT_AES_256))
+         if ((m_privMethod == SNMP_ENCRYPT_AES_192) || (m_privMethod == SNMP_ENCRYPT_AES_256))
          {
-            BYTE privKeyPart2[20];
-            GenerateUserKey<MD5HashForPattern, CalculateSHA1Hash, MD5_DIGEST_SIZE>(m_privKey, 20, m_authoritativeEngine, privKeyPart2);
-            memcpy(m_privKey + 20, privKeyPart2, 12);
+            BYTE privKeyPart2[SHA1_DIGEST_SIZE];
+            GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(m_privKey, SHA1_DIGEST_SIZE, m_authoritativeEngine, privKeyPart2);
+            memcpy(m_privKey + SHA1_DIGEST_SIZE, privKeyPart2, (m_privMethod == SNMP_ENCRYPT_AES_256) ? 12 : 4);
          }
          break;
       case SNMP_AUTH_SHA224:
          GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
          GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
-         if (m_privMethod== SNMP_ENCRYPT_AES_256)
+         if (m_privMethod == SNMP_ENCRYPT_AES_256)
          {
-            BYTE privKeyPart2[28];
-            GenerateUserKey<MD5HashForPattern, CalculateSHA224Hash, MD5_DIGEST_SIZE>(m_privKey, 20, m_authoritativeEngine, privKeyPart2);
-            memcpy(m_privKey + 28, privKeyPart2, 4);
+            BYTE privKeyPart2[SHA224_DIGEST_SIZE];
+            GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(m_privKey, SHA224_DIGEST_SIZE, m_authoritativeEngine, privKeyPart2);
+            memcpy(m_privKey + SHA224_DIGEST_SIZE, privKeyPart2, 4);
          }
          break;
       case SNMP_AUTH_SHA256:
