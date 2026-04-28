@@ -1451,7 +1451,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DBWRITER_HK_INTERLOCK));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
-         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_AGENT_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_ETHERNETIP_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V1_PROBE));

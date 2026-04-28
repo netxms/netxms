@@ -1275,7 +1275,6 @@ bool NXCORE_EXPORTABLE Initialize()
                   DBDisconnect(hdbBootstrap);
                   return false;
                }
-               g_flags |= AF_TSDB_DROP_CHUNKS_V2;
             }
          }
          DBFreeResult(hResult);
