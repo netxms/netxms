@@ -114,8 +114,17 @@ public class TwoFactorResponseDialog extends Dialog
          secretText.setLayoutData(gd);
       }
 
+      if ((challenge != null) && !challenge.isEmpty())
+      {
+         Label challengeLabel = new Label(dialogArea, SWT.WRAP);
+         challengeLabel.setText(challenge);
+         GridData gdChallenge = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gdChallenge.widthHint = 400;
+         challengeLabel.setLayoutData(gdChallenge);
+      }
+
       responseText = new LabeledText(dialogArea, SWT.NONE);
-      responseText.setLabel(((challenge != null) && !challenge.isEmpty()) ? challenge : i18n.tr("Response"));
+      responseText.setLabel(i18n.tr("Response"));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;

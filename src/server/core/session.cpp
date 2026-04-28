@@ -2631,15 +2631,16 @@ void ClientSession::login(const NXCPMessage& request)
       }
       else if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
       {
-         // RADIUS Access-Challenge received - trigger 2FA-style flow using native 2FA UI
-         debugPrintf(4, _T("RADIUS Access-Challenge: presenting challenge to user via 2FA modal (reply-message: \"%hs\")"),
+         // RADIUS Access-Challenge - pass Reply-Message as challenge text and the
+         // configured 2FA token timeout to the client; client will collect the OTP
+         // and submit it via CMD_2FA_VALIDATE_RESPONSE without going through the
+         // method selection / prepare-challenge phase.
+         response.setFieldFromUtf8String(VID_CHALLENGE, m_loginInfo->radiusChallenge.replyMessage);
+         int32_t tokenTimeout = ConfigReadInt(_T("Server.Security.2FA.TokenTimeout"), 120);
+         if (tokenTimeout > 0)
+            response.setField(VID_TIMEOUT, static_cast<uint32_t>(tokenTimeout));
+         debugPrintf(4, _T("RADIUS Access-Challenge: presenting challenge to user (reply-message: \"%hs\")"),
                m_loginInfo->radiusChallenge.replyMessage);
-         rcc = RCC_NEED_2FA;
-         // Send a single synthetic method "RADIUS" so the client auto-selects it
-         response.setField(VID_2FA_METHOD_COUNT, static_cast<uint32_t>(1));
-         response.setField(VID_2FA_METHOD_LIST_BASE, _T("RADIUS"));
-         // Trusted devices are not applicable for RADIUS challenge-response
-         response.setField(VID_TRUSTED_DEVICES_ALLOWED, false);
       }
       else
       {
@@ -2668,32 +2669,26 @@ void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_loginInfo != nullptr)
    {
-      TCHAR method[MAX_OBJECT_NAME];
-      request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
-
-      if (!_tcscmp(method, _T("RADIUS")) && m_loginInfo->radiusChallengeActive)
+      if (m_loginInfo->radiusChallengeActive)
       {
-         // RADIUS Access-Challenge: return Reply-Message as challenge text
-         // (will be shown in the 2FA dialog and used as window title)
-         TCHAR replyMsg[1024];
-         utf8_to_wchar(m_loginInfo->radiusChallenge.replyMessage, -1, replyMsg, 1024);
-         replyMsg[1023] = 0;
-         response.setField(VID_CHALLENGE, replyMsg);
-         uint32_t radiusTimeout = static_cast<uint32_t>(ConfigReadInt(_T("RADIUS.Timeout"), 3));
-         if (radiusTimeout > 0)
-            response.setField(VID_TIMEOUT, radiusTimeout);
-         response.setField(VID_RCC, RCC_SUCCESS);
-         debugPrintf(4, _T("RADIUS challenge prepared for user %s (reply-message: \"%s\")"),
-               m_loginInfo->loginName, replyMsg);
+         // Client should respond directly with CMD_2FA_VALIDATE_RESPONSE after
+         // receiving RCC_RADIUS_ACCESS_CHALLENGE - prepare-challenge is not part
+         // of the RADIUS flow.
+         response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       }
       else
       {
+         TCHAR method[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
          delete m_loginInfo->token;
          m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
          if (m_loginInfo->token != nullptr)
          {
             response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
             response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
+            int32_t tokenTimeout = ConfigReadInt(_T("Server.Security.2FA.TokenTimeout"), 120);
+            if (tokenTimeout > 0)
+               response.setField(VID_TIMEOUT, static_cast<uint32_t>(tokenTimeout));
             response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -2754,8 +2749,10 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
          }
          else
          {
-            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response rejected (result=%d, client info: %s)"),
-                  m_loginInfo->loginName, radResult, m_clientInfo);
+            const TCHAR *outcome = (radResult == RADIUS_RESULT_REJECT) ? _T("rejected by server") :
+                  (radResult == RADIUS_RESULT_TIMEOUT) ? _T("timed out") : _T("failed");
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response %s (result=%d, client info: %s)"),
+                  m_loginInfo->loginName, outcome, radResult, m_clientInfo);
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
             m_userId = INVALID_INDEX;
          }

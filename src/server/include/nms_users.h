@@ -550,11 +550,13 @@ public:
 /**
  * RADIUS authentication result codes
  */
-#define RADIUS_RESULT_OK        0  // Access-Accept
-#define RADIUS_RESULT_REJECT    1  // Access-Reject
-#define RADIUS_RESULT_CHALLENGE 2  // Access-Challenge
-#define RADIUS_RESULT_TIMEOUT   7  // Timeout
-#define RADIUS_RESULT_ERROR     8  // Protocol error or unexpected response
+#define RADIUS_RESULT_OK         0  // Access-Accept
+#define RADIUS_RESULT_REJECT     1  // Access-Reject
+#define RADIUS_RESULT_CHALLENGE  2  // Access-Challenge
+#define RADIUS_RESULT_BAD_SERVER 3  // RADIUS server name cannot be resolved
+#define RADIUS_RESULT_TIMEOUT    7  // Timeout
+#define RADIUS_RESULT_ERROR      8  // Protocol error or unexpected response
+#define RADIUS_RESULT_NO_SERVER  10 // No RADIUS server configured
 
 /**
  * RADIUS challenge data (attributes from Access-Challenge response)

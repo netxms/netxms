@@ -60,6 +60,19 @@ static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
 }
 
 /**
+ * Upgrade from 62.9 to 62.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateConfigParam(L"Server.Security.2FA.TokenTimeout",
+            L"120",
+            L"Time (in seconds) the user has to respond to a 2FA challenge before the client cancels the prompt. Set to 0 to disable the auto-cancel timer.",
+            L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 62.8 to 62.9
  */
 static bool H_UpgradeFromV8()
@@ -355,6 +368,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  62, 10, H_UpgradeFromV9  },
    { 8,  62, 9,  H_UpgradeFromV8  },
    { 7,  62, 8,  H_UpgradeFromV7  },
    { 6,  62, 7,  H_UpgradeFromV6  },

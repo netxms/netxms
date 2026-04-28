@@ -2569,6 +2569,27 @@ public class NXCSession
             }
          }
       }
+      else if ((rcc == RCC.RADIUS_ACCESS_CHALLENGE) && (twoFactorAuthenticationCallback != null))
+      {
+         logger.info("RADIUS Access-Challenge received from server");
+
+         String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
+         challengeTimeout = response.getFieldAsInt32(NXCPCodes.VID_TIMEOUT);
+         String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, null, false);
+         if (userResponse == null)
+         {
+            logger.debug("RADIUS challenge response read cancelled by user");
+            throw new NXCException(RCC.OPERATION_CANCELLED);
+         }
+
+         request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
+         request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
+         sendMessage(request);
+
+         response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
+         rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+         logger.debug("RADIUS challenge response validated, RCC=" + rcc);
+      }
       else if (rcc == RCC.VERSION_MISMATCH)
       {
          String minVersion = response.getFieldAsString(NXCPCodes.VID_VALUE);

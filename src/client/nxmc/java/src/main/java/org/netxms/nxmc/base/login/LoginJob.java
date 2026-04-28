@@ -67,7 +67,6 @@ public class LoginJob implements IRunnableWithProgress
    private Certificate certificate;
    private Signature signature;
    private String clientAddress;
-   private int twoFactorTimeout = 0;
 
    /**
     * Create login job with specified credentials.
@@ -89,16 +88,6 @@ public class LoginJob implements IRunnableWithProgress
       this.enableCompression = enableCompression;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       this.clientAddress = Registry.getClientAddress();
-   }
-
-   /**
-    * Set two-factor authentication timeout.
-    *
-    * @param seconds timeout in seconds (0 = no timeout)
-    */
-   public void setTwoFactorTimeout(int seconds)
-   {
-      this.twoFactorTimeout = seconds;
    }
 
    /**
@@ -171,8 +160,7 @@ public class LoginJob implements IRunnableWithProgress
             public String getUserResponse(final String challenge, final String qrLabel, final boolean trustedDevicesAllowed)
             {
                final String[] response = new String[1];
-               int challengeTimeout = session.getChallengeTimeout();
-               int dialogTimeout = (challengeTimeout > 0 && (twoFactorTimeout == 0 || challengeTimeout < twoFactorTimeout)) ? challengeTimeout : twoFactorTimeout;
+               final int dialogTimeout = session.getChallengeTimeout();
                display.syncExec(new Runnable() {
                   @Override
                   public void run()
