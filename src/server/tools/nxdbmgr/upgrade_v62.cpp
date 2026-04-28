@@ -98,6 +98,24 @@ static bool H_UpgradeFromV11()
 }
 
 /**
+ * Upgrade from 62.12 to 62.13
+ */
+static bool H_UpgradeFromV12()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE network_maps ADD canvas_type integer\n"
+      L"UPDATE network_maps SET canvas_type=0\n"
+      L"ALTER TABLE network_maps ADD initial_view_mode integer\n"
+      L"UPDATE network_maps SET initial_view_mode=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"network_maps", L"canvas_type"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"network_maps", L"initial_view_mode"));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 62.10 to 62.11
  */
 static bool H_UpgradeFromV10()

@@ -39,6 +39,7 @@ import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -73,6 +74,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.maps.MapCanvasType;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
@@ -152,6 +154,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
+	protected org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer geoViewer;
+	private Composite contentParent;
+	private Composite stackHolder;
+	private Composite graphPanel;
+	private org.eclipse.swt.custom.StackLayout stackLayout;
 	protected MapLayoutAlgorithm layoutAlgorithm = MapLayoutAlgorithm.SPRING;
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
@@ -169,6 +176,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected Action actionZoomOut;
 	protected Action actionZoomFit;
 	protected Action[] actionZoomTo;
+   protected Action[] actionGeoZoomTo;
 	protected Action[] actionSetAlgorithm;
 	protected Action[] actionSetRouter;
 	protected Action actionEnableAutomaticLayout;
@@ -189,6 +197,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
    protected Action actionLock;
+   protected Action actionToggleCanvasType;
    protected Action actionHSpanIncrease;
    protected Action actionHSpanDecrease;
    protected Action actionHSpanFull;
@@ -232,14 +241,428 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected abstract void buildMapPage(NetworkMapPage oldMapPage);
 
    /**
+    * Message-area entry id for the "N nodes hidden (no location)" notice. Zero
+    * when no message is currently shown. Tracked separately from any other
+    * messages so we can update or remove it idempotently as the count changes.
+    */
+   private int unplacedCountMessageId = 0;
+
+   /**
+    * Add, update or remove the message-area entry reporting how many map
+    * elements are hidden because their object has no geolocation. Called by
+    * {@code GeoNetworkMapViewer} via the unplaced-count listener.
+    */
+   private void updateUnplacedCountMessage(int count)
+   {
+      if (count <= 0)
+      {
+         if (unplacedCountMessageId != 0)
+         {
+            deleteMessage(unplacedCountMessageId);
+            unplacedCountMessageId = 0;
+         }
+         return;
+      }
+      String text = (count == 1)
+            ? i18n.tr("1 node hidden (no location)")
+            : i18n.tr("{0} nodes hidden (no location)", count);
+      // Replace the previous entry so the count updates in place rather than
+      // accumulating duplicate messages as objects gain/lose geolocation.
+      if (unplacedCountMessageId != 0)
+         deleteMessage(unplacedCountMessageId);
+      unplacedCountMessageId = addMessage(org.netxms.nxmc.base.widgets.MessageArea.INFORMATION, text, true);
+   }
+
+   /**
+    * Per-view session override for the canvas type — set by the toolbar
+    * toggle action. {@code null} means "use the map's persisted canvas type".
+    * Intentionally NOT persisted: the toggle is a temporary view switch and
+    * resets every time the user reopens the map (or navigates to a different
+    * one). To make the change permanent the user edits Canvas type on the
+    * Map Background property page.
+    */
+   private Boolean canvasTypeOverride;
+
+   /**
+    * True when the currently-bound object's effective canvas type is
+    * {@link MapCanvasType#GEOGRAPHICAL}. The session-local toolbar override
+    * takes precedence over the map's persisted canvas type when present.
+    */
+   protected final boolean isGeographicalCanvas()
+   {
+      // Session-local toolbar override wins regardless of context — ad-hoc
+      // topology views (L2, IP, Internal) carry a Node as context, not a
+      // NetworkMap, so they have no persisted canvas type to fall through to.
+      if (canvasTypeOverride != null)
+         return canvasTypeOverride.booleanValue();
+      AbstractObject o = getObject();
+      if (!(o instanceof NetworkMap))
+         return false;
+      return ((NetworkMap)o).getCanvasType() == MapCanvasType.GEOGRAPHICAL;
+   }
+
+   /**
+    * Build content for geographical canvas mode: a tile-backed canvas with
+    * object pins, links (with bendpoints / routing), DCI labels, and the
+    * unplaced-objects message. Skips all Zest-based widgets and toolbar
+    * actions.
+    */
+   private void createGeoContent(Composite parent)
+   {
+      // geoViewer lives alongside graphPanel inside a StackLayout on parent
+      geoViewer = new org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer(parent, SWT.NONE, this);
+      applyGeoLinkDefaults();
+      geoViewer.setLinkChangeCallback(new FigureChangeCallback() {
+         @Override
+         public void onMove(NetworkMapElement element)
+         {
+            // Object positions on the geo canvas are world-anchored, never
+            // moved by user gestures — onMove cannot fire here.
+         }
+
+         @Override
+         public void onLinkChange(NetworkMapLink link)
+         {
+            AbstractNetworkMapView.this.onLinkChange(link);
+         }
+      });
+      wireGeoViewerSelection();
+      attachGeoContextMenu();
+      geoViewer.setUnplacedCountListener(this::updateUnplacedCountMessage);
+
+      requestInitialView();
+
+      AbstractObject o = getObject();
+      if (o instanceof NetworkMap)
+      {
+         NetworkMap m = (NetworkMap)o;
+         if (m.getInitialViewMode() != org.netxms.client.maps.MapInitialViewMode.FIT_TO_SCREEN)
+         {
+            double lat = (m.getBackgroundLocation() != null) ? m.getBackgroundLocation().getLatitude() : 0.0;
+            double lon = (m.getBackgroundLocation() != null) ? m.getBackgroundLocation().getLongitude() : 0.0;
+            int zoom = (m.getBackgroundZoom() > 0) ? m.getBackgroundZoom() : 3;
+            geoViewer.showMap(new org.netxms.nxmc.modules.worldmap.tools.MapAccessor(lat, lon, zoom));
+         }
+      }
+      onGeoViewerCreated();
+   }
+
+   /**
+    * Hook called once after {@code geoViewer} is created and wired with
+    * selection/context menu. Subclasses (e.g. {@code PredefinedMapView})
+    * override to install drop support or any other geo-only integration that
+    * needs to reach back into subclass state ({@code saveMap}, etc.). Runs at
+    * most once per geo viewer instance.
+    */
+   protected void onGeoViewerCreated()
+   {
+   }
+
+   /**
+    * Ask the geographical viewer to apply the persisted initial view mode
+    * once it has a valid viewport size and content. Called when entering
+    * geo mode (initial creation or graph→geo switch).
+    */
+   private void requestInitialView()
+   {
+      AbstractObject o = getObject();
+      if (o instanceof NetworkMap)
+      {
+         NetworkMap m = (NetworkMap)o;
+         org.netxms.client.maps.MapInitialViewMode mode = m.getInitialViewMode();
+         if (mode == null)
+            mode = org.netxms.client.maps.MapInitialViewMode.FIT_TO_SCREEN;
+         geoViewer.setInitialView(mode, m.getBackgroundLocation(), m.getBackgroundZoom());
+      }
+      else
+      {
+         // No persisted initial view (ad-hoc topology / VLAN views): fit
+         // the placed objects' bbox into the viewport on first paint.
+         geoViewer.setInitialView(org.netxms.client.maps.MapInitialViewMode.FIT_TO_SCREEN, null, 0);
+      }
+   }
+
+   /**
+    * Flip the StackLayout to the correct child for the current object's
+    * canvas type. Used to handle a live canvas-type change (property-page
+    * toggle) on an already-open view — {@code contextChanged} won't fire
+    * because the context object didn't change.
+    */
+   protected void ensureCorrectCanvas()
+   {
+      if ((stackHolder == null) || stackHolder.isDisposed() || (stackLayout == null))
+         return;
+      boolean geo = isGeographicalCanvas();
+      if (actionToggleCanvasType != null)
+         actionToggleCanvasType.setChecked(geo);
+      updateActionsForCanvas(geo);
+      if (geo)
+      {
+         if (stackLayout.topControl != geoViewer)
+         {
+            // Capture the single selected object before swap so the same
+            // pin is highlighted on the geo canvas (or selection cleared
+            // if the object has no geolocation).
+            AbstractObject carryOver = singleSelectedObject();
+            switchToGeoContent();
+            geoViewer.selectObject(carryOver);
+         }
+         else
+         {
+            // Already showing geo — map options may have changed, refresh defaults.
+            applyGeoLinkDefaults();
+            geoViewer.redraw();
+         }
+         updateUnplacedCountMessage(geoViewer.getUnplacedObjectCount());
+      }
+      else
+      {
+         if (stackLayout.topControl != graphPanel)
+         {
+            // Capture before the StackLayout swap and the setInput rebuild
+            // so we can re-apply the same object selection on the graph
+            // side (Zest's setInput drops any prior selection).
+            AbstractObject carryOver = singleSelectedObject();
+            stackLayout.topControl = graphPanel;
+            stackHolder.layout(true, true);
+            if (mapPage == null)
+               buildMapPage(null);
+            viewer.setInput(mapPage);
+            applyObjectSelectionToGraph(carryOver);
+            graphPanel.redraw();
+         }
+         // Geo-specific message is meaningless on the graph canvas — drop it.
+         updateUnplacedCountMessage(0);
+      }
+   }
+
+   /**
+    * Return the single AbstractObject in the current selection, or null when
+    * the selection is empty, holds multiple items, or is something other
+    * than an object (link, decoration). Used to carry an object selection
+    * across a canvas swap.
+    */
+   private AbstractObject singleSelectedObject()
+   {
+      if ((currentSelection == null) || (currentSelection.size() != 1))
+         return null;
+      Object first = currentSelection.getFirstElement();
+      return (first instanceof AbstractObject) ? (AbstractObject)first : null;
+   }
+
+   /**
+    * Apply an object-selection to the Zest viewer after a geo→graph swap.
+    * Looks up the {@link NetworkMapObject} element for {@code object} in
+    * {@link #mapPage} and selects it, or clears the selection if the object
+    * isn't present on this map.
+    */
+   private void applyObjectSelectionToGraph(AbstractObject object)
+   {
+      if (object == null)
+      {
+         viewer.setSelection(new StructuredSelection());
+         return;
+      }
+      NetworkMapObject element = (mapPage != null) ? mapPage.findObjectElement(object.getObjectId()) : null;
+      if (element != null)
+         viewer.setSelection(new StructuredSelection(element));
+      else
+         viewer.setSelection(new StructuredSelection());
+   }
+
+   /**
+    * Toggle the enabled state of actions that make sense only on the Zest
+    * graph canvas. Called from {@link #ensureCorrectCanvas} on every canvas
+    * swap so the toolbar and menu state always reflects the active canvas.
+    *
+    * <p>The canvas-toggle and the actions that genuinely work on both
+    * canvases (find, copy/save image, select all, hide links/labels, show
+    * link direction, zoom in/out/fit, drill-down, line chart) stay enabled
+    * in both modes.</p>
+    */
+   private void updateActionsForCanvas(boolean geo)
+   {
+      boolean graph = !geo;
+
+      // Layout/topology: graph-only. Routing applies to both canvases.
+      actionEnableAutomaticLayout.setEnabled(graph);
+      for(IAction a : actionSetAlgorithm)
+         a.setEnabled(graph);
+      actionAlignToGrid.setEnabled(graph);
+      actionSnapToGrid.setEnabled(graph);
+      actionShowGrid.setEnabled(graph);
+      actionShowSize.setEnabled(graph);
+      actionLock.setEnabled(graph);
+
+      // Object spacing — modifies the graph map's pixel dimensions, which the
+      // geo canvas doesn't honour (positions come from lat/lon).
+      actionHSpanIncrease.setEnabled(graph);
+      actionHSpanDecrease.setEnabled(graph);
+      actionHSpanFull.setEnabled(graph);
+      actionVSpanIncrease.setEnabled(graph);
+      actionVSpanDecrease.setEnabled(graph);
+
+      // Object display style — Zest figure rendering. Geo canvas always
+      // renders pins regardless of these toggles.
+      actionFiguresIcons.setEnabled(graph);
+      actionFiguresSmallLabels.setEnabled(graph);
+      actionFiguresLargeLabels.setEnabled(graph);
+      actionFiguresStatusIcons.setEnabled(graph);
+      actionFiguresFloorPlan.setEnabled(graph);
+      actionShowStatusIcon.setEnabled(graph);
+      actionShowStatusBackground.setEnabled(graph);
+      actionShowStatusFrame.setEnabled(graph);
+      actionTranslucentLabelBkgnd.setEnabled(graph);
+
+      // Zoom-to-percent vs zoom-to-tile-level: only one applies at a time,
+      // and the menu builders pick the right array. We toggle enabled state in
+      // sync so disabled entries don't accidentally surface anywhere else.
+      for(IAction a : actionZoomTo)
+         a.setEnabled(graph);
+      for(IAction a : actionGeoZoomTo)
+         a.setEnabled(geo);
+   }
+
+   /**
+    * Build the array of "zoom to level N" actions for the geographical canvas.
+    * Each action sets the tile viewer to that zoom level and recenters on the
+    * current map position. Action labels read "Level 1"..."Level N". The
+    * actions are AS_RADIO_BUTTON so the menu shows which level is active.
+    */
+   private Action[] createGeoZoomActions()
+   {
+      int min = org.netxms.nxmc.modules.worldmap.tools.MapAccessor.MIN_MAP_ZOOM;
+      int max = org.netxms.nxmc.modules.worldmap.tools.MapAccessor.MAX_MAP_ZOOM;
+      Action[] actions = new Action[max - min + 1];
+      for(int i = 0; i < actions.length; i++)
+      {
+         final int level = min + i;
+         actions[i] = new Action(i18n.tr("Level {0}", level), Action.AS_RADIO_BUTTON) {
+            @Override
+            public void run()
+            {
+               org.netxms.nxmc.modules.worldmap.tools.MapAccessor a = geoViewer.getMapAccessor();
+               if (a == null)
+                  return;
+               a.setZoom(level);
+               geoViewer.showMap(a);
+            }
+         };
+      }
+      return actions;
+   }
+
+   /**
+    * Set the radio-checked state on the geo zoom-level actions to reflect the
+    * geo viewer's current zoom. Called whenever the zoom changes. No-op when
+    * the actions haven't been built yet.
+    */
+   private void syncGeoZoomChecked()
+   {
+      org.netxms.nxmc.modules.worldmap.tools.MapAccessor a = geoViewer.getMapAccessor();
+      if (a == null)
+         return;
+      int level = a.getZoom();
+      int min = org.netxms.nxmc.modules.worldmap.tools.MapAccessor.MIN_MAP_ZOOM;
+      for(int i = 0; i < actionGeoZoomTo.length; i++)
+         actionGeoZoomTo[i].setChecked((min + i) == level);
+   }
+
+   /**
+    * Show the geographical viewer (creating it on first use) and populate it
+    * with the current map's content. Graph-mode widgets remain alive behind
+    * the StackLayout so their references ({@code viewer}, listeners, actions)
+    * stay valid — operations against the hidden graph viewer are harmless.
+    */
+   private void switchToGeoContent()
+   {
+      if (stackHolder == null || stackHolder.isDisposed())
+         return;
+      if (geoViewer == null)
+         createGeoContent(stackHolder);
+      if (stackLayout != null)
+      {
+         stackLayout.topControl = geoViewer;
+         stackHolder.layout(true, true);
+      }
+      applyGeoLinkDefaults();
+      buildMapPage(mapPage);
+      geoViewer.setContent(mapPage);
+      geoViewer.redraw();
+      // requestInitialView() runs from createGeoContent on first creation and
+      // from contextChanged on navigation; calling it here too would re-fit
+      // on every property-page toggle and clobber the user's pan/zoom.
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#contextChanged(java.lang.Object, java.lang.Object)
+    */
+   @Override
+   protected void contextChanged(Object oldContext, Object newContext)
+   {
+      // Drop any session-local canvas-type override from the previous map —
+      // the toggle is per-view and per-map, so navigating to a different map
+      // resets to that map's persisted canvas type.
+      canvasTypeOverride = null;
+      // Flip the StackLayout to the right child for the new context's canvas
+      // type (creating the geo viewer on first use). super.contextChanged
+      // then runs onObjectChange in the subclass — syncObjects() must run for
+      // both modes so interface-status / utilization link styling resolves.
+      ensureCorrectCanvas();
+      // Re-request the initial view so navigating between maps applies each
+      // map's persisted view mode. tryApplyInitialView is gated on having
+      // both viewport and content, so it deferred-applies after the async
+      // sync → refresh → setContent path completes for the new map.
+      if (isGeographicalCanvas())
+         requestInitialView();
+      super.contextChanged(oldContext, newContext);
+   }
+
+   protected void applyGeoLinkDefaults()
+   {
+      AbstractObject o = getObject();
+      NetworkMap m = (o instanceof NetworkMap) ? (NetworkMap)o : null;
+      // Ad-hoc topology / VLAN views have no persisted link defaults — use
+      // the same fallbacks the Zest-mode MapLabelProvider uses (color -1
+      // means "no map-level default", style SOLID, routing DIRECT).
+      int color = (m != null) ? m.getDefaultLinkColor() : -1;
+      int colorSource = (m != null) ? m.getDefaultLinkColorSource() : NetworkMapLink.COLOR_SOURCE_DEFAULT;
+      // Match the Zest-mode fallback (MapLabelProvider.setDefaultLinkWidth):
+      // an unset map-level width (0) falls back to the NetMap.DefaultLinkWidth
+      // preference, which itself defaults to 5.
+      int width = (m != null) ? m.getDefaultLinkWidth() : 0;
+      if (width <= 0)
+         width = PreferenceStore.getInstance().getAsInteger("NetMap.DefaultLinkWidth", 5);
+      int style = (m != null) ? m.getDefaultLinkStyle() : 1;
+      int routing = (m != null) ? m.getDefaultLinkRouting() : NetworkMapLink.ROUTING_DIRECT;
+      // Pass the encoded color through; geoViewer resolves it via its own
+      // colorCache so the SWT resource is owned by the cache (no per-call
+      // new Color(...) leak — applyGeoLinkDefaults runs on every object
+      // update and would otherwise burn through GDI / X11 handles).
+      geoViewer.setLinkDefaults(color, colorSource, width, style);
+      geoViewer.setDefaultLinkRouting(routing);
+      geoViewer.setShowLinkDirection((m != null) && m.isShowLinkDirection());
+      // Sync the in-session UI toggles for hide-links / hide-link-labels.
+      if (actionHideLinks != null)
+         geoViewer.setLinksVisible(!actionHideLinks.isChecked());
+      if (actionHideLinkLabels != null)
+         geoViewer.setLinkLabelsVisible(!actionHideLinkLabels.isChecked());
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
 	@Override
    public final void createContent(Composite parent)
 	{
+      this.contentParent = parent;
       parent.setLayout(new FormLayout());
 
-	   searchBar = new Composite(parent, SWT.NONE);
+      // Search bar lives above the stack so it's reachable from both canvas
+      // modes. Hidden by default; activateFindObjectMode toggles visibility
+      // and re-attaches the stack holder's top to it (or to the parent's
+      // top edge when hidden).
+      searchBar = new Composite(parent, SWT.NONE);
       GridLayout gridLayout = new GridLayout();
       gridLayout.numColumns = 3;
       searchBar.setLayout(gridLayout);
@@ -265,11 +688,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             {
                if (e.keyCode == SWT.ARROW_DOWN || e.keyCode == 13)
                {
-                  viewer.findNodeByText(queryEditor.getText(), true);
+                  performFindObject(queryEditor.getText(), true);
                }
                else if (e.keyCode == SWT.ARROW_UP)
                {
-                  viewer.findNodeByText(queryEditor.getText(), false);
+                  performFindObject(queryEditor.getText(), false);
                }
             }
          }
@@ -283,7 +706,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            viewer.findNodeByText(queryEditor.getText(), false);
+            performFindObject(queryEditor.getText(), false);
          }
       });
       previousButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
@@ -295,19 +718,34 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            viewer.findNodeByText(queryEditor.getText(), true);
+            performFindObject(queryEditor.getText(), true);
          }
       });
       nextButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+      searchBar.setVisible(false);
 
-      mainContent = new Composite(parent, SWT.NONE);
-      mainContent.setLayout(new FillLayout());
+      // stackHolder owns the StackLayout that swaps between the Zest graph
+      // panel and the geographical viewer.
+      stackHolder = new Composite(parent, SWT.NONE);
+      this.stackLayout = new org.eclipse.swt.custom.StackLayout();
+      stackHolder.setLayout(this.stackLayout);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(searchBar);
+      fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
-      mainContent.setLayoutData(fd);
+      stackHolder.setLayoutData(fd);
+
+      // Always create the graph-mode panel and Zest viewer; createActions(),
+      // createContextMenu(), the session listener and double-click registry
+      // below all assume graph-mode widgets exist, and ensureCorrectCanvas()
+      // needs graphPanel as a swap target when the user toggles back to GRAPH.
+      graphPanel = new Composite(stackHolder, SWT.NONE);
+      this.stackLayout.topControl = graphPanel;
+      graphPanel.setLayout(new FillLayout());
+
+      mainContent = new Composite(graphPanel, SWT.NONE);
+      mainContent.setLayout(new FillLayout());
       mainContent.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_NO));
 
       viewer = new ExtendedGraphViewer(mainContent, SWT.NONE, this, new FigureChangeCallback() {
@@ -435,6 +873,17 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(this);
 		setupMapControl();
+
+      // If the map is opened with the GEOGRAPHICAL canvas type, create the
+      // geo viewer now and flip the StackLayout to it. Graph-mode widgets
+      // remain alive behind the StackLayout so subsequent toggles back to
+      // GRAPH work without recreating anything.
+      if (isGeographicalCanvas())
+      {
+         createGeoContent(stackHolder);
+         stackLayout.topControl = geoViewer;
+         stackHolder.layout();
+      }
 	}
 
    /**
@@ -484,6 +933,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    @Override
    public void refresh()
 	{
+      if (isGeographicalCanvas())
+      {
+         if (geoViewer != null)
+         {
+            buildMapPage(mapPage);
+            geoViewer.setContent(mapPage);
+         }
+         return;
+      }
 
       IStructuredSelection selection = viewer.getStructuredSelection();
       List<Object> newSelection = new ArrayList<Object>(selection.size());
@@ -516,7 +974,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          NetworkMapPage oldMapPage = mapPage;
          mapPage = page;
          refreshDciRequestList(oldMapPage, true);
-         viewer.setInput(mapPage);
+         if (isGeographicalCanvas() && (geoViewer != null))
+            geoViewer.setContent(mapPage);
+         else
+            viewer.setInput(mapPage);
 		});
 	}
 
@@ -643,6 +1104,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             updateObjectPositions();
             saveLayout();
             viewer.refresh();
+            if (geoViewer != null)
+            {
+               geoViewer.setShowLinkDirection(labelProvider.isShowLinkDirection());
+               geoViewer.redraw();
+            }
          }
       };
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
@@ -705,7 +1171,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			@Override
 			public void run()
 			{
-				viewer.zoomIn();
+            if (isGeographicalCanvas() && (geoViewer != null))
+               geoViewer.zoomIn();
+            else
+               viewer.zoomIn();
 			}
 		};
       addKeyBinding("M1+=", actionZoomIn);
@@ -714,7 +1183,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			@Override
 			public void run()
 			{
-				viewer.zoomOut();
+            if (isGeographicalCanvas() && (geoViewer != null))
+               geoViewer.zoomOut();
+            else
+               viewer.zoomOut();
 			}
 		};
       addKeyBinding("M1+-", actionZoomOut);
@@ -723,12 +1195,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            viewer.zoomFit();
+            if (isGeographicalCanvas() && (geoViewer != null))
+               geoViewer.zoomFit();
+            else
+               viewer.zoomFit();
          }
       };
       addKeyBinding("M1+F", actionZoomFit);
 
       actionZoomTo = viewer.createZoomActions();
+      actionGeoZoomTo = createGeoZoomActions();
 
 		actionSetAlgorithm = new Action[layoutAlgorithmNames.length];
 		for(int i = 0; i < layoutAlgorithmNames.length; i++)
@@ -787,6 +1263,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       };
       actionLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/lock.png"));
       actionLock.setEnabled(true);
+
+      actionToggleCanvasType = new Action(i18n.tr("Geographical view"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            toggleCanvasType(actionToggleCanvasType.isChecked());
+         }
+      };
+      actionToggleCanvasType.setImageDescriptor(ResourceManager.getImageDescriptor("icons/worldmap.png"));
+      actionToggleCanvasType.setChecked(isGeographicalCanvas());
 
 		actionOpenDrillDownObject = new Action("Open drill-down object") {
 			@Override
@@ -890,7 +1376,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            MapImageManipulationHelper.copyMapImageToClipboard(viewer);
+            if (isGeographicalCanvas() && (geoViewer != null))
+               geoViewer.copyToClipboard();
+            else
+               MapImageManipulationHelper.copyMapImageToClipboard(viewer);
          }
 		};
 
@@ -908,6 +1397,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          {
             labelProvider.setConnectionLabelsVisible(!actionHideLinkLabels.isChecked());
             viewer.refresh(true);
+            if (geoViewer != null)
+            {
+               geoViewer.setLinkLabelsVisible(!actionHideLinkLabels.isChecked());
+               geoViewer.redraw();
+            }
          }
       };
       actionHideLinkLabels.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/hide_link_labels.png"));
@@ -918,6 +1412,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          {
             labelProvider.setConnectionsVisible(!actionHideLinks.isChecked());
             viewer.refresh(true);
+            if (geoViewer != null)
+            {
+               geoViewer.setLinksVisible(!actionHideLinks.isChecked());
+               geoViewer.redraw();
+            }
          }
       };
       actionHideLinks.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/hide_links.png"));
@@ -926,7 +1425,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          public void run()
          {
-            viewer.setSelection(new StructuredSelection(mapPage.getObjectElements()));
+            if (isGeographicalCanvas() && (geoViewer != null))
+               geoViewer.selectAllObjects();
+            else
+               viewer.setSelection(new StructuredSelection(mapPage.getObjectElements()));
          }
       };
       addKeyBinding("M1+A", actionSelectAllObjects);
@@ -1017,9 +1519,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          fd.top = new FormAttachment(searchBar);
          fd.right = new FormAttachment(100, 0);
          fd.bottom = new FormAttachment(100, 0);
-         mainContent.setLayoutData(fd);
-
-         mainContent.getParent().layout();
+         stackHolder.setLayoutData(fd);
       }
       else
       {
@@ -1033,9 +1533,28 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          fd.top = new FormAttachment(0, 0);
          fd.right = new FormAttachment(100, 0);
          fd.bottom = new FormAttachment(100, 0);
-         mainContent.setLayoutData(fd);
+         stackHolder.setLayoutData(fd);
+      }
+      contentParent.layout();
+   }
 
-         mainContent.getParent().layout();
+   /**
+    * Dispatch a find-object request to the active viewer (Zest in graph mode,
+    * geo viewer in geographical mode). Handles the case where no match is
+    * found by surfacing an information banner via the host's message area.
+    */
+   private void performFindObject(String text, boolean forward)
+   {
+      if ((text == null) || text.isEmpty())
+         return;
+      if (isGeographicalCanvas() && (geoViewer != null))
+      {
+         if (!geoViewer.findObjectByText(text, forward))
+            addMessage(org.netxms.nxmc.base.widgets.MessageArea.INFORMATION, i18n.tr("No matching objects found on the map."));
+      }
+      else
+      {
+         viewer.findNodeByText(text, forward);
       }
    }
 
@@ -1088,8 +1607,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected void fillLocalMenu(IMenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
-      for(int i = 0; i < actionZoomTo.length; i++)
-         zoom.add(actionZoomTo[i]);
+      Action[] zoomEntries = isGeographicalCanvas() ? actionGeoZoomTo : actionZoomTo;
+      if (isGeographicalCanvas())
+         syncGeoZoomChecked();
+      for(int i = 0; i < zoomEntries.length; i++)
+         zoom.add(zoomEntries[i]);
 
       if (!readOnly)
       {
@@ -1169,6 +1691,13 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(new Separator());
       if (!readOnly)
          manager.add(actionLock);
+      // Canvas toggle is a per-view session switch, not a write operation,
+      // so it shows for read-only views (ad-hoc predefined maps and ad-hoc
+      // topology / VLAN views) too. The view always knows how to render
+      // its placed objects as geo pins; views without a NetworkMap context
+      // simply have no persisted canvas type to fall back on and start in
+      // GRAPH each time.
+      manager.add(actionToggleCanvasType);
       manager.add(actionCopyImage);
 	}
 
@@ -1213,6 +1742,79 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	}
 
    /**
+    * Forward selection changes from the geographical viewer into this view's
+    * {@code currentSelection} (and to view-level selection listeners), so the
+    * shared context-menu logic — which keys off {@code currentSelection} —
+    * works on the geo canvas the same way it does on the Zest canvas.
+    */
+   private void wireGeoViewerSelection()
+   {
+      geoViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent e)
+         {
+            currentSelection = transformSelection(e.getSelection());
+
+            NetworkMapLink editLink = null;
+            if (currentSelection.size() == 1)
+            {
+               Object first = currentSelection.getFirstElement();
+               if ((first instanceof NetworkMapLink)
+                     && (((NetworkMapLink)first).getRouting() == NetworkMapLink.ROUTING_BENDPOINTS))
+                  editLink = (NetworkMapLink)first;
+            }
+            geoViewer.setEditedLink(editLink);
+
+            if (selectionListeners.isEmpty())
+               return;
+            SelectionChangedEvent forwarded = new SelectionChangedEvent(AbstractNetworkMapView.this, currentSelection);
+            for(ISelectionChangedListener l : selectionListeners)
+               l.selectionChanged(forwarded);
+         }
+      });
+   }
+
+   /**
+    * Attach a context menu to the geographical viewer using the same
+    * {@code ObjectContextMenuManager} as the Zest canvas. Right-click on a
+    * pin shows the object menu; right-click on free space falls through to
+    * {@link #fillMapContextMenu(IMenuManager)}.
+    */
+   private void attachGeoContextMenu()
+   {
+      MenuManager menuMgr = new ObjectContextMenuManager(this, this, null) {
+         @Override
+         protected void fillContextMenu()
+         {
+            int selectionType = analyzeSelection(currentSelection);
+            switch(selectionType)
+            {
+               case SELECTION_EMPTY:
+                  fillMapContextMenu(this);
+                  break;
+               case SELECTION_OBJECTS:
+                  AbstractObject currentObject = (AbstractObject)currentSelection.getFirstElement();
+                  fillObjectContextMenu(this, currentObject.isPartialObject());
+                  if (!currentObject.isPartialObject())
+                  {
+                     add(new Separator());
+                     super.fillContextMenu();
+                  }
+                  break;
+               case SELECTION_ELEMENTS:
+                  fillElementContextMenu(this);
+                  break;
+               case SELECTION_LINKS:
+                  fillLinkContextMenu(this);
+                  break;
+            }
+         }
+      };
+      Menu menu = menuMgr.createContextMenu(geoViewer);
+      geoViewer.setMenu(menu);
+   }
+
+   /**
     * Fill context menu for object.
     *
     * @param manager menu manager
@@ -1252,8 +1854,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
-      for(int i = 0; i < actionZoomTo.length; i++)
-         zoom.add(actionZoomTo[i]);
+      Action[] zoomEntries = isGeographicalCanvas() ? actionGeoZoomTo : actionZoomTo;
+      if (isGeographicalCanvas())
+         syncGeoZoomChecked();
+      for(int i = 0; i < zoomEntries.length; i++)
+         zoom.add(zoomEntries[i]);
 
       MenuManager figureType = new MenuManager(i18n.tr("&Display objects as"));
       figureType.add(actionFiguresIcons);
@@ -1442,6 +2047,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 					objects.add(element);
 				}
 			}
+			else if (element instanceof AbstractObject)
+			{
+				// Geographical viewer puts AbstractObject directly into its
+				// selection (pin click → object selection), so pass these
+				// through here too. Without this, transformSelection would
+				// drop the object and the context menu would fall back to
+				// the empty/map menu instead of the object menu.
+				objects.add(element);
+			}
 			else if (isSelectableElement(element))
 			{
 				objects.add(element);
@@ -1570,17 +2184,23 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	public void setConnectionRouter(int routingAlgorithm, boolean doSave)
 	{
-		switch(routingAlgorithm)
+		int alg = (routingAlgorithm == NetworkMapLink.ROUTING_MANHATTAN)
+				? NetworkMapLink.ROUTING_MANHATTAN : NetworkMapLink.ROUTING_DIRECT;
+		this.routingAlgorithm = alg;
+
+		// Keep the Zest router in sync; cheap and safe to do even when the
+		// graph canvas is currently hidden behind the geo viewer.
+		viewer.getGraphControl().setRouter((alg == NetworkMapLink.ROUTING_MANHATTAN) ? new ManhattanConnectionRouter() : null);
+
+		// Geo viewer projects links itself, so push the default routing in
+		// and trigger a repaint of the live tile canvas.
+		if (geoViewer != null)
 		{
-			case NetworkMapLink.ROUTING_MANHATTAN:
-				this.routingAlgorithm = NetworkMapLink.ROUTING_MANHATTAN;
-				viewer.getGraphControl().setRouter(new ManhattanConnectionRouter());
-				break;
-			default:
-				this.routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
-				viewer.getGraphControl().setRouter(null);
-				break;
+			geoViewer.setDefaultLinkRouting(alg);
+			if (isGeographicalCanvas())
+				geoViewer.redraw();
 		}
+
 		for(int i = 0; i < actionSetRouter.length; i++)
 			actionSetRouter[i].setChecked(routingAlgorithm == (i + 1));
 		if (doSave)
@@ -1669,6 +2289,25 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    }
 
    /**
+    * Switch the active canvas locally. The toolbar toggle is a temporary view
+    * switch — it lives only for the current view instance and is never
+    * persisted (neither on the server nor in PreferenceStore). Closing and
+    * reopening the map (or navigating to a different map and back) resets to
+    * the map's saved canvas type. To make the change permanent the user
+    * edits Canvas type on the Map Background property page.
+    */
+   private void toggleCanvasType(boolean geographical)
+   {
+      // Ad-hoc topology / VLAN views don't bind a NetworkMap — they have no
+      // persisted canvas type and default to GRAPH, so the override stays
+      // engaged whenever the user wants GEOGRAPHICAL.
+      AbstractObject o = getObject();
+      boolean mapDefault = (o instanceof NetworkMap) && (((NetworkMap)o).getCanvasType() == MapCanvasType.GEOGRAPHICAL);
+      canvasTypeOverride = (geographical == mapDefault) ? null : Boolean.valueOf(geographical);
+      ensureCorrectCanvas();
+   }
+
+   /**
     * @param mode
     * @param saveLayout
     */
@@ -1692,10 +2331,13 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    }
 
    /**
-    * Save map image to file
+    * Save map image to file. Captures the geographical viewer when in geo
+    * mode and the Zest viewer otherwise.
     */
    public boolean saveMapImageToFile(String fileName)
    {
+      if (isGeographicalCanvas() && (geoViewer != null))
+         return geoViewer.saveAsImage(getWindow().getShell(), logger, fileName);
       return MapImageManipulationHelper.saveMapImageToFile(getWindow().getShell(), viewer, logger, fileName);
    }
 

@@ -6668,8 +6668,11 @@ void ClientSession::createObject(const NXCPMessage& request)
                   {
                      IntegerArray<uint32_t> seeds;
                      request.getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
-                     object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), seeds);
-                     object->setName(objectName);
+                     auto netmap = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), seeds);
+                     netmap->setName(objectName);
+                     if (request.isFieldExist(VID_MAP_CANVAS_TYPE))
+                        netmap->setCanvasType(static_cast<MapCanvasType>(request.getFieldAsUInt16(VID_MAP_CANVAS_TYPE)));
+                     object = netmap;
                      NetObjInsert(object, true, false);
                   }
                   break;

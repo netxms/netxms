@@ -437,6 +437,101 @@ public class NetworkMapLink
    }
 
    /**
+    * Get geographical bend points (for geographical canvas type).
+    * Each entry is {latitude, longitude}.
+    *
+    * @return the geo bend points or null if not configured
+    */
+   public double[][] getGeoBendPoints()
+   {
+      return config.getGeoBendPoints();
+   }
+
+   /**
+    * Set geographical bend points (for geographical canvas type).
+    *
+    * @param geoBendPoints geographical bend points to set
+    */
+   public void setGeoBendPoints(double[][] geoBendPoints)
+   {
+      config.setGeoBendPoints(geoBendPoints);
+   }
+
+   /**
+    * Maximum number of bend points allowed on a single link.
+    */
+   public static final int MAX_BEND_POINTS = 16;
+
+   /**
+    * Insert a new {lat, lon} bend point at {@code index} (0 = before the
+    * first existing bend point, N = after the last). Silently no-ops when the
+    * link already has {@link #MAX_BEND_POINTS} bend points; out-of-range
+    * indices are clamped to the valid range. Returns {@code true} if the
+    * link's geo-bendpoint list changed.
+    */
+   public boolean insertGeoBendPoint(int index, double latitude, double longitude)
+   {
+      double[][] existing = getGeoBendPoints();
+      int n = (existing != null) ? existing.length : 0;
+      if (n >= MAX_BEND_POINTS)
+         return false;
+      int at = Math.max(0, Math.min(index, n));
+      double[][] updated = new double[n + 1][];
+      for(int i = 0; i < at; i++)
+         updated[i] = existing[i];
+      updated[at] = new double[] { latitude, longitude };
+      for(int i = at; i < n; i++)
+         updated[i + 1] = existing[i];
+      setGeoBendPoints(updated);
+      return true;
+   }
+
+   /**
+    * Remove the bend point at {@code index}. No-op when the index is out of
+    * range. When the last bend point is removed the array is cleared to
+    * {@code null} (rather than left as a zero-length array) to match the
+    * "no bends" representation the server expects.
+    */
+   public boolean removeGeoBendPoint(int index)
+   {
+      double[][] existing = getGeoBendPoints();
+      if ((existing == null) || (index < 0) || (index >= existing.length))
+         return false;
+      if (existing.length == 1)
+      {
+         setGeoBendPoints(null);
+         return true;
+      }
+      double[][] updated = new double[existing.length - 1][];
+      for(int i = 0, j = 0; i < existing.length; i++)
+      {
+         if (i == index)
+            continue;
+         updated[j++] = existing[i];
+      }
+      setGeoBendPoints(updated);
+      return true;
+   }
+
+   /**
+    * Replace the bend point at {@code index} with {@code (latitude, longitude)}.
+    * No-op when the index is out of range. Used by interactive bendpoint
+    * dragging on the geographical canvas.
+    */
+   public boolean updateGeoBendPoint(int index, double latitude, double longitude)
+   {
+      double[][] existing = getGeoBendPoints();
+      if ((existing == null) || (index < 0) || (index >= existing.length))
+         return false;
+      double[][] updated = new double[existing.length][];
+      for(int i = 0; i < existing.length; i++)
+         updated[i] = existing[i];
+      updated[index] = new double[] { latitude, longitude };
+      setGeoBendPoints(updated);
+      return true;
+   }
+
+   /**
     * @return the flags
     */
    public int getFlags()

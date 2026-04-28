@@ -8,6 +8,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
@@ -22,19 +23,28 @@ public class MapImageManipulationHelper
     */
    public static boolean saveMapImageToFile(Shell shell, ExtendedGraphViewer viewer, Logger logger, String fileName)
    {
-      if (fileName == null)
-      {
-         FileDialog dlg = new FileDialog(shell, SWT.SAVE);
-         dlg.setFilterExtensions(new String[] { ".png" });
-         dlg.setOverwrite(true);
-         fileName = dlg.open();
-         if (fileName == null)
-            return false;
-      }
-      
-      Image image = viewer.takeSnapshot();
+      return saveImageToFile(shell, viewer.takeSnapshot(), logger, fileName);
+   }
+
+   /**
+    * Save an already-captured snapshot to a PNG file. The caller hands over
+    * ownership of {@code image}; this method disposes it before returning.
+    */
+   public static boolean saveImageToFile(Shell shell, Image image, Logger logger, String fileName)
+   {
+      if (image == null)
+         return false;
       try
       {
+         if (fileName == null)
+         {
+            FileDialog dlg = new FileDialog(shell, SWT.SAVE);
+            dlg.setFilterExtensions(new String[] { ".png" });
+            dlg.setOverwrite(true);
+            fileName = dlg.open();
+            if (fileName == null)
+               return false;
+         }
          ImageLoader loader = new ImageLoader();
          loader.data = new ImageData[] { image.getImageData() };
          loader.save(fileName, SWT.IMAGE_PNG);
@@ -42,7 +52,7 @@ public class MapImageManipulationHelper
       }
       catch(Exception e)
       {
-         logger.error("Exception in saveMapImageToFile", e);
+         logger.error("Exception in saveImageToFile", e);
          return false;
       }
       finally
@@ -53,9 +63,21 @@ public class MapImageManipulationHelper
 
    public static void copyMapImageToClipboard(ExtendedGraphViewer viewer)
    {
-      Image image = viewer.takeSnapshot();
+      copyImageToClipboard(viewer.getControl().getDisplay(), viewer.takeSnapshot());
+   }
+
+   /**
+    * Push an already-captured snapshot onto the system clipboard. The caller
+    * hands over ownership of {@code image}; the helper does not dispose it
+    * (the clipboard implementation copies the data internally), but callers
+    * may dispose the original after the call returns.
+    */
+   public static void copyImageToClipboard(Display display, Image image)
+   {
+      if (image == null)
+         return;
       Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
-      final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
+      final Clipboard clipboard = new Clipboard(display);
       clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
    }
 }

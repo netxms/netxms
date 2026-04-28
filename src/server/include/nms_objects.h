@@ -5216,6 +5216,8 @@ protected:
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
    bool m_updateFailed;
    int m_displayPriority;
+   MapCanvasType m_canvasType;
+   MapInitialViewMode m_initialViewMode;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -5270,6 +5272,10 @@ public:
    uint16_t getDefaultLinkWidth() const { return m_defaultLinkWidth; }
    uint16_t getDefaultLinkStyle() const { return m_defaultLinkStyle; }
    uint16_t getObjectDisplayMode() const { return m_objectDisplayMode; }
+   MapCanvasType getCanvasType() const { return m_canvasType; }
+   MapInitialViewMode getInitialViewMode() const { return m_initialViewMode; }
+   void setCanvasType(MapCanvasType canvasType) { m_canvasType = canvasType; }
+   void setInitialViewMode(MapInitialViewMode mode) { m_initialViewMode = mode; }
    int32_t getWidth() const { return m_width; }
    int32_t getHeight() const { return m_height; }
    bool isUpdateFailed() const { return m_updateFailed; }

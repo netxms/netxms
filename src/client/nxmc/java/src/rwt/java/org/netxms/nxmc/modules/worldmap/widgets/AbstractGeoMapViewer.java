@@ -38,6 +38,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
@@ -45,6 +46,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.ui.presentations.PresentationUtil;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
@@ -63,6 +68,7 @@ import org.netxms.nxmc.modules.worldmap.tools.TileSet;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.RAPDragTracker;
+import org.slf4j.Logger;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -181,12 +187,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          @Override
          public void handleEvent(Event event)
          {
-            if (event.type == SWT.DragDetect) 
+            if (event.type == SWT.DragDetect)
             {
                MouseEvent me = new MouseEvent(event);
                me.stateMask = SWT.BUTTON1;
                AbstractGeoMapViewer.this.mouseDown(me);
-            }        
+            }
          }
       });
       DragSource dragSource = new DragSource(this, DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
@@ -229,24 +235,24 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Add zoom level change listener
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void addMapListener(GeoMapListener listener)
 	{
 		mapListeners.add(listener);
 	}
-	
+
 	/**
 	 * Remove previously registered zoom change listener
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void removeMapListener(GeoMapListener listener)
 	{
 		mapListeners.remove(listener);
 	}
-	
+
 	/**
 	 * Notify all listeners about zoom level change
 	 */
@@ -266,8 +272,18 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	}
 
 	/**
+	 * @return a copy of the viewer's current {@link MapAccessor} (center
+	 *         lat/lon and zoom level). Returns a copy so callers can safely
+	 *         mutate and pass back to {@link #showMap}.
+	 */
+	public MapAccessor getMapAccessor()
+	{
+		return new MapAccessor(accessor);
+	}
+
+	/**
 	 * Show given map
-	 * 
+	 *
 	 * @param accessor
 	 */
 	public void showMap(MapAccessor accessor)
@@ -314,7 +330,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					{
                   if (isDisposed())
                      return;
-                  
+
                   if (currentTileSet != null)
                      currentTileSet.dispose();
                   currentTileSet = tiles;
@@ -346,7 +362,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
     * Load missing tiles in tile set
-    * 
+    *
     * @param tiles tile set to load tiles for
     */
 	private void loadMissingTiles(final TileSet tiles)
@@ -431,9 +447,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		GeoLocation currentLocation;
 
-		// Draw objects and decorations if user is not dragging map
-		// and map is not currently loading
-		if (dragStartPoint == null)
+		// Draw objects and decorations if user is not actively dragging the map.
+		// A pressed mouse button without any drag offset (a plain click) must still
+		// render content — otherwise pins/links disappear until the next redraw.
+		if ((dragStartPoint == null) || ((offsetX == 0) && (offsetY == 0)))
 		{
          currentLocation = accessor.getCenterPoint();
          Rectangle rect = getClientArea();
@@ -445,6 +462,11 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   cp.x += offsetX;
 		   cp.y += offsetY;
          currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom(), true);
+         // Draw overlay content anchored to the dragged location so pins and
+         // links pan with the tiles instead of disappearing for the duration
+         // of the drag and snapping back into place at mouseUp.
+         Rectangle rect = getClientArea();
+         drawContent(gc, currentLocation, rect.width, rect.height, contentVerticalOffset);
 		}
 
 		// Draw selection rectangle
@@ -539,7 +561,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
     * Draw content over map
-    * 
+    *
     * @param gc
     * @param currentLocation current location (map center)
     * @param imgW map image width
@@ -565,11 +587,88 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Real handler for geolocation cache changes. Must be run in UI thread.
-	 * 
+	 *
 	 * @param object
 	 * @param prevLocation
 	 */
 	protected abstract void onCacheChange(final AbstractObject object, final GeoLocation prevLocation);
+
+   /**
+    * Capture the current viewport as an {@link Image}. Returns {@code null}
+    * under RWT — the renderer paints directly onto the browser canvas with no
+    * server-side buffer to copy. Use {@link #copyToClipboard()} or
+    * {@link #saveAsImage} instead, which capture the rendered DOM via the
+    * {@code domtoimage} client helper.
+    */
+   public Image takeSnapshot()
+   {
+      return null;
+   }
+
+   /**
+    * Copy the current viewport contents to the system clipboard as a PNG,
+    * via the browser's clipboard API.
+    */
+   public void copyToClipboard()
+   {
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor == null)
+         return;
+      executor.execute("RWTUtil_widgetToClipboard('" + WidgetUtil.getId(this) + "', 'div');");
+   }
+
+   /**
+    * Save the current viewport contents as a PNG download. {@code shell} and
+    * {@code logger} are unused under RWT (the download is browser-driven);
+    * {@code fileName} is used as the suggested download name, defaulting to
+    * {@code map.png} when {@code null}.
+    *
+    * @return true when the request was dispatched to the client
+    */
+   public boolean saveAsImage(Shell shell, Logger logger, String fileName)
+   {
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor == null)
+         return false;
+      String name = (fileName != null) ? fileName : "map.png";
+      executor.execute("RWTUtil_widgetToImage('" + WidgetUtil.getId(this) + "', 'div', '" + name + "');");
+      return true;
+   }
+
+   /**
+    * Zoom in by one level around the current center. Mirrors the +/- control's
+    * step. No-op at maximum zoom.
+    */
+   public void zoomIn()
+   {
+      int zoom = accessor.getZoom();
+      if (zoom >= MapAccessor.MAX_MAP_ZOOM)
+         return;
+      accessor.setZoom(zoom + 1);
+      checkVerticalCoverage();
+      reloadMap();
+      notifyOnZoomChange();
+   }
+
+   /**
+    * Zoom out by one level around the current center, but only when the
+    * current viewport is smaller than the next zoom level's virtual map size
+    * (the same guard used by the +/- control). No-op at minimum zoom.
+    */
+   public void zoomOut()
+   {
+      int zoom = accessor.getZoom();
+      if (zoom <= 1)
+         return;
+      Point virtualMapSize = GeoLocationCache.getVirtualMapSize(zoom);
+      Point widgetSize = getSize();
+      if ((widgetSize.x >= virtualMapSize.x) && (widgetSize.y >= virtualMapSize.y))
+         return;
+      accessor.setZoom(zoom - 1);
+      checkVerticalCoverage();
+      reloadMap();
+      notifyOnZoomChange();
+   }
 
    /**
     * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
@@ -762,7 +861,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Get location at given point within widget
-	 * 
+	 *
 	 * @param p widget-related coordinates
 	 * @return location (latitude/longitude) at given point
 	 */
@@ -790,7 +889,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
    /**
     * Get object at given point within widget
-    * 
+    *
     * @param p widget-related coordinates
     * @return object at given point or null
     */

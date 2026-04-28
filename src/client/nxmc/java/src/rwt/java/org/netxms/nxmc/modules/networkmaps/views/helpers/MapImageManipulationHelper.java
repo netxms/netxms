@@ -8,6 +8,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
@@ -21,7 +22,17 @@ public class MapImageManipulationHelper
     */
    public static boolean saveMapImageToFile(Shell shell, ExtendedGraphViewer viewer, Logger logger, String fileName)
    {
-      Image image = viewer.takeSnapshot();
+      return saveImageToFile(shell, viewer.takeSnapshot(), logger, fileName);
+   }
+
+   /**
+    * Save an already-captured snapshot using the RAP download handler. The
+    * caller hands over ownership of {@code image}; this method disposes it.
+    */
+   public static boolean saveImageToFile(Shell shell, Image image, Logger logger, String fileName)
+   {
+      if (image == null)
+         return false;
       try
       {
          ImageLoader loader = new ImageLoader();
@@ -34,7 +45,7 @@ public class MapImageManipulationHelper
       }
       catch(Exception e)
       {
-         logger.error("Exception in saveMapImageToFile", e);
+         logger.error("Exception in saveImageToFile", e);
          return false;
       }
       finally
@@ -45,9 +56,19 @@ public class MapImageManipulationHelper
 
    public static void copyMapImageToClipboard(ExtendedGraphViewer viewer)
    {
-      Image image = viewer.takeSnapshot();
+      copyImageToClipboard(viewer.getControl().getDisplay(), viewer.takeSnapshot());
+   }
+
+   /**
+    * Push an already-captured snapshot onto the system clipboard. The caller
+    * hands over ownership of {@code image}; the helper does not dispose it.
+    */
+   public static void copyImageToClipboard(Display display, Image image)
+   {
+      if (image == null)
+         return;
       ImageTransfer imageTransfer = ImageTransfer.getInstance();
-      final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
+      final Clipboard clipboard = new Clipboard(display);
       clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
    }
 }

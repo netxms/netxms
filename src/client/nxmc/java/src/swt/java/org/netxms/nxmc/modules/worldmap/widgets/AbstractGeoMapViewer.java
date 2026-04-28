@@ -43,11 +43,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.networkmaps.views.helpers.MapImageManipulationHelper;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.worldmap.GeoLocationCache;
 import org.netxms.nxmc.modules.worldmap.GeoLocationCacheListener;
@@ -59,6 +61,7 @@ import org.netxms.nxmc.modules.worldmap.tools.Tile;
 import org.netxms.nxmc.modules.worldmap.tools.TileSet;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.FontTools;
+import org.slf4j.Logger;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -193,24 +196,24 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Add zoom level change listener
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void addMapListener(GeoMapListener listener)
 	{
 		mapListeners.add(listener);
 	}
-	
+
 	/**
 	 * Remove previously registered zoom change listener
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void removeMapListener(GeoMapListener listener)
 	{
 		mapListeners.remove(listener);
 	}
-	
+
 	/**
 	 * Notify all listeners about zoom level change
 	 */
@@ -230,8 +233,18 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	}
 
 	/**
+	 * @return a copy of the viewer's current {@link MapAccessor} (center
+	 *         lat/lon and zoom level). Returns a copy so callers can safely
+	 *         mutate and pass back to {@link #showMap}.
+	 */
+	public MapAccessor getMapAccessor()
+	{
+		return new MapAccessor(accessor);
+	}
+
+	/**
 	 * Show given map
-	 * 
+	 *
 	 * @param accessor
 	 */
 	public void showMap(MapAccessor accessor)
@@ -323,7 +336,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
     * Load missing tiles in tile set
-    * 
+    *
     * @param tiles tile set to load tiles for
     */
 	private void loadMissingTiles(final TileSet tiles)
@@ -437,9 +450,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		GeoLocation currentLocation;
 
-		// Draw objects and decorations if user is not dragging map
-		// and map is not currently loading
-		if (dragStartPoint == null)
+		// Draw objects and decorations if user is not actively dragging the map.
+		// A pressed mouse button without any drag offset (a plain click) must still
+		// render content — otherwise pins/links disappear until the next redraw.
+		if ((dragStartPoint == null) || ((offsetX == 0) && (offsetY == 0)))
 		{
          currentLocation = accessor.getCenterPoint();
 
@@ -484,6 +498,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	         }
 	      }
 	      tileSet.dispose();
+
+	      // Draw overlay content (pins, links, etc.) anchored to the dragged
+	      // currentLocation so they pan smoothly with the tiles. Without this
+	      // the overlay disappears between mouseDown and mouseUp, making pins
+	      // look like they "jump" back to position after the drag finishes.
+	      drawContent(gc, currentLocation, size.x, size.y, contentVerticalOffset);
 		}
 
 		// Draw selection rectangle
@@ -576,12 +596,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       }
 
       gc.dispose();
-      e.gc.drawImage(bufferImage, 0, 0);      
+      e.gc.drawImage(bufferImage, 0, 0);
 	}
 
 	/**
     * Draw content over map
-    * 
+    *
     * @param gc
     * @param currentLocation current location (map center)
     * @param imgW map image width
@@ -607,12 +627,97 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Real handler for geolocation cache changes. Must be run in UI thread.
-	 * 
+	 *
 	 * @param object
 	 * @param prevLocation
 	 */
 	protected abstract void onCacheChange(final AbstractObject object, final GeoLocation prevLocation);
-	
+
+   /**
+    * Capture the current viewport contents as a freshly-allocated {@link Image}.
+    * The caller takes ownership and is responsible for disposing it. Returns
+    * {@code null} when the buffer hasn't been built yet (widget not laid out).
+    *
+    * <p>The snapshot reflects what the user currently sees, including the
+    * tile imagery, link/pin overlay drawn by {@code drawContent}, the
+    * "Map data © OpenStreetMap" footer and the zoom-control widget. We
+    * {@code update()} first so any pending paint events are flushed into the
+    * buffer before we copy it.</p>
+    */
+   public Image takeSnapshot()
+   {
+      if (isDisposed())
+         return null;
+      update();
+      if ((bufferImage == null) || bufferImage.isDisposed())
+         return null;
+      return new Image(getDisplay(), bufferImage.getImageData());
+   }
+
+   /**
+    * Copy the current viewport contents to the system clipboard as a PNG.
+    */
+   public void copyToClipboard()
+   {
+      Image image = takeSnapshot();
+      if (image == null)
+         return;
+      try
+      {
+         MapImageManipulationHelper.copyImageToClipboard(getDisplay(), image);
+      }
+      finally
+      {
+         image.dispose();
+      }
+   }
+
+   /**
+    * Save the current viewport contents to a PNG file. When {@code fileName}
+    * is {@code null}, a save-as dialog is opened on {@code shell}.
+    *
+    * @return true on success, false if the user cancelled or an error occurred
+    */
+   public boolean saveAsImage(Shell shell, Logger logger, String fileName)
+   {
+      return MapImageManipulationHelper.saveImageToFile(shell, takeSnapshot(), logger, fileName);
+   }
+
+   /**
+    * Zoom in by one level around the current center. Mirrors the +/- control's
+    * step. No-op at maximum zoom.
+    */
+   public void zoomIn()
+   {
+      int zoom = accessor.getZoom();
+      if (zoom >= MapAccessor.MAX_MAP_ZOOM)
+         return;
+      accessor.setZoom(zoom + 1);
+      checkVerticalCoverage();
+      reloadMap();
+      notifyOnZoomChange();
+   }
+
+   /**
+    * Zoom out by one level around the current center, but only when the
+    * current viewport is smaller than the next zoom level's virtual map size
+    * (the same guard used by the +/- control). No-op at minimum zoom.
+    */
+   public void zoomOut()
+   {
+      int zoom = accessor.getZoom();
+      if (zoom <= 1)
+         return;
+      Point virtualMapSize = GeoLocationCache.getVirtualMapSize(zoom);
+      Point widgetSize = getSize();
+      if ((widgetSize.x >= virtualMapSize.x) && (widgetSize.y >= virtualMapSize.y))
+         return;
+      accessor.setZoom(zoom - 1);
+      checkVerticalCoverage();
+      reloadMap();
+      notifyOnZoomChange();
+   }
+
    /**
     * @see org.eclipse.swt.events.MouseWheelListener#mouseScrolled(org.eclipse.swt.events.MouseEvent)
     */
@@ -851,7 +956,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 	/**
 	 * Get location at given point within widget
-	 * 
+	 *
 	 * @param p widget-related coordinates
 	 * @return location (latitude/longitude) at given point
 	 */
@@ -879,7 +984,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
    /**
     * Get object at given point within widget
-    * 
+    *
     * @param p widget-related coordinates
     * @return object at given point or null
     */
