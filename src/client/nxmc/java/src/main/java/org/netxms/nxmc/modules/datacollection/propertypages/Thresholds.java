@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.base.widgets.DateTimeSelector;
@@ -179,7 +177,9 @@ public class Thresholds extends AbstractDCIPropertyPage
 
       new Label(thresholdArea, SWT.NONE).setText(i18n.tr("Thresholds"));
 
-      thresholdList = new SortableTableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
+      final String[] names = { i18n.tr("Expression"), i18n.tr("Activation event"), i18n.tr("Deactivation event") };
+      final int[] widths = { 300, 150, 150 };
+      thresholdList = new SortableTableViewer(thresholdArea, names, widths, 0, -1, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -187,7 +187,9 @@ public class Thresholds extends AbstractDCIPropertyPage
 		gd.grabExcessVerticalSpace = true;
 		gd.horizontalSpan = 2;
 		thresholdList.getControl().setLayoutData(gd);
-		setupThresholdList();
+      thresholdList.setContentProvider(new ArrayContentProvider());
+      thresholdList.setLabelProvider(new ThresholdLabelProvider());
+      thresholdList.disableSorting();
 		thresholdList.setInput(thresholds.toArray());
       thresholdList.packColumns();
 
@@ -425,28 +427,6 @@ public class Thresholds extends AbstractDCIPropertyPage
 				thresholdList.setSelection(new StructuredSelection(threshold));
 			}
 		}
-	}
-
-	/**
-	 * Setup threshold list control
-	 */
-	private void setupThresholdList()
-	{
-		Table table = thresholdList.getTable();
-
-		TableColumn column = new TableColumn(table, SWT.LEFT);
-      column.setText(i18n.tr("Expression"));
-
-		column = new TableColumn(table, SWT.LEFT);
-      column.setText(i18n.tr("Activation event"));
-
-      column = new TableColumn(table, SWT.LEFT);
-      column.setText(i18n.tr("Deactivation event"));
-
-		thresholdList.setContentProvider(new ArrayContentProvider());
-		thresholdList.setLabelProvider(new ThresholdLabelProvider());
-
-      thresholdList.disableSorting();
 	}
 
 	/**
