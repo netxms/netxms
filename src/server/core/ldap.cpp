@@ -1211,7 +1211,7 @@ void LDAPConnection::syncUsers()
 /**
  * Login via LDAP - stub for server without LDAP support
  */
-uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
+uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const char *password)
 {
    nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::ldapUserLogin(): FAILED - server was compiled without LDAP support"));
    return RCC_INTERNAL_ERROR;
