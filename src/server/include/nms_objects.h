@@ -3903,6 +3903,7 @@ protected:
    TCHAR *m_agentCertSubject;
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
+   TCHAR m_agentPlatformName[MAX_PLATFORM_NAME_LEN];
    NodeHardwareId m_hardwareId;
    SNMP_ObjectId m_snmpObjectId;
    TCHAR *m_sysDescription;   // Agent's System.Uname or SNMP sysDescr
@@ -4250,6 +4251,7 @@ public:
    const uuid& getAgentId() const { return m_agentId; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
    const TCHAR *getPlatformName() const { return m_platformName; }
+   const TCHAR *getAgentPlatformName() const { return m_agentPlatformName; }
    const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
    SNMP_Version getSNMPVersion() const { return m_snmpVersion; }
    uint16_t getSNMPPort() const { return m_snmpPort; }

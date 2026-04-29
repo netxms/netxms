@@ -563,6 +563,7 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_SYSTEM_OS_PRODUCT_TYPE               _T("Operating system: product type")
 #define DCIDESC_SYSTEM_OS_SERVICE_PACK               _T("Operating system: service pack version")
 #define DCIDESC_SYSTEM_OS_VERSION                    _T("Operating system: version")
+#define DCIDESC_SYSTEM_OSPLATFORMNAME                _T("Operating system platform name")
 #define DCIDESC_SYSTEM_PLATFORMNAME                  _T("Platform name")
 #define DCIDESC_SYSTEM_PROCESSCOUNT                  _T("Total number of processes")
 #define DCIDESC_SYSTEM_SERVICESTATE                  _T("State of {instance} service")

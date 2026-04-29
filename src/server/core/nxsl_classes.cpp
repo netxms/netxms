@@ -2984,6 +2984,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       TCHAR buffer[64];
       value = vm->createValue(node->getAgentId().toString(buffer));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentPlatformName"))
+   {
+      value = vm->createValue(node->getAgentPlatformName());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentProxy"))
    {
       shared_ptr<NetObj> object = FindObjectById(node->getAgentProxy());

@@ -1528,6 +1528,8 @@ public class NXCPCodes
    public static final long VID_DCI_HOURLY_RETENTION = 984;
    public static final long VID_DCI_DAILY_RETENTION = 985;
    public static final long VID_POLICY_FILE_GUID = 986;
+   public static final long VID_OS_PLATFORM_NAME = 987;
+   public static final long VID_AGENT_PLATFORM_NAME = 988;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;

@@ -1719,6 +1719,8 @@ typedef struct
 #define VID_DCI_HOURLY_RETENTION    ((uint32_t)984)
 #define VID_DCI_DAILY_RETENTION     ((uint32_t)985)
 #define VID_POLICY_FILE_GUID        ((uint32_t)986)
+#define VID_OS_PLATFORM_NAME        ((uint32_t)987)
+#define VID_AGENT_PLATFORM_NAME     ((uint32_t)988)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

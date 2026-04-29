@@ -450,6 +450,7 @@ CREATE TABLE nodes
   agent_id varchar(36) null,
   hardware_id varchar(40) null,
   platform_name varchar(63) null,
+  agent_platform_name varchar(63) null,
   poller_node_id integer not null,
   zone_guid integer not null,
   proxy_node integer not null,

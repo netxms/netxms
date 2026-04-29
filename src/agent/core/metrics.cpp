@@ -65,6 +65,7 @@ LONG H_NotificationStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PhysicalDiskList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_PhysicalDiskTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_OSPlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProblemsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -609,6 +610,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
    { _T("System.HardwareId"), H_SystemHardwareId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
    { _T("System.Hostname"), H_HostName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.OSPlatformName"), H_OSPlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_OSPLATFORMNAME },
    { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
    { _T("System.TimeZone"), H_SystemTimeZone, _T("N"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONE },
    { _T("System.TimeZoneOffset"), H_SystemTimeZone, _T("O"), DCI_DT_STRING, DCIDESC_SYSTEM_TIMEZONEOFFSET },

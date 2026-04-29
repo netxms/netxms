@@ -36,6 +36,7 @@ shared_ptr_store<Config> g_config;
 /**
  * Externals
  */
+LONG H_OSPlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
@@ -79,6 +80,9 @@ bool DownloadConfig(const TCHAR *server)
          if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
             _tcscpy(buffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, buffer);
+         if (H_OSPlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
+            _tcscpy(buffer, _T("error"));
+         msg.setField(VID_OS_PLATFORM_NAME, buffer);
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
          msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_RELEASE);

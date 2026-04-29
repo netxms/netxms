@@ -26,6 +26,7 @@
 /**
  * Externals
  */
+LONG H_OSPlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
@@ -60,6 +61,9 @@ bool RegisterOnServer(const TCHAR *server, int32_t zoneUIN)
          if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
             _tcscpy(buffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, buffer);
+         if (H_OSPlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
+            _tcscpy(buffer, _T("error"));
+         msg.setField(VID_OS_PLATFORM_NAME, buffer);
          msg.setField(VID_VERSION_MAJOR, static_cast<uint16_t>(NETXMS_VERSION_MAJOR));
          msg.setField(VID_VERSION_MINOR, static_cast<uint16_t>(NETXMS_VERSION_MINOR));
          msg.setField(VID_VERSION_RELEASE, static_cast<uint16_t>(NETXMS_VERSION_RELEASE));
