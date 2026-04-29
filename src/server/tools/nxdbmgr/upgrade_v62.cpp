@@ -60,6 +60,25 @@ static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
 }
 
 /**
+ * Upgrade from 62.10 to 62.11
+ */
+static bool H_UpgradeFromV10()
+{
+   // Add agent_platform_name column to nodes table.
+   // Existing platform_name values reflect the agent binary architecture
+   // (because the agent reported architecture via GetSystemInfo, which is
+   // WOW64-aware). Seed agent_platform_name from platform_name so that
+   // agent-installer package matching keeps working immediately after the
+   // upgrade. On the next configuration poll, platform_name will be
+   // overwritten with the operating system architecture reported via the
+   // new System.OSPlatformName parameter.
+   CHK_EXEC(SQLQuery(L"ALTER TABLE nodes ADD agent_platform_name varchar(63)"));
+   CHK_EXEC(SQLQuery(L"UPDATE nodes SET agent_platform_name=platform_name"));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 62.9 to 62.10
  */
 static bool H_UpgradeFromV9()
@@ -368,6 +387,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 62, 11, H_UpgradeFromV10 },
    { 9,  62, 10, H_UpgradeFromV9  },
    { 8,  62, 9,  H_UpgradeFromV8  },
    { 7,  62, 8,  H_UpgradeFromV7  },

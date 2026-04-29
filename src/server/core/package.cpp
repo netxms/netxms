@@ -574,9 +574,21 @@ void PackageDeploymentJob::execute()
    }
    else
    {
-      // Binary package, check target platform
+      // Binary package, check target platform.
+      // Agent installer must match agent binary architecture; everything else
+      // must match the operating system architecture (which can differ from
+      // the agent's own architecture, e.g. 32-bit agent on 64-bit Windows).
+      const wchar_t *paramName = !wcscmp(m_packageType, L"agent-installer")
+         ? L"System.PlatformName"
+         : L"System.OSPlatformName";
       TCHAR platform[MAX_RESULT_LENGTH];
-      if (agentConn->getParameter(L"System.PlatformName", platform, MAX_RESULT_LENGTH) == ERR_SUCCESS)
+      uint32_t rcc = agentConn->getParameter(paramName, platform, MAX_RESULT_LENGTH);
+      if ((rcc != ERR_SUCCESS) && wcscmp(paramName, L"System.PlatformName"))
+      {
+         // Fall back to legacy parameter for older agents that do not expose System.OSPlatformName
+         rcc = agentConn->getParameter(L"System.PlatformName", platform, MAX_RESULT_LENGTH);
+      }
+      if (rcc == ERR_SUCCESS)
       {
          targetCheckOK = MatchString(m_platform, platform, false);
       }

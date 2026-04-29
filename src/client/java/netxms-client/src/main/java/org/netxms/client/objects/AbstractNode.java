@@ -162,6 +162,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	protected String agentSharedSecret;
 	protected String agentVersion;
 	protected String platformName;
+	protected String agentPlatformName;
    protected byte[] hardwareId;
 	protected String snmpAuthName;
 	protected String snmpAuthPassword;
@@ -293,6 +294,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
 		agentId = msg.getFieldAsUUID(NXCPCodes.VID_AGENT_ID);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
+		agentPlatformName = msg.getFieldAsString(NXCPCodes.VID_AGENT_PLATFORM_NAME);
       hardwareId = msg.getFieldAsBinary(NXCPCodes.VID_HARDWARE_ID);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
 		snmpAuthPassword = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_PASSWORD);
@@ -644,6 +646,20 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public String getPlatformName()
 	{
 		return platformName;
+	}
+
+	/**
+	 * Get the agent binary architecture (e.g. "windows-i386" for a 32-bit
+	 * agent running on 64-bit Windows). Used for matching agent upgrade
+	 * packages, while {@link #getPlatformName()} reflects the operating
+	 * system architecture and is used for matching all other software
+	 * deployment packages.
+	 *
+	 * @return the agent platform name
+	 */
+	public String getAgentPlatformName()
+	{
+		return agentPlatformName;
 	}
 
 	/**
@@ -1517,6 +1533,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       addString(strings, sshLogin);
       addString(strings, systemDescription);
       addString(strings, platformName);
+      addString(strings, agentPlatformName);
       return strings;
    }
    

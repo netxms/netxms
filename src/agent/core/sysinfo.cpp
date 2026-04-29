@@ -438,18 +438,14 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
    return SYSINFO_RC_SUCCESS;
 }
 
-/**
- * Get platform name
- */
-bool GetPlatformName(TCHAR *value)
-{
-   bool success = true;
-
 #if defined(_WIN32)
 
-   SYSTEM_INFO sysInfo;
-   GetSystemInfo(&sysInfo);
-   switch(sysInfo.wProcessorArchitecture)
+/**
+ * Build platform name string from Windows processor architecture identifier
+ */
+static void BuildWindowsPlatformName(TCHAR *value, WORD processorArchitecture)
+{
+   switch(processorArchitecture)
    {
       case PROCESSOR_ARCHITECTURE_INTEL:
          _tcscpy(value, _T("windows-i386"));
@@ -480,6 +476,37 @@ bool GetPlatformName(TCHAR *value)
          _tcscpy(value, _T("windows-unknown"));
          break;
    }
+}
+
+#endif
+
+/**
+ * Append user-configurable platform name suffix
+ */
+static void AppendPlatformSuffix(TCHAR *value)
+{
+   if (g_szPlatformSuffix[0] != 0)
+   {
+      if (g_szPlatformSuffix[0] != _T('-'))
+         _tcscat(value, _T("-"));
+      _tcscat(value, g_szPlatformSuffix);
+   }
+}
+
+/**
+ * Get platform name reflecting the agent binary architecture.
+ * On Windows under WOW64 this returns the agent's own architecture
+ * (e.g. "windows-i386" for a 32-bit agent on 64-bit Windows).
+ */
+bool GetPlatformName(TCHAR *value)
+{
+   bool success = true;
+
+#if defined(_WIN32)
+
+   SYSTEM_INFO sysInfo;
+   GetSystemInfo(&sysInfo);
+   BuildWindowsPlatformName(value, sysInfo.wProcessorArchitecture);
 
 #elif HAVE_UNAME
 
@@ -506,15 +533,29 @@ bool GetPlatformName(TCHAR *value)
 
 #endif
 
-   // Add user-configurable platform name suffix
-   if (success && (g_szPlatformSuffix[0] != 0))
-   {
-      if (g_szPlatformSuffix[0] != _T('-'))
-         _tcscat(value, _T("-"));
-      _tcscat(value, g_szPlatformSuffix);
-   }
+   if (success)
+      AppendPlatformSuffix(value);
 
    return success;
+}
+
+/**
+ * Get platform name reflecting the operating system architecture.
+ * On Windows uses GetNativeSystemInfo() so the true OS architecture is
+ * reported even when the agent runs under WOW64. On Unix-like systems
+ * currently identical to GetPlatformName() (multilib detection out of scope).
+ */
+bool GetOSPlatformName(TCHAR *value)
+{
+#if defined(_WIN32)
+   SYSTEM_INFO sysInfo;
+   GetNativeSystemInfo(&sysInfo);
+   BuildWindowsPlatformName(value, sysInfo.wProcessorArchitecture);
+   AppendPlatformSuffix(value);
+   return true;
+#else
+   return GetPlatformName(value);
+#endif
 }
 
 /**
@@ -523,6 +564,14 @@ bool GetPlatformName(TCHAR *value)
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    return GetPlatformName(value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Handler for System.OSPlatformName
+ */
+LONG H_OSPlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   return GetOSPlatformName(value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**

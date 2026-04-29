@@ -1143,6 +1143,8 @@ bool Tunnel::connectToServer()
    TCHAR buffer[MAX_RESULT_LENGTH];
    if (GetMetricValue(_T("System.PlatformName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_PLATFORM_NAME, buffer);
+   if (GetMetricValue(_T("System.OSPlatformName"), buffer, &session) == ERR_SUCCESS)
+      msg.setField(VID_OS_PLATFORM_NAME, buffer);
    if (GetMetricValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_SYS_DESCRIPTION, buffer);
 

@@ -147,6 +147,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
+   m_agentPlatformName[0] = 0;
    m_sysDescription = nullptr;
    m_sysName = nullptr;
    m_sysContact = nullptr;
@@ -282,6 +283,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
+   m_agentPlatformName[0] = 0;
    m_sysDescription = nullptr;
    m_sysName = nullptr;
    m_sysContact = nullptr;
@@ -442,7 +444,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
       _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time,")
-      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods FROM nodes WHERE id=?"));
+      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -635,6 +637,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       m_lastEvents[i] = _tcstoul(elements.get(i), nullptr, 10);
    m_decommissionTime = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 91));
    m_eipAddress = DBGetFieldInetAddr(hResult, 0, 92);
+   DBGetField(hResult, 0, 98, m_agentPlatformName, MAX_PLATFORM_NAME_LEN);
 
    // SNMP trap credential columns (null = use polling credentials)
    char trapAuthObject[256], trapAuthPassword[256], trapPrivPassword[256];
@@ -1114,7 +1117,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          L"modbus_unit_id", L"vnc_password", L"vnc_port", L"vnc_proxy", L"path_check_reason", L"path_check_node_id",
          L"path_check_iface_id", L"expected_capabilities", L"last_events", L"decommission_time",
          L"trap_snmp_version", L"trap_community", L"trap_usm_auth_password", L"trap_usm_priv_password", L"trap_usm_methods",
-         L"eip_address", nullptr
+         L"eip_address", L"agent_platform_name", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1282,7 +1285,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          }
          wchar_t eipAddr[64];
          DBBind(hStmt, 98, DB_SQLTYPE_VARCHAR, m_eipAddress.isValidUnicast() ? m_eipAddress.toString(eipAddr) : nullptr, DB_BIND_STATIC);
-         DBBind(hStmt, 99, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 99, DB_SQLTYPE_VARCHAR, m_agentPlatformName, DB_BIND_STATIC);
+         DBBind(hStmt, 100, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2982,6 +2986,7 @@ restart_status_poll:
                m_capabilities &= ~NC_IS_NATIVE_AGENT;
                m_state &= ~NSF_AGENT_UNREACHABLE;
                m_platformName[0] = 0;
+               m_agentPlatformName[0] = 0;
                m_agentVersion[0] = 0;
                sendPollerMsg(POLLER_WARNING _T("Attribute isNetXMSAgent set to FALSE\r\n"));
             }
@@ -4879,6 +4884,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
       m_snmpObjectId = SNMP_ObjectId();
       m_platformName[0] = 0;
+      m_agentPlatformName[0] = 0;
       m_agentVersion[0] = 0;
       MemFreeAndNull(m_sysDescription);
       MemFreeAndNull(m_sysName);
@@ -5910,14 +5916,37 @@ bool Node::confPollAgent()
          unlockProperties();
       }
 
-      if (pAgentConn->getParameter(_T("System.PlatformName"), buffer, MAX_PLATFORM_NAME_LEN) == ERR_SUCCESS)
+      // Agent binary architecture (used for agent upgrade matching). Updated silently.
+      TCHAR agentPlatformBuffer[MAX_PLATFORM_NAME_LEN];
+      bool hasAgentPlatform = (pAgentConn->getParameter(L"System.PlatformName", agentPlatformBuffer, MAX_PLATFORM_NAME_LEN) == ERR_SUCCESS);
+      if (hasAgentPlatform)
       {
          lockProperties();
-         if (_tcscmp(m_platformName, buffer))
+         if (wcscmp(m_agentPlatformName, agentPlatformBuffer))
          {
-            _tcscpy(m_platformName, buffer);
+            wcslcpy(m_agentPlatformName, agentPlatformBuffer, MAX_PLATFORM_NAME_LEN);
             hasChanges = true;
-            sendPollerMsg(_T("   Platform name changed to %s\r\n"), m_platformName);
+         }
+         unlockProperties();
+      }
+
+      // Operating system architecture (used for general package matching).
+      // Falls back to agent architecture when the new metric is not exposed by an older agent.
+      TCHAR osPlatformBuffer[MAX_PLATFORM_NAME_LEN];
+      const TCHAR *platformValue = nullptr;
+      if (pAgentConn->getParameter(L"System.OSPlatformName", osPlatformBuffer, MAX_PLATFORM_NAME_LEN) == ERR_SUCCESS)
+         platformValue = osPlatformBuffer;
+      else if (hasAgentPlatform)
+         platformValue = agentPlatformBuffer;
+
+      if (platformValue != nullptr)
+      {
+         lockProperties();
+         if (wcscmp(m_platformName, platformValue))
+         {
+            wcslcpy(m_platformName, platformValue, MAX_PLATFORM_NAME_LEN);
+            hasChanges = true;
+            sendPollerMsg(L"   Platform name changed to %s\r\n", m_platformName);
          }
          unlockProperties();
       }
@@ -9707,6 +9736,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AGENT_ID, m_agentId);
    msg->setField(VID_HARDWARE_ID, m_hardwareId.value(), HARDWARE_ID_LENGTH);
    msg->setField(VID_PLATFORM_NAME, m_platformName);
+   msg->setField(VID_AGENT_PLATFORM_NAME, m_agentPlatformName);
    msg->setField(VID_POLLER_NODE_ID, m_pollerNode);
    msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setField(VID_AGENT_PROXY, m_agentProxy);
@@ -14405,6 +14435,7 @@ json_t *Node::toJson(bool includeSensitiveData)
       json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != nullptr) ? m_snmpSecurity->toJson(true) : json_object());
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));
+   json_object_set_new(root, "agentPlatformName", json_string_t(m_agentPlatformName));
    json_object_set_new(root, "snmpObjectId", json_string_t(m_snmpObjectId.toString()));
    json_object_set_new(root, "sysDescription", json_string_t(m_sysDescription));
    json_object_set_new(root, "sysName", json_string_t(m_sysName));
