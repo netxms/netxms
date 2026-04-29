@@ -439,12 +439,54 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
+ * Parse a tier name string ("auto"/"raw"/"hourly"/"daily", case-insensitive).
+ * Returns DCI_TIER_AUTO when no value supplied, or -1 on unknown name.
+ */
+static int ParseDciTierName(const wchar_t *name)
+{
+   if ((name == nullptr) || (*name == 0))
+      return DCI_TIER_AUTO;
+   if (!wcsicmp(name, L"auto"))   return DCI_TIER_AUTO;
+   if (!wcsicmp(name, L"raw"))    return DCI_TIER_RAW;
+   if (!wcsicmp(name, L"hourly")) return DCI_TIER_HOURLY;
+   if (!wcsicmp(name, L"daily"))  return DCI_TIER_DAILY;
+   return -1;
+}
+
+/**
+ * Parse an aggregation function name ("avg"/"min"/"max"/"minmax", case-insensitive).
+ * Returns DCI_HAGG_AVG when no value supplied, or -1 on unknown name.
+ */
+static int ParseDciAggFunctionName(const wchar_t *name)
+{
+   if ((name == nullptr) || (*name == 0))
+      return DCI_HAGG_AVG;
+   if (!wcsicmp(name, L"avg"))    return DCI_HAGG_AVG;
+   if (!wcsicmp(name, L"min"))    return DCI_HAGG_MIN;
+   if (!wcsicmp(name, L"max"))    return DCI_HAGG_MAX;
+   if (!wcsicmp(name, L"minmax")) return DCI_HAGG_MINMAX;
+   return -1;
+}
+
+/**
  * Get all DCI values for period (common implementation for GetDCIValues and GetDCIValuesEx).
  * If asDataPoints is true, return array of data points (timestamp + value).
+ *
+ * Argument layout:
+ *   argv[0]: DataCollectionTarget object
+ *   argv[1]: DCI id (integer)
+ *   argv[2]: start time, seconds since epoch (integer)
+ *   argv[3]: end time, seconds since epoch (integer, optional; default = now)
+ *   argv[4]: raw-value indicator (boolean, optional; default false)
+ *   argv[5]: tier name "auto"|"raw"|"hourly"|"daily" (string, optional; default "auto")
+ *   argv[6]: function name "avg"|"min"|"max"|"minmax" (string, optional; default "avg")
+ *
+ * Tier and function only apply when rawValue is false. MINMAX is not supported in NXSL —
+ * use the per-tier MIN or MAX functions, or call GetDCIValues twice.
  */
 static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, bool asDataPoints)
 {
-   if ((argc < 3) || (argc > 5))
+   if ((argc < 3) || (argc > 7))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
 	if (!argv[0]->isObject())
@@ -453,62 +495,107 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	if (!argv[1]->isInteger() || !argv[2]->isInteger() || ((argc > 3) && !argv[3]->isInteger()))
 		return NXSL_ERR_NOT_INTEGER;
 
+	if (((argc > 5) && !argv[5]->isString()) || ((argc > 6) && !argv[6]->isString()))
+		return NXSL_ERR_NOT_STRING;
+
 	NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
+
+   bool rawValue = (argc > 4) && argv[4]->isTrue();
+   int parsedTier = (argc > 5) ? ParseDciTierName(argv[5]->getValueAsCString()) : DCI_TIER_AUTO;
+   int parsedFunction = (argc > 6) ? ParseDciAggFunctionName(argv[6]->getValueAsCString()) : DCI_HAGG_AVG;
+   if ((parsedTier < 0) || (parsedFunction < 0) || (parsedFunction == DCI_HAGG_MINMAX))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-      StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
-      query.append(((argc > 4) && argv[4]->isTrue()) ? _T("raw_value") : _T("idata_value"));
-      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-      {
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-         {
-            query.append(_T(" FROM idata_sc_"));
-            query.append(DCObject::getStorageClassName(dci->getStorageClass()));
-            query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)"));
-         }
-         else
-         {
-            query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-         }
-      }
-      else if (node->hasV5IdataTable())
-      {
-         query.append(_T(" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_"));
-         query.append(node->getId());
-         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-         query.append(_T(" UNION ALL SELECT "));
-         query.append(V5TimestampToMs(false));
-         query.append(_T(",idata_value,raw_value FROM idata_v5_"));
-         query.append(node->getId());
-         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
-      }
-      else
-      {
-         query.append(_T(" FROM idata_"));
-         query.append(node->getId());
-         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-      }
-      query.append(_T(" ORDER BY idata_timestamp DESC"));
+      // Tier and function are meaningful only against the processed (non-raw) value column.
+      DciTier requestedTier = rawValue ? DCI_TIER_RAW : static_cast<DciTier>(parsedTier);
+      DciAggregationFunction aggFunction = static_cast<DciAggregationFunction>(parsedFunction);
+      int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
+      int64_t startSec = argv[2]->getValueAsInt64();
+      int64_t endSec = (argc > 3) ? argv[3]->getValueAsInt64() : static_cast<int64_t>(time(nullptr));
+      DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, DCO_TYPE_ITEM, startSec * 1000, endSec * 1000,
+               node->getRuntimeFlags(), autoSelectThreshold);
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+      DB_STATEMENT hStmt = nullptr;
+      if (resolvedTier != DCI_TIER_RAW)
+      {
+         wchar_t condition[128];
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+         {
+            wcscpy(condition, L" AND bucket_start BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)");
+         }
+         else
+         {
+            wcscpy(condition, L" AND bucket_start BETWEEN ? AND ?");
+         }
+         hStmt = PrepareTieredDataSelect(hdb, node->getId(), resolvedTier, aggFunction, MAX_DCI_DATA_RECORDS, condition);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+            DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, startSec * 1000);
+            DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, endSec * 1000);
+         }
+      }
+      else
+      {
+         StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
+         query.append(rawValue ? L"raw_value" : L"idata_value");
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+         {
+            if (g_dbSyntax == DB_SYNTAX_TSDB)
+            {
+               query.append(L" FROM idata_sc_");
+               query.append(DCObject::getStorageClassName(dci->getStorageClass()));
+               query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)");
+            }
+            else
+            {
+               query.append(L" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+            }
+         }
+         else if (node->hasV5IdataTable())
+         {
+            query.append(L" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_");
+            query.append(node->getId());
+            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+            query.append(L" UNION ALL SELECT ");
+            query.append(V5TimestampToMs(false));
+            query.append(L",idata_value,raw_value FROM idata_v5_");
+            query.append(node->getId());
+            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d");
+         }
+         else
+         {
+            query.append(L" FROM idata_");
+            query.append(node->getId());
+            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+         }
+         query.append(L" ORDER BY idata_timestamp DESC");
+
+         hStmt = DBPrepare(hdb, query);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startSec * 1000);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, endSec * 1000);
+            if (node->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+            {
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, startSec);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, endSec);
+            }
+         }
+      }
+
 		if (hStmt != nullptr)
 		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64() * 1000L);
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() * 1000L : static_cast<int64_t>(time(nullptr)) * 1000L);
-			if (node->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
-			{
-			   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt64());
-			   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt64() : static_cast<int64_t>(time(nullptr)));
-			}
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{
@@ -525,7 +612,9 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
                }
                else
                {
-                  DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
+                  // Raw GetDCIValues returns single-column SELECT (value at col 0); tier reads
+                  // always return (bucket_start, value) so the value is at col 1.
+                  DBGetField(hResult, i, (resolvedTier != DCI_TIER_RAW) ? 1 : 0, buffer, MAX_RESULT_LENGTH);
                   result->set(i, vm->createValue(buffer));
                }
             }
@@ -555,9 +644,9 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 /**
  * Get all DCI values for period.
- * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
- * Raw value indicator is optional (default is false)
- * End time is optional (default is current time)
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue, tier, function)
+ * - endTime, rawValue, tier, and function are optional (defaults: now, false, "auto", "avg")
+ * - tier ∈ {"auto","raw","hourly","daily"}; function ∈ {"avg","min","max"}
  * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
  */
 static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
@@ -567,9 +656,9 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 /**
  * Get all DCI values for period as data points (timestamp + values).
- * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
- * Raw value indicator is optional (default is false)
- * End time is optional (default is current time)
+ * Format: GetDCIValuesEx(node, dciId, startTime, endTime, rawValue, tier, function)
+ * - endTime, rawValue, tier, and function are optional (defaults: now, false, "auto", "avg")
+ * - tier ∈ {"auto","raw","hourly","daily"}; function ∈ {"avg","min","max"}
  * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
  */
 static int F_GetDCIValuesEx(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)

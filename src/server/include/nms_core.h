@@ -1335,6 +1335,10 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId,
          uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition);
 DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32_t nodeId, DCObjectStorageClass storageClass,
          int64_t bucketSizeMs, const TCHAR *condition);
+DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t nodeId, DciTier tier,
+         DciAggregationFunction function, uint32_t maxRows, const wchar_t *condition);
+DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci, int dciType, int64_t timeFrom, int64_t timeTo,
+         uint32_t runtimeFlags, int autoSelectThreshold);
 
 /**
  * Functions

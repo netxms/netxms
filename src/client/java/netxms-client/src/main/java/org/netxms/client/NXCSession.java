@@ -90,6 +90,8 @@ import org.netxms.client.constants.BackgroundTaskState;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.DciAggregationFunction;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.IncidentState;
 import org.netxms.client.constants.ObjectPollType;
@@ -6278,8 +6280,9 @@ public class NXCSession
          data.setDataType(dataType);
          short flags = inputStream.readShort();
 
-         boolean isAggregated = (flags & 0x02) != 0;
-         if (isAggregated)
+         boolean isAggregated = (flags & 0x02) != 0;   // On-the-fly avg/min/max bucketing
+         boolean isMinMaxBand = (flags & 0x04) != 0;   // Tier read with function=MINMAX
+         if (isAggregated || isMinMaxBand)
             data.setAggregated(true);
 
          for(int i = 0; i < rows; i++)
@@ -6291,6 +6294,12 @@ public class NXCSession
                double min = inputStream.readDouble();
                double max = inputStream.readDouble();
                row = new DciDataRow(new Date(timestamp), avg, min, max);
+            }
+            else if (isMinMaxBand)
+            {
+               double min = inputStream.readDouble();
+               double max = inputStream.readDouble();
+               row = new DciDataRow(new Date(timestamp), min, max);
             }
             else
             {
@@ -6357,11 +6366,56 @@ public class NXCSession
    private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, HistoricalDataType valueType, long delegateReadObject) throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject, 0);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject, 0,
+            DciTier.AUTO, DciAggregationFunction.AVG);
    }
 
+   /**
+    * Get collected DCI data from server. Please note that you should specify either row count limit or time from/to limit.
+    *
+    * @param nodeId Node ID
+    * @param dciId DCI ID
+    * @param instance instance value (for table DCI only)
+    * @param dataColumn name of column to retrieve data from (for table DCI only)
+    * @param from Start of time range or null for no limit
+    * @param to End of time range or null for no limit
+    * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType type of historical data to retrieve
+    * @param delegateReadObject delegate object read access should be provided thought
+    * @param maxDataPoints maximum number of data points that can be displayed / processed by caller
+    * @return DCI data set
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, HistoricalDataType valueType, long delegateReadObject, int maxDataPoints) throws IOException, NXCException
+   {
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject,
+            maxDataPoints, DciTier.AUTO, DciAggregationFunction.AVG);
+   }
+
+   /**
+    * Get collected DCI data from server. Please note that you should specify either row count limit or time from/to limit.
+    *
+    * @param nodeId Node ID
+    * @param dciId DCI ID
+    * @param instance instance value (for table DCI only)
+    * @param dataColumn name of column to retrieve data from (for table DCI only)
+    * @param from Start of time range or null for no limit
+    * @param to End of time range or null for no limit
+    * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType type of historical data to retrieve
+    * @param delegateReadObject delegate object read access should be provided thought
+    * @param maxDataPoints maximum number of data points that can be displayed / processed by caller
+    * @param tier aggregation tier
+    * @param function aggregation function
+    * @return DCI data set
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows, HistoricalDataType valueType, long delegateReadObject, int maxDataPoints, DciTier tier,
+         DciAggregationFunction function) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -6380,6 +6434,8 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_DELEGATE_OBJECT_ID, delegateReadObject);
       if (maxDataPoints > 0)
          msg.setFieldUInt32(NXCPCodes.VID_MAX_DATA_POINTS, maxDataPoints);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_TIER, tier.getValue());
+      msg.setFieldInt16(NXCPCodes.VID_DCI_AGG_FUNCTION, function.getValue());
 
       DataSeries data = new DataSeries(nodeId, dciId);
 
@@ -6510,6 +6566,30 @@ public class NXCSession
          throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0, maxDataPoints);
+   }
+
+   /**
+    * Get collected DCI data from server with explicit tier and aggregation function selection.
+    * Lets the caller bypass the server-side auto-select heuristic and read directly from the
+    * raw, hourly, or daily aggregate tier. Function MINMAX returns both min and max in a single
+    * response (one round trip) for band-graph rendering.
+    *
+    * @param nodeId    Node ID
+    * @param dciId     DCI ID
+    * @param from      Start of time range or null for no limit
+    * @param to        End of time range or null for no limit
+    * @param maxRows   Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType type of historical data to retrieve
+    * @param tier      tier to read from (AUTO/RAW/HOURLY/DAILY)
+    * @param function  aggregation function to apply (AVG/MIN/MAX/MINMAX)
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType,
+         DciTier tier, DciAggregationFunction function) throws IOException, NXCException
+   {
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0, 0, tier, function);
    }
 
    /**

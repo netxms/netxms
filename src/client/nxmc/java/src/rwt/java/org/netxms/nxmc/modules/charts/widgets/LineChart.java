@@ -49,6 +49,7 @@ import org.eclipse.swtchart.ISeriesSet;
 import org.eclipse.swtchart.LineStyle;
 import org.eclipse.swtchart.Range;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
@@ -531,11 +532,24 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
 
-      int pollingInterval = data.getPollingInterval();
-      if ((pollingInterval > 0) && !data.isStoreChangesOnly())
+      // Gap threshold: 4x the inter-sample interval. For aggregated tiers the spacing is the bucket size,
+      // not the polling interval — using pollingInterval here makes every aggregated point look like a gap.
+      DciTier tier = data.getTierServed();
+      if (tier == DciTier.HOURLY)
       {
-         // Use 4x polling interval as gap threshold (X-axis is in milliseconds)
-         series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
+         series.setLineGapThreshold(4.0 * 3600.0 * 1000.0);
+      }
+      else if (tier == DciTier.DAILY)
+      {
+         series.setLineGapThreshold(4.0 * 86400.0 * 1000.0);
+      }
+      else
+      {
+         int pollingInterval = data.getPollingInterval();
+         if ((pollingInterval > 0) && !data.isStoreChangesOnly())
+         {
+            series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
+         }
       }
 	}
 

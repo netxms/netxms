@@ -63,6 +63,27 @@ public class DciDataRow
 	}
 
 	/**
+	 * Create min/max-only band row (no average — produced by tier reads with function=MINMAX).
+	 * The primary value is set to the midpoint so charts that ignore min/max still render
+	 * something sensible. Average value is set to NaN to signal that no avg was queried.
+	 *
+	 * @param timestamp bucket timestamp
+	 * @param min minimum value
+	 * @param max maximum value
+	 */
+	public DciDataRow(Date timestamp, double min, double max)
+	{
+		super();
+		this.timestamp = timestamp;
+		this.value = Double.valueOf((min + max) / 2.0);
+		this.rawValue = null;
+		this.aggregated = true;
+		this.avgValue = Double.NaN;
+		this.minValue = min;
+		this.maxValue = max;
+	}
+
+	/**
 	 * Set raw value
 	 * 
 	 * @param rawValue new raw value

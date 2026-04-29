@@ -5350,6 +5350,40 @@ static void ProcessAggregatedDataSelectResults(DB_UNBUFFERED_RESULT hResult, Cli
 }
 
 /**
+ * Process results from a tier read against the hourly or daily aggregate table.
+ *
+ * For AVG/MIN/MAX the wire shape matches the raw single-value path: bucket_start_ms + double.
+ * For MINMAX the row carries two doubles (min, max) and option bit 0x0004 signals that to clients.
+ */
+static void ProcessTieredDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
+         DciAggregationFunction function)
+{
+   bool minmax = (function == DCI_HAGG_MINMAX);
+   uint16_t options = minmax ? 0x0004 : 0x0000;
+
+   ByteStream data(32768);
+   data.writeB(static_cast<int32_t>(0));   // Placeholder for number of rows
+   data.writeB(static_cast<int16_t>(DCI_DT_FLOAT));   // Tier values are always double
+   data.writeB(options);
+
+   int32_t rows = 0;
+   while(DBFetch(hResult))
+   {
+      rows++;
+      data.writeB(DBGetFieldInt64(hResult, 0));     // bucket_start (ms)
+      data.writeB(DBGetFieldDouble(hResult, 1));    // first value (avg/min/max, or min when minmax)
+      if (minmax)
+         data.writeB(DBGetFieldDouble(hResult, 2)); // max when minmax
+   }
+   data.seek(0, SEEK_SET);
+   data.writeB(rows);
+
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
+   session->sendRawMessage(msg);
+   MemFree(msg);
+}
+
+/**
  * Process results from SELECT statement for DCI data
  */
 static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
@@ -5532,10 +5566,19 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
 	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
 
+	// Phase 4 tier dispatch: explicit tier + function selection (defaults: AUTO + AVG).
+	// VID_TIME_FROM / VID_TIME_TO are already in milliseconds (matches Date.getTime() on Java side).
+	DciTier requestedTier = static_cast<DciTier>(request.getFieldAsInt16(VID_DCI_TIER));
+	DciAggregationFunction aggFunction = static_cast<DciAggregationFunction>(request.getFieldAsInt16(VID_DCI_AGG_FUNCTION));
+	int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
+	DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, dciType, timeFrom, timeTo,
+	         dcTarget.getRuntimeFlags(), autoSelectThreshold);
+
 	// Check if aggregation is applicable (only for numeric single-value DCIs)
 	bool useAggregation = (maxDataPoints > 0) && (dciType == DCO_TYPE_ITEM) &&
 	   (static_cast<DCItem&>(*dci).getTransformedDataType() != DCI_DT_STRING) &&
-	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom);
+	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom) &&
+	   (resolvedTier == DCI_TIER_RAW);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5614,6 +5657,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
       response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
       response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(DCI_TIER_RAW));
       sendMessage(response);
 
       int16_t dataType;
@@ -5669,10 +5713,29 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	}
 
 read_from_db:
-   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u)"), maxRows);
+   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u, tier = %d)"), maxRows, static_cast<int>(resolvedTier));
 
    TCHAR condition[256] = _T("");
-	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+      // Tier reads use bucket_start. On TSDB the unified views expose it as timestamptz;
+      // on other backends the per-object aggregate tables store it as BIGINT (ms).
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=ms_to_timestamptz(?)"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=ms_to_timestamptz(?)"));
+      }
+      else
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=?"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=?"));
+      }
+	}
+	else if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)
          _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=ms_to_timestamptz(?)") : _T(" AND idata_timestamp>=ms_to_timestamptz(?)"));
@@ -5691,7 +5754,11 @@ read_from_db:
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 	DB_STATEMENT hStmt;
-	if (useAggregation)
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+	   hStmt = PrepareTieredDataSelect(hdb, dcTarget.getId(), resolvedTier, aggFunction, maxRows, condition);
+	}
+	else if (useAggregation)
 	{
 	   int64_t bucketSizeMs = (timeTo - timeFrom) / maxDataPoints;
 	   if (bucketSizeMs < 1)
@@ -5741,9 +5808,12 @@ read_from_db:
 	      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
 	      response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
 	      response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+	      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(resolvedTier));
 	      sendMessage(response);
 
-			if (useAggregation)
+			if (resolvedTier != DCI_TIER_RAW)
+			   ProcessTieredDataSelectResults(hResult, this, request.getId(), aggFunction);
+			else if (useAggregation)
 			   ProcessAggregatedDataSelectResults(hResult, this, request.getId());
 			else if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());

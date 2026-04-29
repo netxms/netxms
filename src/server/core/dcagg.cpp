@@ -84,6 +84,31 @@ static inline const wchar_t *GetIdataValueCastExpr()
 }
 
 /**
+ * Predicate that excludes idata rows whose value cannot be cast to a number.
+ * A numeric DCI may still have empty-string rows (e.g. failed collections), and strict
+ * dialects (PostgreSQL, MSSQL, MySQL strict mode, Oracle, DB2) error on those casts.
+ * Mirrors the regex used by the TSDB continuous aggregates in sql/dbinit_tsdb.sql.
+ */
+static inline const wchar_t *GetIdataValueNumericFilter()
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         return L" AND idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
+      case DB_SYNTAX_MYSQL:
+         return L" AND idata_value REGEXP '^[-+]?[0-9]*\\\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_DB2:
+         return L" AND REGEXP_LIKE(idata_value, '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$')";
+      case DB_SYNTAX_MSSQL:
+         return L" AND TRY_CAST(idata_value AS float) IS NOT NULL";
+      default:
+         return L" AND idata_value<>''";
+   }
+}
+
+/**
  * Ensure the per-object hourly or daily aggregate table exists for this object. Uses
  * the ODF_HAS_IDATA_1H_TABLE / ODF_HAS_IDATA_1D_TABLE runtime flag as a fast path; on
  * first call for a given object the CREATE TABLE runs and the flag is set so the table
@@ -211,6 +236,7 @@ static inline int64_t FloorToBucket(int64_t timestampMs, int64_t bucketSizeMs)
 static void BuildRawBucketSelect(wchar_t *query, size_t size, uint32_t objectId, int64_t bucketSizeMs)
 {
    const wchar_t *castExpr = GetIdataValueCastExpr();
+   const wchar_t *numericFilter = GetIdataValueNumericFilter();
 
    switch(g_dbSyntax)
    {
@@ -218,33 +244,33 @@ static void BuildRawBucketSelect(wchar_t *query, size_t size, uint32_t objectId,
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp DIV " INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY 1 ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter);
          break;
       case DB_SYNTAX_ORACLE:
          nx_swprintf(query, size,
             L"SELECT TRUNC(idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY TRUNC(idata_timestamp/" INT64_FMT L")*" INT64_FMT L" ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, bucketSizeMs, bucketSizeMs);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter, bucketSizeMs, bucketSizeMs);
          break;
       case DB_SYNTAX_MSSQL:
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY (idata_timestamp/" INT64_FMT L")*" INT64_FMT L" ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, bucketSizeMs, bucketSizeMs);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter, bucketSizeMs, bucketSizeMs);
          break;
       default:
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY 1 ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter);
          break;
    }
 }

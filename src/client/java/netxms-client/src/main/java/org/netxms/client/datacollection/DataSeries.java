@@ -24,6 +24,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.constants.Severity;
 
 /**
@@ -45,6 +46,7 @@ public class DataSeries
    private int pollingInterval;
    private boolean storeChangesOnly;
    private boolean aggregated;
+   private DciTier tierServed = DciTier.RAW;
    private DataCollectionObjectStatus dciStatus = DataCollectionObjectStatus.ACTIVE;
    private int errorCount = 0;
 
@@ -104,6 +106,7 @@ public class DataSeries
       this.pollingInterval = src.pollingInterval;
       this.storeChangesOnly = src.storeChangesOnly;
       this.aggregated = src.aggregated;
+      this.tierServed = src.tierServed;
       this.dciStatus = src.dciStatus;
       this.errorCount = src.errorCount;
    }
@@ -124,6 +127,11 @@ public class DataSeries
       storeChangesOnly = msg.getFieldAsBoolean(NXCPCodes.VID_STORE_CHANGES_ONLY);
       dciStatus = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS));
       errorCount = msg.getFieldAsInt32(NXCPCodes.VID_ERROR_COUNT);
+      // Legacy servers that don't know about tier dispatch omit the field — default to RAW
+      // rather than the AUTO value (0), which is a request-side sentinel and never served.
+      tierServed = msg.isFieldPresent(NXCPCodes.VID_DCI_TIER_USED)
+            ? DciTier.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_TIER_USED))
+            : DciTier.RAW;
 
       String units = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
       measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
@@ -395,6 +403,18 @@ public class DataSeries
    public void setAggregated(boolean aggregated)
    {
       this.aggregated = aggregated;
+   }
+
+   /**
+    * Get the tier the server actually read from to fulfill the request. May differ from the
+    * caller's requested tier when AUTO selects a tier or when an explicit tier is downgraded
+    * (e.g. requested HOURLY on a DCI without an hourly aggregate table).
+    *
+    * @return tier served (RAW for legacy servers that don't set the field)
+    */
+   public DciTier getTierServed()
+   {
+      return tierServed;
    }
 
    /**
