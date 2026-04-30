@@ -32,6 +32,7 @@ public class DciDataRow
    private double avgValue;
    private double minValue;
    private double maxValue;
+   private int sampleCount;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
@@ -226,6 +227,28 @@ public class DciDataRow
    public double getMaxValue()
    {
       return maxValue;
+   }
+
+   /**
+    * Get the number of raw samples that contributed to this aggregated bucket.
+    * Set to 0 when the row is not from a tier read or when the server is older and does not
+    * include sample counts in the response.
+    *
+    * @return sample count, or 0 if not available
+    */
+   public int getSampleCount()
+   {
+      return sampleCount;
+   }
+
+   /**
+    * Set sample count (used by NXCP parser).
+    *
+    * @param sampleCount number of raw samples in the bucket
+    */
+   public void setSampleCount(int sampleCount)
+   {
+      this.sampleCount = sampleCount;
    }
 
    /**

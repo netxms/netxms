@@ -1523,6 +1523,9 @@ public class NXCPCodes
    public static final long VID_DCI_TIER = 980;
    public static final long VID_DCI_AGG_FUNCTION = 981;
    public static final long VID_DCI_TIER_USED = 982;
+   public static final long VID_DCI_AGGREGATION_MODE = 983;
+   public static final long VID_DCI_HOURLY_RETENTION = 984;
+   public static final long VID_DCI_DAILY_RETENTION = 985;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;

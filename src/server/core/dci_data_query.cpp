@@ -240,21 +240,22 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
 
 /**
  * Build the SELECT column list for a tier read, given the requested aggregation function.
- * MINMAX returns two columns (min,max); single-function modes return one.
+ * MINMAX returns two columns (min,max); single-function modes return one. sample_count is
+ * always appended as the trailing column so the client can surface it in tooltips.
  */
 static const wchar_t* GetTierColumnList(DciAggregationFunction function)
 {
    switch (function)
    {
       case DCI_HAGG_MIN:
-         return L"min_value";
+         return L"min_value,sample_count";
       case DCI_HAGG_MAX:
-         return L"max_value";
+         return L"max_value,sample_count";
       case DCI_HAGG_MINMAX:
-         return L"min_value,max_value";
+         return L"min_value,max_value,sample_count";
       case DCI_HAGG_AVG:
       default:
-         return L"avg_value";
+         return L"avg_value,sample_count";
    }
 }
 

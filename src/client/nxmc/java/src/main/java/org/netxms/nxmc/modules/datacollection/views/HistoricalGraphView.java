@@ -40,6 +40,8 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TimePeriod;
+import org.netxms.client.constants.DciAggregationFunction;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeFrameType;
@@ -137,6 +139,13 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private Action actionCopyImage;
    private Action actionSaveAsImage;
    private Action actionDelete;
+   private Action actionMinMaxBand;
+   private Action actionTierAuto;
+   private Action actionTierRaw;
+   private Action actionTierHourly;
+   private Action actionTierDaily;
+   private DciTier requestedTier = DciTier.AUTO;
+   private boolean showMinMaxBand = false;
 
    /**
     * Build view ID
@@ -447,9 +456,20 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                currentItem = dciList[i];
                if (currentItem.type == ChartDciConfig.ITEM)
                {
-                  data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
-                        configuration.getTimeTo(), 0,
-                        currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
+                  HistoricalDataType valueType = currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED;
+                  // Raw-value requests bypass the tier dispatcher; min/max band needs aggregated data so it
+                  // also forces PROCESSED. Otherwise honor the user-selected tier and band toggle.
+                  if (currentItem.useRawValues || (requestedTier == DciTier.AUTO && !showMinMaxBand))
+                  {
+                     data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
+                           configuration.getTimeTo(), 0, valueType);
+                  }
+                  else
+                  {
+                     DciAggregationFunction function = showMinMaxBand ? DciAggregationFunction.MINMAX : DciAggregationFunction.AVG;
+                     data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
+                           configuration.getTimeTo(), 0, HistoricalDataType.PROCESSED, requestedTier, function);
+                  }
                }
                else
                {
@@ -751,6 +771,45 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             deletePredefinedGraph();
          }
       };
+
+      actionMinMaxBand = new Action(i18n.tr("Show min/max &band"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            showMinMaxBand = isChecked();
+            updateChart();
+         }
+      };
+      actionMinMaxBand.setChecked(showMinMaxBand);
+
+      actionTierAuto = createTierAction(i18n.tr("&Auto"), DciTier.AUTO);
+      actionTierRaw = createTierAction(i18n.tr("&Raw"), DciTier.RAW);
+      actionTierHourly = createTierAction(i18n.tr("&Hourly"), DciTier.HOURLY);
+      actionTierDaily = createTierAction(i18n.tr("&Daily"), DciTier.DAILY);
+   }
+
+   /**
+    * Build a radio action that selects a specific data resolution tier.
+    *
+    * @param label menu label
+    * @param tier tier this action selects
+    * @return new action
+    */
+   private Action createTierAction(String label, DciTier tier)
+   {
+      Action action = new Action(label, Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            if (isChecked())
+            {
+               requestedTier = tier;
+               updateChart();
+            }
+         }
+      };
+      action.setChecked(requestedTier == tier);
+      return action;
    }
 
    /**
@@ -770,6 +829,12 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionLegendRight.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
       actionLegendTop.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_TOP);
       actionLegendBottom.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
+
+      actionMinMaxBand.setChecked(showMinMaxBand);
+      actionTierAuto.setChecked(requestedTier == DciTier.AUTO);
+      actionTierRaw.setChecked(requestedTier == DciTier.RAW);
+      actionTierHourly.setChecked(requestedTier == DciTier.HOURLY);
+      actionTierDaily.setChecked(requestedTier == DciTier.DAILY);
    }
 
    /**
@@ -792,6 +857,12 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
 
+      MenuManager resolution = new MenuManager(i18n.tr("Data &resolution"));
+      resolution.add(actionTierAuto);
+      resolution.add(actionTierRaw);
+      resolution.add(actionTierHourly);
+      resolution.add(actionTierDaily);
+
       manager.add(presets);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
@@ -807,6 +878,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionTranslucent);
       manager.add(actionAutoRefresh);
       manager.add(legend);
+      manager.add(new Separator());
+      manager.add(resolution);
+      manager.add(actionMinMaxBand);
       manager.add(new Separator());
       manager.add(actionRefresh);
       manager.add(new Separator());
@@ -852,6 +926,12 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
 
+      MenuManager resolution = new MenuManager(i18n.tr("Data &resolution"));
+      resolution.add(actionTierAuto);
+      resolution.add(actionTierRaw);
+      resolution.add(actionTierHourly);
+      resolution.add(actionTierDaily);
+
       manager.add(presets);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
@@ -867,6 +947,9 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionTranslucent);
       manager.add(actionAutoRefresh);
       manager.add(legend);
+      manager.add(new Separator());
+      manager.add(resolution);
+      manager.add(actionMinMaxBand);
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);

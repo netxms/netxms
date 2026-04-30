@@ -6282,6 +6282,7 @@ public class NXCSession
 
          boolean isAggregated = (flags & 0x02) != 0;   // On-the-fly avg/min/max bucketing
          boolean isMinMaxBand = (flags & 0x04) != 0;   // Tier read with function=MINMAX
+         boolean hasSampleCount = (flags & 0x08) != 0; // Tier reads carry sample_count per row
          if (isAggregated || isMinMaxBand)
             data.setAggregated(true);
 
@@ -6333,6 +6334,10 @@ public class NXCSession
                {
                   row.setRawValue(inputStream.readUTF());
                }
+            }
+            if (hasSampleCount)
+            {
+               row.setSampleCount(inputStream.readInt());
             }
             data.addDataRow(row);
          }

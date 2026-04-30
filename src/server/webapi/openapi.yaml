@@ -2607,7 +2607,17 @@ paths:
     get:
       operationId: getDciHistory
       summary: Get data collection history
-      description: Retrieve historical data for a specific DCI (Data Collection Item).
+      description: |
+        Retrieve historical data for a specific DCI (Data Collection Item).
+
+        The server can serve data from one of three storage tiers: raw samples, hourly
+        aggregates, or daily aggregates. The `tier` query parameter selects which tier to
+        read from (default `auto`, which picks the densest tier whose point count fits
+        within the server-side `DataCollection.Aggregation.MaxAutoSelectPoints` threshold).
+        When the resolved tier is hourly or daily, each row carries pre-computed avg/min/max
+        and a `sampleCount` of raw samples that contributed to the bucket. The `function`
+        query parameter selects which value column(s) the server returns from the aggregate
+        tables (`minmax` returns both min and max in a single response for band rendering).
       parameters:
         - name: object-id
           in: path
@@ -2636,11 +2646,41 @@ paths:
           schema:
             type: integer
             description: Maximum number of data points to return
+        - name: maxDataPoints
+          in: query
+          schema:
+            type: integer
+            description: |
+              When the request resolves to the raw tier, perform on-the-fly bucketing into
+              this many points and return avg/min/max per bucket. Ignored on hourly/daily
+              tier reads (those already serve pre-computed buckets).
         - name: historicalDataType
           in: query
           schema:
             type: integer
             description: Type of historical data (0=raw, 1=processed, 2=full table, 3=raw and processed)
+        - name: tier
+          in: query
+          schema:
+            type: string
+            enum: [auto, raw, hourly, daily]
+            default: auto
+            description: |
+              Storage tier to read from. `auto` picks the densest tier whose point count
+              fits the server-side auto-select threshold. Explicit tiers are downgraded to
+              raw when the requested aggregate is not available for the DCI (e.g. string
+              DCIs, or non-TSDB targets where the per-object aggregate table has not been
+              created yet). The actually-served tier is reported in `tierServed`.
+        - name: function
+          in: query
+          schema:
+            type: string
+            enum: [avg, min, max, minmax]
+            default: avg
+            description: |
+              Aggregation function for hourly/daily tier reads. `minmax` returns both
+              `min` and `max` columns in a single response, suitable for band-graph
+              rendering. Ignored when `tierServed` is `raw`.
       responses:
         '200':
           description: Data collection history retrieved successfully
@@ -2655,6 +2695,24 @@ paths:
                   unitName:
                     type: string
                     description: Unit name for the value
+                  tierServed:
+                    type: string
+                    enum: [raw, hourly, daily]
+                    description: |
+                      Storage tier the server actually read from. May differ from the
+                      requested tier (e.g. `auto` resolves to a concrete tier; an
+                      unsupported tier downgrades to `raw`).
+                  aggregated:
+                    type: boolean
+                    description: |
+                      `true` when rows carry aggregate columns (avg/min/max). Set when the
+                      response is served from a hourly/daily tier or when `maxDataPoints`
+                      triggered on-the-fly bucketing on the raw tier.
+                  bucketSize:
+                    type: integer
+                    description: |
+                      On-the-fly bucket size in milliseconds. Only present when the raw tier
+                      was bucketed via `maxDataPoints`.
                   values:
                     type: array
                     items:
@@ -2665,7 +2723,29 @@ paths:
                           format: date-time
                         value:
                           type: string
-                          description: Data value
+                          description: |
+                            Raw data value (only when `tierServed=raw` and no
+                            `maxDataPoints` bucketing).
+                        avg:
+                          type: number
+                          description: |
+                            Average value of the bucket. Present for `function=avg` tier
+                            reads and for on-the-fly raw bucketing.
+                        min:
+                          type: number
+                          description: |
+                            Minimum value of the bucket. Present for `function=min` /
+                            `function=minmax` tier reads and for on-the-fly raw bucketing.
+                        max:
+                          type: number
+                          description: |
+                            Maximum value of the bucket. Present for `function=max` /
+                            `function=minmax` tier reads and for on-the-fly raw bucketing.
+                        sampleCount:
+                          type: integer
+                          description: |
+                            Number of raw samples that contributed to the bucket. Only
+                            populated when reading from a hourly/daily tier.
         '400':
           description: Object is not data collection target or DCI type not supported
         '401':
