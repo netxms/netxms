@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev
           libmosquitto-dev libjq-dev cppcheck libpcre3-dev libmicrohttpd-dev
-          libargon2-dev
+          libargon2-dev libjansson-dev
       - name: Prepare release build
         run: ./build/prepare_release_build.sh
       - name: autoconf

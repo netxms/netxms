@@ -16,13 +16,16 @@ jobs:
       - name: Update apt cache
         run: sudo apt-get update
       - name: Install dependencies
-        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev libpcre3-dev libmicrohttpd-dev libargon2-dev
+        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev
+          libmosquitto-dev libjq-dev libpcre3-dev libmicrohttpd-dev
+          libargon2-dev libjansson-dev
       - name: Prepare release build
         run: ./build/prepare_release_build.sh
       - name: autoconf
         run: ./reconf
       - name: configure
-        run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql --with-tests
+        run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
+          --with-tests
       - name: make
         run: make -j$(nproc)
       - name: make install
