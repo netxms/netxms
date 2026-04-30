@@ -4,7 +4,7 @@ BUILT_SOURCES = generated/common.pb.cc generated/resource.pb.cc generated/metric
 
 generated/%.pb.cc generated/%.pb.h: %.proto
 	@mkdir -p generated
-	@PROTOC@ --cpp_out=generated --proto_path=$(srcdir) $<
+	@PROTOC@ @PROTOC_FLAGS@ --cpp_out=generated --proto_path=$(srcdir) $<
 
 pkglib_LTLIBRARIES = otlp.la
 otlp_la_SOURCES = main.cpp receiver.cpp matching.cpp instance.cpp
