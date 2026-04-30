@@ -34,7 +34,7 @@
 /**
  * Check if server address is valid
  */
-bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool forceResolve);
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool *pbUpgradeServer, bool forceResolve);
 
 /**
  * Register session
@@ -1484,14 +1484,14 @@ void Tunnel::createSession(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId(), 4);
 
    // Assume that peer always have minimal access, so don't check return value
-   bool masterServer, controlServer;
-   IsValidServerAddress(m_address, &masterServer, &controlServer, m_forceResolve);
+   bool masterServer, controlServer, upgradeServer;
+   IsValidServerAddress(m_address, &masterServer, &controlServer, &upgradeServer, m_forceResolve);
    m_forceResolve = false;
 
    shared_ptr<TunnelCommChannel> channel = createChannel();
    if (channel != nullptr)
    {
-      shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, m_address, masterServer, controlServer);
+      shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, m_address, masterServer, controlServer, upgradeServer);
       if (RegisterSession(session))
       {
          response.setField(VID_RCC, ERR_SUCCESS);

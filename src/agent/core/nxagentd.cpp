@@ -275,6 +275,7 @@ static StringList *s_actionList = new StringList();
 static TCHAR *m_pszServerList = nullptr;
 static TCHAR *m_pszControlServerList = nullptr;
 static TCHAR *m_pszMasterServerList = nullptr;
+static TCHAR *m_pszUpgradeServerList = nullptr;
 static TCHAR *m_pszSubagentList = nullptr;
 static TCHAR *s_externalMetrics = nullptr;
 static TCHAR *s_backgroundExternalMetrics = nullptr;
@@ -390,6 +391,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogUnresolvedSymbols"), CT_BOOLEAN_FLAG_32, 0, 0, SF_LOG_UNRESOLVED_SYMBOLS, 0, &s_startupFlags, nullptr },
    { _T("LongRunningQueryThreshold"), CT_LONG, 0, 0, 0, 0, &g_longRunningQueryThreshold, nullptr },
    { _T("MasterServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszMasterServerList, nullptr },
+   { _T("UpgradeServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszUpgradeServerList, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, nullptr },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_maxCommSessions, nullptr },
    { _T("OfflineDataExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_dcOfflineExpirationTime, nullptr },
@@ -491,7 +493,7 @@ static TCHAR m_szHelpText[] =
 /**
  * Server info: constructor
  */
-ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
+ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master, bool upgrade)
 {
 #ifdef UNICODE
    m_name = MBStringFromWideString(name);
@@ -521,6 +523,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
 
    m_control = control;
    m_master = master;
+   m_upgrade = upgrade;
    m_lastResolveTime = time(nullptr);
 }
 
@@ -954,7 +957,7 @@ static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, c
 /**
  * Parser server list
  */
-static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
+static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster, bool isUpgrade)
 {
 	TCHAR *curr, *next;
 	for(curr = next = serverList; next != nullptr && *curr != 0; curr = next + 1)
@@ -965,9 +968,9 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 		Trim(curr);
 		if (*curr != 0)
 		{
-         g_serverList.add(new ServerInfo(curr, isControl, isMaster));
-         nxlog_debug_tag(DEBUG_TAG_COMM, 3, _T("Added server access record %s (control=%s, master=%s)"), curr,
-                  BooleanToString(isControl), BooleanToString(isMaster));
+         g_serverList.add(new ServerInfo(curr, isControl, isMaster, isUpgrade));
+         nxlog_debug_tag(DEBUG_TAG_COMM, 3, _T("Added server access record %s (control=%s, master=%s, upgrade=%s)"), curr,
+                  BooleanToString(isControl), BooleanToString(isMaster), BooleanToString(isUpgrade));
 		}
 	}
 	MemFree(serverList);
@@ -1343,11 +1346,13 @@ BOOL Initialize()
 
       // Parse server lists
       if (m_pszMasterServerList != nullptr)
-         ParseServerList(m_pszMasterServerList, true, true);
+         ParseServerList(m_pszMasterServerList, true, true, true);
+      if (m_pszUpgradeServerList != nullptr)
+         ParseServerList(m_pszUpgradeServerList, false, false, true);
 		if (m_pszControlServerList != nullptr)
-			ParseServerList(m_pszControlServerList, true, false);
+			ParseServerList(m_pszControlServerList, true, false, false);
 		if (m_pszServerList != nullptr)
-			ParseServerList(m_pszServerList, false, false);
+			ParseServerList(m_pszServerList, false, false, false);
 
       // Set default accepted environment variable patterns if not configured
       if (g_acceptedEnvVars.contains(_T("none")))

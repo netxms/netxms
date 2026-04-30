@@ -1319,7 +1319,9 @@ public:
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
          std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t cancelFileMonitoring(const TCHAR *agentFileId);
-   uint32_t startUpgrade(const TCHAR *pkgName);
+   uint32_t startUpgrade(const TCHAR *pkgName, uint32_t transferId = 0);
+   uint32_t uploadAgentUpgradePackage(const TCHAR *localFile, uint32_t *transferId,
+         std::function<void (size_t)> progressCallback = nullptr, uint32_t bandwidthLimit = 0);
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);

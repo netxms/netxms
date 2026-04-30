@@ -2192,18 +2192,80 @@ uint32_t AgentConnection::getFileFingerprint(const TCHAR *file, RemoteFileFinger
 }
 
 /**
- * Send upgrade command
+ * Upload an agent upgrade package into the agent's session-private staging area.
+ *
+ * On success, *transferId receives the request ID used for the upload, which
+ * the caller must pass back via VID_TRANSFER_ID when triggering the upgrade.
+ * Returns ERR_NOT_IMPLEMENTED / ERR_UNKNOWN_COMMAND when the agent is too old
+ * to support this flow; callers should fall back to uploadFile() + startUpgrade().
  */
-uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName)
+uint32_t AgentConnection::uploadAgentUpgradePackage(const TCHAR *localFile, uint32_t *transferId,
+      std::function<void (size_t)> progressCallback, uint32_t bandwidthLimit)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage setup(CMD_SETUP_AGENT_UPGRADE, requestId, m_nProtocolVersion);
+   if (!sendMessage(&setup))
+      return ERR_CONNECTION_BROKEN;
+
+   uint32_t rcc = waitForRCC(requestId, m_commandTimeout);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
+
+   shared_ptr<AbstractCommChannel> channel = acquireChannel();
+   if (channel == nullptr)
+      return ERR_CONNECTION_BROKEN;
+
+   debugPrintf(5, _T("Streaming agent upgrade package \"%s\" into private staging area"), localFile);
+   m_fileUploadInProgress = true;
+   shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
+
+   FileUploadContext context;
+   context.connection = this;
+   context.userCallback = progressCallback;
+   context.lastProbeTime = time(nullptr);
+   context.messageCount = 0;
+
+   if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), 0, FileUploadProgressCalback, &context,
+            &m_mutexSocketWrite, NXCP_STREAM_COMPRESSION_NONE, nullptr, bandwidthLimit))
+   {
+      rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));
+   }
+   else
+   {
+      rcc = ERR_IO_FAILURE;
+   }
+   m_fileUploadInProgress = false;
+
+   if ((rcc == ERR_SUCCESS) && (transferId != nullptr))
+      *transferId = requestId;
+   return rcc;
+}
+
+/**
+ * Send upgrade command. If transferId is non-zero, references a session-private
+ * staging file uploaded via uploadAgentUpgradePackage(); otherwise pkgName must
+ * name a file previously uploaded into the agent's file store via uploadFile().
+ */
+uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName, uint32_t transferId)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
    NXCPMessage request(CMD_UPGRADE_AGENT, generateRequestId(), m_nProtocolVersion);
-   int i;
-   for(i = (int)_tcslen(pkgName) - 1;
-       (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
-   request.setField(VID_FILE_NAME, &pkgName[i + 1]);
+   if (transferId != 0)
+   {
+      request.setField(VID_TRANSFER_ID, transferId);
+   }
+   else
+   {
+      int i;
+      for(i = (int)_tcslen(pkgName) - 1;
+          (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
+      request.setField(VID_FILE_NAME, &pkgName[i + 1]);
+   }
 
    uint32_t rcc;
    if (sendMessage(&request))
