@@ -709,8 +709,7 @@ void DailyDataAggregationRollup(const shared_ptr<ScheduledTaskParameters>& param
  * table. Honors per-DCI retention overrides by grouping DCIs with the same retention
  * into partitioned DELETE statements.
  */
-static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, bool hourly,
-         int32_t defaultRetentionDays, int64_t nowMs)
+static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, bool hourly, int32_t defaultRetentionDays, int64_t nowMs)
 {
    uint32_t runtimeFlag = hourly ? ODF_HAS_IDATA_1H_TABLE : ODF_HAS_IDATA_1D_TABLE;
    if (!(target->getRuntimeFlags() & runtimeFlag))
@@ -752,10 +751,15 @@ static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, boo
             return _CONTINUE;   // 0 or negative means "keep forever"
 
          int64_t cutoff = nowMs - static_cast<int64_t>(retentionDays) * ONE_DAY_MS;
-         wchar_t query[512];
-         nx_swprintf(query, 512,
-            L"DELETE FROM idata_%s_%u WHERE bucket_start<" INT64_FMT L" AND item_id IN (%s)",
-            suffix, targetId, cutoff, idList->cstr());
+         StringBuffer query(L"DELETE FROM idata_");
+         query.append(suffix);
+         query.append(L'_');
+         query.append(targetId);
+         query.append(L" WHERE bucket_start<");
+         query.append(cutoff);
+         query.append(L" AND item_id IN (");
+         query.append(*idList);
+         query.append(L')');
          DBQuery(hdb, query);
          return _CONTINUE;
       });
