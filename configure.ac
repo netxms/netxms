@@ -4666,6 +4666,23 @@ if test "x$REQUIRE_PROTOBUF" = "xyes"; then
 
 		if test "x$PROTOBUF_SUPPORT" = "xyes"; then
 			AC_DEFINE(WITH_PROTOBUF, 1, Define to 1 if protobuf is supported)
+
+			AC_MSG_CHECKING([whether protoc requires --experimental_allow_proto3_optional])
+			PROTOC_FLAGS=""
+			cat > conftest.proto <<_ACEOF
+syntax = "proto3";
+message ProtocOptionalTest { optional int32 field = 1; }
+_ACEOF
+			if $PROTOC --cpp_out=. conftest.proto >/dev/null 2>&1; then
+				AC_MSG_RESULT([no])
+			elif $PROTOC --experimental_allow_proto3_optional --cpp_out=. conftest.proto >/dev/null 2>&1; then
+				PROTOC_FLAGS="--experimental_allow_proto3_optional"
+				AC_MSG_RESULT([yes])
+			else
+				AC_MSG_RESULT([unable to compile proto3 optional fields])
+				AC_MSG_ERROR([*** protoc cannot compile proto3 optional fields - upgrade protobuf ***])
+			fi
+			rm -f conftest.proto ProtocOptionalTest.pb.cc ProtocOptionalTest.pb.h conftest.pb.cc conftest.pb.h
 		else
 			if test "x$REQUIRE_PROTOBUF" = "xyes"; then
 				AC_MSG_ERROR([*** libprotobuf is required ***])
@@ -4953,6 +4970,7 @@ AC_SUBST(PROMETHEUS_LIBS)
 AC_SUBST(PROTOBUF_CPPFLAGS)
 AC_SUBST(PROTOBUF_LDFLAGS)
 AC_SUBST(PROTOBUF_LIBS)
+AC_SUBST(PROTOC_FLAGS)
 AC_SUBST(PYTHON_CPPFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 AC_SUBST(PYTHON_LIBS)
