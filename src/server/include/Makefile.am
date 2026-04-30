@@ -16,6 +16,7 @@ serverinclude_HEADERS = \
 	asset_management.h \
 	auth-token.h \
 	cloud-connector.h \
+	dci_table_creation.h \
 	device-backup.h \
 	entity_mib.h \
 	hdlink.h \
