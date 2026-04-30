@@ -94,7 +94,7 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 /**
  * Client session class constructor
  */
-CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) :
+CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer, bool upgradeServer) :
          m_channel(channel), m_downloadFileMap(Ownership::True), m_socketWriteMutex(MutexType::FAST), m_tcpProxyLock(MutexType::FAST),
          m_tcpProxies(0, 16, Ownership::True), m_responseConditionMap(Ownership::True)
 {
@@ -111,6 +111,9 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
    m_masterServer = masterServer;
    m_controlServer = controlServer;
+   m_upgradeServer = upgradeServer;
+   m_pendingUpgradeFile = nullptr;
+   m_pendingUpgradeRequestId = 0;
    m_proxyConnection = false;
    m_acceptTraps = false;
    m_acceptData = false;
@@ -153,6 +156,12 @@ CommSession::~CommSession()
    delete m_responseQueue;
 
    m_downloadFileMap.forEach(AbortFileTransfer, this);
+
+   if (m_pendingUpgradeFile != nullptr)
+   {
+      _tremove(m_pendingUpgradeFile);
+      MemFree(m_pendingUpgradeFile);
+   }
 }
 
 /**
@@ -649,6 +658,9 @@ void CommSession::processCommand(NXCPMessage *request)
          case CMD_INSTALL_PACKAGE:
             response.setField(VID_RCC, installPackage(request));
             break;
+         case CMD_SETUP_AGENT_UPGRADE:
+            response.setField(VID_RCC, setupAgentUpgrade(request));
+            break;
          case CMD_UPGRADE_AGENT:
             response.setField(VID_RCC, upgrade(request));
             break;
@@ -749,7 +761,7 @@ void CommSession::processCommand(NXCPMessage *request)
             m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
             m_acceptKeepalive = request->getFieldAsBoolean(VID_ACCEPT_KEEPALIVE);
             response.setField(VID_RCC, ERR_SUCCESS);
-            response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
+            response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00) | ((m_masterServer || m_upgradeServer) ? 0x04 : 0x00)));
             debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                         m_ipv6Aware ? _T("yes") : _T("no"),
                         m_bulkReconciliationSupported ? _T("yes") : _T("no"),
@@ -1156,28 +1168,130 @@ bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off64_t offset
 }
 
 /**
- * Upgrade agent from package in the file store
+ * Set up isolated staging area for agent upgrade package upload.
+ * Server is expected to stream package bytes via CMD_FILE_DATA chunks
+ * keyed by this message's request ID, then trigger the upgrade with
+ * CMD_UPGRADE_AGENT carrying VID_TRANSFER_ID equal to the same request ID.
+ *
+ * The staging file lives in <FileStore>/upgrade/, a subdirectory that
+ * BuildFullPath() (used by CMD_TRANSFER_FILE) cannot address because it
+ * strips path components from server-supplied filenames. The path is
+ * stored only on the session and unlinked on session teardown.
+ */
+uint32_t CommSession::setupAgentUpgrade(NXCPMessage *request)
+{
+   if (!m_masterServer && !m_upgradeServer)
+   {
+      writeLog(NXLOG_WARNING, _T("Agent upgrade setup request from server without upgrade access"));
+      return ERR_ACCESS_DENIED;
+   }
+
+   // Only one staging file per session; replace any prior incomplete staging
+   if (m_pendingUpgradeFile != nullptr)
+   {
+      DownloadFileInfo *prev = m_downloadFileMap.get(m_pendingUpgradeRequestId);
+      if (prev != nullptr)
+      {
+         prev->close(false);
+         m_downloadFileMap.remove(m_pendingUpgradeRequestId);
+      }
+      _tremove(m_pendingUpgradeFile);
+      MemFreeAndNull(m_pendingUpgradeFile);
+      m_pendingUpgradeRequestId = 0;
+   }
+
+   // Build staging directory path: <FileStore>/upgrade/
+   TCHAR stagingDir[MAX_PATH];
+   _tcslcpy(stagingDir, g_szFileStore, MAX_PATH);
+   size_t len = _tcslen(stagingDir);
+   if ((len > 0) && (stagingDir[len - 1] != _T('\\')) && (stagingDir[len - 1] != _T('/')))
+   {
+      _tcslcat(stagingDir, FS_PATH_SEPARATOR, MAX_PATH);
+   }
+   _tcslcat(stagingDir, _T("upgrade"), MAX_PATH);
+   if (!CreateDirectoryTree(stagingDir))
+   {
+      debugPrintf(3, _T("setupAgentUpgrade(): cannot create staging directory \"%s\" (%s)"), stagingDir, _tcserror(errno));
+      return ERR_IO_FAILURE;
+   }
+
+   BYTE randomBytes[12];
+   GenerateRandomBytes(randomBytes, sizeof(randomBytes));
+   TCHAR randomHex[sizeof(randomBytes) * 2 + 1];
+   BinToStr(randomBytes, sizeof(randomBytes), randomHex);
+
+   TCHAR *stagingPath = MemAllocString(MAX_PATH);
+   _sntprintf(stagingPath, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("agent-upgrade-%s.pkg"), stagingDir, randomHex);
+
+   uint32_t requestId = request->getId();
+   NXCPMessage probe(NXCP_VERSION);
+   openFile(&probe, stagingPath, requestId, 0, FileTransferResumeMode::OVERWRITE);
+   uint32_t rcc = probe.getFieldAsUInt32(VID_RCC);
+   if (rcc != ERR_SUCCESS)
+   {
+      MemFree(stagingPath);
+      return rcc;
+   }
+
+   m_pendingUpgradeFile = stagingPath;
+   m_pendingUpgradeRequestId = requestId;
+   debugPrintf(4, _T("Agent upgrade staging area prepared at \"%s\""), m_pendingUpgradeFile);
+   return ERR_SUCCESS;
+}
+
+/**
+ * Upgrade agent from a previously staged package.
+ *
+ * Two flows are supported:
+ *  - New flow: VID_TRANSFER_ID identifies a session-private staging file
+ *    prepared by setupAgentUpgrade(). Available to upgrade-only servers.
+ *  - Legacy flow: VID_FILE_NAME names a file in the agent file store
+ *    (uploaded via CMD_TRANSFER_FILE). Master access required as before.
  */
 uint32_t CommSession::upgrade(NXCPMessage *request)
 {
-   if (m_masterServer)
+   if (request->isFieldExist(VID_TRANSFER_ID))
    {
-      TCHAR packageName[MAX_PATH] = _T("");
-      request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
-            
-      // Store upgrade file name to delete it after system start
-      WriteRegistry(_T("upgrade.file"), packageName);
-      writeLog(NXLOG_INFO, _T("Starting agent upgrade using package %s"), packageName);
+      if (!m_masterServer && !m_upgradeServer)
+      {
+         writeLog(NXLOG_WARNING, _T("Upgrade request from server without upgrade access"));
+         return ERR_ACCESS_DENIED;
+      }
+      uint32_t transferId = request->getFieldAsUInt32(VID_TRANSFER_ID);
+      if ((m_pendingUpgradeFile == nullptr) || (transferId != m_pendingUpgradeRequestId))
+      {
+         writeLog(NXLOG_WARNING, _T("Upgrade request with unknown transfer ID"));
+         return ERR_BAD_ARGUMENTS;
+      }
 
       TCHAR fullPath[MAX_PATH];
-      BuildFullPath(packageName, fullPath);
+      _tcslcpy(fullPath, m_pendingUpgradeFile, MAX_PATH);
+
+      // Hand ownership of the staging file to the post-restart cleanup path.
+      WriteRegistry(_T("upgrade.file"), fullPath);
+      writeLog(NXLOG_INFO, _T("Starting agent upgrade using staged package %s"), fullPath);
+
+      MemFreeAndNull(m_pendingUpgradeFile);
+      m_pendingUpgradeRequestId = 0;
       return UpgradeAgent(fullPath);
    }
-   else
+
+   if (!m_masterServer)
    {
       writeLog(NXLOG_WARNING, _T("Upgrade request from server which is not master (upgrade will not start)"));
       return ERR_ACCESS_DENIED;
    }
+
+   TCHAR packageName[MAX_PATH] = _T("");
+   request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
+
+   // Store upgrade file name to delete it after system start
+   WriteRegistry(_T("upgrade.file"), packageName);
+   writeLog(NXLOG_INFO, _T("Starting agent upgrade using package %s"), packageName);
+
+   TCHAR fullPath[MAX_PATH];
+   BuildFullPath(packageName, fullPath);
+   return UpgradeAgent(fullPath);
 }
 
 /**

@@ -718,6 +718,7 @@ typedef struct
 #define CMD_GET_AI_SKILLS_AND_FUNCTIONS  0x0206
 #define CMD_MODIFY_AI_DISABLED_LIST      0x0207
 #define CMD_GET_POLICY_FILE              0x0208
+#define CMD_SETUP_AGENT_UPGRADE           0x0209
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1721,6 +1722,7 @@ typedef struct
 #define VID_POLICY_FILE_GUID        ((uint32_t)986)
 #define VID_OS_PLATFORM_NAME        ((uint32_t)987)
 #define VID_AGENT_PLATFORM_NAME     ((uint32_t)988)
+#define VID_TRANSFER_ID             ((uint32_t)989)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

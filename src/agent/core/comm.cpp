@@ -68,7 +68,7 @@ void InitSessionList()
 /**
  * Validates server's address
  */
-bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool forceResolve)
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool *pbUpgradeServer, bool forceResolve)
 {
    for(int i = 0; i < g_serverList.size(); i++)
 	{
@@ -77,6 +77,7 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
       {
          *pbMasterServer = s->isMaster();
          *pbControlServer = s->isControl();
+         *pbUpgradeServer = s->isUpgrade();
          return true;
       }
 	}
@@ -93,7 +94,9 @@ bool RegisterSession(const shared_ptr<CommSession>& session)
    {
       g_sessions.add(session);
       g_sessionLock.unlock();
-      session->debugPrintf(4, _T("Session registered (control=%s, master=%s)"), BooleanToString(session->isControlServer()), BooleanToString(session->isMasterServer()));
+      session->debugPrintf(4, _T("Session registered (control=%s, master=%s, upgrade=%s)"),
+            BooleanToString(session->isControlServer()), BooleanToString(session->isMasterServer()),
+            BooleanToString(session->isUpgradeServer()));
       return true;
    }
 
@@ -436,15 +439,15 @@ void ListenerThread()
          InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
          nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Incoming connection from %s"), addr.toString(buffer));
 
-         bool masterServer, controlServer;
-         if (IsValidServerAddress(addr, &masterServer, &controlServer, false))
+         bool masterServer, controlServer, upgradeServer;
+         if (IsValidServerAddress(addr, &masterServer, &controlServer, &upgradeServer, false))
          {
             g_acceptedConnections++;
             nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
             shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(hClientSocket, nullptr, Ownership::True);
-            shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, addr, masterServer, controlServer);
+            shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, addr, masterServer, controlServer, upgradeServer);
 
             if (RegisterSession(session))
             {

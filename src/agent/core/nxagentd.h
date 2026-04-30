@@ -291,6 +291,7 @@ private:
    InetAddress m_address;
    bool m_control;
    bool m_master;
+   bool m_upgrade;
    time_t m_lastResolveTime;
    bool m_redoResolve;
    Mutex m_mutex;
@@ -298,13 +299,14 @@ private:
    void resolve(bool forceResolve);
 
 public:
-   ServerInfo(const TCHAR *name, bool control, bool master);
+   ServerInfo(const TCHAR *name, bool control, bool master, bool upgrade);
    ~ServerInfo();
 
    bool match(const InetAddress &addr, bool forceResolve);
 
    bool isMaster() const { return m_master; }
    bool isControl() const { return m_control; }
+   bool isUpgrade() const { return m_upgrade || m_master; }
 };
 
 /**
@@ -346,6 +348,7 @@ private:
    bool m_authenticated;
    bool m_masterServer;
    bool m_controlServer;
+   bool m_upgradeServer;
    bool m_proxyConnection;
    bool m_acceptData;
    bool m_acceptTraps;
@@ -357,6 +360,8 @@ private:
    bool m_stopCommandProcessing;
    VolatileCounter m_pendingRequests;
    HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
+   TCHAR *m_pendingUpgradeFile;        // Path to private staging file for agent upgrade (owned by session)
+   uint32_t m_pendingUpgradeRequestId; // Request ID used to upload staging file
 	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    int64_t m_timestamp;       // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
@@ -376,6 +381,7 @@ private:
    void getTable(NXCPMessage *request, NXCPMessage *response);
    void action(NXCPMessage *request, NXCPMessage *response);
    void recvFile(NXCPMessage *request, NXCPMessage *response);
+   uint32_t setupAgentUpgrade(NXCPMessage *request);
    uint32_t installPackage(NXCPMessage *request);
    uint32_t upgrade(NXCPMessage *request);
    uint32_t setupProxyConnection(NXCPMessage *pRequest);
@@ -400,7 +406,7 @@ private:
    void setResponseSentCondition(uint32_t requestId);
 
 public:
-   CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
+   CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer, bool upgradeServer);
    virtual ~CommSession();
 
    shared_ptr<CommSession> self() const { return static_pointer_cast<CommSession>(AbstractCommSession::self()); }
@@ -426,6 +432,7 @@ public:
 
    virtual bool isMasterServer() override { return m_masterServer; }
    virtual bool isControlServer() override { return m_controlServer; }
+   bool isUpgradeServer() const { return m_upgradeServer; }
    virtual bool canAcceptData() override { return m_acceptData; }
    virtual bool canAcceptTraps() override { return m_acceptTraps; }
    virtual bool canAcceptFileUpdates() override { return m_acceptFileUpdates; }

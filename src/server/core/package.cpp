@@ -447,9 +447,9 @@ void PackageDeploymentJob::notifyClients() const
 /**
  * Upgrade agent
  */
-static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionEx *upgradeConnection, const wchar_t **errorMessage)
+static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionEx *upgradeConnection, uint32_t transferId, const wchar_t **errorMessage)
 {
-   if (upgradeConnection->startUpgrade(job->getPackageFile()) != ERR_SUCCESS)
+   if (upgradeConnection->startUpgrade(job->getPackageFile(), transferId) != ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"UpgradeAgent(): cannot start agent upgrade on node %s [%u] in job [%u]", node->getName(), node->getId(), job->getId());
       *errorMessage = L"Unable to start upgrade process";
@@ -611,7 +611,30 @@ void PackageDeploymentJob::execute()
    packageFile.append(m_packageFile);
    uint32_t bwLimit = node->getCustomAttributeAsUInt32(L"SysConfig:Agent.UploadBandwidthLimit", g_agentUploadBandwidthLimit);
    uint32_t bandwidthLimit = (bwLimit > 0) ? bwLimit * 1024 : 0;
-   uint32_t rcc = agentConn->uploadFile(packageFile, nullptr, false, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
+
+   bool isAgentUpgrade = !wcscmp(m_packageType, L"agent-installer");
+   uint32_t upgradeTransferId = 0;
+   uint32_t rcc;
+
+   if (isAgentUpgrade)
+   {
+      // Prefer the isolated upload flow so agents configured with UpgradeServers
+      // (but not MasterServers) can still receive upgrades. Falls back to legacy
+      // CMD_TRANSFER_FILE for older agents that don't implement the new command.
+      rcc = agentConn->uploadAgentUpgradePackage(packageFile, &upgradeTransferId, nullptr, bandwidthLimit);
+      if ((rcc == ERR_NOT_IMPLEMENTED) || (rcc == ERR_UNKNOWN_COMMAND))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"PackageDeploymentJob::execute(): agent on node %s [%u] does not support isolated upgrade flow, falling back to legacy upload",
+            node->getName(), m_nodeId);
+         upgradeTransferId = 0;
+         rcc = agentConn->uploadFile(packageFile, nullptr, false, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
+      }
+   }
+   else
+   {
+      rcc = agentConn->uploadFile(packageFile, nullptr, false, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
+   }
+
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): file transfer failed to node %s [%u] in job [%u] (%u: %s)",
@@ -623,10 +646,10 @@ void PackageDeploymentJob::execute()
    setStatus(PKG_JOB_INSTALLATION_RUNNING);
 
    bool success;
-   if (!wcscmp(m_packageType, L"agent-installer"))
+   if (isAgentUpgrade)
    {
       const wchar_t *errorMessage;
-      success = UpgradeAgent(this, node.get(), agentConn.get(), &errorMessage);
+      success = UpgradeAgent(this, node.get(), agentConn.get(), upgradeTransferId, &errorMessage);
       if (!success)
          markAsFailed(errorMessage, false);
    }
