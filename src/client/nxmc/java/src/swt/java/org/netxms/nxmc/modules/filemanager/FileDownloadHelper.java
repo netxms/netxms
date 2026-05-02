@@ -24,6 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -32,6 +35,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -237,6 +241,28 @@ public class FileDownloadHelper
          }
       }
       dir.setLastModified(sf.getModificationTime().getTime());
+   }
+
+   /**
+    * Hand a locally available file to the user for saving. On desktop this opens a native Save dialog
+    * and copies the file to the chosen destination. On web this triggers a browser download.
+    *
+    * @param shell parent shell for the save dialog
+    * @param localFile already-downloaded local file (e.g. server temp file)
+    * @param suggestedName default file name to offer to the user
+    * @return true if the file was saved (or queued for download), false if the user cancelled
+    * @throws IOException on I/O failure during copy
+    */
+   public static boolean saveLocalFile(Shell shell, File localFile, String suggestedName) throws IOException
+   {
+      FileDialog dlg = new FileDialog(shell, SWT.SAVE);
+      dlg.setFileName(suggestedName);
+      dlg.setOverwrite(true);
+      String target = dlg.open();
+      if (target == null)
+         return false;
+      Files.copy(localFile.toPath(), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+      return true;
    }
 
    /**

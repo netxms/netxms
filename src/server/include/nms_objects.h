@@ -2261,6 +2261,8 @@ public:
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data) override;
    virtual void validate() override;
+
+   bool hasFile(const uuid& fileGuid);
 };
 
 /**
@@ -2341,6 +2343,7 @@ public:
    bool hasPolicy(const uuid& guid) const;
    void fillPolicyListMessage(NXCPMessage *pMsg) const;
    bool fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) const;
+   uint32_t resolvePolicyFile(const uuid& policyGuid, const uuid& fileGuid, wchar_t *outName, size_t outNameSize) const;
    uuid updatePolicyFromMessage(const NXCPMessage& request);
    bool removePolicy(const uuid& guid);
    void applyPolicyChanges();

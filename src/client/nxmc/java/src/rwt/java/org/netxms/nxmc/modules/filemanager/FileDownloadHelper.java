@@ -23,10 +23,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -224,12 +226,30 @@ public class FileDownloadHelper
    }
 
    /**
+    * Hand a locally available file to the user for saving. On web this registers the file with
+    * {@link DownloadServiceHandler} and triggers a browser download.
+    *
+    * @param shell unused on web; present for API symmetry with desktop
+    * @param localFile already-downloaded local file (e.g. server temp file)
+    * @param suggestedName default file name to offer to the user
+    * @return always true (download is queued)
+    * @throws IOException unused on web; present for API symmetry with desktop
+    */
+   public static boolean saveLocalFile(Shell shell, File localFile, String suggestedName) throws IOException
+   {
+      final String id = UUID.randomUUID().toString();
+      DownloadServiceHandler.addDownload(id, suggestedName, localFile, "application/octet-stream");
+      DownloadServiceHandler.startDownload(id);
+      return true;
+   }
+
+   /**
     * Upload local folder to agent
-    * @param viewer 
-    * @param agentFileManager 
+    * @param viewer
+    * @param agentFileManager
     */
    public static void uploadFolder(long objectId, IStructuredSelection selection, AgentFileManager agentFileManager, SortableTreeViewer viewer)
    {
       //Do nothing
-   }   
+   }
 }

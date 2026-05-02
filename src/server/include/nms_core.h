@@ -927,6 +927,7 @@ private:
    void deletePolicy(const NXCPMessage& request);
    void getPolicyList(const NXCPMessage& request);
    void getPolicy(const NXCPMessage& request);
+   void getPolicyFile(const NXCPMessage& request);
    void onPolicyEditorClose(const NXCPMessage& request);
    void forceApplyPolicy(const NXCPMessage& request);
    void getMatchingDCI(const NXCPMessage& request);

@@ -460,7 +460,7 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 /**
  * Get file list from file policy configuration
  */
-static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
+static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content, bool updateGuid = true)
 {
    auto files = make_unique<ObjectArray<FileInfo>>(64, 64, Ownership::True);
    Config data;
@@ -473,7 +473,7 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content)
       {
          StringBuffer path;
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Building file list"));
-         BuildFileList(rootElements->get(i), &path, files.get(), true, false);
+         BuildFileList(rootElements->get(i), &path, files.get(), updateGuid, false);
       }
    }
    return files;
@@ -920,6 +920,28 @@ void FileDeliveryPolicy::validate()
             .post();
       }
    }
+}
+
+/**
+ * Check if file with given GUID is referenced by this policy
+ */
+bool FileDeliveryPolicy::hasFile(const uuid& fileGuid)
+{
+   m_contentLock.lock();
+   if (m_content == nullptr)
+   {
+      m_contentLock.unlock();
+      return false;
+   }
+   unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content, false);
+   m_contentLock.unlock();
+
+   for(int i = 0; i < files->size(); i++)
+   {
+      if (files->get(i)->guid.equals(fileGuid))
+         return true;
+   }
+   return false;
 }
 
 /**

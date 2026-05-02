@@ -1867,6 +1867,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_AGENT_POLICY:
          deletePolicy(*request);
          break;
+      case CMD_GET_POLICY_FILE:
+         getPolicyFile(*request);
+         break;
       case CMD_GET_DEPENDENT_NODES:
          getDependentNodes(*request);
          break;
@@ -12272,6 +12275,72 @@ void ClientSession::getServerFile(const NXCPMessage& request)
 	}
 
    sendMessage(&msg);
+}
+
+/**
+ * Send file referenced by file delivery policy back to client
+ */
+void ClientSession::getPolicyFile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t templateId = request.getFieldAsUInt32(VID_TEMPLATE_ID);
+   uuid policyGuid = request.getFieldAsGUID(VID_GUID);
+   uuid fileGuid = request.getFieldAsGUID(VID_POLICY_FILE_GUID);
+
+   shared_ptr<NetObj> templateObject = FindObjectById(templateId, OBJECT_TEMPLATE);
+   if (templateObject == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      sendMessage(response);
+      return;
+   }
+
+   if (!templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, templateId,
+            L"Access denied on download of file %s from policy %s",
+            fileGuid.toString().cstr(), policyGuid.toString().cstr());
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t storedName[64];
+   uint32_t rcc = static_cast<Template&>(*templateObject).resolvePolicyFile(policyGuid, fileGuid, storedName, sizeof(storedName) / sizeof(wchar_t));
+   if (rcc != RCC_SUCCESS)
+   {
+      response.setField(VID_RCC, rcc);
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t fname[MAX_PATH];
+   wcslcpy(fname, g_netxmsdDataDir, MAX_PATH);
+   wcslcat(fname, DDIR_FILES, MAX_PATH);
+   wcslcat(fname, FS_PATH_SEPARATOR, MAX_PATH);
+   wcslcat(fname, storedName, MAX_PATH);
+
+   debugPrintf(4, L"getPolicyFile: requested file %s", fname);
+   if (_waccess(fname, 0) != 0)
+   {
+      debugPrintf(5, L"getPolicyFile: file %s not found on disk", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+      sendMessage(response);
+      return;
+   }
+
+   if (SendFileOverNXCP(m_socket, request.getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
+   {
+      debugPrintf(5, L"getPolicyFile: file %s sent successfully", fname);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      debugPrintf(5, L"getPolicyFile: SendFileOverNXCP() failed for %s", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+   }
+   sendMessage(response);
 }
 
 /**

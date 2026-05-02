@@ -12552,6 +12552,27 @@ public class NXCSession
    }
 
    /**
+    * Download a file referenced by a file delivery agent policy.
+    *
+    * @param templateId owning template object ID
+    * @param policyGuid GUID of the file delivery policy
+    * @param fileGuid GUID of the file within the policy
+    * @return The downloaded file (local temp file)
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public File downloadAgentPolicyFile(long templateId, UUID policyGuid, UUID fileGuid) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_POLICY_FILE);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      msg.setField(NXCPCodes.VID_GUID, policyGuid);
+      msg.setField(NXCPCodes.VID_POLICY_FILE_GUID, fileGuid);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+      return waitForFile(msg.getMessageId(), 60000).getFile();
+   }
+
+   /**
     * Cancel file monitoring
     *
     * @param monitorId file monitor ID (previously returned by <code>downloadFileFromAgent</code>
