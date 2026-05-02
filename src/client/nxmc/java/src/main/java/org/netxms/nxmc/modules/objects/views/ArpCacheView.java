@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -252,7 +252,8 @@ public class ArpCacheView extends ObjectView
       {
          long id = it.next();
          AbstractObject parent = session.findObjectById(id);
-         if ((parent != null) && (parent.getObjectClass() != AbstractObject.OBJECT_SUBNET))
+         if ((parent != null) && ((parent.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (parent.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
+               (parent.getObjectClass() == AbstractObject.OBJECT_SERVICEROOT)))
             return id;
       }
       return 0;

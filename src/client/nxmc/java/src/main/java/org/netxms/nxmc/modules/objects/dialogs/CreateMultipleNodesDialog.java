@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectSelectionFilterFactory;
@@ -92,6 +93,7 @@ public class CreateMultipleNodesDialog extends Dialog
 
       parentSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
       parentSelector.setLabel(i18n.tr("Parent"));
+      parentSelector.setObjectClass(AbstractObject.class);
       parentSelector.setClassFilter(ObjectSelectionFilterFactory.getInstance().createContainerSelectionFilter());
       parentSelector.setObjectId(parentId);
       GridData gd = new GridData();
