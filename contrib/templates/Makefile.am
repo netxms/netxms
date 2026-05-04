@@ -34,11 +34,13 @@ templates_DATA = \
         netxms_ai_providers.json \
 	netxms_file_handle_usage.xml \
 	netxms_server.xml \
+	nvme_ssd.json \
 	object_tools.xml \
 	printers.xml \
 	qnap.xml \
 	rapl_energy_consumption.xml \
 	ruckus_zonedirector.xml \
+	sata_ssd.json \
 	sonicwall.xml \
 	sophos.xml \
 	synology.xml \
