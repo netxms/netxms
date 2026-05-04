@@ -289,6 +289,32 @@ enum DCItemAggregationMode
    DCI_AGGREGATION_DISABLED = 2   // Force-disabled for this DCI
 };
 
+/**
+ * DCI history query tier (selects which aggregation table to read from).
+ * Sent over the wire in VID_DCI_TIER and VID_DCI_TIER_USED.
+ */
+enum DciTier
+{
+   DCI_TIER_AUTO   = 0,   // Server picks raw/hourly/daily based on range and MaxAutoSelectPoints
+   DCI_TIER_RAW    = 1,   // Read raw idata/idata_<N>
+   DCI_TIER_HOURLY = 2,   // Read idata_1h/idata_1h_<N>
+   DCI_TIER_DAILY  = 3    // Read idata_1d/idata_1d_<N>
+};
+
+/**
+ * DCI history aggregation function (selects which aggregate column(s) to return).
+ * Sent over the wire in VID_DCI_AGG_FUNCTION. Names are prefixed DCI_HAGG_ to avoid
+ * collision with the cluster-side AggregationFunction enum (LAST/MIN/MAX/AVG/SUM)
+ * defined in nxcldefs.h, which uses incompatible integer values.
+ */
+enum DciAggregationFunction
+{
+   DCI_HAGG_AVG    = 0,   // Average value
+   DCI_HAGG_MIN    = 1,   // Minimum value
+   DCI_HAGG_MAX    = 2,   // Maximum value
+   DCI_HAGG_MINMAX = 3    // Both min and max in a single response (band graphs)
+};
+
 #ifdef _WIN32
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DataCollectionOwner>;
 template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DCObject>;
@@ -1157,6 +1183,7 @@ void StopV5DataMigration();
  * DCI data aggregation
  */
 void CleanDCIAggregates(DB_HANDLE hdb);
+void ReconcileTSDBAggregation();
 
 /**
  * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.

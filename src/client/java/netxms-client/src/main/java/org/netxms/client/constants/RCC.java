@@ -221,6 +221,7 @@ public final class RCC
    public static final int EPP_CONFLICT = 186;
    public static final int NEED_2FA_SETUP = 187;
    public static final int TEMPLATE_EXCLUSION_CONFLICT = 188;
+   public static final int RADIUS_ACCESS_CHALLENGE = 189;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

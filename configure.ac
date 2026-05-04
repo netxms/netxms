@@ -795,6 +795,16 @@ AC_ARG_WITH(pcre2,
 	fi
 ])
 
+AC_ARG_WITH(argon2,
+[AS_HELP_STRING(--with-argon2,specify libargon2 location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
 AC_ARG_WITH(bundled-openssl,
 [AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
 [
@@ -2329,6 +2339,18 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 #endif
 		])
 	fi
+fi
+
+
+#--------------------------------------------------------------------
+# Checks for libargon2 (password hashing, server only)
+#--------------------------------------------------------------------
+
+if test "x$BUILD_SERVER" = "xyes" ; then
+	AC_CHECK_HEADER(argon2.h, , AC_MSG_ERROR([libargon2 development headers are required (use --with-argon2=PATH for non-standard locations)]))
+	AC_CHECK_LIB(argon2, argon2id_hash_encoded, [
+		SERVER_LIBS="$SERVER_LIBS -largon2"
+	], AC_MSG_ERROR([libargon2 runtime library is required (use --with-argon2=PATH for non-standard locations)]))
 fi
 
 
@@ -4644,6 +4666,23 @@ if test "x$REQUIRE_PROTOBUF" = "xyes"; then
 
 		if test "x$PROTOBUF_SUPPORT" = "xyes"; then
 			AC_DEFINE(WITH_PROTOBUF, 1, Define to 1 if protobuf is supported)
+
+			AC_MSG_CHECKING([whether protoc requires --experimental_allow_proto3_optional])
+			PROTOC_FLAGS=""
+			cat > conftest.proto <<_ACEOF
+syntax = "proto3";
+message ProtocOptionalTest { optional int32 field = 1; }
+_ACEOF
+			if $PROTOC --cpp_out=. conftest.proto >/dev/null 2>&1; then
+				AC_MSG_RESULT([no])
+			elif $PROTOC --experimental_allow_proto3_optional --cpp_out=. conftest.proto >/dev/null 2>&1; then
+				PROTOC_FLAGS="--experimental_allow_proto3_optional"
+				AC_MSG_RESULT([yes])
+			else
+				AC_MSG_RESULT([unable to compile proto3 optional fields])
+				AC_MSG_ERROR([*** protoc cannot compile proto3 optional fields - upgrade protobuf ***])
+			fi
+			rm -f conftest.proto ProtocOptionalTest.pb.cc ProtocOptionalTest.pb.h conftest.pb.cc conftest.pb.h
 		else
 			if test "x$REQUIRE_PROTOBUF" = "xyes"; then
 				AC_MSG_ERROR([*** libprotobuf is required ***])
@@ -4931,6 +4970,7 @@ AC_SUBST(PROMETHEUS_LIBS)
 AC_SUBST(PROTOBUF_CPPFLAGS)
 AC_SUBST(PROTOBUF_LDFLAGS)
 AC_SUBST(PROTOBUF_LIBS)
+AC_SUBST(PROTOC_FLAGS)
 AC_SUBST(PYTHON_CPPFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 AC_SUBST(PYTHON_LIBS)

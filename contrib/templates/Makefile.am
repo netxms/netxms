@@ -28,6 +28,7 @@ templates_DATA = \
 	linux.xml \
 	lsi_megaraid.xml \
 	mikrotik-authentication-failures-syslog.json \
+	mssql_perf_counters_default_instance.json \
 	netgear_nas.xml \
 	netxms_agent.xml \
         netxms_ai_providers.json \

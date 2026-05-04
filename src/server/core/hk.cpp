@@ -269,16 +269,8 @@ struct CutoffTimes
 static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR objectType, DCObjectStorageClass storageClass)
 {
    TCHAR query[256];
-   if (g_flags & AF_TSDB_DROP_CHUNKS_V2)
-   {
-      _sntprintf(query, 256, _T("SELECT drop_chunks('%cdata_sc_%s', to_timestamp(") INT64_FMT _T("))"),
-               objectType, DCObject::getStorageClassName(storageClass), static_cast<int64_t>(cutoffTime));
-   }
-   else
-   {
-      _sntprintf(query, 256, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%cdata_sc_%s')"),
-               static_cast<int64_t>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
-   }
+   _sntprintf(query, 256, _T("SELECT drop_chunks('%cdata_sc_%s', to_timestamp(") INT64_FMT _T("))"),
+            objectType, DCObject::getStorageClassName(storageClass), static_cast<int64_t>(cutoffTime));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing query \"%s\""), query);
    DBQuery(hdb, query);
 }
@@ -327,10 +319,7 @@ static void CleanTimescaleData(DB_HANDLE hdb)
  */
 static void BuildDropChunksQuery(const TCHAR *table, time_t cutoffTime, TCHAR *query, size_t size)
 {
-   if (g_flags & AF_TSDB_DROP_CHUNKS_V2)
-      _sntprintf(query, size, _T("SELECT drop_chunks('%s', to_timestamp(") INT64_FMT _T("))"), table, static_cast<int64_t>(cutoffTime));
-   else
-      _sntprintf(query, size, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%s')"), static_cast<int64_t>(cutoffTime), table);
+   _sntprintf(query, size, _T("SELECT drop_chunks('%s', to_timestamp(") INT64_FMT _T("))"), table, static_cast<int64_t>(cutoffTime));
 }
 
 /**

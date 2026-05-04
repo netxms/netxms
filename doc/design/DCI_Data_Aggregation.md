@@ -64,13 +64,21 @@ Sizing for a large deployment (5,000 nodes × 100 DCIs × 60s collection, 1-year
 
 ### TSDB backend
 
-Two global hypertables:
-- `idata_1h` — materialized by CAGG over view `idata` (UNION of raw `idata_sc_*`)
-- `idata_1d` — CAGG-on-CAGG over `idata_1h` (avoids re-scanning raw)
+TimescaleDB rejects continuous aggregates whose source is a view (`ERROR: invalid continuous aggregate view; DETAIL: At least one hypertable should be used in the view definition`). The aggregates therefore mirror the existing storage-class split of raw `idata_sc_*` hypertables:
 
-**No sc_ split for aggregates**. Rationale: per-DCI retention cannot be honored on TSDB anyway (CAGG writes to one target; no per-row routing), so sc_ buckets provide no benefit. Chunk-drop retention applied to the single hypertable per tier.
+Per storage class `S` ∈ {default, 7, 30, 90, 180, other}:
+- `idata_1h_sc_<S>` — CAGG directly over `idata_sc_<S>` with a 1-hour `time_bucket`. Numeric regex in the WHERE clause excludes string DCIs.
+- `idata_1d_sc_<S>` — hierarchical CAGG over `idata_1h_sc_<S>` with a 1-day `time_bucket`. Weighted average (`sum(avg*count)/sum(count)`) keeps it equivalent to averaging raw values directly.
 
-TSDB minimum version bumped to one that supports CAGG over views (≥ 2.10). Document in release notes.
+Two read-side views aggregate the per-class CAGGs:
+- `idata_1h` — `UNION ALL` of the six hourly CAGGs
+- `idata_1d` — `UNION ALL` of the six daily CAGGs
+
+The query dispatcher (future phase) reads from the two unified views and stays storage-class-agnostic.
+
+**Bonus from per-class CAGGs**: chunk-drop retention is now per-storage-class (one `add_retention_policy` per CAGG), so retention granularity is exactly what users effectively requested when they picked a storage class for the DCI. Per-DCI retention overrides are still not honored on TSDB.
+
+TSDB minimum version: ≥ 2.10 (hierarchical CAGGs). The CAGG `GROUP BY` must reference the literal `time_bucket(...)` expression — a SELECT alias is rejected by the CAGG validator. Document in release notes.
 
 ### String / table DCIs
 
@@ -112,25 +120,34 @@ Per-object parallelism via existing data collection thread pool.
 
 ### TSDB — continuous aggregates
 
-```sql
-CREATE MATERIALIZED VIEW idata_1h WITH (timescaledb.continuous) AS
-  SELECT item_id,
-         time_bucket('1 hour', idata_timestamp) AS bucket_start,
-         min(CAST(idata_value AS double precision)) AS min_value,
-         max(CAST(idata_value AS double precision)) AS max_value,
-         avg(CAST(idata_value AS double precision)) AS avg_value,
-         count(*) AS sample_count
-  FROM idata
-  WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
-  GROUP BY 1, 2;
+For each storage class `S`:
 
-SELECT add_continuous_aggregate_policy('idata_1h',
-    start_offset => INTERVAL '30 days',
-    end_offset   => INTERVAL '1 hour',
-    schedule_interval => INTERVAL '10 minutes');
+```sql
+CREATE MATERIALIZED VIEW idata_1h_sc_<S> WITH (timescaledb.continuous) AS
+  SELECT item_id,
+         time_bucket(interval '1 hour', idata_timestamp) AS bucket_start,
+         min(idata_value::double precision) AS min_value,
+         max(idata_value::double precision) AS max_value,
+         avg(idata_value::double precision) AS avg_value,
+         count(*) AS sample_count
+  FROM idata_sc_<S>
+  WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+  GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
+  WITH NO DATA;
+
+CREATE MATERIALIZED VIEW idata_1d_sc_<S> WITH (timescaledb.continuous) AS
+  SELECT item_id,
+         time_bucket(interval '1 day', bucket_start) AS bucket_start,
+         min(min_value) AS min_value,
+         max(max_value) AS max_value,
+         sum(avg_value * sample_count) / sum(sample_count) AS avg_value,
+         sum(sample_count) AS sample_count
+  FROM idata_1h_sc_<S>
+  GROUP BY item_id, time_bucket(interval '1 day', bucket_start)
+  WITH NO DATA;
 ```
 
-`idata_1d` defined analogously over `idata_1h` (weighted avg: `sum(avg*count)/sum(count)`).
+Refresh and retention policies are attached at server startup by `ReconcileTSDBAggregation()` when `Aggregation.Enabled = 1` (using `add_continuous_aggregate_policy` / `add_retention_policy`). The CAGGs themselves are created `WITH NO DATA` and produce nothing while the master switch is off, so they are cheap to keep around when the feature is disabled.
 
 ### Late-data correctness
 
@@ -165,9 +182,9 @@ Fallback: if the chosen tier has no data for the range (e.g., aggregation recent
 
 ### API surface
 
-- **NXCP** — extend `CMD_GET_DCI_VALUES` with `VID_DCI_TIER` and `VID_DCI_AGG_FUNCTION`. Legacy clients unaffected (absent fields → auto + avg).
-- **Java client** — new `NXCSession.getCollectedData()` overload with `DciTier` and `DciAggregationFunction` enums; legacy overload delegates to `(AUTO, AVG)`.
-- **NXSL** — `GetDCIValues(dci, from, to, tier?, function?)` — trailing optional string parameters.
+- **NXCP** — extend `CMD_GET_DCI_DATA` with `VID_DCI_TIER` and `VID_DCI_AGG_FUNCTION`; the response carries `VID_DCI_TIER_USED` so clients know which tier the dispatcher actually served. Legacy clients unaffected (absent fields → auto + avg; missing response field → raw).
+- **Java client** — new `NXCSession.getCollectedData()` overload with `DciTier` and `DciAggregationFunction` enums; legacy overloads delegate to `(AUTO, AVG)`. `DataSeries.getTierServed()` exposes the served tier.
+- **NXSL** — `GetDCIValues(node, dciId, startTime, endTime?, rawValue?, tier?, function?)`. Tier and function are optional strings appended after the existing `rawValue` argument; same shape for `GetDCIValuesEx`. Tier ∈ `{auto, raw, hourly, daily}`, function ∈ `{avg, min, max}` — `minmax` is not exposed in NXSL (no array-of-pairs return shape).
 
 ## DCI Recalculation
 
@@ -291,8 +308,8 @@ No server restart required.
 
 Documented in the admin guide:
 - **Per-DCI aggregation disable** is a query-time filter only — aggregates are still produced on disk for all DCIs
-- **Per-DCI aggregate retention is not honored** — retention is driven by a single chunk-drop policy per aggregate hypertable
-- **Per-DCI retention longer than global default is impossible** — chunk drops are global
+- **Per-DCI aggregate retention is not honored** — retention is driven by one chunk-drop policy per `idata_1h_sc_<S>` / `idata_1d_sc_<S>`. Granularity is per-storage-class, which matches the granularity users opted into when assigning a DCI to a storage class.
+- **Per-DCI retention longer than the storage-class default is impossible** — same reason
 
 Same class of tradeoff as the existing raw storage-class model, which approximates per-DCI retention via the `idata_sc_*` buckets.
 
@@ -302,7 +319,6 @@ All schema changes are additive. NXCP gains optional fields (legacy clients igno
 
 ## Open Items for Implementation
 
-- Exact TSDB minimum version to require in release notes
 - Housekeeper task naming and integration point for non-TSDB aggregate retention deletes
 - Precise UI field labels and help text (en/de/cs/ru/es/pt translations)
 - Whether to expose aggregate `sample_count` in the API as a distinct response column or only via tooltip

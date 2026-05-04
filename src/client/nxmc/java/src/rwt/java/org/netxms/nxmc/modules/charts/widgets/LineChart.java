@@ -49,6 +49,7 @@ import org.eclipse.swtchart.ISeriesSet;
 import org.eclipse.swtchart.LineStyle;
 import org.eclipse.swtchart.Range;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataFormatter;
@@ -192,9 +193,12 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
    					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
    					double value = yAxis.getDataCoordinate(e.y);
    					MeasurementUnit unit = chart.getDataSeries().isEmpty() ? null : chart.getDataSeries().get(0).getMeasurementUnit();
-   					getPlotArea().setToolTipText(
-                        series.getDescription() + "\n" + DateFormatFactory.getDateTimeFormat().format(timestamp) + "\n" +
-   					      (useMultipliers ? DataFormatter.roundDecimalValue(value, cachedTickStep, 5, unit) : Double.toString(value)));
+   					String text = series.getDescription() + "\n" + DateFormatFactory.getDateTimeFormat().format(timestamp) + "\n" +
+   					      (useMultipliers ? DataFormatter.roundDecimalValue(value, cachedTickStep, 5, unit) : Double.toString(value));
+   					String sampleInfo = formatSampleCountForTooltip(series, timestamp);
+   					if (sampleInfo != null)
+   					   text = text + "\n" + sampleInfo;
+   					getPlotArea().setToolTipText(text);
    					tooltipShown = true;
 				   }
 				}
@@ -525,19 +529,153 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 
-      ILineSeries<?> series = addLineSeries(index, item.getLabel(), xSeries, ySeries);
+      ILineSeries<?> series = addLineSeries(index, decorateLabel(item.getLabel(), data), xSeries, ySeries);
       if (item.getColorAsInt() != -1)
          series.setLineColor(ColorConverter.colorFromInt(item.getColorAsInt(), colorCache));
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
 
-      int pollingInterval = data.getPollingInterval();
-      if ((pollingInterval > 0) && !data.isStoreChangesOnly())
+      // Gap threshold: 4x the inter-sample interval. For aggregated tiers the spacing is the bucket size,
+      // not the polling interval — using pollingInterval here makes every aggregated point look like a gap.
+      DciTier tier = data.getTierServed();
+      if (tier == DciTier.HOURLY)
       {
-         // Use 4x polling interval as gap threshold (X-axis is in milliseconds)
-         series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
+         series.setLineGapThreshold(4.0 * 3600.0 * 1000.0);
       }
+      else if (tier == DciTier.DAILY)
+      {
+         series.setLineGapThreshold(4.0 * 86400.0 * 1000.0);
+      }
+      else
+      {
+         int pollingInterval = data.getPollingInterval();
+         if ((pollingInterval > 0) && !data.isStoreChangesOnly())
+         {
+            series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
+         }
+      }
+
+      addMinMaxBandSeries(index, item, data, values);
 	}
+
+   /**
+    * Append a tier suffix to the legend label so the user can tell at a glance whether the
+    * series is raw or aggregated (e.g. "Interface load (hourly)").
+    */
+   private static String decorateLabel(String baseLabel, DataSeries data)
+   {
+      DciTier tier = data.getTierServed();
+      if ((tier == null) || (tier == DciTier.RAW))
+         return baseLabel;
+      switch(tier)
+      {
+         case HOURLY:
+            return baseLabel + " (hourly)";
+         case DAILY:
+            return baseLabel + " (daily)";
+         default:
+            return baseLabel;
+      }
+   }
+
+   /**
+    * Add two thin companion line series (min and max) for an aggregated band, sharing the parent
+    * series color.
+    */
+   private void addMinMaxBandSeries(int index, ChartDciConfig item, DataSeries data, DciDataRow[] values)
+	{
+	   if ((values.length == 0) || !values[0].isAggregated())
+	      return;
+
+	   double[] minSeries = new double[values.length];
+	   double[] maxSeries = new double[values.length];
+	   Date[] xSeries = new Date[values.length];
+	   boolean anyValid = false;
+	   for(int i = 0; i < values.length; i++)
+	   {
+	      xSeries[i] = values[i].getTimestamp();
+	      double min = values[i].getMinValue();
+	      double max = values[i].getMaxValue();
+	      if (Double.isNaN(min) || Double.isNaN(max) || (min == 0 && max == 0))
+	      {
+	         minSeries[i] = Double.NaN;
+	         maxSeries[i] = Double.NaN;
+	      }
+	      else
+	      {
+	         minSeries[i] = min;
+	         maxSeries[i] = max;
+	         anyValid = true;
+	      }
+	   }
+	   if (!anyValid)
+	      return;
+
+	   Color baseColor = (item.getColorAsInt() != -1)
+	         ? ColorConverter.colorFromInt(item.getColorAsInt(), colorCache)
+	         : ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString((index % ChartConfiguration.DEFAULT_PALETTE_SIZE) + 1));
+
+	   addBandLine(index + "_min", item.getLabel() + " (min)", xSeries, minSeries, baseColor);
+	   addBandLine(index + "_max", item.getLabel() + " (max)", xSeries, maxSeries, baseColor);
+	}
+
+   @SuppressWarnings("deprecation")
+	private void addBandLine(String id, String description, Date[] xSeries, double[] ySeries, Color baseColor)
+	{
+	   ISeriesSet seriesSet = getSeriesSet();
+	   ILineSeries<?> series = (ILineSeries<?>)seriesSet.createSeries(SeriesType.LINE, id);
+	   series.setDescription(description);
+	   series.setSymbolType(PlotSymbolType.NONE);
+	   series.setLineWidth(1);
+	   series.setLineStyle(LineStyle.DOT);
+	   series.setLineColor(baseColor);
+	   series.setXDateSeries(xSeries);
+	   series.setYSeries(ySeries);
+	}
+
+   /**
+    * Look up the row matching the hovered timestamp in the underlying DataSeries and format
+    * "samples: N" if a sample count is available.
+    */
+   private String formatSampleCountForTooltip(ISeries<?> series, Date timestamp)
+   {
+      List<DataSeries> dataSeriesList = chart.getDataSeries();
+      String id = series.getId();
+      int idx;
+      try
+      {
+         idx = Integer.parseInt(id);
+      }
+      catch(NumberFormatException e)
+      {
+         return null;
+      }
+      if ((idx < 0) || (idx >= dataSeriesList.size()))
+         return null;
+      DataSeries data = dataSeriesList.get(idx);
+      if (!data.isAggregated())
+         return null;
+      DciDataRow nearest = findNearestRow(data, timestamp.getTime());
+      if (nearest == null || nearest.getSampleCount() <= 0)
+         return null;
+      return "samples: " + nearest.getSampleCount();
+   }
+
+   private static DciDataRow findNearestRow(DataSeries data, long targetTime)
+   {
+      DciDataRow best = null;
+      long bestDiff = Long.MAX_VALUE;
+      for(DciDataRow row : data.getValues())
+      {
+         long diff = Math.abs(row.getTimestamp().getTime() - targetTime);
+         if (diff < bestDiff)
+         {
+            bestDiff = diff;
+            best = row;
+         }
+      }
+      return best;
+   }
 
    /**
     * @param enableZoom

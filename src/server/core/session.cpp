@@ -70,6 +70,10 @@ struct LoginInfo
    bool closeOtherSessions;
    bool intruderLockout;
 
+   // RADIUS Access-Challenge state
+   bool radiusChallengeActive;
+   RADIUSChallengeData radiusChallenge;
+
    LoginInfo()
    {
       token = nullptr;
@@ -78,6 +82,7 @@ struct LoginInfo
       changePassword = false;
       closeOtherSessions = false;
       intruderLockout = false;
+      radiusChallengeActive = false;
    }
    ~LoginInfo()
    {
@@ -90,6 +95,8 @@ struct LoginInfo
  */
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
+
+int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);
 
 void UnregisterClientSession(session_id_t id);
 void ResetDiscoveryPoller();
@@ -1860,6 +1867,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_AGENT_POLICY:
          deletePolicy(*request);
          break;
+      case CMD_GET_POLICY_FILE:
+         getPolicyFile(*request);
+         break;
       case CMD_GET_DEPENDENT_NODES:
          getDependentNodes(*request);
          break;
@@ -2368,10 +2378,16 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
 uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
-   wchar_t password[1024];
-   request.getFieldAsString(VID_PASSWORD, password, 256);
+   char password[1024];
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
    uint32_t rcc = AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights, &loginInfo->changePassword,
-         &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
+         &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins, &loginInfo->radiusChallenge);
+   if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
+   {
+      loginInfo->radiusChallengeActive = true;
+      debugPrintf(4, _T("RADIUS Access-Challenge received for user %s (reply-message: \"%hs\")"),
+            loginInfo->loginName, loginInfo->radiusChallenge.replyMessage);
+   }
    SecureZeroMemory(password, sizeof(password));
    return rcc;
 }
@@ -2390,7 +2406,7 @@ uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request
       const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
       if (signature != nullptr)
       {
-         rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const TCHAR*>(signature), sigLen,
+         rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const char*>(signature), sigLen,
                pCert, m_challenge, &m_userId, &m_systemAccessRights, &loginInfo->changePassword, &loginInfo->intruderLockout,
                &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
       }
@@ -2616,6 +2632,19 @@ void ClientSession::login(const NXCPMessage& request)
             delete_and_null(m_loginInfo);
          }
       }
+      else if (rcc == RCC_RADIUS_ACCESS_CHALLENGE)
+      {
+         // RADIUS Access-Challenge - pass Reply-Message as challenge text and the
+         // configured 2FA token timeout to the client; client will collect the OTP
+         // and submit it via CMD_2FA_VALIDATE_RESPONSE without going through the
+         // method selection / prepare-challenge phase.
+         response.setFieldFromUtf8String(VID_CHALLENGE, m_loginInfo->radiusChallenge.replyMessage);
+         int32_t tokenTimeout = ConfigReadInt(_T("Server.Security.2FA.TokenTimeout"), 120);
+         if (tokenTimeout > 0)
+            response.setField(VID_TIMEOUT, static_cast<uint32_t>(tokenTimeout));
+         debugPrintf(4, _T("RADIUS Access-Challenge: presenting challenge to user (reply-message: \"%hs\")"),
+               m_loginInfo->radiusChallenge.replyMessage);
+      }
       else
       {
          writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
@@ -2643,19 +2672,32 @@ void ClientSession::prepare2FAChallenge(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_loginInfo != nullptr)
    {
-      TCHAR method[MAX_OBJECT_NAME];
-      request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
-      delete m_loginInfo->token;
-      m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
-      if (m_loginInfo->token != nullptr)
+      if (m_loginInfo->radiusChallengeActive)
       {
-         response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
-         response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
-         response.setField(VID_RCC, RCC_SUCCESS);
+         // Client should respond directly with CMD_2FA_VALIDATE_RESPONSE after
+         // receiving RCC_RADIUS_ACCESS_CHALLENGE - prepare-challenge is not part
+         // of the RADIUS flow.
+         response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       }
       else
       {
-         response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+         TCHAR method[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
+         delete m_loginInfo->token;
+         m_loginInfo->token = Prepare2FAChallenge(method, m_userId);
+         if (m_loginInfo->token != nullptr)
+         {
+            response.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+            response.setField(VID_QR_LABEL, m_loginInfo->token->getQRLabel());
+            int32_t tokenTimeout = ConfigReadInt(_T("Server.Security.2FA.TokenTimeout"), 120);
+            if (tokenTimeout > 0)
+               response.setField(VID_TIMEOUT, static_cast<uint32_t>(tokenTimeout));
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
+         }
       }
    }
    else
@@ -2675,28 +2717,75 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
    {
       TCHAR userResponse[1024];
       request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
-      BYTE *trustedDeviceToken = nullptr;
-      size_t trustedDeviceTokenSize = 0;
-      if (Validate2FAResponse(m_loginInfo->token, userResponse, m_userId, &trustedDeviceToken, &trustedDeviceTokenSize))
+
+      if (m_loginInfo->radiusChallengeActive)
       {
-         uint32_t rcc = finalizeLogin(request, &response);
-         response.setField(VID_RCC, rcc);
-         if ((rcc == RCC_SUCCESS) && (trustedDeviceToken != nullptr))
+         // RADIUS Access-Challenge response: re-authenticate with RADIUS using State + OTP
+         int radResult = RadiusChallengeResponse(m_loginInfo->loginName, userResponse, &m_loginInfo->radiusChallenge);
+         if (radResult == RADIUS_RESULT_OK)
          {
-            response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
+            // Fetch effective system rights and re-check account status before finalizing.
+            // (m_systemAccessRights is not set by the challenge path in AuthenticateUser.)
+            uint32_t lookupRcc = RCC_SUCCESS;
+            if (!ValidateUserId(m_userId, m_loginInfo->loginName, &m_systemAccessRights, &lookupRcc))
+            {
+               writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response succeeded but account validation failed with error code %d (client info: %s)"),
+                     m_loginInfo->loginName, lookupRcc, m_clientInfo);
+               response.setField(VID_RCC, lookupRcc);
+               m_userId = INVALID_INDEX;
+            }
+            else
+            {
+               uint32_t rcc = finalizeLogin(request, &response);
+               response.setField(VID_RCC, rcc);
+               if (rcc != RCC_SUCCESS)
+               {
+                  writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response succeeded but finalize login failed with error code %d (client info: %s)"),
+                        m_loginInfo->loginName, rcc, m_clientInfo);
+               }
+               else
+               {
+                  writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" successfully authenticated via RADIUS challenge-response (client info: %s)"),
+                        m_loginInfo->loginName, m_clientInfo);
+               }
+            }
          }
-         if (rcc != RCC_SUCCESS)
+         else
          {
-            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+            const TCHAR *outcome = (radResult == RADIUS_RESULT_REJECT) ? _T("rejected by server") :
+                  (radResult == RADIUS_RESULT_TIMEOUT) ? _T("timed out") : _T("failed");
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" RADIUS challenge-response %s (result=%d, client info: %s)"),
+                  m_loginInfo->loginName, outcome, radResult, m_clientInfo);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            m_userId = INVALID_INDEX;
          }
-         MemFree(trustedDeviceToken);
+         delete_and_null(m_loginInfo);
       }
       else
       {
-         writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed (client info: %s)"), m_loginInfo->loginName, m_clientInfo);
-         response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
+         BYTE *trustedDeviceToken = nullptr;
+         size_t trustedDeviceTokenSize = 0;
+         if (Validate2FAResponse(m_loginInfo->token, userResponse, m_userId, &trustedDeviceToken, &trustedDeviceTokenSize))
+         {
+            uint32_t rcc = finalizeLogin(request, &response);
+            response.setField(VID_RCC, rcc);
+            if ((rcc == RCC_SUCCESS) && (trustedDeviceToken != nullptr))
+            {
+               response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
+            }
+            if (rcc != RCC_SUCCESS)
+            {
+               writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+            }
+            MemFree(trustedDeviceToken);
+         }
+         else
+         {
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed (client info: %s)"), m_loginInfo->loginName, m_clientInfo);
+            response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
+         }
+         delete_and_null(m_loginInfo);
       }
-      delete_and_null(m_loginInfo);
    }
    else
    {
@@ -4380,8 +4469,8 @@ void ClientSession::validatePassword(const NXCPMessage& request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-   wchar_t password[256];
-   request.getFieldAsString(VID_PASSWORD, password, 256);
+   char password[256];
+   request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_userId, m_loginName, password, &isValid));
@@ -4402,10 +4491,10 @@ void ClientSession::setPassword(const NXCPMessage& request)
    uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_userId))     // User can change password for itself
    {
-      wchar_t newPassword[1024], oldPassword[1024];
-      request.getFieldAsString(VID_PASSWORD, newPassword, 256);
+      char newPassword[1024], oldPassword[1024];
+      request.getFieldAsUtf8String(VID_PASSWORD, newPassword, 256);
 		if (request.isFieldExist(VID_OLD_PASSWORD))
-			request.getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
+			request.getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 256);
 		else
 			oldPassword[0] = 0;
 
@@ -4427,7 +4516,6 @@ void ClientSession::setPassword(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
    sendMessage(response);
 }
 
@@ -5265,6 +5353,51 @@ static void ProcessAggregatedDataSelectResults(DB_UNBUFFERED_RESULT hResult, Cli
 }
 
 /**
+ * Process results from a tier read against the hourly or daily aggregate table.
+ *
+ * For AVG/MIN/MAX the wire shape matches the raw single-value path: bucket_start_ms + double.
+ * For MINMAX the row carries two doubles (min, max) and option bit 0x0004 signals that to clients.
+ * Option bit 0x0008 indicates a trailing int32 sample_count is appended to every row
+ * (always set by tier reads — the client uses it for hover tooltips).
+ */
+static void ProcessTieredDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
+         DciAggregationFunction function)
+{
+   bool minmax = (function == DCI_HAGG_MINMAX);
+   uint16_t options = (minmax ? 0x0004 : 0x0000) | 0x0008;
+
+   ByteStream data(32768);
+   data.writeB(static_cast<int32_t>(0));   // Placeholder for number of rows
+   data.writeB(static_cast<int16_t>(DCI_DT_FLOAT));   // Tier values are always double
+   data.writeB(options);
+
+   int32_t rows = 0;
+   while(DBFetch(hResult))
+   {
+      rows++;
+      data.writeB(DBGetFieldInt64(hResult, 0));     // bucket_start (ms)
+      data.writeB(DBGetFieldDouble(hResult, 1));    // first value (avg/min/max, or min when minmax)
+      int sampleCountColumn;
+      if (minmax)
+      {
+         data.writeB(DBGetFieldDouble(hResult, 2)); // max when minmax
+         sampleCountColumn = 3;
+      }
+      else
+      {
+         sampleCountColumn = 2;
+      }
+      data.writeB(static_cast<int32_t>(DBGetFieldLong(hResult, sampleCountColumn)));
+   }
+   data.seek(0, SEEK_SET);
+   data.writeB(rows);
+
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
+   session->sendRawMessage(msg);
+   MemFree(msg);
+}
+
+/**
  * Process results from SELECT statement for DCI data
  */
 static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
@@ -5447,10 +5580,19 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
 	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
 
+	// Phase 4 tier dispatch: explicit tier + function selection (defaults: AUTO + AVG).
+	// VID_TIME_FROM / VID_TIME_TO are already in milliseconds (matches Date.getTime() on Java side).
+	DciTier requestedTier = static_cast<DciTier>(request.getFieldAsInt16(VID_DCI_TIER));
+	DciAggregationFunction aggFunction = static_cast<DciAggregationFunction>(request.getFieldAsInt16(VID_DCI_AGG_FUNCTION));
+	int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
+	DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, dciType, timeFrom, timeTo,
+	         dcTarget.getRuntimeFlags(), autoSelectThreshold);
+
 	// Check if aggregation is applicable (only for numeric single-value DCIs)
 	bool useAggregation = (maxDataPoints > 0) && (dciType == DCO_TYPE_ITEM) &&
 	   (static_cast<DCItem&>(*dci).getTransformedDataType() != DCI_DT_STRING) &&
-	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom);
+	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom) &&
+	   (resolvedTier == DCI_TIER_RAW);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5529,6 +5671,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
       response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
       response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(DCI_TIER_RAW));
       sendMessage(response);
 
       int16_t dataType;
@@ -5584,10 +5727,29 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	}
 
 read_from_db:
-   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u)"), maxRows);
+   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u, tier = %d)"), maxRows, static_cast<int>(resolvedTier));
 
    TCHAR condition[256] = _T("");
-	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+      // Tier reads use bucket_start. On TSDB the unified views expose it as timestamptz;
+      // on other backends the per-object aggregate tables store it as BIGINT (ms).
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=ms_to_timestamptz(?)"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=ms_to_timestamptz(?)"));
+      }
+      else
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=?"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=?"));
+      }
+	}
+	else if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)
          _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=ms_to_timestamptz(?)") : _T(" AND idata_timestamp>=ms_to_timestamptz(?)"));
@@ -5606,7 +5768,11 @@ read_from_db:
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 	DB_STATEMENT hStmt;
-	if (useAggregation)
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+	   hStmt = PrepareTieredDataSelect(hdb, dcTarget.getId(), resolvedTier, aggFunction, maxRows, condition);
+	}
+	else if (useAggregation)
 	{
 	   int64_t bucketSizeMs = (timeTo - timeFrom) / maxDataPoints;
 	   if (bucketSizeMs < 1)
@@ -5656,9 +5822,12 @@ read_from_db:
 	      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
 	      response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
 	      response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+	      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(resolvedTier));
 	      sendMessage(response);
 
-			if (useAggregation)
+			if (resolvedTier != DCI_TIER_RAW)
+			   ProcessTieredDataSelectResults(hResult, this, request.getId(), aggFunction);
+			else if (useAggregation)
 			   ProcessAggregatedDataSelectResults(hResult, this, request.getId());
 			else if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());
@@ -12106,6 +12275,72 @@ void ClientSession::getServerFile(const NXCPMessage& request)
 	}
 
    sendMessage(&msg);
+}
+
+/**
+ * Send file referenced by file delivery policy back to client
+ */
+void ClientSession::getPolicyFile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t templateId = request.getFieldAsUInt32(VID_TEMPLATE_ID);
+   uuid policyGuid = request.getFieldAsGUID(VID_GUID);
+   uuid fileGuid = request.getFieldAsGUID(VID_POLICY_FILE_GUID);
+
+   shared_ptr<NetObj> templateObject = FindObjectById(templateId, OBJECT_TEMPLATE);
+   if (templateObject == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      sendMessage(response);
+      return;
+   }
+
+   if (!templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, templateId,
+            L"Access denied on download of file %s from policy %s",
+            fileGuid.toString().cstr(), policyGuid.toString().cstr());
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t storedName[64];
+   uint32_t rcc = static_cast<Template&>(*templateObject).resolvePolicyFile(policyGuid, fileGuid, storedName, sizeof(storedName) / sizeof(wchar_t));
+   if (rcc != RCC_SUCCESS)
+   {
+      response.setField(VID_RCC, rcc);
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t fname[MAX_PATH];
+   wcslcpy(fname, g_netxmsdDataDir, MAX_PATH);
+   wcslcat(fname, DDIR_FILES, MAX_PATH);
+   wcslcat(fname, FS_PATH_SEPARATOR, MAX_PATH);
+   wcslcat(fname, storedName, MAX_PATH);
+
+   debugPrintf(4, L"getPolicyFile: requested file %s", fname);
+   if (_waccess(fname, 0) != 0)
+   {
+      debugPrintf(5, L"getPolicyFile: file %s not found on disk", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+      sendMessage(response);
+      return;
+   }
+
+   if (SendFileOverNXCP(m_socket, request.getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
+   {
+      debugPrintf(5, L"getPolicyFile: file %s sent successfully", fname);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      debugPrintf(5, L"getPolicyFile: SendFileOverNXCP() failed for %s", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+   }
+   sendMessage(response);
 }
 
 /**

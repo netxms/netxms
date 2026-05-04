@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -998,18 +998,18 @@ void LDAPConnection::compareGroupList()
  * Converts given parameters to correct encoding, login to ldap and close connection.
  * This function should be used to check connection. As name should be given user dn.
  */
-uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const wchar_t *password)
+uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const char *password)
 {
    open();
    uint32_t result;
 #ifdef _WIN32
    wcslcpy(m_userDN, name, MAX_CONFIG_VALUE_LENGTH);
-   wcslcpy(m_userPassword, password, MAX_PASSWORD);
+   utf8_to_wchar(password, -1, m_userPassword, MAX_PASSWORD);
+   m_userPassword[MAX_PASSWORD - 1] = 0;
 #else
    wchar_to_utf8(name, -1, m_userDN, MAX_CONFIG_VALUE_LENGTH);
    m_userDN[MAX_CONFIG_VALUE_LENGTH - 1] = 0;
-   wchar_to_utf8(password, -1, m_userPassword, MAX_PASSWORD);
-   m_userPassword[MAX_PASSWORD - 1] = 0;
+   strlcpy(m_userPassword, password, MAX_PASSWORD);
 #endif
    result = login(false);
    close();
@@ -1211,7 +1211,7 @@ void LDAPConnection::syncUsers()
 /**
  * Login via LDAP - stub for server without LDAP support
  */
-uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
+uint32_t LDAPConnection::ldapUserLogin(const wchar_t *name, const char *password)
 {
    nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::ldapUserLogin(): FAILED - server was compiled without LDAP support"));
    return RCC_INTERNAL_ERROR;

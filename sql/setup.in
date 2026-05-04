@@ -293,6 +293,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.MessageOfTheDay','','',1,0,'S','Message to be shown when a user logs into the console.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Name','','',1,0,'S','Name of this server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.RoamingMode','1','1',1,0,'B','Enable/disable roaming mode for server (when server can be disconnected from one network and connected to another or IP address of the server can change).','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.2FA.TokenTimeout','120','120',1,0,'I','Time (in seconds) the user has to respond to a 2FA challenge before the client cancels the prompt. Set to 0 to disable the auto-cancel timer.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.2FA.TrustedDeviceTTL','0','0',1,0,'I','TTL in seconds for 2FA trusted device.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.CaseInsensitiveLoginNames','0','0',1,1,'B','Enable/disable case insensitive login names.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.ExtendedLogQueryAccessControl','0','0',1,0,'B','Enable/disable extended access control in log queries.','');
@@ -302,6 +303,9 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.MinPasswordLength','0','0',1,0,'I','Default minimum password length for a NetXMS user. The default applied only if per-user setting is not defined.','characters');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordComplexity','0','0',1,0,'I','Set of flags to enforce password complexity.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordExpiration','0','0',1,0,'I','Password expiration time in days. If set to 0, password expiration is disabled.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordHash.MemoryCostKB','65536','65536',1,0,'I','Argon2id memory cost in KiB used when hashing user passwords. Higher values strengthen resistance to GPU/ASIC cracking at the cost of login latency and server memory.','KB');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordHash.Parallelism','1','1',1,0,'I','Argon2id parallelism (lanes) used when hashing user passwords.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordHash.TimeCost','3','3',1,0,'I','Argon2id iteration count used when hashing user passwords.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.PasswordHistoryLength','0','0',1,0,'I','Number of previous passwords to keep. Users are not allowed to set password if it matches one from previous passwords list.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Server.Security.RestrictLocalConsoleAccess','1','1',1,0,'B','If enabled, restrict access to local server console only to authenticated users with server console access rights.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('SNMP.Agent.AllowedVersions','7','7',1,0,'I','A bitmask for SNMP versions allowed by built-in SNMP agent (sum the values to allow multiple versions at once): 1 = version 1, 2 = version 2c, 4 = version 3).','');
@@ -563,7 +567,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#Server=localhost' CONCAT CRLF CONCAT
       '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
       '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
-      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#VerifyPeer=yes' CONCAT CRLF CONCAT
       '#Login=' CONCAT CRLF CONCAT
       '#Password=' CONCAT CRLF CONCAT
       '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT
@@ -576,7 +580,7 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#Server=localhost' CONCAT CRLF CONCAT
       '#Port=25 # if TLSMode=TLS, default value is 465 else 25' CONCAT CRLF CONCAT
       '#TLSMode=NONE # NONE, TLS, STARTTLS' CONCAT CRLF CONCAT
-      '#AuthMethod=none # none,basic, digest, ntlm, negotiate' CONCAT CRLF CONCAT
+      '#VerifyPeer=yes' CONCAT CRLF CONCAT
       '#Login=' CONCAT CRLF CONCAT
       '#Password=' CONCAT CRLF CONCAT
       '#FromAddr=netxms@localhost' CONCAT CRLF CONCAT

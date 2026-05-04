@@ -936,6 +936,11 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
    {
       nxlog_write(NXLOG_INFO, _T("******* MARK *******"));
    }
+   else if (IsCommand(_T("LOGROTATE"), szBuffer, 4))
+   {
+      bool success = nxlog_rotate();
+      console->printf(L"Log rotation %s\n", success ? L"completed successfully" : L"failed");
+   }
    else if (IsCommand(_T("RAISE"), szBuffer, 5))
    {
       // Get argument
@@ -1451,7 +1456,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DBWRITER_HK_INTERLOCK));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
-         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_AGENT_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_ETHERNETIP_PROBE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V1_PROBE));
@@ -2178,6 +2182,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   ldapsync                          - Synchronize ldap users with local user database\n")
             _T("   log <text>                        - Write given text to server log file\n")
             _T("   logmark                           - Write marker ******* MARK ******* to server log file\n")
+            _T("   logrotate                         - Force server log file rotation\n")
             _T("   notify <session> <code> [<data>]  - Send notification message to client session\n")
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")

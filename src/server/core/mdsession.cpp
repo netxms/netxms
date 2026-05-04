@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -303,7 +303,8 @@ void MobileDeviceSession::sendServerInfo(uint32_t requestId)
  */
 void MobileDeviceSession::login(const NXCPMessage& request)
 {
-   TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
+   wchar_t szLogin[MAX_USER_NAME];
+   char password[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false, closeOtherSessions = false;
    UINT32 dwResult;
@@ -330,8 +331,8 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
-				request.getFieldAsString(VID_PASSWORD, szPassword, 256);
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_userId,
+				request.getFieldAsUtf8String(VID_PASSWORD, password, 256);
+				dwResult = AuthenticateUser(szLogin, password, 0, nullptr, nullptr, &m_userId,
 													 &userRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);
 				break;
@@ -343,7 +344,7 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 					const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
                if (signature != nullptr)
                {
-                  dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR *>(signature), sigLen,
+                  dwResult = AuthenticateUser(szLogin, reinterpret_cast<const char*>(signature), sigLen,
                      pCert, m_challenge, &m_userId, &userRights,
                      &changePasswd, &intruderLockout,
                      &closeOtherSessions, false, &graceLogins);
@@ -421,7 +422,6 @@ void MobileDeviceSession::login(const NXCPMessage& request)
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
 
-   // Send response
    sendMessage(msg);
 }
 

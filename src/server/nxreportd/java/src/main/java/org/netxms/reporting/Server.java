@@ -280,8 +280,23 @@ public final class Server implements Daemon
    public String getConfigurationProperty(String name, String defaultValue)
    {
       String value = configuration.getProperty(name);
-      logger.debug("Configuration property: {}={}", name, value != null ? value : "null");
-      return (value != null) ? value : configuration.getProperty(name + "@remote", defaultValue);
+      if (value == null)
+         value = configuration.getProperty(name + "@remote", defaultValue);
+      if (logger.isDebugEnabled())
+      {
+         String displayValue;
+         if (value == null)
+         {
+            displayValue = "null";
+         }
+         else
+         {
+            String lowerName = name.toLowerCase();
+            displayValue = (lowerName.contains("password") || lowerName.contains("secret") || lowerName.contains("token")) ? "********" : value;
+         }
+         logger.debug("Configuration property: {}={}", name, displayValue);
+      }
+      return value;
    }
 
    /**

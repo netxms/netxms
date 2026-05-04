@@ -178,7 +178,7 @@ public:
 #endif // WITH_LDAP
 
    void syncUsers();
-   uint32_t ldapUserLogin(const wchar_t *name, const wchar_t *password);
+   uint32_t ldapUserLogin(const wchar_t *name, const char *password);
 };
 
 /**
@@ -319,27 +319,41 @@ enum PasswordHashType
 {
    PWD_HASH_SHA1 = 0,
    PWD_HASH_SHA256 = 1,
-   PWD_HASH_DISABLED = 2
+   PWD_HASH_DISABLED = 2,
+   PWD_HASH_ARGON2ID = 3
 };
 
 /**
- * Password salt length
+ * Password salt length (legacy SHA-256 records)
  */
 #define PASSWORD_SALT_LENGTH  8
 
 /**
- * Password hash size
+ * Salt length for new Argon2id hashes
+ */
+#define ARGON2_SALT_LENGTH  16
+
+/**
+ * Encoded Argon2 PHC string buffer size (matches users.password varchar(127) + null terminator)
+ */
+#define ARGON2_ENCODED_LENGTH  128
+
+/**
+ * Password hash size (legacy types only)
  */
 #define PWD_HASH_SIZE(t) ((t == PWD_HASH_SHA256) ? SHA256_DIGEST_SIZE : ((t == PWD_HASH_SHA1) ? SHA1_DIGEST_SIZE : 0))
 
 /**
- * Hashed password
+ * Hashed password.
+ * For PWD_HASH_ARGON2ID the canonical representation is `encoded` (PHC string emitted by libargon2);
+ * `hash` and `salt` are unused. For legacy SHA-1/SHA-256 only `hash` (and `salt` for SHA-256) are used.
  */
 struct PasswordHash
 {
    PasswordHashType hashType;
    BYTE hash[SHA256_DIGEST_SIZE];
    BYTE salt[PASSWORD_SALT_LENGTH];
+   char encoded[ARGON2_ENCODED_LENGTH];
 };
 
 #ifdef _WIN32
@@ -407,9 +421,9 @@ public:
    const TCHAR *getPhoneNumber() const { return CHECK_NULL_EX(m_phoneNumber); }
    const TCHAR *getEmail() const { return CHECK_NULL_EX(m_email); }
 
-   bool validatePassword(const wchar_t *password);
+   bool validatePassword(const char *password, bool *rehash);
    void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
-   void setPassword(const wchar_t *password, bool clearChangePasswdFlag);
+   void setPassword(const char *password, bool clearChangePasswdFlag, bool resetGraceLogins);
    void increaseAuthFailures();
    void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
    void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
@@ -534,18 +548,49 @@ public:
 };
 
 /**
+ * RADIUS authentication result codes
+ */
+#define RADIUS_RESULT_OK         0  // Access-Accept
+#define RADIUS_RESULT_REJECT     1  // Access-Reject
+#define RADIUS_RESULT_CHALLENGE  2  // Access-Challenge
+#define RADIUS_RESULT_BAD_SERVER 3  // RADIUS server name cannot be resolved
+#define RADIUS_RESULT_TIMEOUT    7  // Timeout
+#define RADIUS_RESULT_ERROR      8  // Protocol error or unexpected response
+#define RADIUS_RESULT_NO_SERVER  10 // No RADIUS server configured
+
+/**
+ * RADIUS challenge data (attributes from Access-Challenge response)
+ */
+struct RADIUSChallengeData
+{
+   char replyMessage[1024];  // Reply-Message attribute (type 18), null-terminated UTF-8
+   BYTE state[253];          // State attribute (type 24), binary
+   size_t stateLength;       // Length of state data (0 if not present)
+   char serverName[256];     // RADIUS server that issued the challenge
+   bool useSecondary;        // Whether secondary server was used
+
+   RADIUSChallengeData()
+   {
+      replyMessage[0] = 0;
+      stateLength = 0;
+      serverName[0] = 0;
+      useSecondary = false;
+   }
+};
+
+/**
  * Functions
  */
 bool LoadUsers();
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId);
 void SendUserDBUpdate(uint16_t code, uint32_t id, UserDatabaseObject *object);
 void SendUserDBUpdate(uint16_t code, uint32_t id);
-uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
+uint32_t NXCORE_EXPORTABLE AuthenticateUser(const TCHAR *login, const char *password, size_t sigLen, void *pCert,
          BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
-         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
+         bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins, RADIUSChallengeData *radiusChallengeData = nullptr);
 
-uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const wchar_t *password, bool *isValid);
-uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const wchar_t *newPassword, const wchar_t *oldPassword, bool changeOwnPassword);
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const wchar_t *login, const char *password, bool *isValid);
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const char *newPassword, const char *oldPassword, bool changeOwnPassword);
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
 String NXCORE_EXPORTABLE GetEffectiveUIAccessRules(uint32_t userId);
 bool NXCORE_EXPORTABLE CheckUserMembership(uint32_t userId, uint32_t groupId);

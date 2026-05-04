@@ -25,6 +25,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -99,9 +100,13 @@ public class LoginDialog extends Dialog
    protected void configureShell(Shell shell)
    {
       super.configureShell(shell);
-      shell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getProductName()));
+      String title = BrandingManager.getProductName() + " - " + i18n.tr("Connect to Server");
+      shell.setText(title);
       shell.setMaximized(true);
       shell.setFullScreen(true);
+      JavaScriptExecutor js = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (js != null)
+         js.execute("document.title='" + title.replace("'", "\\'") + "';");
    }
 
    /**

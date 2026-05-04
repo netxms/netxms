@@ -18,8 +18,10 @@
 **
 ** File: dcagg.cpp
 **
-** DCI data aggregation (issue #419) - non-TSDB implementation.
-** TSDB uses native continuous aggregates and is handled separately.
+** DCI data aggregation (issue #419). Non-TSDB rollup is implemented in this
+** file directly; on TSDB the rollup is performed by per-storage-class
+** continuous aggregates whose refresh and retention policies are managed by
+** ReconcileTSDBAggregation() at server startup.
 **
 **/
 
@@ -78,6 +80,31 @@ static inline const wchar_t *GetIdataValueCastExpr()
          return L"CAST(idata_value AS DOUBLE)";
       default:
          return L"CAST(idata_value AS double precision)";
+   }
+}
+
+/**
+ * Predicate that excludes idata rows whose value cannot be cast to a number.
+ * A numeric DCI may still have empty-string rows (e.g. failed collections), and strict
+ * dialects (PostgreSQL, MSSQL, MySQL strict mode, Oracle, DB2) error on those casts.
+ * Mirrors the regex used by the TSDB continuous aggregates in sql/dbinit_tsdb.sql.
+ */
+static inline const wchar_t *GetIdataValueNumericFilter()
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         return L" AND idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
+      case DB_SYNTAX_MYSQL:
+         return L" AND idata_value REGEXP '^[-+]?[0-9]*\\\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_DB2:
+         return L" AND REGEXP_LIKE(idata_value, '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$')";
+      case DB_SYNTAX_MSSQL:
+         return L" AND TRY_CAST(idata_value AS float) IS NOT NULL";
+      default:
+         return L" AND idata_value<>''";
    }
 }
 
@@ -209,6 +236,7 @@ static inline int64_t FloorToBucket(int64_t timestampMs, int64_t bucketSizeMs)
 static void BuildRawBucketSelect(wchar_t *query, size_t size, uint32_t objectId, int64_t bucketSizeMs)
 {
    const wchar_t *castExpr = GetIdataValueCastExpr();
+   const wchar_t *numericFilter = GetIdataValueNumericFilter();
 
    switch(g_dbSyntax)
    {
@@ -216,33 +244,33 @@ static void BuildRawBucketSelect(wchar_t *query, size_t size, uint32_t objectId,
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp DIV " INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY 1 ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter);
          break;
       case DB_SYNTAX_ORACLE:
          nx_swprintf(query, size,
             L"SELECT TRUNC(idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY TRUNC(idata_timestamp/" INT64_FMT L")*" INT64_FMT L" ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, bucketSizeMs, bucketSizeMs);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter, bucketSizeMs, bucketSizeMs);
          break;
       case DB_SYNTAX_MSSQL:
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY (idata_timestamp/" INT64_FMT L")*" INT64_FMT L" ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, bucketSizeMs, bucketSizeMs);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter, bucketSizeMs, bucketSizeMs);
          break;
       default:
          nx_swprintf(query, size,
             L"SELECT (idata_timestamp/" INT64_FMT L")*" INT64_FMT L","
             L"MIN(%s),MAX(%s),AVG(%s),COUNT(*) "
-            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<? "
+            L"FROM idata_%u WHERE item_id=? AND idata_timestamp>=? AND idata_timestamp<?%s "
             L"GROUP BY 1 ORDER BY 1",
-            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId);
+            bucketSizeMs, bucketSizeMs, castExpr, castExpr, castExpr, objectId, numericFilter);
          break;
    }
 }
@@ -681,8 +709,7 @@ void DailyDataAggregationRollup(const shared_ptr<ScheduledTaskParameters>& param
  * table. Honors per-DCI retention overrides by grouping DCIs with the same retention
  * into partitioned DELETE statements.
  */
-static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, bool hourly,
-         int32_t defaultRetentionDays, int64_t nowMs)
+static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, bool hourly, int32_t defaultRetentionDays, int64_t nowMs)
 {
    uint32_t runtimeFlag = hourly ? ODF_HAS_IDATA_1H_TABLE : ODF_HAS_IDATA_1D_TABLE;
    if (!(target->getRuntimeFlags() & runtimeFlag))
@@ -724,10 +751,15 @@ static void PruneAggregateTable(DB_HANDLE hdb, DataCollectionTarget *target, boo
             return _CONTINUE;   // 0 or negative means "keep forever"
 
          int64_t cutoff = nowMs - static_cast<int64_t>(retentionDays) * ONE_DAY_MS;
-         wchar_t query[512];
-         nx_swprintf(query, 512,
-            L"DELETE FROM idata_%s_%u WHERE bucket_start<" INT64_FMT L" AND item_id IN (%s)",
-            suffix, targetId, cutoff, idList->cstr());
+         StringBuffer query(L"DELETE FROM idata_");
+         query.append(suffix);
+         query.append(L'_');
+         query.append(targetId);
+         query.append(L" WHERE bucket_start<");
+         query.append(cutoff);
+         query.append(L" AND item_id IN (");
+         query.append(*idList);
+         query.append(L')');
          DBQuery(hdb, query);
          return _CONTINUE;
       });
@@ -760,4 +792,162 @@ void CleanDCIAggregates(DB_HANDLE hdb)
       PruneAggregateTable(hdb, target, false, dailyRetention, nowMs);
       ThrottleHousekeeper();
    }
+}
+
+/**
+ * Storage classes used for per-class continuous aggregates on TSDB. Order and
+ * names must match sql/schema.in and DCObject::getStorageClassName.
+ */
+static constexpr DCObjectStorageClass s_tsdbStorageClasses[] = {
+   DCObjectStorageClass::DEFAULT,
+   DCObjectStorageClass::BELOW_7,
+   DCObjectStorageClass::BELOW_30,
+   DCObjectStorageClass::BELOW_90,
+   DCObjectStorageClass::BELOW_180,
+   DCObjectStorageClass::OTHER
+};
+
+/**
+ * Detach refresh policies from all TSDB continuous aggregates. Retention
+ * policies are intentionally left in place so chunks continue to age out
+ * even when the master switch is off.
+ */
+static void DetachTSDBRefreshPolicies(DB_HANDLE hdb)
+{
+   wchar_t query[256];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"SELECT remove_continuous_aggregate_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 256, L"SELECT remove_continuous_aggregate_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+   }
+}
+
+/**
+ * Attach refresh and retention policies to all TSDB continuous aggregates,
+ * picking up current configuration values. Always remove-then-add so changes
+ * to the relevant config variables land on the next server restart.
+ */
+static void AttachTSDBPolicies(DB_HANDLE hdb)
+{
+   int refreshStartOffset = ConfigReadInt(L"DataCollection.Aggregation.TSDB.RefreshStartOffset", 30);
+   int refreshSchedule = ConfigReadInt(L"DataCollection.Aggregation.TSDB.RefreshScheduleInterval", 600);
+   int hourlyRetention = ConfigReadInt(L"DataCollection.Aggregation.DefaultHourlyRetentionTime", 365);
+   int dailyRetention = ConfigReadInt(L"DataCollection.Aggregation.DefaultDailyRetentionTime", 1825);
+
+   wchar_t query[512];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+
+      nx_swprintf(query, 512, L"SELECT remove_continuous_aggregate_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_continuous_aggregate_policy('idata_1h_sc_%ls', "
+         L"start_offset => INTERVAL '%d days', "
+         L"end_offset => INTERVAL '1 hour', "
+         L"schedule_interval => INTERVAL '%d seconds')",
+         cls, refreshStartOffset, refreshSchedule);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_continuous_aggregate_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_continuous_aggregate_policy('idata_1d_sc_%ls', "
+         L"start_offset => INTERVAL '%d days', "
+         L"end_offset => INTERVAL '1 day', "
+         L"schedule_interval => INTERVAL '%d seconds')",
+         cls, refreshStartOffset, refreshSchedule);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_retention_policy('idata_1h_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_retention_policy('idata_1h_sc_%ls', drop_after => INTERVAL '%d days')",
+         cls, hourlyRetention);
+      DBQuery(hdb, query);
+
+      nx_swprintf(query, 512, L"SELECT remove_retention_policy('idata_1d_sc_%ls', if_exists => true)", cls);
+      DBQuery(hdb, query);
+      nx_swprintf(query, 512,
+         L"SELECT add_retention_policy('idata_1d_sc_%ls', drop_after => INTERVAL '%d days')",
+         cls, dailyRetention);
+      DBQuery(hdb, query);
+   }
+}
+
+/**
+ * One-shot backfill that materializes all existing raw history into the
+ * continuous aggregates. Runs in a worker thread because on large installs
+ * it can take hours; the user-visible side effect is elevated DB load.
+ */
+static void BackfillTSDBAggregates()
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Backfilling TSDB continuous aggregates");
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   wchar_t query[256];
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1h_sc_%ls', NULL, now())", cls);
+      DBQuery(hdb, query);
+   }
+   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
+      nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1d_sc_%ls', NULL, now())", cls);
+      DBQuery(hdb, query);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB continuous aggregate backfill complete");
+}
+
+/**
+ * Reconcile TSDB-side aggregation state with the master switch. Called once
+ * during server startup. Aggregation.Enabled is need_server_restart=1 so we
+ * don't track its value at runtime - flipping the switch and restarting the
+ * server is the supported way to enable or disable aggregation.
+ *
+ * Detects the enable transition by checking whether a refresh policy is
+ * already attached on idata_1h_sc_default; if not and BackfillOnEnable is
+ * true, queues a one-shot backfill in a worker thread.
+ */
+void ReconcileTSDBAggregation()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return;
+
+   bool enabled = ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool policyAttached = false;
+   DB_RESULT hResult = DBSelect(hdb,
+      L"SELECT count(*) FROM timescaledb_information.jobs "
+      L"WHERE proc_name='policy_refresh_continuous_aggregate' "
+      L"AND hypertable_name='idata_1h_sc_default'");
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         policyAttached = (DBGetFieldLong(hResult, 0, 0) > 0);
+      DBFreeResult(hResult);
+   }
+
+   if (enabled)
+   {
+      AttachTSDBPolicies(hdb);
+      bool firstEnable = !policyAttached;
+      if (firstEnable && ConfigReadBoolean(L"DataCollection.Aggregation.BackfillOnEnable", true))
+         ThreadPoolExecute(g_mainThreadPool, BackfillTSDBAggregates);
+      nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB aggregation enabled%s", firstEnable ? L" (initial activation)" : L"");
+   }
+   else if (policyAttached)
+   {
+      DetachTSDBRefreshPolicies(hdb);
+      nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB aggregation refresh policies detached");
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
 }

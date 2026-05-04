@@ -28,6 +28,7 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
@@ -176,7 +177,11 @@ public class MainWindow extends Window implements MessageAreaHolder
       super.configureShell(shell);
 
       final NXCSession session = Registry.getSession();
-      shell.setText(String.format(i18n.tr("%s - %s"), BrandingManager.getClientProductName(), session.getUserName() + "@" + session.getServerAddress()));
+      String title = String.format(i18n.tr("%s - %s"), BrandingManager.getClientProductName(), session.getUserName() + "@" + session.getServerAddress());
+      shell.setText(title);
+      JavaScriptExecutor js = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (js != null)
+         js.execute("document.title='" + title.replace("'", "\\'") + "';");
 
       final SessionListener sessionListener = (n) -> processSessionNotification(n);
       session.addListener(sessionListener);

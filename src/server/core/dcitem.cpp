@@ -957,6 +957,9 @@ void DCItem::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_UNITS_NAME, m_unitName);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
    pMsg->setField(VID_AI_HINT, m_aiHint);
+   pMsg->setField(VID_DCI_AGGREGATION_MODE, static_cast<uint16_t>(m_aggregationMode));
+   pMsg->setField(VID_DCI_HOURLY_RETENTION, m_hourlyRetention);
+   pMsg->setField(VID_DCI_DAILY_RETENTION, m_dailyRetention);
 	if (m_thresholds != nullptr)
 	{
 		pMsg->setField(VID_NUM_THRESHOLDS, static_cast<uint32_t>(m_thresholds->size()));
@@ -1040,6 +1043,12 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
 	m_allThresholdsRearmEvent = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
 	m_aiHint = msg.getFieldAsSharedString(VID_AI_HINT);
+	if (msg.isFieldExist(VID_DCI_AGGREGATION_MODE))
+	   m_aggregationMode = static_cast<BYTE>(msg.getFieldAsUInt16(VID_DCI_AGGREGATION_MODE));
+	if (msg.isFieldExist(VID_DCI_HOURLY_RETENTION))
+	   m_hourlyRetention = msg.getFieldAsInt32(VID_DCI_HOURLY_RETENTION);
+	if (msg.isFieldExist(VID_DCI_DAILY_RETENTION))
+	   m_dailyRetention = msg.getFieldAsInt32(VID_DCI_DAILY_RETENTION);
 
    // Update thresholds
    uint32_t numThresholds = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
@@ -2732,6 +2741,18 @@ bool DCItem::deleteAllData()
       _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%u"), m_ownerId, m_id);
    }
 	bool success = DBQuery(hdb, query);
+   if (success && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      // Drop matching rows from per-storage-class aggregate continuous aggregates
+      const wchar_t *cls = getStorageClassName(getStorageClass());
+      _sntprintf(query, 256, _T("DELETE FROM idata_1h_sc_%s WHERE item_id=%u"), cls, m_id);
+      success = DBQuery(hdb, query);
+      if (success)
+      {
+         _sntprintf(query, 256, _T("DELETE FROM idata_1d_sc_%s WHERE item_id=%u"), cls, m_id);
+         success = DBQuery(hdb, query);
+      }
+   }
 	clearCache();
 	updateCacheSizeInternal(true);
    unlock();

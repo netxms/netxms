@@ -792,6 +792,7 @@ enum SessionState
 #define RCC_EPP_CONFLICT                  ((uint32_t)186)
 #define RCC_2FA_SETUP_MANDATORY           ((uint32_t)187)
 #define RCC_TEMPLATE_EXCLUSION_CONFLICT   ((uint32_t)188)
+#define RCC_RADIUS_ACCESS_CHALLENGE       ((uint32_t)189)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -240,6 +240,18 @@ public class SortableTableViewer extends TableViewer
       packColumns(false);
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.AbstractTableViewer#internalRefresh(java.lang.Object, boolean)
+    */
+   @Override
+   protected void internalRefresh(Object element, boolean updateLabels)
+   {
+      super.internalRefresh(element, updateLabels);
+      // refresh() in viewers that call setInput() once and then drive updates via refresh()
+      // would otherwise leave columns at their initial (often empty-input) packed widths
+      packColumns(false);
+   }
+
 	/**
 	 * Pack columns unconditionally (equivalent to {@link #packColumns(boolean) packColumns(true)}).
 	 */
@@ -271,6 +283,8 @@ public class SortableTableViewer extends TableViewer
             // otherwise pack() on some platforms won't shrink columns that were previously wider.
             c.setWidth(0);
             c.pack();
+            // Add some padding for better readability
+            c.setWidth(c.getWidth() + 4);
          }
       }
 	   if (!Registry.IS_WEB_CLIENT)

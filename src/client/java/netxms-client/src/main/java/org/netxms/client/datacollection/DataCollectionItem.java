@@ -23,6 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.DciAggregationMode;
 
 /**
  * Data Collection Item representation
@@ -76,6 +77,9 @@ public class DataCollectionItem extends DataCollectionObject
    private List<Threshold> thresholds;
    private int allThresholdsRearmEvent;
    private String aiHint;
+   private DciAggregationMode aggregationMode;
+   private int hourlyRetention;
+   private int dailyRetention;
 
 	/**
 	 * Create data collection item object from NXCP message
@@ -97,6 +101,9 @@ public class DataCollectionItem extends DataCollectionObject
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
       allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
       aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
+      aggregationMode = DciAggregationMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_AGGREGATION_MODE));
+      hourlyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION);
+      dailyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DAILY_RETENTION);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -126,6 +133,9 @@ public class DataCollectionItem extends DataCollectionObject
 		unitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
       allThresholdsRearmEvent = 0;
+      aggregationMode = DciAggregationMode.INHERIT;
+      hourlyRetention = 0;
+      dailyRetention = 0;
 		thresholds = new ArrayList<Threshold>(0);
 	}
 
@@ -178,6 +188,9 @@ public class DataCollectionItem extends DataCollectionObject
       snmpRawValueType = src.snmpRawValueType;
       allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       aiHint = src.aiHint;
+      aggregationMode = src.aggregationMode;
+      hourlyRetention = src.hourlyRetention;
+      dailyRetention = src.dailyRetention;
       thresholds = new ArrayList<Threshold>(src.thresholds);
    }
 
@@ -201,6 +214,9 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
       msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
       msg.setField(NXCPCodes.VID_AI_HINT, aiHint);
+      msg.setFieldInt16(NXCPCodes.VID_DCI_AGGREGATION_MODE, (aggregationMode != null) ? aggregationMode.getValue() : DciAggregationMode.INHERIT.getValue());
+      msg.setFieldInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION, hourlyRetention);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_DAILY_RETENTION, dailyRetention);
 
 		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
@@ -594,5 +610,59 @@ public class DataCollectionItem extends DataCollectionObject
    public void setAiHint(String aiHint)
    {
       this.aiHint = aiHint;
+   }
+
+   /**
+    * Get per-DCI aggregation mode override (INHERIT defers to global switch).
+    *
+    * @return aggregation mode
+    */
+   public DciAggregationMode getAggregationMode()
+   {
+      return (aggregationMode != null) ? aggregationMode : DciAggregationMode.INHERIT;
+   }
+
+   /**
+    * @param aggregationMode aggregation mode to set
+    */
+   public void setAggregationMode(DciAggregationMode aggregationMode)
+   {
+      this.aggregationMode = aggregationMode;
+   }
+
+   /**
+    * Get per-DCI hourly aggregate retention override in days. 0 means use the global default.
+    *
+    * @return hourly retention override in days, or 0 for default
+    */
+   public int getHourlyRetention()
+   {
+      return hourlyRetention;
+   }
+
+   /**
+    * @param hourlyRetention hourly retention in days, or 0 to use default
+    */
+   public void setHourlyRetention(int hourlyRetention)
+   {
+      this.hourlyRetention = hourlyRetention;
+   }
+
+   /**
+    * Get per-DCI daily aggregate retention override in days. 0 means use the global default.
+    *
+    * @return daily retention override in days, or 0 for default
+    */
+   public int getDailyRetention()
+   {
+      return dailyRetention;
+   }
+
+   /**
+    * @param dailyRetention daily retention in days, or 0 to use default
+    */
+   public void setDailyRetention(int dailyRetention)
+   {
+      this.dailyRetention = dailyRetention;
    }
 }

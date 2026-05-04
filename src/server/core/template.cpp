@@ -757,6 +757,37 @@ bool Template::fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) cons
 }
 
 /**
+ * Resolve on-disk file name for a file referenced by file delivery policy.
+ * Returns RCC_SUCCESS and writes "FileDelivery-<guid>" to outName if found.
+ */
+uint32_t Template::resolvePolicyFile(const uuid& policyGuid, const uuid& fileGuid, wchar_t *outName, size_t outNameSize) const
+{
+   shared_ptr<GenericAgentPolicy> policy;
+   lockProperties();
+   for (int i = 0; i < m_policyList.size(); i++)
+   {
+      if (m_policyList.get(i)->getGuid().equals(policyGuid))
+      {
+         policy = m_policyList.getShared(i);
+         break;
+      }
+   }
+   unlockProperties();
+
+   if (policy == nullptr)
+      return RCC_INVALID_POLICY_ID;
+
+   if (wcscmp(policy->getType(), L"FileDelivery") != 0)
+      return RCC_INVALID_POLICY_ID;
+
+   if (!static_cast<FileDeliveryPolicy*>(policy.get())->hasFile(fileGuid))
+      return RCC_INVALID_REQUEST;
+
+   nx_swprintf(outName, outNameSize, L"FileDelivery-%s", fileGuid.toString().cstr());
+   return RCC_SUCCESS;
+}
+
+/**
  * Fill NXCP message with data for all policies
  */
 void Template::fillPolicyListMessage(NXCPMessage *msg) const

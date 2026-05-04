@@ -209,6 +209,10 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
    switch(arg[0])
    {
       case 'A':
+      case 'B':
+      case 'H':
+      case 'R':
+      case 'W':
          AgentGetParameterArgA(param, 2, customPathBuffer, 2048);
          jsonPath = customPathBuffer;
          break;
@@ -278,32 +282,47 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
    LONG rc;
    json_t *element = json_object_get_by_path_a(root, jsonPath);
-   if ((element == nullptr) && (arg[0] == 'A'))
+   if (element == nullptr)
    {
-      // check for attribute name in ata_smart_attributes
-      json_t *attributes = json_object_get_by_path_a(root, "ata_smart_attributes/table");
-      if (json_is_array(attributes))
+      const char *attrField;
+      switch(arg[0])
       {
-         size_t i;
-         json_t *attr;
-         json_array_foreach(attributes, i, attr)
-         {
-            const char *name = json_object_get_string_utf8(attr, "name", nullptr);
-            if ((name != nullptr) && (strcmp(name, jsonPath) == 0))
-            {
-               element = json_object_get_by_path_a(attr, "value");
-               break;
-            }
-         }
+         case 'A': attrField = "value"; break;
+         case 'B': attrField = "raw/string"; break;
+         case 'H': attrField = "thresh"; break;
+         case 'R': attrField = "raw/value"; break;
+         case 'W': attrField = "worst"; break;
+         default:  attrField = nullptr; break;
       }
 
-      // check for attribute name in nvme_smart_health_information_log
-      if (element == nullptr)
+      if (attrField != nullptr)
       {
-         json_t *nvmeLog = json_object_get_by_path_a(root, "nvme_smart_health_information_log");
-         if (json_is_object(nvmeLog))
+         // check for attribute name in ata_smart_attributes
+         json_t *attributes = json_object_get_by_path_a(root, "ata_smart_attributes/table");
+         if (json_is_array(attributes))
          {
-            element = json_object_get(nvmeLog, jsonPath);
+            size_t i;
+            json_t *attr;
+            json_array_foreach(attributes, i, attr)
+            {
+               const char *name = json_object_get_string_utf8(attr, "name", nullptr);
+               if ((name != nullptr) && (strcmp(name, jsonPath) == 0))
+               {
+                  element = json_object_get_by_path_a(attr, attrField);
+                  break;
+               }
+            }
+         }
+
+         // check for attribute name in nvme_smart_health_information_log (only makes
+         // sense for normalized value; NVMe log has no worst/threshold/raw fields)
+         if ((element == nullptr) && (arg[0] == 'A'))
+         {
+            json_t *nvmeLog = json_object_get_by_path_a(root, "nvme_smart_health_information_log");
+            if (json_is_object(nvmeLog))
+            {
+               element = json_object_get(nvmeLog, jsonPath);
+            }
          }
       }
    }
