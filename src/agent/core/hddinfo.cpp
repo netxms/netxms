@@ -297,7 +297,13 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
       if (attrField != nullptr)
       {
-         // check for attribute name in ata_smart_attributes
+         // The attribute reference can be either a numeric SMART attribute ID
+         // (1..255 - portable across vendors) or a smartctl attribute name
+         // (vendor-specific via the smartctl drivedb).
+         char *endp;
+         long attrId = strtol(jsonPath, &endp, 10);
+         bool useId = (*jsonPath != 0) && (*endp == 0) && (attrId >= 1) && (attrId <= 255);
+
          json_t *attributes = json_object_get_by_path_a(root, "ata_smart_attributes/table");
          if (json_is_array(attributes))
          {
@@ -305,8 +311,17 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
             json_t *attr;
             json_array_foreach(attributes, i, attr)
             {
-               const char *name = json_object_get_string_utf8(attr, "name", nullptr);
-               if ((name != nullptr) && (strcmp(name, jsonPath) == 0))
+               bool match;
+               if (useId)
+               {
+                  match = (json_object_get_int32(attr, "id", -1) == attrId);
+               }
+               else
+               {
+                  const char *name = json_object_get_string_utf8(attr, "name", nullptr);
+                  match = (name != nullptr) && (strcmp(name, jsonPath) == 0);
+               }
+               if (match)
                {
                   element = json_object_get_by_path_a(attr, attrField);
                   break;
@@ -316,7 +331,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
          // check for attribute name in nvme_smart_health_information_log (only makes
          // sense for normalized value; NVMe log has no worst/threshold/raw fields)
-         if ((element == nullptr) && (arg[0] == 'A'))
+         if ((element == nullptr) && (arg[0] == 'A') && !useId)
          {
             json_t *nvmeLog = json_object_get_by_path_a(root, "nvme_smart_health_information_log");
             if (json_is_object(nvmeLog))
