@@ -1320,7 +1320,8 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
-    * Receive a view from another folder via drag-and-drop.
+    * Receive a view from another folder via drag-and-drop. Closeable (ad-hoc) views
+    * are moved; non-closeable (permanent) views are copied so the original stays in place.
     *
     * @param sourceView view being dragged
     * @param sourceFolder folder the view is coming from
@@ -1342,8 +1343,8 @@ public class ViewFolder extends ViewContainer
       tabFolder.setSelection(tabItem);
       activateView(clone, tabItem);
 
-      // Remove from source folder
-      sourceFolder.detachAndDisposeView(sourceView);
+      if (sourceView.isCloseable())
+         sourceFolder.detachAndDisposeView(sourceView);
    }
 
    /**

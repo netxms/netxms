@@ -360,8 +360,7 @@ public abstract class Perspective
          mainFolder = new ViewFolder(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false, configuration.enableViewHide);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
-         if (configuration.enableTabDragAndDrop)
-            mainFolder.setEnableTabDragAndDrop(true);
+         mainFolder.setEnableTabDragAndDrop(true);
          if (configuration.hasHeaderArea)
             mainFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }

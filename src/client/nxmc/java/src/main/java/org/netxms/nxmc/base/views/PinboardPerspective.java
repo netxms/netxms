@@ -61,7 +61,6 @@ public class PinboardPerspective extends Perspective
       configuration.useGlobalViewId = true;
       configuration.ignoreViewContext = true;
       configuration.enableViewHide = false;
-      configuration.enableTabDragAndDrop = true;
       configuration.keyboardShortcut = new KeyStroke(SWT.F12);
    }
 
