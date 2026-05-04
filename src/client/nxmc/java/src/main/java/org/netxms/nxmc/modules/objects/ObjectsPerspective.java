@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
@@ -195,18 +196,19 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
 
    /**
-    * Create new object perspective. If object filter is provided, as top level objects will be selected objects that passed filter
+    * Create new object perspective with a lazily-evaluated display name.
+    * If object filter is provided, as top level objects will be selected objects that passed filter
     * themselves and does not have accessible parents at all or none of their parents passed filter.
     *
     * @param id perspective ID
-    * @param name perspective name
+    * @param nameSupplier supplier that returns the perspective display name
     * @param imagePath path to perspective SVG image resource
     * @param subtreeType object subtree type
     * @param objectFilter additional filter for top level objects (optional, can be null)
     */
-   protected ObjectsPerspective(String id, String name, String imagePath, SubtreeType subtreeType, ObjectFilter objectFilter)
+   protected ObjectsPerspective(String id, Supplier<String> nameSupplier, String imagePath, SubtreeType subtreeType, ObjectFilter objectFilter)
    {
-      super(id, name, imagePath);
+      super(id, nameSupplier, imagePath);
       this.subtreeType = subtreeType;
       this.objectFilter = objectFilter;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");

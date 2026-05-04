@@ -42,7 +42,7 @@ public class MonitorPerspective extends Perspective
     */
    public MonitorPerspective()
    {
-      super("monitor", LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), "icons/perspectives/monitor.svg");
+      super("monitor", () -> LocalizationHelper.getI18n(MonitorPerspective.class).tr("Monitor"), "icons/perspectives/monitor.svg");
 
       ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
       for(MonitorDescriptor e : loader)

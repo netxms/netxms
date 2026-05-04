@@ -27,11 +27,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MapsPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(MapsPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(MapsPerspective.class);
 
    public MapsPerspective()
    {
-      super("objects.maps", i18n.tr("Maps"), "icons/perspectives/maps.svg", SubtreeType.MAPS, null);
+      super("objects.maps", () -> LocalizationHelper.getI18n(MapsPerspective.class).tr("Maps"), "icons/perspectives/maps.svg", SubtreeType.MAPS, null);
    }
 
    /**

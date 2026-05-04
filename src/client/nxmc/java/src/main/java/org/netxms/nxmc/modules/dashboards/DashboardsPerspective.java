@@ -29,11 +29,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DashboardsPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(DashboardsPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(DashboardsPerspective.class);
 
    public DashboardsPerspective()
    {
-      super("objects.dashboards", i18n.tr("Dashboards"), "icons/perspectives/dashboards.svg", SubtreeType.DASHBOARDS, null);
+      super("objects.dashboards", () -> LocalizationHelper.getI18n(DashboardsPerspective.class).tr("Dashboards"), "icons/perspectives/dashboards.svg", SubtreeType.DASHBOARDS, null);
    }
 
    /**

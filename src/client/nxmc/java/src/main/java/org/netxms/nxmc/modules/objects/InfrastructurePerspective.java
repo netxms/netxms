@@ -27,14 +27,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InfrastructurePerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(InfrastructurePerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(InfrastructurePerspective.class);
 
    /**
     * Create "Infrastructure" perspective
     */
    public InfrastructurePerspective()
    {
-      super("objects.infrastructure", i18n.tr("Infrastructure"), "icons/perspectives/infrastructure.svg", 
+      super("objects.infrastructure", () -> LocalizationHelper.getI18n(InfrastructurePerspective.class).tr("Infrastructure"), "icons/perspectives/infrastructure.svg",
             SubtreeType.INFRASTRUCTURE, new InfrastructureObjectFilter());
    }
 

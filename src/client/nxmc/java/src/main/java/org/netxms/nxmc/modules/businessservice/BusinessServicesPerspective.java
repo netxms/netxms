@@ -25,15 +25,15 @@ import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Dashboards" perspective
+ * "Business Services" perspective
  */
 public class BusinessServicesPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(BusinessServicesPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(BusinessServicesPerspective.class);
 
    public BusinessServicesPerspective()
    {
-      super("objects.business-services", i18n.tr("Business Services"), "icons/perspectives/business-services.svg", SubtreeType.BUSINESS_SERVICES, null);
+      super("objects.business-services", () -> LocalizationHelper.getI18n(BusinessServicesPerspective.class).tr("Business Services"), "icons/perspectives/business-services.svg", SubtreeType.BUSINESS_SERVICES, null);
    }
 
    /**
