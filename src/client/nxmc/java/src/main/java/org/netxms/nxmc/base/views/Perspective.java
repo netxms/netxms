@@ -251,7 +251,7 @@ public abstract class Perspective
    {
       if ((content == null) || content.isDisposed())
       {
-         logger.debug("Creating content for perspective " + getName());
+         logger.debug("Creating content for perspective " + nameSupplier.get());
          createWidgets(parent);
       }
       else
