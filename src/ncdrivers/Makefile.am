@@ -124,6 +124,11 @@ smtp_la_SOURCES = smtp/smtp.cpp
 smtp_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
 smtp_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
 smtp_la_LIBADD = ../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+smtp_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+smtp_la_LIBADD += -ljansson
+endif
 
 snmptrap_la_SOURCES = snmptrap/snmptrap.cpp
 snmptrap_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build

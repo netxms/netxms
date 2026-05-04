@@ -1867,6 +1867,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_AGENT_POLICY:
          deletePolicy(*request);
          break;
+      case CMD_GET_POLICY_FILE:
+         getPolicyFile(*request);
+         break;
       case CMD_GET_DEPENDENT_NODES:
          getDependentNodes(*request);
          break;
@@ -5350,6 +5353,51 @@ static void ProcessAggregatedDataSelectResults(DB_UNBUFFERED_RESULT hResult, Cli
 }
 
 /**
+ * Process results from a tier read against the hourly or daily aggregate table.
+ *
+ * For AVG/MIN/MAX the wire shape matches the raw single-value path: bucket_start_ms + double.
+ * For MINMAX the row carries two doubles (min, max) and option bit 0x0004 signals that to clients.
+ * Option bit 0x0008 indicates a trailing int32 sample_count is appended to every row
+ * (always set by tier reads — the client uses it for hover tooltips).
+ */
+static void ProcessTieredDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
+         DciAggregationFunction function)
+{
+   bool minmax = (function == DCI_HAGG_MINMAX);
+   uint16_t options = (minmax ? 0x0004 : 0x0000) | 0x0008;
+
+   ByteStream data(32768);
+   data.writeB(static_cast<int32_t>(0));   // Placeholder for number of rows
+   data.writeB(static_cast<int16_t>(DCI_DT_FLOAT));   // Tier values are always double
+   data.writeB(options);
+
+   int32_t rows = 0;
+   while(DBFetch(hResult))
+   {
+      rows++;
+      data.writeB(DBGetFieldInt64(hResult, 0));     // bucket_start (ms)
+      data.writeB(DBGetFieldDouble(hResult, 1));    // first value (avg/min/max, or min when minmax)
+      int sampleCountColumn;
+      if (minmax)
+      {
+         data.writeB(DBGetFieldDouble(hResult, 2)); // max when minmax
+         sampleCountColumn = 3;
+      }
+      else
+      {
+         sampleCountColumn = 2;
+      }
+      data.writeB(static_cast<int32_t>(DBGetFieldLong(hResult, sampleCountColumn)));
+   }
+   data.seek(0, SEEK_SET);
+   data.writeB(rows);
+
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_DCI_DATA, requestId, 0, data.buffer(), data.size(), nullptr, session->isCompressionEnabled());
+   session->sendRawMessage(msg);
+   MemFree(msg);
+}
+
+/**
  * Process results from SELECT statement for DCI data
  */
 static void ProcessDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
@@ -5532,10 +5580,19 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	int64_t timeFrom = request.getFieldAsInt64(VID_TIME_FROM);
 	int64_t timeTo = request.getFieldAsInt64(VID_TIME_TO);
 
+	// Phase 4 tier dispatch: explicit tier + function selection (defaults: AUTO + AVG).
+	// VID_TIME_FROM / VID_TIME_TO are already in milliseconds (matches Date.getTime() on Java side).
+	DciTier requestedTier = static_cast<DciTier>(request.getFieldAsInt16(VID_DCI_TIER));
+	DciAggregationFunction aggFunction = static_cast<DciAggregationFunction>(request.getFieldAsInt16(VID_DCI_AGG_FUNCTION));
+	int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
+	DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, dciType, timeFrom, timeTo,
+	         dcTarget.getRuntimeFlags(), autoSelectThreshold);
+
 	// Check if aggregation is applicable (only for numeric single-value DCIs)
 	bool useAggregation = (maxDataPoints > 0) && (dciType == DCO_TYPE_ITEM) &&
 	   (static_cast<DCItem&>(*dci).getTransformedDataType() != DCI_DT_STRING) &&
-	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom);
+	   (timeFrom != 0) && (timeTo != 0) && (timeTo > timeFrom) &&
+	   (resolvedTier == DCI_TIER_RAW);
 
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
@@ -5614,6 +5671,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
       response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
       response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(DCI_TIER_RAW));
       sendMessage(response);
 
       int16_t dataType;
@@ -5669,10 +5727,29 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
 	}
 
 read_from_db:
-   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u)"), maxRows);
+   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %u, tier = %d)"), maxRows, static_cast<int>(resolvedTier));
 
    TCHAR condition[256] = _T("");
-	if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+      // Tier reads use bucket_start. On TSDB the unified views expose it as timestamptz;
+      // on other backends the per-object aggregate tables store it as BIGINT (ms).
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=ms_to_timestamptz(?)"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=ms_to_timestamptz(?)"));
+      }
+      else
+      {
+         if (timeFrom != 0)
+            _tcscpy(condition, _T(" AND bucket_start>=?"));
+         if (timeTo != 0)
+            _tcscat(condition, _T(" AND bucket_start<=?"));
+      }
+	}
+	else if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
 	{
       if (timeFrom != 0)
          _tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=ms_to_timestamptz(?)") : _T(" AND idata_timestamp>=ms_to_timestamptz(?)"));
@@ -5691,7 +5768,11 @@ read_from_db:
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 	DB_STATEMENT hStmt;
-	if (useAggregation)
+	if (resolvedTier != DCI_TIER_RAW)
+	{
+	   hStmt = PrepareTieredDataSelect(hdb, dcTarget.getId(), resolvedTier, aggFunction, maxRows, condition);
+	}
+	else if (useAggregation)
 	{
 	   int64_t bucketSizeMs = (timeTo - timeFrom) / maxDataPoints;
 	   if (bucketSizeMs < 1)
@@ -5741,9 +5822,12 @@ read_from_db:
 	      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
 	      response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
 	      response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+	      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(resolvedTier));
 	      sendMessage(response);
 
-			if (useAggregation)
+			if (resolvedTier != DCI_TIER_RAW)
+			   ProcessTieredDataSelectResults(hResult, this, request.getId(), aggFunction);
+			else if (useAggregation)
 			   ProcessAggregatedDataSelectResults(hResult, this, request.getId());
 			else if (historicalDataType == HDT_FULL_TABLE)
             ProcessTableDataSelectResults(hResult, this, request.getId());
@@ -12191,6 +12275,72 @@ void ClientSession::getServerFile(const NXCPMessage& request)
 	}
 
    sendMessage(&msg);
+}
+
+/**
+ * Send file referenced by file delivery policy back to client
+ */
+void ClientSession::getPolicyFile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t templateId = request.getFieldAsUInt32(VID_TEMPLATE_ID);
+   uuid policyGuid = request.getFieldAsGUID(VID_GUID);
+   uuid fileGuid = request.getFieldAsGUID(VID_POLICY_FILE_GUID);
+
+   shared_ptr<NetObj> templateObject = FindObjectById(templateId, OBJECT_TEMPLATE);
+   if (templateObject == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      sendMessage(response);
+      return;
+   }
+
+   if (!templateObject->checkAccessRights(m_userId, OBJECT_ACCESS_MANAGE_POLICIES))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, templateId,
+            L"Access denied on download of file %s from policy %s",
+            fileGuid.toString().cstr(), policyGuid.toString().cstr());
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t storedName[64];
+   uint32_t rcc = static_cast<Template&>(*templateObject).resolvePolicyFile(policyGuid, fileGuid, storedName, sizeof(storedName) / sizeof(wchar_t));
+   if (rcc != RCC_SUCCESS)
+   {
+      response.setField(VID_RCC, rcc);
+      sendMessage(response);
+      return;
+   }
+
+   wchar_t fname[MAX_PATH];
+   wcslcpy(fname, g_netxmsdDataDir, MAX_PATH);
+   wcslcat(fname, DDIR_FILES, MAX_PATH);
+   wcslcat(fname, FS_PATH_SEPARATOR, MAX_PATH);
+   wcslcat(fname, storedName, MAX_PATH);
+
+   debugPrintf(4, L"getPolicyFile: requested file %s", fname);
+   if (_waccess(fname, 0) != 0)
+   {
+      debugPrintf(5, L"getPolicyFile: file %s not found on disk", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+      sendMessage(response);
+      return;
+   }
+
+   if (SendFileOverNXCP(m_socket, request.getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, &m_mutexSocketWrite))
+   {
+      debugPrintf(5, L"getPolicyFile: file %s sent successfully", fname);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      debugPrintf(5, L"getPolicyFile: SendFileOverNXCP() failed for %s", fname);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+   }
+   sendMessage(response);
 }
 
 /**

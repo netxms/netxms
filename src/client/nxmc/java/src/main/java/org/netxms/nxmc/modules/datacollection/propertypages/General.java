@@ -523,7 +523,7 @@ public class General extends AbstractDCIPropertyPage
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
          dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
-         dci.setUnitName(dataUnit.getText());      
+         dci.setUnitName(dataUnit.getText());
          dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
          dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
          dci.setSampleSaveInterval(sampleSaveInterval.getSelection());

@@ -54,6 +54,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.FileDeleteConfirmationDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.FilePermissionDialog;
 import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
+import org.netxms.nxmc.modules.filemanager.FileDownloadHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
@@ -90,6 +91,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionDelete;
    private Action actionRename;
    private Action actionUpdate;
+   private Action actionDownload;
    private Action actionEditPermissions;
    private Action actionRestore;
    private Action actionPurge;
@@ -189,6 +191,14 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
 
+      actionDownload = new Action(i18n.tr("&Download..."), SharedIcons.DOWNLOAD) {
+         @Override
+         public void run()
+         {
+            downloadFile();
+         }
+      };
+
       actionEditPermissions = new Action(i18n.tr("&Permissions..."), ResourceManager.getImageDescriptor("icons/permissions.png")) {
          @Override
          public void run()
@@ -268,6 +278,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          if (e.isFile())
          {
             manager.add(actionUpdate);
+            if (!notSavedFiles.contains(e.getGuid().toString()))
+               manager.add(actionDownload);
          }
          else
          {
@@ -608,6 +620,46 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             runInUIThread(() -> {
                enableFileTransferMode(false);
             });
+         }
+      }.start();
+   }
+
+   /**
+    * Download selected file from server's file delivery policy storage
+    */
+   private void downloadFile()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if ((selection.size() != 1) || !((PathElement)selection.getFirstElement()).isFile())
+         return;
+
+      final PathElement e = (PathElement)selection.getFirstElement();
+      final long templateId = view.getObjectId();
+      final UUID policyGuid = policy.getGuid();
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Downloading file"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final File downloaded = session.downloadAgentPolicyFile(templateId, policyGuid, e.getGuid());
+            runInUIThread(() -> {
+               try
+               {
+                  FileDownloadHelper.saveLocalFile(getShell(), downloaded, e.getName());
+               }
+               catch(Exception ex)
+               {
+                  logger.error("Cannot save policy file " + e.getName(), ex);
+                  MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
+                        i18n.tr("Cannot save file: {0}", ex.getLocalizedMessage()));
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot download policy file");
          }
       }.start();
    }

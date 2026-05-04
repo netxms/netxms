@@ -64,6 +64,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
+import org.netxms.nxmc.modules.datacollection.propertypages.Aggregation;
 import org.netxms.nxmc.modules.datacollection.propertypages.ClusterOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.Comments;
 import org.netxms.nxmc.modules.datacollection.propertypages.CustomSchedule;
@@ -434,6 +435,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       if (dce.getObject() instanceof DataCollectionTable)
          pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));
       pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));
+      if (dce.getObject() instanceof DataCollectionItem)
+         pm.addToRoot(new PreferenceNode("aggregation", new Aggregation(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));
       else

@@ -182,9 +182,9 @@ Fallback: if the chosen tier has no data for the range (e.g., aggregation recent
 
 ### API surface
 
-- **NXCP** — extend `CMD_GET_DCI_VALUES` with `VID_DCI_TIER` and `VID_DCI_AGG_FUNCTION`. Legacy clients unaffected (absent fields → auto + avg).
-- **Java client** — new `NXCSession.getCollectedData()` overload with `DciTier` and `DciAggregationFunction` enums; legacy overload delegates to `(AUTO, AVG)`.
-- **NXSL** — `GetDCIValues(dci, from, to, tier?, function?)` — trailing optional string parameters.
+- **NXCP** — extend `CMD_GET_DCI_DATA` with `VID_DCI_TIER` and `VID_DCI_AGG_FUNCTION`; the response carries `VID_DCI_TIER_USED` so clients know which tier the dispatcher actually served. Legacy clients unaffected (absent fields → auto + avg; missing response field → raw).
+- **Java client** — new `NXCSession.getCollectedData()` overload with `DciTier` and `DciAggregationFunction` enums; legacy overloads delegate to `(AUTO, AVG)`. `DataSeries.getTierServed()` exposes the served tier.
+- **NXSL** — `GetDCIValues(node, dciId, startTime, endTime?, rawValue?, tier?, function?)`. Tier and function are optional strings appended after the existing `rawValue` argument; same shape for `GetDCIValuesEx`. Tier ∈ `{auto, raw, hourly, daily}`, function ∈ `{avg, min, max}` — `minmax` is not exposed in NXSL (no array-of-pairs return shape).
 
 ## DCI Recalculation
 

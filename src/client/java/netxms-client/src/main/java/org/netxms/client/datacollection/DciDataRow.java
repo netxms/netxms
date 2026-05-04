@@ -32,6 +32,7 @@ public class DciDataRow
    private double avgValue;
    private double minValue;
    private double maxValue;
+   private int sampleCount;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
@@ -58,6 +59,27 @@ public class DciDataRow
 		this.rawValue = null;
 		this.aggregated = true;
 		this.avgValue = avg;
+		this.minValue = min;
+		this.maxValue = max;
+	}
+
+	/**
+	 * Create min/max-only band row (no average — produced by tier reads with function=MINMAX).
+	 * The primary value is set to the midpoint so charts that ignore min/max still render
+	 * something sensible. Average value is set to NaN to signal that no avg was queried.
+	 *
+	 * @param timestamp bucket timestamp
+	 * @param min minimum value
+	 * @param max maximum value
+	 */
+	public DciDataRow(Date timestamp, double min, double max)
+	{
+		super();
+		this.timestamp = timestamp;
+		this.value = Double.valueOf((min + max) / 2.0);
+		this.rawValue = null;
+		this.aggregated = true;
+		this.avgValue = Double.NaN;
 		this.minValue = min;
 		this.maxValue = max;
 	}
@@ -205,6 +227,28 @@ public class DciDataRow
    public double getMaxValue()
    {
       return maxValue;
+   }
+
+   /**
+    * Get the number of raw samples that contributed to this aggregated bucket.
+    * Set to 0 when the row is not from a tier read or when the server is older and does not
+    * include sample counts in the response.
+    *
+    * @return sample count, or 0 if not available
+    */
+   public int getSampleCount()
+   {
+      return sampleCount;
+   }
+
+   /**
+    * Set sample count (used by NXCP parser).
+    *
+    * @param sampleCount number of raw samples in the bucket
+    */
+   public void setSampleCount(int sampleCount)
+   {
+      this.sampleCount = sampleCount;
    }
 
    /**

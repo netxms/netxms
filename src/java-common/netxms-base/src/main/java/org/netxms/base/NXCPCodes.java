@@ -535,6 +535,7 @@ public class NXCPCodes
    public static final int CMD_GET_CONNECTION_HISTORY = 0x0205;
    public static final int CMD_GET_AI_SKILLS_AND_FUNCTIONS = 0x0206;
    public static final int CMD_MODIFY_AI_DISABLED_LIST = 0x0207;
+   public static final int CMD_GET_POLICY_FILE = 0x0208;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1520,8 +1521,15 @@ public class NXCPCodes
    public static final long VID_NUM_DISABLED_EXTRAS = 977;
    public static final long VID_ITEM_TYPE = 978;
    public static final long VID_TOOL_APPLICABLE_CLASSES = 979;
-   public static final long VID_OS_PLATFORM_NAME = 980;
-   public static final long VID_AGENT_PLATFORM_NAME = 981;
+   public static final long VID_DCI_TIER = 980;
+   public static final long VID_DCI_AGG_FUNCTION = 981;
+   public static final long VID_DCI_TIER_USED = 982;
+   public static final long VID_DCI_AGGREGATION_MODE = 983;
+   public static final long VID_DCI_HOURLY_RETENTION = 984;
+   public static final long VID_DCI_DAILY_RETENTION = 985;
+   public static final long VID_POLICY_FILE_GUID = 986;
+   public static final long VID_OS_PLATFORM_NAME = 987;
+   public static final long VID_AGENT_PLATFORM_NAME = 988;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;
