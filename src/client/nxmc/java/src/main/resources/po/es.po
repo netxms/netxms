@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-30 17:14+0300\n"
+"POT-Creation-Date: 2026-05-04 16:16+0300\n"
 "PO-Revision-Date: 2023-11-29 22:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -56,6 +56,8 @@ msgid "JVM default locale"
 msgstr "Localización por defecto de la JVM"
 
 #: src/main/java/org/netxms/nxmc/base/preferencepages/RegionalSettingsPage.java:91
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:160
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:202
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/PerformanceView.java:205
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/helpers/DashboardElementsLabelProvider.java:48
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateInterfaceDciDialog.java:169
@@ -288,6 +290,7 @@ msgstr "Los períodos personalizados se pueden configurar en las preferencias de
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateRackDialog.java:121
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/DecommissionNodeDialog.java:117
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMobileDeviceDialog.java:119
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMultipleNodesDialog.java:128
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/ClusterNetworkEditDialog.java:117
 #: src/main/java/org/netxms/nxmc/modules/objects/actions/ClearInterfacePeerInformation.java:63
 #: src/main/java/org/netxms/nxmc/modules/objects/actions/ChangeMacAddressAction.java:67
@@ -341,8 +344,7 @@ msgid "day"
 msgstr "día"
 
 #: src/main/java/org/netxms/nxmc/base/widgets/helpers/TimePeriodFunctions.java:58
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:559
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:604
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:229
 msgid "days"
 msgstr "días"
 
@@ -1191,7 +1193,7 @@ msgstr "Estado"
 #: src/main/java/org/netxms/nxmc/modules/reporting/views/ReportDefinitionManager.java:101
 #: src/main/java/org/netxms/nxmc/modules/users/views/UserManagementView.java:135
 #: src/main/java/org/netxms/nxmc/modules/events/dialogs/EditEventTemplateDialog.java:100
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/PolicyListView.java:111
 #: src/main/java/org/netxms/nxmc/modules/objects/views/elements/ObjectInfo.java:65
 #: src/main/java/org/netxms/nxmc/modules/imagelibrary/views/ImageLibrary.java:114
@@ -1239,7 +1241,7 @@ msgstr "&Cargar..."
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/CustomSchedule.java:177
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/TableThresholds.java:273
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/WebServiceHeaders.java:143
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:176
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:178
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryTableManager.java:231
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalGraphView.java:767
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:440
@@ -1384,7 +1386,7 @@ msgstr "Autenticación Tokens"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/DciList.java:114
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryTableManager.java:102
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:221
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/alarms/dialogs/AlarmStateChangeFailureDialog.java:88
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmCategoryList.java:115
 #: src/main/java/org/netxms/nxmc/modules/snmp/views/SnmpTrapEditor.java:125
@@ -1557,7 +1559,7 @@ msgstr "Atributos personalizados"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditDciSummaryTableColumnDlg.java:77
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreateSnmpTableDciDialog.java:165
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditColumnDialog.java:97
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/WebServiceManager.java:98
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/PolicyListView.java:111
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmCategoryList.java:115
@@ -1641,7 +1643,7 @@ msgstr "Nombre"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/BulkUpdateDialog.java:114
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalDataView.java:258
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalDataView.java:259
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/ThresholdSummaryView.java:125
 #: src/main/java/org/netxms/nxmc/modules/snmp/dialogs/MibWalkDialog.java:148
 #: src/main/java/org/netxms/nxmc/modules/snmp/views/MibExplorer.java:255
@@ -2149,6 +2151,7 @@ msgstr "&Editar..."
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/MenuItemDialog.java:182
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreateSnmpTableDciDialog.java:204
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreateSnmpTableDciDialog.java:216
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:653
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalGraphView.java:555
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/PolicyListView.java:326
 #: src/main/java/org/netxms/nxmc/modules/alarms/propertypages/General.java:113
@@ -2198,7 +2201,7 @@ msgstr "No es posible actualizar usuario cuenta"
 #: src/main/java/org/netxms/nxmc/modules/logviewer/dialogs/WindowsEventLogRecordDetailsDialog.java:180
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/WebServiceGeneral.java:69
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/SummaryTableGeneral.java:61
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:147
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:137
 #: src/main/java/org/netxms/nxmc/modules/alarms/propertypages/General.java:57
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/General.java:64
 #: src/main/java/org/netxms/nxmc/modules/logwatch/widgets/LogParserEditor.java:224
@@ -2552,7 +2555,7 @@ msgstr "&Propiedades..."
 
 #: src/main/java/org/netxms/nxmc/modules/users/views/UserManagementView.java:275
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalGraphView.java:1297
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:454
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:457
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmCategoryList.java:297
 #, java-printf-format
 msgid "Properties for %s"
@@ -2685,7 +2688,7 @@ msgstr "Desconocido"
 #: src/main/java/org/netxms/nxmc/modules/users/views/helpers/DecoratingUserLabelProvider.java:101
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/DeploymentJobManager.java:102
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/helpers/SyslogLabelProvider.java:48
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ResponsibleUsers.java:120
 #: src/main/java/org/netxms/nxmc/modules/objects/views/UserSessionsView.java:107
 #: src/main/java/org/netxms/nxmc/modules/objects/views/elements/Inventory.java:137
@@ -2699,7 +2702,7 @@ msgstr "Usuario"
 #: src/main/java/org/netxms/nxmc/modules/users/views/helpers/UserFilter.java:75
 #: src/main/java/org/netxms/nxmc/modules/users/views/helpers/DecoratingUserLabelProvider.java:101
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/PerformanceView.java:123
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:166
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:1171
 msgid "Group"
@@ -3051,7 +3054,7 @@ msgstr "Clave"
 #: src/main/java/org/netxms/nxmc/modules/nxsl/views/MappingTableEditorView.java:131
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleComments.java:43
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Comments.java:48
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmList.java:204
 #: src/main/java/org/netxms/nxmc/modules/alarms/views/AlarmDetails.java:401
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Comments.java:55
@@ -3238,7 +3241,7 @@ msgstr "&Editar"
 
 #: src/main/java/org/netxms/nxmc/modules/nxsl/views/ScriptLibraryView.java:179
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/AgentConfigurationsManager.java:186
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:168
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:170
 msgid "&Rename..."
 msgstr "&Renombrar..."
 
@@ -3656,7 +3659,7 @@ msgstr "Gravedad"
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/EventTraceWidget.java:121
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/SyslogTraceWidget.java:106
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/EventTemplateList.java:118
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmList.java:202
 #: src/main/java/org/netxms/nxmc/modules/alarms/views/AlarmDetails.java:451
 #: src/main/java/org/netxms/nxmc/modules/snmp/views/MibFileManager.java:190
@@ -3866,7 +3869,7 @@ msgstr "Túneles del agente"
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ConditionData.java:141
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/ConditionDciEditDialog.java:90
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ConnectionHistoryView.java:108
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:101
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:116
 #: src/main/java/org/netxms/nxmc/modules/objects/views/InterfacesView.java:160
 #: src/main/java/org/netxms/nxmc/modules/objects/views/SwitchForwardingDatabaseView.java:103
 #: src/main/java/org/netxms/nxmc/modules/objects/views/WirelessStations.java:107
@@ -4114,7 +4117,7 @@ msgstr "Archivo ZIP"
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:562
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/MenuItemDialog.java:157
 #: src/swt/java/org/netxms/nxmc/modules/users/actions/GenerateObjectAccessReportAction.java:69
-#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:70
+#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:74
 msgid "All Files"
 msgstr "Todos los ficheros"
 
@@ -4552,7 +4555,7 @@ msgstr "Notificación"
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/SyslogTraceWidget.java:97
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalDataView.java:258
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/HistoricalDataView.java:259
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/alarms/views/AlarmDetails.java:451
 #: src/main/java/org/netxms/nxmc/modules/snmp/widgets/SnmpTrapTraceWidget.java:85
 #: src/main/java/org/netxms/nxmc/modules/objects/views/DeviceConfigBackupView.java:142
@@ -4837,7 +4840,7 @@ msgstr "Cliente"
 
 #: src/main/java/org/netxms/nxmc/modules/logviewer/views/helpers/LogLabelProvider.java:360
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/SNMP.java:77
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:182
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:172
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:81
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/SNMP.java:80
 msgid "SNMP"
@@ -4846,7 +4849,7 @@ msgstr "SNMP"
 #: src/main/java/org/netxms/nxmc/modules/logviewer/views/helpers/LogLabelProvider.java:360
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:162
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleActionScript.java:46
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:187
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:177
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:104
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditThresholdDialog.java:130
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditThresholdDialog.java:316
@@ -5009,7 +5012,7 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Filter.java:134
 #: src/main/java/org/netxms/nxmc/modules/objects/widgets/EntityMibTreeViewer.java:79
 #: src/main/java/org/netxms/nxmc/modules/objects/ObjectMenuFactory.java:97
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:101
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:116
 #: src/main/java/org/netxms/nxmc/modules/objects/views/SwitchForwardingDatabaseView.java:103
 #: src/main/java/org/netxms/nxmc/modules/objects/views/OSPFView.java:151
 #: src/main/java/org/netxms/nxmc/modules/objects/views/RoutingTableView.java:97
@@ -5118,7 +5121,7 @@ msgstr "Coma flotante"
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/helpers/ToolColumnLabelProvider.java:35
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/EditColumnDialog.java:54
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ConnectionHistoryView.java:107
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:101
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:116
 #: src/main/java/org/netxms/nxmc/modules/objects/views/WirelessStations.java:107
 #: src/main/java/org/netxms/nxmc/modules/objects/views/AccessPointsView.java:116
 msgid "IP Address"
@@ -5127,7 +5130,7 @@ msgstr "Dirección IP"
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/helpers/ToolColumnLabelProvider.java:35
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/EditColumnDialog.java:55
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ConnectionHistoryView.java:107
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:101
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:116
 #: src/main/java/org/netxms/nxmc/modules/objects/views/WirelessStations.java:107
 #: src/main/java/org/netxms/nxmc/modules/objects/views/AccessPointsView.java:115
 msgid "MAC Address"
@@ -5383,7 +5386,7 @@ msgstr "&Bajar"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditColumnDialog.java:102
 #: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/DciList.java:114
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:221
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/ObjectQueryEditDialog.java:307
 #: src/main/java/org/netxms/nxmc/modules/assetmanagement/propertypages/AssetAttributeEnums.java:64
 #: src/main/java/org/netxms/nxmc/modules/assetmanagement/dialogs/SelectAssetAttributeDlg.java:88
@@ -5565,7 +5568,7 @@ msgid "Error on alarm search"
 msgstr "Error en alarma search"
 
 #: src/main/java/org/netxms/nxmc/modules/objecttools/views/helpers/ObjectToolsLabelProvider.java:94
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:180
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:170
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:74
 msgid "Internal"
 msgstr "Interno"
@@ -6381,7 +6384,7 @@ msgstr "Clave de temporizador de aplazamiento/bloqueo (No ejecutar acción si es
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/EventTraceWidget.java:120
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditThresholdDialog.java:182
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/ThresholdSummaryView.java:125
 #: src/main/java/org/netxms/nxmc/modules/snmp/propertypages/SnmpTrapGeneral.java:119
 #: src/main/java/org/netxms/nxmc/modules/snmp/views/SnmpTrapEditor.java:125
@@ -6437,7 +6440,7 @@ msgstr "Host nombre"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptionsTable.java:90
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:180
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:222
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ResponsibleUsers.java:123
 #: src/main/java/org/netxms/nxmc/modules/logwatch/widgets/LogParserRuleEditor.java:443
 #: src/main/java/org/netxms/nxmc/modules/dashboards/dialogs/StatusIndicatorElementEditDialog.java:160
@@ -7013,7 +7016,6 @@ msgid "Associate with cluster resource"
 msgstr "Asociar a un recurso de cluster"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/ClusterOptions.java:132
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:500
 msgid "Data aggregation"
 msgstr "Datos aggregation"
 
@@ -7335,6 +7337,50 @@ msgstr "Columnas"
 msgid "Metric"
 msgstr "Métrica"
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:71
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/TableColumns.java:359
+msgid "Aggregation"
+msgstr "Agregación"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:104
+msgid "Aggregation mode"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:114
+msgid "Server default (use server-wide setting)"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:118
+#: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiItemLabelProvider.java:105
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:122
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:87
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/NetworkDiscoveryConfigurator.java:329
+#: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiItemLabelProvider.java:105
+#: src/rwt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:63
+#: src/swt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:58
+msgid "Disabled"
+msgstr "Desactivado"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:132
+msgid "Hourly aggregate retention"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:152
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:194
+msgid "Server default"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:174
+msgid "Daily aggregate retention"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Aggregation.java:249
+msgid "Note: on TimescaleDB backend, per-DCI retention overrides are not honored (retention is per storage class) and \"Disabled\" is enforced as a query-time filter only."
+msgstr ""
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/AccessControl.java:60
 msgid "Inherited from object access rights"
 msgstr "Heredado de objeto acceso derechos"
@@ -7352,42 +7398,42 @@ msgstr "Restrict acceso a siguientes usuarios"
 msgid "Synchronize node components"
 msgstr "Sincronizar nodo componentes"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:179
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:169
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:221
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/CustomAttributes.java:115
 #: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:120
 msgid "Origin"
 msgstr "Origen"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:181
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:171
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:72
 msgid "NetXMS Agent"
 msgstr "Agente NetXMS"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:183
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:173
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:106
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:83
 msgid "Web Service"
 msgstr "Servicio web"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:184
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:174
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:110
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:78
 msgid "Push"
 msgstr "Enviar"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:185
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:175
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:105
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:84
 msgid "Windows Performance Counters"
 msgstr "Windows Rendimiento Counters"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:186
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:176
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:80
 msgid "SM-CLP"
 msgstr "SM-CLP"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:188
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:178
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:82
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/NetworkServicePolling.java:121
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/SSH.java:68
@@ -7395,106 +7441,52 @@ msgstr "SM-CLP"
 msgid "SSH"
 msgstr "SSH"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:189
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:179
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:76
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MQTT.java:56
 msgid "MQTT"
 msgstr "MQTT"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:190
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:180
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:73
 msgid "Network Device Driver"
 msgstr "Red Controlador de dispositivo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:191
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:181
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:75
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Modbus.java:59
 msgid "Modbus"
 msgstr "Modbus"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:192
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:182
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/EtherNetIP.java:68
 msgid "EtherNet/IP"
 msgstr "EtherNet/IP"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:193
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:183
 msgid "Cloud Connector"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:194
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:184
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:111
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:77
 msgid "OTLP"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:239
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:229
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/NetworkServicePolling.java:69
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/InterfacePolling.java:65
 #: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Polling.java:79
 msgid "Polling"
 msgstr "Sondeo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:254
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:244
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/AbstractSelectParamDlg.java:142
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreateSnmpTableDciDialog.java:170
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:222
 #: src/main/java/org/netxms/nxmc/modules/assetmanagement/views/AssetManagementSchemaManager.java:105
 msgid "Data Type"
 msgstr "Tipo"
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:517
-msgid "Aggregation mode"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:518
-msgid "Default (use server-wide setting)"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:519
-#: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiItemLabelProvider.java:105
-msgid "Enabled"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:520
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/DciLabelProvider.java:87
-#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/NetworkDiscoveryConfigurator.java:329
-#: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiItemLabelProvider.java:105
-#: src/rwt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:63
-#: src/swt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:58
-msgid "Disabled"
-msgstr "Desactivado"
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:535
-msgid "Hourly retention: server default"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:543
-msgid "Hourly retention: custom"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:580
-msgid "Daily retention: server default"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:588
-msgid "Daily retention: custom"
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:617
-msgid "Aggregation not applicable: data type is STRING."
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:622
-msgid "Hourly aggregation not applicable: polling interval exceeds 30 minutes."
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:626
-msgid "Daily aggregation not applicable: polling interval exceeds 12 hours."
-msgstr ""
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:632
-msgid "Note: on TimescaleDB backend, per-DCI retention overrides are not honored (retention is per storage class) and \"Disabled\" is enforced as a query-time filter only."
-msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/PerformanceView.java:78
 msgid "Performance View"
@@ -7533,7 +7525,7 @@ msgstr "&Extended leyenda"
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/PerformanceView.java:193
 #: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/BaseTableValueViewer.java:141
 #: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SummaryTableWidget.java:167
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:284
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:285
 #: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/AbstractChart.java:178
 msgid "Use &multipliers"
 msgstr "Utilizar &múltiplos"
@@ -7732,10 +7724,6 @@ msgstr "Mostrar Nombre"
 #: src/main/java/org/netxms/nxmc/modules/networkmaps/dialogs/DataSourceEditDlg.java:134
 msgid "Instance"
 msgstr "Instancia"
-
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/TableColumns.java:359
-msgid "Aggregation"
-msgstr "Agregación"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/TableColumns.java:363
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreateSnmpTableDciDialog.java:175
@@ -8859,119 +8847,137 @@ msgstr "Ejecutando forzado DCI sondeo"
 msgid "Forced DCI poll failed"
 msgstr "Sondeo forzado del DCI falló"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 #: src/main/java/org/netxms/nxmc/modules/assetmanagement/views/helpers/AssetAttributeListLabelProvider.java:46
 msgid "Date"
 msgstr "Fecha"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:110
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:112
 msgid "Permissions"
 msgstr "Permisos"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:144
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:146
 msgid "&Add root directory..."
 msgstr "&Add raíz directorio..."
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:152
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:154
 msgid "Add d&irectory..."
 msgstr "Agregar d&irectorio..."
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:160
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:162
 msgid "Add &file..."
 msgstr "Agregar archivo..."
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:184
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:186
 msgid "&Update..."
 msgstr "&Actualizar..."
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:192
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:194
+#: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:376
+msgid "&Download..."
+msgstr "&Descargar..."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:202
 msgid "&Permissions..."
 msgstr "Permisos..."
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:200
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:210
 msgid "Res&tore"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:208
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:218
 msgid "P&urge"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:447
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:459
 msgid "File overwrite confirmation"
 msgstr "Fichero overwrite confirmation"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:448
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:460
 #, java-format
 msgid "File named {0} already exists. Do you want to overwrite it?"
 msgstr "Fichero named {0} ya existe. ¿Desea want a sobrescribir it?"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:478
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:490
 msgid "Uploading files"
 msgstr "Cargando ficheros"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:513
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:602
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:525
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:614
 msgid "Cannot upload file"
 msgstr "No es posible subir el fichero"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:533
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:545
 msgid "Deleting file"
 msgstr "Eliminando fichero"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:543
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:555
 msgid "Cannot delete file"
 msgstr "No es posible eliminar fichero"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:570
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:582
 msgid "Uploading file"
 msgstr "Cargando fichero"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:620
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:640
+msgid "Downloading file"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:654
+#, java-format
+msgid "Cannot save file: {0}"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:662
+msgid "Cannot download policy file"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:672
 msgid "New Root Directory"
 msgstr "Nuevo Raíz Directorio"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:620
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:672
 msgid "New Directory"
 msgstr "Nuevo Directorio"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:620
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:672
 msgid "Enter name for new directory"
 msgstr "Introduzca nombre para el nuevo directorio"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:625
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:667
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:677
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:719
 msgid "Name cannot be empty"
 msgstr "El nombre no puede estar vacío"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:630
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:682
 msgid "Directory with this name already exists"
 msgstr "Ya existe un directorio con este nombre"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:662
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:714
 msgid "Rename File"
 msgstr "Renombrar fichero"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:662
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:714
 msgid "Rename Directory"
 msgstr "Renombrar directorio"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:662
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:714
 msgid "Enter new name"
 msgstr "Introduzca nuevo nombre"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:672
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:724
 msgid "File or directory with this name already exists"
 msgstr "Ya existe un fichero o directorio con este nombre"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:850
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:902
 msgid "Purge"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:850
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:902
 msgid "Permanently remove selected entries?"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:890
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/FileDeliveryPolicyEditor.java:942
 msgid "File transfer is in progress"
 msgstr "Fichero transfer es en progress"
 
@@ -8996,7 +9002,7 @@ msgid "Pick from existing DCI"
 msgstr "Pick de existente DCI"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/DciList.java:158
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:551
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:554
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryDataCollectionView.java:221
 #, java-printf-format
 msgid "Get DCI values for node %s"
@@ -9495,17 +9501,17 @@ msgid "Move or Copy"
 msgstr "Mover o copiar"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:375
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:217
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:218
 msgid "E&xport"
 msgstr "E&xportar"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:384
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:225
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:226
 msgid "A&ctions"
 msgstr "A&cciones"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:390
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:231
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:232
 msgid "V&iew options"
 msgstr "V&iew opciones"
 
@@ -9782,7 +9788,7 @@ msgstr "Leyendo predefinido gráfico lista"
 msgid "Error reading predefined graph list"
 msgstr "Error reading predefinido gráfico lista"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ResourcesView.java:69
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:166
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ScheduledTasks.java:113
@@ -9790,76 +9796,76 @@ msgstr "Error reading predefinido gráfico lista"
 msgid "Owner"
 msgstr "Propietario"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:163
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:164
 msgid "Threshold"
 msgstr "Umbral"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:293
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:294
 msgid "Show collection &errors"
 msgstr "Mostrar colección de &errores"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:302
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:303
 msgid "Show &unsupported"
 msgstr "Mostrar no &soportados"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:311
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:312
 msgid "Show &hidden"
 msgstr "Mostrar &ocultos"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:320
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:321
 msgid "Show disabled"
 msgstr "Mostrar deshabilitado"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:331
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:332
 msgid "&Copy value to clipboard"
 msgstr "&Copiar valor a portapapeles"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:340
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:341
 msgid "Copy DCI name"
 msgstr "Copiar nombre del DCI"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:349
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:350
 msgid "&Force poll"
 msgstr "&Force sondeo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:357
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:358
 msgid "Start data &recalculation"
 msgstr "Start datos &recálculo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:365
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:366
 msgid "Clear collected data"
 msgstr "Limpiar recolectados datos"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:591
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:594
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryDataCollectionView.java:242
 #, java-printf-format
 msgid "Cannot get DCI values for node %s"
 msgstr "No es posible recuperar valores DCI del nodo %s"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:868
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:872
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:871
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:875
 msgid "Initiating DCI polling"
 msgstr "Initiating DCI sondeo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:884
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:887
 msgid "Cannot start forced DCI poll"
 msgstr "No es posible iniciar el sondeo forzado del DCI"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:906
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:910
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:909
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:913
 msgid "Initiating DCI data recalculation"
 msgstr "Initiating Datos del DCI recálculo"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:922
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:925
 msgid "Cannot start DCI data recalculation"
 msgstr "No es posible iniciar el recálculo de datos del DCI"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:944
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:948
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:947
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:951
 msgid "Clearing collected DCI data"
 msgstr "Limpiando recolectados Datos del DCI"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:960
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:963
 msgid "Cannot clear collected DCI data"
 msgstr "No es posible limpiar los datos recolectados del DCI"
 
@@ -10255,6 +10261,7 @@ msgstr "<Desconocida>"
 #: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmList.java:201
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateNodeDialog.java:444
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateClusterDialog.java:108
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMultipleNodesDialog.java:108
 #: src/main/java/org/netxms/nxmc/modules/objects/views/TemplateTargets.java:96
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/AddressListElementEditDialog.java:154
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/NetworkDiscoveryConfigurator.java:792
@@ -13882,6 +13889,18 @@ msgstr "Crear Móvil Dispositivo"
 msgid "Device ID"
 msgstr "Dispositivo ID"
 
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMultipleNodesDialog.java:76
+msgid "Create Nodes"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMultipleNodesDialog.java:95
+msgid "Parent"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateMultipleNodesDialog.java:128
+msgid "Please select parent object."
+msgstr ""
+
 #: src/main/java/org/netxms/nxmc/modules/objects/dialogs/StatusExplanationDialog.java:85
 msgid "Status Explanation"
 msgstr ""
@@ -14360,10 +14379,12 @@ msgid "&Node..."
 msgstr "Nodo..."
 
 #: src/main/java/org/netxms/nxmc/modules/objects/ObjectCreateMenuManager.java:521
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:333
 msgid "Creating node"
 msgstr "Creando nodo"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/ObjectCreateMenuManager.java:531
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:343
 #, java-printf-format
 msgid "Cannot create node object %s"
 msgstr "No es posible crear nodo objeto %s"
@@ -14591,7 +14612,7 @@ msgid "VLAN"
 msgstr "VLAN"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/ConnectionHistoryView.java:129
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:122
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:137
 #: src/main/java/org/netxms/nxmc/modules/objects/views/InterfacesView.java:223
 #: src/main/java/org/netxms/nxmc/modules/objects/views/SwitchForwardingDatabaseView.java:124
 #: src/main/java/org/netxms/nxmc/modules/tools/widgets/SearchResult.java:129
@@ -15044,21 +15065,38 @@ msgstr "&Radial vista"
 msgid "Fit to &screen"
 msgstr "Ajustar a la &pantalla"
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:73
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:88
 msgid "ARP Cache"
 msgstr "ARP Caché"
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:101
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:116
 #: src/main/java/org/netxms/nxmc/modules/objects/views/SwitchForwardingDatabaseView.java:103
 #: src/main/java/org/netxms/nxmc/modules/objects/views/WirelessStations.java:107
 msgid "NIC Vendor"
 msgstr "NIC Proveedor"
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:205
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:161
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:198
+msgid "&Create node..."
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:198
+msgid "&Create nodes..."
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:364
+msgid "Creating nodes"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:388
+msgid "Cannot create node objects"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:421
 msgid "Reading ARP cache"
 msgstr "Leyendo Caché ARP"
 
-#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:222
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ArpCacheView.java:438
 #, java-printf-format
 msgid "Cannot get ARP cache for node %s"
 msgstr "No es posible obtener ARP caché para nodo %s"
@@ -17790,7 +17828,7 @@ msgstr "Seleccionar Ficheros en el Servidor"
 
 #: src/main/java/org/netxms/nxmc/modules/filemanager/dialogs/SelectServerFileDialog.java:117
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:565
-#: src/rwt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:124
+#: src/rwt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:126
 msgid "Get server file list"
 msgstr "Obtener la lista de ficheros en el servidor"
 
@@ -17951,7 +17989,7 @@ msgstr "Leyendo remoto directorio"
 
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/helpers/ViewAgentFilesProvider.java:79
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:623
-#: src/rwt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:106
+#: src/rwt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:108
 msgid "Cannot read remote directory"
 msgstr "No es posible leer remoto directorio"
 
@@ -17999,10 +18037,6 @@ msgstr "&Subir fichero..."
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:351
 msgid "Upload &folder..."
 msgstr "Subir &carpeta..."
-
-#: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:376
-msgid "&Download..."
-msgstr "&Descargar..."
 
 #: src/main/java/org/netxms/nxmc/modules/filemanager/views/AgentFileManager.java:385
 msgid "&Follow changes"
@@ -21998,11 +22032,11 @@ msgstr "Start Carpeta Subir"
 msgid "Select folder"
 msgstr "Select carpeta"
 
-#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:67
+#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:71
 msgid "Start Download"
 msgstr "Iniciar descarga"
 
-#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:253
+#: src/swt/java/org/netxms/nxmc/modules/filemanager/FileDownloadHelper.java:279
 msgid "Upload folder to agent"
 msgstr "Subir carpeta a agente"
 
