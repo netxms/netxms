@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -120,12 +120,13 @@ void VlanList::fillMessage(NXCPMessage *msg)
 	uint32_t fieldId = VID_VLAN_LIST_BASE;
 	for(int i = 0; i < m_size; i++)
 	{
-		msg->setField(fieldId++, static_cast<uint16_t>(m_vlans[i]->getVlanId()));
-		msg->setField(fieldId++, m_vlans[i]->getName());
-		msg->setField(fieldId++, static_cast<uint32_t>(m_vlans[i]->getNumPorts()));
-		for(int j = 0; j < m_vlans[i]->getNumPorts(); j++)
+	   VlanInfo *vlan = m_vlans[i];
+		msg->setField(fieldId++, static_cast<uint16_t>(vlan->getVlanId()));
+		msg->setField(fieldId++, vlan->getName());
+		msg->setField(fieldId++, static_cast<uint32_t>(vlan->getNumPorts()));
+		for(int j = 0; j < vlan->getNumPorts(); j++)
 		{
-		   const VlanPortInfo *p = m_vlans[i]->getPort(j);
+		   const VlanPortInfo *p = vlan->getPort(j);
 	      msg->setField(fieldId++, p->ifIndex);
          msg->setField(fieldId++, p->objectId);
          msg->setField(fieldId++, p->location.chassis);
@@ -188,4 +189,26 @@ void VlanInfo::resolvePort(int index, const InterfacePhysicalLocation& location,
 		port->ifIndex = ifIndex;
 		port->objectId = id;
 	}
+}
+
+/**
+ * Build JSON representation of VLAN object
+ */
+json_t *VlanInfo::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_vlanId));
+   json_object_set_new(root, "name", json_string_w(m_name));
+   json_t *ports = json_array();
+   for(int i = 0; i < m_ports.size(); i++)
+   {
+      const VlanPortInfo *p = m_ports.get(i);
+      json_t *port = json_object();
+      json_object_set_new(port, "ifIndex", json_integer(p->ifIndex));
+      json_object_set_new(port, "objectId", json_integer(p->objectId));
+      json_object_set_new(port, "physicalLocation", p->location.toJson());
+      json_array_append_new(ports, port);
+   }
+   json_object_set_new(root, "ports", ports);
+   return root;
 }

@@ -339,10 +339,20 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
       return (port == l.port) && (pic == l.pic) && (module == l.module) && (chassis == l.chassis);
    }
 
-   TCHAR *toString(TCHAR *buffer, size_t size) const
+   wchar_t *toString(wchar_t *buffer, size_t size) const
    {
-      _sntprintf(buffer, size, _T("%u/%u/%u/%u"), chassis, module, pic, port);
+      nx_swprintf(buffer, size, L"%u/%u/%u/%u", chassis, module, pic, port);
       return buffer;
+   }
+
+   json_t *toJson() const
+   {
+      json_t *root = json_object();
+      json_object_set_new(root, "chassis", json_integer(chassis));
+      json_object_set_new(root, "module", json_integer(module));
+      json_object_set_new(root, "pic", json_integer(pic));
+      json_object_set_new(root, "port", json_integer(port));
+      return root;
    }
 };
 
@@ -495,6 +505,8 @@ public:
 	int getNumPorts() const { return m_ports.size(); }
 	const VlanPortInfo *getPort(int index) const { return m_ports.get(index); }
 	uint32_t getNodeId() const { return m_nodeId; }
+
+	json_t *toJson() const;
 
 	void add(const InterfacePhysicalLocation& location, bool tagged = false);
 	void add(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port, bool tagged = false)

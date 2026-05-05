@@ -2198,6 +2198,8 @@ json_t *Interface::toJson(bool includeSensitiveData)
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));
    json_object_set_new(root, "ifTableSuffix", json_integer_array(m_ifTableSuffix, m_ifTableSuffixLen));
+   json_object_set_new(root, "vlans", json_integer_array(m_vlans));
+   json_object_set_new(root, "physicalLocation", m_physicalLocation.toJson());
 
    if (m_flags & IF_OSPF_INTERFACE)
    {
@@ -2206,13 +2208,6 @@ json_t *Interface::toJson(bool includeSensitiveData)
       json_object_set_new(root, "ospfType", json_integer(static_cast<json_int_t>(m_ospfType)));
       json_object_set_new(root, "ospfState", json_integer(static_cast<json_int_t>(m_ospfState)));
    }
-
-   json_t *loc = json_object();
-   json_object_set_new(loc, "chassis", json_integer(m_physicalLocation.chassis));
-   json_object_set_new(loc, "module", json_integer(m_physicalLocation.module));
-   json_object_set_new(loc, "pic", json_integer(m_physicalLocation.pic));
-   json_object_set_new(loc, "port", json_integer(m_physicalLocation.port));
-   json_object_set_new(root, "physicalLocation", loc);
 
    unlockProperties();
    return root;

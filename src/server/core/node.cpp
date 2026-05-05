@@ -14489,6 +14489,23 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    unlockProperties();
+
+   m_topologyMutex.lock();
+   shared_ptr<VlanList> vlans = m_vlans;
+   m_topologyMutex.unlock();
+
+   if (vlans != nullptr)
+   {
+      json_t *vlanList = json_array();
+      for(int i = 0; i < vlans->size(); i++)
+         json_array_append(vlanList, vlans->get(i)->toJson());
+      json_object_set_new(root, "vlans", vlanList);
+   }
+   else
+   {
+      json_object_set_new(root, "vlans", json_null());
+   }
+
    return root;
 }
 
