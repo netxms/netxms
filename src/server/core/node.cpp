@@ -14445,7 +14445,7 @@ json_t *Node::toJson(bool includeSensitiveData)
    {
       json_t *vlanList = json_array();
       for(int i = 0; i < vlans->size(); i++)
-         json_array_append(vlanList, vlans->get(i)->toJson());
+         json_array_append_new(vlanList, vlans->get(i)->toJson());
       json_object_set_new(root, "vlans", vlanList);
    }
    else
