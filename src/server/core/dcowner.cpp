@@ -1025,11 +1025,11 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
          {
-            curr->updateFromImport(e, nxslV5);
+            curr->updateFromImport(e, nxslV5, context);
          }
          else
          {
-            auto dci = make_shared<DCItem>(e, self(), nxslV5);
+            auto dci = make_shared<DCItem>(e, self(), nxslV5, context);
             m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
@@ -1044,11 +1044,11 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config, ImportContext *c
          shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != nullptr) && (curr->getType() == DCO_TYPE_TABLE))
          {
-            curr->updateFromImport(e, nxslV5);
+            curr->updateFromImport(e, nxslV5, context);
          }
          else
          {
-            auto dci = make_shared<DCTable>(e, self(), nxslV5);
+            auto dci = make_shared<DCTable>(e, self(), nxslV5, context);
             m_dcObjects.add(dci);
             guid = dci->getGuid();  // For case when export file does not contain valid GUID
          }
@@ -1124,11 +1124,11 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
             shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
             if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
             {
-               curr->updateFromImport(dciJson);
+               curr->updateFromImport(dciJson, context);
             }
             else
             {
-               auto dci = make_shared<DCItem>(dciJson, self());
+               auto dci = make_shared<DCItem>(dciJson, self(), context);
                m_dcObjects.add(dci);
                guid = dci->getGuid();  // For case when export file does not contain valid GUID
             }
@@ -1146,16 +1146,16 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
          {
             if (!json_is_object(dctableJson))
                continue;
-               
+
             uuid guid = json_object_get_uuid(dctableJson, "guid");
             shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
             if ((curr != nullptr) && (curr->getType() == DCO_TYPE_TABLE))
             {
-               curr->updateFromImport(dctableJson);
+               curr->updateFromImport(dctableJson, context);
             }
             else
             {
-               auto dci = make_shared<DCTable>(dctableJson, self());
+               auto dci = make_shared<DCTable>(dctableJson, self(), context);
                m_dcObjects.add(dci);
                guid = dci->getGuid();  // For case when export file does not contain valid GUID
             }

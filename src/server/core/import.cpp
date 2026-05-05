@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,12 +25,55 @@
 #include <nxcore_websvc.h>
 #include <asset_management.h>
 #include <netxms_mt.h>
-#include <jansson/jansson.h>
 #include <netxms-xml.h>
 
 #define DEBUG_TAG _T("import")
 
 void DeleteEmptyTemplateGroup(const shared_ptr<NetObj>& parent);
+
+/**
+ * Resolve a reference to an object imported from another server.
+ * Resolution order: GUID, then local management hint (only meaningful for nodes),
+ * then name with optional class restriction. Returns 0 when nothing matches and
+ * (if an import context is provided) emits a warning so the user is notified
+ * that the imported reference was dropped.
+ */
+uint32_t ResolveImportedObjectReference(const uuid& guid, bool localManagement, const wchar_t *name, int objectClassHint,
+      ImportContext *context, const wchar_t *referenceKind, const wchar_t *referrerDescription)
+{
+   if (!guid.isNull())
+   {
+      shared_ptr<NetObj> object = FindObjectByGUID(guid, objectClassHint);
+      if (object != nullptr)
+         return object->getId();
+   }
+
+   if (localManagement && ((objectClassHint == -1) || (objectClassHint == OBJECT_NODE)))
+   {
+      uint32_t id = FindLocalMgmtNode();
+      if (id != 0)
+         return id;
+   }
+
+   if ((name != nullptr) && (*name != 0))
+   {
+      shared_ptr<NetObj> object = FindObjectByName(name, objectClassHint);
+      if (object != nullptr)
+         return object->getId();
+   }
+
+   if (context != nullptr)
+   {
+      wchar_t guidText[64];
+      context->log(NXLOG_WARNING, L"ResolveImportedObjectReference()",
+            L"%s \"%s\" (GUID %s) referenced by %s was not found",
+            (referenceKind != nullptr) ? referenceKind : L"Object",
+            ((name != nullptr) && (*name != 0)) ? name : L"<unknown>",
+            guid.isNull() ? L"<none>" : guid.toString(guidText),
+            (referrerDescription != nullptr) ? referrerDescription : L"<unknown>");
+   }
+   return 0;
+}
 
 /**
  * Check if given event exist either in server configuration or in configuration being imported

@@ -343,7 +343,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5), m_unitName(config->getSubEntryValue(_T("unitName")))
+DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context) : DCObject(config, owner, nxslV5, context), m_unitName(config->getSubEntryValue(_T("unitName")))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"), 0, DCI_DT_NULL);
@@ -400,7 +400,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 /**
  * Create DCItem from imported JSON configuration
  */
-DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCObject(json, owner)
+DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context) : DCObject(json, owner, context)
 {
    m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));
    m_transformedDataType = static_cast<BYTE>(json_object_get_int32(json, "transformedDataType", DCI_DT_NULL));
@@ -2979,7 +2979,21 @@ json_t *DCItem::createExportRecord() const
    {
       json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    }
-   
+
+   if (m_sourceNode != 0)
+   {
+      shared_ptr<NetObj> node = FindObjectById(m_sourceNode, OBJECT_NODE);
+      if (node != nullptr)
+      {
+         json_t *sourceNode = json_object();
+         json_object_set_new(sourceNode, "id", json_integer(node->getId()));
+         json_object_set_new(sourceNode, "guid", node->getGuid().toJson());
+         json_object_set_new(sourceNode, "name", json_string_w(node->getName()));
+         json_object_set_new(sourceNode, "localManagement", json_boolean(static_cast<Node&>(*node).isLocalManagement()));
+         json_object_set_new(root, "sourceNode", sourceNode);
+      }
+   }
+
    return root;
 }
 
@@ -3124,9 +3138,9 @@ bool DCItem::isCacheLoaded()
 /**
  * Create DCI from import file
  */
-void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
+void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context)
 {
-   DCObject::updateFromImport(config, nxslV5);
+   DCObject::updateFromImport(config, nxslV5, context);
 
    lock();
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
@@ -3164,9 +3178,9 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5)
 /**
  * Update DCItem from imported JSON configuration
  */
-void DCItem::updateFromImport(json_t *json)
+void DCItem::updateFromImport(json_t *json, ImportContext *context)
 {
-   DCObject::updateFromImport(json);
+   DCObject::updateFromImport(json, context);
 
    lock();
    m_dataType = static_cast<BYTE>(json_object_get_int32(json, "dataType"));

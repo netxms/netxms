@@ -1604,6 +1604,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
 uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
 uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuffer **log);
 uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer **log);
+uint32_t ResolveImportedObjectReference(const uuid& guid, bool localManagement, const wchar_t *name, int objectClassHint = -1,
+      ImportContext *context = nullptr, const wchar_t *referenceKind = nullptr, const wchar_t *referrerDescription = nullptr);
 void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, const wchar_t *descriptionFormat, ...);
 
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);

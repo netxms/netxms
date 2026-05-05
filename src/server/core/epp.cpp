@@ -334,6 +334,9 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
       }
    }
 
+   wchar_t referrerDescription[256];
+   nx_swprintf(referrerDescription, 256, L"event processing policy rule \"%s\"", m_guid.toString().cstr());
+
    // Import sources
    json_t *sourcesArray = json_object_get(json, "sources");
    if (json_is_array(sourcesArray))
@@ -344,21 +347,14 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
       {
          if (json_is_object(sourceItem))
          {
-            uuid sourceGuid = json_object_get_uuid(sourceItem, "guid");
-            if (!sourceGuid.isNull())
-            {
-               shared_ptr<NetObj> object = FindObjectByGUID(sourceGuid);
-               if (object != nullptr)
-               {
-                  m_sources.add(object->getId());
-               }
-               else
-               {
-                  context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
-                     _T("Event processing policy rule import: rule \"%s\" references source object \"%s\" (GUID=%s) that does not exist"),
-                     m_guid.toString().cstr(), json_object_get_string(sourceItem, "name", _T("")).cstr(), sourceGuid.toString().cstr());
-               }
-            }
+            String sourceName = json_object_get_string(sourceItem, "name", L"");
+            int classHint = json_object_get_int32(sourceItem, "class", -1);
+            uint32_t resolved = ResolveImportedObjectReference(
+                  json_object_get_uuid(sourceItem, "guid"),
+                  json_object_get_boolean(sourceItem, "localManagement", false),
+                  sourceName.cstr(), classHint, context, L"Source object", referrerDescription);
+            if (resolved != 0)
+               m_sources.add(resolved);
          }
       }
    }
@@ -373,21 +369,14 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
       {
          if (json_is_object(sourceItem))
          {
-            uuid sourceGuid = json_object_get_uuid(sourceItem, "guid");
-            if (!sourceGuid.isNull())
-            {
-               shared_ptr<NetObj> object = FindObjectByGUID(sourceGuid);
-               if (object != nullptr)
-               {
-                  m_sourceExclusions.add(object->getId());
-               }
-               else
-               {
-                  context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
-                     _T("Event processing policy rule import: rule \"%s\" references source exclusion object \"%s\" (GUID=%s) that does not exist"),
-                     m_guid.toString().cstr(), json_object_get_string(sourceItem, "name", _T("")).cstr(), sourceGuid.toString().cstr());
-               }
-            }
+            String sourceName = json_object_get_string(sourceItem, "name", L"");
+            int classHint = json_object_get_int32(sourceItem, "class", -1);
+            uint32_t resolved = ResolveImportedObjectReference(
+                  json_object_get_uuid(sourceItem, "guid"),
+                  json_object_get_boolean(sourceItem, "localManagement", false),
+                  sourceName.cstr(), classHint, context, L"Source exclusion", referrerDescription);
+            if (resolved != 0)
+               m_sourceExclusions.add(resolved);
          }
       }
    }
@@ -1953,6 +1942,8 @@ json_t *EPRule::createExportRecord() const
          json_object_set_new(source, "name", json_string_w(object->getName()));
          json_object_set_new(source, "guid", object->getGuid().toJson());
          json_object_set_new(source, "class", json_integer(object->getObjectClass()));
+         if (object->getObjectClass() == OBJECT_NODE)
+            json_object_set_new(source, "localManagement", json_boolean(static_cast<Node&>(*object).isLocalManagement()));
          json_array_append_new(sources, source);
       }
    }
@@ -1970,6 +1961,8 @@ json_t *EPRule::createExportRecord() const
          json_object_set_new(sourceExclusion, "name", json_string_w(object->getName()));
          json_object_set_new(sourceExclusion, "guid", object->getGuid().toJson());
          json_object_set_new(sourceExclusion, "class", json_integer(object->getObjectClass()));
+         if (object->getObjectClass() == OBJECT_NODE)
+            json_object_set_new(sourceExclusion, "localManagement", json_boolean(static_cast<Node&>(*object).isLocalManagement()));
          json_array_append_new(sourceExclusions, sourceExclusion);
       }
    }

@@ -130,7 +130,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hRes
 /**
  * Create DCTable from import file
  */
-DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : DCObject(config, owner, nxslV5)
+DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context) : DCObject(config, owner, nxslV5, context)
 {
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
 	if (columnsRoot != nullptr)
@@ -166,7 +166,7 @@ DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& own
 /**
  * Create DCTable from imported JSON configuration
  */
-DCTable::DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : DCObject(json, owner)
+DCTable::DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context) : DCObject(json, owner, context)
 {
    m_columns = new ObjectArray<DCTableColumn>(0, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 8, Ownership::True);
@@ -1253,16 +1253,30 @@ json_t *DCTable::createExportRecord() const
    {
       json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    }
-   
+
+   if (m_sourceNode != 0)
+   {
+      shared_ptr<NetObj> node = FindObjectById(m_sourceNode, OBJECT_NODE);
+      if (node != nullptr)
+      {
+         json_t *sourceNode = json_object();
+         json_object_set_new(sourceNode, "id", json_integer(node->getId()));
+         json_object_set_new(sourceNode, "guid", node->getGuid().toJson());
+         json_object_set_new(sourceNode, "name", json_string_w(node->getName()));
+         json_object_set_new(sourceNode, "localManagement", json_boolean(static_cast<Node&>(*node).isLocalManagement()));
+         json_object_set_new(root, "sourceNode", sourceNode);
+      }
+   }
+
    return root;
 }
 
 /**
  * Create DCObject from import file
  */
-void DCTable::updateFromImport(ConfigEntry *config, bool nxslV5)
+void DCTable::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context)
 {
-   DCObject::updateFromImport(config, nxslV5);
+   DCObject::updateFromImport(config, nxslV5, context);
 
    lock();
    m_columns->clear();
@@ -1292,9 +1306,9 @@ void DCTable::updateFromImport(ConfigEntry *config, bool nxslV5)
 /**
  * Update DCTable from imported JSON configuration
  */
-void DCTable::updateFromImport(json_t *json)
+void DCTable::updateFromImport(json_t *json, ImportContext *context)
 {
-   DCObject::updateFromImport(json);
+   DCObject::updateFromImport(json, context);
 
    lock();
    

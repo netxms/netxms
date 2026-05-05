@@ -206,7 +206,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -253,6 +253,15 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_errorCount = 0;
    m_resourceId = 0;
    m_sourceNode = 0;
+   ConfigEntry *sourceNodeEntry = config->findEntry(_T("sourceNode"));
+   if (sourceNodeEntry != nullptr)
+   {
+      m_sourceNode = ResolveImportedObjectReference(
+            sourceNodeEntry->getSubEntryValueAsUUID(_T("guid")),
+            sourceNodeEntry->getSubEntryValueAsBoolean(_T("localManagement")),
+            sourceNodeEntry->getSubEntryValue(_T("name")),
+            OBJECT_NODE, context, L"Source node", m_name);
+   }
    m_perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
@@ -310,7 +319,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
 /**
  * Create DCObject from imported JSON configuration
  */
-DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
+DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context) : m_owner(owner), m_mutex(MutexType::RECURSIVE), m_accessList(0, 16)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = json_object_get_uuid(json, "guid");
@@ -339,6 +348,15 @@ DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner) :
    m_errorCount = 0;
    m_resourceId = 0;
    m_sourceNode = 0;
+   json_t *sourceNodeObj = json_object_get(json, "sourceNode");
+   if (json_is_object(sourceNodeObj))
+   {
+      String sourceNodeName = json_object_get_string(sourceNodeObj, "name", _T(""));
+      m_sourceNode = ResolveImportedObjectReference(
+            json_object_get_uuid(sourceNodeObj, "guid"),
+            json_object_get_boolean(sourceNodeObj, "localManagement", false),
+            sourceNodeName.cstr(), OBJECT_NODE, context, L"Source node", m_name);
+   }
    m_perfTabSettings = json_object_get_string(json, "perfTabSettings", _T(""));
    m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
    m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
@@ -1295,7 +1313,7 @@ int16_t DCObject::getAgentCacheMode()
 /**
  * Update data collection object from import file
  */
-void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
+void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context)
 {
    lock();
 
@@ -1380,6 +1398,20 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5)
    }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
+
+   ConfigEntry *sourceNodeEntry = config->findEntry(_T("sourceNode"));
+   if (sourceNodeEntry != nullptr)
+   {
+      m_sourceNode = ResolveImportedObjectReference(
+            sourceNodeEntry->getSubEntryValueAsUUID(_T("guid")),
+            sourceNodeEntry->getSubEntryValueAsBoolean(_T("localManagement")),
+            sourceNodeEntry->getSubEntryValue(_T("name")),
+            OBJECT_NODE, context, L"Source node", m_name);
+   }
+   else
+   {
+      m_sourceNode = 0;
+   }
 
    unlock();
 }
@@ -2177,7 +2209,7 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
 /**
  * Update DCObject from imported JSON configuration
  */
-void DCObject::updateFromImport(json_t *json)
+void DCObject::updateFromImport(json_t *json, ImportContext *context)
 {
    lock();
 
@@ -2258,6 +2290,20 @@ void DCObject::updateFromImport(json_t *json)
 
    m_instanceName = json_object_get_string(json, "instance", nullptr);
    m_instanceRetentionTime = json_object_get_int32(json, "instanceRetentionTime", -1);
+
+   json_t *sourceNodeObj = json_object_get(json, "sourceNode");
+   if (json_is_object(sourceNodeObj))
+   {
+      String sourceNodeName = json_object_get_string(sourceNodeObj, "name", L"");
+      m_sourceNode = ResolveImportedObjectReference(
+            json_object_get_uuid(sourceNodeObj, "guid"),
+            json_object_get_boolean(sourceNodeObj, "localManagement", false),
+            sourceNodeName.cstr(), OBJECT_NODE, context, L"Source node", m_name);
+   }
+   else
+   {
+      m_sourceNode = 0;
+   }
 
    unlock();
 }

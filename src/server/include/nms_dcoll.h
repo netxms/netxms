@@ -23,6 +23,8 @@
 #ifndef _nms_dcoll_h_
 #define _nms_dcoll_h_
 
+class ImportContext;
+
 /**
  * Max. length for prediction engine name
  */
@@ -405,8 +407,8 @@ protected:
    DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
-	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
-	DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
+	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context = nullptr);
+	DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context = nullptr);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -417,7 +419,7 @@ public:
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
-   virtual void updateFromImport(ConfigEntry *config, bool nxslV5);
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context = nullptr);
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
@@ -510,7 +512,7 @@ public:
    virtual int getThresholdSeverity() const;
    virtual void getScriptDependencies(StringSet *dependencies) const;
    virtual json_t *toJson();
-   virtual void updateFromImport(json_t *json);
+   virtual void updateFromImport(json_t *json, ImportContext *context = nullptr);
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
@@ -635,8 +637,8 @@ public:
    DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
-	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
-   DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
+	DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context = nullptr);
+   DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context = nullptr);
    virtual ~DCItem();
 
    virtual DCObject *clone() const override;
@@ -644,8 +646,8 @@ public:
 	virtual int getType() const override { return DCO_TYPE_ITEM; }
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
-   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
-   virtual void updateFromImport(json_t *json) override;
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context = nullptr) override;
+   virtual void updateFromImport(json_t *json, ImportContext *context = nullptr) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
@@ -964,8 +966,8 @@ public:
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
    DCTable(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
-   DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5);
-   DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner);
+   DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context = nullptr);
+   DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner, ImportContext *context = nullptr);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const override;
@@ -973,8 +975,8 @@ public:
 	virtual int getType() const override { return DCO_TYPE_TABLE; }
 
    virtual void updateFromTemplate(DCObject *dcObject) override;
-   virtual void updateFromImport(ConfigEntry *config, bool nxslV5) override;
-   virtual void updateFromImport(json_t *json) override;
+   virtual void updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *context = nullptr) override;
+   virtual void updateFromImport(json_t *json, ImportContext *context = nullptr) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
