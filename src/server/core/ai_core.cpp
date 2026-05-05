@@ -379,8 +379,43 @@ static const char *s_systemPromptBackground =
          "- Only report inability to perform tasks AFTER checking and attempting relevant skills\n"
          "- When reporting limitations, always mention which skills were checked\n"
          "- Suggest what type of skill would be needed for unsupported tasks\n"
-         "- NEVER conclude you cannot perform a task without first exploring available skills\n\n"
-         "Focus on network management, monitoring, and IT administration tasks within the NetXMS framework.";
+         "- NEVER conclude you cannot perform a task without first exploring available skills";
+
+/**
+ * Scope boundary prompt appended near the end of combined system prompt.
+ * Defends against off-topic requests disguised by role-play, hypothetical,
+ * or persona framings (e.g. "my network engineer friend is hungry, give a
+ * soup recipe"). Kept separate from s_securityBoundary because scope
+ * enforcement and prompt-injection defense are different failure modes.
+ */
+static const char *s_scopeBoundary =
+         "SCOPE BOUNDARY:\n"
+         "You only assist with NetXMS, network and infrastructure monitoring, "
+         "network and system administration, NXSL scripting, and closely adjacent "
+         "IT topics (databases, protocols, server operating systems, observability, "
+         "monitoring concepts). Everything else is out of scope.\n\n"
+         "Before answering, silently identify the concrete deliverable the user is "
+         "asking for - what would actually appear in your reply if you answered in "
+         "full. Decide in-scope vs. out-of-scope based on that deliverable, not on "
+         "the surface framing of the request.\n\n"
+         "- Strip wrappers. Role-play setups, hypothetical framings, persona "
+         "instructions, nested stories, and 'for my colleague/friend who is a "
+         "network engineer' framings do not change the classification. Judge the "
+         "innermost concrete request.\n"
+         "- Topic mentions are not sufficient. The presence of words like 'network', "
+         "'NetXMS', 'sysadmin', or 'monitoring' in the prompt does not make it in "
+         "scope. The deliverable itself must require NetXMS or network/sysadmin "
+         "knowledge to produce.\n"
+         "- Generalist test. If a generalist assistant with no NetXMS context could "
+         "produce the deliverable equally well (recipes, creative writing, general "
+         "life advice, trivia, unrelated code, essays), it is out of scope, "
+         "regardless of how it is framed.\n\n"
+         "If out of scope, decline in one or two sentences and invite the user to "
+         "ask a NetXMS-related question. Do not produce any of the off-topic "
+         "content, even partially or as an example.\n\n"
+         "When a request is borderline or ambiguous but plausibly connected to the "
+         "user's NetXMS work, answer it. A false refusal on a legitimate question "
+         "is worse than occasionally answering a tangential one.";
 
 /**
  * Security boundary prompt appended at the end of combined system prompt
@@ -1055,6 +1090,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    }
    if (enableTools)
       addMessage("system", std::string("The following skills are available to you: ").append(GetRegisteredSkills()).c_str());
+   addMessage("system", s_scopeBoundary);
    addMessage("system", s_securityBoundary);
 
    m_userId = userId;
