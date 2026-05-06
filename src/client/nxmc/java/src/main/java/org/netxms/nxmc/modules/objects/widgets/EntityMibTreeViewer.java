@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,20 +68,12 @@ public class EntityMibTreeViewer extends AbstractHardwareInventoryWidget
    {
       super(parent, style, view);
 
-      viewer = new SortableTreeViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.addColumn(i18n.tr("Name"), 200);
-      viewer.addColumn(i18n.tr("Class"), 100);
-      viewer.addColumn(i18n.tr("Description"), 250);
-      viewer.addColumn(i18n.tr("Model"), 150);
-      viewer.addColumn(i18n.tr("Firmware"), 100);
-      viewer.addColumn(i18n.tr("Serial Number"), 150);
-      viewer.addColumn(i18n.tr("Vendor"), 150);
-      viewer.addColumn(i18n.tr("Interface"), 150);
+      final String[] names = new String[] { i18n.tr("Name"), i18n.tr("Class"), i18n.tr("Description"), i18n.tr("Model"), i18n.tr("Firmware"), i18n.tr("Serial Number"), i18n.tr("Vendor"), i18n.tr("Interface") };
+      final int[] widths = new int[] { 200, 100, 250, 150, 100, 150, 150, 150 };
+      viewer = new SortableTreeViewer(this, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new ComponentTreeLabelProvider();
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ComponentTreeContentProvider());
-      viewer.getTree().setHeaderVisible(true);
-      viewer.getTree().setLinesVisible(true);
       viewer.enablePersistence("EntityMibTreeViewer");
    }
 
