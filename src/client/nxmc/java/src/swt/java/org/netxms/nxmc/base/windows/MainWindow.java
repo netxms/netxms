@@ -28,10 +28,17 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
@@ -95,6 +102,7 @@ import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewFolder;
+import org.netxms.nxmc.base.views.helpers.ViewDragData;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.PerspectiveSwitcher;
@@ -159,6 +167,12 @@ public class MainWindow extends Window implements MessageAreaHolder
    private Action actionToggleFullScreen;
    private KeyBindingManager keyBindingManager;
    private List<Runnable> postOpenRunnables = new ArrayList<>();
+   private List<Composite> activeDragPlaceholders = null;
+   private int[] savedHorizontalWeightsForDrag = null;
+   private int[] savedVerticalWeightsForDrag = null;
+   private DropIntent pendingDropIntent = null;
+   private Color dragPlaceholderBackground = null;
+   private Color dragPlaceholderHoverBackground = null;
 
    /**
     * @param parentShell
@@ -670,6 +684,10 @@ public class MainWindow extends Window implements MessageAreaHolder
       getShell().addDisposeListener((e) -> {
          headerFontBold.dispose();
          clockFont.dispose();
+         if (dragPlaceholderBackground != null)
+            dragPlaceholderBackground.dispose();
+         if (dragPlaceholderHoverBackground != null)
+            dragPlaceholderHoverBackground.dispose();
       });
 
       actionToggleFullScreen = new Action(i18n.tr("&Full screen"), Action.AS_CHECK_BOX) {
@@ -867,6 +885,186 @@ public class MainWindow extends Window implements MessageAreaHolder
       }
       pinArea.addView(view, true, true, true);
       return pinArea;
+   }
+
+   /**
+    * Called by {@link ViewFolder} when a view tab drag starts. Creates thin placeholder
+    * strips on each edge that does not currently have a pinned area, so the user can
+    * reveal a hidden docking area by dropping the dragged tab onto an edge.
+    *
+    * @param dragData drag payload (currently informational only)
+    */
+   public void beginViewDrag(ViewDragData dragData)
+   {
+      if (activeDragPlaceholders != null)
+         return; // re-entrant call (shouldn't happen — only one drag at a time)
+
+      boolean leftEmpty = (leftPinArea == null) || leftPinArea.isDisposed();
+      boolean rightEmpty = (rightPinArea == null) || rightPinArea.isDisposed();
+      boolean bottomEmpty = (bottomPinArea == null) || bottomPinArea.isDisposed();
+      if (!leftEmpty && !rightEmpty && !bottomEmpty)
+         return; // nothing to do — every edge already has a real drop target
+
+      activeDragPlaceholders = new ArrayList<>();
+      if (leftEmpty || rightEmpty)
+         savedHorizontalWeightsForDrag = horizontalSplitArea.getWeights();
+      if (bottomEmpty)
+         savedVerticalWeightsForDrag = verticalSplitArea.getWeights();
+
+      if (leftEmpty)
+         activeDragPlaceholders.add(createDragPlaceholder(PinLocation.LEFT, horizontalSplitArea, true));
+      if (rightEmpty)
+         activeDragPlaceholders.add(createDragPlaceholder(PinLocation.RIGHT, horizontalSplitArea, false));
+      if (bottomEmpty)
+         activeDragPlaceholders.add(createDragPlaceholder(PinLocation.BOTTOM, verticalSplitArea, false));
+
+      windowContent.layout(true, true);
+   }
+
+   /**
+    * Called by {@link ViewFolder} when a view tab drag finishes (whether dropped or
+    * cancelled). Tears down any drag placeholders, restores SashForm weights, and — if
+    * a placeholder received a drop — moves the dragged view into a freshly-created pin
+    * area at the drop location.
+    */
+   public void endViewDrag()
+   {
+      if (activeDragPlaceholders == null)
+         return;
+
+      for(Composite p : activeDragPlaceholders)
+      {
+         if (!p.isDisposed())
+            p.dispose();
+      }
+      activeDragPlaceholders = null;
+
+      if (savedHorizontalWeightsForDrag != null)
+      {
+         if (horizontalSplitArea.getChildren().length == savedHorizontalWeightsForDrag.length)
+            horizontalSplitArea.setWeights(savedHorizontalWeightsForDrag);
+         savedHorizontalWeightsForDrag = null;
+      }
+      if (savedVerticalWeightsForDrag != null)
+      {
+         if (verticalSplitArea.getChildren().length == savedVerticalWeightsForDrag.length)
+            verticalSplitArea.setWeights(savedVerticalWeightsForDrag);
+         savedVerticalWeightsForDrag = null;
+      }
+      windowContent.layout(true, true);
+
+      DropIntent intent = pendingDropIntent;
+      pendingDropIntent = null;
+      if (intent != null)
+      {
+         View clone = intent.dragData.view.cloneView();
+         if (clone != null)
+         {
+            pinView(clone, intent.location);
+            if (!intent.dragData.sourceFolder.isDisposed()
+                  && (intent.dragData.view.isCloseable() || intent.dragData.sourceFolder.areAllViewsCloseable()))
+               intent.dragData.sourceFolder.detachAndDisposeView(intent.dragData.view);
+         }
+      }
+   }
+
+   /**
+    * Create one edge drop placeholder for the given location. The placeholder is a
+    * thin Composite child of the splitter (occupying ~4% of its weight) with its own
+    * {@link DropTarget} that records a {@link DropIntent} on drop. Final pin-area
+    * creation happens later in {@link #endViewDrag()}, after the source's
+    * {@code dragFinished} fires.
+    *
+    * @param location pin location this placeholder represents
+    * @param splitter parent SashForm
+    * @param prepend true if the placeholder must be the first child (used for LEFT)
+    * @return placeholder descriptor
+    */
+   private Composite createDragPlaceholder(final PinLocation location, final SashForm splitter, boolean prepend)
+   {
+      int[] curr = splitter.getWeights();
+      final Composite placeholder = new Composite(splitter, SWT.NONE);
+      placeholder.setLayout(new FillLayout());
+      if (dragPlaceholderBackground == null)
+         dragPlaceholderBackground = new Color(getShell().getDisplay(), 180, 200, 230);
+      if (dragPlaceholderHoverBackground == null)
+         dragPlaceholderHoverBackground = new Color(getShell().getDisplay(), 100, 150, 220);
+      placeholder.setBackground(dragPlaceholderBackground);
+      if (prepend)
+         placeholder.moveAbove(null);
+
+      int total = 0;
+      for(int w : curr)
+         total += w;
+      int phWeight = Math.max(1, total * 4 / 96); // ~4% of new total
+      int[] newWeights = new int[curr.length + 1];
+      if (prepend)
+      {
+         newWeights[0] = phWeight;
+         System.arraycopy(curr, 0, newWeights, 1, curr.length);
+      }
+      else
+      {
+         System.arraycopy(curr, 0, newWeights, 0, curr.length);
+         newWeights[curr.length] = phWeight;
+      }
+      splitter.setWeights(newWeights);
+
+      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      DropTarget dt = new DropTarget(placeholder, DND.DROP_MOVE);
+      dt.setTransfer(transfers);
+      dt.addDropListener(new DropTargetAdapter() {
+         @Override
+         public void dragEnter(DropTargetEvent event)
+         {
+            event.detail = DND.DROP_MOVE;
+            if (!placeholder.isDisposed())
+               placeholder.setBackground(dragPlaceholderHoverBackground);
+         }
+
+         @Override
+         public void dragLeave(DropTargetEvent event)
+         {
+            if (!placeholder.isDisposed())
+               placeholder.setBackground(dragPlaceholderBackground);
+         }
+
+         @Override
+         public void dragOver(DropTargetEvent event)
+         {
+            event.detail = DND.DROP_MOVE;
+         }
+
+         @Override
+         public void drop(DropTargetEvent event)
+         {
+            if (!(event.data instanceof IStructuredSelection))
+               return;
+            Object obj = ((IStructuredSelection)event.data).getFirstElement();
+            if (!(obj instanceof ViewDragData))
+               return;
+            // Defer the actual move until dragFinished fires on the source — endViewDrag
+            // will then dispose placeholders, restore weights, and create the pin area.
+            pendingDropIntent = new DropIntent(location, (ViewDragData)obj);
+         }
+      });
+
+      return placeholder;
+   }
+
+   /**
+    * Captured outcome of a placeholder drop, executed in {@link #endViewDrag()}.
+    */
+   private static class DropIntent
+   {
+      final PinLocation location;
+      final ViewDragData dragData;
+
+      DropIntent(PinLocation location, ViewDragData dragData)
+      {
+         this.location = location;
+         this.dragData = dragData;
+      }
    }
 
    /**
