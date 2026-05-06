@@ -1210,8 +1210,10 @@ public class ViewFolder extends ViewContainer
                return;
             }
             View view = (View)dragStartTab.getData("view");
-            LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(new ViewDragData(ViewFolder.this, view)));
+            ViewDragData dragData = new ViewDragData(ViewFolder.this, view);
+            LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(dragData));
             event.doit = true;
+            Registry.getMainWindow().beginViewDrag(dragData);
          }
 
          @Override
@@ -1225,6 +1227,7 @@ public class ViewFolder extends ViewContainer
          {
             LocalSelectionTransfer.getTransfer().setSelection(null);
             dragStartTab = null;
+            Registry.getMainWindow().endViewDrag();
          }
       });
 
@@ -1320,8 +1323,10 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
-    * Receive a view from another folder via drag-and-drop. Closeable (ad-hoc) views
-    * are moved; non-closeable (permanent) views are copied so the original stays in place.
+    * Receive a view from another folder via drag-and-drop. The original is detached
+    * (move) when the view itself is closeable or when the source folder treats every
+    * tab as closeable (pin areas, all-closeable perspective folders); otherwise it is
+    * copied so the original permanent view stays in place.
     *
     * @param sourceView view being dragged
     * @param sourceFolder folder the view is coming from
@@ -1343,7 +1348,7 @@ public class ViewFolder extends ViewContainer
       tabFolder.setSelection(tabItem);
       activateView(clone, tabItem);
 
-      if (sourceView.isCloseable())
+      if (sourceView.isCloseable() || sourceFolder.areAllViewsCloseable())
          sourceFolder.detachAndDisposeView(sourceView);
    }
 
@@ -1352,7 +1357,7 @@ public class ViewFolder extends ViewContainer
     *
     * @param view view to detach
     */
-   void detachAndDisposeView(View view)
+   public void detachAndDisposeView(View view)
    {
       String viewId = getViewId(view);
       views.remove(viewId);
