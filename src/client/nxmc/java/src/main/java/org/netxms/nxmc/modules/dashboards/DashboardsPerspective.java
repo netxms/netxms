@@ -22,18 +22,16 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.SubtreeType;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Dashboards" perspective
  */
 public class DashboardsPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(DashboardsPerspective.class);
-
    public DashboardsPerspective()
    {
-      super("objects.dashboards", i18n.tr("Dashboards"), "icons/perspectives/dashboards.svg", SubtreeType.DASHBOARDS, null);
+      super("objects.dashboards", LocalizationHelper.getI18n(DashboardsPerspective.class).tr("Dashboards"),
+            "icons/perspectives/dashboards.svg", SubtreeType.DASHBOARDS, null);
    }
 
    /**

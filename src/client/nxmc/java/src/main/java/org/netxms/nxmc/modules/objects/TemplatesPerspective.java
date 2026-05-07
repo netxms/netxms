@@ -25,15 +25,12 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.NodeComponent;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Templates" perspective
  */
 public class TemplatesPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(TemplatesPerspective.class);
-
    private static final Set<Integer> classFilterTemplate = new HashSet<>(1);
    static
    {
@@ -45,7 +42,8 @@ public class TemplatesPerspective extends ObjectsPerspective
     */
    public TemplatesPerspective()
    {
-      super("objects.templates", i18n.tr("Templates"), "icons/perspectives/templates.svg", SubtreeType.TEMPLATES, 
+      super("objects.templates", LocalizationHelper.getI18n(TemplatesPerspective.class).tr("Templates"),
+            "icons/perspectives/templates.svg", SubtreeType.TEMPLATES,
             (o) -> {
                if ((o.getObjectClass() == AbstractObject.OBJECT_INTERFACE) || (o.getObjectClass() == AbstractObject.OBJECT_NETWORKSERVICE) ||
                      (o.getObjectClass() == AbstractObject.OBJECT_VPNCONNECTOR))

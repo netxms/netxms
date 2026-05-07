@@ -20,22 +20,19 @@ package org.netxms.nxmc.modules.objects;
 
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * "Infrastructure" perspective
  */
 public class InfrastructurePerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(InfrastructurePerspective.class);
-
    /**
     * Create "Infrastructure" perspective
     */
    public InfrastructurePerspective()
    {
-      super("objects.infrastructure", i18n.tr("Infrastructure"), "icons/perspectives/infrastructure.svg", 
-            SubtreeType.INFRASTRUCTURE, new InfrastructureObjectFilter());
+      super("objects.infrastructure", LocalizationHelper.getI18n(InfrastructurePerspective.class).tr("Infrastructure"),
+            "icons/perspectives/infrastructure.svg", SubtreeType.INFRASTRUCTURE, new InfrastructureObjectFilter());
    }
 
    /**

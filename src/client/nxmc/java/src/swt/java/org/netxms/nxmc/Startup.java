@@ -116,7 +116,6 @@ public class Startup
       {
          stateDir.mkdir();
       }
-      Registry.setStateDir(stateDir);
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
@@ -143,7 +142,12 @@ public class Startup
          }
       }
       logger.info("Language: " + language);
-      Locale.setDefault(Locale.forLanguageTag(language));
+      Locale.setDefault(LocalizationHelper.localeFromLanguageCode(language));
+
+      // Set state dir on Registry only after locale is in place: Registry's static
+      // initializer instantiates all perspectives, whose names are translated at
+      // class-load time.
+      Registry.setStateDir(stateDir);
 
       DateFormatFactory.updateFromPreferences();
       SharedIcons.init();
