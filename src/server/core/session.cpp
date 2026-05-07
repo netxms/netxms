@@ -9573,15 +9573,24 @@ void ClientSession::executeAction(const NXCPMessage& request)
                   list.remove(0);
                }
 
-               StringBuffer args;
-               args.appendPreallocated(list.join(_T(", ")));
+               StringBuffer argsSuffix;
+               StringBuffer joinedArgs;
+               joinedArgs.appendPreallocated(list.join(_T(", ")));
+               if (joinedArgs.length() > 0)
+               {
+                  argsSuffix.append(_T(", with arguments: "));
+                  argsSuffix.append(joinedArgs);
+               }
+               // inputFields was already overwritten with ****** for masked entries above (when expandString is set),
+               // so we don't need to pass a separate masked-fields list to BuildAuditInputFieldsString here.
+               String inputFieldsLog = BuildAuditInputFieldsString(inputFields, nullptr);
 
                switch(rcc)
                {
                   case ERR_SUCCESS:
                      response.setField(VID_RCC, RCC_SUCCESS);
-                     writeAuditLog(AUDIT_OBJECTS, true, object->getId(), (args.length() > 0 ? _T("Executed agent action %s, with fields: %s") :
-                                                                                             _T("Executed agent action %s")), action, args.cstr());
+                     writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action %s%s%s"),
+                           action, argsSuffix.cstr(), inputFieldsLog.cstr());
                      break;
                   case ERR_ACCESS_DENIED:
                      response.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -12505,8 +12514,9 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   TCHAR *script = request.getFieldAsString(VID_SCRIPT);
+   wchar_t *script = request.getFieldAsString(VID_SCRIPT);
    MutableString maskedScript = script;
+   MutableString inputFieldsAudit;
    if (object != nullptr)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -12530,8 +12540,8 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   uint32_t fieldId = VID_FIELD_LIST_BASE;
                   for(int i = 0; i < count; i++)
                   {
-                     TCHAR *name = request.getFieldAsString(fieldId++);
-                     TCHAR *value = request.getFieldAsString(fieldId++);
+                     wchar_t *name = request.getFieldAsString(fieldId++);
+                     wchar_t *value = request.getFieldAsString(fieldId++);
                      inputFields.setPreallocated(name, value);
                   }
                }
@@ -12563,10 +12573,12 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                      maskedInputFields.set(maskedFields.get(i), _T("******"));
                   }
                   maskedScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &maskedInputFields, nullptr);
+                  inputFieldsAudit = BuildAuditInputFieldsString(inputFields, &maskedFields);
                }
                else
                {
                   maskedScript = expScript;
+                  inputFieldsAudit = BuildAuditInputFieldsString(inputFields, nullptr);
                }
                MemFree(script);
                script = MemCopyString(expScript);
@@ -12627,7 +12639,8 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    // start execution
    if (success)
    {
-      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]"), maskedScript.cstr(), object->getName(), object->getId());
+      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]%s"),
+            maskedScript.cstr(), object->getName(), object->getId(), inputFieldsAudit.cstr());
 
       ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
       for(int i = 1; i < args->size(); i++)
@@ -12638,9 +12651,9 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
       {
          if (withOutput)
          {
-            TCHAR buffer[1024];
-            const TCHAR *value = vm->getResult()->getValueAsCString();
-            _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+            wchar_t buffer[1024];
+            const wchar_t *value = vm->getResult()->getValueAsCString();
+            nx_swprintf(buffer, 1024, L"\n\n*** FINISHED ***\n\nResult: %s\n\n", CHECK_NULL(value));
             response.setField(VID_MESSAGE, buffer);
          }
          response.setField(VID_RCC, RCC_SUCCESS);
@@ -13692,7 +13705,11 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 			   if (commandExecutor->execute())
 			   {
 			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, commandExecutor->getMaskedCommand(), nodeId);
-               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), commandExecutor->getMaskedCommand());
+               StringMap inputFields(request, VID_FIELD_LIST_BASE, VID_NUM_FIELDS);
+               StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+               String inputFieldsLog = BuildAuditInputFieldsString(inputFields, &maskedFields);
+               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s%s"),
+                     commandExecutor->getMaskedCommand(), inputFieldsLog.cstr());
                response.setField(VID_COMMAND_ID, taskId);
                response.setField(VID_RCC, RCC_SUCCESS);
 			   }
@@ -18059,8 +18076,11 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                      }
                      command = node->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
                   }
-                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s"),
-                        command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr());
+                  // inputFields was already overwritten with ****** for masked entries above (when any are present),
+                  // so we don't need to pass a separate masked-fields list to BuildAuditInputFieldsString here.
+                  String inputFieldsLog = BuildAuditInputFieldsString(inputFields, nullptr);
+                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(),  _T("Executed SSH command \"%s\" on %s:%u as %s%s"),
+                        command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr(), inputFieldsLog.cstr());
                }
             }
             else

@@ -1544,6 +1544,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
 json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId, bool fullAccess);
 uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_ptr<Node>& node, json_t **result);
 uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCHAR **toolData, uint32_t *flags);
+String NXCORE_EXPORTABLE BuildAuditInputFieldsString(const StringMap& inputFields, const StringList *maskedFields);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title, const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, uint32_t *newId);

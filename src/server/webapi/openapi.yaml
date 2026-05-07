@@ -4311,6 +4311,14 @@ paths:
                   additionalProperties:
                     type: string
                   description: Optional input field values for macro expansion
+                maskedFields:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    Optional list of input field names whose values must be masked
+                    in the audit log (typically password-type fields). Names not
+                    present in inputFields are ignored.
                 stream:
                   type: boolean
                   description: |
