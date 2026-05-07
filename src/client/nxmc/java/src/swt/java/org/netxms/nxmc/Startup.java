@@ -106,10 +106,6 @@ public class Startup
     */
    public static void main(String[] args)
    {
-      display = new Display();
-
-      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
-
       String homeDir = System.getProperty("user.home");
       File stateDir = new File(homeDir + File.separator + ".nxmc4");
       if (!stateDir.isDirectory())
@@ -119,17 +115,6 @@ public class Startup
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
-      logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
-
-      // Icons for application window(s)
-      String iconResourcePrefix = BrandingManager.getWindowIconResourcePrefix();
-      windowIcons[0] = ResourceManager.getImage(iconResourcePrefix + "256x256.png");
-      windowIcons[1] = ResourceManager.getImage(iconResourcePrefix + "128x128.png");
-      windowIcons[2] = ResourceManager.getImage(iconResourcePrefix + "64x64.png");
-      windowIcons[3] = ResourceManager.getImage(iconResourcePrefix + "48x48.png");
-      windowIcons[4] = ResourceManager.getImage(iconResourcePrefix + "32x32.png");
-      windowIcons[5] = ResourceManager.getImage(iconResourcePrefix + "16x16.png");
-      Window.setDefaultImages(windowIcons);
 
       PreferenceStore.open(stateDir.getAbsolutePath());
 
@@ -144,9 +129,24 @@ public class Startup
       logger.info("Language: " + language);
       Locale.setDefault(LocalizationHelper.localeFromLanguageCode(language));
 
-      // Set state dir on Registry only after locale is in place: Registry's static
-      // initializer instantiates all perspectives, whose names are translated at
-      // class-load time.
+      // Important: create display only after locale is in place
+      display = new Display();
+      logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
+
+      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
+
+      // Icons for application window(s)
+      String iconResourcePrefix = BrandingManager.getWindowIconResourcePrefix();
+      windowIcons[0] = ResourceManager.getImage(iconResourcePrefix + "256x256.png");
+      windowIcons[1] = ResourceManager.getImage(iconResourcePrefix + "128x128.png");
+      windowIcons[2] = ResourceManager.getImage(iconResourcePrefix + "64x64.png");
+      windowIcons[3] = ResourceManager.getImage(iconResourcePrefix + "48x48.png");
+      windowIcons[4] = ResourceManager.getImage(iconResourcePrefix + "32x32.png");
+      windowIcons[5] = ResourceManager.getImage(iconResourcePrefix + "16x16.png");
+      Window.setDefaultImages(windowIcons);
+
+      // Important: set state dir on Registry only after locale is in place: Registry's static
+      // initializer instantiates all perspectives, whose names are translated at construction time.
       Registry.setStateDir(stateDir);
 
       DateFormatFactory.updateFromPreferences();
