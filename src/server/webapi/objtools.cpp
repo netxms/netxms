@@ -469,7 +469,7 @@ int H_ObjectToolDetails(Context *context)
 /**
  * Execute agent action tool
  */
-static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)
 {
    if (object->getObjectClass() != OBJECT_NODE)
    {
@@ -515,14 +515,16 @@ static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action \"%s\" on object %s [%u]"), actionName, object->getName(), object->getId());
+   String inputFieldsLog = BuildAuditInputFieldsString(*inputFields, maskedFields);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action \"%s\" on object %s [%u]%s"),
+         actionName, object->getName(), object->getId(), inputFieldsLog.cstr());
    return 200;
 }
 
 /**
  * Execute server command tool
  */
-static int ExecuteServerCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+static int ExecuteServerCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)
 {
    if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_CONTAINER) &&
          (object->getObjectClass() != OBJECT_COLLECTOR) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
@@ -559,14 +561,15 @@ static int ExecuteServerCommand(Context *context, const shared_ptr<NetObj>& obje
       json_object_set_new(response, "type", json_string("none"));
    }
 
-   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server command %s", expandedCommand.cstr());
+   String inputFieldsLog = BuildAuditInputFieldsString(*inputFields, maskedFields);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server command %s%s", expandedCommand.cstr(), inputFieldsLog.cstr());
    return 200;
 }
 
 /**
  * Execute server script tool
  */
-static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, Alarm *alarm, const StringMap *inputFields, json_t *response)
+static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)
 {
    StringBuffer expandedScript = object->expandText(toolData, alarm, nullptr, shared_ptr<DCObjectInfo>(), context->getLoginName(), nullptr, nullptr, inputFields, nullptr);
    StringList *scriptArgs = ParseCommandLine(expandedScript);
@@ -622,7 +625,9 @@ static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& objec
    }
    json_object_set_new(response, "output", json_string_t(output.cstr()));
 
-   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server script tool \"%s\" on object %s [%u]", scriptArgs->get(0), object->getName(), object->getId());
+   String inputFieldsLog = BuildAuditInputFieldsString(*inputFields, maskedFields);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed server script tool \"%s\" on object %s [%u]%s",
+         scriptArgs->get(0), object->getName(), object->getId(), inputFieldsLog.cstr());
 
    delete vm;
    delete scriptArgs;
@@ -630,7 +635,8 @@ static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& objec
 }
 
 /**
- * Execute table tool (SNMP table, agent table, or agent list)
+ * Execute table tool (SNMP table, agent table, or agent list).
+ * These tool types do not perform macro expansion, so input fields are not used.
  */
 static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, uint32_t toolId, json_t *response)
 {
@@ -659,7 +665,7 @@ static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, 
  * object (which may be a node, interface, sensor, or access point); the source object is used
  * for macro expansion context. Access rights must already have been validated by the caller.
  */
-static int ExecuteSSHCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, json_t *response)
+static int ExecuteSSHCommand(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)
 {
    shared_ptr<Node> targetNode = GetParentNodeForObjectTool(object);
    if (targetNode == nullptr)
@@ -721,11 +727,13 @@ static int ExecuteSSHCommand(Context *context, const shared_ptr<NetObj>& object,
       return 500;
    }
 
+   String inputFieldsLog = BuildAuditInputFieldsString(*inputFields, maskedFields);
    if (object->getId() != node.getId())
-      context->writeAuditLog(AUDIT_OBJECTS, true, node.getId(), _T("Executed SSH command on node %s [%u] (context: %s [%u])"),
-            node.getName(), node.getId(), object->getName(), object->getId());
+      context->writeAuditLog(AUDIT_OBJECTS, true, node.getId(), _T("Executed SSH command on node %s [%u] (context: %s [%u])%s"),
+            node.getName(), node.getId(), object->getName(), object->getId(), inputFieldsLog.cstr());
    else
-      context->writeAuditLog(AUDIT_OBJECTS, true, node.getId(), _T("Executed SSH command on object %s [%u]"), node.getName(), node.getId());
+      context->writeAuditLog(AUDIT_OBJECTS, true, node.getId(), _T("Executed SSH command on object %s [%u]%s"),
+            node.getName(), node.getId(), inputFieldsLog.cstr());
    return 200;
 }
 
@@ -738,6 +746,7 @@ struct StreamingAgentActionData
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
+   StringList maskedFields;
    ToolOutputWebSocketSession *session;
    uint32_t userId;
    wchar_t loginName[MAX_USER_NAME];
@@ -808,6 +817,7 @@ struct StreamingServerCommandData
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
+   StringList maskedFields;
    ToolOutputWebSocketSession *session;
    wchar_t loginName[MAX_USER_NAME];
 };
@@ -856,6 +866,7 @@ struct StreamingServerScriptData
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
+   StringList maskedFields;
    ToolOutputWebSocketSession *session;
    uint32_t userId;
    wchar_t loginName[MAX_USER_NAME];
@@ -939,6 +950,7 @@ struct StreamingSSHCommandData
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
+   StringList maskedFields;
    ToolOutputWebSocketSession *session;
    wchar_t loginName[MAX_USER_NAME];
 };
@@ -1154,6 +1166,21 @@ int H_ObjectToolExecute(Context *context)
 
    StringMap inputFields(json_object_get(request, "inputFields"));
 
+   // Names of input fields whose values must be masked in audit log (typically password-type fields).
+   // Optional; if omitted no masking is applied.
+   StringList maskedFields;
+   json_t *maskedFieldsJson = json_object_get(request, "maskedFields");
+   if (json_is_array(maskedFieldsJson))
+   {
+      size_t index;
+      json_t *value;
+      json_array_foreach(maskedFieldsJson, index, value)
+      {
+         if (json_is_string(value))
+            maskedFields.addUTF8String(json_string_value(value));
+      }
+   }
+
    // Check if streaming mode is requested
    bool streamRequested = json_object_get_boolean(request, "stream", false);
    if (streamRequested && IsStreamableToolType(toolType) && (toolFlags & TF_GENERATES_OUTPUT))
@@ -1176,6 +1203,7 @@ int H_ObjectToolExecute(Context *context)
             data->toolData = toolData;
             data->alarm = alarm;
             data->inputFields = inputFields;
+            data->maskedFields = maskedFields;
             data->session = session;
             data->userId = context->getUserId();
             wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
@@ -1189,6 +1217,7 @@ int H_ObjectToolExecute(Context *context)
             data->toolData = toolData;
             data->alarm = alarm;
             data->inputFields = inputFields;
+            data->maskedFields = maskedFields;
             data->session = session;
             wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingServerCommandThread, data);
@@ -1201,6 +1230,7 @@ int H_ObjectToolExecute(Context *context)
             data->toolData = toolData;
             data->alarm = alarm;
             data->inputFields = inputFields;
+            data->maskedFields = maskedFields;
             data->session = session;
             data->userId = context->getUserId();
             wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
@@ -1214,6 +1244,7 @@ int H_ObjectToolExecute(Context *context)
             data->toolData = toolData;
             data->alarm = alarm;
             data->inputFields = inputFields;
+            data->maskedFields = maskedFields;
             data->session = session;
             wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingSSHCommandThread, data);
@@ -1234,7 +1265,9 @@ int H_ObjectToolExecute(Context *context)
       snprintf(wsUrl, sizeof(wsUrl), "/v1/object-tools/output/%s", tokenStr);
       json_object_set_new(response, "wsUrl", json_string(wsUrl));
 
-      context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Started streaming tool execution on object %s [%u]", object->getName(), object->getId());
+      String inputFieldsLog = BuildAuditInputFieldsString(inputFields, &maskedFields);
+      context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Started streaming tool execution on object %s [%u]%s",
+            object->getName(), object->getId(), inputFieldsLog.cstr());
       context->setResponseData(response);
       json_decref(response);
       return 202;
@@ -1247,13 +1280,13 @@ int H_ObjectToolExecute(Context *context)
    switch(toolType)
    {
       case TOOL_TYPE_ACTION:
-         httpCode = ExecuteAgentAction(context, object, toolData, toolFlags, alarm, &inputFields, response);
+         httpCode = ExecuteAgentAction(context, object, toolData, toolFlags, alarm, &inputFields, &maskedFields, response);
          break;
       case TOOL_TYPE_SERVER_COMMAND:
-         httpCode = ExecuteServerCommand(context, object, toolData, toolFlags, alarm, &inputFields, response);
+         httpCode = ExecuteServerCommand(context, object, toolData, toolFlags, alarm, &inputFields, &maskedFields, response);
          break;
       case TOOL_TYPE_SERVER_SCRIPT:
-         httpCode = ExecuteServerScript(context, object, toolData, alarm, &inputFields, response);
+         httpCode = ExecuteServerScript(context, object, toolData, alarm, &inputFields, &maskedFields, response);
          break;
       case TOOL_TYPE_SNMP_TABLE:
       case TOOL_TYPE_AGENT_TABLE:
@@ -1261,7 +1294,7 @@ int H_ObjectToolExecute(Context *context)
          httpCode = ExecuteTableTool(context, object, toolId, response);
          break;
       case TOOL_TYPE_SSH_COMMAND:
-         httpCode = ExecuteSSHCommand(context, object, toolData, toolFlags, alarm, &inputFields, response);
+         httpCode = ExecuteSSHCommand(context, object, toolData, toolFlags, alarm, &inputFields, &maskedFields, response);
          break;
       case TOOL_TYPE_URL:
          httpCode = ExpandURL(context, object, toolData, alarm, &inputFields, response);

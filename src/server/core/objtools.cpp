@@ -2846,25 +2846,10 @@ shared_ptr<ServerCommandExecutor> ServerCommandExecutor::createFromMessage(const
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      StringMap *inputFields;
       int count = request.getFieldAsInt16(VID_NUM_FIELDS);
-      if (count > 0)
-      {
-         inputFields = new StringMap();
-         uint32_t fieldId = VID_FIELD_LIST_BASE;
-         for(int i = 0; i < count; i++)
-         {
-            TCHAR *name = request.getFieldAsString(fieldId++);
-            TCHAR *value = request.getFieldAsString(fieldId++);
-            inputFields->setPreallocated(name, value);
-         }
-      }
-      else
-      {
-         inputFields = nullptr;
-      }
+      StringMap *inputFields = (count > 0) ? new StringMap(request, VID_FIELD_LIST_BASE, VID_NUM_FIELDS) : nullptr;
 
-      TCHAR *cmd = request.getFieldAsString(VID_COMMAND);
+      wchar_t *cmd = request.getFieldAsString(VID_COMMAND);
       command = object->expandText(cmd, alarm, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
 
       if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
@@ -2936,4 +2921,44 @@ void ServerCommandExecutor::endOfOutput()
    msg.setEndOfSequence();
    m_session->sendMessage(msg);
    m_session->unregisterServerCommand(getId());
+}
+
+/**
+ * Build a human-readable representation of object tool input fields for audit log.
+ * Returns an empty string when there are no input fields, otherwise a string of the
+ * form `; input fields: name1="value1", name2="******"`. Values for keys listed in
+ * maskedFields (typically password-type fields) are replaced with `******`. The
+ * leading separator is included so the result can be unconditionally appended to
+ * an existing audit message.
+ */
+String BuildAuditInputFieldsString(const StringMap& inputFields, const StringList *maskedFields)
+{
+   if (inputFields.size() == 0)
+      return String();
+
+   StringBuffer sb(L"; input fields: ");
+   bool first = true;
+   for(const KeyValuePair<const TCHAR> *kv : inputFields)
+   {
+      if (!first)
+         sb.append(L", ");
+      first = false;
+      sb.append(kv->key);
+      sb.append(L"=\"");
+      if ((maskedFields != nullptr) && maskedFields->contains(kv->key))
+      {
+         sb.append(L"******");
+      }
+      else if (kv->value != nullptr)
+      {
+         for(const TCHAR *p = kv->value; *p != 0; p++)
+         {
+            if ((*p == L'"') || (*p == L'\\'))
+               sb.append(L'\\');
+            sb.append(*p);
+         }
+      }
+      sb.append(L'"');
+   }
+   return sb;
 }
