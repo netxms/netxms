@@ -61,7 +61,7 @@ public class LanguagePage extends PropertyPage
 
    public LanguagePage()
    {
-      super(LocalizationHelper.getI18n(LanguagePage.class).tr("Language"));
+      super("A\u6587 - " + LocalizationHelper.getI18n(LanguagePage.class).tr("Language"));
    }
 
    /**

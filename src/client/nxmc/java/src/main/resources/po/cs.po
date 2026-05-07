@@ -109,7 +109,7 @@ msgstr "Use server time &zone"
 
 #: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:64
 msgid "Language"
-msgstr "Jazyk (Language)"
+msgstr "Jazyk"
 
 #: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:83
 msgid "Selected language"

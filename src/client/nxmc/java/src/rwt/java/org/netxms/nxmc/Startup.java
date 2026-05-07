@@ -122,11 +122,7 @@ public class Startup implements EntryPoint, StartupParameters
    @Override
    public int createUI()
    {
-      display = new Display();
       Thread.currentThread().setPriority(Math.min(Thread.MAX_PRIORITY, Thread.NORM_PRIORITY + 1));
-
-      display.setData(RWT.CANCEL_KEYS, new String[] { "CTRL+E", "CTRL+F", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10" });
-      display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+E", "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
 
       File tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("javax.servlet.context.tempdir");
       if (tempDir == null)
@@ -158,7 +154,13 @@ public class Startup implements EntryPoint, StartupParameters
       logger.info("Language: " + language);
       RWT.setLocale(LocalizationHelper.localeFromLanguageCode(language));
 
-      // Set state dir on Registry only after locale is in place: Registry construction
+      // Important: create display only after locale is in place
+      display = new Display();
+
+      display.setData(RWT.CANCEL_KEYS, new String[] { "CTRL+E", "CTRL+F", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10" });
+      display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+E", "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
+
+      // Important: set state dir on Registry only after locale is in place: Registry construction
       // instantiates all perspectives, whose names are translated at construction time.
       Registry.setStateDir(stateDir);
 

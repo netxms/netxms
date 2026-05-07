@@ -109,7 +109,7 @@ msgstr "Использовать тайм-зону сервера"
 
 #: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:64
 msgid "Language"
-msgstr "Язык (Language)"
+msgstr "Язык"
 
 #: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:83
 msgid "Selected language"
