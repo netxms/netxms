@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetSummaryView extends ObjectView
 {
-   static final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
 
    private SortableTableViewer viewer;
    private AssetPropertyReader propertyReader;

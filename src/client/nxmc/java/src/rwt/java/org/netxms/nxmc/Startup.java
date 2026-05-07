@@ -25,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -130,15 +129,15 @@ public class Startup implements EntryPoint, StartupParameters
       display.setData(RWT.ACTIVE_KEYS, new String[] { "CTRL+E", "CTRL+F", "CTRL+F2", "F5", "F7", "F8", "F10" });
 
       File tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("javax.servlet.context.tempdir");
-      if (tempDir == null) {
-        tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("jakarta.servlet.context.tempdir");
+      if (tempDir == null)
+      {
+         tempDir = (File)RWT.getUISession().getHttpSession().getServletContext().getAttribute("jakarta.servlet.context.tempdir");
       }
       File stateDir = new File(tempDir + File.separator + "state");
       if (!stateDir.isDirectory())
       {
          stateDir.mkdir();
       }
-      Registry.setStateDir(stateDir);
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
@@ -157,7 +156,11 @@ public class Startup implements EntryPoint, StartupParameters
       if ((language == null) || language.isEmpty())
          language = PreferenceStore.getInstance().getAsString("nxmc.language", "en");
       logger.info("Language: " + language);
-      RWT.setLocale(Locale.forLanguageTag(language));
+      RWT.setLocale(LocalizationHelper.localeFromLanguageCode(language));
+
+      // Set state dir on Registry only after locale is in place: Registry construction
+      // instantiates all perspectives, whose names are translated at construction time.
+      Registry.setStateDir(stateDir);
 
       DateFormatFactory.createInstance();
       SharedIcons.init();

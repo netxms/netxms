@@ -19,6 +19,8 @@
 package org.netxms.nxmc.localization;
 
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -27,6 +29,8 @@ import org.xnap.commons.i18n.I18nFactory;
  */
 public final class LocalizationHelper
 {
+   private static final Logger logger = LoggerFactory.getLogger(LocalizationHelper.class);
+
    /**
     * Prevent construction
     */
@@ -43,6 +47,22 @@ public final class LocalizationHelper
    public static I18n getI18n(Class<?> c)
    {
       return I18nFactory.getI18n(c, Locale.getDefault(), I18nFactory.FALLBACK);
+   }
+
+   /**
+    * Convert a language code (e.g. {@code "pt_BR"} or {@code "pt-BR"}) to a {@link Locale}. Language codes stored in preferences use
+    * underscores as separator, but {@link Locale#forLanguageTag(String)} requires the BCP 47 hyphen separator, so we normalise before
+    * parsing.
+    *
+    * @param languageCode language code in any supported format
+    * @return the corresponding locale
+    */
+   public static Locale localeFromLanguageCode(String languageCode)
+   {
+      Locale locale = Locale.forLanguageTag(languageCode.replace('_', '-'));
+      logger.debug("localeFromLanguageCode(\"{}\") -> language={}, country={}, toLanguageTag={}",
+            languageCode, locale.getLanguage(), locale.getCountry(), locale.toLanguageTag());
+      return locale;
    }
 
    /**
