@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -273,7 +274,7 @@ public class DashboardImporter
 	private Map<Long, ObjectIdMatchingData> readSourceObjects(Element root)
 	{
 		Map<Long, ObjectIdMatchingData> objects = new HashMap<Long, ObjectIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("objectMap"); //$NON-NLS-1$
+		NodeList objectsRoot = root.getElementsByTagName("objectMap");
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
@@ -283,7 +284,7 @@ public class DashboardImporter
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
+				long id = getAttributeAsLong(e, "id", 0);
             objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0)));
 			}
 		}
@@ -299,7 +300,7 @@ public class DashboardImporter
 	private Map<Long, DciIdMatchingData> readSourceDci(Element root)
 	{
 		Map<Long, DciIdMatchingData> dcis = new HashMap<Long, DciIdMatchingData>();
-		NodeList objectsRoot = root.getElementsByTagName("dciMap"); //$NON-NLS-1$
+		NodeList objectsRoot = root.getElementsByTagName("dciMap");
 		for(int i = 0; i < objectsRoot.getLength(); i++)
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
@@ -373,7 +374,7 @@ public class DashboardImporter
 	{
 		NodeList l = parent.getElementsByTagName(tag);
 		if ((l.getLength() == 0) || (l.item(0).getNodeType() != Node.ELEMENT_NODE))
-			return "<" + tag + "></" + tag + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return "<" + tag + "></" + tag + ">";
 		return nodeToString(l.item(0));
 	}
 
@@ -388,9 +389,13 @@ public class DashboardImporter
 	private static String nodeToString(Node node) throws TransformerFactoryConfigurationError, TransformerException
 	{
 		StringWriter sw = new StringWriter();
-		Transformer t = TransformerFactory.newInstance().newTransformer();
-		t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-		t.setOutputProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
+		TransformerFactory tf = TransformerFactory.newInstance();
+		tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+		Transformer t = tf.newTransformer();
+		t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+		t.setOutputProperty(OutputKeys.INDENT, "yes");
 		t.transform(new DOMSource(node), new StreamResult(sw));
 		return sw.toString();
 	}
