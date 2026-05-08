@@ -242,6 +242,8 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
       return MSGRECV_COMM_FAILURE;
    }
 
+   connection->m_tLastCommandTime = time(nullptr);
+
    if (msg->isBinary())
    {
       if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)

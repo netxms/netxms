@@ -3781,13 +3781,17 @@ class ProxyAgentConnection : public ObjectLock<shared_ptr<AgentConnectionEx>>
 {
 private:
    time_t m_lastConnect;
+   uint32_t m_failureCount;
 
 public:
-   ProxyAgentConnection() : ObjectLock<shared_ptr<AgentConnectionEx>>() { m_lastConnect = 0; }
-   ProxyAgentConnection(const shared_ptr<AgentConnectionEx>& object) : ObjectLock<shared_ptr<AgentConnectionEx>>(object) { m_lastConnect = 0; }
+   ProxyAgentConnection() : ObjectLock<shared_ptr<AgentConnectionEx>>() { m_lastConnect = 0; m_failureCount = 0; }
+   ProxyAgentConnection(const shared_ptr<AgentConnectionEx>& object) : ObjectLock<shared_ptr<AgentConnectionEx>>(object) { m_lastConnect = 0; m_failureCount = 0; }
 
    void setLastConnectTime(time_t t) { m_lastConnect = t; }
    time_t getLastConnectTime() const { return m_lastConnect; }
+   uint32_t getFailureCount() const { return m_failureCount; }
+   void incrementFailureCount() { m_failureCount++; }
+   void resetReconnectThrottle() { m_lastConnect = 0; m_failureCount = 0; }
 };
 
 /**

@@ -2949,20 +2949,20 @@ restart_status_poll:
                sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
-               // Reset connection time of all proxy connections so they can be re-established immediately
+               // Reset throttle on all proxy connections so they can be re-established immediately
                for(int i = 0; i < MAX_PROXY_TYPE; i++)
                {
                   m_proxyConnections[i].lock();
-                  m_proxyConnections[i].setLastConnectTime(0);
+                  m_proxyConnections[i].resetReconnectThrottle();
                   m_proxyConnections[i].unlock();
                }
             }
 
-            // Reset connection time of all proxy connections so they can be re-established immediately
+            // Reset throttle on all proxy connections so they can be re-established immediately
             for(int i = 0; i < MAX_PROXY_TYPE; i++)
             {
                m_proxyConnections[i].lock();
-               m_proxyConnections[i].setLastConnectTime(0);
+               m_proxyConnections[i].resetReconnectThrottle();
                m_proxyConnections[i].unlock();
             }
          }
@@ -4946,11 +4946,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
             sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             m_pollCountAgent = 0;
 
-            // Reset connection time of all proxy connections so they can be re-established immediately
+            // Reset throttle on all proxy connections so they can be re-established immediately
             for(int i = 0; i < MAX_PROXY_TYPE; i++)
             {
                m_proxyConnections[i].lock();
-               m_proxyConnections[i].setLastConnectTime(0);
+               m_proxyConnections[i].resetReconnectThrottle();
                m_proxyConnections[i].unlock();
             }
          }
@@ -8719,7 +8719,7 @@ bool Node::getDataFromSmclp(const wchar_t *command, StringBuffer *output)
    uint32_t rcc = ERR_NOT_CONNECTED;
    if (proxy != nullptr)
    {
-      shared_ptr<AgentConnectionEx> conn = proxy->acquireProxyConnection(ProxyType::SMCLP_PROXY, false);
+      shared_ptr<AgentConnectionEx> conn = proxy->acquireProxyConnection(ProxyType::SMCLP_PROXY);
       if (conn != nullptr)
       {
          StringList arguments;
@@ -10873,6 +10873,28 @@ shared_ptr<AgentConnectionEx> Node::getAgentConnection(bool forcePrimary)
 }
 
 /**
+ * Skip nop()-based proxy connection validation if a successful message was
+ * received from the agent within this many seconds. Recent traffic is stronger
+ * proof of liveness than a keepalive RTT, and avoids tearing down a fleet-shared
+ * connection because of transient scheduling jitter on the server side.
+ */
+#define PROXY_VALIDATION_FRESHNESS_THRESHOLD 5
+
+/**
+ * Compute exponential backoff (in seconds) before the next proxy reconnect attempt
+ * is allowed. Returns 0 for failureCount == 0 (immediate retry permitted), then
+ * 1, 2, 4, 8, 16, 32, capping at 60 seconds.
+ */
+static inline uint32_t ProxyReconnectBackoff(uint32_t failureCount)
+{
+   if (failureCount == 0)
+      return 0;
+   if (failureCount >= 7)
+      return 60;
+   return 1U << (failureCount - 1);
+}
+
+/**
  * Acquire SNMP proxy agent connection
  */
 shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool validate)
@@ -10891,43 +10913,62 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
       nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection dropped"), m_name, m_id, (int)type);
    }
 
+   time_t now = time(nullptr);
+
    if ((conn != nullptr) && validate)
    {
-      uint32_t rcc = conn->nop();
-      if (rcc == ERR_SUCCESS)
+      time_t lastCmd = conn->getLastCommandTime();
+      if ((lastCmd != 0) && (now - lastCmd <= PROXY_VALIDATION_FRESHNESS_THRESHOLD))
       {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection passed validation"), m_name, m_id, (int)type);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::acquireProxyConnection(%s [%u] type=%d): skipping validation, last activity %d seconds ago"),
+                  m_name, m_id, (int)type, (int)(now - lastCmd));
       }
       else
       {
-         conn.reset();
-         m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection failed validation (RCC=%u) and dropped"),
-                  m_name, m_id, (int)type, rcc);
+         uint32_t rcc = conn->nop();
+         if (rcc == ERR_SUCCESS)
+         {
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection passed validation"), m_name, m_id, (int)type);
+         }
+         else
+         {
+            conn.reset();
+            m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection failed validation (RCC=%u) and dropped"),
+                     m_name, m_id, (int)type, rcc);
+         }
       }
    }
 
-   if ((conn == nullptr) && (time(nullptr) - m_proxyConnections[type].getLastConnectTime() > 60))
+   if (conn == nullptr)
    {
-      conn = createAgentConnection();
-      if (conn != nullptr)
+      uint32_t backoff = ProxyReconnectBackoff(m_proxyConnections[type].getFailureCount());
+      if (now - m_proxyConnections[type].getLastConnectTime() > static_cast<time_t>(backoff))
       {
-         if (conn->isMasterServer())
+         conn = createAgentConnection();
+         if ((conn != nullptr) && conn->isMasterServer())
          {
             m_proxyConnections[type].set(conn);
+            m_proxyConnections[type].resetReconnectThrottle();
             nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): new agent connection created"), m_name, m_id, (int)type);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): server does not have master access to agent"), m_name, m_id, (int)type);
-            conn.reset();
+            if (conn != nullptr)
+            {
+               nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): server does not have master access to agent"), m_name, m_id, (int)type);
+               conn.reset();
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): cannot create new agent connection"), m_name, m_id, (int)type);
+            }
+            m_proxyConnections[type].incrementFailureCount();
+            m_proxyConnections[type].setLastConnectTime(now);
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): reconnect failure count %u, next attempt in %u seconds"),
+                     m_name, m_id, (int)type, m_proxyConnections[type].getFailureCount(), ProxyReconnectBackoff(m_proxyConnections[type].getFailureCount()));
          }
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): cannot create new agent connection"), m_name, m_id, (int)type);
-      }
-      m_proxyConnections[type].setLastConnectTime(time(nullptr));
    }
 
    m_proxyConnections[type].unlock();
