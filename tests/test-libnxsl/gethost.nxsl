@@ -1,6 +1,6 @@
 import Net;
 
-assert("mail.netxms.org" == ResolveAddress("5.9.112.213"));
+assert("one.one.one.one" == ResolveAddress("1.1.1.1"));
 assert("dns.google" == ResolveAddress("8.8.8.8"));
 assert(null == ResolveAddress("169.254.15.16"));
 
