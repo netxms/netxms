@@ -263,7 +263,6 @@ public class Rest {
         } catch (IOException e) {
             Platform.writeLog(LogLevel.ERROR,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] " + e.getLocalizedMessage());
-            e.printStackTrace();
         } finally {
             if (response != null)
                 EntityUtils.consumeQuietly(response.getEntity());
