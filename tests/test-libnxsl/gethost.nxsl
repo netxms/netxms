@@ -1,5 +1,5 @@
 //gethostbyaddr
-assert("mail.netxms.org" == gethostbyaddr("5.9.112.213"));
+assert("one.one.one.one" == gethostbyaddr("1.1.1.1"));
 assert("dns.google" == gethostbyaddr("8.8.8.8"));
 assert(null == gethostbyaddr("169.254.15.16"));
 
