@@ -105,6 +105,7 @@ int H_GrafanaGetSummaryTable(Context *context);
 int H_GrafanaObjectList(Context *context);
 int H_GrafanaGetObjectQuery(Context *context);
 int H_GrafanaGetObjectsStatus(Context *context);
+int H_ObjectChildren(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
@@ -382,6 +383,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)
+      .build();
+   RouteBuilder("v1/objects/:object-id/children")
+      .GET(H_ObjectChildren)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/current-values")
       .GET(H_DataCollectionCurrentValues)

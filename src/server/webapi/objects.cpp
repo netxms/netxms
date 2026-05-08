@@ -382,6 +382,62 @@ int H_ObjectSubTree(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/children
+ */
+int H_ObjectChildren(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   uint32_t userId = context->getUserId();
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return 403;
+
+   std::unordered_set<int> classFilter;
+   const char *classFilterParam = context->getQueryParameter("class");
+   if (classFilterParam != nullptr)
+   {
+      String(classFilterParam, "UTF8").split(L",", true,
+         [&classFilter] (const String& className) ->void
+         {
+            int n = NetObj::getObjectClassByName(className);
+            if (n != OBJECT_GENERIC)
+               classFilter.insert(n);
+         });
+   }
+
+   wchar_t nameFilter[256];
+   utf8_to_wchar(CHECK_NULL_EX_A(context->getQueryParameter("filter")), -1, nameFilter, 256);
+
+   unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
+   json_t *output = json_array();
+   for(int i = 0; i < children->size(); i++)
+   {
+      NetObj *child = children->get(i);
+
+      if (child->isUnpublished() || child->isDeleted() || !child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      if (!classFilter.empty() && (classFilter.count(child->getObjectClass()) == 0))
+         continue;
+
+      if ((nameFilter[0] != 0) && (wcsistr(child->getName(), nameFilter) == nullptr) && (wcsistr(child->getAlias(), nameFilter) == nullptr))
+         continue;
+
+      json_array_append_new(output, child->toJson(child->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)));
+   }
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Handler for /v1/objects/:object-id/execute-agent-command
  */
 int H_ObjectExecuteAgentCommand(Context *context)
