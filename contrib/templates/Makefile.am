@@ -37,6 +37,7 @@ templates_DATA = \
 	netxms_server.xml \
 	nvme_ssd.json \
 	object_tools.xml \
+	pgsql_server.json \
 	printers.xml \
 	qnap.xml \
 	rapl_energy_consumption.xml \
