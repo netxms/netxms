@@ -33,45 +33,64 @@ DB_DRIVER g_pgsqlDriver = nullptr;
 DatabaseQuery g_queries[] =
 {
 	{ _T("DB_STAT"), MAKE_PGSQL_VERSION(12, 0, 0), 0, 1,
-		_T("SELECT d.datname, CASE WHEN has_database_privilege(current_user, d.datname, 'CONNECT') THEN pg_catalog.pg_database_size(d.datname) ELSE NULL END AS size, s.numbackends, s.deadlocks, ")
-			_T("round(s.blks_hit::numeric*100/(s.blks_hit+s.blks_read), 2) CacheHitRatio, s.xact_commit, s.xact_rollback, ")
-			_T("s.tup_inserted, s.tup_updated, s.tup_deleted, s.tup_fetched, s.tup_returned, s.blks_read, s.blks_hit, ")
-			_T("s.conflicts, s.temp_files, s.temp_bytes, s.blk_read_time, s.blk_write_time, ")
-			_T("s.checksum_failures ")
-			_T("FROM  pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_database s ON d.oid = s.datid ")
-			_T("WHERE NOT d.datistemplate AND d.datallowconn AND s.blks_read >0")
+		_T("SELECT d.datname, pg_catalog.pg_database_size(d.datname) AS size, COALESCE(s.numbackends, 0) AS numbackends, COALESCE(s.deadlocks, 0) AS deadlocks, ")
+			_T("CASE WHEN COALESCE(s.blks_hit + s.blks_read, 0) = 0 THEN 0 ELSE round(s.blks_hit::numeric * 100 / (s.blks_hit + s.blks_read), 2) END AS CacheHitRatio, ")
+			_T("COALESCE(s.xact_commit, 0) AS xact_commit, COALESCE(s.xact_rollback, 0) AS xact_rollback, ")
+			_T("COALESCE(s.tup_inserted, 0) AS tup_inserted, COALESCE(s.tup_updated, 0) AS tup_updated, COALESCE(s.tup_deleted, 0) AS tup_deleted, ")
+			_T("COALESCE(s.tup_fetched, 0) AS tup_fetched, COALESCE(s.tup_returned, 0) AS tup_returned, COALESCE(s.blks_read, 0) AS blks_read, COALESCE(s.blks_hit, 0) AS blks_hit, ")
+			_T("COALESCE(s.conflicts, 0) AS conflicts, COALESCE(s.temp_files, 0) AS temp_files, COALESCE(s.temp_bytes, 0) AS temp_bytes, ")
+			_T("COALESCE(s.blk_read_time, 0) AS blk_read_time, COALESCE(s.blk_write_time, 0) AS blk_write_time, ")
+			_T("COALESCE(s.checksum_failures, 0) AS checksum_failures ")
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_database s ON d.oid = s.datid ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT')")
 	},
 	{ _T("DB_STAT"), 0, MAKE_PGSQL_VERSION(12, 0, 0), 1,
-		_T("SELECT d.datname, CASE WHEN has_database_privilege(current_user, d.datname, 'CONNECT') THEN pg_catalog.pg_database_size(d.datname) ELSE NULL END AS size, s.numbackends, s.deadlocks, ")
-			_T("round(s.blks_hit::numeric*100/(s.blks_hit+s.blks_read), 2) CacheHitRatio, s.xact_commit, s.xact_rollback, ")
-			_T("s.tup_inserted, s.tup_updated, s.tup_deleted, s.tup_fetched, s.tup_returned, s.blks_read, s.blks_hit, ")
-			_T("s.conflicts, s.temp_files, s.temp_bytes, s.blk_read_time, s.blk_write_time ")
-			_T("FROM  pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_database s ON d.oid = s.datid ")
-			_T("WHERE NOT d.datistemplate AND d.datallowconn AND s.blks_read >0")
+		_T("SELECT d.datname, pg_catalog.pg_database_size(d.datname) AS size, COALESCE(s.numbackends, 0) AS numbackends, COALESCE(s.deadlocks, 0) AS deadlocks, ")
+			_T("CASE WHEN COALESCE(s.blks_hit + s.blks_read, 0) = 0 THEN 0 ELSE round(s.blks_hit::numeric * 100 / (s.blks_hit + s.blks_read), 2) END AS CacheHitRatio, ")
+			_T("COALESCE(s.xact_commit, 0) AS xact_commit, COALESCE(s.xact_rollback, 0) AS xact_rollback, ")
+			_T("COALESCE(s.tup_inserted, 0) AS tup_inserted, COALESCE(s.tup_updated, 0) AS tup_updated, COALESCE(s.tup_deleted, 0) AS tup_deleted, ")
+			_T("COALESCE(s.tup_fetched, 0) AS tup_fetched, COALESCE(s.tup_returned, 0) AS tup_returned, COALESCE(s.blks_read, 0) AS blks_read, COALESCE(s.blks_hit, 0) AS blks_hit, ")
+			_T("COALESCE(s.conflicts, 0) AS conflicts, COALESCE(s.temp_files, 0) AS temp_files, COALESCE(s.temp_bytes, 0) AS temp_bytes, ")
+			_T("COALESCE(s.blk_read_time, 0) AS blk_read_time, COALESCE(s.blk_write_time, 0) AS blk_write_time ")
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_database s ON d.oid = s.datid ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT')")
 	},
-	{ _T("DB_CONNECTIONS"), MAKE_PGSQL_VERSION(9, 6, 0), 0, 1,
-		_T("SELECT datname, count(*) AS total, count(*) FILTER (WHERE state = 'active') AS active, count(*) FILTER (WHERE state = 'active') AS idle, ")
-			_T("count(*) FILTER (WHERE state = 'idle in transaction') AS idle_in_transaction, count(*) FILTER (WHERE state = 'idle in transaction (aborted)') AS idle_in_transaction_aborted, ")
-			_T("count(*) FILTER (WHERE state = 'fastpath function call') AS fastpath_function_call, greatest(max(age(backend_xmin)), max(age(backend_xid))) AS oldestxid, ")
-			_T("count(*) FILTER (WHERE state <> 'idle' AND query like '%autovacuum%') AS autovacuum, ")
-			_T("count(*) FILTER (WHERE wait_event IS NOT NULL ) AS waiting ") // change in v9.6
-			_T("FROM pg_catalog.pg_stat_activity WHERE datid is not NULL GROUP BY datname")
+	{ _T("DB_CONNECTIONS"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 1,
+		_T("SELECT d.datname, count(s.pid) AS total, count(s.pid) FILTER (WHERE s.state = 'active') AS active, count(s.pid) FILTER (WHERE s.state = 'idle') AS idle, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'idle in transaction') AS idle_in_transaction, count(s.pid) FILTER (WHERE s.state = 'idle in transaction (aborted)') AS idle_in_transaction_aborted, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'fastpath function call') AS fastpath_function_call, COALESCE(greatest(max(age(s.backend_xmin)), max(age(s.backend_xid))), 0) AS oldestxid, ")
+			_T("count(s.pid) FILTER (WHERE s.backend_type = 'autovacuum worker') AS autovacuum, ") // backend_type added in v10
+			_T("count(s.pid) FILTER (WHERE s.wait_event IS NOT NULL) AS waiting ")
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_activity s ON s.datid = d.oid ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT') GROUP BY d.datname")
+	},
+	{ _T("DB_CONNECTIONS"), MAKE_PGSQL_VERSION(9, 6, 0), MAKE_PGSQL_VERSION(10, 0, 0), 1,
+		_T("SELECT d.datname, count(s.pid) AS total, count(s.pid) FILTER (WHERE s.state = 'active') AS active, count(s.pid) FILTER (WHERE s.state = 'idle') AS idle, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'idle in transaction') AS idle_in_transaction, count(s.pid) FILTER (WHERE s.state = 'idle in transaction (aborted)') AS idle_in_transaction_aborted, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'fastpath function call') AS fastpath_function_call, COALESCE(greatest(max(age(s.backend_xmin)), max(age(s.backend_xid))), 0) AS oldestxid, ")
+			_T("count(s.pid) FILTER (WHERE s.state <> 'idle' AND s.query LIKE '%autovacuum%') AS autovacuum, ")
+			_T("count(s.pid) FILTER (WHERE s.wait_event IS NOT NULL) AS waiting ") // wait_event added in v9.6
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_activity s ON s.datid = d.oid ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT') GROUP BY d.datname")
 	},
 	{ _T("DB_CONNECTIONS"), 0, MAKE_PGSQL_VERSION(9, 6, 0), 1,
-		_T("SELECT datname, count(*) AS total, count(*) FILTER (WHERE state = 'active') AS active, count(*) FILTER (WHERE state = 'active') AS idle, ")
-			_T("count(*) FILTER (WHERE state = 'idle in transaction') AS idle_in_transaction, count(*) FILTER (WHERE state = 'idle in transaction (aborted)') AS idle_in_transaction_aborted, ")
-			_T("count(*) FILTER (WHERE state = 'fastpath function call') AS fastpath_function_call, greatest(max(age(backend_xmin)), max(age(backend_xid))) AS oldestxid, ")
-			_T("count(*) FILTER (WHERE state <> 'idle' AND query like '%autovacuum%') AS autovacuum, ")
-			_T("count(*) FILTER (WHERE waiting ) AS waiting ")
-			_T("FROM pg_catalog.pg_stat_activity WHERE datid is not NULL GROUP BY datname")
+		_T("SELECT d.datname, count(s.pid) AS total, count(s.pid) FILTER (WHERE s.state = 'active') AS active, count(s.pid) FILTER (WHERE s.state = 'idle') AS idle, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'idle in transaction') AS idle_in_transaction, count(s.pid) FILTER (WHERE s.state = 'idle in transaction (aborted)') AS idle_in_transaction_aborted, ")
+			_T("count(s.pid) FILTER (WHERE s.state = 'fastpath function call') AS fastpath_function_call, COALESCE(greatest(max(age(s.backend_xmin)), max(age(s.backend_xid))), 0) AS oldestxid, ")
+			_T("count(s.pid) FILTER (WHERE s.state <> 'idle' AND s.query LIKE '%autovacuum%') AS autovacuum, ")
+			_T("count(s.pid) FILTER (WHERE s.waiting) AS waiting ")
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_stat_activity s ON s.datid = d.oid ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT') GROUP BY d.datname")
 	},
 	{ _T("CONNECTIONS"), 0, 0, 0,
-		_T("SELECT count(*) AS total, pg_catalog.current_setting('max_connections')::int AS max, count(*)*100/(SELECT pg_catalog.current_setting('max_connections')::int) AS total_pct, ")
+		_T("SELECT count(*) AS total, pg_catalog.current_setting('max_connections')::int AS max, count(*)::numeric * 100 / pg_catalog.current_setting('max_connections')::numeric AS total_pct, ")
 			_T("pg_catalog.current_setting('autovacuum_max_workers')::int AS autovacuum_max ")
 			_T("FROM pg_catalog.pg_stat_activity WHERE datid is not NULL")
 	},
 	{ _T("DB_TRANSACTIONS"), 0, 0, 1,
-		_T("SELECT database, count(*) AS prepared FROM pg_catalog.pg_prepared_xacts GROUP BY database")
+		_T("SELECT d.datname, count(p.gid) AS prepared ")
+			_T("FROM pg_catalog.pg_database d LEFT JOIN pg_catalog.pg_prepared_xacts p ON p.database = d.datname ")
+			_T("WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT') GROUP BY d.datname")
 	},
 	{ _T("DB_LOCKS"), 0, 0, 1,
 		_T("SELECT d.datname, ")
@@ -84,7 +103,7 @@ DatabaseQuery g_queries[] =
 			_T("count(*) FILTER (WHERE MODE = 'ShareLock') AS share, ")
 			_T("count(*) FILTER (WHERE MODE = 'ShareRowExclusiveLock') AS sharerowexclusive, ")
 			_T("count(*) FILTER (WHERE MODE = 'ShareUpdateExclusiveLock') AS shareupdateexclusive ")
-			_T("FROM pg_catalog.pg_locks l RIGHT JOIN pg_catalog.pg_database d ON d.oid = l.database WHERE NOT datistemplate AND datallowconn GROUP BY d.datname")
+			_T("FROM pg_catalog.pg_locks l RIGHT JOIN pg_catalog.pg_database d ON d.oid = l.database WHERE NOT d.datistemplate AND d.datallowconn AND has_database_privilege(current_user, d.datname, 'CONNECT') GROUP BY d.datname")
 	},
 	{ _T("BGWRITER"), MAKE_PGSQL_VERSION(17, 0, 0), 0, 0,
 		_T("SELECT c.num_timed AS checkpoints_timed, c.num_requested AS checkpoints_req, ")
@@ -617,7 +636,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("PostgreSQL.GlobalConnections.AutovacuumMax(*)"), H_GlobalParameter, _T("CONNECTIONS/autovacuum_max"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: max autovacuum backends") },
 	{ _T("PostgreSQL.GlobalConnections.Total(*)"), H_GlobalParameter, _T("CONNECTIONS/total"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: number of all backends") },
 	{ _T("PostgreSQL.GlobalConnections.TotalMax(*)"), H_GlobalParameter, _T("CONNECTIONS/max"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: max connections") },
-	{ _T("PostgreSQL.GlobalConnections.TotalPct(*)"), H_GlobalParameter, _T("CONNECTIONS/total_pct"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: used connections (%)") },
+	{ _T("PostgreSQL.GlobalConnections.TotalPct(*)"), H_GlobalParameter, _T("CONNECTIONS/total_pct"), DCI_DT_FLOAT, _T("PostgreSQL/GlobalConnections: used connections (%)") },
 	{ _T("PostgreSQL.Replication.InRecovery(*)"), H_GlobalParameter, _T("REPLICATION/in_recovery"), DCI_DT_STRING, _T("PostgreSQL/Replication: in recovery") },
 	{ _T("PostgreSQL.Replication.IsReceiver(*)"), H_GlobalParameter, _T("REPLICATION/is_receiver"), DCI_DT_STRING, _T("PostgreSQL/Replication: is receiver") },
 	{ _T("PostgreSQL.Replication.Lag(*)"), H_GlobalParameter, _T("REPLICATION/lag"), DCI_DT_INT, _T("PostgreSQL/Replication: lag in seconds") },
