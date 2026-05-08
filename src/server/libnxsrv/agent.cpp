@@ -3526,51 +3526,51 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
 
    bool hasSessionAgentInfo = false;
 
-   Table *table;
-   uint32_t rcc = getTable(_T("System.ActiveUserSessions"), &table);
+   Table *userSessionsTable;
+   uint32_t rcc = getTable(_T("System.ActiveUserSessions"), &userSessionsTable);
    if (rcc == ERR_SUCCESS)
    {
-      *sessions = new ObjectArray<UserSession>(table->getNumRows(), 16, Ownership::True);
+      *sessions = new ObjectArray<UserSession>(userSessionsTable->getNumRows(), 16, Ownership::True);
 
-      int cId = table->getColumnIndex(_T("ID"));
-      int cUserName = table->getColumnIndex(_T("USER_NAME"));
-      int cTerminal = table->getColumnIndex(_T("TERMINAL"));
-      int cState = table->getColumnIndex(_T("STATE"));
-      int cClientName = table->getColumnIndex(_T("CLIENT_NAME"));
-      int cClientAddress = table->getColumnIndex(_T("CLIENT_ADDRESS"));
-      int cDisplay = table->getColumnIndex(_T("CLIENT_DISPLAY"));
-      int cConnectTime = table->getColumnIndex(_T("CONNECT_TIMESTAMP"));
-      int cLogonTime = table->getColumnIndex(_T("LOGON_TIMESTAMP"));
-      int cIdleTime = table->getColumnIndex(_T("IDLE_TIME"));
-      int cAgentType = table->getColumnIndex(_T("AGENT_TYPE"));
-      int cAgentPid = table->getColumnIndex(_T("AGENT_PID"));
+      int cId = userSessionsTable->getColumnIndex(_T("ID"));
+      int cUserName = userSessionsTable->getColumnIndex(_T("USER_NAME"));
+      int cTerminal = userSessionsTable->getColumnIndex(_T("TERMINAL"));
+      int cState = userSessionsTable->getColumnIndex(_T("STATE"));
+      int cClientName = userSessionsTable->getColumnIndex(_T("CLIENT_NAME"));
+      int cClientAddress = userSessionsTable->getColumnIndex(_T("CLIENT_ADDRESS"));
+      int cDisplay = userSessionsTable->getColumnIndex(_T("CLIENT_DISPLAY"));
+      int cConnectTime = userSessionsTable->getColumnIndex(_T("CONNECT_TIMESTAMP"));
+      int cLogonTime = userSessionsTable->getColumnIndex(_T("LOGON_TIMESTAMP"));
+      int cIdleTime = userSessionsTable->getColumnIndex(_T("IDLE_TIME"));
+      int cAgentType = userSessionsTable->getColumnIndex(_T("AGENT_TYPE"));
+      int cAgentPid = userSessionsTable->getColumnIndex(_T("AGENT_PID"));
 
       hasSessionAgentInfo = (cAgentType != -1);
 
-      for(int i = 0; i < table->getNumRows(); i++)
+      for(int i = 0; i < userSessionsTable->getNumRows(); i++)
       {
          UserSession *session = new UserSession();
-         session->id = table->getAsUInt(i, cId);
-         session->loginName = table->getAsString(i, cUserName, _T(""));
-         session->terminal = table->getAsString(i, cTerminal, _T(""));
-         session->connected = _tcsicmp(table->getAsString(i, cState, _T("")), _T("Active")) == 0;
-         session->clientName = table->getAsString(i, cClientName, _T(""));
-         session->connectTime = static_cast<time_t>(table->getAsInt64(i, cConnectTime));
-         session->loginTime = static_cast<time_t>(table->getAsInt64(i, cLogonTime));
-         session->idleTime = static_cast<time_t>(table->getAsInt64(i, cIdleTime));
+         session->id = userSessionsTable->getAsUInt(i, cId);
+         session->loginName = userSessionsTable->getAsString(i, cUserName, _T(""));
+         session->terminal = userSessionsTable->getAsString(i, cTerminal, _T(""));
+         session->connected = _tcsicmp(userSessionsTable->getAsString(i, cState, _T("")), _T("Active")) == 0;
+         session->clientName = userSessionsTable->getAsString(i, cClientName, _T(""));
+         session->connectTime = static_cast<time_t>(userSessionsTable->getAsInt64(i, cConnectTime));
+         session->loginTime = static_cast<time_t>(userSessionsTable->getAsInt64(i, cLogonTime));
+         session->idleTime = static_cast<time_t>(userSessionsTable->getAsInt64(i, cIdleTime));
 
          if (cAgentType != -1)
          {
-            session->agentType = table->getAsInt(i, cAgentType);
-            session->agentPID = table->getAsInt(i, cAgentPid);
+            session->agentType = userSessionsTable->getAsInt(i, cAgentType);
+            session->agentPID = userSessionsTable->getAsInt(i, cAgentPid);
          }
 
-         const TCHAR *addr = table->getAsString(i, cClientAddress, _T(""));
+         const TCHAR *addr = userSessionsTable->getAsString(i, cClientAddress, _T(""));
          if (*addr != 0)
             session->clientAddress = InetAddress::parse(addr);
 
          TCHAR displayInfo[128];
-         _tcslcpy(displayInfo, table->getAsString(i, cDisplay, _T("")), 128);
+         _tcslcpy(displayInfo, userSessionsTable->getAsString(i, cDisplay, _T("")), 128);
          if (displayInfo[0] != 0)
          {
             int values[3];
@@ -3598,7 +3598,7 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
          (*sessions)->add(session);
       }
 
-      delete table;
+      delete userSessionsTable;
    }
    else if (rcc == ERR_UNKNOWN_METRIC)
    {
@@ -3639,18 +3639,19 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
       }
    }
 
-   if ((rcc == ERR_SUCCESS) && !hasSessionAgentInfo && (getTable(_T("Agent.SessionAgents"), &table) == ERR_SUCCESS))
+   Table *sessionAgentsTable;
+   if ((rcc == ERR_SUCCESS) && !hasSessionAgentInfo && (getTable(_T("Agent.SessionAgents"), &sessionAgentsTable) == ERR_SUCCESS))
    {
-      int cId = table->getColumnIndex(_T("SESSION_ID"));
-      int cName = table->getColumnIndex(_T("SESSION_NAME"));
-      int cAgentType = table->getColumnIndex(_T("AGENT_TYPE"));
-      int cAgentPid = table->getColumnIndex(_T("AGENT_PID"));
-      int cScreenWidth = table->getColumnIndex(_T("SCREEN_WIDTH"));
-      int cScreenHeight = table->getColumnIndex(_T("SCREEN_HEIGHT"));
-      int cScreenBpp = table->getColumnIndex(_T("SCREEN_BPP"));
-      for(int i = 0; i < table->getNumRows(); i++)
+      int cId = sessionAgentsTable->getColumnIndex(_T("SESSION_ID"));
+      int cName = sessionAgentsTable->getColumnIndex(_T("SESSION_NAME"));
+      int cAgentType = sessionAgentsTable->getColumnIndex(_T("AGENT_TYPE"));
+      int cAgentPid = sessionAgentsTable->getColumnIndex(_T("AGENT_PID"));
+      int cScreenWidth = sessionAgentsTable->getColumnIndex(_T("SCREEN_WIDTH"));
+      int cScreenHeight = sessionAgentsTable->getColumnIndex(_T("SCREEN_HEIGHT"));
+      int cScreenBpp = sessionAgentsTable->getColumnIndex(_T("SCREEN_BPP"));
+      for(int i = 0; i < sessionAgentsTable->getNumRows(); i++)
       {
-         uint32_t sid = table->getAsUInt(i, cId);
+         uint32_t sid = sessionAgentsTable->getAsUInt(i, cId);
 
          UserSession *session = nullptr;
          for(int j = 0; j < (*sessions)->size(); j++)
@@ -3665,14 +3666,14 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
 
          if (session != nullptr)
          {
-            session->agentPID = table->getAsUInt(i, cAgentPid);
-            session->agentType = table->getAsUInt(i, cAgentType);
-            session->sessionName = table->getAsString(i, cName, _T(""));
+            session->agentPID = sessionAgentsTable->getAsUInt(i, cAgentPid);
+            session->agentType = sessionAgentsTable->getAsUInt(i, cAgentType);
+            session->sessionName = sessionAgentsTable->getAsString(i, cName, _T(""));
             if (cScreenWidth != -1 && cScreenHeight != -1 && cScreenBpp != -1)
             {
-               int32_t w = table->getAsInt(i, cScreenWidth);
-               int32_t h = table->getAsInt(i, cScreenHeight);
-               int32_t bpp = table->getAsInt(i, cScreenBpp);
+               int32_t w = sessionAgentsTable->getAsInt(i, cScreenWidth);
+               int32_t h = sessionAgentsTable->getAsInt(i, cScreenHeight);
+               int32_t bpp = sessionAgentsTable->getAsInt(i, cScreenBpp);
                if (w > 0 && h > 0 && bpp > 0)
                {
                   session->displayWidth = w;
@@ -3682,7 +3683,7 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
             }
          }
       }
-      delete table;
+      delete sessionAgentsTable;
    }
 
    return rcc;
