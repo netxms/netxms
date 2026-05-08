@@ -314,19 +314,29 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-	if (arg[0] == _T('?'))  // interpret missing data as 0
+	if (db->isConnected() && !db->firstPollDone())
+		return SYSINFO_RC_ERROR;
+
+	const TCHAR *tag = (arg[0] == _T('?')) ? &arg[1] : arg;
+	switch (db->getData(tag, value))
 	{
-		if (db->getData(&arg[1], value))
+		case CacheReadResult::Found:
 			return SYSINFO_RC_SUCCESS;
+		case CacheReadResult::Stale:
+			return SYSINFO_RC_ERROR;
+		case CacheReadResult::Missing:
+			break;
+	}
 
+	if (arg[0] == _T('?'))  // interpret missing data as 0, but only while DB is connected
+	{
 		if (!db->isConnected())
-		   return SYSINFO_RC_ERROR;   // Ignore "interpret missing as 0" option if DB is not connected
-
+			return SYSINFO_RC_ERROR;
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}
 
-	return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+	return SYSINFO_RC_ERROR;
 }
 
 /**
@@ -351,6 +361,9 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
    if (db == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
+   if (db->isConnected() && !db->firstPollDone())
+      return SYSINFO_RC_ERROR;
+
    if (c == nullptr)
    {
       if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
@@ -362,27 +375,24 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("H_InstanceParameter: querying %s for instance %s"), arg, instance);
 
+	bool missingAsZero = (arg[0] == _T('?'));
 	TCHAR tag[MAX_DB_STRING];
-	bool missingAsZero;
-	if (arg[0] == _T('?'))  // interpret missing instance as 0
-	{
-		_sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), &arg[1], instance);
-		missingAsZero = true;
-	}
-	else
-	{
-		_sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), arg, instance);
-		missingAsZero = false;
-	}
+	_sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), missingAsZero ? &arg[1] : arg, instance);
 
-	if (db->getData(tag, value))
-		return SYSINFO_RC_SUCCESS;
+	switch (db->getData(tag, value))
+	{
+		case CacheReadResult::Found:
+			return SYSINFO_RC_SUCCESS;
+		case CacheReadResult::Stale:
+			return SYSINFO_RC_ERROR;
+		case CacheReadResult::Missing:
+			break;
+	}
 
 	if (missingAsZero)
 	{
-      if (!db->isConnected())
-         return SYSINFO_RC_ERROR;   // Ignore "interpret missing as 0" option if DB is not connected
-
+		if (!db->isConnected())
+			return SYSINFO_RC_ERROR;
 		ret_int(value, 0);
 		return SYSINFO_RC_SUCCESS;
 	}

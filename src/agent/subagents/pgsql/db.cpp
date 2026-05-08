@@ -22,6 +22,8 @@
 #include "pgsql_subagent.h"
 #include <netxms-regex.h>
 
+static constexpr int64_t CACHE_MAX_AGE_MS = 300 * 1000;
+
 /**
  * Create new database instance object
  */
@@ -33,6 +35,9 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::F
 	m_connected = false;
 	m_data = nullptr;
 	m_version = 0;
+	m_firstPollDone = false;
+	m_lastSuccessfulPoll = 0;
+	m_staleLogged = false;
 }
 
 /**
@@ -120,9 +125,10 @@ void DatabaseInstance::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("PGSQL: poller thread for database server %s started"), m_info.id);
    INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
+   bool plannedReconnect = false;
    do
    {
-reconnect:
+      plannedReconnect = false;
 		m_sessionLock.lock();
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
@@ -160,15 +166,12 @@ reconnect:
 			if (currTime - pollerLoopStartTime > connectionTTL)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 4, _T("Planned connection reset for database %s"), m_info.id);
-				m_sessionLock.lock();
-				m_connected = false;
-				DBDisconnect(m_session);
-				m_session = nullptr;
-				m_sessionLock.unlock();
-				goto reconnect;
+				plannedReconnect = true;
+				break;
 			}
 			int64_t elapsedTime = currTime - startTime;
-			sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+			// re-poll immediately if over budget; clamp negative deltas (clock jumped backwards) to no-wait
+			sleepTime = (elapsedTime < 0 || elapsedTime >= 60000) ? 0u : static_cast<uint32_t>(60000 - elapsedTime);
 		}
 		while(!m_stopCondition.wait(sleepTime));
 
@@ -178,7 +181,7 @@ reconnect:
 		m_session = nullptr;
 		m_sessionLock.unlock();
 	}
-	while(!m_stopCondition.wait(60000));	// reconnect every 60 seconds
+	while(!m_stopCondition.wait(plannedReconnect ? 0 : 60000));	// reconnect every 60s, or immediately on planned reconnect — but always honor stop request
 	nxlog_debug_tag(DEBUG_TAG, 3, _T("Poller thread for database server %s stopped"), m_info.id);
 }
 
@@ -260,33 +263,75 @@ bool DatabaseInstance::poll()
 		DBFreeResult(hResult);
 	}
 
+	bool success = (failures < count);
+
 	// update cached data
 	m_dataLock.lock();
-	delete m_data;
-	m_data = data;
+	if (success)
+	{
+		m_lastSuccessfulPoll = GetMonotonicClockTime();
+		m_staleLogged = false;
+		delete m_data;
+		m_data = data;
+	}
+	else
+	{
+		// preserve previously cached data so the TTL window can serve it during reconnect
+		delete data;
+	}
 	m_dataLock.unlock();
 
-	return failures < count;
+	// Only mark first poll as done when a poll actually published data — otherwise the
+	// guard in handlers would let `?`-prefixed metrics fall through to the missing-as-zero
+	// path while m_data is still null, producing phantom zeros.
+	if (success)
+		m_firstPollDone = true;
+
+	return success;
 }
 
 /**
- * Get collected data
+ * Check whether cached data has exceeded the maximum age. Caller must hold m_dataLock —
+ * uses the monotonic clock so it is immune to wall-clock jumps in either direction.
  */
-bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
+bool DatabaseInstance::isCacheStaleLocked() const
 {
-	bool success = false;
+	return (m_lastSuccessfulPoll != 0) &&
+		(GetMonotonicClockTime() - m_lastSuccessfulPoll > CACHE_MAX_AGE_MS);
+}
+
+/**
+ * Get collected data. Returns Found/Missing/Stale so the caller can distinguish "no such tag"
+ * (where the ?-prefix "missing as zero" rule applies) from "cache exceeded TTL" (always an error).
+ */
+CacheReadResult DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
+{
+	CacheReadResult result = CacheReadResult::Missing;
+	bool shouldLog = false;
+	int64_t ageSeconds = 0;
 	m_dataLock.lock();
-	if (m_data != nullptr)
+	if (isCacheStaleLocked())
+	{
+		shouldLog = !m_staleLogged;
+		m_staleLogged = true;
+		ageSeconds = (GetMonotonicClockTime() - m_lastSuccessfulPoll) / 1000;
+		result = CacheReadResult::Stale;
+	}
+	else if (m_data != nullptr)
 	{
 		const TCHAR *v = m_data->get(tag);
 		if (v != nullptr)
 		{
 			ret_string(value, v);
-			success = true;
+			result = CacheReadResult::Found;
 		}
 	}
 	m_dataLock.unlock();
-	return success;
+
+	if (shouldLog)
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("Cached data for %s is stale (last poll %lld seconds ago)"), m_info.id, static_cast<long long>(ageSeconds));
+
+	return result;
 }
 
 /**
@@ -321,8 +366,16 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *
 bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 {
 	bool success = false;
+	bool shouldLog = false;
+	int64_t ageSeconds = 0;
 	m_dataLock.lock();
-	if (m_data != nullptr)
+	if (isCacheStaleLocked())
+	{
+		shouldLog = !m_staleLogged;
+		m_staleLogged = true;
+		ageSeconds = (GetMonotonicClockTime() - m_lastSuccessfulPoll) / 1000;
+	}
+	else if (m_data != nullptr)
 	{
 		const char *eptr;
 		int eoffset;
@@ -337,6 +390,10 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 		}
 	}
 	m_dataLock.unlock();
+
+	if (shouldLog)
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("Cached data for %s is stale (last poll %lld seconds ago)"), m_info.id, static_cast<long long>(ageSeconds));
+
 	return success;
 }
 

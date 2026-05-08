@@ -57,6 +57,16 @@ struct TableDescriptor
 };
 
 /**
+ * Cache read outcome for DatabaseInstance::getData()
+ */
+enum class CacheReadResult
+{
+	Found,
+	Missing,
+	Stale
+};
+
+/**
  * Database instance
  */
 class DatabaseInstance
@@ -67,6 +77,9 @@ private:
 	DB_HANDLE m_session;
 	bool m_connected;
 	int m_version;
+	bool m_firstPollDone;
+	int64_t m_lastSuccessfulPoll;  // monotonic clock ms; 0 means "never"
+	bool m_staleLogged;
 	StringMap *m_data;
 	Mutex m_dataLock;
 	Mutex m_sessionLock;
@@ -77,6 +90,7 @@ private:
 	void pollerThread();
 	bool poll();
 	int getPgsqlVersion();
+	bool isCacheStaleLocked() const;
 
 public:
 	DatabaseInstance(DatabaseInfo *info);
@@ -88,9 +102,10 @@ public:
 	const TCHAR *getId() { return m_info.id; }
 	const TCHAR *getName() { return m_info.name; }
 	bool isConnected() { return m_connected; }
+	bool firstPollDone() const { return m_firstPollDone; }
 	int getVersion() { return m_version; }
 
-	bool getData(const TCHAR *tag, TCHAR *value);
+	CacheReadResult getData(const TCHAR *tag, TCHAR *value);
 	bool getTagList(const TCHAR *pattern, StringList *value);
 	bool queryTable(TableDescriptor *td, Table *value);
 };
@@ -101,7 +116,7 @@ public:
 struct DatabaseQuery
 {
 	const TCHAR *name;
-	int minVersion; // >= 
+	int minVersion; // >=
 	int maxVersion; // <
 	int instanceColumns;
 	const TCHAR *query;
