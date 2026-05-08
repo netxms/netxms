@@ -10,6 +10,21 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
 
+   <dependencyManagement>
+      <dependencies>
+         <!-- Pin Netty to a version that addresses CVE-2025-24970 (netty-handler SslHandler native crash)
+              and CVE-2026-33870 (netty-codec-http chunked transfer request smuggling).
+              Eclipse Milo 0.6.14 transitively pulls 4.1.112.Final which is vulnerable to both. -->
+         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-bom</artifactId>
+            <version>4.1.132.Final</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+
    <dependencies>
       <dependency>
          <groupId>org.netxms</groupId>
