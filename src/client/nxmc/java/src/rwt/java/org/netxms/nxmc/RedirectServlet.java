@@ -40,7 +40,7 @@ public class RedirectServlet extends HttpServlet
 		final String path = request.getRequestURI().substring(request.getContextPath().length());
       if ((path == null) || path.isEmpty() || "/".equals(path))
 		{
-         response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/nxmc-light.app"));
+         response.sendRedirect(request.getContextPath() + "/nxmc-light.app");
 		}
 	}
 }
