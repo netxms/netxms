@@ -169,7 +169,12 @@ static void PushValueToNode(const shared_ptr<Node>& node, const char *metricName
  */
 static int BuildCounterStateKey(uint32_t nodeId, const char *metricName, uint32_t dciId, char *buffer, size_t bufferSize)
 {
-   return snprintf(buffer, bufferSize, "%u:%s:%u", nodeId, metricName, dciId);
+   int n = snprintf(buffer, bufferSize, "%u:%s:%u", nodeId, metricName, dciId);
+   if (n < 0)
+      return 0;
+   if (static_cast<size_t>(n) >= bufferSize)
+      n = static_cast<int>(bufferSize) - 1;  // Truncated: clamp to actual bytes written
+   return n;
 }
 
 /**
