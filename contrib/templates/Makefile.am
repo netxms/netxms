@@ -15,6 +15,7 @@ templates_DATA = \
 	apc.xml \
 	brocade_icx.xml \
 	cisco_gsm.xml \
+	cisco_performance.json \
 	cyberpower.xml \
 	dell_hw.xml \
 	dell_idrac.xml \
