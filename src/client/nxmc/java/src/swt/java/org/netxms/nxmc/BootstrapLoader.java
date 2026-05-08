@@ -139,6 +139,7 @@ public class BootstrapLoader
       }
       catch(Exception e)
       {
+         // nosemgrep: java.lang.security.audit.active-debug-code-printstacktrace.active-debug-code-printstacktrace -- pre-logger bootstrap; stderr is the only sink available
          e.printStackTrace();
       }
       finally
@@ -151,6 +152,7 @@ public class BootstrapLoader
             }
             catch(IOException e)
             {
+               // nosemgrep: java.lang.security.audit.active-debug-code-printstacktrace.active-debug-code-printstacktrace -- pre-logger bootstrap; stderr is the only sink available
                e.printStackTrace();
             }
          }

@@ -65,6 +65,7 @@ public class Shell
       }
       catch(Throwable e)
       {
+         // nosemgrep: java.lang.security.audit.active-debug-code-printstacktrace.active-debug-code-printstacktrace -- top-level CLI handler; stderr stack trace is expected user-facing output
          e.printStackTrace();
       }
    }

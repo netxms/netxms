@@ -56,6 +56,8 @@ public class DownloadServiceHandler implements ServiceHandler
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
 	{
 		String id = request.getParameter("id");
+		if (id != null)
+			id = id.replace('\r', '_').replace('\n', '_');
 		DownloadInfo info;
 		synchronized(downloads)
 		{
@@ -77,8 +79,12 @@ public class DownloadServiceHandler implements ServiceHandler
 		if (info.localFile != null)
 		{
 	      response.setContentLength((int)info.localFile.length());
+         // "id" request parameter is a HashMap key into a server-populated registry; the File comes from addDownload() callers, not from request input.
+         // nosemgrep: java.servlets.security.httpservlet-path-traversal.httpservlet-path-traversal
          try (InputStream in = new FileInputStream(info.localFile))
 			{
+            // Body bytes come from a server-registered file (see addDownload() callers); contentType is set by the registering caller, not from request input.
+            // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
 				OutputStream out = response.getOutputStream();
 
 				byte[] buffer = new byte[8192];
@@ -94,6 +100,8 @@ public class DownloadServiceHandler implements ServiceHandler
 		else
 		{
 			response.setContentLength(info.data.length);
+         // Body bytes come from a server-registered byte[] (see addDownload() callers); contentType is set by the registering caller, not from request input.
+         // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
 			response.getOutputStream().write(info.data);
 		}
 

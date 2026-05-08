@@ -55,9 +55,13 @@ public class VideoServiceHandler implements ServiceHandler
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
 	{
 		String id = request.getParameter("id");
+		if (id != null)
+			id = id.replace('\r', '_').replace('\n', '_');
 		File vf;
 		synchronized(videoFiles)
 		{
+		   // "id" request parameter is a HashMap key into a server-populated registry; the File comes from addVideoFile() callers, not from request input.
+		   // nosemgrep: java.servlets.security.httpservlet-path-traversal.httpservlet-path-traversal
 			vf = videoFiles.get(id);
 		}
 
@@ -116,6 +120,8 @@ public class VideoServiceHandler implements ServiceHandler
 		RandomAccessFile in = new RandomAccessFile(vf, "r");
 		try
 		{
+		   // Body bytes come from a server-registered video file (see addVideoFile() callers); contentType is hardcoded to video/mp4 or multipart/byteranges, not from request input.
+		   // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
 		   ServletOutputStream out = response.getOutputStream();
 			if (ranges.isEmpty())
 			{
@@ -139,6 +145,8 @@ public class VideoServiceHandler implements ServiceHandler
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
 			   response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
 			   
+			   // Multipart headers are hardcoded constants and server-derived numeric ranges; no request input written here.
+			   // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
 			   for(Range r : ranges)
 			   {
 			      out.println();
@@ -172,6 +180,8 @@ public class VideoServiceHandler implements ServiceHandler
       int bytes = total;
       while(len != -1)
       {
+         // Bytes copied from a server-registered video file; not request input.
+         // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
          out.write(buffer, 0, Math.min(len, bytes));
          bytes -= len;
          if (bytes <= 0)
