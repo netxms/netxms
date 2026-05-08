@@ -1267,6 +1267,7 @@ public:
    void disconnect();
 
    bool isConnected() const { return m_isConnected; }
+   time_t getLastCommandTime() const { return m_tLastCommandTime; }
    bool isProxyMode() { return m_useProxy; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
 	bool isControlServer() const { return m_controlServer; }
