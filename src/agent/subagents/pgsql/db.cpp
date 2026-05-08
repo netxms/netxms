@@ -230,16 +230,28 @@ bool DatabaseInstance::poll()
 			{
 				int col;
 
-				// Process instance columns
+				// Process instance columns. break exits only this composition loop;
+				// per-row metric emission below continues with the truncated instance.
 				TCHAR instance[128];
 				instance[0] = 0;
+				const size_t instanceCap = sizeof(instance) / sizeof(TCHAR);
 				for(col = 0; (col < g_queries[i].instanceColumns) && (col < numColumns); col++)
 				{
-					int len = (int)_tcslen(instance);
+					size_t len = _tcslen(instance);
 					if (len > 0)
+					{
+						// need room for '|' + at least one char + NUL; otherwise stop without
+						// overwriting the terminator and leaving the buffer non-NUL-terminated
+						if (instanceCap - len < 3)
+							break;
 						instance[len++] = _T('|');
-					DBGetField(hResult, row, col, &instance[len], 128 - len);
+					}
+					DBGetField(hResult, row, col, &instance[len], static_cast<int>(instanceCap - len));
 				}
+				// composition loop may have broken before all instance columns were consumed;
+				// skip past them so the metric loop does not treat instance columns as metrics
+				if (col < g_queries[i].instanceColumns)
+					col = g_queries[i].instanceColumns;
 
 				for(; col < numColumns; col++)
 				{
@@ -416,6 +428,11 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 	if (hResult != NULL)
 	{
 		int numColumns = DBGetColumnCount(hResult);
+		if (numColumns > MAX_TABLE_COLUMNS)
+		{
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("queryTable: query returned %d columns, truncating to MAX_TABLE_COLUMNS (%d)"), numColumns, MAX_TABLE_COLUMNS);
+			numColumns = MAX_TABLE_COLUMNS;
+		}
 		for(int col = 0; col < numColumns; col++)
 		{
 			TCHAR name[64];

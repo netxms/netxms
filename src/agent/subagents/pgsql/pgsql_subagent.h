@@ -30,6 +30,11 @@
 #define DEBUG_TAG _T("sa.pgsql")
 
 /**
+ * Maximum number of columns supported in a TableDescriptor.
+ */
+static constexpr int MAX_TABLE_COLUMNS = 32;
+
+/**
  * Database connection information
  */
 struct DatabaseInfo
@@ -53,7 +58,7 @@ struct TableDescriptor
 	{
 		int dataType;
 		const TCHAR *displayName;
-	} columns[32];
+	} columns[MAX_TABLE_COLUMNS];
 };
 
 /**

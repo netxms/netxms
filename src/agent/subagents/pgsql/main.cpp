@@ -227,7 +227,8 @@ static TableDescriptor s_tqBackends[] =
 			{ DCI_DT_STRING, _T("Last state change") },
 			{ DCI_DT_STRING, _T("SQL") }
 		}
-	}
+	},
+	{ 0, nullptr, { } }   // sentinel terminator for H_TableQuery walk
 };
 
 /**
@@ -259,7 +260,8 @@ static TableDescriptor s_tqLocks[] =
 			{ DCI_DT_STRING, _T("Granted?") },
 			{ DCI_DT_STRING, _T("Fastpath?") }
 		}
-	}
+	},
+	{ 0, nullptr, { } }   // sentinel terminator for H_TableQuery walk
 };
 
 /**
@@ -279,7 +281,8 @@ static TableDescriptor s_tqPrepared[] =
 			{ DCI_DT_INT64, _T("XID") },
 			{ DCI_DT_STRING, _T("Prepared at") }
 		}
-	}
+	},
+	{ 0, nullptr, { } }   // sentinel terminator for H_TableQuery walk
 };
 
 /**
@@ -504,8 +507,10 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	TableDescriptor *td = (TableDescriptor *)arg;
-	while (td->minVersion > db->getVersion())
+	while (td->query != nullptr && td->minVersion > db->getVersion())
 		td++;
+	if (td->query == nullptr)
+		return SYSINFO_RC_UNSUPPORTED;
 
 	return db->queryTable(td, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
