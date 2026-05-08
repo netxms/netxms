@@ -44,6 +44,7 @@ public class EncryptedPassword
     */
    public static String encrypt(String login, String password) throws NoSuchAlgorithmException, UnsupportedEncodingException
    {
+      // nosemgrep: java.lang.security.audit.crypto.use-of-md5.use-of-md5 -- nxcencpasswd wire/file format compatibility; MD5 derives a fixed-size ICE key from the login, not a signature (this class is documented as obfuscation, not encryption)
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
       byte[] encrypted = IceCrypto.encrypt(Arrays.copyOf(password.getBytes("UTF-8"), 32), key);
       return new String(Base64.encodeBase64(encrypted, false), "ISO-8859-1");
@@ -60,6 +61,7 @@ public class EncryptedPassword
    {
       if (password.length() != 44)
          return password;  // assume that password is not encrypted
+      // nosemgrep: java.lang.security.audit.crypto.use-of-md5.use-of-md5 -- nxcencpasswd wire/file format compatibility; see encrypt() above
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
       byte[] encrypted = Base64.decodeBase64(password.getBytes("ISO-8859-1"));
       byte[] plainText = IceCrypto.decrypt(encrypted, key);
