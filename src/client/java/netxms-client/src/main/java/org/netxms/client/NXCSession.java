@@ -12183,6 +12183,7 @@ public class NXCSession
    {
       InputStream in = new FileInputStream(file);
       byte[] buffer = new byte[1024];
+      // nosemgrep: java.lang.security.audit.crypto.use-of-md5.use-of-md5 -- protocol checksum for resumable file upload; must match agent's VID_HASH_MD5, not a security signature
       MessageDigest hash = MessageDigest.getInstance("MD5");
       long numRead = 0;
       while((numRead = in.read(buffer)) != -1 && size > 0)

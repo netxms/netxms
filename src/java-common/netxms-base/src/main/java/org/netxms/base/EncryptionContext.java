@@ -393,6 +393,7 @@ public final class EncryptionContext
 	   
       try
       {
+         // nosemgrep: java.lang.security.audit.crypto.use-of-md5.use-of-md5 -- SSH-style fingerprint for human visual key identification; format is user-facing, change requires coordinated UI/operator-runbook update
          MessageDigest m = MessageDigest.getInstance("MD5");
          byte[] key = serverPublicKey.getEncoded();
          m.update(key, 0, key.length);
