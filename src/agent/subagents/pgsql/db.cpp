@@ -68,23 +68,40 @@ void DatabaseInstance::stop()
 }
 
 /**
- * Detect PosgreSQL version
+ * Detect PostgreSQL version
  */
-int DatabaseInstance::getPgsqlVersion() 
+int DatabaseInstance::getPgsqlVersion()
 {
-	DB_RESULT hResult = DBSelect(m_session, _T("SELECT substring(version() from '(\\\\d+\\.\\\\d+(\\\\.\\\\d+)?)')"));
+	DB_RESULT hResult = DBSelect(m_session, _T("SELECT current_setting('server_version_num')::int"));
 	if (hResult == nullptr)
 	{
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to detect PostgreSQL version for database server %s - version-gated metrics will be skipped"), m_info.id);
 		return 0;
 	}
 
-	TCHAR versionString[16];
-	DBGetField(hResult, 0, 0, versionString, 16);
-	int ver1 = 0, ver2 = 0, ver3 = 0;
-	_stscanf(versionString, _T("%d.%d.%d"), &ver1, &ver2, &ver3);
+	int32_t v = DBGetFieldLong(hResult, 0, 0);
 	DBFreeResult(hResult);
 
-	return MAKE_PGSQL_VERSION(ver1, ver2, ver3);
+	if (v < 90000)
+	{
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Detected unsupported PostgreSQL version (%d) for database server %s - version-gated metrics will be skipped"), v, m_info.id);
+		return 0;
+	}
+
+	int maj, min, patch;
+	if (v >= 100000)
+	{
+		maj = v / 10000;
+		min = v % 10000;
+		patch = 0;
+	}
+	else
+	{
+		maj = v / 10000;
+		min = (v / 100) % 100;
+		patch = v % 100;
+	}
+	return MAKE_PGSQL_VERSION(maj, min, patch);
 }
 
 /**
@@ -329,7 +346,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 {
 	m_sessionLock.lock();
-	
+
 	if (!m_connected || (m_session == nullptr))
 	{
 		m_sessionLock.unlock();
