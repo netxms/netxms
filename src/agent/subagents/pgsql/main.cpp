@@ -421,7 +421,7 @@ static LONG H_DatabaseServerConnectionStatus(const TCHAR *param, const TCHAR *ar
 }
 
 /**
- * Handler for Oracle.DBInfo.Version parameter
+ * Handler for PostgreSQL.Version parameter
  */
 static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
@@ -530,6 +530,28 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
+/**
+ * Reset s_dbInfo to shared defaults. Caller must assign id afterwards.
+ */
+static void ResetDatabaseInfoDefaults()
+{
+	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
+	s_dbInfo.connectionTTL = 3600;
+	_tcscpy(s_dbInfo.server, _T("127.0.0.1"));
+	_tcscpy(s_dbInfo.name, _T("postgres"));
+	_tcscpy(s_dbInfo.login, _T("netxms"));
+}
+
+/**
+ * Decrypt s_dbInfo password and add a database instance built from the
+ * current s_dbInfo to the polling list.
+ */
+static void RegisterDatabaseInstance()
+{
+	DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+	s_instances.add(new DatabaseInstance(&s_dbInfo));
+}
+
 /*
  * Subagent initialization
  */
@@ -545,15 +567,11 @@ static bool SubAgentInit(Config *config)
 
 	// Load configuration from "pgsql" section to allow simple configuration
 	// of one connection without XML includes
-	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-	s_dbInfo.connectionTTL = 3600;
+	ResetDatabaseInfoDefaults();
 	_tcscpy(s_dbInfo.id, _T("localdb"));
-	_tcscpy(s_dbInfo.server, _T("127.0.0.1"));
-	_tcscpy(s_dbInfo.name, _T("postgres"));
-	_tcscpy(s_dbInfo.login, _T("netxms"));
-	if(config->getEntry(_T("/pgsql/id")) != NULL || config->getEntry(_T("/pgsql/name")) != NULL ||
-			config->getEntry(_T("pgsql/server")) != NULL || config->getEntry(_T("/pgsql/login")) != NULL  ||
-			config->getEntry(_T("/pgsql/password")) != NULL)
+	if(config->getEntry(_T("/pgsql/id")) != nullptr || config->getEntry(_T("/pgsql/name")) != nullptr ||
+			config->getEntry(_T("/pgsql/server")) != nullptr || config->getEntry(_T("/pgsql/login")) != nullptr  ||
+			config->getEntry(_T("/pgsql/password")) != nullptr)
 	{
 		if (config->parseTemplate(_T("PGSQL"), s_configTemplate))
 		{
@@ -561,27 +579,22 @@ static bool SubAgentInit(Config *config)
 			{
 				if (s_dbInfo.id[0] == 0)
 					_tcscpy(s_dbInfo.id, s_dbInfo.name);
-
-				DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-				s_instances.add(new DatabaseInstance(&s_dbInfo));
+				RegisterDatabaseInstance();
 			}
 		}
 	}
 
 	// Load full-featured XML configuration
 	ConfigEntry *metricRoot = config->getEntry(_T("/pgsql/servers"));
-	if (metricRoot != NULL)
+	if (metricRoot != nullptr)
 	{
       unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
       for (int i = 0; i < metrics->size(); i++)
       {
 			TCHAR section[MAX_DB_STRING];
 			ConfigEntry *e = metrics->get(i);
-			s_dbInfo.connectionTTL = 3600;
+			ResetDatabaseInfoDefaults();
 			_tcscpy(s_dbInfo.id, e->getName());
-			_tcscpy(s_dbInfo.server, _T("127.0.0.1"));
-			_tcscpy(s_dbInfo.name, _T("postgres"));
-			_tcscpy(s_dbInfo.login, _T("netxms"));
 
 			_sntprintf(section, MAX_DB_STRING, _T("pgsql/servers/%s"), e->getName());
 			if (!config->parseTemplate(section, s_configTemplate))
@@ -593,9 +606,7 @@ static bool SubAgentInit(Config *config)
 			if (s_dbInfo.id[0] == 0)
 				continue;
 
-			DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-
-			s_instances.add(new DatabaseInstance(&s_dbInfo));
+			RegisterDatabaseInstance();
       }
    }
 

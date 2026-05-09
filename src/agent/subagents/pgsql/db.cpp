@@ -124,7 +124,7 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
 void DatabaseInstance::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("PGSQL: poller thread for database server %s started"), m_info.id);
-   INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
+   int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * 1000LL;
    bool plannedReconnect = false;
    do
    {
@@ -393,8 +393,8 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 		int eoffset;
 		TagListCallbackData data;
 		data.list = value;
-		data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
-		if (data.preg != NULL)
+		data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+		if (data.preg != nullptr)
 		{
 			m_data->forEach(TagListCallback, &data);
 			_pcre_free_t(data.preg);
@@ -425,7 +425,7 @@ bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
 	bool success = false;
 
 	DB_RESULT hResult = DBSelect(m_session, td->query);
-	if (hResult != NULL)
+	if (hResult != nullptr)
 	{
 		int numColumns = DBGetColumnCount(hResult);
 		if (numColumns > MAX_TABLE_COLUMNS)
