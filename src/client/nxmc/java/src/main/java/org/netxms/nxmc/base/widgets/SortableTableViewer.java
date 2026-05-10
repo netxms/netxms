@@ -113,6 +113,17 @@ public class SortableTableViewer extends TableViewer
       }
    }
 
+   /**
+    * Create empty column set
+    */
+   public void createEmptyColumnSet()
+   {
+      if (initialized)
+         reset();
+      columns = new ArrayList<TableColumn>(16);
+      initialized = true;
+   }
+
 	/**
 	 * Create columns
 	 *

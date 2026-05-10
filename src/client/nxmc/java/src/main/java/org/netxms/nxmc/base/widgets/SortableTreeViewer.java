@@ -108,6 +108,17 @@ public class SortableTreeViewer extends TreeViewer
       }
    }
 
+   /**
+    * Create empty column set
+    */
+   public void createEmptyColumnSet()
+   {
+      if (initialized)
+         reset();
+      columns = new ArrayList<TreeColumn>(16);
+      initialized = true;
+   }
+
 	/**
 	 * Create columns
 	 *
@@ -248,8 +259,20 @@ public class SortableTreeViewer extends TreeViewer
 	}
 
 	/**
-	 * Disable sorting
-	 */
+    * Reset viewer to uninitialized state
+    */
+   public void reset()
+   {
+      initialized = false;
+      columns.clear();
+      getTree().removeAll();
+      for(TreeColumn c : getTree().getColumns())
+         c.dispose();
+   }
+
+   /**
+    * Disable sorting
+    */
 	public void disableSorting()
 	{
 		for(TreeColumn c : columns)

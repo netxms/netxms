@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,8 +104,9 @@ public class AssetSummaryView extends ObjectView
       propertyReader = new AssetPropertyReader();
 
       viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
-
+      viewer.createEmptyColumnSet();
       viewer.addColumn(i18n.tr("Asset"), SWT.DEFAULT);
+
       List<AssetAttribute> attributes = new ArrayList<>(session.getAssetManagementSchema().values());
       attributes.sort((a1, a2) -> a1.getEffectiveDisplayName().compareToIgnoreCase(a2.getEffectiveDisplayName()));
       for(AssetAttribute a : attributes)
