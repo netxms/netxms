@@ -57,7 +57,10 @@ const TCHAR* QtechSWDriver::getVersion()
  */
 int QtechSWDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-   return (oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 1 }) || oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 10 })) ? 127 : 0;
+   return (oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 1 }) ||
+           oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 2 }) ||
+           oid.startsWith({ 1, 3, 6, 1, 4, 1, 27514, 1, 1, 10 }) ||
+           oid.startsWith({ 1, 3, 6, 1, 4, 1, 29763, 1, 1, 10 })) ? 127 : 0;
 }
 
 /**
@@ -83,15 +86,72 @@ InterfaceList* QtechSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
    if (ifList == nullptr)
       return nullptr;
 
-   for (int i = 0; i < ifList->size(); i++)
+   const char *eptr;
+   int eoffset;
+
+   // Standalone switch port names: Gi1/0, Te1/0, Ethernet1/1, Fo1/0, TF1/0
+   PCREHandle reBase(_pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|Gi|Te|Fo|TF)([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
+   if (reBase == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_QTECH, 5, _T("QtechSWDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+
+   // Clustered (stacked) switch port names: Gi1/0/0, Te2/1/3, ...
+   PCREHandle reStack(_pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|Gi|Te|Fo|TF)([0-9]+)/([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
+   if (reStack == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_QTECH, 5, _T("QtechSWDriver::getInterfaces: cannot compile stack regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+
+   // Management port in clustered configuration: Mg1/0, Mg2/0, ...
+   PCREHandle reMgmt(_pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^Mg([0-9]+)/0$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
+   if (reMgmt == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_QTECH, 5, _T("QtechSWDriver::getInterfaces: cannot compile management regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+
+   int pmatch[30];
+   for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (iface->type == 6)
+      nxlog_debug_tag(DEBUG_TAG_QTECH, 6, _T("QtechSWDriver::getInterfaces(%s [%u]): ifName=%s ifDescr=%s ifIndex=%u"),
+            node->getName(), node->getId(), iface->name, iface->description, iface->index);
+
+      if (!_tcsncmp(iface->name, _T("Mg0"), 3))
       {
-         iface->location.chassis = 1;
+         // Standalone management port
          iface->isPhysicalPort = true;
-         iface->location.module = 0;
-         iface->location.port = iface->index;
+         iface->location.chassis = 1;
+         iface->location.port = 0;
+      }
+      else if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = 1;
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+      }
+      else if (_pcre_exec_t(reStack.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+      }
+      else if (_pcre_exec_t(reMgmt.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 2)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 1);
+         iface->location.port = 0;
       }
    }
 

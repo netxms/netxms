@@ -96,26 +96,25 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
    // - some devices uses SPCAE symbol in f interface names for example  'gi 1/0/1'
    // So correct way to analyze ports - use REGEX from Cisco Generic driver 
 
-   // short names like 'gi1/0' or 'gi 1/1' with only 2 digit in name 
+   // short names like 'gi1/0' or 'gi 1/1' with only 2 digit in name
    const char *eptr;
    int eoffset;
-   PCRE *reBase = _pcre_compile_t(
+   PCREHandle reBase(_pcre_compile_t(
          reinterpret_cast<const PCRE_TCHAR*>(_T("^(fastethernet|fa|gigabitethernet|gi|tengigabitethernet|te)[ ]*([0-9]+)/([0-9]+)$")),
-         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
    if (reBase == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): cannot compile BASE regexp: %hs at offset %d"), node->getName(), node->getId(), eptr, eoffset);
       return ifList;
    }
 
-   // long names like 'gi1/0/1' or 'gi 1/0/1' with 3  digit in name 
-   PCRE *reFex = _pcre_compile_t(
+   // long names like 'gi1/0/1' or 'gi 1/0/1' with 3  digit in name
+   PCREHandle reFex(_pcre_compile_t(
          reinterpret_cast<const PCRE_TCHAR*>(_T("^(fastethernet|fa|gigabitethernet|gi|tengigabitethernet|te)[ ]*([0-9]+)/([0-9]+)/([0-9]+)$")),
-         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
    if (reFex == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): cannot compile FEX regexp: %hs at offset %d"), node->getName(), node->getId(), eptr, eoffset);
-      _pcre_free_t(reBase);
       return ifList;
    }
 
@@ -124,25 +123,23 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
    {
       InterfaceInfo *iface = ifList->get(i);
       nxlog_debug_tag(DEBUG_TAG_ELTEX, 5, _T("EltexDriver::getInterfaces(%s [%u]): ifName:%s ifIndex:%d "), node->getName(), node->getId(), iface->name, iface->index);
-      if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = 1;
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
       }
-      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      else if (_pcre_exec_t(reFex.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
-         // due interface numbering scheme in eletx devices - we should ise ifindex as locaion port to avoid misorganised port illustration 
+         // due interface numbering scheme in eletx devices - we should ise ifindex as locaion port to avoid misorganised port illustration
          iface->location.port = iface->index;
       }
    }
 
-   _pcre_free_t(reBase);
-   _pcre_free_t(reFex);
    return ifList;
 }
 

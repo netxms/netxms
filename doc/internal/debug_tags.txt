@@ -134,6 +134,7 @@ ndd.huawei.optix	Huawei OptiX network device driver
 ndd.mikrotik    Mikrotik network device driver
 ndd.moxa.edr    MOXA-EDR network device driver
 ndd.net-snmp	net-snmp network device driver
+ndd.qtech	Qtech network device driver
 ndd.saf		SAF network device driver
 ndd.westerstrand        Westerstrand network device driver
 
