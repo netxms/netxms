@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Small Business switches
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
  */
 const TCHAR *CiscoSbDriver::getName()
 {
-	return _T("CISCO-SB");
+   return _T("CISCO-SB");
 }
 
 /**
@@ -39,12 +39,12 @@ const TCHAR *CiscoSbDriver::getName()
  */
 int CiscoSbDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
-	if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 6, 1 }))
-		return 0;
+   if (!oid.startsWith({ 1, 3, 6, 1, 4, 1, 9, 6, 1 }))
+      return 0;
 
-	uint32_t model = oid.getElement(9);
-	if ((model == 80) ||  // SF500
-	    (model == 81) ||  // SG500
+   uint32_t model = oid.getElement(9);
+   if ((model == 80) ||  // SF500
+       (model == 81) ||  // SG500
        (model == 82) ||  // SF300
        (model == 83) ||  // SG300
        (model == 84) ||  // SG220, SF220
@@ -52,6 +52,7 @@ int CiscoSbDriver::isPotentialDevice(const SNMP_ObjectId& oid)
        (model == 86) ||  // ESW2-350G, ESW2-550X
        (model == 87) ||  // SF200
        (model == 88) ||  // SG200, SF200
+       (model == 89) ||  // SG220, SF220 (not documented, could be regional variant) 
        (model == 90) ||  // SG550XG
        (model == 91) ||  // SG350XG
        (model == 92) ||  // SF550X
@@ -60,8 +61,8 @@ int CiscoSbDriver::isPotentialDevice(const SNMP_ObjectId& oid)
        (model == 96) ||  // SF350
        (model == 97) ||  // SG250
        (model == 98))    // SF250
-		return 252;
-	return 0;
+      return 252;
+   return 0;
 }
 
 /**
