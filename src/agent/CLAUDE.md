@@ -230,6 +230,26 @@ nxlog_debug_tag(_T("session"), level, ...)    # Server sessions
 nxlog_debug_tag(_T("tunnel"), level, ...)     # Tunnel connections
 ```
 
+## Agent Extensions
+
+Agent extensions are independent processes that expose metrics, lists, tables,
+and actions to the agent over **JSON-RPC 2.0 on a loopback TCP port** — a
+language-agnostic, less-coupled alternative to subagents (Python is the primary
+target). The agent is the client; the extension is the listener.
+
+| File | Description |
+|------|-------------|
+| `core/extension.h` | `AgentExtension` class, `ExtensionConfig`, registry/dispatch declarations |
+| `core/extension.cpp` | Protocol layer: JSON-RPC framing, handshake, `list_capabilities`, `get_metric`/`get_list`/`get_table`/`execute_action`, push-notification handling, ping/keepalive |
+| `core/extension_lifecycle.cpp` | Per-extension supervisor: spawn (env-var injection, child stderr capture) / connect, exponential backoff, graceful shutdown |
+| `core/extension_registry.cpp` | Global registry, dispatch fallback (after native subagents → `ExternalSubagent`), config parsing (`<extensions>` blocks + `Extension` shorthand), `Agent.Extension.*` metrics + `Agent.Extensions` table |
+
+- **Protocol spec:** [`doc/AGENT_EXTENSION_PROTOCOL.md`](../../doc/AGENT_EXTENSION_PROTOCOL.md)
+- **Reference implementation:** [`contrib/extensions/sample-python/`](../../contrib/extensions/sample-python/)
+- **Config:** see the "Agent extensions" section in `contrib/nxagentd.conf-dist`
+- **Debug tags:** `extension` (common), `extension.<name>` (per-extension)
+- **Dispatch precedence:** native subagents → `ExternalSubagent` (named pipe/NXCP) → `AgentExtension` (TCP/JSON-RPC)
+
 ## libnxagent
 
 The `libnxagent/` library provides:

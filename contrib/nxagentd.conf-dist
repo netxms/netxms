@@ -239,3 +239,43 @@
 #
 # Examples:
 # ExternalParameterShellExec = Test:dir c:\ | wc -l
+
+#
+# Agent extensions (generic JSON-RPC over TCP loopback)
+#
+# Extensions are independent processes that expose metrics, lists, tables, and
+# actions to the agent over a JSON-RPC 2.0 connection on a loopback TCP port.
+# Unlike subagents they are language-agnostic (Python, Go, etc.) and run in
+# their own process. Two modes are supported:
+#
+#   spawn   - agent launches and supervises the extension process, passing the
+#             port and an auth token via the NXAGENT_EXTENSION_PORT and
+#             NXAGENT_EXTENSION_TOKEN environment variables.
+#   connect - extension is managed externally (systemd, container, embedded in
+#             a larger application); agent connects to a configured endpoint.
+#             Requires a pre-shared Token (use "file:<path>" to read it from a
+#             file shared by both sides).
+#
+# Flat shorthand (spawn mode only):
+# Extension = <name>: [spawn] <command line>
+#
+# Examples:
+# Extension = temperature: spawn /usr/bin/python3 /opt/myext/temperature.py
+#
+# Full form with per-extension settings (one section per extension; the section
+# name after "extensions/" is the extension's internal name):
+#
+# *extensions/temperature
+# Mode = spawn
+# Command = /usr/bin/python3 /opt/myext/temperature.py
+# Environment = SENSOR_BUS=/dev/i2c-1
+# RestartDelay = 5
+# RestartDelayMax = 300
+# ShutdownTimeout = 10
+# DebugTag = extension.temperature
+#
+# *extensions/legacyapp
+# Mode = connect
+# Endpoint = tcp://127.0.0.1:9876
+# Token = file:/etc/nxagentd.d/legacyapp.token
+# AllowRemote = no

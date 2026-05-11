@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include "extension.h"
 
 #define DEBUG_TAG _T("actions")
 
@@ -141,6 +142,7 @@ LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstrac
       value->add(buffer);
    }
    ListActionsFromExtSubagents(value);
+   ListActionsFromExtensions(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -161,6 +163,7 @@ void GetActionList(NXCPMessage *msg)
 
    uint32_t count = static_cast<uint32_t>(s_actions.size());
    ListActionsFromExtSubagents(msg, &fieldId, &count);
+   ListActionsFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_ACTIONS, count);
 }
 
@@ -193,7 +196,12 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
 {
    ACTION *action = FindAction(name);
    if (action == nullptr)
-      return ExecuteActionByExtSubagent(name, args, session, requestId, sendOutput);
+   {
+      uint32_t rcc = ExecuteActionByExtSubagent(name, args, session, requestId, sendOutput);
+      if (rcc == ERR_UNKNOWN_METRIC)
+         rcc = ExecuteActionByExtension(name, args, session, requestId, sendOutput);
+      return rcc;
+   }
 
    uint32_t rcc;
    if (action->isExternal)

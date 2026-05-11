@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include "extension.h"
 #include <nxstat.h>
 #include <netxms_getopt.h>
 #include <netxms-version.h>
@@ -284,6 +285,7 @@ static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
 static TCHAR *s_externalSubAgentsList = nullptr;
 static TCHAR *s_appAgentsList = nullptr;
+static TCHAR *s_extensionShorthandList = nullptr;
 static StringSet s_serverConnectionList;
 static StringSet s_crlList;
 static uint32_t s_crlReloadInterval = 14400; // 4 hours by default
@@ -371,6 +373,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalCommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCommandTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
+   { _T("Extension"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_extensionShorthandList, nullptr },
    { _T("ExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
    { _T("ExternalMetricProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
    { _T("ExternalMetricProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricProviderTimeout, nullptr },
@@ -1558,6 +1561,34 @@ BOOL Initialize()
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external subagent \"%s\""), name);
       }
 
+      // Generic agent extensions — <extensions> blocks
+      unique_ptr<ObjectArray<ConfigEntry>> extensionEntries = config->getSubEntries(_T("/extensions"));
+      if (extensionEntries != nullptr)
+      {
+         for(int i = 0; i < extensionEntries->size(); i++)
+         {
+            const ConfigEntry *e = extensionEntries->get(i);
+            if (!AddExtensionFromConfig(e))
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add agent extension \"%s\""), e->getName());
+         }
+      }
+
+      // Generic agent extensions — flat Extension shorthand entries
+      if (s_extensionShorthandList != nullptr)
+      {
+         TCHAR *curr, *next;
+         for(curr = next = s_extensionShorthandList; next != nullptr && *curr != 0; curr = next + 1)
+         {
+            next = _tcschr(curr, _T('\n'));
+            if (next != nullptr)
+               *next = 0;
+            Trim(curr);
+            if (*curr != 0 && !AddExtensionFromShorthand(curr))
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add agent extension from \"%s\""), curr);
+         }
+         MemFree(s_extensionShorthandList);
+      }
+
       // Parse application agents list
 	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != nullptr))
       {
@@ -1606,6 +1637,8 @@ BOOL Initialize()
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), std::max((GetExternalDataProviderCount() + 1) / 2, 1), std::max(GetExternalDataProviderCount() * 2, 16));
    StartExternalMetricProviders();
    StartBackgroundMetricCollection();
+   if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+      StartExtensions();
 
    // Agent start time
    g_agentStartTime = GetMonotonicClockTime();
@@ -1758,6 +1791,7 @@ void Shutdown()
 		ThreadJoin(s_listenerThread);
 		ThreadJoin(s_tunnelManagerThread);
 		StopExternalSubagentConnectors();
+		StopExtensions(false);
 	}
    if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
    {

@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include "extension.h"
 #include <netxms-version.h>
 
 #ifdef _WIN32
@@ -509,6 +510,8 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.DataSenderQueueSize"), H_DataSenderQueueSize, nullptr, DCI_DT_UINT, DCIDESC_AGENT_DATASENDERQUEUESIZE },
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
    { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },
+   { _T("Agent.Extension.IsConnected(*)"), H_ExtensionIsConnected, nullptr, DCI_DT_INT, _T("Check if agent extension {instance} is connected") },
+   { _T("Agent.Extension.Uptime(*)"), H_ExtensionUptime, nullptr, DCI_DT_UINT64, _T("Agent extension {instance}: connection uptime in seconds") },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&s_failedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
 #ifndef _WIN32
    { _T("Agent.FileHandleLimit"), H_FileHandleLimit, nullptr, DCI_DT_UINT, DCIDESC_AGENT_FILEHANDLELIMIT },
@@ -674,6 +677,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_standardTables[] =
 {
+   { _T("Agent.Extensions"), H_ExtensionsTable, nullptr, _T("NAME"), _T("Configured agent extensions") },
    { _T("Agent.Problems"), H_ProblemsTable, nullptr, _T("KEY"), _T("Registered agent problems") },
    { _T("Agent.SessionAgents"), H_SessionAgents, nullptr, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
    { _T("Agent.SubAgents"), H_SubAgentTable, nullptr, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
@@ -706,6 +710,7 @@ static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
    }
    ListParametersFromExtProviders(value);
    ListParametersFromExtSubagents(value);
+   ListParametersFromExtensions(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -728,6 +733,7 @@ static LONG H_ListOfLists(const TCHAR *cmd, const TCHAR *arg, StringList *value,
       value->add(s_lists.get(i)->name);
    ListListsFromExtProviders(value);
    ListListsFromExtSubagents(value);
+   ListListsFromExtensions(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -740,6 +746,7 @@ static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, A
       value->add(s_tables.get(i)->name);
    ListTablesFromExtProviders(value);
    ListTablesFromExtSubagents(value);
+   ListTablesFromExtensions(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -1284,6 +1291,23 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
 		}
    }
 
+   if (errorCode == ERR_UNKNOWN_METRIC)
+   {
+		errorCode = GetParameterValueFromExtension(param, value);
+		if (errorCode == ERR_SUCCESS)
+		{
+         InterlockedIncrement(&s_processedRequests);
+		}
+		else if ((errorCode == ERR_UNSUPPORTED_METRIC) || (errorCode == ERR_UNKNOWN_METRIC))
+		{
+         InterlockedIncrement(&s_unsupportedRequests);
+		}
+		else
+		{
+         InterlockedIncrement(&s_failedRequests);
+		}
+   }
+
 	session->debugPrintf(7, _T("GetMetricValue(\"%s\"): %u (%s) value = \"%s\""), param, errorCode, GetErrorCodeSymbolicName(errorCode), (errorCode == ERR_SUCCESS) ? value : _T(""));
    return errorCode;
 }
@@ -1371,6 +1395,23 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
 	if (errorCode == ERR_UNKNOWN_METRIC)
    {
 		errorCode = GetListValueFromExtSubagent(param, value);
+		if (errorCode == ERR_SUCCESS)
+		{
+         InterlockedIncrement(&s_processedRequests);
+		}
+		else if ((errorCode == ERR_UNSUPPORTED_METRIC) || (errorCode == ERR_UNKNOWN_METRIC))
+		{
+         InterlockedIncrement(&s_unsupportedRequests);
+		}
+		else
+		{
+         InterlockedIncrement(&s_failedRequests);
+		}
+   }
+
+	if (errorCode == ERR_UNKNOWN_METRIC)
+   {
+		errorCode = GetListValueFromExtension(param, value);
 		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
@@ -1489,6 +1530,24 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
 		}
    }
 
+   if (errorCode == ERR_UNKNOWN_METRIC)
+   {
+      session->debugPrintf(7, _T("GetTableValue(): requesting table from extensions"));
+		errorCode = GetTableValueFromExtension(param, value);
+		if (errorCode == ERR_SUCCESS)
+		{
+         InterlockedIncrement(&s_processedRequests);
+		}
+		else if ((errorCode == ERR_UNKNOWN_METRIC) || (errorCode == ERR_UNSUPPORTED_METRIC))
+		{
+         InterlockedIncrement(&s_unsupportedRequests);
+		}
+		else
+		{
+         InterlockedIncrement(&s_failedRequests);
+		}
+   }
+
    if (errorCode == ERR_SUCCESS)
    {
       session->debugPrintf(7, _T("GetTableValue(): result is SUCCESS, value contains %d rows"), value->getNumRows());
@@ -1524,6 +1583,7 @@ void GetParameterList(NXCPMessage *msg)
 
 	ListParametersFromExtProviders(msg, &fieldId, &count);
 	ListParametersFromExtSubagents(msg, &fieldId, &count);
+	ListParametersFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
@@ -1546,6 +1606,7 @@ void GetParameterList(NXCPMessage *msg)
    }
    ListListsFromExtProviders(msg, &fieldId, &count);
    ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 
 	// Tables
@@ -1559,6 +1620,7 @@ void GetParameterList(NXCPMessage *msg)
    }
    ListTablesFromExtProviders(msg, &fieldId, &count);
 	ListTablesFromExtSubagents(msg, &fieldId, &count);
+	ListTablesFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_TABLES, count);
 }
 
@@ -1579,6 +1641,7 @@ void GetTableList(NXCPMessage *msg)
    uint32_t count = static_cast<uint32_t>(s_tables.size());
    ListTablesFromExtProviders(msg, &fieldId, &count);
 	ListTablesFromExtSubagents(msg, &fieldId, &count);
+	ListTablesFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_TABLES, count);
 }
 
@@ -1599,6 +1662,7 @@ void GetEnumList(NXCPMessage *msg)
    uint32_t count = static_cast<uint32_t>(s_lists.size());
    ListListsFromExtProviders(msg, &fieldId, &count);
    ListListsFromExtSubagents(msg, &fieldId, &count);
+   ListListsFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
    msg->setField(VID_TABLE_EXTENDED_FORMAT, true);
 }

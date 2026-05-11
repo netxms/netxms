@@ -1,7 +1,8 @@
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = actions.cpp aitools.cpp appagent.cpp bkgnd_metrics.cpp certinfo.cpp comm.cpp \
 		   config.cpp ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp ethernetip.cpp event.cpp exec.cpp \
-		   extagent.cpp extdp.cpp filemon.cpp hddinfo.cpp localdb.cpp master.cpp \
+		   extagent.cpp extdp.cpp extension.cpp extension_lifecycle.cpp \
+		   extension_registry.cpp filemon.cpp hddinfo.cpp localdb.cpp master.cpp \
 		   metrics.cpp modbus.cpp nproc.cpp nxagentd.cpp package.cpp policy.cpp \
 		   problems.cpp proxy.cpp push.cpp register.cpp sa.cpp session.cpp snmpproxy.cpp \
                    snmptrapproxy.cpp static_subagents.cpp subagent.cpp \
@@ -37,6 +38,7 @@ static_subagents.cpp: @top_srcdir@/config.h Makefile
 	@top_builddir@/tools/create_ssa_list.sh "@STATIC_SUBAGENT_LIST@" > static_subagents.cpp
 
 EXTRA_DIST = \
+    extension.h \
     localdb.h \
     messages.mc \
     nxagentd.vcxproj nxagentd.vcxproj.filters \

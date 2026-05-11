@@ -70,6 +70,8 @@ event.corr	Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
 ext.provider	Agent external provider
+extension	Agent extensions (generic JSON-RPC protocol) — common
+extension.*	Agent extensions — per-extension (extension.<name>)
 exec		External function execution
 
 fbdev		Framebuffer screenshot subagent

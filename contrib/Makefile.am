@@ -11,6 +11,7 @@
 
 EXTRA_DIST = \
 	netxmsd.conf-dist nxagentd.conf-dist \
-	installAgent.sh installBinaryAgent.sh
+	installAgent.sh installBinaryAgent.sh \
+	extensions/sample-python/sensor_extension.py
 SUBDIRS = integration startup
 SUBDIRS += @CONTRIB_MODULES@
