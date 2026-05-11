@@ -70,21 +70,20 @@ InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *
 
    const char *eptr;
    int eoffset;
-   PCRE *reBase = _pcre_compile_t(
+   PCREHandle reBase(_pcre_compile_t(
          reinterpret_cast<const PCRE_TCHAR*>(_T("^(Se|Serial|Et|Ethernet|Fa|FastEthernet|Gi|GigabitEthernet|Te|TenGigabitEthernet|Fo|FortyGigabitEthernet)([0-9]+)/([0-9]+)$")),
-         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
    if (reBase == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("GenericCiscoDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
       return ifList;
    }
-   PCRE *reFex = _pcre_compile_t(
+   PCREHandle reFex(_pcre_compile_t(
          reinterpret_cast<const PCRE_TCHAR*>(_T("^(Se|Serial|Et|Ethernet|Fa|FastEthernet|Gi|GigabitEthernet|Te|TenGigabitEthernet|Fo|FortyGigabitEthernet)([0-9]+)/([0-9]+)/([0-9]+)$")),
-         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
    if (reFex == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("GenericCiscoDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
-      _pcre_free_t(reBase);
       return ifList;
    }
 
@@ -92,14 +91,14 @@ InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = 1;
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
       }
-      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      else if (_pcre_exec_t(reFex.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
@@ -107,9 +106,6 @@ InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
       }
    }
-
-   _pcre_free_t(reBase);
-   _pcre_free_t(reFex);
 
    return ifList;
 }
