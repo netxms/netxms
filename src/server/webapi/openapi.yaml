@@ -44,6 +44,8 @@ tags:
     description: DCI summary table operations
   - name: Event Templates
     description: Event template management
+  - name: Event Processing Policy
+    description: Event processing policy management
   - name: Users
     description: User management
   - name: User Groups
@@ -4847,6 +4849,111 @@ paths:
       responses:
         '101':
           description: Switching protocols to WebSocket
+  /v1/event-processing-policy:
+    get:
+      operationId: getEventProcessingPolicy
+      summary: Get event processing policy
+      description: |
+        Retrieve the complete event processing policy as an ordered list of rules. The returned
+        `version` value should be sent back unchanged in a subsequent update request to detect
+        concurrent modifications (optimistic concurrency control).
+      responses:
+        '200':
+          description: Event processing policy retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicy'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+    put:
+      operationId: updateEventProcessingPolicy
+      summary: Replace event processing policy
+      description: |
+        Replace the entire event processing policy with the supplied ordered list of rules.
+        If `version` is present in the request body it must match the current policy version,
+        otherwise the request is rejected with status 409 and the body contains the current
+        `currentVersion`. If `version` is omitted the policy is replaced unconditionally.
+
+        Each rule may be supplied either in the form produced by this API (object IDs and event
+        codes as plain integers) or as a configuration export record (object/event references as
+        objects carrying name and GUID); the latter form is resolved on import and any references
+        that cannot be resolved are dropped, with details returned in the optional `warnings` field.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventProcessingPolicyUpdateRequest'
+      responses:
+        '200':
+          description: Event processing policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicyUpdateResult'
+        '400':
+          description: Invalid event processing policy data
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '409':
+          description: Version conflict - the policy was modified by another client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  currentVersion:
+                    type: integer
+                    description: Current policy version on the server
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+  /v1/event-processing-policy/rules/{rule-guid}:
+    get:
+      operationId: getEventProcessingPolicyRule
+      summary: Get event processing policy rule
+      description: Retrieve a single event processing policy rule by its GUID.
+      parameters:
+        - name: rule-guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Rule GUID
+      responses:
+        '200':
+          description: Rule retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicyRule'
+        '400':
+          description: Invalid rule GUID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '404':
+          description: Rule not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
   /v1/event-templates:
     get:
       operationId: listEventTemplates
@@ -6498,6 +6605,217 @@ components:
         oldPassword:
           type: string
           description: Current password (required for self-change, omit for admin reset)
+    EventProcessingPolicy:
+      type: object
+      description: Event processing policy - an ordered list of rules plus a version for optimistic concurrency control
+      properties:
+        version:
+          type: integer
+          description: Policy version, incremented on every change. Send this value back when updating the policy to detect concurrent modifications.
+        ruleCount:
+          type: integer
+          description: Number of rules in the policy
+        rules:
+          type: array
+          description: Rules in evaluation order
+          items:
+            $ref: '#/components/schemas/EventProcessingPolicyRule'
+    EventProcessingPolicyUpdateRequest:
+      type: object
+      description: Request body for replacing the entire event processing policy
+      required:
+        - rules
+      properties:
+        version:
+          type: integer
+          description: |
+            Expected current policy version. If present, the update is applied only if it matches the
+            server-side version, otherwise the request is rejected with status 409. If omitted, the
+            policy is replaced unconditionally.
+        rules:
+          type: array
+          description: New rule list in evaluation order (the existing policy is fully replaced)
+          items:
+            $ref: '#/components/schemas/EventProcessingPolicyRule'
+    EventProcessingPolicyUpdateResult:
+      type: object
+      description: Result of a successful event processing policy update
+      properties:
+        version:
+          type: integer
+          description: New policy version
+        ruleCount:
+          type: integer
+          description: Number of rules now in the policy
+        warnings:
+          type: string
+          description: Human-readable text describing any issues encountered while applying the rules (e.g. references to objects that no longer exist). Present only if there were warnings.
+    EventProcessingPolicyRule:
+      type: object
+      description: |
+        A single event processing policy rule. On output, object and event references are plain numeric
+        identifiers. On input, they may also be supplied as configuration export records (objects/events
+        as nested objects carrying `name` and `guid`); such references are resolved by GUID or name.
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Rule GUID. A new random GUID is generated on input if omitted.
+        ruleNumber:
+          type: integer
+          description: 1-based position of the rule in the policy (output only; ignored on input - array order is authoritative)
+        flags:
+          type: integer
+          description: |
+            Rule flags bitmask:
+            0x000001 stop processing,
+            0x000002 negated source match,
+            0x000004 negated event match,
+            0x000008 generate alarm,
+            0x000010 disabled,
+            0x000020 terminate alarms by regular expression,
+            0x000100..0x001000 match severity (info/warning/minor/major/critical),
+            0x002000 create helpdesk ticket,
+            0x004000 accept correlated events,
+            0x008000 negated time frame match,
+            0x010000 start downtime,
+            0x020000 end downtime,
+            0x040000 request AI comment,
+            0x080000 create incident,
+            0x100000 AI analyze incident,
+            0x200000 AI auto-assign incident
+        sources:
+          type: array
+          description: Source object IDs the rule matches (empty = match any source)
+          items:
+            type: integer
+        sourceExclusions:
+          type: array
+          description: Source object IDs explicitly excluded from matching
+          items:
+            type: integer
+        events:
+          type: array
+          description: Event codes the rule matches (empty = match any event)
+          items:
+            type: integer
+        timeFrames:
+          type: array
+          description: Time frames during which the rule is active (empty = always active)
+          items:
+            type: object
+            properties:
+              time:
+                type: integer
+                description: Time-of-day filter bitmask
+              date:
+                type: integer
+                description: Date filter bitmask (day of month / month / day of week)
+        filterScript:
+          type: string
+          description: NXSL filter script source; rule matches only if the script returns true
+        alarmSeverity:
+          type: integer
+          description: "Severity of the generated alarm: 0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical, 5=same as event, 6=terminate alarms, 7=resolve alarms"
+        alarmKey:
+          type: string
+          description: Alarm key template (supports macro expansion)
+        alarmMessage:
+          type: string
+          description: Alarm message template (supports macro expansion)
+        alarmImpact:
+          type: string
+          description: Alarm impact description template
+        alarmTimeout:
+          type: integer
+          description: Alarm timeout in seconds (0 = no timeout)
+        alarmTimeoutEvent:
+          type: integer
+          description: Event code generated when the alarm times out
+        alarmCategories:
+          type: array
+          description: Alarm category IDs assigned to the generated alarm
+          items:
+            type: integer
+        rootCauseAnalysisScript:
+          type: string
+          description: Name of the library script used for root cause analysis
+        actions:
+          type: array
+          description: Server actions executed when the rule matches
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Server action ID
+              timerDelay:
+                type: string
+                description: Delay before executing the action (seconds; supports macro expansion). Empty for immediate execution.
+              timerKey:
+                type: string
+                description: Timer key (supports macro expansion); used together with timerCancellations
+              blockingTimerKey:
+                type: string
+                description: Action is suppressed while a timer with this key is active
+              snoozeTime:
+                type: string
+                description: Minimum interval between repeated executions (seconds; supports macro expansion)
+              active:
+                type: boolean
+                description: Whether the action is enabled
+        timerCancellations:
+          type: array
+          description: Timer keys to cancel when the rule matches
+          items:
+            type: string
+        actionScript:
+          type: string
+          description: NXSL action script executed when the rule matches
+        pstorageSetActions:
+          type: object
+          additionalProperties:
+            type: string
+          description: Persistent storage entries to set (key/value pairs; values support macro expansion)
+        pstorageDeleteActions:
+          type: array
+          description: Persistent storage keys to delete
+          items:
+            type: string
+        customAttributeSetActions:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom attributes to set on the source object (key/value pairs; values support macro expansion)
+        customAttributeDeleteActions:
+          type: array
+          description: Custom attribute names to delete from the source object
+          items:
+            type: string
+        downtimeTag:
+          type: string
+          description: Downtime tag used when starting or ending maintenance downtime
+        incidentDelay:
+          type: integer
+          description: Delay in seconds before an incident is created (0 = immediate)
+        incidentTitle:
+          type: string
+          description: Incident title template (empty = use alarm message)
+        incidentDescription:
+          type: string
+          description: Incident description template
+        incidentAIAnalysisDepth:
+          type: integer
+          description: Depth of AI incident analysis (0=quick, 1=standard, 2=thorough)
+        incidentAIPrompt:
+          type: string
+          description: Custom AI analysis instructions for the incident
+        aiAgentInstructions:
+          type: string
+          description: Instructions for the AI agent when generating an alarm comment
+        comments:
+          type: string
+          description: Rule description
     EventTemplate:
       type: object
       description: Event template definition

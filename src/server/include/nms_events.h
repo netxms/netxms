@@ -889,12 +889,15 @@ public:
                           uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
                           const uuid& userGuid, const TCHAR* userName,
                           ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);
+   uint32_t replaceAllRules(const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
+                            const uuid& userGuid, const wchar_t *userName, uint32_t *newVersion);
    void fillRuleVersions(NXCPMessage *msg) const;
 
    json_t *exportRule(const uuid& guid) const;
    json_t *exportRuleOrdering() const;
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *getRuleDetails(const uuid& ruleId) const;
+   json_t *getRuleAsJson(const uuid& guid) const;
    json_t *toJson() const;
 
    void validateConfig() const;
@@ -937,6 +940,7 @@ const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
 EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy();
+uint32_t NXCORE_EXPORTABLE UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t userId, json_t **response);
 
 /**
  * Global variables

@@ -26,6 +26,7 @@ make -C src/server
 | `alarms.cpp` | Alarm management endpoints |
 | `datacoll.cpp` | Data collection and history endpoints |
 | `dcst.cpp` | DCI summary table endpoints |
+| `epp.cpp` | Event processing policy endpoints |
 | `events.cpp` | Event template endpoints |
 | `find.cpp` | Network search endpoints |
 | `grafana.cpp` | Grafana integration endpoints |

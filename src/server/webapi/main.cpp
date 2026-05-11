@@ -157,6 +157,9 @@ int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
+int H_EventProcessingPolicy(Context *context);
+int H_EventProcessingPolicyRule(Context *context);
+int H_EventProcessingPolicyUpdate(Context *context);
 int H_EventTemplates(Context *context);
 int H_EventTemplateDetails(Context *context);
 int H_EventTemplateCreate(Context *context);
@@ -278,6 +281,13 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/terminate")
       .POST(H_AlarmTerminate)
+      .build();
+   RouteBuilder("v1/event-processing-policy")
+      .GET(H_EventProcessingPolicy)
+      .PUT(H_EventProcessingPolicyUpdate)
+      .build();
+   RouteBuilder("v1/event-processing-policy/rules/:rule-guid")
+      .GET(H_EventProcessingPolicyRule)
       .build();
    RouteBuilder("v1/event-templates")
       .GET(H_EventTemplates)

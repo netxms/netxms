@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 #include <nms_incident.h>
 #include <nxcore_ps.h>
 #include <nxai.h>
@@ -288,10 +289,15 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
 }
 
 /**
- * Create rule from JSON object
+ * Create rule from JSON object. Import context is optional - if not provided (e.g. when called from
+ * the web API), a throwaway context is used so warnings are still written to the server log.
  */
 EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
+   ImportContext localImportContext;
+   if (context == nullptr)
+      context = &localImportContext;
+
    m_id = 0;
    m_guid = json_object_get_uuid(json, "guid");
    if (m_guid.isNull())
@@ -331,6 +337,12 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
                   m_guid.toString().cstr(), eventName.isEmpty() ? _T("(unnamed)") : eventName.cstr());
             }
          }
+         else if (json_is_integer(eventItem))
+         {
+            uint32_t eventCode = static_cast<uint32_t>(json_integer_value(eventItem));
+            if ((eventCode != 0) && !m_events.contains(eventCode))
+               m_events.add(eventCode);
+         }
       }
    }
 
@@ -356,6 +368,16 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
             if (resolved != 0)
                m_sources.add(resolved);
          }
+         else if (json_is_integer(sourceItem))
+         {
+            uint32_t objectId = static_cast<uint32_t>(json_integer_value(sourceItem));
+            if ((objectId != 0) && (FindObjectById(objectId) != nullptr))
+               m_sources.add(objectId);
+            else
+               context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+                  _T("Event processing policy rule import: rule \"%s\" refers to non-existent source object [%u]"),
+                  m_guid.toString().cstr(), objectId);
+         }
       }
    }
 
@@ -377,6 +399,16 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
                   sourceName.cstr(), classHint, context, L"Source exclusion", referrerDescription);
             if (resolved != 0)
                m_sourceExclusions.add(resolved);
+         }
+         else if (json_is_integer(sourceItem))
+         {
+            uint32_t objectId = static_cast<uint32_t>(json_integer_value(sourceItem));
+            if ((objectId != 0) && (FindObjectById(objectId) != nullptr))
+               m_sourceExclusions.add(objectId);
+            else
+               context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+                  _T("Event processing policy rule import: rule \"%s\" refers to non-existent source exclusion object [%u]"),
+                  m_guid.toString().cstr(), objectId);
          }
       }
    }
@@ -475,9 +507,17 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_alarmSeverity = json_object_get_int32(json, "alarmSeverity");
    m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
 
-   // Import alarm timeout event - JSON format uses event name
-   String alarmTimeoutEventName = json_object_get_string(json, "alarmTimeoutEvent", _T("SYS_ALARM_TIMEOUT"));
-   m_alarmTimeoutEvent = EventCodeFromName(alarmTimeoutEventName, EVENT_ALARM_TIMEOUT);
+   // Import alarm timeout event - export records use the event name, while toJson() uses the numeric event code
+   json_t *alarmTimeoutEventJson = json_object_get(json, "alarmTimeoutEvent");
+   if (json_is_integer(alarmTimeoutEventJson))
+   {
+      m_alarmTimeoutEvent = static_cast<uint32_t>(json_integer_value(alarmTimeoutEventJson));
+   }
+   else
+   {
+      String alarmTimeoutEventName = json_object_get_string(json, "alarmTimeoutEvent", _T("SYS_ALARM_TIMEOUT"));
+      m_alarmTimeoutEvent = EventCodeFromName(alarmTimeoutEventName, EVENT_ALARM_TIMEOUT);
+   }
 
    m_alarmKey = MemCopyString(json_object_get_string(json, "alarmKey", _T("")));
    m_alarmMessage = MemCopyString(json_object_get_string(json, "alarmMessage", _T("")));
@@ -1920,17 +1960,15 @@ void EPRule::fillMessage(NXCPMessage *msg) const
 }
 
 /**
- * Create configuration export record
+ * Create configuration export record. Produces the same data as toJson() but with object, event,
+ * and action references enriched with names and GUIDs so the record can be imported on another server.
  */
 json_t *EPRule::createExportRecord() const
 {
-   json_t *root = json_object();
+   json_t *root = toJson();
    json_object_set_new(root, "id", json_integer(m_id + 1));
-   json_object_set_new(root, "guid", m_guid.toJson());
 
-   json_object_set_new(root, "flags", json_integer(m_flags));
-
-   // Export sources with full object information
+   // Replace source ID array with full object information
    json_t *sources = json_array();
    for(int i = 0; i < m_sources.size(); i++)
    {
@@ -1949,7 +1987,7 @@ json_t *EPRule::createExportRecord() const
    }
    json_object_set_new(root, "sources", sources);
 
-   // Export source exclusions with full object information
+   // Replace source exclusion ID array with full object information
    json_t *sourceExclusions = json_array();
    for(int i = 0; i < m_sourceExclusions.size(); i++)
    {
@@ -1968,37 +2006,20 @@ json_t *EPRule::createExportRecord() const
    }
    json_object_set_new(root, "sourceExclusions", sourceExclusions);
 
-   // Export events with names (XML-compatible structure)
+   // Replace event code array with name/id pairs (XML-compatible structure)
    json_t *events = json_array();
    for(int i = 0; i < m_events.size(); i++)
    {
       uint32_t eventCode = m_events.get(i);
       json_t *event = json_object();
-
-      TCHAR eventName[MAX_EVENT_NAME];
-      if (EventNameFromCode(eventCode, eventName))
-      {
-         json_object_set_new(event, "name", json_string_t(eventName));
-      }
-      else
-      {
-         json_object_set_new(event, "name", json_string("UNKNOWN_EVENT"));
-      }
-
+      wchar_t eventName[MAX_EVENT_NAME];
+      json_object_set_new(event, "name", EventNameFromCode(eventCode, eventName) ? json_string_t(eventName) : json_string("UNKNOWN_EVENT"));
       json_object_set_new(event, "id", json_integer(eventCode));
       json_array_append_new(events, event);
    }
    json_object_set_new(root, "events", events);
 
-   json_t *timeFrames = json_array();
-   for(TimeFrame *frame : m_timeFrames)
-   {
-      json_t *timeFrame = json_object();
-      json_object_set_new(timeFrame, "time", json_integer(frame->getTimeFilter()));
-      json_object_set_new(timeFrame, "date", json_integer(frame->getDateFilter()));
-      json_array_append_new(timeFrames, timeFrame);
-   }
-   json_object_set_new(root, "timeFrames", timeFrames);
+   // Replace action list with version including action GUIDs
    json_t *actions = json_array();
    for(int i = 0; i < m_actions.size(); i++)
    {
@@ -2014,45 +2035,11 @@ json_t *EPRule::createExportRecord() const
       json_array_append_new(actions, action);
    }
    json_object_set_new(root, "actions", actions);
-   json_t *timerCancellations = json_array();
-   for(int i = 0; i < m_timerCancellations.size(); i++)
-   {
-      json_array_append_new(timerCancellations, json_string_t(m_timerCancellations.get(i)));
-   }
-   json_object_set_new(root, "timerCancellations", timerCancellations);
-   json_object_set_new(root, "comments", json_string_t(m_comments));
-   json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
-   json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
-   json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
-   json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
-   json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
-   json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
-   json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
-   json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
 
    // Export alarm timeout event by name
-   TCHAR alarmTimeoutEventName[MAX_EVENT_NAME];
-   if (EventNameFromCode(m_alarmTimeoutEvent, alarmTimeoutEventName))
-   {
-      json_object_set_new(root, "alarmTimeoutEvent", json_string_t(alarmTimeoutEventName));
-   }
-   else
-   {
-      json_object_set_new(root, "alarmTimeoutEvent", json_string("UNKNOWN_EVENT"));
-   }
-
-   json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
-   json_object_set_new(root, "alarmCategories", m_alarmCategoryList.toJson());
-   json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
-   json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
-   json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
-   json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
-   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
-   json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
-   json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
-   json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
-   json_object_set_new(root, "incidentAIAnalysisDepth", json_integer(m_incidentAIAnalysisDepth));
-   json_object_set_new(root, "incidentAIPrompt", json_string_t(m_incidentAIPrompt));
+   wchar_t alarmTimeoutEventName[MAX_EVENT_NAME];
+   json_object_set_new(root, "alarmTimeoutEvent",
+      EventNameFromCode(m_alarmTimeoutEvent, alarmTimeoutEventName) ? json_string_t(alarmTimeoutEventName) : json_string("UNKNOWN_EVENT"));
 
    return root;
 }
@@ -2100,9 +2087,8 @@ json_t *EPRule::toJson(bool assistantMode) const
    json_object_set_new(root, "downtimeTag", json_string_w(m_downtimeTag));
    json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
    json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
-   json_object_set_new(root, "rcaScriptName", json_string_t(m_rcaScriptName));
-   json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
    json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
+   json_object_set_new(root, "alarmCategories", m_alarmCategoryList.toJson());
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
@@ -2152,6 +2138,11 @@ json_t *EPRule::toJson(bool assistantMode) const
       json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
       json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
       json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+      json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
+      json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
+      json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
+      json_object_set_new(root, "incidentAIAnalysisDepth", json_integer(m_incidentAIAnalysisDepth));
+      json_object_set_new(root, "incidentAIPrompt", json_string_t(m_incidentAIPrompt));
    }
 
    return root;
@@ -2537,6 +2528,39 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
 }
 
 /**
+ * Replace all rules in the policy with the given list. If checkVersion is true, expectedVersion must match
+ * the current policy version, otherwise RCC_EPP_CONFLICT is returned and the policy is left unchanged.
+ * On success the new policy version is returned via newVersion and the policy is persisted to the database.
+ */
+uint32_t EventProcessingPolicy::replaceAllRules(const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
+   const uuid& userGuid, const wchar_t *userName, uint32_t *newVersion)
+{
+   writeLock();
+
+   if (checkVersion && (expectedVersion != m_version))
+   {
+      *newVersion = m_version;
+      unlock();
+      return RCC_EPP_CONFLICT;
+   }
+
+   m_rules.clear();
+   for(size_t i = 0; i < rules.size(); i++)
+   {
+      shared_ptr<EPRule> rule = rules.getShared(i);
+      rule->setId(static_cast<uint32_t>(i));
+      m_rules.add(rule);
+   }
+   m_version++;
+   *newVersion = m_version;
+   unlock();
+
+   if (!saveToDB(userGuid, userName))
+      return RCC_DB_FAILURE;
+   return RCC_SUCCESS;
+}
+
+/**
  * Fill message with current rule GUIDs and versions (for client sync after save)
  */
 void EventProcessingPolicy::fillRuleVersions(NXCPMessage *msg) const
@@ -2681,6 +2705,26 @@ json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
 }
 
 /**
+ * Get single rule serialized to JSON (canonical form, as produced by EPRule::toJson()).
+ * Returns nullptr if rule with given GUID does not exist.
+ */
+json_t *EventProcessingPolicy::getRuleAsJson(const uuid& guid) const
+{
+   json_t *result = nullptr;
+   readLock();
+   for (auto& rule : m_rules)
+   {
+      if (guid.equals(rule->getGuid()))
+      {
+         result = rule->toJson();
+         break;
+      }
+   }
+   unlock();
+   return result;
+}
+
+/**
  * Export rule to JSON
  */
 json_t *EventProcessingPolicy::exportRule(const uuid& guid) const
@@ -2805,6 +2849,8 @@ json_t *EventProcessingPolicy::toJson() const
    json_t *root = json_object();
    json_t *rulesJson = json_array();
    readLock();
+   json_object_set_new(root, "version", json_integer(m_version));
+   json_object_set_new(root, "ruleCount", json_integer(m_rules.size()));
    int ruleNum = 1;
    for (auto& rule : m_rules)
    {
@@ -2877,4 +2923,66 @@ void EventProcessingPolicy::getScriptDependencies(uint32_t count, const uuid *gu
       }
    }
    unlock();
+}
+
+/**
+ * Update event processing policy from JSON document. Input document format:
+ *   { "version": <optional integer>, "rules": [ <rule>, ... ] }
+ * where each rule is in the form produced by EPRule::toJson() (export records produced by
+ * EPRule::createExportRecord() are also accepted, as they are a superset of that form).
+ *
+ * If "version" is present it must match the current policy version, otherwise RCC_EPP_CONFLICT is
+ * returned and *response is set to { "currentVersion": <n> }. If "version" is omitted the policy is
+ * replaced unconditionally. On success *response is set to { "version": <new>, "ruleCount": <n>,
+ * "warnings": <text> (only if there were import warnings) } and RCC_SUCCESS is returned. Returns
+ * RCC_INVALID_ARGUMENT for malformed input and RCC_DB_FAILURE on database error. *response is set only
+ * when RCC_SUCCESS or RCC_EPP_CONFLICT is returned.
+ */
+uint32_t UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t userId, json_t **response)
+{
+   if (!json_is_object(request))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *rulesArray = json_object_get(request, "rules");
+   if (!json_is_array(rulesArray))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *versionField = json_object_get(request, "version");
+   if ((versionField != nullptr) && !json_is_integer(versionField))
+      return RCC_INVALID_ARGUMENT;
+   bool checkVersion = (versionField != nullptr);
+   uint32_t expectedVersion = checkVersion ? static_cast<uint32_t>(json_integer_value(versionField)) : 0;
+
+   // Parse all rules before touching the policy, so a malformed rule aborts the whole update
+   ImportContext importContext;
+   SharedObjectArray<EPRule> rules;
+   size_t i;
+   json_t *ruleJson;
+   json_array_foreach(rulesArray, i, ruleJson)
+   {
+      if (!json_is_object(ruleJson))
+         return RCC_INVALID_ARGUMENT;
+      rules.add(make_shared<EPRule>(ruleJson, &importContext));
+   }
+
+   uuid userGuid = GetUserGuidById(userId);
+   wchar_t userName[MAX_USER_NAME];
+   ResolveUserId(userId, userName, true);
+
+   uint32_t newVersion = 0;
+   uint32_t rcc = GetEventProcessingPolicy()->replaceAllRules(rules, checkVersion, expectedVersion, userGuid, userName, &newVersion);
+   if (rcc == RCC_SUCCESS)
+   {
+      *response = json_object();
+      json_object_set_new(*response, "version", json_integer(newVersion));
+      json_object_set_new(*response, "ruleCount", json_integer(rules.size()));
+      if (!importContext.isEmpty())
+         json_object_set_new(*response, "warnings", json_string_t(importContext.cstr()));
+   }
+   else if (rcc == RCC_EPP_CONFLICT)
+   {
+      *response = json_object();
+      json_object_set_new(*response, "currentVersion", json_integer(newVersion));
+   }
+   return rcc;
 }
