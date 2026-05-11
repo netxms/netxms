@@ -52,6 +52,7 @@ int CiscoSbDriver::isPotentialDevice(const SNMP_ObjectId& oid)
        (model == 86) ||  // ESW2-350G, ESW2-550X
        (model == 87) ||  // SF200
        (model == 88) ||  // SG200, SF200
+       (model == 89) ||  // SG200, SF200
        (model == 90) ||  // SG550XG
        (model == 91) ||  // SG350XG
        (model == 92) ||  // SF550X
