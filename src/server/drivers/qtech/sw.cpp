@@ -193,7 +193,7 @@ bool QtechSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
          TCHAR buffer[256];
          v->getValueAsString(buffer, 256);
          StringList items = String::split(buffer, _T(" "), true);
-         if (items.size() > 0)
+         if (items.size() > 1)
          {
             _tcslcpy(hwInfo->productName, items.get(1), 128);
          }
