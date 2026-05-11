@@ -32,6 +32,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -101,6 +102,24 @@ public class LoginDialog extends Dialog
          newShell.setLocation((ma[0].getClientArea().width - newShell.getSize().x) / 2,
                (ma[0].getClientArea().height - newShell.getSize().y) / 2);
       }
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#getInitialSize()
+    */
+   @Override
+   protected Point getInitialSize()
+   {
+      Point size = super.getInitialSize();
+      // Shell.computeSize() can return a degenerate value on some platforms (notably GTK on a "cold"
+      // first run, before the font/widget metrics subsystem is fully initialized). This dialog is not
+      // resizable, so a clipped login form would be unrecoverable - enforce a usable minimum size in
+      // that case (see issue #3205).
+      if (size.x < 350)
+         size.x = 500;
+      if (size.y < 250)
+         size.y = 350;
+      return size;
    }
 
    /**

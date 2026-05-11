@@ -34,6 +34,7 @@ import org.eclipse.jface.util.ISafeRunnableRunner;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.Display;
@@ -134,6 +135,8 @@ public class Startup
       display = new Display();
       logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
 
+      warmUpRenderingSubsystem(display);
+
       ServiceManager.registerClassLoader(display.getClass().getClassLoader());
 
       // Icons for application window(s)
@@ -218,6 +221,33 @@ public class Startup
          shutdown();
       }
       logger.debug("main() method completed");
+   }
+
+   /**
+    * Force early initialization of the platform text rendering / font metrics subsystem before any UI
+    * is built. On some platforms (notably GTK on a "cold" first run) the very first text measurement
+    * scans the system font configuration and may otherwise complete only after early layout calculations
+    * have already run, leading to incorrectly sized windows (see issue #3205). This is a safeguard - it
+    * is cheap and harmless if not needed.
+    *
+    * @param display current display
+    */
+   private static void warmUpRenderingSubsystem(Display display)
+   {
+      try
+      {
+         Image image = new Image(display, 1, 1);
+         GC gc = new GC(image);
+         gc.setFont(display.getSystemFont());
+         gc.stringExtent("M");
+         gc.getFontMetrics();
+         gc.dispose();
+         image.dispose();
+      }
+      catch(Exception e)
+      {
+         logger.debug("Rendering subsystem warm-up failed", e);
+      }
    }
 
    /**
