@@ -23,6 +23,8 @@
 #ifndef _netxms_regex_h
 #define _netxms_regex_h
 
+#include <memory>
+
 #if USE_PCRE2
 
 #define PCRE2_CODE_UNIT_WIDTH 8
@@ -323,5 +325,23 @@ static inline uint32_t IntegerFromCGroupA(const char *text, int *cgroups, int cg
 #else
 #define IntegerFromCGroup IntegerFromCGroupA
 #endif
+
+/**
+ * Deleter for compiled PCRE pattern (releases it with the matching _pcre_free_* function)
+ */
+struct PCRE_Deleter
+{
+   void operator()(PCRE *re) const
+   {
+      if (re != nullptr)
+         _pcre_free_t(re);
+   }
+};
+
+/**
+ * RAII holder for a compiled PCRE pattern obtained from _pcre_compile_t().
+ * Pass handle.get() to _pcre_exec_t(); the pattern is freed automatically.
+ */
+using PCREHandle = std::unique_ptr<PCRE, PCRE_Deleter>;
 
 #endif	/* _netxms_regex_h */
