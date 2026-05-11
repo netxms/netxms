@@ -6532,6 +6532,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
 		value = vm->createValue(dci->getLastPollTime());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("mappingTableId") && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      value = vm->createValue(dci->getMappingTableId());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
    {
 		value = vm->createValue(dci->getName());

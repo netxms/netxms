@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
@@ -38,6 +39,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.UnmappedDciException;
+import org.netxms.nxmc.modules.datacollection.MappingTableCache;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -55,6 +57,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
+	private final MappingTableCache mappingTableCache;
+	private final Runnable mappingTableLoadHook;
 
    /**
     * @param parent parent composite
@@ -66,9 +70,26 @@ public abstract class ComparisonChartElement extends ElementWidget
       super(parent, element, view);
       session = Registry.getSession();
 
+      mappingTableCache = MappingTableCache.getInstance();
+      if (mappingTableCache != null)
+      {
+         final Display display = getDisplay();
+         mappingTableLoadHook = () -> display.asyncExec(() -> {
+            if (!isDisposed() && (chart != null) && !chart.isDisposed())
+               chart.refresh();
+         });
+         mappingTableCache.addLoadListener(mappingTableLoadHook);
+      }
+      else
+      {
+         mappingTableLoadHook = null;
+      }
+
       addDisposeListener((e) -> {
          if (refreshController != null)
             refreshController.dispose();
+         if ((mappingTableCache != null) && (mappingTableLoadHook != null))
+            mappingTableCache.removeLoadListener(mappingTableLoadHook);
       });
    }
 

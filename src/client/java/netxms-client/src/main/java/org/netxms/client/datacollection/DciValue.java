@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ public abstract class DciValue
    protected boolean noValueObject;
    protected boolean anomalyDetected;
    protected long thresholdDisableEndTime;
+   protected int mappingTableId;
 
    /**
     * Factory method to create correct DciValue subclass from NXCP message.
@@ -114,12 +115,13 @@ public abstract class DciValue
       anomalyDetected = msg.getFieldAsBoolean(fieldId++);
       userTag = msg.getFieldAsString(fieldId++);
       thresholdDisableEndTime = msg.getFieldAsInt64(fieldId++);
+      mappingTableId = msg.getFieldAsInt32(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
 	}
-   
+
    /**
     * Get data formatter for this DCI value.
     * 
@@ -356,14 +358,24 @@ public abstract class DciValue
    }
 
    /**
+    * Get ID of the mapping table used to translate the raw value into a display value.
+    *
+    * @return mapping table ID, or 0 if no mapping is configured
+    */
+   public int getMappingTableId()
+   {
+      return mappingTableId;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", comments=" + comments +
-            ", source=" + source + ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp +
-            ", activeThreshold=" + activeThreshold + ", flags=" + flags + ", measurementUnit=" + measurementUnit + ", multiplier=" + multiplier + ", noValueObject=" + noValueObject +
-            ", anomalyDetected=" + anomalyDetected + "]";
+      return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", userTag=" + userTag +
+            ", comments=" + comments + ", source=" + source + ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" +
+            timestamp + ", activeThreshold=" + activeThreshold + ", flags=" + flags + ", measurementUnit=" + measurementUnit + ", multiplier=" + multiplier + ", noValueObject=" + noValueObject +
+            ", anomalyDetected=" + anomalyDetected + ", thresholdDisableEndTime=" + thresholdDisableEndTime + ", mappingTableId=" + mappingTableId + "]";
    }
 }

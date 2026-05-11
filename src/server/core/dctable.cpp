@@ -924,6 +924,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, false); // Anomaly detected
    msg->setField(fieldId++, m_userTag);
    msg->setFieldFromTime(fieldId++, m_thresholdDisableEndTime);
+   msg->setField(fieldId++, static_cast<uint32_t>(0));   // mapping_table_id placeholder; tables don't carry one
 
    if (m_thresholds != nullptr)
    {

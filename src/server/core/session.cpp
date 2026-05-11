@@ -5663,6 +5663,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
          response->setField(VID_UNITS_NAME, dciItem->getUnitName());
          response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
          response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+         response->setField(VID_MAPPING_TABLE_ID, dciItem->getMappingTableId());
       }
       response->setField(VID_DCI_NAME, dci->getName());
       response->setField(VID_DESCRIPTION, dci->getDescription());
@@ -5814,6 +5815,7 @@ read_from_db:
 	         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
 	         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
 	         response->setField(VID_USE_MULTIPLIER, dciItem->getUseMultiplier());
+	         response->setField(VID_MAPPING_TABLE_ID, dciItem->getMappingTableId());
 	      }
 	      response->setField(VID_DCI_NAME, dci->getName());
 	      response->setField(VID_DESCRIPTION, dci->getDescription());

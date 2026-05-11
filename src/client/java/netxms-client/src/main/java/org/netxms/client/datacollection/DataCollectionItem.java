@@ -73,6 +73,7 @@ public class DataCollectionItem extends DataCollectionObject
 	private int sampleSaveInterval;
 	private int multiplier;
 	private String unitName;
+	private long mappingTableId;
 	private int snmpRawValueType;
    private List<Threshold> thresholds;
    private int allThresholdsRearmEvent;
@@ -98,6 +99,7 @@ public class DataCollectionItem extends DataCollectionObject
 		sampleSaveInterval = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_SAVE_INTERVAL);
 		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
 		unitName = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
+		mappingTableId = msg.getFieldAsInt64(NXCPCodes.VID_MAPPING_TABLE_ID);
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
       allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
       aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
@@ -131,6 +133,7 @@ public class DataCollectionItem extends DataCollectionObject
 		sampleSaveInterval = 1;
 		multiplier = 0;
 		unitName = null;
+		mappingTableId = 0;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
       allThresholdsRearmEvent = 0;
       aggregationMode = DciAggregationMode.INHERIT;
@@ -185,6 +188,7 @@ public class DataCollectionItem extends DataCollectionObject
       sampleSaveInterval = src.sampleSaveInterval;
       multiplier = src.multiplier;
       unitName = src.unitName;
+      mappingTableId = src.mappingTableId;
       snmpRawValueType = src.snmpRawValueType;
       allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       aiHint = src.aiHint;
@@ -213,6 +217,7 @@ public class DataCollectionItem extends DataCollectionObject
       msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, allThresholdsRearmEvent);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
       msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
+      msg.setFieldInt32(NXCPCodes.VID_MAPPING_TABLE_ID, (int)mappingTableId);
       msg.setField(NXCPCodes.VID_AI_HINT, aiHint);
       msg.setFieldInt16(NXCPCodes.VID_DCI_AGGREGATION_MODE, (aggregationMode != null) ? aggregationMode.getValue() : DciAggregationMode.INHERIT.getValue());
       msg.setFieldInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION, hourlyRetention);
@@ -398,6 +403,22 @@ public class DataCollectionItem extends DataCollectionObject
 	public void setUnitName(String unitName)
 	{
 		this.unitName = unitName;
+	}
+
+	/**
+	 * @return ID of the mapping table used to translate raw values into display values, or 0 if none
+	 */
+	public long getMappingTableId()
+	{
+		return mappingTableId;
+	}
+
+	/**
+	 * @param mappingTableId mapping table ID, or 0 to disable mapping
+	 */
+	public void setMappingTableId(long mappingTableId)
+	{
+		this.mappingTableId = mappingTableId;
 	}
 
 	/**

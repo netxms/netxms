@@ -224,9 +224,7 @@ public abstract class BaseTableValueViewer extends Composite
             viewer.enablePersistence(configId);
          else
             viewer.enableColumnReordering();
-         viewer.getTable().addDisposeListener((e) -> {
-            ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed());
-         });
+         viewer.getTable().addDisposeListener((e) -> ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed()));
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
 
          labelProvider.setColumns(table.getColumns());

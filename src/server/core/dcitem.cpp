@@ -162,6 +162,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_aiHint = src->m_aiHint;
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
+	m_mappingTableId = src->m_mappingTableId;
 	m_snmpRawValueType = src->m_snmpRawValueType;
    wcscpy(m_predictionEngine, src->m_predictionEngine);
    m_allThresholdsRearmEvent = src->m_allThresholdsRearmEvent;
@@ -200,7 +201,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    retention_type,polling_interval_src,retention_time_src,snmp_version,state_flags,
  *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,
  *    anomaly_profile,anomaly_profile_timestamp,ai_hint,
- *    aggregation_mode,hourly_retention,daily_retention,aggregation_watermark
+ *    aggregation_mode,hourly_retention,daily_retention,aggregation_watermark,
+ *    mapping_table_id
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -268,6 +270,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_hourlyRetention = DBGetFieldInt32(hResult, row, 48);
    m_dailyRetention = DBGetFieldInt32(hResult, row, 49);
    m_aggregationWatermark = DBGetFieldInt64(hResult, row, 50);
+   m_mappingTableId = DBGetFieldUInt32(hResult, row, 51);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -327,6 +330,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
 	m_multiplier = 0;
+	m_mappingTableId = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 	m_allThresholdsRearmEvent = 0;
@@ -363,6 +367,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
+	m_mappingTableId = config->getSubEntryValueAsUInt(_T("mappingTableId"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
    m_sampleSaveInterval = config->getSubEntryValueAsInt(_T("sampleSaveInterval"), 0, 1);
@@ -420,6 +425,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
    m_multiplier = json_object_get_int32(json, "multiplier");
+   m_mappingTableId = json_object_get_uint32(json, "mappingTableId", 0);
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
    m_sampleSaveInterval = json_object_get_int32(json, "sampleSaveInterval", 1);
@@ -562,7 +568,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
       L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", L"snmp_context",
       L"anomaly_profile", L"anomaly_profile_timestamp", L"ai_hint",
-      L"aggregation_mode", L"hourly_retention", L"daily_retention", L"aggregation_watermark", nullptr
+      L"aggregation_mode", L"hourly_retention", L"daily_retention", L"aggregation_watermark",
+      L"mapping_table_id", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
@@ -630,7 +637,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 49, DB_SQLTYPE_INTEGER, m_hourlyRetention);
    DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, m_dailyRetention);
    DBBind(hStmt, 51, DB_SQLTYPE_BIGINT, m_aggregationWatermark);
-   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_mappingTableId);
+   DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -955,6 +963,7 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_MULTIPLIER, static_cast<uint32_t>(m_multiplier));
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
    pMsg->setField(VID_UNITS_NAME, m_unitName);
+   pMsg->setField(VID_MAPPING_TABLE_ID, m_mappingTableId);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
    pMsg->setField(VID_AI_HINT, m_aiHint);
    pMsg->setField(VID_DCI_AGGREGATION_MODE, static_cast<uint16_t>(m_aggregationMode));
@@ -1040,6 +1049,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	m_sampleSaveInterval = msg.getFieldAsInt32(VID_SAMPLE_SAVE_INTERVAL);
 	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
 	m_unitName = msg.getFieldAsSharedString(VID_UNITS_NAME);
+	m_mappingTableId = msg.getFieldAsUInt32(VID_MAPPING_TABLE_ID);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
 	m_allThresholdsRearmEvent = msg.getFieldAsUInt32(VID_DEACTIVATION_EVENT);
 	m_aiHint = msg.getFieldAsSharedString(VID_AI_HINT);
@@ -2289,6 +2299,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_anomalyDetected);
    msg->setField(baseId++, m_userTag);
    msg->setFieldFromTime(baseId++, m_thresholdDisableEndTime);
+   msg->setField(baseId++, m_mappingTableId);
 
 	if (m_thresholds != nullptr)
 	{
@@ -2372,6 +2383,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "anomalyDetected", json_boolean(m_anomalyDetected));
    json_object_set_new(data, "userTag", json_string_t(m_userTag));
    json_object_set_new(data, "thresholdDisableEndTime", json_integer(m_thresholdDisableEndTime));
+   json_object_set_new(data, "mappingTableId", json_integer(m_mappingTableId));
 
    if (m_thresholds != nullptr)
    {
@@ -2836,6 +2848,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 	m_multiplier = item->m_multiplier;
 	m_unitName = item->m_unitName;
+	m_mappingTableId = item->m_mappingTableId;
 
    // Copy thresholds
    // ***************************
@@ -2933,6 +2946,7 @@ json_t *DCItem::createExportRecord() const
    json_object_set_new(root, "isDisabled", json_boolean(m_status == ITEM_STATUS_DISABLED));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
+   json_object_set_new(root, "mappingTableId", json_integer(m_mappingTableId));
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
 
    if (!m_transformationScriptSource.isBlank())
@@ -3151,6 +3165,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *c
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
    m_unitName = config->getSubEntryValue(_T("unitName"));
    m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
+   m_mappingTableId = config->getSubEntryValueAsUInt(_T("mappingTableId"));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
 
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
@@ -3191,6 +3206,7 @@ void DCItem::updateFromImport(json_t *json, ImportContext *context)
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
    m_unitName = json_object_get_string(json, "unitName", _T(""));
    m_multiplier = json_object_get_int32(json, "multiplier");
+   m_mappingTableId = json_object_get_uint32(json, "mappingTableId", 0);
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
@@ -3246,6 +3262,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "prevValueTimeStamp", m_prevValueTimeStamp.asJson());
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
+   json_object_set_new(root, "mappingTableId", json_integer(m_mappingTableId));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));

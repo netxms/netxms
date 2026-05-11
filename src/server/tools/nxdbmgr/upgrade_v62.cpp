@@ -60,6 +60,18 @@ static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
 }
 
 /**
+ * Upgrade from 62.11 to 62.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE items ADD mapping_table_id integer"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET mapping_table_id=0"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"mapping_table_id"));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 62.10 to 62.11
  */
 static bool H_UpgradeFromV10()
@@ -387,6 +399,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 62, 12, H_UpgradeFromV11 },
    { 10, 62, 11, H_UpgradeFromV10 },
    { 9,  62, 10, H_UpgradeFromV9  },
    { 8,  62, 9,  H_UpgradeFromV8  },

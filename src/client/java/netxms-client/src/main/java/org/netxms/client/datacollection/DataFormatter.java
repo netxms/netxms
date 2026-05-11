@@ -23,6 +23,7 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IllegalFormatException;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.mt.MappingTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,8 @@ public class DataFormatter
    private int useMultipliers; //  DciValue.MULTIPLIERS_DEFAULT, DciValue.MULTIPLIERS_ON, DciValue.MULTIPLIERS_OFF
    private boolean useMultipliersByDefault = true;
    private String defaultFormatStringWithMultipliers = "%{m,u}s";
-   private String defaultFormatStringWithoutMultipliers = "%{u}s";   
+   private String defaultFormatStringWithoutMultipliers = "%{u}s";
+   private MappingTable mappingTable;
 
 
    /**
@@ -173,6 +175,19 @@ public class DataFormatter
    }
 
    /**
+    * Set mapping table to translate raw values into display strings. When set and a lookup hits, the mapped value is
+    * returned as-is and the rest of the format pipeline is bypassed.
+    *
+    * @param mappingTable mapping table to use, or {@code null} to disable mapping
+    * @return this
+    */
+   public DataFormatter setMappingTable(MappingTable mappingTable)
+   {
+      this.mappingTable = mappingTable;
+      return this;
+   }
+
+   /**
     * Format value
     *
     * @param value The value
@@ -181,15 +196,22 @@ public class DataFormatter
     */
    public String format(String value, TimeFormatter timeFormatter)
    {
+      if (value == null || value.isEmpty())
+         return "";
+
+      if (mappingTable != null)
+      {
+         String mapped = mappingTable.lookup(value);
+         if (mapped != null)
+            return mapped;
+      }
+
       String str = formatString;
       if (str == null || str.isEmpty())
       {
-         str = ((useMultipliers == DciValue.MULTIPLIERS_DEFAULT) && useMultipliersByDefault) || 
+         str = ((useMultipliers == DciValue.MULTIPLIERS_DEFAULT) && useMultipliersByDefault) ||
                (useMultipliers == DciValue.MULTIPLIERS_YES) ? defaultFormatStringWithMultipliers : defaultFormatStringWithoutMultipliers;
       }
-      
-      if (value == null || value.isEmpty())
-         return "";
 
       StringBuilder sb = new StringBuilder();
       char[] format = str.toCharArray();

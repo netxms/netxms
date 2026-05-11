@@ -2060,12 +2060,14 @@ DCObjectInfo::DCObjectInfo(const DCObject& object) : m_pollingSchedules(object.g
    {
       m_unitName = static_cast<const DCItem&>(object).m_unitName;
       m_multiplier = static_cast<const DCItem&>(object).m_multiplier;
+      m_mappingTableId = static_cast<const DCItem&>(object).m_mappingTableId;
       m_dataType = static_cast<const DCItem&>(object).m_dataType;
       m_transformedDataType = static_cast<const DCItem&>(object).m_transformedDataType;
    }
    else
    {
       m_multiplier = 0;
+      m_mappingTableId = 0;
       m_dataType = -1;
       m_transformedDataType = -1;
    }
@@ -2104,12 +2106,14 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object) : m_p
    {
       m_unitName = static_cast<const DCItem*>(object)->m_unitName;
       m_multiplier = static_cast<const DCItem*>(object)->m_multiplier;
+      m_mappingTableId = static_cast<const DCItem*>(object)->m_mappingTableId;
       m_dataType = msg.getFieldAsInt16(VID_DCI_DATA_TYPE);
       m_transformedDataType = msg.getFieldAsInt16(VID_TRANSFORMED_DATA_TYPE);
    }
    else
    {
       m_multiplier = 0;
+      m_mappingTableId = 0;
       m_dataType = -1;
       m_transformedDataType = -1;
    }

@@ -597,6 +597,7 @@ protected:
    SharedString m_aiHint;              // Hint for AI anomaly profile generation
 	int m_multiplier;
 	SharedString m_unitName;
+	uint32_t m_mappingTableId;          // Mapping table for raw->display value mapping (0 = none)
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
    uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
@@ -676,6 +677,7 @@ public:
 	int getMultiplier() const { return m_multiplier; }
 	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
+	uint32_t getMappingTableId() const { return m_mappingTableId; }
 	bool inAnomalyDetectionByAIEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
 	bool isAnomalyDetectedAI() const { return m_anomalyDetectedAI; }
@@ -743,6 +745,7 @@ public:
 	void setDeltaCalculation(BYTE method) { m_deltaCalculation = method; }
 	void setSampleCount(int count) { m_sampleCount = count; }
 	void setMultiplier(int multiplier) { m_multiplier = multiplier; }
+	void setMappingTableId(uint32_t id) { m_mappingTableId = id; }
 	void setDataType(BYTE dataType) { m_dataType = dataType; }
 
 	void prepareForRecalc();
@@ -1041,6 +1044,7 @@ private:
    TCHAR *m_comments;
    SharedString m_unitName;
    int m_multiplier;
+   uint32_t m_mappingTableId;
    int m_dataType;
    int m_transformedDataType;
    int m_origin;
@@ -1075,6 +1079,7 @@ public:
    const TCHAR *getComments() const { return m_comments; }
    int getDataType() const { return m_dataType; }
    int getTransformedDataType() const { return m_transformedDataType; }
+   uint32_t getMappingTableId() const { return m_mappingTableId; }
    int getOrigin() const { return m_origin; }
    int getStatus() const { return m_status; }
    uint32_t getErrorCount() const { return m_errorCount; }

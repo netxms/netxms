@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public class MappingTableDescriptor
 		flags = msg.getFieldAsInt32(baseId + 3);
 		guid = msg.getFieldAsUUID(baseId + 4);
 	}
-	
+
 	/**
 	 * Create from scratch.
 	 *

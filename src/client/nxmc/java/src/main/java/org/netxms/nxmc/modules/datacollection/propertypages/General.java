@@ -18,6 +18,11 @@
  */
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -40,10 +45,12 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.base.widgets.Hyperlink;
@@ -112,6 +119,8 @@ public class General extends AbstractDCIPropertyPage
    private Combo dataType;
    private Combo useMultipliers;
    private Combo dataUnit;
+   private Combo mappingTableSelector;
+   private List<MappingTableDescriptor> mappingTableList;
 	private Button scheduleDefault;
    private Button scheduleFixed;
    private Button scheduleAdvanced;
@@ -226,7 +235,7 @@ public class General extends AbstractDCIPropertyPage
          DataCollectionItem dci = (DataCollectionItem)dco;
 
          Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
-         groupProcessingAndVisualization.setText(i18n.tr("Polling"));
+         groupProcessingAndVisualization.setText(i18n.tr("Data type and display"));
          layout = new GridLayout();
          layout.marginHeight = WidgetHelper.OUTER_SPACING;
          layout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -278,6 +287,16 @@ public class General extends AbstractDCIPropertyPage
          useMultipliers.add("Yes");
          useMultipliers.add("No");
          useMultipliers.select(dci.getMultipliersSelection());
+
+         gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.horizontalSpan = 3;
+         mappingTableSelector = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Display value mapping table", gd);
+         mappingTableSelector.add(i18n.tr("(none)"));
+         mappingTableSelector.select(0);
+         mappingTableSelector.setEnabled(false);
+         loadMappingTables(dci.getMappingTableId());
       }
 
       Group groupPolling = new Group(dialogArea, SWT.NONE);
@@ -527,6 +546,11 @@ public class General extends AbstractDCIPropertyPage
          dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
          dci.setStoreChangesOnly(checkSaveOnlyChangedValues.getSelection());
          dci.setSampleSaveInterval(sampleSaveInterval.getSelection());
+         if (mappingTableList != null)
+         {
+            int index = mappingTableSelector.getSelectionIndex();
+            dci.setMappingTableId((index > 0) ? mappingTableList.get(index - 1).getId() : 0);
+         }
       }
 
 		editor.modify();
@@ -591,8 +615,53 @@ public class General extends AbstractDCIPropertyPage
       {
          dataUnit.setText("");
          useMultipliers.select(0);
+         if (mappingTableSelector != null)
+            mappingTableSelector.select(0);
       }
 	}
+
+   /**
+    * Asynchronously load the list of mapping tables from the server and populate the selector. Pre-selects the table that
+    * matches {@code currentId}; falls back to the no-mapping entry when the current selection no longer exists.
+    */
+   private void loadMappingTables(final long currentId)
+   {
+      new Job(i18n.tr("Loading mapping tables"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<MappingTableDescriptor> tables = session.listMappingTables();
+            Collections.sort(tables, new Comparator<MappingTableDescriptor>() {
+               @Override
+               public int compare(MappingTableDescriptor a, MappingTableDescriptor b)
+               {
+                  return a.getName().compareToIgnoreCase(b.getName());
+               }
+            });
+            runInUIThread(() -> {
+               if (mappingTableSelector.isDisposed())
+                  return;
+               mappingTableList = new ArrayList<MappingTableDescriptor>(tables);
+               int selection = 0;
+               for(int i = 0; i < tables.size(); i++)
+               {
+                  MappingTableDescriptor t = tables.get(i);
+                  mappingTableSelector.add(t.getName());
+                  if (t.getId() == currentId)
+                     selection = i + 1;
+               }
+               mappingTableSelector.select(selection);
+               mappingTableSelector.setEnabled(true);
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot load mapping tables");
+         }
+      }.start();
+   }
 
 	/**
 	 * Get selector position for given data type

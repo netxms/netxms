@@ -41,6 +41,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.Pair;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -62,6 +63,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.MappingTableCache;
 import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
 import org.netxms.nxmc.modules.datacollection.propertypages.Aggregation;
@@ -497,6 +499,26 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             refreshController.dispose();
          }
       });
+
+      final MappingTableCache mappingTableCache = MappingTableCache.getInstance();
+      if (mappingTableCache != null)
+      {
+         final Display display = viewer.getTable().getDisplay();
+         final Runnable mappingTableHook = () -> {
+            display.asyncExec(() -> {
+               if (!viewer.getTable().isDisposed())
+                  viewer.refresh(true);
+            });
+         };
+         mappingTableCache.addLoadListener(mappingTableHook);
+         viewer.getTable().addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               mappingTableCache.removeLoadListener(mappingTableHook);
+            }
+         });
+      }
 
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override

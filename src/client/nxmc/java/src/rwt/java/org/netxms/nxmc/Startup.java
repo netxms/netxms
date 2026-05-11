@@ -71,6 +71,7 @@ import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
+import org.netxms.nxmc.modules.datacollection.MappingTableCache;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -293,6 +294,7 @@ public class Startup implements EntryPoint, StartupParameters
       SummaryTablesCache.attachSession(display, session);
       GraphTemplateCache.attachSession(display, session);
       LogDescriptorRegistry.attachSession(display, session);
+      MappingTableCache.attachSession(display, session);
       Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
 
       if (!kioskMode)

@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataSeries;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
 import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
@@ -139,6 +140,10 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     */
    protected String getValueAsDisplayString(ChartDciConfig dci, DataSeries data)
    {
-      return data.getDataFormatter().setFormatString(dci.getDisplayFormat()).format(data.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter()); 
+      System.out.println(data.getDciName() + " mt=" + data.getMappingTableId() + " v=" + data.getCurrentValueAsString());
+      String mapped = DciValueFormatter.lookup(data.getMappingTableId(), data.getCurrentValueAsString());
+      if (mapped != null)
+         return mapped;
+      return data.getDataFormatter().setFormatString(dci.getDisplayFormat()).format(data.getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
    }
 }

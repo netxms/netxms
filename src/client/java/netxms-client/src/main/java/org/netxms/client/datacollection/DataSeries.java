@@ -49,6 +49,7 @@ public class DataSeries
    private DciTier tierServed = DciTier.RAW;
    private DataCollectionObjectStatus dciStatus = DataCollectionObjectStatus.ACTIVE;
    private int errorCount = 0;
+   private int mappingTableId = 0;
 
    /**
     * Create empty data series
@@ -109,6 +110,7 @@ public class DataSeries
       this.tierServed = src.tierServed;
       this.dciStatus = src.dciStatus;
       this.errorCount = src.errorCount;
+      this.mappingTableId = src.mappingTableId;
    }
 
    /**
@@ -135,6 +137,8 @@ public class DataSeries
 
       String units = msg.getFieldAsString(NXCPCodes.VID_UNITS_NAME);
       measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
+
+      mappingTableId = msg.getFieldAsInt32(NXCPCodes.VID_MAPPING_TABLE_ID);
 
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
       thresholds = new Threshold[count];
@@ -435,6 +439,16 @@ public class DataSeries
    public int getErrorCount()
    {
       return errorCount;
+   }
+
+   /**
+    * Get ID of the mapping table used to translate raw values into display strings.
+    *
+    * @return mapping table ID, or 0 when no mapping is configured
+    */
+   public int getMappingTableId()
+   {
+      return mappingTableId;
    }
 
    /**
