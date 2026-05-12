@@ -33,6 +33,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -110,16 +111,12 @@ public class LoginDialog extends Dialog
    @Override
    protected Point getInitialSize()
    {
+      // Enforce a usable minimum size as a last line of defense against degenerate sizes produced by
+      // Shell.computeSize() on a "cold" platform start (notably GTK on a first run, before widget
+      // metrics are fully initialized) - see issue #3205. The shell is also re-sized after it is shown
+      // (see createDialogArea), by which point metrics are reliable.
       Point size = super.getInitialSize();
-      // Shell.computeSize() can return a degenerate value on some platforms (notably GTK on a "cold"
-      // first run, before the font/widget metrics subsystem is fully initialized). This dialog is not
-      // resizable, so a clipped login form would be unrecoverable - enforce a usable minimum size in
-      // that case (see issue #3205).
-      if (size.x < 350)
-         size.x = 500;
-      if (size.y < 250)
-         size.y = 350;
-      return size;
+      return new Point(Math.max(size.x, 460), Math.max(size.y, 340));
    }
 
    /**
@@ -183,7 +180,7 @@ public class LoginDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 24; //$NON-NLS-1$
+      gd.widthHint = Math.max(WidgetHelper.getTextWidth(textLogin, "M") * 24, 192); // Use 192 as viable minimum in case getTextWidth returns incorrect value
       textLogin.setLayoutData(gd);
 
       gd = new GridData();
@@ -262,6 +259,25 @@ public class LoginDialog extends Dialog
       	else if (authMethod == AuthenticationType.CERTIFICATE)
       		comboCert.setFocus();
       }
+
+      // Workaround for issue #3205: on some platforms (notably GTK on a "cold" first run) the dialog can
+      // be laid out before widget metrics are reliable, producing a too-small and clipped form. Once the
+      // shell has been shown, re-measure and grow it (and re-center) if it turns out to be undersized.
+      parent.getDisplay().timerExec(500, () -> {
+         Shell shell = getShell();
+         if ((shell == null) || shell.isDisposed())
+            return;
+         shell.layout(true, true);
+         Point preferredSize = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+         Rectangle currentBounds = shell.getBounds();
+         if ((preferredSize.x > currentBounds.width) || (preferredSize.y > currentBounds.height))
+         {
+            int width = Math.max(preferredSize.x, currentBounds.width);
+            int height = Math.max(preferredSize.y, currentBounds.height);
+            shell.setBounds(currentBounds.x - (width - currentBounds.width) / 2,
+                  currentBounds.y - (height - currentBounds.height) / 2, width, height);
+         }
+      });
 
       return dialogArea;
    }
