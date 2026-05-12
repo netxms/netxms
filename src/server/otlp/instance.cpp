@@ -298,6 +298,14 @@ shared_ptr<DCObject> ResolveOTelInstance(const shared_ptr<Node>& node,
 
       if (existing != nullptr)
       {
+         if (existing->getStatus() == ITEM_STATUS_DISABLED)
+         {
+            // Instance DCI exists but was disabled by user - do not collect data and do not re-create it
+            nxlog_debug_tag(DEBUG_TAG_OTLP, 6, L"Existing instance DCI %u for metric %hs instance \"%s\" on node %s [%u] is disabled, ignoring data point",
+               existing->getId(), metricName, instanceKey.cstr(), node->getName(), node->getId());
+            continue;
+         }
+
          // Add to cache and return
          s_instanceCacheLock.lock();
          InstanceCacheEntry *entry = MemAllocStruct<InstanceCacheEntry>();

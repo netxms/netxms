@@ -1170,6 +1170,9 @@ uint32_t DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, uint32_t ba
  */
 bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObject, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints)
 {
+   if (dcObject->getStatus() == ITEM_STATUS_DISABLED)
+      return true;  // do not accept data for disabled DCI (e.g. pushed values)
+
    if (dcObject->getLastValueTimestamp() == timestamp)
       return true;  // duplicate timestamp and/or value, silently ignore it
 
