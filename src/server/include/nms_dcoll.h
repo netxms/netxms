@@ -225,6 +225,7 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void fillMessage(NXCPMessage *msg, uint32_t baseId, DCItem *dci) const;
    void updateFromMessage(const NXCPMessage& msg, uint32_t baseId);
+   void updateFromJson(json_t *json);
 
    void createId();
    uint32_t getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
@@ -959,6 +960,8 @@ public:
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
    shared_ptr<Table> getLastValue();
    void getThresholdIdList(IntegerArray<uint32_t> *idList) const;
+   int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
+   DCTableThreshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }
 
    void mergeValues(Table *dest, Table *src, int count) const;
 

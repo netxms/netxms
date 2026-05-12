@@ -1023,6 +1023,80 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId)
 }
 
 /**
+ * Get all thresholds configured across all data collection items and tables on a given object.
+ * Returns one row per threshold with the activation/deactivation event names, so the assistant
+ * can answer questions like "which events can be generated from thresholds on node X".
+ */
+std::string F_GetObjectThresholds(json_t *arguments, uint32_t userId)
+{
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
+
+   if (!object->isDataCollectionTarget())
+      return std::string("Object is not a data collection target");
+
+   unique_ptr<SharedObjectArray<DCObject>> dcObjects = static_cast<DataCollectionTarget&>(*object).getAllDCObjects(userId);
+
+   json_t *output = json_array();
+   wchar_t eventName[MAX_EVENT_NAME];
+   for(int i = 0; i < dcObjects->size(); i++)
+   {
+      DCObject *dco = dcObjects->get(i);
+      if (dco->getType() == DCO_TYPE_ITEM)
+      {
+         DCItem *dci = static_cast<DCItem*>(dco);
+         int count = dci->getThresholdCount();
+         for(int j = 0; j < count; j++)
+         {
+            Threshold *t = dci->getThreshold(j);
+            if (t == nullptr)
+               continue;
+            json_t *row = json_object();
+            json_object_set_new(row, "dciId", json_integer(dci->getId()));
+            json_object_set_new(row, "dciName", json_string_t(dci->getName().cstr()));
+            json_object_set_new(row, "dciType", json_string("item"));
+            json_object_set_new(row, "thresholdId", json_integer(t->getId()));
+            json_object_set_new(row, "condition", json_string_t(t->getTextualDefinition().cstr()));
+            if (t->isDisabled())
+               json_object_set_new(row, "disabled", json_true());
+            EventNameFromCode(t->getEventCode(), eventName);
+            json_object_set_new(row, "activationEvent", json_string_t(eventName));
+            EventNameFromCode(t->getRearmEventCode(), eventName);
+            json_object_set_new(row, "deactivationEvent", json_string_t(eventName));
+            json_array_append_new(output, row);
+         }
+      }
+      else if (dco->getType() == DCO_TYPE_TABLE)
+      {
+         DCTable *dct = static_cast<DCTable*>(dco);
+         int count = dct->getThresholdCount();
+         for(int j = 0; j < count; j++)
+         {
+            DCTableThreshold *t = dct->getThreshold(j);
+            if (t == nullptr)
+               continue;
+            json_t *row = json_object();
+            json_object_set_new(row, "dciId", json_integer(dct->getId()));
+            json_object_set_new(row, "dciName", json_string_t(dct->getName().cstr()));
+            json_object_set_new(row, "dciType", json_string("table"));
+            json_object_set_new(row, "thresholdId", json_integer(t->getId()));
+            json_object_set_new(row, "condition", json_string_t(t->getConditionAsText().cstr()));
+            EventNameFromCode(t->getActivationEvent(), eventName);
+            json_object_set_new(row, "activationEvent", json_string_t(eventName));
+            EventNameFromCode(t->getDeactivationEvent(), eventName);
+            json_object_set_new(row, "deactivationEvent", json_string_t(eventName));
+            json_array_append_new(output, row);
+         }
+      }
+   }
+
+   return JsonToString(output);
+}
+
+/**
  * Add threshold to a metric
  */
 std::string F_AddThreshold(json_t *arguments, uint32_t userId)
@@ -1067,7 +1141,9 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
       return std::string("Invalid threshold operation specified");
 
    int sampleCount = json_object_get_int32(arguments, "sampleCount", 1);
+   int deactivationSampleCount = json_object_get_int32(arguments, "deactivationSampleCount", 1);
    int repeatInterval = json_object_get_int32(arguments, "repeatInterval", -1);
+   bool regenerateOnValueChange = json_object_get_boolean(arguments, "regenerateOnValueChange", false);
 
    const char *activationEvent = json_object_get_string_utf8(arguments, "activationEvent", "SYS_THRESHOLD_REACHED");
    const char *deactivationEvent = json_object_get_string_utf8(arguments, "deactivationEvent", "SYS_THRESHOLD_REARMED");
@@ -1080,11 +1156,13 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
    json_object_set_new(thresholdJson, "condition", json_integer(operation));
    json_object_set_new(thresholdJson, "value", json_string(valueStr));
    json_object_set_new(thresholdJson, "sampleCount", json_integer(sampleCount));
+   json_object_set_new(thresholdJson, "deactivationSampleCount", json_integer(deactivationSampleCount));
    json_object_set_new(thresholdJson, "repeatInterval", json_integer(repeatInterval));
+   json_object_set_new(thresholdJson, "regenerateOnValueChange", json_boolean(regenerateOnValueChange));
    if (script != nullptr)
       json_object_set_new(thresholdJson, "script", json_string(script));
 
-   // Set events - the Threshold constructor will resolve names to codes
+   // Set events - the Threshold constructor will resolve names or numeric codes
    json_object_set_new(thresholdJson, "activationEvent", json_string(activationEvent));
    json_object_set_new(thresholdJson, "deactivationEvent", json_string(deactivationEvent));
 
@@ -1098,6 +1176,131 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
 
    char buffer[128];
    snprintf(buffer, 128, "Threshold with ID %u added to metric %u", threshold->getId(), dci->getId());
+   return std::string(buffer);
+}
+
+/**
+ * Edit an existing threshold on a metric. Only specified properties are changed; others
+ * (including runtime state) are preserved.
+ */
+std::string F_EditThreshold(json_t *arguments, uint32_t userId)
+{
+   const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
+   if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
+      return std::string("Metric name or ID must be provided");
+
+   uint32_t thresholdId = json_object_get_uint32(arguments, "thresholdId", 0);
+   if (thresholdId == 0)
+      return std::string("Threshold ID must be provided");
+
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
+
+   if (!object->isDataCollectionTarget())
+      return std::string("Object is not a data collection target");
+
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
+   shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
+   if (dco == nullptr)
+      return std::string("Metric not found");
+
+   if (dco->getType() != DCO_TYPE_ITEM)
+      return std::string("Object is not a data collection item");
+
+   DCItem *dci = static_cast<DCItem*>(dco.get());
+   Threshold *threshold = nullptr;
+   int thresholdCount = dci->getThresholdCount();
+   for(int i = 0; i < thresholdCount; i++)
+   {
+      Threshold *t = dci->getThreshold(i);
+      if ((t != nullptr) && (t->getId() == thresholdId))
+      {
+         threshold = t;
+         break;
+      }
+   }
+   if (threshold == nullptr)
+      return std::string("Threshold not found");
+
+   json_t *update = json_object();
+
+   const char *function = json_object_get_string_utf8(arguments, "function", nullptr);
+   if (function != nullptr)
+   {
+      int code = ParseThresholdFunction(function);
+      if (code < 0)
+      {
+         json_decref(update);
+         return std::string("Invalid threshold function specified");
+      }
+      json_object_set_new(update, "function", json_integer(code));
+   }
+
+   const char *operation = json_object_get_string_utf8(arguments, "operation", nullptr);
+   if (operation != nullptr)
+   {
+      int code = ParseThresholdOperation(operation);
+      if (code < 0)
+      {
+         json_decref(update);
+         return std::string("Invalid threshold operation specified");
+      }
+      json_object_set_new(update, "condition", json_integer(code));
+   }
+
+   const char *valueStr = json_object_get_string_utf8(arguments, "value", nullptr);
+   if (valueStr != nullptr)
+      json_object_set_new(update, "value", json_string(valueStr));
+
+   if (json_object_get(arguments, "sampleCount") != nullptr)
+      json_object_set_new(update, "sampleCount", json_integer(json_object_get_int32(arguments, "sampleCount", threshold->getSampleCount())));
+
+   if (json_object_get(arguments, "deactivationSampleCount") != nullptr)
+      json_object_set_new(update, "deactivationSampleCount", json_integer(json_object_get_int32(arguments, "deactivationSampleCount", threshold->getDeactivationSampleCount())));
+
+   if (json_object_get(arguments, "repeatInterval") != nullptr)
+      json_object_set_new(update, "repeatInterval", json_integer(json_object_get_int32(arguments, "repeatInterval", threshold->getRepeatInterval())));
+
+   if (json_object_get(arguments, "regenerateOnValueChange") != nullptr)
+      json_object_set_new(update, "regenerateOnValueChange", json_boolean(json_object_get_boolean(arguments, "regenerateOnValueChange", threshold->isRegenerateOnValueChange())));
+
+   if (json_object_get(arguments, "disabled") != nullptr)
+      json_object_set_new(update, "disabled", json_boolean(json_object_get_boolean(arguments, "disabled", threshold->isDisabled())));
+
+   const char *script = json_object_get_string_utf8(arguments, "script", nullptr);
+   if (script != nullptr)
+      json_object_set_new(update, "script", json_string(script));
+
+   // Event names/codes are passed through to Threshold::updateFromJson, which resolves them (same as add-threshold)
+   const char *activationEvent = json_object_get_string_utf8(arguments, "activationEvent", nullptr);
+   if (activationEvent != nullptr)
+      json_object_set_new(update, "activationEvent", json_string(activationEvent));
+
+   const char *deactivationEvent = json_object_get_string_utf8(arguments, "deactivationEvent", nullptr);
+   if (deactivationEvent != nullptr)
+      json_object_set_new(update, "deactivationEvent", json_string(deactivationEvent));
+
+   if (json_object_size(update) == 0)
+   {
+      json_decref(update);
+      return std::string("No threshold properties specified to change");
+   }
+
+   threshold->updateFromJson(update);
+   threshold->setDataType(dci->getTransformedDataType());
+   json_decref(update);
+
+   dci->updateCacheSize();
+   dci->getOwner()->markAsModified(MODIFY_DATA_COLLECTION);
+
+   char buffer[128];
+   snprintf(buffer, 128, "Threshold with ID %u on metric %u updated", thresholdId, dci->getId());
    return std::string(buffer);
 }
 

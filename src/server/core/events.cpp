@@ -1038,11 +1038,23 @@ shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplate(const wchar_t *nam
 }
 
 /**
- * Translate event name to code
- * If event with given name does not exist, returns supplied default value
+ * Translate event name to code. Accepts an event name, an event GUID, or an event code
+ * in textual form. If the string does not match any known event, returns supplied default value.
  */
-uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue)
+uint32_t NXCORE_EXPORTABLE EventCodeFromName(const wchar_t *name, uint32_t defaultValue)
 {
+   if (name == nullptr)
+      return defaultValue;
+
+   // Accept an event code given in textual form (only if it refers to an existing event)
+   if ((name[0] >= '0') && (name[0] <= '9'))
+   {
+      wchar_t *eptr;
+      uint32_t code = wcstoul(name, &eptr, 10);
+      if ((*eptr == 0) && (FindEventTemplateByCode(code) != nullptr))
+         return code;
+   }
+
    shared_ptr<EventTemplate> e = FindEventTemplate(name);
 	return (e != nullptr) ? e->getCode() : defaultValue;
 }
