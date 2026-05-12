@@ -841,6 +841,56 @@ void Threshold::updateFromMessage(const NXCPMessage& msg, uint32_t baseId)
 }
 
 /**
+ * Update threshold from JSON object.
+ *
+ * Recognizes the same keys as the Threshold(json_t*, DCItem*) constructor: activationEvent,
+ * deactivationEvent, function, condition, value, sampleCount (or legacy param1),
+ * deactivationSampleCount, script, repeatInterval, regenerateOnValueChange; plus "disabled"
+ * (as in updateFromMessage). Event keys accept an event name, GUID, or numeric code (see
+ * EventCodeFromName). Unlike the constructor, this is a partial update: keys that are absent
+ * (or hold an unusable value) leave the corresponding property unchanged, and runtime state
+ * (current severity, match counters, reached flag) and threshold identity are preserved.
+ */
+void Threshold::updateFromJson(json_t *json)
+{
+   json_t *member = json_object_get(json, "activationEvent");
+   if (json_is_string(member))
+      m_eventCode = EventCodeFromName(String(json_string_value(member), "utf8"), m_eventCode);
+
+   member = json_object_get(json, "deactivationEvent");
+   if (json_is_string(member))
+      m_rearmEventCode = EventCodeFromName(String(json_string_value(member), "utf8"), m_rearmEventCode);
+
+   m_function = static_cast<uint8_t>(json_object_get_int32(json, "function", m_function));
+   m_operation = static_cast<uint8_t>(json_object_get_int32(json, "condition", m_operation));
+
+   member = json_object_get(json, "value");
+   if (json_is_string(member))
+   {
+      m_value.set(String(json_string_value(member), "utf8"), true);
+      m_expandValue = (NumChars(m_value, '%') > 0);
+   }
+
+   // sampleCount has a legacy alias "param1"
+   member = json_object_get(json, "sampleCount");
+   if (member == nullptr)
+      member = json_object_get(json, "param1");
+   if (json_is_integer(member))
+      m_sampleCount = static_cast<int>(json_integer_value(member));
+
+   m_deactivationSampleCount = json_object_get_int32(json, "deactivationSampleCount", m_deactivationSampleCount);
+   if (m_deactivationSampleCount < 1)
+      m_deactivationSampleCount = 1;
+   m_repeatInterval = json_object_get_int32(json, "repeatInterval", m_repeatInterval);
+   m_regenerateOnValueChange = json_object_get_boolean(json, "regenerateOnValueChange", m_regenerateOnValueChange);
+   m_disabled = json_object_get_boolean(json, "disabled", m_disabled);
+
+   member = json_object_get(json, "script");
+   if (json_is_string(member))
+      setScript(WideStringFromUTF8String(json_string_value(member)));
+}
+
+/**
  * Calculate average value for values of given type
  */
 template<typename T> static T CalculateAverage(const ItemValue &lastValue, ItemValue **prevValues, int sampleCount)

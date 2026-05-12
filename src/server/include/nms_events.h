@@ -930,7 +930,7 @@ Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
 bool NXCORE_EXPORTABLE EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
-uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
+uint32_t NXCORE_EXPORTABLE EventCodeFromName(const wchar_t *name, uint32_t defaultValue = 0);
 shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplateByCode(uint32_t code);
 shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplate(const wchar_t *name);
 

@@ -7,7 +7,7 @@ This skill provides comprehensive data collection management capabilities for Ne
 - **Inspect metric configuration**: Get full configuration details of individual metrics before making changes
 - **Monitor current values**: Retrieve real-time metric values and status information
 - **Analyze historical data**: Access time series data for trend analysis, anomaly detection, and performance monitoring
-- **Manage thresholds**: Add, view, and remove alerting thresholds on metrics
+- **Manage thresholds**: Add, edit, view, and remove alerting thresholds on metrics; enumerate every threshold on an object at once with `get-object-thresholds` to see which events it can generate
 - **Performance optimization**: Identify performance bottlenecks and capacity planning opportunities
 
 ## Key Capabilities
@@ -50,6 +50,11 @@ Editable properties include:
 - **Processing**: transformation script, data type
 - **Network**: source node (proxy), SNMP port
 - **Flags**: tooltip display, overview display, node status calculation, store changes only, hide on last values, cluster aggregation
+
+### Thresholds and Alerting
+- `get-thresholds` returns the thresholds configured on one specific metric, including the activation and deactivation event names
+- `get-object-thresholds` returns every threshold across all metrics (items and tables) on an object in one call - use this when asked which events a node can generate via thresholds, or to audit alerting coverage, instead of calling `get-thresholds` for each metric
+- `add-threshold` / `edit-threshold` / `delete-threshold` create, modify, and remove thresholds on a metric; `edit-threshold` changes only the properties you pass and preserves the threshold's ID and runtime state
 
 ### Real-time Monitoring
 - Current metric values with timestamps

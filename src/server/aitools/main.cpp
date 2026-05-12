@@ -34,7 +34,9 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId);
 std::string F_DeleteMetric(json_t *arguments, uint32_t userId);
 std::string F_GetMetricDetails(json_t *arguments, uint32_t userId);
 std::string F_GetThresholds(json_t *arguments, uint32_t userId);
+std::string F_GetObjectThresholds(json_t *arguments, uint32_t userId);
 std::string F_AddThreshold(json_t *arguments, uint32_t userId);
+std::string F_EditThreshold(json_t *arguments, uint32_t userId);
 std::string F_DeleteThreshold(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId);
@@ -323,6 +325,13 @@ static void CreateAssistantSkillList()
             },
             F_GetThresholds),
          AssistantFunction(
+            "get-object-thresholds",
+            "Get all thresholds configured across every data collection item and table on an object (node, device, etc.) in a single call. Returns one row per threshold with the data collection item name and ID, threshold ID, condition, and the names of the events generated on activation and deactivation. Use this to answer questions like which events can be generated from thresholds on a given node.",
+            {
+               { "object", "name or ID of an object (mandatory)" }
+            },
+            F_GetObjectThresholds),
+         AssistantFunction(
             "add-threshold",
             "Add a threshold to a data collection item for alerting when values exceed limits.",
             {
@@ -331,13 +340,35 @@ static void CreateAssistantSkillList()
                { "value", "threshold value (mandatory)" },
                { "function", "function: last, average, sum, meanDeviation, diff, error, script, absDeviation, anomaly (default: last)" },
                { "operation", "operation: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike (default: greaterOrEqual)" },
-               { "sampleCount", "sample count for function (default: 1)" },
-               { "activationEvent", "event code or name when threshold activates (default: SYS_THRESHOLD_REACHED)" },
-               { "deactivationEvent", "event code or name when threshold deactivates (default: SYS_THRESHOLD_REARMED)" },
+               { "sampleCount", "number of samples for the function (default: 1)" },
+               { "deactivationSampleCount", "number of consecutive non-matching polls before deactivation (default: 1)" },
+               { "activationEvent", "event name or numeric code generated when threshold activates (default: SYS_THRESHOLD_REACHED)" },
+               { "deactivationEvent", "event name or numeric code generated when threshold deactivates (default: SYS_THRESHOLD_REARMED)" },
                { "repeatInterval", "repeat interval in seconds, -1=default, 0=off (default: -1)" },
+               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)" },
                { "script", "NXSL script for script function (optional)" }
             },
             F_AddThreshold),
+         AssistantFunction(
+            "edit-threshold",
+            "Edit an existing threshold on a data collection item. Only specified properties are changed; others (including runtime state) remain unchanged. Parameters mirror add-threshold. Use get-thresholds or get-object-thresholds first to find the threshold ID.",
+            {
+               { "object", "name or ID of an object (mandatory)" },
+               { "metric", "name or ID of the metric (mandatory)" },
+               { "thresholdId", "ID of the threshold to edit (mandatory)" },
+               { "value", "new threshold value (optional)" },
+               { "function", "new function: last, average, sum, meanDeviation, diff, error, script, absDeviation, anomaly (optional)" },
+               { "operation", "new operation: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike (optional)" },
+               { "sampleCount", "new number of samples for the function (optional)" },
+               { "deactivationSampleCount", "new number of consecutive non-matching polls before deactivation (optional)" },
+               { "activationEvent", "new event name or numeric code generated when threshold activates (optional)" },
+               { "deactivationEvent", "new event name or numeric code generated when threshold deactivates (optional)" },
+               { "repeatInterval", "new repeat interval in seconds, -1=default, 0=off (optional)" },
+               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)" },
+               { "disabled", "disable or enable the threshold (optional, boolean)" },
+               { "script", "new NXSL script for script function, empty string to clear (optional)" }
+            },
+            F_EditThreshold),
          AssistantFunction(
             "delete-threshold",
             "Delete a threshold from a data collection item.",
