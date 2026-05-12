@@ -32,6 +32,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -52,6 +54,8 @@ import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -59,6 +63,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LoginDialog extends Dialog
 {
+   private static final Logger logger = LoggerFactory.getLogger(LoginDialog.class);
+
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
    private ImageDescriptor loginImage;
    private Combo comboServer;
@@ -243,6 +249,32 @@ public class LoginDialog extends Dialog
       	else if (authMethod == AuthenticationType.CERTIFICATE)
       		comboCert.setFocus();
       }
+
+      // Workaround for issue #3205: on Linux GTK on first run,
+      // before SWT's window trim cache (~/.swt/trims.prefs) is populated,
+      // actual shell size could be wrong.
+      parent.getDisplay().asyncExec(() -> {
+         Shell shell = getShell();
+         if ((shell == null) || shell.isDisposed())
+            return;
+
+         shell.layout(true, true);
+         Point preferredSize = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+         Rectangle currentBounds = shell.getBounds();
+         if ((preferredSize.x != currentBounds.width) || (preferredSize.y != currentBounds.height))
+         {
+            logger.warn("Incorrect login dialog shell size (expected " + preferredSize + " actual " + new Point(currentBounds.width, currentBounds.height) + ")");
+
+            shell.setSize(preferredSize);
+
+            // Re-center
+            Monitor[] ma = shell.getDisplay().getMonitors();
+            if (ma != null)
+            {
+               shell.setLocation((ma[0].getClientArea().width - preferredSize.x) / 2, (ma[0].getClientArea().height - preferredSize.y) / 2);
+            }
+         }
+      });
 
       return dialogArea;
    }
