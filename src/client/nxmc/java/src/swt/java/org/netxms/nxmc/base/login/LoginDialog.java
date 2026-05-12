@@ -54,6 +54,8 @@ import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -61,6 +63,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LoginDialog extends Dialog
 {
+   private static final Logger logger = LoggerFactory.getLogger(LoginDialog.class);
+
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
    private ImageDescriptor loginImage;
    private Combo comboServer;
@@ -103,20 +107,6 @@ public class LoginDialog extends Dialog
          newShell.setLocation((ma[0].getClientArea().width - newShell.getSize().x) / 2,
                (ma[0].getClientArea().height - newShell.getSize().y) / 2);
       }
-   }
-
-   /**
-    * @see org.eclipse.jface.dialogs.Dialog#getInitialSize()
-    */
-   @Override
-   protected Point getInitialSize()
-   {
-      // Enforce a usable minimum size as a last line of defense against degenerate sizes produced by
-      // Shell.computeSize() on a "cold" platform start (notably GTK on a first run, before widget
-      // metrics are fully initialized) - see issue #3205. The shell is also re-sized after it is shown
-      // (see createDialogArea), by which point metrics are reliable.
-      Point size = super.getInitialSize();
-      return new Point(Math.max(size.x, 460), Math.max(size.y, 340));
    }
 
    /**
@@ -260,22 +250,29 @@ public class LoginDialog extends Dialog
       		comboCert.setFocus();
       }
 
-      // Workaround for issue #3205: on some platforms (notably GTK on a "cold" first run) the dialog can
-      // be laid out before widget metrics are reliable, producing a too-small and clipped form. Once the
-      // shell has been shown, re-measure and grow it (and re-center) if it turns out to be undersized.
-      parent.getDisplay().timerExec(500, () -> {
+      // Workaround for issue #3205: on Linux GTK on first run,
+      // before SWT's window trim cache (~/.swt/trims.prefs) is populated,
+      // actual shell size could be wrong.
+      parent.getDisplay().asyncExec(() -> {
          Shell shell = getShell();
          if ((shell == null) || shell.isDisposed())
             return;
+
          shell.layout(true, true);
          Point preferredSize = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
          Rectangle currentBounds = shell.getBounds();
-         if ((preferredSize.x > currentBounds.width) || (preferredSize.y > currentBounds.height))
+         if ((preferredSize.x != currentBounds.width) || (preferredSize.y != currentBounds.height))
          {
-            int width = Math.max(preferredSize.x, currentBounds.width);
-            int height = Math.max(preferredSize.y, currentBounds.height);
-            shell.setBounds(currentBounds.x - (width - currentBounds.width) / 2,
-                  currentBounds.y - (height - currentBounds.height) / 2, width, height);
+            logger.warn("Incorrect login dialog shell size (expected " + preferredSize + " actual " + new Point(currentBounds.width, currentBounds.height) + ")");
+
+            shell.setSize(preferredSize);
+
+            // Re-center
+            Monitor[] ma = shell.getDisplay().getMonitors();
+            if (ma != null)
+            {
+               shell.setLocation((ma[0].getClientArea().width - preferredSize.x) / 2, (ma[0].getClientArea().height - preferredSize.y) / 2);
+            }
          }
       });
 
