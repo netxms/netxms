@@ -936,11 +936,15 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 }
 
 /**
- * Create directory and all parent directories as needed (like mkdir -p)
+ * Create directory and all parent directories as needed (like mkdir -p).
+ * Existing directory is treated as success.
  */
 bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path)
 {
    NX_STAT_STRUCT st;
+   if (CALL_STAT_FOLLOW_SYMLINK(path, &st) == 0)
+      return S_ISDIR(st.st_mode);   // already exists
+
    TCHAR *previous = MemCopyString(path);
    TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
    bool success = false;
@@ -974,8 +978,12 @@ bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path)
    {
 #ifdef _WIN32
       success = CreateDirectory(path, nullptr);
+      if (!success && (GetLastError() == ERROR_ALREADY_EXISTS))
+         success = ((CALL_STAT_FOLLOW_SYMLINK(path, &st) == 0) && S_ISDIR(st.st_mode));   // created concurrently
 #else
       success = (_tmkdir(path, st.st_mode) == 0);
+      if (!success && (errno == EEXIST))
+         success = ((CALL_STAT_FOLLOW_SYMLINK(path, &st) == 0) && S_ISDIR(st.st_mode));   // created concurrently
 #endif /* _WIN32 */
    }
 
