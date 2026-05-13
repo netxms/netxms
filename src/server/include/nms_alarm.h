@@ -258,12 +258,12 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);
 uint32_t NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref);
 void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup);
 
-uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId);
-uint32_t AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text);
-uint32_t UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk = true);
-uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId);
-uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg);
-ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId);
+uint32_t NXCORE_EXPORTABLE AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text);
+uint32_t NXCORE_EXPORTABLE UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk = true);
+uint32_t NXCORE_EXPORTABLE DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId);
+uint32_t NXCORE_EXPORTABLE GetAlarmComments(uint32_t alarmId, NXCPMessage *msg);
+ObjectArray<AlarmComment> NXCORE_EXPORTABLE *GetAlarmComments(uint32_t alarmId);
 
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb);
 
