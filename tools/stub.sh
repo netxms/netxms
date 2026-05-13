@@ -24,12 +24,10 @@ fi
 # 	exit
 # ' INT EXIT
 
-SCRIPT_DIR=`dirname $0`
-if [[ "$SCRIPT_DIR" = /* ]]; then
-   SELF=$0
-else
-   SELF=`pwd -P`/$0
-fi
+case "$0" in
+   /*) SELF=$0 ;;
+   *)  SELF=`pwd -P`/$0 ;;
+esac
 
 echo "$SELF started: $*" > $log
 
