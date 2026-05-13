@@ -23,8 +23,13 @@
 #include "aitools.h"
 #include <netxms-version.h>
 
+std::string F_AcknowledgeAlarm(json_t *arguments, uint32_t userId);
+std::string F_AddAlarmComment(json_t *arguments, uint32_t userId);
 std::string F_AddIncidentComment(json_t *arguments, uint32_t userId);
 std::string F_AlarmList(json_t *arguments, uint32_t userId);
+std::string F_GetAlarmDetails(json_t *arguments, uint32_t userId);
+std::string F_ResolveAlarm(json_t *arguments, uint32_t userId);
+std::string F_TerminateAlarm(json_t *arguments, uint32_t userId);
 std::string F_AssignIncident(json_t *arguments, uint32_t userId);
 std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId);
 std::string F_CreateIncident(json_t *arguments, uint32_t userId);
@@ -99,9 +104,10 @@ static void CreateAssistantFunctionList()
 {
    RegisterAIAssistantFunction(
       "alarm-list",
-      "Get list of active (outstanding) alarms (alerts) for monitored devices (each alarm represents outstanding problem or condition worth operator attention). Device in this context could mean anything related to IT infrastructure: switch, router, server, workstation, ATM, POS, terminal, printer, scanner, UPS, sensor of any kind.",
+      "Get list of active alarms (alerts) for monitored devices, including each alarm's numeric ID (needed by the alarm-management skill to act on it). Each alarm represents an outstanding problem or condition worth operator attention. Device in this context could mean anything related to IT infrastructure: switch, router, server, workstation, ATM, POS, terminal, printer, scanner, UPS, sensor of any kind.",
       {
-         { "object", "optional name or ID of node, device, server, workstation, or container or group of them" }
+         { "object", "optional name or ID of node, device, server, workstation, or container or group of them" },
+         { "state", "optional state filter: 'active' (outstanding + acknowledged, the default), 'outstanding', 'acknowledged', 'resolved', or 'all'" }
       },
       F_AlarmList);
    RegisterAIAssistantFunction(
@@ -215,6 +221,55 @@ static void CreateAssistantFunctionList()
  */
 static void CreateAssistantSkillList()
 {
+   RegisterAIAssistantSkill(
+      "alarm-management",
+      "Provides alarm lifecycle management for NetXMS. Use this skill to acknowledge, resolve, and terminate alarms (alerts), add operator comments, and inspect full alarm details including comment history and related events. Essential for alert triage, incident response, on-call workflows, and clearing stale or resolved alarms. To get a list of active alarms (with their IDs) use the alarm-list function; this skill provides the actions you take on those alarms.",
+      "@alarm-management.md",
+      {
+         AssistantFunction(
+            "get-alarm-details",
+            "Get full details of a single active alarm: state, severity, source object and its status, timestamps, repeat count, helpdesk linkage, the originating EPP rule, the complete operator comment history, and recent related events. Use this before acting on an alarm to understand its context. Terminated alarms are not retained in the active list and cannot be retrieved here.",
+            {
+               { "alarm", "numeric alarm ID (mandatory)" }
+            },
+            F_GetAlarmDetails),
+         AssistantFunction(
+            "acknowledge-alarm",
+            "Acknowledge one or more alarms, signaling that an operator is aware of the condition. Only alarms in the outstanding state can be acknowledged. Returns a per-alarm result with success/failure for each ID.",
+            {
+               { "alarms", "alarm ID, or array of alarm IDs, to acknowledge (mandatory)" },
+               { "sticky", "if true, the alarm stays acknowledged even if the originating condition repeats (default: false)" },
+               { "timeout_minutes", "for a sticky acknowledgment, automatically revert the alarm to outstanding after this many minutes unless it was resolved (optional; ignored unless sticky is true; 0 = no timeout)" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+            },
+            F_AcknowledgeAlarm),
+         AssistantFunction(
+            "resolve-alarm",
+            "Resolve one or more alarms. A resolved alarm remains in the active alarm list and will be re-activated automatically if the originating condition occurs again. Use this when the underlying problem has been fixed. Returns a per-alarm result.",
+            {
+               { "alarms", "alarm ID, or array of alarm IDs, to resolve (mandatory)" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+            },
+            F_ResolveAlarm),
+         AssistantFunction(
+            "terminate-alarm",
+            "Terminate one or more alarms, removing them from the active alarm list. The alarm will not reappear unless it is raised again. Use this to clear stale alarms or alarms that no longer apply. An alarm that is open in an external helpdesk system cannot be terminated until the helpdesk issue is closed. Returns a per-alarm result.",
+            {
+               { "alarms", "alarm ID, or array of alarm IDs, to terminate (mandatory)" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+            },
+            F_TerminateAlarm),
+         AssistantFunction(
+            "add-alarm-comment",
+            "Add an operator comment to an alarm to document analysis findings, actions taken, or context for other operators. The comment is appended to the alarm's comment history.",
+            {
+               { "alarm", "numeric alarm ID (mandatory)" },
+               { "text", "comment text (mandatory)" }
+            },
+            F_AddAlarmComment)
+      }
+   );
+
    RegisterAIAssistantSkill(
       "data-collection",
       "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create, edit, and delete metrics, configure thresholds, monitor current values, analyze performance data, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment. Essential for performance analysis, capacity planning, resource utilization monitoring, and troubleshooting performance issues.",

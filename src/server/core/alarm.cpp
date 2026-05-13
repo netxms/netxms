@@ -2591,7 +2591,7 @@ uint32_t Alarm::updateAlarmComment(uint32_t *commentId, const TCHAR *text, uint3
 /**
  * Add alarm's comment by helpdesk reference
  */
-uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -2614,7 +2614,7 @@ uint32_t AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId)
 /**
  * Add alarm's comment by helpdesk reference from system user
  */
-uint32_t AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text)
+uint32_t NXCORE_EXPORTABLE AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text)
 {
    return AddAlarmComment(hdref, text, 0);
 }
@@ -2622,7 +2622,7 @@ uint32_t AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text)
 /**
  * Update alarm's comment
  */
-uint32_t UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk)
+uint32_t NXCORE_EXPORTABLE UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId, const TCHAR *text, uint32_t userId, bool syncWithHelpdesk)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -2664,7 +2664,7 @@ uint32_t Alarm::deleteComment(uint32_t commentId)
 /**
  * Delete comment
  */
-uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId)
+uint32_t NXCORE_EXPORTABLE DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId)
 {
    uint32_t rcc = RCC_INVALID_ALARM_ID;
 
@@ -2683,7 +2683,7 @@ uint32_t DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId)
  * Get alarm's comments
  * Will return object array that is not the owner of objects
  */
-ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId)
+ObjectArray<AlarmComment> NXCORE_EXPORTABLE *GetAlarmComments(uint32_t alarmId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    ObjectArray<AlarmComment> *comments = new ObjectArray<AlarmComment>(16, 16, Ownership::False);
@@ -2714,7 +2714,7 @@ ObjectArray<AlarmComment> *GetAlarmComments(uint32_t alarmId)
 /**
  * Get alarm's comments
  */
-uint32_t GetAlarmComments(uint32_t alarmId, NXCPMessage *msg)
+uint32_t NXCORE_EXPORTABLE GetAlarmComments(uint32_t alarmId, NXCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	uint32_t rcc = RCC_DB_FAILURE;
