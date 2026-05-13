@@ -639,7 +639,27 @@ void PackageDeploymentJob::execute()
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): file transfer failed to node %s [%u] in job [%u] (%u: %s)",
          node->getName(), m_nodeId, m_id, rcc, AgentErrorCodeToText(rcc));
-      markAsFailed(L"File transfer failed", true);
+      bool transient;
+      switch(rcc)
+      {
+         case ERR_CONNECTION_BROKEN:
+         case ERR_NOT_CONNECTED:
+         case ERR_REQUEST_TIMEOUT:
+         case ERR_IO_FAILURE:
+         case ERR_SOCKET_ERROR:
+         case ERR_CONNECT_FAILED:
+         case ERR_RESOURCE_BUSY:
+         case ERR_OUT_OF_RESOURCES:
+            transient = true;
+            break;
+         default:
+            transient = false;
+            break;
+      }
+      StringBuffer errorMessage(L"File transfer failed (");
+      errorMessage.append(AgentErrorCodeToText(rcc));
+      errorMessage.append(L')');
+      markAsFailed(errorMessage, transient);
       return;
    }
 
