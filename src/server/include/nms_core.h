@@ -42,6 +42,7 @@
 #define LIBNXCL_NO_DECLARATIONS  1
 
 #include <nms_common.h>
+#include <iosfwd>
 
 #ifndef _WIN32
 
@@ -1060,6 +1061,7 @@ public:
    void sendRawMessage(NXCP_MESSAGE *msg);
    void sendPollerMsg(uint32_t requestIf, const wchar_t *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
+	bool sendFile(std::istream &stream, uint32_t requestId, bool allowCompression = true);
 
    virtual void writeAuditLog(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *format, ...) const override;
    virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const override;

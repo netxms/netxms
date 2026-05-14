@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <sstream>
 #include <netxms_mt.h>
 #include <nxtools.h>
 #include <nxstat.h>
@@ -2315,6 +2316,15 @@ bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, off64_t offs
 {
    return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_encryptionContext.get(),
             offset, nullptr, nullptr, &m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
+}
+
+/**
+ * Send in-memory stream to client over NXCP file transfer
+ */
+bool ClientSession::sendFile(std::istream &stream, uint32_t requestId, bool allowCompression)
+{
+   return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, &stream, m_encryptionContext.get(),
+            0, nullptr, nullptr, &m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
 }
 
 /**
@@ -13566,73 +13576,70 @@ void ClientSession::findHostname(const NXCPMessage& request)
  */
 void ClientSession::sendLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	TCHAR guidText[64], absFileName[MAX_PATH];
-	uint32_t rcc = RCC_SUCCESS;
+   wchar_t guidText[64];
+   uint32_t rcc = RCC_SUCCESS;
+   BYTE *imageData = nullptr;
+   size_t imageSize = 0;
 
-	uuid_t guid;
-	request.getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
-	_uuid_to_string(guid, guidText);
-	debugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
+   uuid_t guid;
+   request.getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
+   _uuid_to_string(guid, guidText);
+   debugPrintf(5, L"sendLibraryImage: guid=%s", guidText);
 
-	if (rcc == RCC_SUCCESS)
-	{
-	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT name,category,mimetype,protected,image_data FROM images WHERE guid=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_STATIC);
+      DB_RESULT result = DBSelectPrepared(hStmt);
+      if (result != nullptr)
+      {
+         if (DBGetNumRows(result) > 0)
+         {
+            wchar_t buffer[MAX_DB_STRING];
 
-		TCHAR query[MAX_DB_STRING];
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT name,category,mimetype,protected FROM images WHERE guid = '%s'"), guidText);
-		DB_RESULT result = DBSelect(hdb, query);
-		if (result != nullptr)
-		{
-			int count = DBGetNumRows(result);
-			if (count > 0)
-			{
-				TCHAR buffer[MAX_DB_STRING];
+            response.setField(VID_GUID, guid, UUID_LENGTH);
+            DBGetField(result, 0, 0, buffer, MAX_DB_STRING);
+            response.setField(VID_NAME, buffer);
+            DBGetField(result, 0, 1, buffer, MAX_DB_STRING);
+            response.setField(VID_CATEGORY, buffer);
+            DBGetField(result, 0, 2, buffer, MAX_DB_STRING);
+            response.setField(VID_IMAGE_MIMETYPE, buffer);
+            response.setField(VID_IMAGE_PROTECTED, static_cast<uint16_t>(DBGetFieldLong(result, 0, 3)));
 
-				response.setField(VID_GUID, guid, UUID_LENGTH);
+            imageData = DBGetFieldBinary(result, 0, 4, &imageSize);
+            if ((imageData == nullptr) || (imageSize == 0))
+               rcc = RCC_IO_ERROR;
+         }
+         else
+         {
+            rcc = RCC_INVALID_OBJECT_ID;
+         }
+         DBFreeResult(result);
+      }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 
-				DBGetField(result, 0, 0, buffer, MAX_DB_STRING);	// image name
-				response.setField(VID_NAME, buffer);
-				DBGetField(result, 0, 1, buffer, MAX_DB_STRING);	// category
-				response.setField(VID_CATEGORY, buffer);
-				DBGetField(result, 0, 2, buffer, MAX_DB_STRING);	// mime type
-				response.setField(VID_IMAGE_MIMETYPE, buffer);
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
 
-				response.setField(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
-
-				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-				debugPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
-
-				NX_STAT_STRUCT st;
-				if ((CALL_STAT(absFileName, &st) == 0) && S_ISREG(st.st_mode))
-				{
-					rcc = RCC_SUCCESS;
-				}
-				else
-				{
-					rcc = RCC_IO_ERROR;
-				}
-			}
-			else
-			{
-				rcc = RCC_INVALID_OBJECT_ID;
-			}
-
-			DBFreeResult(result);
-		}
-		else
-		{
-			rcc = RCC_DB_FAILURE;
-		}
-		DBConnectionPoolReleaseConnection(hdb);
-	}
-
-	response.setField(VID_RCC, rcc);
-	sendMessage(response);
-
-	if (rcc == RCC_SUCCESS)
-		sendFile(absFileName, request.getId(), 0);
+   if (rcc == RCC_SUCCESS)
+   {
+      std::istringstream stream(std::string(reinterpret_cast<const char*>(imageData), imageSize));
+      sendFile(stream, request.getId());
+   }
+   MemFree(imageData);
 }
 
 /**
@@ -13728,9 +13735,10 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
       {
          if (DBQuery(hdb, query))
          {
-            // DB up to date, update file)
+            // Stage uploaded bytes to a temp file under {datadir}/images; on
+            // completion the lambda loads it into image_data column and unlinks.
             _sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-            debugPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
+            debugPrintf(5, _T("updateLibraryImage: guid=%s, stagingFile=%s"), guidText, absFileName);
 
             bool isSVG = !_tcsicmp(mimetype, _T("image/svg+xml"));
             ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName,
@@ -13740,8 +13748,31 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
                   {
                      if (isSVG)
                         SanitizeSVGFile(fileName);
+
+                     size_t fileSize = 0;
+                     BYTE *data = LoadFile(fileName, &fileSize);
+                     if (data != nullptr)
+                     {
+                        DB_HANDLE cbHdb = DBConnectionPoolAcquireConnection();
+                        DB_STATEMENT cbStmt = DBPrepare(cbHdb, L"UPDATE images SET image_data=? WHERE guid=?");
+                        if (cbStmt != nullptr)
+                        {
+                           wchar_t guidStr[64];
+                           guid.toString(guidStr);
+                           DBBind(cbStmt, 1, DB_SQLTYPE_TEXT, data, fileSize, DB_BIND_DYNAMIC);
+                           DBBind(cbStmt, 2, DB_SQLTYPE_VARCHAR, guidStr, DB_BIND_STATIC);
+                           DBExecute(cbStmt);
+                           DBFreeStatement(cbStmt);
+                        }
+                        else
+                        {
+                           MemFree(data);
+                        }
+                        DBConnectionPoolReleaseConnection(cbHdb);
+                     }
                      EnumerateClientSessions([] (ClientSession *pSession, void *arg) { pSession->onLibraryImageChange(*((const uuid *)arg), false); }, (void *)&guid);
                   }
+                  _tremove(fileName);
                });
             if (dInfo->open())
             {
@@ -13807,14 +13838,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 			if (DBGetFieldLong(hResult, 0, 0) == 0)
 			{
 				_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), guidText);
-				if (DBQuery(hdb, query))
-				{
-				   TCHAR fileName[MAX_PATH];
-               _sntprintf(fileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-               debugPrintf(5, _T("deleteLibraryImage: guid=%s, fileName=%s"), guidText, fileName);
-               _tremove(fileName);
-				}
-				else
+				if (!DBQuery(hdb, query))
 				{
 					rcc = RCC_DB_FAILURE;
 				}

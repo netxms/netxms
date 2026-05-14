@@ -155,59 +155,68 @@ int H_ImageLibraryData(Context *context)
    if (guid.isNull())
       return 400;
 
-   // Get MIME type from database
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR query[256];
-   _sntprintf(query, 256, L"SELECT mimetype FROM images WHERE guid='%s'", guidText);
-   DB_RESULT result = DBSelect(hdb, query);
-   if (result == nullptr)
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT mimetype,image_data FROM images WHERE guid=?");
+   if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
       return 500;
    }
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
 
+   DB_RESULT result = DBSelectPrepared(hStmt);
+   if (result == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      return 500;
+   }
    if (DBGetNumRows(result) == 0)
    {
       DBFreeResult(result);
+      DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
       return 404;
    }
 
-   TCHAR mimeType[64];
+   wchar_t mimeType[64];
    DBGetField(result, 0, 0, mimeType, 64);
+   size_t dataSize = 0;
+   BYTE *data = DBGetFieldBinary(result, 0, 1, &dataSize);
    DBFreeResult(result);
+   DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
 
-   // Load file from disk
-   TCHAR absFileName[MAX_PATH];
-   _sntprintf(absFileName, MAX_PATH, L"%s" DDIR_IMAGES FS_PATH_SEPARATOR L"%s", g_netxmsdDataDir, guidText);
-
-   size_t fileSize;
-   BYTE *data = LoadFile(absFileName, &fileSize);
-   if (data == nullptr)
+   if ((data == nullptr) || (dataSize == 0))
+   {
+      MemFree(data);
       return 404;
+   }
 
    char mimeTypeA[64];
    tchar_to_utf8(mimeType, -1, mimeTypeA, 64);
-   context->setResponseData(data, fileSize, mimeTypeA);
+   context->setResponseData(data, dataSize, mimeTypeA);
    MemFree(data);
    return 200;
 }
 
 /**
- * Write raw image bytes to the image library file storage.
- * Sanitizes SVG content after writing. Returns true on success.
+ * Sanitize an SVG payload by staging through {datadir}/images/{guid}, running
+ * SanitizeSVGFile on it, and reloading the cleaned bytes. Returns a freshly
+ * allocated buffer (caller MemFree's) and writes its length to *outSize, or
+ * nullptr on failure. Non-SVG inputs should not call this.
  */
-static bool WriteImageFile(const wchar_t *guidText, const wchar_t *mimeType, const void *data, size_t size)
+static BYTE *SanitizeSVGPayload(const wchar_t *guidText, const void *data, size_t size, size_t *outSize)
 {
-   wchar_t absFileName[MAX_PATH];
-   _sntprintf(absFileName, MAX_PATH, L"%s" DDIR_IMAGES FS_PATH_SEPARATOR L"%s", g_netxmsdDataDir, guidText);
-   if (SaveFile(absFileName, data, size) != SaveFileStatus::SUCCESS)
-      return false;
-   if (!wcsicmp(mimeType, L"image/svg+xml"))
-      SanitizeSVGFile(absFileName);
-   return true;
+   wchar_t staging[MAX_PATH];
+   _sntprintf(staging, MAX_PATH, L"%s" DDIR_IMAGES FS_PATH_SEPARATOR L"%s", g_netxmsdDataDir, guidText);
+   if (SaveFile(staging, data, size) != SaveFileStatus::SUCCESS)
+      return nullptr;
+   SanitizeSVGFile(staging);
+   BYTE *sanitized = LoadFile(staging, outSize);
+   _wremove(staging);
+   return sanitized;
 }
 
 /**
@@ -252,11 +261,26 @@ int H_ImageLibraryCreate(Context *context)
    wchar_t guidText[64];
    guid.toString(guidText);
 
+   const void *imageBytes = context->getRequestData();
+   size_t imageSize = context->getRequestDataSize();
+   BYTE *sanitizedBuf = nullptr;
+   if (!wcsicmp(mimeType, L"image/svg+xml"))
+   {
+      sanitizedBuf = SanitizeSVGPayload(guidText, imageBytes, imageSize, &imageSize);
+      if (sanitizedBuf == nullptr)
+      {
+         context->setErrorResponse("Failed to sanitize image");
+         return 500;
+      }
+      imageBytes = sanitizedBuf;
+   }
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO images (guid,name,category,mimetype,protected) VALUES (?,?,?,?,0)");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO images (guid,name,category,mimetype,protected,image_data) VALUES (?,?,?,?,0,?)");
    if (hStmt == nullptr)
    {
+      MemFree(sanitizedBuf);
       DBConnectionPoolReleaseConnection(hdb);
       return 500;
    }
@@ -264,6 +288,7 @@ int H_ImageLibraryCreate(Context *context)
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, category, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC, 32);
+   DBBind(hStmt, 5, DB_SQLTYPE_TEXT, imageBytes, imageSize, (sanitizedBuf != nullptr) ? DB_BIND_DYNAMIC : DB_BIND_STATIC);
    bool dbSuccess = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
@@ -271,18 +296,6 @@ int H_ImageLibraryCreate(Context *context)
    if (!dbSuccess)
    {
       context->setErrorResponse("Database failure");
-      return 500;
-   }
-
-   if (!WriteImageFile(guidText, mimeType, context->getRequestData(), context->getRequestDataSize()))
-   {
-      // Roll back DB insert so the library doesn't list an entry with no file behind it
-      hdb = DBConnectionPoolAcquireConnection();
-      wchar_t query[128];
-      _sntprintf(query, 128, L"DELETE FROM images WHERE guid='%s'", guidText);
-      DBQuery(hdb, query);
-      DBConnectionPoolReleaseConnection(hdb);
-      context->setErrorResponse("Failed to write image file");
       return 500;
    }
 
@@ -363,16 +376,47 @@ int H_ImageLibraryUpdate(Context *context)
          utf8_to_wchar(newMimeUtf8, -1, mimeType, MAX_DB_STRING);
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE images SET name=?,category=?,mimetype=? WHERE guid=? AND protected=0");
+   const void *imageBytes = nullptr;
+   size_t imageSize = 0;
+   BYTE *sanitizedBuf = nullptr;
+   if (hasBody)
+   {
+      imageBytes = context->getRequestData();
+      imageSize = context->getRequestDataSize();
+      if (!wcsicmp(mimeType, L"image/svg+xml"))
+      {
+         sanitizedBuf = SanitizeSVGPayload(guidText, imageBytes, imageSize, &imageSize);
+         if (sanitizedBuf == nullptr)
+         {
+            DBConnectionPoolReleaseConnection(hdb);
+            context->setErrorResponse("Failed to sanitize image");
+            return 500;
+         }
+         imageBytes = sanitizedBuf;
+      }
+   }
+
+   DB_STATEMENT hStmt = hasBody
+      ? DBPrepare(hdb, L"UPDATE images SET name=?,category=?,mimetype=?,image_data=? WHERE guid=? AND protected=0")
+      : DBPrepare(hdb, L"UPDATE images SET name=?,category=?,mimetype=? WHERE guid=? AND protected=0");
    if (hStmt == nullptr)
    {
+      MemFree(sanitizedBuf);
       DBConnectionPoolReleaseConnection(hdb);
       return 500;
    }
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, category, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC, 32);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+   if (hasBody)
+   {
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, imageBytes, imageSize, (sanitizedBuf != nullptr) ? DB_BIND_DYNAMIC : DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, guid);
+   }
+   else
+   {
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+   }
    bool dbSuccess = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
@@ -380,12 +424,6 @@ int H_ImageLibraryUpdate(Context *context)
    if (!dbSuccess)
    {
       context->setErrorResponse("Database failure");
-      return 500;
-   }
-
-   if (hasBody && !WriteImageFile(guidText, mimeType, context->getRequestData(), context->getRequestDataSize()))
-   {
-      context->setErrorResponse("Failed to write image file");
       return 500;
    }
 
@@ -454,10 +492,6 @@ int H_ImageLibraryDelete(Context *context)
       context->setErrorResponse("Database failure");
       return 500;
    }
-
-   wchar_t absFileName[MAX_PATH];
-   _sntprintf(absFileName, MAX_PATH, L"%s" DDIR_IMAGES FS_PATH_SEPARATOR L"%s", g_netxmsdDataDir, guidText);
-   _wremove(absFileName);
 
    NotifyImageLibraryChange(guid, true);
 

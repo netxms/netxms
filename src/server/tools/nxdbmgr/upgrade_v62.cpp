@@ -25,37 +25,63 @@
 #include <nxtools.h>
 
 /**
- * Create per-storage-class hourly and daily continuous aggregates plus the
- * matching union views (TSDB only). Mirrors the DDL in sql/schema.in.
+ * Upgrade from 62.12 to 62.13
  */
-static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
+static bool H_UpgradeFromV12()
 {
-   wchar_t query[1024];
+   CHK_EXEC(SQLQuery(L"ALTER TABLE images ADD image_data $SQL:TEXT"));
 
-   nx_swprintf(query, 1024,
-      L"CREATE MATERIALIZED VIEW idata_1h_sc_%ls WITH (timescaledb.continuous) AS "
-      L"SELECT item_id, time_bucket(interval '1 hour', idata_timestamp) AS bucket_start, "
-      L"min(idata_value::double precision) AS min_value, "
-      L"max(idata_value::double precision) AS max_value, "
-      L"avg(idata_value::double precision) AS avg_value, count(*) AS sample_count "
-      L"FROM idata_sc_%ls "
-      L"WHERE idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$' "
-      L"GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp) "
-      L"WITH NO DATA", cls, cls);
-   if (!SQLQuery(query))
-      return false;
+   wchar_t dataDir[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, dataDir);
 
-   nx_swprintf(query, 1024,
-      L"CREATE MATERIALIZED VIEW idata_1d_sc_%ls WITH (timescaledb.continuous) AS "
-      L"SELECT item_id, time_bucket(interval '1 day', bucket_start) AS bucket_start, "
-      L"min(min_value) AS min_value, max(max_value) AS max_value, "
-      L"sum(avg_value * sample_count) / sum(sample_count) AS avg_value, "
-      L"sum(sample_count) AS sample_count "
-      L"FROM idata_1h_sc_%ls "
-      L"GROUP BY item_id, time_bucket(interval '1 day', bucket_start) "
-      L"WITH NO DATA", cls, cls);
-   if (!SQLQuery(query))
+   DB_RESULT hResult = SQLSelect(L"SELECT guid FROM images");
+   if (hResult != nullptr)
+   {
+      bool success = true;
+
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"UPDATE images SET image_data=? WHERE guid=?");
+      if (hStmt != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for (int i = 0; (i < count) && success; i++)
+         {
+            wchar_t guid[64];
+            DBGetField(hResult, i, 0, guid, 64);
+
+            wchar_t path[MAX_PATH];
+            nx_swprintf(path, MAX_PATH, L"%s" DDIR_IMAGES L"/%s", dataDir, guid);
+
+            size_t fileSize = 0;
+            BYTE *data = LoadFile(path, &fileSize);
+            if (data == nullptr)
+            {
+               WriteToTerminalEx(L"Cannot read image file \"%s\"\n", path);
+               if (g_ignoreErrors)
+                  continue;
+               success = false;
+               break;
+            }
+
+            DBBind(hStmt, 1, DB_SQLTYPE_TEXT, data, fileSize, DB_BIND_DYNAMIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               success = false;
+         }
+
+         DBFreeStatement(hStmt);
+      }
+
+      DBFreeResult(hResult);
+
+      if (!success && !g_ignoreErrors)
+         return false;
+   }
+   else if (!g_ignoreErrors)
+   {
       return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
 
@@ -100,6 +126,41 @@ static bool H_UpgradeFromV9()
             L"Time (in seconds) the user has to respond to a 2FA challenge before the client cancels the prompt. Set to 0 to disable the auto-cancel timer.",
             L"seconds", 'I', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
+ * Create per-storage-class hourly and daily continuous aggregates plus the
+ * matching union views (TSDB only). Mirrors the DDL in sql/schema.in.
+ */
+static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
+{
+   wchar_t query[1024];
+
+   nx_swprintf(query, 1024,
+      L"CREATE MATERIALIZED VIEW idata_1h_sc_%ls WITH (timescaledb.continuous) AS "
+      L"SELECT item_id, time_bucket(interval '1 hour', idata_timestamp) AS bucket_start, "
+      L"min(idata_value::double precision) AS min_value, "
+      L"max(idata_value::double precision) AS max_value, "
+      L"avg(idata_value::double precision) AS avg_value, count(*) AS sample_count "
+      L"FROM idata_sc_%ls "
+      L"WHERE idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$' "
+      L"GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp) "
+      L"WITH NO DATA", cls, cls);
+   if (!SQLQuery(query))
+      return false;
+
+   nx_swprintf(query, 1024,
+      L"CREATE MATERIALIZED VIEW idata_1d_sc_%ls WITH (timescaledb.continuous) AS "
+      L"SELECT item_id, time_bucket(interval '1 day', bucket_start) AS bucket_start, "
+      L"min(min_value) AS min_value, max(max_value) AS max_value, "
+      L"sum(avg_value * sample_count) / sum(sample_count) AS avg_value, "
+      L"sum(sample_count) AS sample_count "
+      L"FROM idata_1h_sc_%ls "
+      L"GROUP BY item_id, time_bucket(interval '1 day', bucket_start) "
+      L"WITH NO DATA", cls, cls);
+   if (!SQLQuery(query))
+      return false;
    return true;
 }
 
@@ -399,6 +460,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 62, 13, H_UpgradeFromV12 },
    { 11, 62, 12, H_UpgradeFromV11 },
    { 10, 62, 11, H_UpgradeFromV10 },
    { 9,  62, 10, H_UpgradeFromV9  },
