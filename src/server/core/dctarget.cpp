@@ -52,11 +52,6 @@ void LockIDataWrites();
 void UnlockIDataWrites();
 
 /**
- * Poller thread pool
- */
-extern ThreadPool *g_pollerThreadPool;
-
-/**
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY),

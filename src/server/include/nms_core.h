@@ -1823,6 +1823,7 @@ extern ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue;
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool);
+extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_pollerThreadPool);
 
 extern wchar_t g_startupSqlScriptPath[];
 extern wchar_t g_dbSessionSetupSqlScriptPath[];

@@ -88,7 +88,6 @@ struct LoginInfo
 /**
  * Externals
  */
-extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
 void UnregisterClientSession(session_id_t id);

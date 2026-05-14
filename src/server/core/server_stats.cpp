@@ -54,7 +54,6 @@ extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
 extern ThreadPool *g_dataCollectorThreadPool;
-extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 
 int64_t GetAlarmDbWriterQueueSize();
