@@ -288,7 +288,9 @@ public class ColumnFilterEditor extends DashboardComposite
 		}
 		else
 		{
-			return conditions.get(0).createFilter();
+		   ColumnFilter filter = conditions.get(0).createFilter();
+		   filter.setOperation(booleanOperation);
+		   return filter;
 		}
 	}
 }

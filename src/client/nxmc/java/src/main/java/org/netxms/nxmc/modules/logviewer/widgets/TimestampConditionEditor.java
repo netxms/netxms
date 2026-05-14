@@ -91,7 +91,7 @@ public class TimestampConditionEditor extends ConditionEditor
 		timePicker1 = new DateTime(group, SWT.TIME);
 		timePicker1.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
       timePicker1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-		
+
       andLabel = new Label(group, SWT.NONE);
       andLabel.setText(i18n.tr("  and  "));
       andLabel.setBackground(getBackground());
@@ -104,6 +104,45 @@ public class TimestampConditionEditor extends ConditionEditor
 		timePicker2 = new DateTime(group, SWT.TIME);
 		timePicker2.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
       timePicker2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+
+      if (initialFilter != null)
+      {
+         int operationIndex = -1;
+         switch(initialFilter.getType())
+         {
+            case RANGE:
+               operationIndex = 0;
+               setPickerDateTime(datePicker1, timePicker1, initialFilter.getRangeFrom());
+               setPickerDateTime(datePicker2, timePicker2, initialFilter.getRangeTo());
+               break;
+            case LESS:
+               operationIndex = 1;
+               setPickerDateTime(datePicker1, timePicker1, initialFilter.getNumericValue());
+               break;
+            case GREATER:
+               operationIndex = 2;
+               setPickerDateTime(datePicker1, timePicker1, initialFilter.getNumericValue());
+               break;
+            default:
+               break;
+         }
+         if (operationIndex >= 0)
+         {
+            setSelectedOperation(operationIndex);
+            operationSelectionChanged(operationIndex);
+         }
+      }
+   }
+
+   /**
+    * Set date/time picker pair from Unix timestamp (seconds since epoch).
+    */
+   private static void setPickerDateTime(DateTime datePicker, DateTime timePicker, long timestamp)
+   {
+      Calendar c = Calendar.getInstance();
+      c.setTimeInMillis(timestamp * 1000L);
+      datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+      timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
    }
 
    /**
