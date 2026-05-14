@@ -39,7 +39,6 @@ extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
 extern ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
-extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 

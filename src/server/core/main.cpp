@@ -71,11 +71,9 @@ static BYTE *SMBIOS_Reader(size_t *size)
 /**
  * Externals
  */
-extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_fileTransferThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 extern ThreadPool *g_discoveryThreadPool;
-extern ThreadPool *g_pollerThreadPool;
 
 extern Config g_serverConfig;
 

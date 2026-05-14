@@ -80,6 +80,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_trustedObjects = nullptr;
    m_pollRequestor = nullptr;
    m_pollRequestId = 0;
+   m_pollerOutputBuffer = nullptr;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
    m_statusPropAlg = SA_PROPAGATE_DEFAULT;
    m_fixedStatus = STATUS_WARNING;
@@ -2264,7 +2265,7 @@ bool NetObj::isManagementStatusChangeAllowed(bool isManaged)
  */
 void NetObj::sendPollerMsg(const wchar_t *format, ...)
 {
-   if (m_pollRequestor == nullptr)
+   if ((m_pollRequestor == nullptr) && (m_pollerOutputBuffer == nullptr))
       return;
 
    va_list args;
@@ -2272,7 +2273,10 @@ void NetObj::sendPollerMsg(const wchar_t *format, ...)
    wchar_t buffer[1024];
    _vsntprintf(buffer, 1024, format, args);
    va_end(args);
-   m_pollRequestor->sendPollerMsg(m_pollRequestId, buffer);
+   if (m_pollRequestor != nullptr)
+      m_pollRequestor->sendPollerMsg(m_pollRequestId, buffer);
+   if (m_pollerOutputBuffer != nullptr)
+      m_pollerOutputBuffer->append(buffer);
 }
 
 /**

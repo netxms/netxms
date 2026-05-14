@@ -1379,6 +1379,30 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
    const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args);
 
 /**
+ * Thread-safe append-only capture buffer for poller diagnostic output.
+ * Used by AI assistant force-poll path to collect lines produced by NetObj::sendPollerMsg.
+ */
+class PollerOutputBuffer
+{
+private:
+   mutable Mutex m_lock;
+   StringBuffer m_data;
+
+public:
+   void append(const wchar_t *text)
+   {
+      LockGuard g(m_lock);
+      m_data.append(text);
+   }
+
+   StringBuffer snapshot() const
+   {
+      LockGuard g(m_lock);
+      return StringBuffer(m_data);
+   }
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj : public NObject
@@ -1435,6 +1459,7 @@ protected:
    PostalAddress m_postalAddress;
    ClientSession *m_pollRequestor;
    uint32_t m_pollRequestId;
+   PollerOutputBuffer *m_pollerOutputBuffer; // Optional capture target for poller messages (AI-initiated polls)
    IntegerArray<uint32_t> m_dashboards; // Dashboards and network maps associated with this object
    ObjectArray<ObjectUrl> m_urls;       // URLs associated with this object
    uint32_t m_primaryZoneProxyId;       // ID of assigned primary zone proxy node
@@ -1677,6 +1702,7 @@ public:
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
 
    void sendPollerMsg(const wchar_t *format, ...);
+   void setPollerOutputBuffer(PollerOutputBuffer *buffer) { m_pollerOutputBuffer = buffer; }
 
    StringBuffer expandText(const wchar_t *textTemplate, const Alarm *alarm, const Event *event, shared_ptr<DCObjectInfo> dci,
             const wchar_t *userName, const wchar_t *objectName, const wchar_t *instance, const StringMap *inputFields, const StringList *args)
@@ -6219,7 +6245,7 @@ bool IsValidAssetLinkTargetClass(int objectClass);
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
-PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object);
+PollerInfo NXCORE_EXPORTABLE *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object);
 void ShowPollers(ServerConsole *console);
 void ShowPollerSummary(ServerConsole *console);
 int GetTotalPollerCount();

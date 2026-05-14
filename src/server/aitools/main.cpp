@@ -46,6 +46,7 @@ std::string F_DeleteThreshold(json_t *arguments, uint32_t userId);
 std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
+std::string F_ForcePoll(json_t *arguments, uint32_t userId);
 std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId);
 std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingAction(json_t *arguments, uint32_t userId);
@@ -135,6 +136,23 @@ static void CreateAssistantFunctionList()
          { "zoneUIN", "optional zone UIN" }
       },
       F_FindObjects);
+   RegisterAIAssistantFunction(
+      "force-poll",
+      "Trigger an immediate poll on a monitored object instead of waiting for the next scheduled poll. "
+      "Use when fresh state is needed right now — e.g. after a device was fixed or reconfigured, to "
+      "refresh status, capabilities, interfaces, or topology. Polls run asynchronously by default; set "
+      "wait=true to block until the poll completes (or timeoutSeconds elapses) and receive the poller's "
+      "diagnostic output. The poll type must match the object class: 'status'/'configuration' work for "
+      "most monitored objects, 'topology'/'routing-table'/'discovery' for nodes, 'autobind' for "
+      "containers/templates/maps/network maps, 'instance-discovery' for data collection owners, "
+      "'map-update' for network maps.",
+      {
+         { "object", "name or ID of the object to poll (mandatory)" },
+         { "pollType", "one of: status, configuration, instance-discovery, topology, routing-table, discovery, autobind, map-update (mandatory)" },
+         { "wait", "if true, block until the poll completes or timeoutSeconds elapses, returning captured poller output (default: false)" },
+         { "timeoutSeconds", "max seconds to wait when wait=true; clamped to [1, 300] (default: 30)" }
+      },
+      F_ForcePoll);
    RegisterAIAssistantFunction(
       "get-notification-channels",
       "Get list of configured notification channels",

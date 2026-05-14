@@ -93,7 +93,6 @@ struct LoginInfo
 /**
  * Externals
  */
-extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
 int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);

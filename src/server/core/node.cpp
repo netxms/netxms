@@ -52,11 +52,6 @@ void GetAIProviderTable(Table *table);
 DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t *buffer, size_t size);
 
 /**
- * Poller thread pool
- */
-extern ThreadPool *g_pollerThreadPool;
-
-/**
  * Unbind agent tunnel from node
  */
 uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);

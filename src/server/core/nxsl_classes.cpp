@@ -34,11 +34,6 @@
 #include <device-backup.h>
 
 /**
- * Poller thread pool
- */
-extern ThreadPool *g_pollerThreadPool;
-
-/**
  * Maintenance journal access
  */
 bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR *description);
