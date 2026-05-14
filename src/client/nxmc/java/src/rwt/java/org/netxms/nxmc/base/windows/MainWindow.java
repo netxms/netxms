@@ -107,6 +107,7 @@ import org.netxms.nxmc.modules.ai.actions.ExportConversationAction;
 import org.netxms.nxmc.modules.ai.widgets.AiAssistantChatWidget;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmPreferences;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
+import org.netxms.nxmc.modules.logviewer.preferencepages.LogViewerPreferences;
 import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.modules.objects.preferencepages.ObjectsPreferences;
@@ -1097,6 +1098,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       pm.addToRoot(new PreferenceNode("alarm", new AlarmPreferences()));
       pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
       pm.addToRoot(new PreferenceNode("language", new LanguagePage()));
+      pm.addToRoot(new PreferenceNode("logViewer", new LogViewerPreferences()));
       pm.addToRoot(new PreferenceNode("networkMap", new GeneralMapPreferences()));
       pm.addToRoot(new PreferenceNode("objects", new ObjectsPreferences()));
       pm.addToRoot(new PreferenceNode("regionalSettings", new RegionalSettingsPage()));

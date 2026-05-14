@@ -59,6 +59,7 @@ import org.netxms.client.log.LogRecordDetails;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.nxmc.Memento;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -85,13 +86,12 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LogViewer extends ViewWithContext
 {
-	private static final int PAGE_SIZE = 400;
-
    private final I18n i18n = LocalizationHelper.getI18n(LogViewer.class);
    private static final Logger logger = LoggerFactory.getLogger(LogViewer.class);
 
    protected NXCSession session = Registry.getSession();
 	protected TableViewer viewer;
+	private int pageSize = 400;
 
    private FilterBuilder filterBuilder;
 	private String logName;
@@ -560,11 +560,11 @@ public class LogViewer extends ViewWithContext
                logHandle = session.openServerLog(logName);
                logHandle.query(filter);
             }
-				final Table data = logHandle.retrieveData(0, PAGE_SIZE);
+				final Table data = logHandle.retrieveData(0, pageSize);
             runInUIThread(() -> {
                resultSet = data;
                viewer.setInput(resultSet.getAllRows());
-               noData = (resultSet.getRowCount() < PAGE_SIZE);
+               noData = (resultSet.getRowCount() < pageSize);
                syncResultSetObjects(data);
 				});
 			}
@@ -599,11 +599,11 @@ public class LogViewer extends ViewWithContext
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Table data = logHandle.retrieveData(resultSet.getRowCount(), PAGE_SIZE);
+				final Table data = logHandle.retrieveData(resultSet.getRowCount(), pageSize);
             runInUIThread(() -> {
                resultSet.addAll(data);
                viewer.setInput(resultSet.getAllRows());
-               noData = (data.getRowCount() < PAGE_SIZE);
+               noData = (data.getRowCount() < pageSize);
                syncResultSetObjects(data);
 				});
 			}
@@ -643,7 +643,7 @@ public class LogViewer extends ViewWithContext
             runInUIThread(() -> {
                resultSet = data;
                viewer.setInput(resultSet.getAllRows());
-               noData = (data.getRowCount() < PAGE_SIZE);
+               noData = (data.getRowCount() < pageSize);
                syncResultSetObjects(data);
 				});
 			}
@@ -727,6 +727,7 @@ public class LogViewer extends ViewWithContext
     */
    private void onQueryStart()
    {
+      pageSize = Math.min(10000, Math.max(50, PreferenceStore.getInstance().getAsInteger("LogViewer.PageSize", 400)));
       actionExecute.setEnabled(false);
       actionGetMoreData.setEnabled(false);
       enableRefresh(false);
