@@ -346,6 +346,9 @@ public:
    bool isNXSL() const { return m_nxslScript != nullptr; }
    void saveToDatabase();
    void checkHealth();
+
+   void requestShutdown() { m_notificationQueue.setShutdownMode(); }
+   void joinWorker() { ThreadJoin(m_workerThread); m_workerThread = INVALID_THREAD_HANDLE; }
 };
 
 /**
@@ -585,8 +588,12 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
  */
 NotificationChannel::~NotificationChannel()
 {
-   m_notificationQueue.setShutdownMode();
-   ThreadJoin(m_workerThread);
+   if (m_workerThread != INVALID_THREAD_HANDLE)
+   {
+      m_notificationQueue.setShutdownMode();
+      ThreadJoin(m_workerThread);
+      m_workerThread = INVALID_THREAD_HANDLE;
+   }
    delete m_driver;
    delete m_storageManager;
    delete m_nxslScript;
@@ -2030,7 +2037,7 @@ void LoadNotificationChannels()
          s_channelList.set(name, nc);
          s_channelListLock.unlock();
          numberOfAddedDrivers++;
-         nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel %s successfully created", name);
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel \"%s\" successfully created", name);
       }
       DBFreeResult(hResult);
    }
@@ -2043,10 +2050,32 @@ void LoadNotificationChannels()
 
 /**
  * Shutdown all notification channels
+ *
+ * Worker threads are stopped explicitly before s_channelList.clear() so that no worker
+ * outlives the call regardless of who else may still hold a shared_ptr to a channel.
+ * This avoids workers running into freed libnetxms static state (e.g. the debug tag tree)
+ * during process exit.
  */
 void ShutdownNotificationChannels()
 {
    s_channelListLock.lock();
-   s_channelList.clear();  // This will delete all channels and destructors will handle correct shutdown
+
+   // Phase 1: signal every worker to exit
+   auto sit = s_channelList.begin();
+   while (sit.hasNext())
+      (*sit.next()->value)->requestShutdown();
+
+   // Phase 2: join every worker
+   auto jit = s_channelList.begin();
+   while (jit.hasNext())
+   {
+      NotificationChannel *ch = jit.next()->value->get();
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Waiting for notification channel \"%s\" worker thread to stop", ch->getName());
+      ch->joinWorker();
+   }
+
+   s_channelList.clear();
    s_channelListLock.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 3, L"All notification channel worker threads stopped");
 }
