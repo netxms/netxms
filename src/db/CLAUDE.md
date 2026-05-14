@@ -177,7 +177,31 @@ DBConnectionPoolShutdown();
 | `DB_SQLTYPE_DOUBLE` | Double precision float |
 | `DB_SQLTYPE_VARCHAR` | Variable-length string |
 | `DB_SQLTYPE_TEXT` | Long text (CLOB) |
-| `DB_SQLTYPE_BLOB` | Binary data |
+
+### Binary Data
+
+There is no dedicated BLOB SQL type. Binary values are stored in text columns
+(`varchar(N)` or `SQL_TEXT`/CLOB) and transparently base64-encoded by libnxdb.
+Use the dedicated `DBBind` overload and `DBGetFieldBinary` accessors; the caller
+picks `DB_SQLTYPE_VARCHAR` or `DB_SQLTYPE_TEXT` to match the underlying column.
+
+```cpp
+// Write
+DBBind(stmt, 1, DB_SQLTYPE_TEXT, imageData, imageLen, DB_BIND_STATIC);
+
+// Read (dynamic alloc; caller MemFree's)
+size_t length;
+BYTE *data = DBGetFieldBinary(result, row, col, &length);
+// ...
+MemFree(data);
+
+// Read into fixed-size buffer (e.g. SHA-256 = 32 bytes)
+BYTE hash[32];
+size_t actual = DBGetFieldBinary(result, row, col, hash, sizeof(hash));
+```
+
+When sizing a `varchar(N)` column for binary content, allocate
+`ceil(maxBinaryBytes / 3) * 4` characters for the base64 representation.
 
 ## Bind Flags
 

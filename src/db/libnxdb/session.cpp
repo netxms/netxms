@@ -837,6 +837,50 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 }
 
 /**
+ * Read base64-encoded binary field. Returns MemAlloc'd buffer; caller must MemFree().
+ * Returns nullptr on NULL value, empty value, or decode error; *length set to 0 in those cases.
+ */
+BYTE LIBNXDB_EXPORTABLE *DBGetFieldBinary(DB_RESULT hResult, int row, int column, size_t *length)
+{
+   *length = 0;
+   char *encoded = DBGetFieldUTF8(hResult, row, column, nullptr, 0);
+   if ((encoded == nullptr) || (*encoded == 0))
+   {
+      MemFree(encoded);
+      return nullptr;
+   }
+
+   char *decoded = nullptr;
+   size_t decodedLen = 0;
+   bool ok = base64_decode_alloc(encoded, strlen(encoded), &decoded, &decodedLen);
+   MemFree(encoded);
+   if (!ok || (decoded == nullptr))
+   {
+      MemFree(decoded);
+      return nullptr;
+   }
+
+   *length = decodedLen;
+   return reinterpret_cast<BYTE*>(decoded);
+}
+
+/**
+ * Read base64-encoded binary field into caller-supplied buffer.
+ * Returns number of bytes written (may be < bufferSize); 0 on NULL value or decode error.
+ */
+size_t LIBNXDB_EXPORTABLE DBGetFieldBinary(DB_RESULT hResult, int row, int column, BYTE *buffer, size_t bufferSize)
+{
+   size_t length = 0;
+   BYTE *data = DBGetFieldBinary(hResult, row, column, &length);
+   if (data == nullptr)
+      return 0;
+   size_t copied = std::min(length, bufferSize);
+   memcpy(buffer, data, copied);
+   MemFree(data);
+   return copied;
+}
+
+/**
  * Get field's value as GUID
  */
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column)
@@ -1195,6 +1239,48 @@ uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int column)
 {
    TCHAR buffer[64];
    return (DBGetField(hResult, column, buffer, 64) == nullptr) ? uuid::NULL_UUID : uuid::parse(buffer);
+}
+
+/**
+ * Read base64-encoded binary field from unbuffered result. Caller must MemFree() returned buffer.
+ */
+BYTE LIBNXDB_EXPORTABLE *DBGetFieldBinary(DB_UNBUFFERED_RESULT hResult, int column, size_t *length)
+{
+   *length = 0;
+   char *encoded = DBGetFieldUTF8(hResult, column, nullptr, 0);
+   if ((encoded == nullptr) || (*encoded == 0))
+   {
+      MemFree(encoded);
+      return nullptr;
+   }
+
+   char *decoded = nullptr;
+   size_t decodedLen = 0;
+   bool ok = base64_decode_alloc(encoded, strlen(encoded), &decoded, &decodedLen);
+   MemFree(encoded);
+   if (!ok || (decoded == nullptr))
+   {
+      MemFree(decoded);
+      return nullptr;
+   }
+
+   *length = decodedLen;
+   return reinterpret_cast<BYTE*>(decoded);
+}
+
+/**
+ * Read base64-encoded binary field from unbuffered result into caller-supplied buffer.
+ */
+size_t LIBNXDB_EXPORTABLE DBGetFieldBinary(DB_UNBUFFERED_RESULT hResult, int column, BYTE *buffer, size_t bufferSize)
+{
+   size_t length = 0;
+   BYTE *data = DBGetFieldBinary(hResult, column, &length);
+   if (data == nullptr)
+      return 0;
+   size_t copied = std::min(length, bufferSize);
+   memcpy(buffer, data, copied);
+   MemFree(data);
+   return copied;
 }
 
 /**
@@ -1565,6 +1651,28 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t 
    {
       DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)_T(""), DB_BIND_STATIC);
    }
+}
+
+/**
+ * Bind binary data. Data is base64-encoded and stored as text; caller picks
+ * sqlType (DB_SQLTYPE_VARCHAR or DB_SQLTYPE_TEXT) to match the underlying column.
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const void *data, size_t length, int allocType)
+{
+   if ((data != nullptr) && (length > 0))
+   {
+      size_t encodedLen = BASE64_LENGTH(length) + 1;
+      char *encoded = MemAllocStringA(encodedLen);
+      base64_encode(static_cast<const char*>(data), length, encoded, encodedLen);
+      DBBind(hStmt, pos, sqlType, DB_CTYPE_UTF8_STRING, encoded, DB_BIND_DYNAMIC);
+   }
+   else
+   {
+      DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)_T(""), DB_BIND_STATIC);
+   }
+
+   if (allocType == DB_BIND_DYNAMIC)
+      MemFree(const_cast<void*>(data));
 }
 
 /**
