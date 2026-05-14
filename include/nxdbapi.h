@@ -149,6 +149,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const I
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const MacAddress& value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, Timestamp value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t *value, int allocType);
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const void *data, size_t length, int allocType);
 bool LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt);
 bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText);
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt);
@@ -186,6 +187,8 @@ InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int row, in
 MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int row, int column);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn, int *pnArray, size_t size, int defaultValue);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn, BYTE *data, size_t size, BYTE defaultValue);
+BYTE LIBNXDB_EXPORTABLE *DBGetFieldBinary(DB_RESULT hResult, int row, int column, size_t *length);
+size_t LIBNXDB_EXPORTABLE DBGetFieldBinary(DB_RESULT hResult, int row, int column, BYTE *buffer, size_t bufferSize);
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int row, int column);
 json_t LIBNXDB_EXPORTABLE *DBGetFieldJson(DB_RESULT hResult, int row, int column);
 
@@ -220,6 +223,8 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_UNBUFFERED_RESULT hResult, int iCo
 uint32_t LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_UNBUFFERED_RESULT hResult, int column);
 InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, int column);
 uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int column);
+BYTE LIBNXDB_EXPORTABLE *DBGetFieldBinary(DB_UNBUFFERED_RESULT hResult, int column, size_t *length);
+size_t LIBNXDB_EXPORTABLE DBGetFieldBinary(DB_UNBUFFERED_RESULT hResult, int column, BYTE *buffer, size_t bufferSize);
 
 static inline time_t DBGetFieldTime(DB_UNBUFFERED_RESULT hResult, int column)
 {
