@@ -41,9 +41,12 @@ public class RoundedLabel extends Canvas
    private static final RGB WHITE = new RGB(255, 255, 255);
 
    private Label label;
+   private Color labelDarkColor;
+   private Color labelLightColor;
    private ColorCache colorCache;
    private Color fillColor;
    private Color borderColor;
+   private boolean blendMode = true;
 
    /**
     * Create new rounded label
@@ -54,6 +57,8 @@ public class RoundedLabel extends Canvas
    {
       super(parent, SWT.NONE);
 
+      labelDarkColor = getDisplay().getSystemColor(SWT.COLOR_BLACK);
+      labelLightColor = getDisplay().getSystemColor(SWT.COLOR_GRAY);
       colorCache = new ColorCache(this);
       fillColor = parent.getBackground();
       borderColor = null;
@@ -67,7 +72,7 @@ public class RoundedLabel extends Canvas
 
       label = new Label(this, SWT.CENTER);
       label.setBackground(getBackground());
-      label.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
+      label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
       label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
       addPaintListener(new PaintListener() {
@@ -89,26 +94,51 @@ public class RoundedLabel extends Canvas
    }
 
    /**
-    * Set label background color. The widget will use a light tint of this color as fill
-    * and the color itself as border and text color.
+    * @return the blendMode
+    */
+   public boolean isBlendMode()
+   {
+      return blendMode;
+   }
+
+   /**
+    * @param blendMode the blendMode to set
+    */
+   public void setBlendMode(boolean blendMode)
+   {
+      this.blendMode = blendMode;
+   }
+
+   /**
+    * Set label background color. If blend mode is on then widget will use a light tint of this color as fill and the color itself
+    * as border and text color.
     *
-    * @param color accent color
+    * @param color background color or accent color in blend mode
     */
    public void setLabelBackground(Color color)
    {
       if (color != null)
       {
-         RGB accent = color.getRGB();
-         fillColor = colorCache.create(ColorConverter.blend(accent, WHITE, 20));
-         borderColor = colorCache.create(accent);
-         RGB textRgb = ColorConverter.isDarkColor(accent) ? accent : ColorConverter.blend(accent, new RGB(0, 0, 0), 60);
-         label.setForeground(colorCache.create(textRgb));
+         if (blendMode)
+         {
+            RGB accent = color.getRGB();
+            fillColor = colorCache.create(ColorConverter.blend(accent, WHITE, 20));
+            borderColor = colorCache.create(accent);
+            RGB textRgb = ColorConverter.isDarkColor(accent) ? accent : ColorConverter.blend(accent, new RGB(0, 0, 0), 60);
+            label.setForeground(colorCache.create(textRgb));
+         }
+         else
+         {
+            fillColor = color;
+            borderColor = null;
+            label.setForeground(ColorConverter.isDarkColor(fillColor) ? labelLightColor : labelDarkColor);
+         }
       }
       else
       {
          fillColor = getParent().getBackground();
          borderColor = null;
-         label.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
+         label.setForeground(ColorConverter.isDarkColor(fillColor) ? labelLightColor : labelDarkColor);
       }
       label.setBackground(fillColor);
       redraw();
@@ -122,7 +152,9 @@ public class RoundedLabel extends Canvas
     */
    public void setLabelForeground(Color darkColor, Color lightColor)
    {
-      label.setForeground((darkColor != null) ? darkColor : getDisplay().getSystemColor(SWT.COLOR_BLACK));
+      labelDarkColor = (darkColor != null) ? darkColor : getDisplay().getSystemColor(SWT.COLOR_BLACK);
+      labelLightColor = (lightColor != null) ? lightColor : getDisplay().getSystemColor(SWT.COLOR_GRAY);
+      label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
    }
 
    /**

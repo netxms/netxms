@@ -472,6 +472,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       filler.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
       objectsOutOfSyncIndicator = new RoundedLabel(headerArea);
+      objectsOutOfSyncIndicator.setBlendMode(false);
       objectsOutOfSyncIndicator.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
       objectsOutOfSyncIndicator.setLabelForeground(null, headerForegroundColor);
       objectsOutOfSyncIndicator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
@@ -489,6 +490,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       new Spacer(headerArea, 32);
 
       RoundedLabel serverName = new RoundedLabel(headerArea);
+      serverName.setBlendMode(false);
       serverName.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
       serverName.setLabelForeground(null, headerForegroundColor);
       serverName.setText(session.getServerName());

@@ -38,7 +38,10 @@ public class RoundedLabel extends Composite
    private static final RGB WHITE = new RGB(255, 255, 255);
 
    private Label label;
+   private Color labelDarkColor;
+   private Color labelLightColor;
    private ColorCache colorCache;
+   private boolean blendMode = true;
 
    /**
     * Create new rounded label
@@ -49,6 +52,8 @@ public class RoundedLabel extends Composite
    {
       super(parent, SWT.NONE);
 
+      labelDarkColor = getDisplay().getSystemColor(SWT.COLOR_BLACK);
+      labelLightColor = getDisplay().getSystemColor(SWT.COLOR_GRAY);
       colorCache = new ColorCache(this);
 
       GridLayout layout = new GridLayout();
@@ -61,29 +66,53 @@ public class RoundedLabel extends Composite
       label = new Label(this, SWT.CENTER);
       label.setData(RWT.CUSTOM_VARIANT, "RoundedLabel");
       label.setBackground(getBackground());
-      label.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
+      label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
       label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
    }
 
    /**
-    * Set label background color. The widget will use a light tint of this color as fill
-    * and the color itself as border and text color.
+    * @return the blendMode
+    */
+   public boolean isBlendMode()
+   {
+      return blendMode;
+   }
+
+   /**
+    * @param blendMode the blendMode to set
+    */
+   public void setBlendMode(boolean blendMode)
+   {
+      this.blendMode = blendMode;
+   }
+
+   /**
+    * Set label background color. If blend mode is on then widget will use a light tint of this color as fill and the color itself
+    * as border and text color.
     *
-    * @param color accent color
+    * @param color background color or accent color in blend mode
     */
    public void setLabelBackground(Color color)
    {
       if (color != null)
       {
-         RGB accent = color.getRGB();
-         label.setBackground(colorCache.create(ColorConverter.blend(accent, WHITE, 20)));
-         RGB textRgb = ColorConverter.isDarkColor(accent) ? accent : ColorConverter.blend(accent, new RGB(0, 0, 0), 60);
-         label.setForeground(colorCache.create(textRgb));
+         if (blendMode)
+         {
+            RGB accent = color.getRGB();
+            label.setBackground(colorCache.create(ColorConverter.blend(accent, WHITE, 20)));
+            RGB textRgb = ColorConverter.isDarkColor(accent) ? accent : ColorConverter.blend(accent, new RGB(0, 0, 0), 60);
+            label.setForeground(colorCache.create(textRgb));
+         }
+         else
+         {
+            label.setBackground(color);
+            label.setForeground(ColorConverter.isDarkColor(color) ? labelLightColor : labelDarkColor);
+         }
       }
       else
       {
          label.setBackground(getParent().getBackground());
-         label.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
+         label.setForeground(ColorConverter.isDarkColor(color) ? labelLightColor : labelDarkColor);
       }
    }
 
@@ -95,7 +124,9 @@ public class RoundedLabel extends Composite
     */
    public void setLabelForeground(Color darkColor, Color lightColor)
    {
-      label.setForeground((darkColor != null) ? darkColor : getDisplay().getSystemColor(SWT.COLOR_BLACK));
+      labelDarkColor = (darkColor != null) ? darkColor : getDisplay().getSystemColor(SWT.COLOR_BLACK);
+      labelLightColor = (lightColor != null) ? lightColor : getDisplay().getSystemColor(SWT.COLOR_GRAY);
+      label.setForeground(ColorConverter.isDarkColor(label.getBackground()) ? labelLightColor : labelDarkColor);
    }
 
    /**
