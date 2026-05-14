@@ -364,6 +364,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       separator.setLayoutData(gd);
 
       objectStatus = new RoundedLabel(headerArea);
+      objectStatus.setBlendMode(false);
       objectStatus.setToolTipText(i18n.tr("Object status"));
       gd = new GridData(SWT.FILL, SWT.FILL, false, true);
       gd.widthHint = WidgetHelper.getTextWidth(objectStatus, StatusDisplayInfo.getStatusText(ObjectStatus.UNMANAGED) + 10);
