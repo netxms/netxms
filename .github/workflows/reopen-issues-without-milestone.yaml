@@ -1,0 +1,29 @@
+name: Reopen issues closed without milestone
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  reopen-if-no-milestone:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check and reopen
+        if: github.event.issue.milestone == null && github.event.issue.state_reason == 'completed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'open'
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Reopening — issues must have a milestone set before being closed as completed. Either assign a milestone, or close as "not planned" / "duplicate".'
+            });
