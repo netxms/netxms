@@ -6814,7 +6814,7 @@ bool Node::confPollSnmp()
    }
 
    // Check for 802.1x support
-   if (CheckSNMPIntegerValue(pTransport, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1))
+   if (m_driver->is8021xSupported(pTransport, this, m_driverData))
    {
       lockProperties();
       m_capabilities |= NC_IS_8021X;

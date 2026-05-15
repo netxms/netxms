@@ -931,7 +931,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking 802.1x state for interface %s"), node->getName(), node->getId(), m_name);
-      paeStatusPoll(rqId, snmpTransport, *node);
+      paeStatusPoll(rqId, snmpTransport, node.get());
       if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
          newStatus = STATUS_MAJOR;
    }
@@ -1247,21 +1247,16 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 /**
  * PAE (802.1x) status poll
  */
-void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node)
+void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node)
 {
    sendPollerMsg(_T("      Checking port 802.1x status...\r\n"));
 
-	TCHAR oid[256];
 	int32_t paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
 
-	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_index);
-	SnmpGet(transport->getSnmpVersion(), transport, oid, nullptr, 0, &paeState, sizeof(int32_t), 0);
+	node->getDriver()->get8021xPortState(transport, node, node->getDriverData(), m_index, &paeState, &backendState);
 
-	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_index);
-	SnmpGet(transport->getSnmpVersion(), transport, oid, nullptr, 0, &backendState, sizeof(int32_t), 0);
-
-	if (m_dot1xPaeAuthState != (WORD)paeState)
+	if (m_dot1xPaeAuthState != static_cast<int16_t>(paeState))
 	{
 	   sendPollerMsg(_T("      Port PAE state changed to %s\r\n"), PAE_STATE_TEXT(paeState));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port PAE state changed to %s"), m_name, m_id, PAE_STATE_TEXT(paeState));

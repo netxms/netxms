@@ -2451,7 +2451,7 @@ protected:
    HashMap<uint32_t, InterfaceState> m_beforeMaintenaceData;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
-   void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
+   void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
    void stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
 
 protected:
@@ -4545,7 +4545,7 @@ public:
    void updateIcmpStatisticPeriod(uint32_t period);
 
    NetworkDeviceDriver *getDriver() const { return m_driver; }
-   DriverData *getDriverData() { return m_driverData; }
+   DriverData *getDriverData() const { return m_driverData; }
    void setDriverData(DriverData *data) { m_driverData = data; }
    const char *getAgentAIToolsSchema() const { return m_agentAIToolsSchema; }
    bool hasAgentAITools() const { return m_agentAIToolsSchema != nullptr; }

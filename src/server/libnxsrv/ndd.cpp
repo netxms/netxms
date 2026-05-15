@@ -22,6 +22,7 @@
 #include "libnxsrv.h"
 #include <nddrv.h>
 #include <netxms-version.h>
+#include <ieee8021x.h>
 
 #define DEBUG_TAG _T("ndd.common")
 
@@ -1052,6 +1053,47 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
       *adminState = IF_ADMIN_STATE_UNKNOWN;
       *operState = IF_OPER_STATE_UNKNOWN;
    }
+}
+
+/**
+ * Check if device supports IEEE 802.1x port-based network access control. Default implementation probes
+ * the standard IEEE8021-PAE-MIB by reading dot1xPaeSystemAuthControl (.1.0.8802.1.1.1.1.1.1.0) and
+ * returns true if it equals 1 (enabled).
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @return true if device supports 802.1x and capability flag should be set on the node
+ */
+bool NetworkDeviceDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return CheckSNMPIntegerValue(snmp, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1);
+}
+
+/**
+ * Read IEEE 802.1x PAE and backend authentication states for given interface. Default implementation reads
+ * dot1xAuthPaeState (.1.0.8802.1.1.1.1.2.1.1.1.<ifIndex>) and dot1xAuthBackendAuthState
+ * (.1.0.8802.1.1.1.1.2.1.1.2.<ifIndex>) from the standard IEEE8021-PAE-MIB. State values that cannot
+ * be retrieved are left as PAE_STATE_UNKNOWN / BACKEND_STATE_UNKNOWN.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver's data
+ * @param ifIndex interface index
+ * @param paeState OUT: PAE state machine state (PAE_STATE_* constant)
+ * @param backendState OUT: backend authentication state machine state (BACKEND_STATE_* constant)
+ */
+void NetworkDeviceDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState)
+{
+   *paeState = PAE_STATE_UNKNOWN;
+   *backendState = BACKEND_STATE_UNKNOWN;
+
+   uint32_t oid[12] = { 1, 0, 8802, 1, 1, 1, 1, 2, 1, 1, 1, 0 };
+   oid[11] = ifIndex;
+   SnmpGetEx(snmp, nullptr, oid, 12, paeState, sizeof(int32_t), 0);
+
+   oid[10] = 2;
+   SnmpGetEx(snmp, nullptr, oid, 12, backendState, sizeof(int32_t), 0);
 }
 
 /**
