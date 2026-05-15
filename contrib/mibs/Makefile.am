@@ -463,6 +463,8 @@ mibs_DATA = \
 	HP-VLAN.mib \
 	HpicfHighAvailability-MIB.mib \
 	HUAWEI-3COM-OID-MIB.mib \
+	HUAWEI-BRAS-SRVCFG-EAP-MIB.mib \
+	HUAWEI-MIB.mib \
 	HUAWEI-VLAN-MIB.mib \
 	IANA-ADDRESS-FAMILY-NUMBERS-MIB.mib \
 	IANA-ITU-ALARM-TC-MIB.mib \
