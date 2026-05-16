@@ -145,56 +145,274 @@ static const wchar_t *SniffImageMimeType(const BYTE *data, size_t size)
 }
 
 /**
- * Create images library row from imported object tool icon (legacy export
- * carries the icon as a hex-encoded blob inline). Returns the GUID of the new
- * or existing row, or null UUID on empty input / failure.
+ * Look up the currently assigned icon UUID for an existing object tool.
+ * Returns null UUID if the tool has no icon or the row does not exist.
  */
-static uuid ImportObjectToolIcon(DB_HANDLE hdb, uint32_t toolId, const TCHAR *toolName,
-      const TCHAR *hexBytes, const char *mimeTypeUtf8)
+static uuid GetExistingObjectToolIcon(DB_HANDLE hdb, uint32_t toolId)
 {
-   if ((hexBytes == nullptr) || (hexBytes[0] == 0))
-      return uuid::NULL_UUID;
+   uuid result;
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT icon FROM object_tools WHERE tool_id=?");
+   if (hStmt == nullptr)
+      return result;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hRes = DBSelectPrepared(hStmt);
+   if ((hRes != nullptr) && (DBGetNumRows(hRes) > 0))
+      result = DBGetFieldGUID(hRes, 0, 0);
+   if (hRes != nullptr)
+      DBFreeResult(hRes);
+   DBFreeStatement(hStmt);
+   return result;
+}
 
-   size_t binSize = _tcslen(hexBytes) / 2;
-   if (binSize == 0)
-      return uuid::NULL_UUID;
+/**
+ * Pick image library name for an imported object tool icon. Image library has
+ * UNIQUE(name, category) and name varchar(63); on conflict append the tool ID.
+ */
+static void BuildObjectToolImageName(uint32_t toolId, const TCHAR *toolName, wchar_t *outName, size_t outSize, DB_HANDLE hdb)
+{
+   nx_swprintf(outName, outSize, L"Object tool: %.48ls", toolName);
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT 1 FROM images WHERE name=? AND category='Object Tools'");
+   if (hStmt == nullptr)
+      return;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, outName, DB_BIND_STATIC);
+   DB_RESULT hRes = DBSelectPrepared(hStmt);
+   bool conflict = (hRes != nullptr) && (DBGetNumRows(hRes) > 0);
+   if (hRes != nullptr)
+      DBFreeResult(hRes);
+   DBFreeStatement(hStmt);
+   if (conflict)
+      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", toolName, toolId);
+}
 
-   BYTE *binData = MemAllocArray<BYTE>(binSize);
-   binSize = StrToBin(hexBytes, binData, binSize);
-   if (binSize == 0)
-   {
-      MemFree(binData);
-      return uuid::NULL_UUID;
-   }
-
-   wchar_t mimeBuf[64];
-   const wchar_t *mimeType;
+/**
+ * Resolve mimetype: caller-supplied UTF-8 string (from export) wins; fall back
+ * to magic-byte sniffing. Output goes into outBuf (64 wchars) when needed.
+ */
+static const wchar_t *ResolveIconMimeType(const char *mimeTypeUtf8, const BYTE *binData, size_t binSize, wchar_t *outBuf, size_t outSize)
+{
    if ((mimeTypeUtf8 != nullptr) && (*mimeTypeUtf8 != 0))
    {
-      utf8_to_wchar(mimeTypeUtf8, -1, mimeBuf, 64);
-      mimeBuf[63] = 0;
-      mimeType = mimeBuf;
+      utf8_to_wchar(mimeTypeUtf8, -1, outBuf, outSize);
+      outBuf[outSize - 1] = 0;
+      return outBuf;
    }
-   else
+   return SniffImageMimeType(binData, binSize);
+}
+
+/**
+ * Resolve an imported object tool icon into an image library row. New-format
+ * exports carry an explicit iconId (UUID); legacy exports only carry the
+ * hex-encoded bytes. Returns the GUID to bind into object_tools.icon, or
+ * null UUID when neither input is usable.
+ *
+ * Decision summary:
+ *   iconId present and row exists locally:
+ *     - bytes match (or none in export)   -> reuse, no writes
+ *     - category == "Object Tools"        -> UPDATE bytes+mimetype in place
+ *     - other category (user repurposed)  -> reuse UUID, don't touch bytes
+ *   iconId present but not in library:
+ *     - bytes available                   -> INSERT with the source UUID (preserves identity)
+ *     - no bytes                          -> null UUID (dangling reference)
+ *   iconId absent (legacy export), bytes present:
+ *     - existingIconGuid bytes match      -> reuse, no writes (idempotent re-import)
+ *     - heuristic: same name pattern,
+ *       category == "Object Tools", sole
+ *       referrer of existingIconGuid      -> UPDATE in place
+ *     - otherwise                         -> INSERT new row
+ */
+static uuid ImportObjectToolIcon(DB_HANDLE hdb, uint32_t toolId, const TCHAR *toolName,
+      const TCHAR *iconIdStr, const TCHAR *hexBytes, const char *mimeTypeUtf8,
+      const uuid& existingIconGuid)
+{
+   // Parse incoming icon identity from the export
+   uuid incomingIconGuid;
+   if ((iconIdStr != nullptr) && (iconIdStr[0] != 0))
    {
-      mimeType = SniffImageMimeType(binData, binSize);
+      uuid parsed = uuid::parse(iconIdStr);
+      if (!parsed.isNull())
+         incomingIconGuid = parsed;
    }
 
-   wchar_t imageName[64];
-   nx_swprintf(imageName, 64, L"Object tool: %.48ls", toolName);
-
-   DB_STATEMENT hCheck = DBPrepare(hdb, L"SELECT 1 FROM images WHERE name=? AND category='Object Tools'");
-   if (hCheck != nullptr)
+   // Decode incoming hex bytes
+   BYTE *binData = nullptr;
+   size_t binSize = 0;
+   if ((hexBytes != nullptr) && (hexBytes[0] != 0))
    {
-      DBBind(hCheck, 1, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
-      DB_RESULT hRes = DBSelectPrepared(hCheck);
-      bool conflict = (hRes != nullptr) && (DBGetNumRows(hRes) > 0);
+      binSize = _tcslen(hexBytes) / 2;
+      if (binSize > 0)
+      {
+         binData = MemAllocArray<BYTE>(binSize);
+         binSize = StrToBin(hexBytes, binData, binSize);
+         if (binSize == 0)
+         {
+            MemFree(binData);
+            binData = nullptr;
+         }
+      }
+   }
+
+   if (incomingIconGuid.isNull() && (binData == nullptr))
+      return uuid::NULL_UUID;
+
+   // ---- New-format path: iconId is authoritative ----
+   if (!incomingIconGuid.isNull())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT category,image_data FROM images WHERE guid=?");
+      if (hStmt == nullptr)
+      {
+         MemFree(binData);
+         return uuid::NULL_UUID;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, incomingIconGuid);
+      DB_RESULT hRes = DBSelectPrepared(hStmt);
+      bool rowExists = (hRes != nullptr) && (DBGetNumRows(hRes) > 0);
+
+      if (rowExists)
+      {
+         wchar_t category[64];
+         DBGetField(hRes, 0, 0, category, 64);
+         size_t existingSize = 0;
+         BYTE *existingData = DBGetFieldBinary(hRes, 0, 1, &existingSize);
+         DBFreeResult(hRes);
+         DBFreeStatement(hStmt);
+
+         bool bytesMatch = (binData == nullptr) ||
+               ((existingData != nullptr) && (existingSize == binSize) && !memcmp(existingData, binData, binSize));
+         MemFree(existingData);
+
+         if (bytesMatch || wcscmp(category, L"Object Tools"))
+         {
+            // Reuse without writes: identical content, or user repurposed the row.
+            MemFree(binData);
+            return incomingIconGuid;
+         }
+
+         // UPDATE in place — matching UUID + Object Tools category is strong identity signal.
+         wchar_t mimeBuf[64];
+         const wchar_t *mimeType = ResolveIconMimeType(mimeTypeUtf8, binData, binSize, mimeBuf, 64);
+         DB_STATEMENT hUpdate = DBPrepare(hdb, L"UPDATE images SET mimetype=?,image_data=? WHERE guid=?");
+         if (hUpdate == nullptr)
+         {
+            MemFree(binData);
+            return uuid::NULL_UUID;
+         }
+         DBBind(hUpdate, 1, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC);
+         DBBind(hUpdate, 2, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
+         DBBind(hUpdate, 3, DB_SQLTYPE_VARCHAR, incomingIconGuid);
+         bool ok = DBExecute(hUpdate);
+         DBFreeStatement(hUpdate);
+         return ok ? incomingIconGuid : uuid::NULL_UUID;
+      }
+
       if (hRes != nullptr)
          DBFreeResult(hRes);
-      DBFreeStatement(hCheck);
-      if (conflict)
-         nx_swprintf(imageName, 64, L"Object tool: %.36ls-%u", toolName, toolId);
+      DBFreeStatement(hStmt);
+
+      // Row missing locally — can only materialize if bytes are in the export.
+      if (binData == nullptr)
+         return uuid::NULL_UUID;
+
+      wchar_t mimeBuf[64];
+      const wchar_t *mimeType = ResolveIconMimeType(mimeTypeUtf8, binData, binSize, mimeBuf, 64);
+      wchar_t imageName[64];
+      BuildObjectToolImageName(toolId, toolName, imageName, 64, hdb);
+
+      DB_STATEMENT hInsert = DBPrepare(hdb,
+            L"INSERT INTO images (guid,name,category,mimetype,protected,image_data) VALUES (?,?,'Object Tools',?,0,?)");
+      if (hInsert == nullptr)
+      {
+         MemFree(binData);
+         return uuid::NULL_UUID;
+      }
+      DBBind(hInsert, 1, DB_SQLTYPE_VARCHAR, incomingIconGuid);
+      DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
+      DBBind(hInsert, 3, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC);
+      DBBind(hInsert, 4, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
+      bool ok = DBExecute(hInsert);
+      DBFreeStatement(hInsert);
+      return ok ? incomingIconGuid : uuid::NULL_UUID;
    }
+
+   // ---- Legacy-format path: only bytes available, fall back to heuristic ----
+   if (!existingIconGuid.isNull())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT category,name,image_data FROM images WHERE guid=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, existingIconGuid);
+         DB_RESULT hRes = DBSelectPrepared(hStmt);
+         if ((hRes != nullptr) && (DBGetNumRows(hRes) > 0))
+         {
+            wchar_t category[64], imageName[64];
+            DBGetField(hRes, 0, 0, category, 64);
+            DBGetField(hRes, 0, 1, imageName, 64);
+            size_t existingSize = 0;
+            BYTE *existingData = DBGetFieldBinary(hRes, 0, 2, &existingSize);
+            DBFreeResult(hRes);
+            DBFreeStatement(hStmt);
+
+            bool bytesMatch = (existingData != nullptr) && (existingSize == binSize) && !memcmp(existingData, binData, binSize);
+            MemFree(existingData);
+            if (bytesMatch)
+            {
+               MemFree(binData);
+               return existingIconGuid;
+            }
+
+            wchar_t expectedPrimary[64], expectedSuffixed[64];
+            nx_swprintf(expectedPrimary, 64, L"Object tool: %.48ls", toolName);
+            nx_swprintf(expectedSuffixed, 64, L"Object tool: %.36ls-%u", toolName, toolId);
+            bool nameAndCategoryMatch = !wcscmp(category, L"Object Tools") &&
+                  (!wcscmp(imageName, expectedPrimary) || !wcscmp(imageName, expectedSuffixed));
+
+            bool soleReferrer = false;
+            if (nameAndCategoryMatch)
+            {
+               DB_STATEMENT hRef = DBPrepare(hdb, L"SELECT COUNT(*) FROM object_tools WHERE icon=? AND tool_id<>?");
+               if (hRef != nullptr)
+               {
+                  DBBind(hRef, 1, DB_SQLTYPE_VARCHAR, existingIconGuid);
+                  DBBind(hRef, 2, DB_SQLTYPE_INTEGER, toolId);
+                  DB_RESULT hResRef = DBSelectPrepared(hRef);
+                  soleReferrer = (hResRef != nullptr) && (DBGetNumRows(hResRef) > 0) && (DBGetFieldLong(hResRef, 0, 0) == 0);
+                  if (hResRef != nullptr)
+                     DBFreeResult(hResRef);
+                  DBFreeStatement(hRef);
+               }
+            }
+
+            if (nameAndCategoryMatch && soleReferrer)
+            {
+               wchar_t mimeBuf[64];
+               const wchar_t *mimeType = ResolveIconMimeType(mimeTypeUtf8, binData, binSize, mimeBuf, 64);
+               DB_STATEMENT hUpdate = DBPrepare(hdb, L"UPDATE images SET mimetype=?,image_data=? WHERE guid=?");
+               if (hUpdate == nullptr)
+               {
+                  MemFree(binData);
+                  return uuid::NULL_UUID;
+               }
+               DBBind(hUpdate, 1, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC);
+               DBBind(hUpdate, 2, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
+               DBBind(hUpdate, 3, DB_SQLTYPE_VARCHAR, existingIconGuid);
+               bool ok = DBExecute(hUpdate);
+               DBFreeStatement(hUpdate);
+               return ok ? existingIconGuid : uuid::NULL_UUID;
+            }
+         }
+         else
+         {
+            if (hRes != nullptr)
+               DBFreeResult(hRes);
+            DBFreeStatement(hStmt);
+         }
+      }
+   }
+
+   // Fall through: INSERT fresh row with newly generated UUID
+   wchar_t mimeBuf[64];
+   const wchar_t *mimeType = ResolveIconMimeType(mimeTypeUtf8, binData, binSize, mimeBuf, 64);
+   wchar_t imageName[64];
+   BuildObjectToolImageName(toolId, toolName, imageName, 64, hdb);
 
    uuid imageGuid = uuid::generate();
    DB_STATEMENT hInsert = DBPrepare(hdb,
@@ -204,14 +422,12 @@ static uuid ImportObjectToolIcon(DB_HANDLE hdb, uint32_t toolId, const TCHAR *to
       MemFree(binData);
       return uuid::NULL_UUID;
    }
-
    DBBind(hInsert, 1, DB_SQLTYPE_VARCHAR, imageGuid);
    DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
    DBBind(hInsert, 3, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC);
    DBBind(hInsert, 4, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
    bool ok = DBExecute(hInsert);
    DBFreeStatement(hInsert);
-
    return ok ? imageGuid : uuid::NULL_UUID;
 }
 
@@ -1478,11 +1694,15 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
 
    const TCHAR *toolNameStr = config->getSubEntryValue(_T("name"), 0, _T(""));
    bool newTool = (toolId == 0);
+   uuid existingIconGuid;
    if (newTool)
       toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+   else
+      existingIconGuid = GetExistingObjectToolIcon(hdb, toolId);
 
-   // Legacy ConfigEntry exports always carry the icon as a hex blob in the "image" element.
-   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, toolNameStr, config->getSubEntryValue(_T("image")), nullptr);
+   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, toolNameStr,
+         config->getSubEntryValue(_T("iconId")), config->getSubEntryValue(_T("image")),
+         nullptr, existingIconGuid);
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, toolNameStr, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolType);
@@ -1690,11 +1910,16 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    String remoteHost = json_object_get_string(config, "remoteHost", _T(""));
 
    bool newTool = (toolId == 0);
+   uuid existingIconGuid;
    if (newTool)
       toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+   else
+      existingIconGuid = GetExistingObjectToolIcon(hdb, toolId);
 
-   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, name.cstr(), image.cstr(),
-         json_object_get_string_utf8(config, "iconMimetype", nullptr));
+   String iconId = json_object_get_string(config, "iconId", _T(""));
+   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, name.cstr(),
+         iconId.cstr(), image.cstr(),
+         json_object_get_string_utf8(config, "iconMimetype", nullptr), existingIconGuid);
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolType);
@@ -1946,10 +2171,12 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
          json_object_set_new(tool, "commandName", json_string_t(DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING)));
          json_object_set_new(tool, "commandShortName", json_string_t(DBGetField(hResult, 0, 9, buffer, MAX_DB_STRING)));
 
-         // Icon: resolve UUID -> images.image_data and emit bytes inline so the export is self-contained.
+         // Icon: emit image library UUID for identity-preserving re-imports, plus
+         // mimetype and hex-encoded bytes so the export stays self-contained.
          uuid iconGuid = DBGetFieldGUID(hResult, 0, 10);
          if (!iconGuid.isNull())
          {
+            json_object_set_new(tool, "iconId", iconGuid.toJson());
             DB_STATEMENT hIconStmt = DBPrepare(hdb, _T("SELECT mimetype,image_data FROM images WHERE guid=?"));
             if (hIconStmt != nullptr)
             {
