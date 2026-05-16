@@ -127,6 +127,95 @@ static uint32_t ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 }
 
 /**
+ * Sniff image MIME type from leading magic bytes
+ */
+static const wchar_t *SniffImageMimeType(const BYTE *data, size_t size)
+{
+   if ((size >= 8) && (memcmp(data, "\x89PNG\r\n\x1a\n", 8) == 0))
+      return L"image/png";
+   if ((size >= 6) && ((memcmp(data, "GIF87a", 6) == 0) || (memcmp(data, "GIF89a", 6) == 0)))
+      return L"image/gif";
+   if ((size >= 3) && (memcmp(data, "\xff\xd8\xff", 3) == 0))
+      return L"image/jpeg";
+   if ((size >= 2) && (memcmp(data, "BM", 2) == 0))
+      return L"image/bmp";
+   if ((size >= 1) && (data[0] == '<'))
+      return L"image/svg+xml";
+   return L"image/png";
+}
+
+/**
+ * Create images library row from imported object tool icon (legacy export
+ * carries the icon as a hex-encoded blob inline). Returns the GUID of the new
+ * or existing row, or null UUID on empty input / failure.
+ */
+static uuid ImportObjectToolIcon(DB_HANDLE hdb, uint32_t toolId, const TCHAR *toolName,
+      const TCHAR *hexBytes, const char *mimeTypeUtf8)
+{
+   if ((hexBytes == nullptr) || (hexBytes[0] == 0))
+      return uuid::NULL_UUID;
+
+   size_t binSize = _tcslen(hexBytes) / 2;
+   if (binSize == 0)
+      return uuid::NULL_UUID;
+
+   BYTE *binData = MemAllocArray<BYTE>(binSize);
+   binSize = StrToBin(hexBytes, binData, binSize);
+   if (binSize == 0)
+   {
+      MemFree(binData);
+      return uuid::NULL_UUID;
+   }
+
+   wchar_t mimeBuf[64];
+   const wchar_t *mimeType;
+   if ((mimeTypeUtf8 != nullptr) && (*mimeTypeUtf8 != 0))
+   {
+      utf8_to_wchar(mimeTypeUtf8, -1, mimeBuf, 64);
+      mimeBuf[63] = 0;
+      mimeType = mimeBuf;
+   }
+   else
+   {
+      mimeType = SniffImageMimeType(binData, binSize);
+   }
+
+   wchar_t imageName[64];
+   nx_swprintf(imageName, 64, L"Object tool: %.48ls", toolName);
+
+   DB_STATEMENT hCheck = DBPrepare(hdb, L"SELECT 1 FROM images WHERE name=? AND category='Object Tools'");
+   if (hCheck != nullptr)
+   {
+      DBBind(hCheck, 1, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
+      DB_RESULT hRes = DBSelectPrepared(hCheck);
+      bool conflict = (hRes != nullptr) && (DBGetNumRows(hRes) > 0);
+      if (hRes != nullptr)
+         DBFreeResult(hRes);
+      DBFreeStatement(hCheck);
+      if (conflict)
+         nx_swprintf(imageName, 64, L"Object tool: %.36ls-%u", toolName, toolId);
+   }
+
+   uuid imageGuid = uuid::generate();
+   DB_STATEMENT hInsert = DBPrepare(hdb,
+         L"INSERT INTO images (guid,name,category,mimetype,protected,image_data) VALUES (?,?,'Object Tools',?,0,?)");
+   if (hInsert == nullptr)
+   {
+      MemFree(binData);
+      return uuid::NULL_UUID;
+   }
+
+   DBBind(hInsert, 1, DB_SQLTYPE_VARCHAR, imageGuid);
+   DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
+   DBBind(hInsert, 3, DB_SQLTYPE_VARCHAR, mimeType, DB_BIND_STATIC);
+   DBBind(hInsert, 4, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
+   bool ok = DBExecute(hInsert);
+   DBFreeStatement(hInsert);
+
+   return ok ? imageGuid : uuid::NULL_UUID;
+}
+
+/**
  * Check if tool with given id exist and is a table tool
  */
 bool NXCORE_EXPORTABLE IsTableTool(uint32_t toolId)
@@ -1169,20 +1258,7 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);
-
-   size_t size;
-   const BYTE *imageData = msg.getBinaryFieldPtr(VID_IMAGE_DATA, &size);
-   if (size > 0)
-   {
-      TCHAR *imageHexData = MemAllocString(size * 2 + 1);
-      BinToStr(imageData, size, imageHexData);
-      DBBind(hStmt, 10, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
-   }
-   else
-   {
-      DBBind(hStmt, 10, DB_SQLTYPE_TEXT, _T(""), DB_BIND_STATIC);
-   }
-
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, msg.getFieldAsGUID(VID_ICON));
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, msg.getFieldAsUInt32(VID_PORT));
    DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_HOSTNAME), DB_BIND_DYNAMIC);
    DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, applicableClasses);
@@ -1400,7 +1476,15 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    if (hStmt == nullptr)
       return ImportFailure(hdb, nullptr, context);
 
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("name")), DB_BIND_STATIC);
+   const TCHAR *toolNameStr = config->getSubEntryValue(_T("name"), 0, _T(""));
+   bool newTool = (toolId == 0);
+   if (newTool)
+      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+
+   // Legacy ConfigEntry exports always carry the icon as a hex blob in the "image" element.
+   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, toolNameStr, config->getSubEntryValue(_T("image")), nullptr);
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, toolNameStr, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolType);
    DBBind(hStmt, 3, DB_SQLTYPE_TEXT, config->getSubEntryValue(_T("data")), DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("description")), DB_BIND_STATIC);
@@ -1409,20 +1493,13 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("confirmation")), DB_BIND_STATIC);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("commandName")), DB_BIND_STATIC);
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("commandShortName")), DB_BIND_STATIC);
-   DBBind(hStmt, 10, DB_SQLTYPE_TEXT, config->getSubEntryValue(_T("image")), DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, iconGuid);
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsInt(_T("remotePort")));
    DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("remoteHost")), DB_BIND_STATIC);
    DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, applicableClasses);
-   if (toolId == 0)
-   {
-      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
+   if (newTool)
       DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
-   }
-   else
-   {
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
-   }
 
    if (!DBExecute(hStmt))
       return ImportFailure(hdb, hStmt, context);
@@ -1612,6 +1689,13 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    String image = json_object_get_string(config, "image", _T(""));
    String remoteHost = json_object_get_string(config, "remoteHost", _T(""));
 
+   bool newTool = (toolId == 0);
+   if (newTool)
+      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+
+   uuid iconGuid = ImportObjectToolIcon(hdb, toolId, name.cstr(), image.cstr(),
+         json_object_get_string_utf8(config, "iconMimetype", nullptr));
+
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolType);
    DBBind(hStmt, 3, DB_SQLTYPE_TEXT, data, DB_BIND_STATIC);
@@ -1621,20 +1705,13 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, confirmation, DB_BIND_STATIC);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, commandName, DB_BIND_STATIC);
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, commandShortName, DB_BIND_STATIC);
-   DBBind(hStmt, 10, DB_SQLTYPE_TEXT, image, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, iconGuid);
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, json_object_get_int32(config, "remotePort", 0));
    DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, remoteHost, DB_BIND_STATIC);
    DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, applicableClasses);
-   if (toolId == 0)
-   {
-      toolId = CreateUniqueId(IDG_OBJECT_TOOL);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
+   if (newTool)
       DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
-   }
-   else
-   {
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, toolId);
-   }
 
    if (!DBExecute(hStmt))
       return ImportFailure(hdb, hStmt, context);
@@ -1869,9 +1946,36 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
          json_object_set_new(tool, "commandName", json_string_t(DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING)));
          json_object_set_new(tool, "commandShortName", json_string_t(DBGetField(hResult, 0, 9, buffer, MAX_DB_STRING)));
 
-         TCHAR *image = DBGetField(hResult, 0, 10, nullptr, 0);
-         json_object_set_new(tool, "image", json_string_t(image));
-         MemFree(image);
+         // Icon: resolve UUID -> images.image_data and emit bytes inline so the export is self-contained.
+         uuid iconGuid = DBGetFieldGUID(hResult, 0, 10);
+         if (!iconGuid.isNull())
+         {
+            DB_STATEMENT hIconStmt = DBPrepare(hdb, _T("SELECT mimetype,image_data FROM images WHERE guid=?"));
+            if (hIconStmt != nullptr)
+            {
+               DBBind(hIconStmt, 1, DB_SQLTYPE_VARCHAR, iconGuid);
+               DB_RESULT hIconResult = DBSelectPrepared(hIconStmt);
+               if ((hIconResult != nullptr) && (DBGetNumRows(hIconResult) > 0))
+               {
+                  TCHAR mimeBuf[64];
+                  DBGetField(hIconResult, 0, 0, mimeBuf, 64);
+                  size_t iconSize = 0;
+                  BYTE *iconData = DBGetFieldBinary(hIconResult, 0, 1, &iconSize);
+                  if ((iconData != nullptr) && (iconSize > 0))
+                  {
+                     TCHAR *hex = MemAllocString(iconSize * 2 + 1);
+                     BinToStr(iconData, iconSize, hex);
+                     json_object_set_new(tool, "image", json_string_t(hex));
+                     MemFree(hex);
+                     json_object_set_new(tool, "iconMimetype", json_string_t(mimeBuf));
+                  }
+                  MemFree(iconData);
+               }
+               if (hIconResult != nullptr)
+                  DBFreeResult(hIconResult);
+               DBFreeStatement(hIconStmt);
+            }
+         }
 
          json_object_set_new(tool, "remotePort", json_integer(DBGetFieldLong(hResult, 0, 11)));
          json_object_set_new(tool, "remoteHost", json_string_t(DBGetField(hResult, 0, 12, buffer, MAX_DB_STRING)));
@@ -2031,20 +2135,8 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
          DBGetField(hResult, i, 9, buffer, MAX_DB_STRING);
          msg->setField(fieldId + 9, buffer);
 
-         // icon
-         wchar_t *imageDataHex = DBGetField(hResult, i, 10, nullptr, 0);
-         if (imageDataHex != nullptr)
-         {
-            size_t size = _tcslen(imageDataHex) / 2;
-            Buffer<BYTE, 4096> imageData(size);
-            size_t bytes = StrToBin(imageDataHex, imageData, size);
-            msg->setField(fieldId + 10, imageData, bytes);
-            MemFree(imageDataHex);
-         }
-         else
-         {
-            msg->setField(fieldId + 10, (BYTE *)nullptr, 0);
-         }
+         // icon (image library UUID reference)
+         msg->setField(fieldId + 10, DBGetFieldGUID(hResult, i, 10));
 
          msg->setField(fieldId + 11, DBGetFieldULong(hResult, i, 11));
 
@@ -2673,12 +2765,9 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
       DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING);
       json_object_set_new(tool, "commandShortName", json_string_t(buffer));
 
-      TCHAR *imageDataHex = DBGetField(hResult, 0, 9, nullptr, 0);
-      if (imageDataHex != nullptr)
-      {
-         json_object_set_new(tool, "icon", json_string_t(imageDataHex));
-         MemFree(imageDataHex);
-      }
+      uuid iconGuid = DBGetFieldGUID(hResult, 0, 9);
+      if (!iconGuid.isNull())
+         json_object_set_new(tool, "icon", iconGuid.toJson());
 
       json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, 0, 10)));
 
@@ -2745,22 +2834,7 @@ uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg)
    msg->setField(VID_CONFIRMATION_TEXT, DBGetField(hResult, 0, 6, buffer, MAX_DB_STRING));
    msg->setField(VID_COMMAND_NAME, DBGetField(hResult, 0, 7, buffer, MAX_DB_STRING));
    msg->setField(VID_COMMAND_SHORT_NAME, DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING));
-
-   // icon
-   data = DBGetField(hResult, 0, 9, nullptr, 0);
-   if (data != nullptr)
-   {
-      size_t size = _tcslen(data) / 2;
-      Buffer<BYTE, 4096> imageData(size);
-      size_t bytes = StrToBin(data, imageData, size);
-      msg->setField(VID_IMAGE_DATA, imageData, bytes);
-      MemFree(data);
-   }
-   else
-   {
-      msg->setField(VID_IMAGE_DATA, (BYTE *)nullptr, 0);
-   }
-
+   msg->setField(VID_ICON, DBGetFieldGUID(hResult, 0, 9));
    msg->setField(VID_PORT, DBGetFieldULong(hResult, 0, 10));
    msg->setField(VID_HOSTNAME, DBGetField(hResult, 0, 11, buffer, MAX_DB_STRING));
    msg->setField(VID_TOOL_APPLICABLE_CLASSES, DBGetFieldULong(hResult, 0, 12));

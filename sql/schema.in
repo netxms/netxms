@@ -2118,7 +2118,7 @@ CREATE TABLE object_tools
   confirmation_text varchar(255) null,
   command_name varchar(255) null,
   command_short_name varchar(31) null,
-  icon SQL_TEXT null,
+  icon varchar(36) null,
   remote_port integer not null,
   remote_host varchar(255) null,
   applicable_classes integer not null,

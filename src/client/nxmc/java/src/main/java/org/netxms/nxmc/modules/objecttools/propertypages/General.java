@@ -18,25 +18,14 @@
  */
 package org.netxms.nxmc.modules.objecttools.propertypages;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
@@ -47,11 +36,8 @@ import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.modules.imagelibrary.widgets.ImageSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -60,7 +46,6 @@ import org.xnap.commons.i18n.I18n;
 public class General extends PropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(General.class);
-   private static final Logger logger = LoggerFactory.getLogger(General.class);
 
 	private ObjectToolDetails objectTool;
 	private LabeledText textName;
@@ -85,8 +70,7 @@ public class General extends PropertyPage
    private LabeledText textCommandShortName;
 	private Button radioIndexOID;
 	private Button radioIndexValue;
-	private Label iconLabel;
-	private Image icon;
+	private ImageSelector iconSelector;
 
 	/**
 	 * Constructor
@@ -123,8 +107,14 @@ public class General extends PropertyPage
       textName.setLayoutData(gd);
       textName.setText(objectTool.getName());
 
-      createIcon();
-      createIconSelector(dialogArea);
+      iconSelector = new ImageSelector(dialogArea, SWT.NONE);
+      iconSelector.setLabel(i18n.tr("Icon"));
+      iconSelector.setImageGuid(objectTool.getIcon(), false);
+      GridData iconGd = new GridData();
+      iconGd.horizontalAlignment = SWT.FILL;
+      iconGd.grabExcessHorizontalSpace = true;
+      iconGd.horizontalSpan = 2;
+      iconSelector.setLayoutData(iconGd);
 
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
 		textDescription.setLabel(i18n.tr("Description"));
@@ -467,129 +457,6 @@ public class General extends PropertyPage
       remoteHost.setText(objectTool.getRemoteHost() != null ? objectTool.getRemoteHost() : "");
    }
 
-	/**
-	 * Create icon
-	 */
-   @SuppressWarnings("deprecation")
-   private void createIcon()
-	{
-	   if (icon != null)
-	   {
-	      icon.dispose();
-	      icon = null;
-	   }
-
-      byte[] imageBytes = objectTool.getImageData();
-      if ((imageBytes == null) || (imageBytes.length == 0))
-         return;
-
-      ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
-      try
-      {
-         ImageDescriptor d = ImageDescriptor.createFromImageData(new ImageData(input));
-         icon = d.createImage();
-      }
-      catch(Exception e)
-      {
-         logger.error("Exception in ObjectToolsGeneral.createIcon()", e);
-      }
-	}
-	
-	/**
-	 * @param parent
-	 */
-	private void createIconSelector(Composite parent)
-	{
-	   Group group = new Group(parent, SWT.NONE);
-	   group.setText(i18n.tr("Icon"));
-	   group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
-	   
-	   GridLayout layout = new GridLayout();
-	   layout.numColumns = 4;
-	   group.setLayout(layout);
-	   
-	   iconLabel = new Label(group, SWT.NONE);
-      iconLabel.setImage((icon != null) ? icon : SharedIcons.IMG_EMPTY);
-      iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, true));
-      
-      Label dummy = new Label(group, SWT.NONE);
-      GridData gd = new GridData();
-      gd.widthHint = 8;
-      dummy.setLayoutData(gd);
-	   
-      Button link = new Button(group, SWT.PUSH);
-      link.setImage(SharedIcons.IMG_FIND);
-      link.setToolTipText(i18n.tr("Select..."));
-      link.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            selectIcon();
-         }
-      });
-
-      link = new Button(group, SWT.PUSH);
-      link.setImage(SharedIcons.IMG_CLEAR);
-      link.setToolTipText(i18n.tr("Clear"));
-      link.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            iconLabel.setImage(SharedIcons.IMG_EMPTY);
-            if (icon != null)
-            {
-               icon.dispose();
-               icon = null;
-            }
-         }
-      });
-      link.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (icon != null)
-               icon.dispose();
-         }
-      });
-	}
-	
-	/**
-    * Select icon
-    */
-	private void selectIcon()
-	{
-	   FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
-	   WidgetHelper.setFileDialogFilterNames(dlg, new String[] { i18n.tr("Image Files"), i18n.tr("All Files") });
-	   WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.gif;*.jpg;*.png", "*.*" }); 
-
-      String fileName = dlg.open();
-      if (fileName == null)
-         return;
-      
-      try
-      {
-         Image image = new Image(getShell().getDisplay(), new FileInputStream(new File(fileName)));
-         if ((image.getImageData().width <= 16) && (image.getImageData().height <= 16))
-         {
-            if (icon != null)
-               icon.dispose();
-            icon = image;
-            iconLabel.setImage(icon);
-         }
-         else
-         {
-            MessageDialogHelper.openError(getShell(), i18n.tr("Error"),
-                  String.format(i18n.tr("Selected image is too large (%dx%d pixels). Maximum allowed size is 16x16 pixels."),
-                        image.getImageData().width, image.getImageData().height));
-            image.dispose();
-         }
-      }
-      catch(Exception e)
-      {
-         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot load image file: %s"), e.getLocalizedMessage()));
-      }
-	}
-
    /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
@@ -713,18 +580,7 @@ public class General extends PropertyPage
          objectTool.setRemoteHost(remoteHost.getText());
       }
 
-		if (icon != null)
-		{
-		   ImageLoader loader = new ImageLoader();
-		   loader.data = new ImageData[] { icon.getImageData() };
-		   ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
-		   loader.save(stream, SWT.IMAGE_PNG);
-		   objectTool.setImageData(stream.toByteArray());
-		}
-		else
-		{
-		   objectTool.setImageData(null);
-		}
+		objectTool.setIcon(iconSelector.getImageGuid());
 		return true;
 	}
 }

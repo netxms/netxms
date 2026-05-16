@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.InputField;
@@ -65,7 +66,7 @@ public class ObjectToolDetails extends ObjectTool
 		columns = new ArrayList<ObjectToolTableColumn>(0);
 		commandName = "";
 		commandShortName = "";
-		imageData = null;
+		icon = null;
       remotePort = 0;
       remoteHost = null;
       applicableClasses = APPLICABLE_NODE;
@@ -96,7 +97,7 @@ public class ObjectToolDetails extends ObjectTool
       remotePort = msg.getFieldAsInt32(NXCPCodes.VID_PORT);
       remoteHost = msg.getFieldAsString(NXCPCodes.VID_HOSTNAME);
       applicableClasses = msg.getFieldAsInt32(NXCPCodes.VID_TOOL_APPLICABLE_CLASSES);
-		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
+		icon = msg.getFieldAsUUID(NXCPCodes.VID_ICON);
       try
       {
          filter = XMLTools.createFromXml(ObjectMenuFilter.class, filterData);
@@ -162,8 +163,7 @@ public class ObjectToolDetails extends ObjectTool
       msg.setFieldInt32(NXCPCodes.VID_PORT, remotePort);
       msg.setField(NXCPCodes.VID_HOSTNAME, remoteHost);
       msg.setFieldInt32(NXCPCodes.VID_TOOL_APPLICABLE_CLASSES, applicableClasses);
-		if (imageData != null)
-		   msg.setField(NXCPCodes.VID_IMAGE_DATA, imageData);
+		msg.setField(NXCPCodes.VID_ICON, icon);
 
 		msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
       msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Integer[accessList.size()]));
@@ -367,13 +367,13 @@ public class ObjectToolDetails extends ObjectTool
    }
    
 	/**
-	 * Set image data (for displaying tool icon).
+	 * Set icon as image library reference.
 	 *
-	 * @param imageData new image data
+	 * @param icon image library UUID, or null to clear
 	 */
-	public void setImageData(byte[] imageData)
+	public void setIcon(UUID icon)
 	{
-	   this.imageData = imageData;
+	   this.icon = icon;
 	   modified = true;
 	}
 	

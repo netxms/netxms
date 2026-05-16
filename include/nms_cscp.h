@@ -715,9 +715,9 @@ typedef struct
 #define CMD_GET_L2_NETWORK_PATH           0x0203
 #define CMD_GET_CLOUD_CONNECTOR_NAMES     0x0204
 #define CMD_GET_CONNECTION_HISTORY        0x0205
-#define CMD_GET_AI_SKILLS_AND_FUNCTIONS  0x0206
-#define CMD_MODIFY_AI_DISABLED_LIST      0x0207
-#define CMD_GET_POLICY_FILE              0x0208
+#define CMD_GET_AI_SKILLS_AND_FUNCTIONS   0x0206
+#define CMD_MODIFY_AI_DISABLED_LIST       0x0207
+#define CMD_GET_POLICY_FILE               0x0208
 #define CMD_SETUP_AGENT_UPGRADE           0x0209
 
 #define CMD_RS_LIST_REPORTS               0x1100
@@ -727,9 +727,9 @@ typedef struct
 #define CMD_RS_RENDER_RESULT              0x1104
 #define CMD_RS_DELETE_RESULT              0x1105
 #define CMD_RS_NOTIFY                     0x1106
-#define CMD_RS_LIST_REPORT_PACKAGES      0x1107
-#define CMD_RS_DELETE_REPORT_PACKAGE     0x1108
-#define CMD_RS_DEPLOY_REPORT_PACKAGE     0x1109
+#define CMD_RS_LIST_REPORT_PACKAGES       0x1107
+#define CMD_RS_DELETE_REPORT_PACKAGE      0x1108
+#define CMD_RS_DEPLOY_REPORT_PACKAGE      0x1109
 
 /**
  * Variable identifiers
@@ -1102,7 +1102,7 @@ typedef struct
 #define VID_LLDP_NODE_ID            ((uint32_t)366)
 #define VID_PHY_MODULE              ((uint32_t)367)
 #define VID_PHY_PORT                ((uint32_t)368)
-#define VID_IMAGE_DATA              ((uint32_t)369)
+// unused: 369
 #define VID_IMAGE_PROTECTED         ((uint32_t)370)
 #define VID_NUM_IMAGES              ((uint32_t)371)
 #define VID_IMAGE_MIMETYPE          ((uint32_t)372)

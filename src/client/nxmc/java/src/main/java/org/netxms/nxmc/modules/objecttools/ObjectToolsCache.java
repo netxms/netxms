@@ -18,21 +18,22 @@
  */
 package org.netxms.nxmc.modules.objecttools;
 
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.services.ObjectToolHandler;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,18 +139,20 @@ public class ObjectToolsCache
 			synchronized(icons)
          {
 			   icons.clear();
-			   
+
+            ImageProvider imageProvider = ImageProvider.getInstance();
             for(ObjectTool tool : list)
             {
-               byte[] imageBytes = tool.getImageData();
-               if ((imageBytes == null) || (imageBytes.length == 0))
+               UUID iconGuid = tool.getIcon();
+               if ((iconGuid == null) || iconGuid.equals(NXCommon.EMPTY_GUID))
                   continue;
-               
-               ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+
                try
                {
-                  final ImageData imageData = new ImageData(input); 
-                  icons.put(tool.getId(), WidgetHelper.createImageDescriptor(imageData));
+                  imageProvider.preloadImageFromServer(iconGuid);
+                  Image image = imageProvider.getImage(iconGuid);
+                  if (image != null)
+                     icons.put(tool.getId(), ImageDescriptor.createFromImage(image));
                }
                catch(Exception e)
                {

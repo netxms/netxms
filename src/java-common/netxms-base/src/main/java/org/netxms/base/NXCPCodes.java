@@ -917,7 +917,6 @@ public class NXCPCodes
 	public static final long VID_LLDP_NODE_ID = 366;
 	public static final long VID_PHY_MODULE = 367;
 	public static final long VID_PHY_PORT = 368;
-	public static final long VID_IMAGE_DATA = 369;
 	public static final long VID_IMAGE_PROTECTED = 370;
 	public static final long VID_NUM_IMAGES = 371;
 	public static final long VID_IMAGE_MIMETYPE = 372;

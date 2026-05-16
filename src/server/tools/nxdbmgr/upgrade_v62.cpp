@@ -25,6 +25,150 @@
 #include <nxtools.h>
 
 /**
+ * Sniff image MIME type from leading magic bytes
+ */
+static const char *SniffImageMimeType(const BYTE *data, size_t size)
+{
+   if ((size >= 8) && (memcmp(data, "\x89PNG\r\n\x1a\n", 8) == 0))
+      return "image/png";
+   if ((size >= 6) && ((memcmp(data, "GIF87a", 6) == 0) || (memcmp(data, "GIF89a", 6) == 0)))
+      return "image/gif";
+   if ((size >= 3) && (memcmp(data, "\xff\xd8\xff", 3) == 0))
+      return "image/jpeg";
+   if ((size >= 2) && (memcmp(data, "BM", 2) == 0))
+      return "image/bmp";
+   if ((size >= 1) && (data[0] == '<'))
+      return "image/svg+xml";
+   return "image/png";
+}
+
+/**
+ * Build unique image library name for migrated object tool icon.
+ * Image library has UNIQUE(name, category) with name varchar(63).
+ * Returns true on success.
+ */
+static bool BuildObjectToolImageName(uint32_t toolId, const wchar_t *toolName, wchar_t *outName, size_t outSize)
+{
+   nx_swprintf(outName, outSize, L"Object tool: %.48ls", toolName);
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"SELECT guid FROM images WHERE name=? AND category='Object Tools'");
+   if (hStmt == nullptr)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, outName, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool conflict = (hResult != nullptr) && (DBGetNumRows(hResult) > 0);
+   if (hResult != nullptr)
+      DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   if (conflict)
+      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", toolName, toolId);
+   return true;
+}
+
+/**
+ * Upgrade from 62.14 to 62.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE object_tools ADD icon_guid varchar(36)"));
+
+   DB_RESULT hResult = SQLSelect(L"SELECT tool_id,tool_name,icon FROM object_tools WHERE icon IS NOT NULL AND icon<>''");
+   if (hResult != nullptr)
+   {
+      bool success = true;
+
+      DB_STATEMENT hInsertImage = DBPrepare(g_dbHandle, L"INSERT INTO images (guid,name,category,mimetype,protected,image_data) VALUES (?,?,'Object Tools',?,0,?)");
+      DB_STATEMENT hUpdateTool = DBPrepare(g_dbHandle, L"UPDATE object_tools SET icon_guid=? WHERE tool_id=?");
+
+      if ((hInsertImage != nullptr) && (hUpdateTool != nullptr))
+      {
+         int count = DBGetNumRows(hResult);
+         for (int i = 0; (i < count) && success; i++)
+         {
+            uint32_t toolId = DBGetFieldULong(hResult, i, 0);
+            wchar_t toolName[256];
+            DBGetField(hResult, i, 1, toolName, 256);
+
+            char *hexIcon = DBGetFieldUTF8(hResult, i, 2, nullptr, 0);
+            if ((hexIcon == nullptr) || (hexIcon[0] == 0))
+            {
+               MemFree(hexIcon);
+               continue;
+            }
+
+            size_t binSize = strlen(hexIcon) / 2;
+            BYTE *binData = MemAllocArray<BYTE>(binSize);
+            binSize = StrToBinA(hexIcon, binData, binSize);
+            MemFree(hexIcon);
+
+            if (binSize == 0)
+            {
+               WriteToTerminalEx(L"Cannot decode icon for object tool [%u] \"%s\"\n", toolId, toolName);
+               MemFree(binData);
+               if (g_ignoreErrors)
+                  continue;
+               success = false;
+               break;
+            }
+
+            wchar_t imageName[64];
+            if (!BuildObjectToolImageName(toolId, toolName, imageName, 64))
+            {
+               MemFree(binData);
+               success = false;
+               break;
+            }
+
+            uuid imageGuid = uuid::generate();
+            const char *mimeType = SniffImageMimeType(binData, binSize);
+
+            DBBind(hInsertImage, 1, DB_SQLTYPE_VARCHAR, imageGuid);
+            DBBind(hInsertImage, 2, DB_SQLTYPE_VARCHAR, imageName, DB_BIND_STATIC);
+            DBBind(hInsertImage, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, mimeType, DB_BIND_STATIC);
+            DBBind(hInsertImage, 4, DB_SQLTYPE_TEXT, binData, binSize, DB_BIND_DYNAMIC);
+            if (!SQLExecute(hInsertImage) && !g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+
+            DBBind(hUpdateTool, 1, DB_SQLTYPE_VARCHAR, imageGuid);
+            DBBind(hUpdateTool, 2, DB_SQLTYPE_INTEGER, toolId);
+            if (!SQLExecute(hUpdateTool) && !g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+         }
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (hInsertImage != nullptr)
+         DBFreeStatement(hInsertImage);
+      if (hUpdateTool != nullptr)
+         DBFreeStatement(hUpdateTool);
+      DBFreeResult(hResult);
+
+      if (!success && !g_ignoreErrors)
+         return false;
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBDropColumn(g_dbHandle, L"object_tools", L"icon"));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, L"object_tools", L"icon_guid", L"icon"));
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 62.13 to 62.14
  */
 static bool H_UpgradeFromV13()
@@ -478,6 +622,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 62, 15, H_UpgradeFromV14 },
    { 13, 62, 14, H_UpgradeFromV13 },
    { 12, 62, 13, H_UpgradeFromV12 },
    { 11, 62, 12, H_UpgradeFromV11 },

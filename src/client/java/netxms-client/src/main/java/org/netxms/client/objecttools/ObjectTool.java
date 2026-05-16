@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.InputField;
 import org.netxms.client.ObjectMenuFilter;
@@ -84,7 +85,7 @@ public class ObjectTool implements ObjectAction
 	protected String commandName;
    protected String commandShortName;
    protected ObjectMenuFilter filter;
-	protected byte[] imageData;
+	protected UUID icon;
    protected int remotePort;
    protected String remoteHost;
    protected int applicableClasses;
@@ -118,7 +119,7 @@ public class ObjectTool implements ObjectAction
 		confirmationText = msg.getFieldAsString(baseId + 7);
 		commandName = msg.getFieldAsString(baseId + 8);
       commandShortName = msg.getFieldAsString(baseId + 9);
-		imageData = msg.getFieldAsBinary(baseId + 10);
+		icon = msg.getFieldAsUUID(baseId + 10);
       remotePort = msg.getFieldAsInt32(baseId + 11);
       remoteHost = msg.getFieldAsString(baseId + 12);
       applicableClasses = msg.getFieldAsInt32(baseId + 13);
@@ -465,11 +466,13 @@ public class ObjectTool implements ObjectAction
    }
 
    /**
-    * @return the imageData
+    * Get icon as image library reference.
+    *
+    * @return image library UUID, or null if no icon is assigned
     */
-   public byte[] getImageData()
+   public UUID getIcon()
    {
-      return imageData;
+      return icon;
    }
 
    /**
