@@ -21,6 +21,7 @@
 **/
 
 #include "huawei.h"
+#include <ieee8021x.h>
 
 #define DEBUG_TAG _T("ndd.huawei.lansw")
 
@@ -106,6 +107,58 @@ InterfaceList *HuaweiSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
    }
 
    return ifList;
+}
+
+/**
+ * Check if device supports IEEE 802.1x. Probes hwDot1xGlobal (.1.3.6.1.4.1.2011.5.25.40.4.1.2.0) from
+ * HUAWEI-BRAS-SRVCFG-EAP-MIB and returns true if it equals enabled(1).
+ */
+bool HuaweiSWDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return CheckSNMPIntegerValue(snmp, { 1, 3, 6, 1, 4, 1, 2011, 5, 25, 40, 4, 1, 2, 0 }, 1);
+}
+
+/**
+ * Read 802.1x state for given interface from HUAWEI-BRAS-SRVCFG-EAP-MIB hwDot1xPortConfigTable
+ * (.1.3.6.1.4.1.2011.5.25.40.4.1.14.1.<col>.<ifIndex>):
+ *   col 2  hwDot1xPortSwitch   - 1=enabled, 2=disabled
+ *   col 5  hwDot1xPortControl  - 1=auto, 2=authorizedForce, 3=unauthorizedForce
+ *   col 11 hwDot1xAuthStatus   - TruthValue, 1=true (authenticated), 2=false
+ *
+ * PAE state is synthesized from these. Backend state has no per-port analog in this MIB and is left UNKNOWN.
+ */
+void HuaweiSWDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+         int32_t *paeState, int32_t *backendState)
+{
+   uint32_t oid[16] = { 1, 3, 6, 1, 4, 1, 2011, 5, 25, 40, 4, 1, 14, 1, 2, ifIndex };
+
+   int32_t portSwitch = 0;
+   if ((SnmpGetEx(snmp, nullptr, oid, 16, &portSwitch, sizeof(int32_t), 0) != SNMP_ERR_SUCCESS) || (portSwitch != 1))
+      return;  // 802.1x not enabled on this port (or unreadable) — leave PAE state UNKNOWN
+
+   oid[14] = 5;  // hwDot1xPortControl
+   int32_t portControl = 0;
+   if (SnmpGetEx(snmp, nullptr, oid, 16, &portControl, sizeof(int32_t), 0) != SNMP_ERR_SUCCESS)
+      return;
+
+   switch (portControl)
+   {
+      case 2:  // authorizedForce
+         *paeState = PAE_STATE_FORCE_AUTH;
+         return;
+      case 3:  // unauthorizedForce
+         *paeState = PAE_STATE_FORCE_UNAUTH;
+         return;
+      case 1:  // auto - need to query runtime auth status
+         break;
+      default:
+         return;
+   }
+
+   oid[14] = 11;  // hwDot1xAuthStatus
+   int32_t authStatus = 0;
+   if (SnmpGetEx(snmp, nullptr, oid, 16, &authStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+      *paeState = (authStatus == 1) ? PAE_STATE_AUTHENTICATED : PAE_STATE_DISCONNECTED;
 }
 
 /**
