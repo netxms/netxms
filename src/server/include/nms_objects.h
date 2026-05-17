@@ -1146,7 +1146,7 @@ public:
    /**
     * Check if save is needed after this poll completion
     */
-   bool isSaveNeeded()
+   bool isSaveNeeded() const
    {
       return m_saveNeeded;
    }
@@ -1164,7 +1164,7 @@ public:
    /**
     * Get timestamp of last completed poll
     */
-   time_t getLastCompleted()
+   time_t getLastCompleted() const
    {
       m_lock.lock();
       time_t t = m_lastCompleted;
@@ -1175,7 +1175,7 @@ public:
    /**
     * Get timer average value
     */
-   int64_t getTimerAverage()
+   int64_t getTimerAverage() const
    {
       m_lock.lock();
       int64_t v = static_cast<int64_t>(m_timer.getAverage());
@@ -1186,7 +1186,7 @@ public:
    /**
     * Get timer minimum value
     */
-   int64_t getTimerMin()
+   int64_t getTimerMin() const
    {
       m_lock.lock();
       int64_t v = m_timer.getMin();
@@ -1197,7 +1197,7 @@ public:
    /**
     * Get timer maximum value
     */
-   int64_t getTimerMax()
+   int64_t getTimerMax() const
    {
       m_lock.lock();
       int64_t v = m_timer.getMax();
@@ -1208,7 +1208,7 @@ public:
    /**
     * Get last timer value
     */
-   int64_t getTimerLast()
+   int64_t getTimerLast() const
    {
       m_lock.lock();
       int64_t v = m_timer.getCurrent();
@@ -1219,7 +1219,7 @@ public:
    /**
     * Fill NXCP message
     */
-   void fillMessage(NXCPMessage *msg, uint32_t baseId)
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
    {
       msg->setField(baseId, m_name);
       msg->setField(baseId + 1, isPending());
@@ -1228,6 +1228,12 @@ public:
       msg->setField(baseId + 3, m_timer.getCurrent());
       m_lock.unlock();
    }
+
+   /**
+    * Create JSON representation. Mirrors the fields emitted by fillMessage,
+    * with additional timer min/max/average exposed by the timer accessors.
+    */
+   json_t *toJson();
 };
 
 /**
@@ -1931,6 +1937,7 @@ public:
    DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
    bool saveToDatabase(DB_HANDLE hdb);
    void pollStateToMessage(NXCPMessage *msg);
+   void pollStateToJson(json_t *root);
 };
 
 /**

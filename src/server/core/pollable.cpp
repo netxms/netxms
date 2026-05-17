@@ -476,6 +476,69 @@ void Pollable::pollStateToMessage(NXCPMessage *msg)
    msg->setField(VID_NUM_POLL_STATES, count);
 }
 
+#define AppendPollStateJson(state, type) \
+{ \
+   if (m_acceptablePolls & type) \
+      json_array_append_new(states, state.toJson()); \
+}
+
+/**
+ * Append current poll states as a "pollStates" JSON array on the given root object.
+ */
+void Pollable::pollStateToJson(json_t *root)
+{
+   json_t *states = json_array();
+   AppendPollStateJson(m_statusPollState, Pollable::STATUS);
+   AppendPollStateJson(m_configurationPollState, Pollable::CONFIGURATION);
+   AppendPollStateJson(m_instancePollState, Pollable::INSTANCE_DISCOVERY);
+   AppendPollStateJson(m_discoveryPollState, Pollable::DISCOVERY);
+   AppendPollStateJson(m_topologyPollState, Pollable::TOPOLOGY);
+   AppendPollStateJson(m_routingPollState, Pollable::ROUTING_TABLE);
+   AppendPollStateJson(m_icmpPollState, Pollable::ICMP);
+   AppendPollStateJson(m_autobindPollState, Pollable::AUTOBIND);
+   AppendPollStateJson(m_mapUpdatePollState, Pollable::MAP_UPDATE);
+   json_object_set_new(root, "pollStates", states);
+}
+
+/**
+ * JSON representation of a single poll state. Mirrors the fields emitted by fillMessage,
+ * plus min/max/average timer values exposed via the timer accessors. Timer subobject is
+ * omitted when the poll has never completed (otherwise zero timer values would be
+ * indistinguishable from a real 0 ms measurement).
+ */
+json_t *PollState::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   json_object_set_new(json, "pending", json_boolean(isPending()));
+
+   m_lock.lock();
+   time_t lastCompleted = m_lastCompleted;
+   int64_t timerLast = m_timer.getCurrent();
+   int64_t timerAverage = static_cast<int64_t>(m_timer.getAverage());
+   int64_t timerMin = m_timer.getMin();
+   int64_t timerMax = m_timer.getMax();
+   m_lock.unlock();
+
+   if (lastCompleted != TIMESTAMP_NEVER)
+   {
+      json_object_set_new(json, "lastCompleted", json_time_string(lastCompleted));
+
+      json_t *timer = json_object();
+      json_object_set_new(timer, "last", json_integer(timerLast));
+      json_object_set_new(timer, "average", json_integer(timerAverage));
+      json_object_set_new(timer, "min", json_integer(timerMin));
+      json_object_set_new(timer, "max", json_integer(timerMax));
+      json_object_set_new(json, "timer", timer);
+   }
+   else
+   {
+      json_object_set_new(json, "lastCompleted", json_null());
+   }
+
+   return json;
+}
+
 /**
  * Auto fill properties of linked asset
  */

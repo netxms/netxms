@@ -7304,6 +7304,42 @@ components:
           description: Object last change timestamp
         status:
           $ref: '#/components/schemas/Status'
+        pollStates:
+          type: array
+          description: Per-poll-type state. Present only for pollable objects (e.g. nodes, sensors, interfaces); one entry per poll type the object accepts.
+          items:
+            $ref: '#/components/schemas/PollState'
+    PollState:
+      type: object
+      description: State of a single poll type on a pollable object.
+      properties:
+        name:
+          type: string
+          description: Poll type name (e.g. "status", "configuration", "instance", "discovery", "topology", "routing-table", "icmp", "autobind", "map-update").
+        pending:
+          type: boolean
+          description: True if a poll of this type is currently queued or in flight.
+        lastCompleted:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the most recent successful completion, or null if this poll type has never completed since server start.
+        timer:
+          type: object
+          description: Poll duration statistics in milliseconds. Omitted when the poll type has never completed (lastCompleted is null).
+          properties:
+            last:
+              type: integer
+              description: Duration of the most recent completed poll (ms).
+            average:
+              type: integer
+              description: Rolling average poll duration (ms).
+            min:
+              type: integer
+              description: Minimum observed poll duration (ms).
+            max:
+              type: integer
+              description: Maximum observed poll duration (ms).
     TopologyMap:
       type: object
       description: Ad-hoc topology map containing discovered objects and the links between them
