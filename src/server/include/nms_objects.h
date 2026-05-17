@@ -1219,7 +1219,7 @@ public:
    /**
     * Fill NXCP message
     */
-   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   void fillMessage(NXCPMessage *msg, uint32_t baseId)
    {
       msg->setField(baseId, m_name);
       msg->setField(baseId + 1, isPending());
