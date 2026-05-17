@@ -3436,6 +3436,9 @@ json_t *NetObj::toJson(bool includeSensitiveData)
    }
    m_moduleDataLock.unlock();
 
+   if (isPollable())
+      getAsPollable()->pollStateToJson(root);
+
    return root;
 }
 
