@@ -51,6 +51,11 @@ uint32_t UpgradeAgent(const TCHAR *pkgFile)
 {
    TCHAR cmdLine[1024];
 #if defined(_WIN32)
+   if (!VerifyFileSignature(pkgFile))
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot verify signature of installer package \"%s\""), pkgFile);
+      return ERR_BAD_SIGNATURE;
+   }
    _sntprintf(cmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pkgFile);
 #else
    _tchmod(pkgFile, 0700);   // Set execute permissions on package file

@@ -137,6 +137,7 @@
 #define ERR_SYSCALL_FAILED             ((uint32_t)935)
 #define ERR_TCP_PROXY_DISABLED         ((uint32_t)936)
 #define ERR_SSH_CHANNEL_OPEN_FAILED    ((uint32_t)937)
+#define ERR_BAD_SIGNATURE              ((uint32_t)938)
 
 /**
  * Bulk data reconciliation DCI processing status codes
