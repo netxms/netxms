@@ -9,16 +9,16 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 DRIVERS = at avaya cambium cisco dell-pwc dlink edgecore eltex etherwan \
-	extreme fortinet hirschmann hpe huawei ignitenet juniper mds \
-	mikrotik moxa net-snmp netonix ping3 planet qtech rittal saf \
+	extreme fortinet hirschmann hpe huawei ignitenet juniper lenovo \
+	mds mikrotik moxa net-snmp netonix ping3 planet qtech rittal saf \
 	siemens symbol-ws tb tplink ubnt westerstrand zyxel
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la cambium.la cisco.la dell-pwc.la \
 	dlink.la edgecore.la eltex.la etherwan.la extreme.la fortinet.la \
-	hirschmann.la hpe.la huawei.la ignitenet.la juniper.la mds.la \
-	mikrotik.la moxa.la net-snmp.la netonix.la ping3.la planet.la \
+	hirschmann.la hpe.la huawei.la ignitenet.la juniper.la lenovo.la \
+	mds.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la planet.la \
 	qtech.la rittal.la saf.la siemens.la symbol-ws.la tb.la tplink.la \
 	ubnt.la westerstrand.la zyxel.la
 
@@ -131,6 +131,13 @@ juniper_la_SOURCES = juniper/juniper.cpp juniper/netscreen.cpp
 juniper_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 juniper_la_LDFLAGS = -module -avoid-version
 juniper_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+lenovo_la_SOURCES = lenovo/flex.cpp lenovo/lenovo.cpp lenovo/rack.cpp
+lenovo_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+lenovo_la_LDFLAGS = -module -avoid-version
+lenovo_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
