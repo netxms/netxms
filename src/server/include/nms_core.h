@@ -1542,6 +1542,8 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
 uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
+uint32_t NXCORE_EXPORTABLE CreateObjectToolFromJson(const json_t *config, uint32_t *newToolId);
+uint32_t NXCORE_EXPORTABLE UpdateObjectToolFromJson(uint32_t toolId, const json_t *config);
 json_t *CreateObjectToolExportRecord(uint32_t id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
 bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context);

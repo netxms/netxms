@@ -467,6 +467,161 @@ int H_ObjectToolDetails(Context *context)
 }
 
 /**
+ * Translate RCC from object-tool save into HTTP response code, populating the error body when
+ * applicable. Returns the chosen HTTP status code.
+ */
+static int SetObjectToolSaveErrorResponse(Context *context, uint32_t rcc)
+{
+   switch(rcc)
+   {
+      case RCC_INVALID_OBJECT_NAME:
+         context->setErrorResponse("Missing or invalid tool name");
+         return 400;
+      case RCC_INVALID_REQUEST:
+         context->setErrorResponse("Missing or invalid tool type");
+         return 400;
+      case RCC_INVALID_TOOL_ID:
+         return 404;
+      default:
+         context->setErrorResponse("Database failure");
+         return 500;
+   }
+}
+
+/**
+ * Handler for POST /v1/object-tools
+ */
+int H_ObjectToolCreate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Missing request body");
+      return 400;
+   }
+
+   uint32_t toolId = 0;
+   uint32_t rcc = CreateObjectToolFromJson(request, &toolId);
+   if (rcc != RCC_SUCCESS)
+      return SetObjectToolSaveErrorResponse(context, rcc);
+
+   json_t *tool = GetObjectToolIntoJSON(toolId, context->getUserId(), true);
+   if (tool == nullptr)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object tool [%u] created", toolId);
+
+   context->setResponseData(tool);
+   json_decref(tool);
+   return 201;
+}
+
+/**
+ * Handler for PUT /v1/object-tools/:tool-id
+ */
+int H_ObjectToolUpdate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      return 403;
+
+   uint32_t toolId = context->getPlaceholderValueAsUInt32(L"tool-id");
+   if (toolId == 0)
+      return 400;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Missing request body");
+      return 400;
+   }
+
+   uint32_t rcc = UpdateObjectToolFromJson(toolId, request);
+   if (rcc != RCC_SUCCESS)
+      return SetObjectToolSaveErrorResponse(context, rcc);
+
+   json_t *tool = GetObjectToolIntoJSON(toolId, context->getUserId(), true);
+   if (tool == nullptr)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object tool [%u] updated", toolId);
+
+   context->setResponseData(tool);
+   json_decref(tool);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/object-tools/:tool-id
+ */
+int H_ObjectToolDelete(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      return 403;
+
+   uint32_t toolId = context->getPlaceholderValueAsUInt32(L"tool-id");
+   if (toolId == 0)
+      return 400;
+
+   uint32_t rcc = DeleteObjectToolFromDB(toolId);
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object tool [%u] deleted", toolId);
+      return 204;
+   }
+
+   context->setErrorResponse("Database failure");
+   return 500;
+}
+
+/**
+ * Common implementation for enable/disable handlers
+ */
+static int ChangeObjectToolEnabledState(Context *context, bool enabled)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      return 403;
+
+   uint32_t toolId = context->getPlaceholderValueAsUInt32(L"tool-id");
+   if (toolId == 0)
+      return 400;
+
+   uint32_t rcc = ChangeObjectToolStatus(toolId, enabled);
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object tool [%u] %s", toolId, enabled ? L"enabled" : L"disabled");
+      return 204;
+   }
+
+   context->setErrorResponse("Database failure");
+   return 500;
+}
+
+/**
+ * Handler for POST /v1/object-tools/:tool-id/enable
+ */
+int H_ObjectToolEnable(Context *context)
+{
+   return ChangeObjectToolEnabledState(context, true);
+}
+
+/**
+ * Handler for POST /v1/object-tools/:tool-id/disable
+ */
+int H_ObjectToolDisable(Context *context)
+{
+   return ChangeObjectToolEnabledState(context, false);
+}
+
+/**
  * Execute agent action tool
  */
 static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)

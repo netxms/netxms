@@ -4677,11 +4677,43 @@ paths:
         - BearerAuth: []
       tags:
         - Object Tools
+    post:
+      operationId: createObjectTool
+      summary: Create a new object tool
+      description: |
+        Create a new object tool. The server assigns the tool ID and GUID. Requires
+        SYSTEM_ACCESS_MANAGE_TOOLS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectToolWrite'
+      responses:
+        '201':
+          description: Object tool created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectToolDetails'
+        '400':
+          description: Missing or invalid request body, tool name, or tool type.
+        '403':
+          description: Insufficient access rights (SYSTEM_ACCESS_MANAGE_TOOLS required).
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
   /v1/object-tools/{tool-id}:
     get:
       operationId: getObjectTool
       summary: Get object tool details
-      description: Retrieve full details of a specific object tool.
+      description: |
+        Retrieve full details of a specific object tool. When the caller has
+        SYSTEM_ACCESS_MANAGE_TOOLS rights the response additionally includes the
+        `acl` and (for snmp-table / agent-list tools) `columns` fields.
       parameters:
         - name: tool-id
           in: path
@@ -4702,6 +4734,124 @@ paths:
           description: Access denied.
         '404':
           description: Tool not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
+    put:
+      operationId: updateObjectTool
+      summary: Update an existing object tool
+      description: |
+        Whole-record replace of an existing object tool. Requires SYSTEM_ACCESS_MANAGE_TOOLS.
+        The ACL, table columns, and input field definitions are all replaced by the values
+        in the request body.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectToolWrite'
+      responses:
+        '200':
+          description: Object tool updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectToolDetails'
+        '400':
+          description: Missing or invalid request body, tool name, or tool type.
+        '403':
+          description: Insufficient access rights (SYSTEM_ACCESS_MANAGE_TOOLS required).
+        '404':
+          description: Tool not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
+    delete:
+      operationId: deleteObjectTool
+      summary: Delete an object tool
+      description: |
+        Delete an object tool along with its ACL, table columns and input field definitions.
+        Requires SYSTEM_ACCESS_MANAGE_TOOLS.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      responses:
+        '204':
+          description: Object tool deleted.
+        '400':
+          description: Invalid tool ID.
+        '403':
+          description: Insufficient access rights (SYSTEM_ACCESS_MANAGE_TOOLS required).
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
+  /v1/object-tools/{tool-id}/disable:
+    post:
+      operationId: disableObjectTool
+      summary: Disable an object tool
+      description: |
+        Sets the `disabled` flag on the tool so that it is hidden from per-object tool lists
+        and cannot be executed. Requires SYSTEM_ACCESS_MANAGE_TOOLS.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      responses:
+        '204':
+          description: Object tool disabled.
+        '400':
+          description: Invalid tool ID.
+        '403':
+          description: Insufficient access rights (SYSTEM_ACCESS_MANAGE_TOOLS required).
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+      tags:
+        - Object Tools
+  /v1/object-tools/{tool-id}/enable:
+    post:
+      operationId: enableObjectTool
+      summary: Enable an object tool
+      description: |
+        Clears the `disabled` flag on the tool. Requires SYSTEM_ACCESS_MANAGE_TOOLS.
+      parameters:
+        - name: tool-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object tool ID
+      responses:
+        '204':
+          description: Object tool enabled.
+        '400':
+          description: Invalid tool ID.
+        '403':
+          description: Insufficient access rights (SYSTEM_ACCESS_MANAGE_TOOLS required).
         '500':
           description: Database failure.
       security:
@@ -7076,6 +7226,22 @@ components:
           items:
             $ref: '#/components/schemas/ObjectToolInputField'
           description: Input field definitions
+    ObjectToolColumn:
+      type: object
+      description: Column definition for table tools (snmp-table or agent-list)
+      properties:
+        name:
+          type: string
+          description: Column display name
+        oid:
+          type: string
+          description: Column SNMP OID or agent column expression
+        format:
+          type: integer
+          description: Column data format code
+        captureGroup:
+          type: integer
+          description: Regex capture group number used to extract the cell value (0 for whole match)
     ObjectToolDetails:
       allOf:
         - $ref: '#/components/schemas/ObjectToolSummary'
@@ -7092,10 +7258,107 @@ components:
               description: Tool filter (matching OID for SNMP tools)
             icon:
               type: string
-              description: Icon as hex-encoded image data
+              format: uuid
+              description: UUID of the icon image in the image library; absent when no icon is set
             remotePort:
               type: integer
               description: Remote port for TCP tunnel
+            remoteHost:
+              type: string
+              description: Remote host for TCP tunnel
+            acl:
+              type: array
+              description: |
+                User and group IDs allowed to execute this tool. Only present when the caller
+                has SYSTEM_ACCESS_MANAGE_TOOLS rights.
+              items:
+                type: integer
+            columns:
+              type: array
+              description: |
+                Column definitions for table tools. Only present when the caller has
+                SYSTEM_ACCESS_MANAGE_TOOLS rights and the tool type is snmp-table or agent-list.
+              items:
+                $ref: '#/components/schemas/ObjectToolColumn'
+    ObjectToolWrite:
+      type: object
+      description: |
+        Request body for creating or updating an object tool. The shape mirrors the
+        ObjectToolDetails response, so a tool can be fetched, edited, and put back without
+        translation. Whole-record replace semantics on PUT.
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: Tool name
+        type:
+          $ref: '#/components/schemas/ObjectToolType'
+        data:
+          type: string
+          description: Tool-specific data (command line, script name, URL template, etc.)
+        description:
+          type: string
+        flags:
+          type: object
+          description: Tool flag booleans; missing keys default to false
+          properties:
+            askConfirmation:
+              type: boolean
+            generatesOutput:
+              type: boolean
+            disabled:
+              type: boolean
+            showInCommands:
+              type: boolean
+            snmpIndexedByValue:
+              type: boolean
+            runInContainerContext:
+              type: boolean
+            suppressSuccessMessage:
+              type: boolean
+            setupTcpTunnel:
+              type: boolean
+        filter:
+          type: string
+        confirmationMessage:
+          type: string
+        commandName:
+          type: string
+        commandShortName:
+          type: string
+        icon:
+          type: string
+          format: uuid
+          description: UUID of an existing image library entry; omit or use null UUID for no icon
+        remotePort:
+          type: integer
+        remoteHost:
+          type: string
+        applicableClasses:
+          type: integer
+          description: |
+            Bitmask of applicable object classes. Bit 0 (1) = Node, bit 1 (2) = Interface,
+            bit 2 (4) = Sensor, bit 3 (8) = Access point. Defaults are applied if 0 or missing:
+            URL tools default to all classes, others to Node. Non-Node bits are stripped for
+            tool types other than server-script, url and ssh-command.
+        acl:
+          type: array
+          description: |
+            User and group IDs allowed to execute this tool. Replaces the existing ACL on PUT.
+            Send an empty array to remove all entries.
+          items:
+            type: integer
+        columns:
+          type: array
+          description: Column definitions for snmp-table and agent-list tools. Ignored for other types.
+          items:
+            $ref: '#/components/schemas/ObjectToolColumn'
+        inputFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectToolInputField'
     ObjectToolTextResult:
       type: object
       required:

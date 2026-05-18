@@ -127,10 +127,15 @@ int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
 int H_Objects(Context *context);
 int H_ObjectSearch(Context *context);
+int H_ObjectToolCreate(Context *context);
+int H_ObjectToolDelete(Context *context);
+int H_ObjectToolDisable(Context *context);
+int H_ObjectToolEnable(Context *context);
 int H_ObjectToolExecute(Context *context);
 int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
 int H_ObjectToolsForObject(Context *context);
+int H_ObjectToolUpdate(Context *context);
 int H_ScheduledTaskCreate(Context *context);
 int H_ScheduledTaskDelete(Context *context);
 int H_ScheduledTaskDetails(Context *context);
@@ -398,9 +403,18 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/object-tools")
       .GET(H_ObjectTools)
+      .POST(H_ObjectToolCreate)
       .build();
    RouteBuilder("v1/object-tools/:tool-id")
       .GET(H_ObjectToolDetails)
+      .PUT(H_ObjectToolUpdate)
+      .DELETE(H_ObjectToolDelete)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id/disable")
+      .POST(H_ObjectToolDisable)
+      .build();
+   RouteBuilder("v1/object-tools/:tool-id/enable")
+      .POST(H_ObjectToolEnable)
       .build();
    RouteBuilder("v1/object-tools/:tool-id/execute")
       .POST(H_ObjectToolExecute)

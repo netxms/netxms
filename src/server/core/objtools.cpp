@@ -2729,6 +2729,254 @@ static bool IsToolFilterApplicable(const char *filterXml, const shared_ptr<NetOb
 }
 
 /**
+ * Save object tool record built from a JSON document. If toolId is 0 a new tool is created
+ * and its assigned ID written back to *toolId; otherwise the existing record with that ID is
+ * replaced (whole-record PUT semantics). The accepted JSON shape mirrors the GET response of
+ * /v1/object-tools/:tool-id, so a fetched tool can be edited and put back without translation.
+ */
+static uint32_t SaveObjectToolFromJson(const json_t *config, uint32_t *toolId)
+{
+   // Validate name
+   const char *nameUtf8 = json_object_get_string_utf8(const_cast<json_t*>(config), "name", nullptr);
+   if ((nameUtf8 == nullptr) || (*nameUtf8 == 0))
+      return RCC_INVALID_OBJECT_NAME;
+
+   wchar_t name[MAX_DB_STRING];
+   utf8_to_wchar(nameUtf8, -1, name, MAX_DB_STRING);
+   name[MAX_DB_STRING - 1] = 0;
+
+   // Validate type
+   const char *typeStr = json_object_get_string_utf8(const_cast<json_t*>(config), "type", nullptr);
+   if (typeStr == nullptr)
+      return RCC_INVALID_REQUEST;
+   int toolType = ToolTypeFromString(typeStr);
+   if (toolType == -1)
+      return RCC_INVALID_REQUEST;
+
+   // Applicable classes: validate and clamp to legal mask for the tool type
+   uint32_t defaultClasses = (toolType == TOOL_TYPE_URL) ? TOOL_APPLICABLE_ALL_VALID : TOOL_APPLICABLE_NODE;
+   uint32_t applicableClasses = json_object_get_uint32(const_cast<json_t*>(config), "applicableClasses", defaultClasses);
+   applicableClasses &= TOOL_APPLICABLE_ALL_VALID;
+   if (applicableClasses == 0)
+      applicableClasses = defaultClasses;
+   if ((applicableClasses & ~TOOL_APPLICABLE_NODE) && (toolType != TOOL_TYPE_SERVER_SCRIPT) && (toolType != TOOL_TYPE_URL) && (toolType != TOOL_TYPE_SSH_COMMAND))
+      applicableClasses = TOOL_APPLICABLE_NODE;
+
+   // Compose flag bitmask from boolean object (matches GET response shape)
+   uint32_t flags = static_cast<uint32_t>(json_object_get_flags(const_cast<json_t*>(json_object_get(const_cast<json_t*>(config), "flags")), s_toolFlagMapping));
+
+   String data = json_object_get_string(const_cast<json_t*>(config), "data", _T(""));
+   String description = json_object_get_string(const_cast<json_t*>(config), "description", _T(""));
+   String filter = json_object_get_string(const_cast<json_t*>(config), "filter", _T(""));
+   String confirmation = json_object_get_string(const_cast<json_t*>(config), "confirmationMessage", _T(""));
+   String commandName = json_object_get_string(const_cast<json_t*>(config), "commandName", _T(""));
+   String commandShortName = json_object_get_string(const_cast<json_t*>(config), "commandShortName", _T(""));
+   String remoteHost = json_object_get_string(const_cast<json_t*>(config), "remoteHost", _T(""));
+   uuid iconGuid = json_object_get_uuid(const_cast<json_t*>(config), "icon");
+   int32_t remotePort = json_object_get_int32(const_cast<json_t*>(config), "remotePort", 0);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   bool newTool = (*toolId == 0);
+   if (!newTool && !IsDatabaseRecordExist(hdb, _T("object_tools"), _T("tool_id"), *toolId))
+   {
+      DBRollback(hdb);
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_INVALID_TOOL_ID;
+   }
+
+   DB_STATEMENT hStmt;
+   if (newTool)
+   {
+      *toolId = CreateUniqueId(IDG_OBJECT_TOOL);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
+                             _T("tool_data,description,flags,tool_filter,")
+                             _T("confirmation_text,command_name,command_short_name,")
+                             _T("icon,remote_port,remote_host,applicable_classes,")
+                             _T("tool_id,guid) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
+                             _T("tool_data=?,description=?,flags=?,")
+                             _T("tool_filter=?,confirmation_text=?,command_name=?,")
+                             _T("command_short_name=?,icon=?,remote_port=?,remote_host=?,")
+                             _T("applicable_classes=? ")
+                             _T("WHERE tool_id=?"));
+   }
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolType);
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, data, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, flags);
+   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, filter, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, confirmation, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, commandName, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, commandShortName, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, iconGuid);
+   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, remotePort);
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, remoteHost, DB_BIND_STATIC);
+   DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, applicableClasses);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, *toolId);
+   if (newTool)
+      DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, uuid::generate());
+
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   // Replace ACL
+   hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_acl WHERE tool_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   json_t *acl = json_object_get(const_cast<json_t*>(config), "acl");
+   if (json_is_array(acl) && (json_array_size(acl) > 0))
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"), json_array_size(acl) > 1);
+      if (hStmt == nullptr)
+         return ReturnDBFailure(hdb, hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+
+      size_t index;
+      json_t *entry;
+      json_array_foreach(acl, index, entry)
+      {
+         if (!json_is_integer(entry))
+            continue;
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(json_integer_value(entry)));
+         if (!DBExecute(hStmt))
+            return ReturnDBFailure(hdb, hStmt);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   // Replace table columns (only meaningful for SNMP_TABLE / AGENT_LIST tool types)
+   hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+   {
+      json_t *columns = json_object_get(const_cast<json_t*>(config), "columns");
+      if (json_is_array(columns) && (json_array_size(columns) > 0))
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
+                                _T("col_number,col_name,col_oid,col_format,col_substr) ")
+                                _T("VALUES (?,?,?,?,?,?)"), json_array_size(columns) > 1);
+         if (hStmt == nullptr)
+            return ReturnDBFailure(hdb, hStmt);
+
+         size_t index;
+         json_t *c;
+         json_array_foreach(columns, index, c)
+         {
+            if (!json_is_object(c))
+               continue;
+            String colName = json_object_get_string(c, "name", _T(""));
+            String colOid = json_object_get_string(c, "oid", _T(""));
+
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(index));
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, colName, DB_BIND_STATIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, colOid, DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "format", 0));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, json_object_get_int32(c, "captureGroup", 0));
+
+            if (!DBExecute(hStmt))
+               return ReturnDBFailure(hdb, hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   // Replace input field definitions
+   hStmt = DBPrepare(hdb, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   json_t *inputFields = json_object_get(const_cast<json_t*>(config), "inputFields");
+   if (json_is_array(inputFields) && (json_array_size(inputFields) > 0))
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num,default_value) VALUES ('T',?,?,?,?,?,?,?)"), json_array_size(inputFields) > 1);
+      if (hStmt == nullptr)
+         return ReturnDBFailure(hdb, hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *toolId);
+
+      size_t index;
+      json_t *f;
+      json_array_foreach(inputFields, index, f)
+      {
+         if (!json_is_object(f))
+            continue;
+         String fieldName = json_object_get_string(f, "name", _T(""));
+         String displayName = json_object_get_string(f, "displayName", _T(""));
+         String defValue = json_object_get_string(f, "defaultValue", _T(""));
+         int32_t sequence = json_object_get_int32(f, "sequence", static_cast<int32_t>(index + 1));
+
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, fieldName, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, json_object_get_int32(f, "type", 0));
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, displayName, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, json_object_get_int32(f, "flags", 0));
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, sequence);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, defValue, DB_BIND_STATIC);
+
+         if (!DBExecute(hStmt))
+            return ReturnDBFailure(hdb, hStmt);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   DBCommit(hdb);
+   DBConnectionPoolReleaseConnection(hdb);
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, *toolId);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Create new object tool from JSON document. On success *newToolId is set to the assigned ID.
+ */
+uint32_t NXCORE_EXPORTABLE CreateObjectToolFromJson(const json_t *config, uint32_t *newToolId)
+{
+   uint32_t toolId = 0;
+   uint32_t rcc = SaveObjectToolFromJson(config, &toolId);
+   if (rcc == RCC_SUCCESS)
+      *newToolId = toolId;
+   return rcc;
+}
+
+/**
+ * Update existing object tool from JSON document. Whole-record replace semantics.
+ */
+uint32_t NXCORE_EXPORTABLE UpdateObjectToolFromJson(uint32_t toolId, const json_t *config)
+{
+   if (toolId == 0)
+      return RCC_INVALID_TOOL_ID;
+   return SaveObjectToolFromJson(config, &toolId);
+}
+
+/**
  * Get object tools available for given user into JSON document.
  * If objectId is non-zero, only tools applicable to that object are returned.
  */
@@ -3004,6 +3252,62 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
       json_object_set_new(tool, "applicableClasses", json_integer(DBGetFieldULong(hResult, 0, 12)));
 
       LoadInputFieldDefinitions(toolId, hdb, tool);
+
+      // ACL and table columns are sensitive and only exposed to callers with MANAGE_TOOLS rights,
+      // so that GET → edit → PUT round-trips work for admin clients without leaking the ACL or
+      // SNMP/agent column configuration to ordinary tool-execution callers.
+      if (fullAccess)
+      {
+         DB_STATEMENT hStmtAcl = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
+         if (hStmtAcl != nullptr)
+         {
+            DBBind(hStmtAcl, 1, DB_SQLTYPE_INTEGER, toolId);
+            DB_RESULT hResultAcl = DBSelectPrepared(hStmtAcl);
+            if (hResultAcl != nullptr)
+            {
+               json_t *acl = json_array();
+               int aclCount = DBGetNumRows(hResultAcl);
+               for(int i = 0; i < aclCount; i++)
+                  json_array_append_new(acl, json_integer(DBGetFieldULong(hResultAcl, i, 0)));
+               json_object_set_new(tool, "acl", acl);
+               DBFreeResult(hResultAcl);
+            }
+            DBFreeStatement(hStmtAcl);
+         }
+
+         if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+         {
+            DB_STATEMENT hStmtCol = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
+            if (hStmtCol != nullptr)
+            {
+               DBBind(hStmtCol, 1, DB_SQLTYPE_INTEGER, toolId);
+               DB_RESULT hResultCol = DBSelectPrepared(hStmtCol);
+               if (hResultCol != nullptr)
+               {
+                  json_t *columns = json_array();
+                  int colCount = DBGetNumRows(hResultCol);
+                  for(int i = 0; i < colCount; i++)
+                  {
+                     json_t *col = json_object();
+
+                     TCHAR colBuffer[MAX_DB_STRING];
+                     DBGetField(hResultCol, i, 0, colBuffer, MAX_DB_STRING);
+                     json_object_set_new(col, "name", json_string_t(colBuffer));
+
+                     DBGetField(hResultCol, i, 1, colBuffer, MAX_DB_STRING);
+                     json_object_set_new(col, "oid", json_string_t(colBuffer));
+
+                     json_object_set_new(col, "format", json_integer(DBGetFieldLong(hResultCol, i, 2)));
+                     json_object_set_new(col, "captureGroup", json_integer(DBGetFieldLong(hResultCol, i, 3)));
+                     json_array_append_new(columns, col);
+                  }
+                  json_object_set_new(tool, "columns", columns);
+                  DBFreeResult(hResultCol);
+               }
+               DBFreeStatement(hStmtCol);
+            }
+         }
+      }
    }
 
    DBFreeResult(hResult);
