@@ -231,24 +231,45 @@ MyDriver::MyDriver(Config *config)
 
 ## Adding a New Driver
 
-1. Create directory: `src/ncdrivers/mydriver/`
-2. Create files:
-   - `mydriver.cpp` - Implementation
-   - `Makefile.am` - Build configuration
-3. Update `src/ncdrivers/Makefile.am` to include new driver
-4. Implement the `NCDriver` interface
-5. Add `DECLARE_NCD_ENTRY_POINT` macro
+A new NC driver must be registered in **all** of the following — easy to miss one and end up with a driver that compiles in isolation but doesn't appear in the build summary or `.ncd` install dir:
+
+1. **Create directory and files** under `src/ncdrivers/mydriver/`:
+   - `mydriver.cpp` — implementation
+   - `Makefile.am` — only needs `EXTRA_DIST = mydriver.cpp mydriver.vcxproj mydriver.vcxproj.filters` (the actual build rules live in the parent `src/ncdrivers/Makefile.am`)
+   - `mydriver.vcxproj` + `.vcxproj.filters` — copy from a similar driver, swap project name + sources, generate a fresh GUID
+2. **`src/ncdrivers/Makefile.am`**:
+   - Add `mydriver.la` to `EXTRA_LTLIBRARIES`
+   - Add per-driver block (sources, CPPFLAGS, LDFLAGS, LIBADD) — alphabetical placement. For jansson-using drivers wrap the jansson link inside `if USE_INTERNAL_JANSSON … else … endif` (see `matrix_la_*` or `slack_la_*` as templates).
+3. **`configure.ac`**:
+   - Line ~1097 (default `NCDRV_MODULES` list) — add driver name, alphabetical
+   - Line ~2529 (libcurl-conditional `NCDRV_MODULES` list) — add driver name if it uses libcurl
+   - AC_CONFIG_FILES block (~line 5181) — add `src/ncdrivers/mydriver/Makefile`
+   - `NCDRV_LTLIBRARIES` (line 4890) is auto-derived from `NCDRV_MODULES` via perl — **no manual edit**
+4. **`netxms.sln`** — add a `Project(...)` entry for the new vcxproj plus per-configuration build rows in `GlobalSection(ProjectConfigurationPlatforms)`. Model after the closest existing driver (e.g. `msteams` at sln line 321).
+5. **`doc/internal/debug_tags.txt`** — add `ncd.mydriver` if you introduce a new debug tag (root CLAUDE.md requirement).
+6. **Implement** the `NCDriver` interface and add `DECLARE_NCD_ENTRY_POINT` macro with a static `NCConfigurationTemplate s_config(needSubject, needRecipient)`.
+7. Run `./init-source-tree && ./configure --with-server` and check that the driver appears in the build summary's NC driver list. `install-exec-hook` in `src/ncdrivers/Makefile.am` iterates `$(DRIVERS)` automatically — nothing to edit there.
 
 ## Build Configuration
 
-In `mydriver/Makefile.am`:
+`mydriver/Makefile.am` is intentionally minimal — actual build rules live in the parent `src/ncdrivers/Makefile.am`:
 
 ```makefile
-pkglib_LTLIBRARIES = ncd_mydriver.la
+EXTRA_DIST = mydriver.cpp mydriver.vcxproj mydriver.vcxproj.filters
+```
 
-ncd_mydriver_la_SOURCES = mydriver.cpp
-ncd_mydriver_la_LDFLAGS = -module -avoid-version
-ncd_mydriver_la_LIBADD = ../../../libnetxms/libnetxms.la
+Parent `src/ncdrivers/Makefile.am` block (for a jansson-using driver):
+
+```makefile
+mydriver_la_SOURCES = mydriver/mydriver.cpp
+mydriver_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+mydriver_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
+mydriver_la_LIBADD = ../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+mydriver_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+mydriver_la_LIBADD += -ljansson
+endif
 ```
 
 ## Debugging
