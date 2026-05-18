@@ -129,6 +129,7 @@ ndd.cisco.sb	Cisco-SB network device driver
 ndd.cisco.wlc	Cisco-WLC network device driver
 ndd.h3c		H3C network device driver
 ndd.huawei.optix	Huawei OptiX network device driver
+ndd.lenovo.flex	Lenovo Flex System Fabric network device driver
 ndd.mikrotik    Mikrotik network device driver
 ndd.moxa.edr    MOXA-EDR network device driver
 ndd.net-snmp	net-snmp network device driver
