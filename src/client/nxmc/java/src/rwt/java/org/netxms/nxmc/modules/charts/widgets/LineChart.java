@@ -468,11 +468,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          Threshold[] tr = chart.getThreshold(i);
          if (items.get(i).showThresholds && !configuration.isStacked() && tr != null)
          {
+            boolean inverted = items.get(i).invertValues;
             for (int j = 0; j < tr.length; j++)
             {
                try
                {
-                  int y = axis.getPixelCoordinate(Double.parseDouble(tr[j].getValue()));
+                  double value = Double.parseDouble(tr[j].getValue());
+                  int y = axis.getPixelCoordinate(inverted ? -value : value);
                   final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
                   gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
                   gc.setLineStyle(SWT.LINE_DOT);
