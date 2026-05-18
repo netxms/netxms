@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -873,7 +873,22 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
             std::string ou = m_bindGuid.toString().getUTF8StdString();
             std::string cn = m_guid.toString().getUTF8StdString();
             int32_t days = ConfigReadInt(_T("AgentTunnels.Certificates.ValidityPeriod"), 90);
-            X509 *cert = IssueCertificate(certRequest, ou.c_str(), cn.c_str(), days);
+
+            // Agents up to and including 6.1.2 set PKCS#10 version field to 1 instead of the
+            // RFC 2986 mandated 0. OpenSSL 3.5+ enforces the spec, so for those legacy agents
+            // we ask IssueCertificate to verify the signature without the version check.
+            bool acceptLegacyVersion = false;
+            if (m_agentVersion != nullptr)
+            {
+               uint32_t major = 0, minor = 0, release = 0;
+               if (_stscanf(m_agentVersion, _T("%u.%u.%u"), &major, &minor, &release) >= 2)
+               {
+                  uint32_t encoded = (major << 16) | (minor << 8) | release;
+                  acceptLegacyVersion = (encoded <= ((6u << 16) | (1u << 8) | 2u));
+               }
+            }
+
+            X509 *cert = IssueCertificate(certRequest, ou.c_str(), cn.c_str(), days, acceptLegacyVersion);
             if (cert != nullptr)
             {
                LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);

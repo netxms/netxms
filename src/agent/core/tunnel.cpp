@@ -1251,7 +1251,7 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
    X509_REQ *req = X509_REQ_new();
    if (req != nullptr)
    {
-      X509_REQ_set_version(req, 1);
+      X509_REQ_set_version(req, 0);
       X509_NAME *subject = X509_REQ_get_subject_name(req);
       if (subject != nullptr)
       {

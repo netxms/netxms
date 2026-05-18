@@ -79,10 +79,54 @@ static Mutex s_certificateStoreLock;
  */
 static VolatileCounter s_logRecordId = 0;
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+
+/**
+ * Verify CSR signature without enforcing the PKCS#10 version field. NetXMS agents up to and
+ * including 6.1.2 send CSRs with version=1, which OpenSSL 3.5+ rejects in X509_REQ_verify_ex.
+ */
+static bool VerifyCertificateRequestSignature(X509_REQ *request, EVP_PKEY *pubkey)
+{
+   const ASN1_BIT_STRING *signature = nullptr;
+   const X509_ALGOR *algorithm = nullptr;
+   X509_REQ_get0_signature(request, &signature, &algorithm);
+   if ((signature == nullptr) || (algorithm == nullptr))
+      return false;
+
+   int digestNid = NID_undef;
+   if (!OBJ_find_sigid_algs(OBJ_obj2nid(algorithm->algorithm), &digestNid, nullptr) || (digestNid == NID_undef))
+      return false;
+
+   const EVP_MD *md = EVP_get_digestbynid(digestNid);
+   if (md == nullptr)
+      return false;
+
+   unsigned char *tbs = nullptr;
+   int tbsLen = i2d_re_X509_REQ_tbs(request, &tbs);
+   if (tbsLen <= 0)
+      return false;
+
+   bool result = false;
+   EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+   if (ctx != nullptr)
+   {
+      if ((EVP_DigestVerifyInit(ctx, nullptr, md, nullptr, pubkey) == 1) &&
+          (EVP_DigestVerify(ctx, ASN1_STRING_get0_data(signature), ASN1_STRING_length(signature), tbs, tbsLen) == 1))
+      {
+         result = true;
+      }
+      EVP_MD_CTX_free(ctx);
+   }
+   OPENSSL_free(tbs);
+   return result;
+}
+
+#endif   /* OPENSSL_VERSION_NUMBER >= 0x30000000L */
+
 /**
  * Issue certificate signed with server's certificate
  */
-X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days)
+X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days, bool acceptLegacyVersion)
 {
    nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: new certificate request (CN override: %hs, OU override: %hs)"),
             (cn != nullptr) ? cn : "<not set>", (ou != nullptr) ? ou : "<not set>");
@@ -206,7 +250,15 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       return nullptr;
    }
 
-   if (X509_REQ_verify(request, pubkey) != 1)
+   bool verified = (X509_REQ_verify(request, pubkey) == 1);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   if (!verified && acceptLegacyVersion)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: standard verification failed for legacy agent, retrying without PKCS#10 version check"));
+      verified = VerifyCertificateRequestSignature(request, pubkey);
+   }
+#endif
+   if (!verified)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: certificate request verification failed"));
       EVP_PKEY_free(pubkey);
