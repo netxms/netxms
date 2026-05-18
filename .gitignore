@@ -48,6 +48,8 @@ target
 .vscode
 .tool-versions
 
+compile_commands.json
+
 /build/netxms-build-tag.h
 /build/netxms-build-tag.iss
 /build/netxms-build-tag.properties
