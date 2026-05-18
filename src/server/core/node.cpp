@@ -172,7 +172,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_lastAgentCommTime = TIMESTAMP_NEVER;
    m_lastAgentConnectAttempt = TIMESTAMP_NEVER;
    m_agentRestartTime = TIMESTAMP_NEVER;
-   m_vrrpInfo = nullptr;
    m_topologyRebuildTimestamp = TIMESTAMP_NEVER;
    m_l1TopologyUsed = false;
    m_topologyDepth = -1;
@@ -308,7 +307,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_lastAgentCommTime = TIMESTAMP_NEVER;
    m_lastAgentConnectAttempt = TIMESTAMP_NEVER;
    m_agentRestartTime = TIMESTAMP_NEVER;
-   m_vrrpInfo = nullptr;
    m_topologyRebuildTimestamp = TIMESTAMP_NEVER;
    m_l1TopologyUsed = false;
    m_topologyDepth = -1;
@@ -384,7 +382,6 @@ Node::~Node()
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
-   delete m_vrrpInfo;
    delete m_snmpSecurity;
    delete m_snmpTrapSecurity;
    delete m_radioInterfaces;
@@ -1848,7 +1845,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
    lockProperties();
    if (m_vrrpInfo != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_name, (int)m_id, m_vrrpInfo->size());
+      nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%u]): m_vrrpInfo->size()=%d"), m_name, m_id, m_vrrpInfo->size());
 
       for(i = 0; i < m_vrrpInfo->size(); i++)
       {
@@ -6785,8 +6782,7 @@ bool Node::confPollSnmp()
    {
       lockProperties();
       m_capabilities |= NC_IS_VRRP;
-      delete m_vrrpInfo;
-      m_vrrpInfo = vrrpInfo;
+      m_vrrpInfo = shared_ptr<VrrpInfo>(vrrpInfo);
       unlockProperties();
    }
    else
@@ -9699,11 +9695,11 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
    if (m_lldpNodeId != nullptr)
       msg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
-   msg->setField(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
+   msg->setField(VID_USE_IFXTABLE, m_nUseIfXTable);
    if (m_vrrpInfo != nullptr)
    {
-      msg->setField(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
-      msg->setField(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
+      msg->setField(VID_VRRP_VERSION, static_cast<uint16_t>(m_vrrpInfo->getVersion()));
+      msg->setField(VID_VRRP_VR_COUNT, static_cast<uint16_t>(m_vrrpInfo->size()));
    }
    msg->setField(VID_DRIVER_NAME, m_driver->getName());
    msg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
@@ -9723,12 +9719,12 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
    msg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
    msg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
-   msg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
-   msg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
+   msg->setField(VID_RACK_ORIENTATION, static_cast<int16_t>(m_rackOrientation));
+   msg->setField(VID_ICMP_COLLECTION_MODE, static_cast<int16_t>(m_icmpStatCollectionMode));
    msg->setField(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr))
    {
-      IcmpStatCollector *collector = m_icmpStatCollectors->get(_T("PRI"));
+      IcmpStatCollector *collector = m_icmpStatCollectors->get(L"PRI");
       if (collector != nullptr)
       {
          msg->setField(VID_ICMP_LAST_RESPONSE_TIME, collector->last());

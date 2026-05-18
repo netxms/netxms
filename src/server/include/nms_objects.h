@@ -3987,7 +3987,7 @@ protected:
    shared_ptr<ArpCache> m_arpCache;
    shared_ptr<LinkLayerNeighbors> m_linkLayerNeighbors;
    shared_ptr<VlanList> m_vlans;
-   VrrpInfo *m_vrrpInfo;
+   shared_ptr<VrrpInfo> m_vrrpInfo;
    StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
    BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
@@ -4384,6 +4384,7 @@ public:
    shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors() const { return GetAttributeWithLock(m_linkLayerNeighbors, m_topologyMutex); }
    void invalidateLinkLayerNeighbor(uint32_t ifIndex);
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
+   shared_ptr<VrrpInfo> getVrrpInfo() const { return GetAttributeWithLock(m_vrrpInfo, m_mutexProperties); }
    shared_ptr<ComponentTree> getComponents() const { return GetAttributeWithLock(m_components, m_mutexProperties); }
    shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
 
