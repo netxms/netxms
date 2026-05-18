@@ -48,6 +48,8 @@ Source: "..\..\..\x64\Release\libnxmb.dll"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\libnxmb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\x64\Release\libethernetip.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\..\..\x64\Release\libethernetip.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
+Source: "..\..\..\x64\Release\libargon2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\..\..\x64\Release\libargon2.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\x64\Release\libpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\..\..\x64\Release\libpng.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
