@@ -198,8 +198,8 @@ Create and configure your database (PostgreSQL, MySQL, etc.) as per [Installatio
 
 6. **Run the server and agent**:
    ```bash
-   /opt/netxms/bin/netxmsd -D6 #run server with debug level 6 not as a daemon
-   /opt/netxms/bin/netxms-agent -D6 #run agent with debug level 6 not as a daemon
+   /opt/netxms/bin/netxmsd -D6 # Run the server with debug level 6 in foreground mode (not as a daemon)
+   /opt/netxms/bin/nxagentd -D6 # Run the agent with debug level 6 in foreground mode (not as a daemon)
    ```
 
 7. **Build and run the Java clients**:
