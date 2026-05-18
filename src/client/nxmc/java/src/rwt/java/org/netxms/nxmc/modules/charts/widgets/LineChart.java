@@ -472,7 +472,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
             {
                try
                {
-                  int y = axis.getPixelCoordinate(Integer.parseInt(tr[j].getValue()));
+                  int y = axis.getPixelCoordinate(Double.parseDouble(tr[j].getValue()));
                   final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)tr[j]).getFireEvent());
                   gc.setForeground(StatusDisplayInfo.getStatusColor(event.getSeverity()));
                   gc.setLineStyle(SWT.LINE_DOT);
