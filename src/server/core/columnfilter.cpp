@@ -227,7 +227,8 @@ StringBuffer ColumnFilter::generateSql()
 				shared_ptr<NetObj> object = FindObjectById(static_cast<uint32_t>(m_value.numericValue));
 				if (object != NULL)
 				{
-					unique_ptr<SharedObjectArray<NetObj>> children = object->getAllChildren(true);
+					// For any-class columns (e.g. audit_log.object_id) include non-event-source descendants like interfaces
+					unique_ptr<SharedObjectArray<NetObj>> children = object->getAllChildren((m_columnFlags & LCF_ANY_OBJECT_CLASS) == 0);
 					if (children->size() > 0)
 					{
 						sql.append(m_column);
