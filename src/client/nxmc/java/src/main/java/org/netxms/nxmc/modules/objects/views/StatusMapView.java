@@ -105,7 +105,7 @@ public class StatusMapView extends ObjectView
          public void setFilterString(String string)
          {
             map.setTextFilter(string);
-            map.refresh();
+            map.reapplyFilter();
          }
       });
 	}
@@ -117,14 +117,14 @@ public class StatusMapView extends ObjectView
    public void dispose()
    {
       final PreferenceStore settings = PreferenceStore.getInstance();
-      
+
       if (actionFlatView.isChecked())
          settings.set("StatusMap.DisplayMode", 0);
       else if (actionGroupView.isChecked())
          settings.set("StatusMap.DisplayMode", 1);
       else if (actionRadialView.isChecked())
          settings.set("StatusMap.DisplayMode", 2);
-      
+
       settings.set("StatusMap.FitToScreen", actionFitToScreen.isChecked());
 
       super.dispose();
@@ -205,7 +205,7 @@ public class StatusMapView extends ObjectView
 
 	/**
     * Rebuild status view
-    * 
+    *
     * @param radial true if should be redrawn in radial way
     */
    private void rebuild(boolean radial)
@@ -268,7 +268,7 @@ public class StatusMapView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof ServiceRoot) || 
+      return (context != null) && ((context instanceof Container) || (context instanceof Collector) || (context instanceof ServiceRoot) ||
             (context instanceof Cluster) || (context instanceof Rack) || (context instanceof Chassis) || (context instanceof WirelessDomain));
    }
 

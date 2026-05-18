@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -104,8 +106,8 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
          buildSection(rootObjectId, "");
 		else
 			buildFlatView();
-		dataArea.layout(true, true);
-		updateScrollBars();
+
+		reapplyFilter();
 
 		for(Runnable l : refreshListeners)
 		   l.run();
@@ -117,24 +119,25 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
    @Override
    public void reapplyFilter()
    {
-      if (groupObjects)
-      {
-         // For grouped mode, sections may need to appear/disappear
-         // which requires a full rebuild
-         refresh();
-         return;
-      }
+      Set<Composite> activeSections = new HashSet<>();
 
-      // For flat (ungrouped) mode, just hide/show existing widgets
       synchronized(statusWidgets)
       {
          for(Map.Entry<Long, ObjectStatusWidget> entry : statusWidgets.entrySet())
          {
             AbstractObject object = session.findObjectById(entry.getKey());
             if (object != null)
-               entry.getValue().setVisible(isAcceptedByFilter(object));
+            {
+               boolean visible = isAcceptedByFilter(object);
+               entry.getValue().setVisible(visible);
+               if (visible)
+                  activeSections.add(groupObjects ? entry.getValue().getParent().getParent() : entry.getValue().getParent());
+            }
          }
       }
+
+      for(Composite section : sections)
+         section.setVisible(activeSections.contains(section));
 
       dataArea.layout(true, true);
       updateScrollBars();
@@ -151,7 +154,6 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 
       List<AbstractObject> objects = new ArrayList<AbstractObject>(
             root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE, AbstractObject.OBJECT_ACCESSPOINT }));
-		filterObjects(objects);
       Collections.sort(objects, (o1, o2) -> o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias()));
 
 		final Composite clientArea = new Composite(dataArea, SWT.NONE);
@@ -199,9 +201,6 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		for(AbstractObject o : objects)
 		{
          if (!isLeafObject(o))
-				continue;
-
-			if (!isAcceptedByFilter(o))
 				continue;
 
 			if (section == null)
@@ -326,18 +325,16 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 
                if (isAcceptedByFilter(object))
                {
+                  w.setVisible(true);
+                  if (groupObjects)
+                     w.getParent().getParent().setVisible(true);
                   w.updateObject(object);
                }
                else
                {
-                  // object no longer pass filters
-                  synchronized(statusWidgets)
-                  {
-                     w.dispose();
-                     statusWidgets.remove(object.getObjectId());
-                     dataArea.layout(true, true);
-                     updateScrollBars();
-                  }
+                  w.setVisible(false);
+                  dataArea.layout(true, true);
+                  updateScrollBars();
                }
 				});
 			}
