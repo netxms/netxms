@@ -160,6 +160,15 @@
     <ClCompile Include="ethernetip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="extension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extension_lifecycle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extension_registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="messages.h">
@@ -208,6 +217,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\rwlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="extension.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

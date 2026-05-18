@@ -437,6 +437,9 @@
     <ClCompile Include="exec.cpp" />
     <ClCompile Include="extagent.cpp" />
     <ClCompile Include="extdp.cpp" />
+    <ClCompile Include="extension.cpp" />
+    <ClCompile Include="extension_lifecycle.cpp" />
+    <ClCompile Include="extension_registry.cpp" />
     <ClCompile Include="filemon.cpp" />
     <ClCompile Include="hddinfo.cpp" />
     <ClCompile Include="localdb.cpp" />
@@ -482,6 +485,7 @@
     <ClInclude Include="..\..\..\include\nxqueue.h" />
     <ClInclude Include="..\..\..\include\nxstat.h" />
     <ClInclude Include="..\..\..\include\rwlock.h" />
+    <ClInclude Include="extension.h" />
     <ClInclude Include="messages.h" />
     <ClInclude Include="nxagentd.h" />
     <ClInclude Include="resource.h" />
