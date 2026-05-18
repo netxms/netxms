@@ -69,6 +69,7 @@ public class ConnectionPointComparator extends ViewerComparator
 			case SearchResult.COLUMN_INTERFACE:
          case SearchResult.COLUMN_NIC_VENDOR:
 			case SearchResult.COLUMN_SWITCH:
+			case SearchResult.COLUMN_SWITCH_IP:
 			case SearchResult.COLUMN_PORT:
 				result = labelProvider.getColumnText(e1, column).compareToIgnoreCase(labelProvider.getColumnText(e2, column));
 				break;

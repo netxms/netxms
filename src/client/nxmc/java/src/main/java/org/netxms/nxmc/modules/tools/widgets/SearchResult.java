@@ -64,9 +64,10 @@ public class SearchResult extends Composite
    public static final int COLUMN_NIC_VENDOR = 4;
    public static final int COLUMN_IP_ADDRESS = 5;
    public static final int COLUMN_SWITCH = 6;
-   public static final int COLUMN_PORT = 7;
-   public static final int COLUMN_INDEX = 8;
-   public static final int COLUMN_TYPE = 9;
+   public static final int COLUMN_SWITCH_IP = 7;
+   public static final int COLUMN_PORT = 8;
+   public static final int COLUMN_INDEX = 9;
+   public static final int COLUMN_TYPE = 10;
 
    private View view;
    private SortableTableViewer viewer;
@@ -90,8 +91,8 @@ public class SearchResult extends Composite
       this.view = view;
       setLayout(new FillLayout());
 
-      final String[] names = { i18n.tr("Seq."), i18n.tr("Node"), i18n.tr("Interface"), i18n.tr("MAC"), i18n.tr("NIC vendor"), i18n.tr("IP"), i18n.tr("Switch"), i18n.tr("Port"), i18n.tr("Index"), i18n.tr("Type") };
-      final int[] widths = { 70, 120, 120, 180, 90, 90, 120, 120, 60, 60 };
+      final String[] names = { i18n.tr("Seq."), i18n.tr("Node"), i18n.tr("Interface"), i18n.tr("MAC"), i18n.tr("NIC vendor"), i18n.tr("IP"), i18n.tr("Switch"), i18n.tr("Switch IP"), i18n.tr("Port"), i18n.tr("Index"), i18n.tr("Type") };
+      final int[] widths = { 70, 120, 120, 180, 90, 90, 120, 90, 120, 60, 60 };
       viewer = new SortableTableViewer(this, names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION, configPrefix);
       viewer.setContentProvider(new ArrayContentProvider());
       ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider(viewer);

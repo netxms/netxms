@@ -28,8 +28,12 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ConnectionPointType;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.nxmc.Registry;
@@ -77,6 +81,25 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
+	}
+
+	/**
+	 * Get IP address of the switch (or access point) the connection point belongs to.
+	 *
+	 * @param cp connection point
+	 * @return IP address as string, or empty string if not available
+	 */
+	private String getSwitchIpAddress(ConnectionPoint cp)
+	{
+	   if (cp.getNodeId() == 0)
+	      return "";
+	   AbstractObject object = session.findObjectById(cp.getNodeId());
+	   InetAddressEx addr = null;
+	   if (object instanceof AbstractNode)
+	      addr = ((AbstractNode)object).getPrimaryIP();
+	   else if (object instanceof AccessPoint)
+	      addr = ((AccessPoint)object).getIpAddress();
+	   return ((addr != null) && addr.isValidUnicastAddress()) ? addr.getHostAddress() : "";
 	}
 
 	/**
@@ -130,6 +153,8 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				return (a != null) ? a.getHostAddress() : ""; //$NON-NLS-1$
 			case SearchResult.COLUMN_SWITCH:
             return (cp.getNodeId() != 0) ? getObjectName(cp.getNodeId()) : "n/a";
+         case SearchResult.COLUMN_SWITCH_IP:
+            return getSwitchIpAddress(cp);
 			case SearchResult.COLUMN_PORT:
             return (cp.getInterfaceId() != 0) ? getObjectName(cp.getInterfaceId()) : "n/a";
          case SearchResult.COLUMN_INDEX:
