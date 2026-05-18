@@ -562,25 +562,25 @@ uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
 	msg.setField(VID_PARAMETER, name);
    uint32_t rcc;
    if (sendMessage(&msg))
-	{
-		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != nullptr)
-		{
-			rcc = response->getFieldAsUInt32(VID_RCC);
-			if (rcc == ERR_SUCCESS)
-				value->updateFromMessage(*response);
-			delete response;
-		}
-		else
-		{
-			rcc = ERR_INTERNAL_ERROR;
-		}
-	}
-	else
-	{
-		rcc = ERR_CONNECTION_BROKEN;
-	}
-	return rcc;
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+            value->updateFromMessage(*response);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_INTERNAL_ERROR;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
 }
 
 /**
@@ -592,29 +592,29 @@ uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
 	msg.setField(VID_PARAMETER, name);
    uint32_t rcc;
    if (sendMessage(&msg))
-	{
-		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != nullptr)
-		{
-			rcc = response->getFieldAsUInt32(VID_RCC);
-			if (rcc == ERR_SUCCESS)
-			{
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
             UINT32 count = response->getFieldAsUInt32(VID_NUM_STRINGS);
             for(UINT32 i = 0; i < count; i++)
-					value->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
-			}
-			delete response;
-		}
-		else
-		{
-			rcc = ERR_INTERNAL_ERROR;
-		}
-	}
-	else
-	{
-		rcc = ERR_CONNECTION_BROKEN;
-	}
-	return rcc;
+               value->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_INTERNAL_ERROR;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
 }
 
 /**

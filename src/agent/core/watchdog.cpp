@@ -95,13 +95,13 @@ void StartWatchdog()
 
    s_watchdog = new ProcessExecutor(szCmdLine);
    if (s_watchdog->execute())
-	{
-	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
-	}
-	else
-	{
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
+   }
+   else
+   {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create process \"%s\""), szCmdLine);
-	}
+   }
 }
 
 /**

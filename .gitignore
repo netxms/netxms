@@ -47,6 +47,7 @@ target
 .vs
 .vscode
 .tool-versions
+.cache
 
 compile_commands.json
 

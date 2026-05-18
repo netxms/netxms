@@ -227,12 +227,12 @@ void MasterAgentListener()
 			}
 			delete_and_null(s_pipe);
 			AgentWriteDebugLog(1, _T("Disconnected from master agent"));
-		}
-		else
-		{
+      }
+      else
+      {
          AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
          ThreadSleep(5);
-		}
+      }
 	}
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));
 }

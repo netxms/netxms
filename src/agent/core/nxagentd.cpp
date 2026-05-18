@@ -1092,19 +1092,19 @@ BOOL Initialize()
    // Open log file
    if (!nxlog_open((s_startupFlags & SF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
                    GetLogDestinationFlag() |
-	                ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+                   ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT) |
                    ((s_startupFlags & SF_JSON_LOG) ? NXLOG_JSON_FORMAT : 0)))
-	{
-	   s_debugLevel = 1;
-	   g_failFlags |= FAIL_OPEN_LOG;
+   {
+      s_debugLevel = 1;
+      g_failFlags |= FAIL_OPEN_LOG;
       nxlog_open(NXAGENTD_SYSLOG_NAME, NXLOG_USE_SYSLOG |
-	               ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
-                  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT));
-		_ftprintf(stderr, _T("ERROR: Cannot open log file \"%s\", logs will be written to syslog with debug level 1\n"), g_szLogFile);
+                 ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+                 ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT));
+      _ftprintf(stderr, _T("ERROR: Cannot open log file \"%s\", logs will be written to syslog with debug level 1\n"), g_szLogFile);
       RegisterProblem(SEVERITY_MAJOR, _T("agent-log-open"), _T("Agent cannot open log file"));
-	}
-	else
+   }
+   else
    {
       if (!(s_startupFlags & (SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL)))
       {
@@ -2512,11 +2512,11 @@ int main(int argc, char *argv[])
          GetModuleFileName(GetModuleHandle(nullptr), s_executableName, MAX_PATH);
 #else
 #ifdef UNICODE
-         char __buffer[MAX_PATH];
+         char pathBuffer[MAX_PATH];
 #else
-#define __buffer s_executableName
+#define pathBuffer s_executableName
 #endif
-         if (realpath(argv[0], __buffer) == nullptr)
+         if (realpath(argv[0], pathBuffer) == nullptr)
          {
             // fallback
             GetNetXMSDirectory(nxDirBin, s_executableName);
@@ -2525,8 +2525,8 @@ int main(int argc, char *argv[])
          else
          {
 #ifdef UNICODE
-            size_t len = strlen(__buffer);
-            mb_to_wchar(__buffer, len, s_executableName, MAX_PATH);
+            size_t len = strlen(pathBuffer);
+            mb_to_wchar(pathBuffer, len, s_executableName, MAX_PATH);
 #endif
          }
 #endif

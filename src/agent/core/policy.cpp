@@ -482,11 +482,11 @@ uint32_t UninstallPolicy(NXCPMessage *request, uint64_t serverId)
    }
 
    TCHAR buffer[64];
-	if (rcc == ERR_SUCCESS)
-	{
+   if (rcc == ERR_SUCCESS)
+   {
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Policy %s of type %s uninstalled successfully"), guid.toString(buffer), type.cstr());
       ThreadPoolExecuteSerialized(g_commThreadPool, _T("SyncPolicies"), SyncPoliciesWithExtSubagents);
-	}
+   }
    else
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Policy %s of type %s uninstall failed (error %u)"), guid.toString(buffer), type.cstr(), rcc);

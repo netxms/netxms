@@ -72,7 +72,12 @@ LONG H_CertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstr
    if (cert == nullptr)
    {
       nxlog_debug_tag(CI_DEBUG_TAG, 6, _T("Cannot parse certificate file %s as PEM, trying DER format"), fileName);
-      rewind(file);
+      if (fseek(file, 0, SEEK_SET) != 0)
+      {
+         nxlog_debug_tag(CI_DEBUG_TAG, 6, _T("Cannot seek to start of certificate file %s (%hs)"), fileName, strerror(errno));
+         fclose(file);
+         return SYSINFO_RC_ERROR;
+      }
       cert = d2i_X509_fp(file, &cert);
    }
 
@@ -80,7 +85,12 @@ LONG H_CertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstr
    if (cert == nullptr)
    {
       nxlog_debug_tag(CI_DEBUG_TAG, 6, _T("Cannot parse certificate file %s as DER, trying PKCS#12 format"), fileName);
-      rewind(file);
+      if (fseek(file, 0, SEEK_SET) != 0)
+      {
+         nxlog_debug_tag(CI_DEBUG_TAG, 6, _T("Cannot seek to start of certificate file %s (%hs)"), fileName, strerror(errno));
+         fclose(file);
+         return SYSINFO_RC_ERROR;
+      }
       PKCS12* pkcs12 = nullptr;
       if (d2i_PKCS12_fp(file, &pkcs12) != nullptr)
       {

@@ -274,14 +274,14 @@ void ListenerThread()
 #endif
 
    if (!_tcscmp(g_szListenAddress, _T("*")))
-	{
-		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   {
+      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 #ifdef WITH_IPV6
-		memset(servAddr6.sin6_addr.s6_addr, 0, 16);
+      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
 #endif
-	}
-	else
-	{
+   }
+   else
+   {
       InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
@@ -361,29 +361,29 @@ void ListenerThread()
    if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
       if (listen(hSocket, SOMAXCONN) == 0)
-		{
+      {
          TCHAR ipAddrText[64];
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Listening on socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), g_wListenPort);
-		}
-		else
-		{
-			closesocket(hSocket);
-			hSocket = INVALID_SOCKET;
-		}
+      }
+      else
+      {
+         closesocket(hSocket);
+         hSocket = INVALID_SOCKET;
+      }
    }
 #ifdef WITH_IPV6
    if (!(g_dwFlags & AF_DISABLE_IPV6))
    {
       if (listen(hSocket6, SOMAXCONN) == 0)
-		{
+      {
          TCHAR ipAddrText[64];
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Listening on socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), g_wListenPort);
-		}
-		else
-		{
-			closesocket(hSocket6);
-			hSocket6 = INVALID_SOCKET;
-		}
+      }
+      else
+      {
+         closesocket(hSocket6);
+         hSocket6 = INVALID_SOCKET;
+      }
    }
 #endif
 
