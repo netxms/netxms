@@ -334,6 +334,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="nc.cpp" />
     <ClCompile Include="objects.cpp" />
+    <ClCompile Include="operational.cpp" />
     <ClCompile Include="polling.cpp" />
     <ClCompile Include="snmp.cpp" />
   </ItemGroup>
