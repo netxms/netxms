@@ -22,7 +22,11 @@
 #include "nxcore.h"
 #include <nxcore_2fa.h>
 #include <nms_users.h>
+#if BUNDLED_LIBARGON2
+#include <argon2/argon2.h>
+#else
 #include <argon2.h>
+#endif
 #include <openssl/crypto.h>
 
 #define DEBUG_TAG _T("userdb")

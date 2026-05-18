@@ -75,4 +75,4 @@ include_HEADERS = \
 	winmutex.h \
 	winrwlock.h
 
-SUBDIRS = jansson msvc
+SUBDIRS = jansson argon2 msvc

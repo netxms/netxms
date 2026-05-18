@@ -679,6 +679,10 @@
       <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\libargon2\libargon2.vcxproj">
+      <Project>{111fa862-45d7-462b-b71c-f274597ae849}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

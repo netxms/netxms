@@ -58,6 +58,9 @@ libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
 libnxcore_la_LIBADD += -ljansson
 endif
+if USE_INTERNAL_ARGON2
+libnxcore_la_LIBADD += @top_srcdir@/src/libargon2/libnxargon2.la
+endif
 if WITH_PRIVATE_EXTENSIONS
 libnxcore_la_CXXFLAGS += -I@top_srcdir@/private/netxms/include -I@top_srcdir@/private/netxms/src/server/init -I@top_srcdir@/private/common/src/licensing
 endif

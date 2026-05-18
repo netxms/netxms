@@ -223,6 +223,7 @@ typedef int bool;
 #define HAVE_MODBUS_H           1
 
 #define BUNDLED_LIBJANSSON      1
+#define BUNDLED_LIBARGON2       1
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
 

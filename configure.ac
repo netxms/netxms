@@ -173,6 +173,7 @@ CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="yes"
 FORCE_INTERNAL_JANSSON="no"
+FORCE_INTERNAL_ARGON2="no"
 FORCE_INTERNAL_SQLITE="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
@@ -412,6 +413,12 @@ AC_ARG_WITH(internal-libjansson,
 [AS_HELP_STRING(--with-internal-libjansson,force use of bundled libjansson)],
 [
         FORCE_INTERNAL_JANSSON="yes"
+])
+
+AC_ARG_WITH(internal-libargon2,
+[AS_HELP_STRING(--with-internal-libargon2,force use of bundled libargon2)],
+[
+        FORCE_INTERNAL_ARGON2="yes"
 ])
 
 AC_ARG_WITH(internal-sqlite,
@@ -1088,7 +1095,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="appagent jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -2343,14 +2350,32 @@ fi
 
 
 #--------------------------------------------------------------------
-# Checks for libargon2 (password hashing, server only)
+# Checks for libargon2 (password hashing, server only).
+# System library is required by default; --with-internal-libargon2
+# opts into the bundled copy under src/libargon2 (for AIX, Windows,
+# and old distributions that lack libargon2).
 #--------------------------------------------------------------------
 
+HAVE_ARGON2=no
 if test "x$BUILD_SERVER" = "xyes" ; then
-	AC_CHECK_HEADER(argon2.h, , AC_MSG_ERROR([libargon2 development headers are required (use --with-argon2=PATH for non-standard locations)]))
-	AC_CHECK_LIB(argon2, argon2id_hash_encoded, [
+	if test "x$FORCE_INTERNAL_ARGON2" = "xyes"; then
+		HAVE_ARGON2=no
+	else
+		HAVE_ARGON2=yes
+		AC_CHECK_HEADER(argon2.h, , HAVE_ARGON2=no)
+		if test "x$HAVE_ARGON2" = "xyes"; then
+			AC_CHECK_LIB(argon2, argon2id_hash_encoded, [ HAVE_ARGON2=yes ], [ HAVE_ARGON2=no ])
+		fi
+		if test "x$HAVE_ARGON2" = "xno"; then
+			AC_MSG_ERROR([libargon2 is required (install development package, use --with-argon2=PATH for non-standard locations, or pass --with-internal-libargon2 to use the bundled copy)])
+		fi
+	fi
+	if test "x$HAVE_ARGON2" = "xyes"; then
 		SERVER_LIBS="$SERVER_LIBS -largon2"
-	], AC_MSG_ERROR([libargon2 runtime library is required (use --with-argon2=PATH for non-standard locations)]))
+	else
+		MODULES="libargon2 $MODULES"
+		AC_DEFINE(BUNDLED_LIBARGON2, 1, [Define to 1 if bundled libargon2 is used])
+	fi
 fi
 
 
@@ -4848,6 +4873,7 @@ AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
 AM_CONDITIONAL([RELEASE_BUILD], [test "x$RELEASE_BUILD" = "xyes"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_ARGON2], [test "x$HAVE_ARGON2" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([USE_LIBJQ], [test "x$HAVE_LIBJQ" = "xyes"])
@@ -5037,6 +5063,7 @@ AC_CONFIG_FILES([
 	doc/internal/Makefile
 	images/Makefile
 	include/Makefile
+	include/argon2/Makefile
 	include/jansson/Makefile
 	include/msvc/Makefile
 	m4/Makefile
@@ -5142,6 +5169,7 @@ AC_CONFIG_FILES([
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile
+	src/libargon2/Makefile
 	src/java-common/Makefile
 	src/java-common/netxms-base/Makefile
 	src/libnetxms/Makefile
@@ -5470,6 +5498,13 @@ if test "x${HAVE_JANSSON}" = "xno"; then
 	echo "Use internal libjansson : YES"
 else
 	echo "Use internal libjansson : NO"
+fi
+if test "x$BUILD_SERVER" = "xyes"; then
+	if test "x${HAVE_ARGON2}" = "xno"; then
+		echo "Use internal libargon2  : YES"
+	else
+		echo "Use internal libargon2  : NO"
+	fi
 fi
 check_substr "$COMPONENTS" "sqlite"
 if test $? = 0; then
