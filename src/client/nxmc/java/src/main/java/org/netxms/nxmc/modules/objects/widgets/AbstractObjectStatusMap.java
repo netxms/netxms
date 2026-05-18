@@ -113,7 +113,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
             session.removeListener(sessionListener);
          }
       });
-      
+
       setLayout(new FillLayout());
 
       setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
@@ -132,7 +132,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
       menuManager = new ObjectContextMenuManager(view, this, null);
 
-      content = createContent(scroller); 
+      content = createContent(scroller);
       scroller.setContent(content);
 
       refreshTimer = new RefreshTimer(10000, this, new Runnable() {
@@ -146,7 +146,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
    /**
     * Create status widget content
-    * 
+    *
     * @param parent parent composite
     * @return content for scroller
     */
@@ -154,7 +154,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
    /**
     * Check if given object is accepted by filter
-    * 
+    *
     * @param object object to test
     * @return true if object can pass filter
     */
@@ -180,13 +180,13 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          if (!match)
             return false;
       }
-      
+
       return true;
    }
 
    /**
     * Filter given object collection
-    * 
+    *
     * @param objects object collection to filter
     */
    protected void filterObjects(Collection<AbstractObject> objects)
@@ -244,7 +244,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
    /**
     * Show object details
-    * 
+    *
     * @param object object to show details for
     */
    protected void showObjectDetails(AbstractObject object)
@@ -329,7 +329,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    {
       refreshListeners.add(listener);
    }
-   
+
    /**
     * @param listener
     */
@@ -342,10 +342,18 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     * Refresh view
     */
    abstract public void refresh();
-   
+
+   /**
+    * Reapply current filter without full UI rebuild.
+    */
+   public void reapplyFilter()
+   {
+      refresh();
+   }
+
    /**
     * Handler for object change
-    * 
+    *
     * @param object
     */
    abstract protected void onObjectChange(final AbstractObject object);
@@ -363,20 +371,20 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
 
    /**
     * Check if given object is a container
-    * 
+    *
     * @param object
     * @return
     */
    protected static boolean isContainerObject(AbstractObject object)
    {
-      return (object instanceof Collector) || (object instanceof Circuit) || (object instanceof Container) || (object instanceof Cluster) || 
-            (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot) || 
+      return (object instanceof Collector) || (object instanceof Circuit) || (object instanceof Container) || (object instanceof Cluster) ||
+            (object instanceof Rack) || (object instanceof Chassis) || (object instanceof ServiceRoot) ||
             (object instanceof WirelessDomain);
    }
-   
+
    /**
     * Check if given object is a leaf object
-    * 
+    *
     * @param object
     * @return
     */
@@ -386,28 +394,28 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    }
 
    /**
-    * Sets fit to screen parameter 
-    * 
+    * Sets fit to screen parameter
+    *
     * @param fitToScreen
     */
    public void setFitToScreen(boolean fitToScreen)
    {
-      this.fitToScreen = fitToScreen;      
+      this.fitToScreen = fitToScreen;
       refresh();
       updateScrollBars();
    }
 
    /**
-    * Update scrollbars after content change 
+    * Update scrollbars after content change
     */
    protected void updateScrollBars()
    {
       scroller.setMinSize(computeSize());
    }
-   
+
    /**
     * Get available client area (without scroll bars)
-    * 
+    *
     * @return
     */
    protected Rectangle getAvailableClientArea()

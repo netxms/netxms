@@ -111,10 +111,39 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		   l.run();
 	}
 
-	/**
-	 * Build flat view - all nodes in one group
-	 */
-	private void buildFlatView()
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectStatusMap#reapplyFilter()
+    */
+   @Override
+   public void reapplyFilter()
+   {
+      if (groupObjects)
+      {
+         // For grouped mode, sections may need to appear/disappear
+         // which requires a full rebuild
+         refresh();
+         return;
+      }
+
+      // For flat (ungrouped) mode, just hide/show existing widgets
+      synchronized(statusWidgets)
+      {
+         for(Map.Entry<Long, ObjectStatusWidget> entry : statusWidgets.entrySet())
+         {
+            AbstractObject object = session.findObjectById(entry.getKey());
+            if (object != null)
+               entry.getValue().setVisible(isAcceptedByFilter(object));
+         }
+      }
+
+      dataArea.layout(true, true);
+      updateScrollBars();
+   }
+
+   /**
+    * Build flat view - all nodes in one group
+    */
+   private void buildFlatView()
 	{
       AbstractObject root = session.findObjectById(rootObjectId);
       if ((root == null) || !((root instanceof Collector) || (root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
