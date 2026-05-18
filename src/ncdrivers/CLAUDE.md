@@ -29,6 +29,7 @@ src/ncdrivers/
 ├── kannel/         # Kannel SMS gateway
 ├── websms/         # Web SMS gateway
 ├── anysms/         # Generic SMS via HTTP
+├── webhook/        # Generic templated HTTP webhook
 ├── portech/        # Portech GSM gateway
 ├── mymobile/       # MyMobile SMS
 ├── text2reach/     # Text2Reach SMS
@@ -181,6 +182,42 @@ int ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
 }
 ```
 
+### Generic Webhook Driver
+
+`webhook/` is a generic, templated HTTP driver (`ncdrv/webhook.ncd`). Instead of hard-coding a vendor's payload it sends a user-supplied body template as an HTTP request, so most REST/JSON notification gateways can be onboarded via config alone. Pure helpers (placeholder substitution, percent-encoding, integer-list and JSON-pointer parsing) live in `webhook_helpers.{cpp,h}` and are unit-tested by `tests/test-ncd-webhook/` (libcurl-free by design).
+
+**Config keys:**
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `URL` | string | (required) | Endpoint. Supports placeholders (URL-encoded). |
+| `Method` | string | `POST` | `POST`, `PUT`, or `PATCH` (case-insensitive). |
+| `ContentType` | string | `application/json` | Sent as `Content-Type` header. |
+| `TemplateFile` | path | (required) | Body template; re-read on every send (edits apply without channel restart). Readability verified at init. |
+| `VerifyPeer` | bool | `yes` | `CURLOPT_SSL_VERIFYPEER`. |
+| `Timeout` | int (sec) | `10` | `CURLOPT_TIMEOUT`. |
+| `SuccessHttpCodes` | csv | `200,201,202,204` | HTTP codes treated as success. |
+| `RetryHttpCodes` | csv | `429,502,503,504` | HTTP codes producing a retry. |
+| `SuccessJsonPath` | string | (empty) | RFC 6901 JSON pointer into the response body. Empty = skip body check. |
+| `SuccessValue` | string | (empty) | Required stringified value at `SuccessJsonPath`. |
+| `[Headers]` section | name=value | none | Extra headers, literal values (no substitution). |
+
+**Placeholders:** `${recipient}`, `${subject}`, `${body}` are substituted in the URL and template body. Unknown tokens are left literal so typos stay visible.
+
+**Escaping rules:** in the URL, values are RFC 3986 percent-encoded (pure helper — not `curl_easy_escape`, so the test target stays libcurl-free); in the template body, values are JSON-escaped via `EscapeStringForJSON()`. Headers carry literal config values (no substitution).
+
+**Success-detection model:**
+
+| Condition | Return |
+|---|---|
+| HTTP in `SuccessHttpCodes` AND (no `SuccessJsonPath` OR path value == `SuccessValue`) | `0` (success) |
+| HTTP in `SuccessHttpCodes`, `SuccessJsonPath` set, value mismatch | `10` (retry) |
+| HTTP in `RetryHttpCodes` | `10` (retry) |
+| Any other HTTP status / transport error / malformed response | `-1` (hard fail) |
+| Missing `URL`/`TemplateFile`, unreadable template, bad `Method` | driver fails to load |
+
+**Non-goals (v1):** header-value placeholder substitution; per-recipient URL aliasing; mtime/stat-based template-reload short-circuit; multi-endpoint per channel; GET/DELETE methods; HMAC/signing helpers; response-body capture beyond debug tracing. (Mirrored in the `webhook.cpp` header comment.)
+
 ## Configuration Template
 
 Each driver defines a configuration template:
@@ -249,6 +286,11 @@ A new NC driver must be registered in **all** of the following — easy to miss 
 5. **`doc/internal/debug_tags.txt`** — add `ncd.mydriver` if you introduce a new debug tag (root CLAUDE.md requirement).
 6. **Implement** the `NCDriver` interface and add `DECLARE_NCD_ENTRY_POINT` macro with a static `NCConfigurationTemplate s_config(needSubject, needRecipient)`.
 7. Run `./init-source-tree && ./configure --with-server` and check that the driver appears in the build summary's NC driver list. `install-exec-hook` in `src/ncdrivers/Makefile.am` iterates `$(DRIVERS)` automatically — nothing to edit there.
+8. **(Optional) Unit tests** — extract pure logic (no libcurl) into `mydriver_helpers.{cpp,h}` and add a `tests/test-ncd-mydriver/` target (see `webhook` for the established pattern):
+   - `Makefile.am` modelled on `tests/test-libnetxms/Makefile.am` (`bin_PROGRAMS` + `@EXEC_LDFLAGS@`/`@EXEC_LIBS@`), compiling `../../src/ncdrivers/mydriver/mydriver_helpers.cpp`; `_CPPFLAGS` must include `-I../include` (for `<testtools.h>`); keep it libcurl-free
+   - Wire via `TEST_MODULES` in **both** `configure.ac` blocks (~line 1092 and ~line 1468) and add `tests/test-ncd-mydriver/Makefile` to AC_CONFIG_FILES — **not** a `tests/Makefile.am` `SUBDIRS` edit
+   - Ship `test-ncd-mydriver.vcxproj` + `.vcxproj.filters` and add a `Project(...)` entry + config rows + nested-projects mapping to `netxms.sln`, like every other `test-*` target
+   - Register the binary in `tests/suite/netxms-test-suite.in` and `netxms-test-suite.cmd` so the documented test command runs it
 
 ## Build Configuration
 
