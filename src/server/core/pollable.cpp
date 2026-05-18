@@ -506,7 +506,7 @@ void Pollable::pollStateToJson(json_t *root)
  * omitted when the poll has never completed (otherwise zero timer values would be
  * indistinguishable from a real 0 ms measurement).
  */
-json_t *PollState::toJson() const
+json_t *PollState::toJson()
 {
    json_t *json = json_object();
    json_object_set_new(json, "name", json_string_t(m_name));
