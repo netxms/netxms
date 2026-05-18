@@ -88,6 +88,7 @@ static struct
    { ERR_REMOTE_CONNECT_FAILED, _T("Connect to remote system failed") },
    { ERR_SYSCALL_FAILED, _T("System API call failed") },
    { ERR_TCP_PROXY_DISABLED, _T("TCP proxy function is disabled") },
+   { ERR_BAD_SIGNATURE, _T("File signature verification failed") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -112,6 +113,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_SUCCESS:
          return RCC_SUCCESS;
       case ERR_ACCESS_DENIED:
+      case ERR_BAD_SIGNATURE:
          return RCC_AGENT_ACCESS_DENIED;
       case ERR_IO_FAILURE:
          return RCC_IO_ERROR;
