@@ -91,5 +91,6 @@ public class StatusMapElement extends ElementWidget
    protected void onFilterModify()
    {
       map.setTextFilter(getFilterText());
+      map.refresh();
    }
 }
