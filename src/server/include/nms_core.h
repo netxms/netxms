@@ -1617,7 +1617,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 void ReloadCertificates();
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
-X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);
+X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days, bool acceptLegacyVersion = false);
 void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert);
 void LogCertificateAction(CertificateOperation operation, uint32_t userId, uint32_t nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, int32_t serial);
 String GetServerCertificateExpirationDate();
