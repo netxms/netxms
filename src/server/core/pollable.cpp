@@ -23,6 +23,58 @@
 #include "nxcore.h"
 
 /**
+ * Fill NXCP message
+ */
+void PollState::fillMessage(NXCPMessage *msg, uint32_t baseId)
+{
+   msg->setField(baseId, m_name);
+   msg->setField(baseId + 1, isPending());
+   m_lock.lock();
+   msg->setFieldFromTime(baseId + 2, m_lastCompleted);
+   msg->setField(baseId + 3, m_timer.getCurrent());
+   m_lock.unlock();
+}
+
+/**
+ * JSON representation of a single poll state. Mirrors the fields emitted by fillMessage,
+ * plus min/max/average timer values exposed via the timer accessors. Timer subobject is
+ * omitted when the poll has never completed (otherwise zero timer values would be
+ * indistinguishable from a real 0 ms measurement).
+ */
+json_t *PollState::toJson()
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   json_object_set_new(json, "pending", json_boolean(isPending()));
+
+   m_lock.lock();
+   time_t lastCompleted = m_lastCompleted;
+   int64_t timerLast = m_timer.getCurrent();
+   int64_t timerAverage = static_cast<int64_t>(m_timer.getAverage());
+   int64_t timerMin = m_timer.getMin();
+   int64_t timerMax = m_timer.getMax();
+   m_lock.unlock();
+
+   if (lastCompleted != TIMESTAMP_NEVER)
+   {
+      json_object_set_new(json, "lastCompleted", json_time_string(lastCompleted));
+
+      json_t *timer = json_object();
+      json_object_set_new(timer, "last", json_integer(timerLast));
+      json_object_set_new(timer, "average", json_integer(timerAverage));
+      json_object_set_new(timer, "min", json_integer(timerMin));
+      json_object_set_new(timer, "max", json_integer(timerMax));
+      json_object_set_new(json, "timer", timer);
+   }
+   else
+   {
+      json_object_set_new(json, "lastCompleted", json_null());
+   }
+
+   return json;
+}
+
+/**
  * Pollable object constructor
  */
 Pollable::Pollable(NetObj *_this, uint32_t acceptablePolls) : m_statusPollState(_T("status")), m_configurationPollState(_T("configuration"), true),
@@ -498,45 +550,6 @@ void Pollable::pollStateToJson(json_t *root)
    AppendPollStateJson(m_autobindPollState, Pollable::AUTOBIND);
    AppendPollStateJson(m_mapUpdatePollState, Pollable::MAP_UPDATE);
    json_object_set_new(root, "pollStates", states);
-}
-
-/**
- * JSON representation of a single poll state. Mirrors the fields emitted by fillMessage,
- * plus min/max/average timer values exposed via the timer accessors. Timer subobject is
- * omitted when the poll has never completed (otherwise zero timer values would be
- * indistinguishable from a real 0 ms measurement).
- */
-json_t *PollState::toJson()
-{
-   json_t *json = json_object();
-   json_object_set_new(json, "name", json_string_t(m_name));
-   json_object_set_new(json, "pending", json_boolean(isPending()));
-
-   m_lock.lock();
-   time_t lastCompleted = m_lastCompleted;
-   int64_t timerLast = m_timer.getCurrent();
-   int64_t timerAverage = static_cast<int64_t>(m_timer.getAverage());
-   int64_t timerMin = m_timer.getMin();
-   int64_t timerMax = m_timer.getMax();
-   m_lock.unlock();
-
-   if (lastCompleted != TIMESTAMP_NEVER)
-   {
-      json_object_set_new(json, "lastCompleted", json_time_string(lastCompleted));
-
-      json_t *timer = json_object();
-      json_object_set_new(timer, "last", json_integer(timerLast));
-      json_object_set_new(timer, "average", json_integer(timerAverage));
-      json_object_set_new(timer, "min", json_integer(timerMin));
-      json_object_set_new(timer, "max", json_integer(timerMax));
-      json_object_set_new(json, "timer", timer);
-   }
-   else
-   {
-      json_object_set_new(json, "lastCompleted", json_null());
-   }
-
-   return json;
 }
 
 /**

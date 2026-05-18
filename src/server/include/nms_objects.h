@@ -1219,15 +1219,7 @@ public:
    /**
     * Fill NXCP message
     */
-   void fillMessage(NXCPMessage *msg, uint32_t baseId)
-   {
-      msg->setField(baseId, m_name);
-      msg->setField(baseId + 1, isPending());
-      m_lock.lock();
-      msg->setFieldFromTime(baseId + 2, m_lastCompleted);
-      msg->setField(baseId + 3, m_timer.getCurrent());
-      m_lock.unlock();
-   }
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
 
    /**
     * Create JSON representation. Mirrors the fields emitted by fillMessage,
