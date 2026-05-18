@@ -208,6 +208,21 @@ static void CreateAssistantFunctionList()
       },
       F_SetObjectAIData);
    RegisterAIAssistantFunction(
+      "operational-status",
+      "Composite triage view of what is currently broken in the monitored infrastructure: down/critical nodes, "
+      "active alarms grouped by source object, and recent critical events — all in a single call. "
+      "Use this when the operator asks 'what's broken', 'anything on fire', 'how does it look', or starts "
+      "shift/incident triage. Defaults exclude objects in maintenance mode and administratively unmanaged objects. "
+      "To act on a specific alarm afterwards, use the alarm-management skill with the alarm IDs returned by this tool.",
+      {
+         { "detail", "response detail level: 'summary' (counts plus a few representative samples per section) or 'full' (per-section structured list, capped). Default: 'summary'" },
+         { "min_severity", "minimum severity to include: 'critical', 'major', 'minor', 'warning'. Default: 'major' (i.e. critical + major)" },
+         { "scope", "optional name or ID of an object (container, zone, single device) to limit the view to that subtree. Default: whole infrastructure visible to user" },
+         { "event_window_minutes", "time window for the 'recent events' section, in minutes. Clamped to [5, 1440]. Default: 60" },
+         { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false" }
+      },
+      F_OperationalStatus);
+   RegisterAIAssistantFunction(
       "server-stats",
       "Get stats (basic internal performance metrics like number of objects, nodes, sensors, interfaces, metrics, data collection items) of NetXMS server itself.",
       {},

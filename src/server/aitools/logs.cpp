@@ -135,7 +135,7 @@ static inline const TCHAR *GetSyslogFacilityName(int facility)
 /**
  * Get NetXMS event severity name
  */
-static inline const TCHAR *GetEventSeverityName(int severity)
+const TCHAR *GetEventSeverityName(int severity)
 {
    return ((severity >= 0) && (severity <= 4)) ? s_eventSeverityNames[severity] : _T("unknown");
 }
@@ -315,7 +315,7 @@ static String GetObjectNameById(uint32_t objectId)
 /**
  * Add object access constraint to query
  */
-static void AddObjectAccessConstraint(StringBuffer& query, uint32_t userId, const TCHAR *objectIdColumn)
+void AddObjectAccessConstraint(StringBuffer& query, uint32_t userId, const TCHAR *objectIdColumn)
 {
    if (userId == 0)
       return;  // System user has access to everything

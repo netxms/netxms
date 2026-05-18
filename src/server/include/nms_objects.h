@@ -1774,7 +1774,7 @@ enum class PollerType
  */
 class NXCORE_EXPORTABLE PollerInfo
 {
-   friend PollerInfo *RegisterPoller(PollerType, const shared_ptr<NetObj>&);
+   friend PollerInfo NXCORE_EXPORTABLE *RegisterPoller(PollerType, const shared_ptr<NetObj>&);
 
 private:
    PollerType m_type;

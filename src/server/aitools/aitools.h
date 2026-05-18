@@ -32,4 +32,15 @@
 
 #define DEBUG_TAG _T("ai.tools")
 
+/**
+ * Helpers shared across aitools translation units (defined in logs.cpp).
+ */
+const TCHAR *GetEventSeverityName(int severity);
+void AddObjectAccessConstraint(StringBuffer& query, uint32_t userId, const TCHAR *objectIdColumn);
+
+/**
+ * Operational status: composite triage view (down nodes + grouped alarms + recent critical events).
+ */
+std::string F_OperationalStatus(json_t *arguments, uint32_t userId);
+
 #endif
