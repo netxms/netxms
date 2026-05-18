@@ -77,6 +77,7 @@
 #define LCF_RECORD_ID            0x0004   /* Column is a sequential record ID */
 #define LCF_INCLUDE_IN_DETAILS   0x0008   /* Column should be sent as part of log record details */
 #define LCF_SYNC_OBJECTS         0x0010   /* Client should synchronize referenced objects */
+#define LCF_ANY_OBJECT_CLASS     0x0020   /* Object ID column may reference any object class (not just event sources) */
 
 /**
  * Log column definition structure

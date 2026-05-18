@@ -83,7 +83,7 @@ static NXCORE_LOG s_logs[] =
          { L"old_value", L"Old value", LC_TEXT, 0 },
          { L"new_value", L"New value", LC_TEXT, 0 },
          { L"user_id", L"User", LC_USER_ID, 0 },
-         { L"linked_object_id", L"Linked object", LC_OBJECT_ID, 0 },
+         { L"linked_object_id", L"Linked object", LC_OBJECT_ID, LCF_ANY_OBJECT_CLASS },
          { nullptr, nullptr, 0, 0 }
       }
    },
@@ -95,7 +95,7 @@ static NXCORE_LOG s_logs[] =
 			{ L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
 			{ L"timestamp", L"Timestamp", LC_TIMESTAMP, 0 },
 			{ L"subsystem", L"Subsystem", LC_TEXT, 0 },
-         { L"object_id", L"Object", LC_OBJECT_ID, 0 },
+         { L"object_id", L"Object", LC_OBJECT_ID, LCF_ANY_OBJECT_CLASS },
 			{ L"user_id", L"User", LC_USER_ID, 0 },
          { L"session_id", L"Session", LC_INTEGER, 0 },
 			{ L"workstation", L"Workstation", LC_TEXT, 0 },
@@ -152,7 +152,7 @@ static NXCORE_LOG s_logs[] =
       "Tracks author, last editor, creation and modification times, and free-form description text.",
       {
          { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
-         { L"object_id", L"Object", LC_OBJECT_ID, 0 },
+         { L"object_id", L"Object", LC_OBJECT_ID, LCF_ANY_OBJECT_CLASS },
          { L"author", L"Author", LC_USER_ID, 0 },
          { L"last_edited_by", L"Last edited dy", LC_USER_ID, 0 },
          { L"description", L"Description", LC_TEXT, 0 },
