@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -917,7 +917,7 @@ public:
     * Create new memory pool
     */
    MemoryPool(size_t regionSize = 8192);
-   
+
    /**
     * Forbid copy construction
     */
@@ -1333,7 +1333,7 @@ class LIBNETXMS_EXPORTABLE MutableString : public String
 public:
    MutableString() : String() { }
    MutableString(const TCHAR *init) : String(init) { }
-   MutableString(const TCHAR *init, size_t len) : String(init, len) { }
+   MutableString(const TCHAR *init, size_t length) : String(init, length) { }
    MutableString(const char *init, const char *codepage) : String(init, codepage) { }
    MutableString(const String& src) : String(src) { }
    MutableString(const MutableString& src) : String(src) { }
@@ -1865,10 +1865,10 @@ public:
 
    ConstIterator& operator=(const ConstIterator& other)
    {
-      m_worker->decRefCount(); 
+      m_worker->decRefCount();
       m_worker = other.m_worker;
       m_worker->incRefCount();
-      return *this; 
+      return *this;
    }
 
    bool operator==(const ConstIterator& other) { return m_worker->equals(other.m_worker); }
@@ -1879,7 +1879,7 @@ public:
       return *this;
    }
    ConstIterator operator++(int) // Postfix increment operator.
-   {  
+   {
       ConstIterator temp = *this;
       m_worker->next();
       return temp;
@@ -3036,7 +3036,7 @@ template class LIBNETXMS_TEMPLATE_EXPORTABLE HashSet<uint64_t>;
 #endif
 
 /**
- * Hash set template
+ * Counting hash set - allows multiple addition of same key and counts number of additions / removals
  */
 template<class K> class CountingHashSet : public HashSetBase
 {
@@ -3264,7 +3264,7 @@ protected:
 
 public:
    HashMapIterator(HashMapBase *hashMap = nullptr);
-   HashMapIterator(const HashMapIterator& other);  
+   HashMapIterator(const HashMapIterator& other);
 
    virtual bool hasNext() override;
    virtual void *next() override;
@@ -5721,7 +5721,16 @@ int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
 #define daemon __daemon
 #endif
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+#define nx_wprintf wprintf
+#define nx_fwprintf fwprintf
+#define nx_swprintf swprintf
+#define nx_vwprintf vwprintf
+#define nx_vfwprintf vfwprintf
+#define nx_vswprintf vswprintf
+
+#else
 
 bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
 
