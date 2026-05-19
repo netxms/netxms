@@ -764,11 +764,47 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
-      if (!configuration.isModifyYBase() && (range.lower > 0))
-         range.lower = 0;
-      else if (range.lower < 0)
-         range.lower = - adjustRange(Math.abs(range.lower));
-      range.upper = adjustRange(range.upper);
+      if (!configuration.isStacked())
+      {
+         List<ChartDciConfig> items = chart.getItems();
+         for(int i = 0; i < items.size(); i++)
+         {
+            ChartDciConfig item = items.get(i);
+            if (!item.showThresholds)
+               continue;
+            Threshold[] tr = chart.getThreshold(i);
+            if (tr == null)
+               continue;
+            for(int j = 0; j < tr.length; j++)
+            {
+               try
+               {
+                  double value = Double.parseDouble(tr[j].getValue());
+                  if (item.invertValues)
+                     value = -value;
+                  if (value < range.lower)
+                     range.lower = value;
+                  if (value > range.upper)
+                     range.upper = value;
+               }
+               catch(NumberFormatException ex)
+               {
+                  // ignore non-numeric thresholds
+               }
+            }
+         }
+      }
+      if (!configuration.isModifyYBase())
+      {
+         if (range.lower > 0)
+            range.lower = 0;
+         if (range.upper < 0)
+            range.upper = 0;
+      }
+      if (range.lower < 0)
+         range.lower = -adjustRange(Math.abs(range.lower));
+      if (range.upper > 0)
+         range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
 		if (repaint)
 			redraw();
