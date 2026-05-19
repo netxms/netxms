@@ -125,6 +125,7 @@ nc.*		Notification channels
 ncd.*		Notification channel drivers
 
 ndd.*           Network device drivers
+ndd.bdcom	BDCOM network device driver
 ndd.cambium	Cambium network device driver
 ndd.common	Network device drivers common
 ndd.hostmib	Hostmib related functionality
