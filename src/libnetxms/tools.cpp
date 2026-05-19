@@ -4079,6 +4079,74 @@ uuid LIBNETXMS_EXPORTABLE json_object_get_uuid(json_t *object, const char *tag)
 }
 
 /**
+ * Coerce a JSON value into an array (accepts arrays, stringified-JSON arrays,
+ * and bare scalars). See header for full contract.
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_array_ex(json_t *object, const char *tag)
+{
+   json_t *src = json_object_get(object, tag);
+   if (src == nullptr)
+      return nullptr;
+   if (json_is_array(src))
+   {
+      json_incref(src);
+      return src;
+   }
+   if (json_is_string(src))
+   {
+      const char *s = json_string_value(src);
+      const char *p = s;
+      while ((*p == ' ') || (*p == '\t') || (*p == '\n') || (*p == '\r'))
+         p++;
+      if (*p == '[')
+      {
+         json_t *parsed = json_loads(s, 0, nullptr);
+         if ((parsed != nullptr) && json_is_array(parsed))
+            return parsed;
+         if (parsed != nullptr)
+            json_decref(parsed);
+         return nullptr;
+      }
+      json_t *wrap = json_array();
+      json_array_append(wrap, src);
+      return wrap;
+   }
+   if (json_is_integer(src) || json_is_object(src) || json_is_boolean(src))
+   {
+      json_t *wrap = json_array();
+      json_array_append(wrap, src);
+      return wrap;
+   }
+   return nullptr;
+}
+
+/**
+ * Coerce a JSON value into an object (accepts objects and stringified-JSON
+ * objects). See header for full contract.
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_object_ex(json_t *object, const char *tag)
+{
+   json_t *src = json_object_get(object, tag);
+   if (src == nullptr)
+      return nullptr;
+   if (json_is_object(src))
+   {
+      json_incref(src);
+      return src;
+   }
+   if (json_is_string(src))
+   {
+      json_t *parsed = json_loads(json_string_value(src), 0, nullptr);
+      if ((parsed != nullptr) && json_is_object(parsed))
+         return parsed;
+      if (parsed != nullptr)
+         json_decref(parsed);
+      return nullptr;
+   }
+   return nullptr;
+}
+
+/**
  * Get element from object by path (separated by /)
  */
 json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path)

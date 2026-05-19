@@ -47,13 +47,22 @@ std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
 std::string F_ForcePoll(json_t *arguments, uint32_t userId);
+std::string F_CreateEppRule(json_t *arguments, uint32_t userId);
 std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId);
+std::string F_CreateServerAction(json_t *arguments, uint32_t userId);
+std::string F_DeleteEppRule(json_t *arguments, uint32_t userId);
 std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId);
+std::string F_DeleteServerAction(json_t *arguments, uint32_t userId);
+std::string F_DisableEppRule(json_t *arguments, uint32_t userId);
+std::string F_EnableEppRule(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingAction(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingActions(json_t *arguments, uint32_t userId);
 std::string F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId);
 std::string F_GetEventTemplate(json_t *arguments, uint32_t userId);
+std::string F_ModifyEppRule(json_t *arguments, uint32_t userId);
 std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId);
+std::string F_ModifyServerAction(json_t *arguments, uint32_t userId);
+std::string F_MoveEppRule(json_t *arguments, uint32_t userId);
 std::string F_GetHistoricalData(json_t *arguments, uint32_t userId);
 std::string F_GetIncidentDetails(json_t *arguments, uint32_t userId);
 std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId);
@@ -530,7 +539,168 @@ static void CreateAssistantSkillList()
             "get-event-processing-policy",
             "Get the complete event processing policy configuration. The policy defines rules for how events are processed, including conditions, actions, and correlations.",
             {},
-            F_GetEventProcessingPolicy)
+            F_GetEventProcessingPolicy),
+         AssistantFunction(
+            "create-epp-rule",
+            "Create a new event processing policy rule. Returns the created rule (with its assigned GUID) and the new policy version. Position the rule with after_guid / before_guid / position (default: append at end).",
+            {
+               { "after_guid", "place the new rule immediately after this rule GUID (optional)" },
+               { "before_guid", "place the new rule immediately before this rule GUID (optional)" },
+               { "position", "explicit position: 'first' or 'last' (default: 'last' if no after/before given)" },
+               { "comments", "human-readable comments describing the rule (optional)" },
+               { "events", "array of event codes or names that the rule matches (optional; empty = match any event)" },
+               { "sources", "array of object IDs or names; rule applies to events from these objects (optional; empty = any source)" },
+               { "source_exclusions", "array of object IDs or names to exclude (optional)" },
+               { "match_severities", "array of severity names to match: info, warning, minor, major, critical (optional; absent = match all severities)" },
+               { "negated_event_match", "if true, invert the event match (match events NOT in the list) (optional, default false)" },
+               { "negated_source_match", "if true, invert the source match (optional, default false)" },
+               { "time_frames", "array of {time, date} integer pairs (optional; format documented in skill md)" },
+               { "filter_script", "NXSL filter script (optional)" },
+               { "actions", "array of {id, timer_delay?, timer_key?, blocking_timer_key?, snooze_time?, active?}; id is action ID or name (optional)" },
+               { "action_script", "NXSL action script (optional)" },
+               { "timer_cancellations", "array of timer keys to cancel (optional)" },
+               { "stop_processing", "if true, stop EPP processing after this rule matches (optional, default false)" },
+               { "generate_alarm", "if true, generate an alarm on match (optional, default false)" },
+               { "alarm_severity", "alarm severity: info, warning, minor, major, critical, normal, 'same as event', resolve, terminate (optional)" },
+               { "alarm_message", "alarm message template (optional)" },
+               { "alarm_impact", "alarm impact text (optional)" },
+               { "alarm_key", "alarm key for deduplication and resolve/terminate matching (optional)" },
+               { "alarm_timeout", "alarm acknowledgment timeout in seconds (optional, 0 = no timeout)" },
+               { "alarm_timeout_event", "event code or name to generate when alarm times out (optional)" },
+               { "alarm_categories", "array of alarm category IDs or names (optional)" },
+               { "create_incident", "if true, create an incident on match (optional, default false)" },
+               { "incident_delay", "incident creation delay in seconds (optional, 0 = immediate)" },
+               { "incident_title", "incident title template (optional; defaults to alarm message)" },
+               { "incident_description", "incident description template (optional)" },
+               { "ai_analyze_incident", "if true, run AI analysis on created incident (optional, default false)" },
+               { "incident_ai_analysis_depth", "AI analysis depth: quick, standard, thorough (optional)" },
+               { "incident_ai_prompt", "custom AI analysis instructions (optional)" },
+               { "create_ticket", "if true, create helpdesk ticket on match (optional, default false)" },
+               { "terminate_by_regexp", "if true, treat alarm_key as a regexp when resolving/terminating (optional, default false)" },
+               { "start_downtime", "if true, start a downtime period on match (optional, default false)" },
+               { "end_downtime", "if true, end a downtime period on match (optional, default false)" },
+               { "downtime_tag", "downtime tag (optional)" },
+               { "request_ai_comment", "if true, request AI-generated comment on alarm (optional, default false)" },
+               { "rca_script_name", "name of library script for root cause analysis (optional)" },
+               { "ai_agent_instructions", "instructions for AI agent processing this rule (optional)" },
+               { "pstorage_set", "object map of persistent storage keys to set on match: {key: value, ...} (optional)" },
+               { "pstorage_delete", "array of persistent storage keys to delete on match (optional)" },
+               { "custom_attribute_set", "object map of custom attributes to set on the source object: {key: value, ...} (optional)" },
+               { "custom_attribute_delete", "array of custom attribute names to delete on the source object (optional)" }
+            },
+            F_CreateEppRule),
+         AssistantFunction(
+            "modify-epp-rule",
+            "Modify an existing event processing policy rule. Only fields actually provided are changed - any field omitted is left unchanged. Use get-event-processing-policy first to find the rule GUID and review its current settings.",
+            {
+               { "guid", "GUID of the rule to modify (mandatory)" },
+               { "comments", "new comments (optional)" },
+               { "events", "new event list (optional, replaces current)" },
+               { "sources", "new source list (optional, replaces current)" },
+               { "source_exclusions", "new source exclusions list (optional, replaces current)" },
+               { "match_severities", "new severity match list (optional, replaces current)" },
+               { "negated_event_match", "new negated-event-match flag (optional)" },
+               { "negated_source_match", "new negated-source-match flag (optional)" },
+               { "time_frames", "new time frames list (optional, replaces current)" },
+               { "filter_script", "new NXSL filter script (optional; empty string clears)" },
+               { "actions", "new actions list (optional, replaces current)" },
+               { "action_script", "new NXSL action script (optional; empty string clears)" },
+               { "timer_cancellations", "new timer cancellations list (optional, replaces current)" },
+               { "stop_processing", "new stop_processing flag (optional)" },
+               { "generate_alarm", "new generate_alarm flag (optional)" },
+               { "alarm_severity", "new alarm severity (optional)" },
+               { "alarm_message", "new alarm message (optional)" },
+               { "alarm_impact", "new alarm impact (optional)" },
+               { "alarm_key", "new alarm key (optional)" },
+               { "alarm_timeout", "new alarm timeout in seconds (optional)" },
+               { "alarm_timeout_event", "new alarm timeout event code or name (optional)" },
+               { "alarm_categories", "new alarm categories list (optional, replaces current)" },
+               { "create_incident", "new create_incident flag (optional)" },
+               { "incident_delay", "new incident delay in seconds (optional)" },
+               { "incident_title", "new incident title (optional)" },
+               { "incident_description", "new incident description (optional)" },
+               { "ai_analyze_incident", "new ai_analyze_incident flag (optional)" },
+               { "incident_ai_analysis_depth", "new AI analysis depth (optional)" },
+               { "incident_ai_prompt", "new AI analysis prompt (optional)" },
+               { "create_ticket", "new create_ticket flag (optional)" },
+               { "terminate_by_regexp", "new terminate_by_regexp flag (optional)" },
+               { "start_downtime", "new start_downtime flag (optional)" },
+               { "end_downtime", "new end_downtime flag (optional)" },
+               { "downtime_tag", "new downtime tag (optional)" },
+               { "request_ai_comment", "new request_ai_comment flag (optional)" },
+               { "rca_script_name", "new RCA script name (optional)" },
+               { "ai_agent_instructions", "new AI agent instructions (optional)" },
+               { "pstorage_set", "new persistent storage set map (optional, replaces current)" },
+               { "pstorage_delete", "new persistent storage delete list (optional, replaces current)" },
+               { "custom_attribute_set", "new custom attribute set map (optional, replaces current)" },
+               { "custom_attribute_delete", "new custom attribute delete list (optional, replaces current)" }
+            },
+            F_ModifyEppRule),
+         AssistantFunction(
+            "delete-epp-rule",
+            "Delete an event processing policy rule.",
+            {
+               { "guid", "GUID of the rule to delete (mandatory)" }
+            },
+            F_DeleteEppRule),
+         AssistantFunction(
+            "enable-epp-rule",
+            "Enable a previously disabled event processing policy rule.",
+            {
+               { "guid", "GUID of the rule to enable (mandatory)" }
+            },
+            F_EnableEppRule),
+         AssistantFunction(
+            "disable-epp-rule",
+            "Disable an event processing policy rule. The rule remains in the policy but is skipped during event processing.",
+            {
+               { "guid", "GUID of the rule to disable (mandatory)" }
+            },
+            F_DisableEppRule),
+         AssistantFunction(
+            "move-epp-rule",
+            "Move an event processing policy rule to a new position. Rules are evaluated top-to-bottom, so order can be functionally significant (especially with stop_processing).",
+            {
+               { "guid", "GUID of the rule to move (mandatory)" },
+               { "after_guid", "place the rule immediately after this rule GUID (optional)" },
+               { "before_guid", "place the rule immediately before this rule GUID (optional)" },
+               { "position", "explicit position: 'first' or 'last' (optional)" }
+            },
+            F_MoveEppRule),
+         AssistantFunction(
+            "create-server-action",
+            "Create a new server-side action that can be referenced from event processing rules. Action types: local_command (run shell command on server), agent_command (run command on monitored node via agent), ssh_command (run command via SSH), notification (send via configured notification channel), forward_event (forward event to another NetXMS server), nxsl_script (execute NXSL script).",
+            {
+               { "name", "unique action name (mandatory)" },
+               { "type", "action type: local_command, agent_command, ssh_command, notification, forward_event, nxsl_script (optional, default local_command)" },
+               { "disabled", "if true, action is created in disabled state (optional, default false)" },
+               { "recipient", "recipient address for notification, or destination server name for forward_event (optional)" },
+               { "email_subject", "subject line for notification (optional)" },
+               { "data", "command line text, NXSL source, or notification message body depending on type (optional)" },
+               { "channel", "notification channel name (notification type only) (optional)" }
+            },
+            F_CreateServerAction),
+         AssistantFunction(
+            "modify-server-action",
+            "Modify an existing server-side action. Only fields actually provided are changed.",
+            {
+               { "id", "action ID (mandatory)" },
+               { "name", "new action name (optional)" },
+               { "type", "new action type (optional)" },
+               { "disabled", "new disabled flag (optional)" },
+               { "recipient", "new recipient address (optional)" },
+               { "email_subject", "new email subject (optional)" },
+               { "data", "new command line / script / body (optional)" },
+               { "channel", "new notification channel name (optional)" }
+            },
+            F_ModifyServerAction),
+         AssistantFunction(
+            "delete-server-action",
+            "Delete a server-side action. Refused if any event processing rule still references it - modify those rules first.",
+            {
+               { "id", "action ID (mandatory)" }
+            },
+            F_DeleteServerAction)
       }
    );
 

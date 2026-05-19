@@ -4871,6 +4871,29 @@ uuid LIBNETXMS_EXPORTABLE json_object_get_uuid(json_t *object, const char *tag);
 time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval = 0);
 
 /**
+ * Coerce a JSON value into an array. Useful when consuming arguments from
+ * LLM-generated tool calls where some models serialize array arguments as
+ * stringified JSON or as bare scalars instead of native arrays. Accepts:
+ *   - native JSON array (returned with incremented reference count)
+ *   - JSON string containing an array literal "[...]" (parsed)
+ *   - any other scalar value (string, integer, boolean, object) - wrapped in a
+ *     single-element array
+ * Returns nullptr if the tag is absent from `object` or the value is present
+ * but cannot be coerced (e.g. malformed JSON string). Always returns a NEW
+ * reference - caller should transfer ownership via json_array_append_new /
+ * json_object_set_new, or release with json_decref.
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_array_ex(json_t *object, const char *tag);
+
+/**
+ * Coerce a JSON value into an object/map. Companion to json_object_get_array_ex
+ * for map-typed arguments. Accepts a native object (incremented refcount) or
+ * a JSON string containing an object literal "{...}" (parsed). Returns nullptr
+ * if the tag is absent or cannot be coerced. Caller owns the returned ref.
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_object_ex(json_t *object, const char *tag);
+
+/**
  * Get element from object by path (separated by /)
  */
 json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path);

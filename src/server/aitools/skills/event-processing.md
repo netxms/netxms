@@ -83,6 +83,58 @@ The Event Processing Policy (EPP) is a comprehensive rule engine that determines
 - **Root cause analysis** - Correlate related events to identify underlying issues
 - **Time-based correlation** - Group events occurring within specific time windows
 
+### Managing Event Processing Policy Rules
+
+The EPP rule write tools let you create, modify, reorder, enable/disable, and delete individual rules in the policy. Every rule is identified by a stable **GUID**, which you obtain by first calling `get-event-processing-policy` to read the full policy.
+
+**Always read the policy first.** Rule GUIDs are not human-readable - to act on a rule you need its exact GUID from `get-event-processing-policy`. Never guess or invent a GUID. The policy response also carries the current `version` integer which the tools use for optimistic concurrency under the hood.
+
+#### create-epp-rule
+Create a new rule. Position via:
+- `after_guid` / `before_guid` - place relative to another rule by GUID
+- `position` - `"first"` or `"last"` (default: `"last"`, appending at the end)
+
+A new rule defaults to "match every event from every source at every severity" (all five `match_severities` bits set). Narrow it by setting `events`, `sources`, and/or `match_severities`. Common combinations:
+- **Alarm on a specific event**: set `events: ["MY_EVENT"]` + `generate_alarm: true` + `alarm_severity: "major"` + `alarm_message: "..."`
+- **Suppress noise**: set `events: [...]` + `stop_processing: true` with no actions to drop matching events from further processing
+- **Notify on critical**: `match_severities: ["critical"]` + `actions: [{id: "email-oncall"}]`
+
+#### modify-epp-rule
+Partial-update a rule by GUID. **Only fields you provide are changed** - omit a field to leave it untouched. To clear a text field, pass an empty string. To replace an array (events, sources, actions, alarm_categories, etc.), pass the new full list - there is no "add one element" operation. To toggle a single boolean flag, set just that field.
+
+#### enable-epp-rule / disable-epp-rule
+Convenience shortcuts for the most common single-flip operation. A disabled rule stays in the policy but is skipped during event processing - prefer disable over delete when troubleshooting a rule you might re-enable. Idempotent (no error if already in target state).
+
+#### delete-epp-rule
+Permanently remove a rule. Prefer `disable-epp-rule` if the operator might want the rule back later.
+
+#### move-epp-rule
+Reorder a rule. **Rule order matters** because rules are evaluated top-to-bottom and `stop_processing` short-circuits further evaluation. Move semantics mirror create: provide one of `after_guid`, `before_guid`, or `position`. Refused if no destination is specified.
+
+### EPP Rule Field Reference
+
+When constructing or modifying rules, key fields fall into these groups:
+
+- **Match conditions** - `events` (array of codes or names), `sources` (array of object IDs or names), `source_exclusions`, `match_severities` (array of `info`/`warning`/`minor`/`major`/`critical`), `time_frames` (advanced; raw `{time, date}` bitmask pairs), `filter_script` (NXSL), `negated_event_match` / `negated_source_match` (invert event or source matching).
+- **Actions** - `actions` (array of `{id, timer_delay, timer_key, blocking_timer_key, snooze_time, active}`; `id` accepts numeric ID or action name), `action_script` (NXSL run on match), `timer_cancellations` (array of timer keys to cancel), `stop_processing` (halt further rule evaluation).
+- **Alarms** - `generate_alarm`, `alarm_severity` (`info`/`warning`/`minor`/`major`/`critical`/`normal`/`same as event`/`resolve`/`terminate`), `alarm_message`, `alarm_impact`, `alarm_key` (used for deduplication and resolve/terminate matching - rules with `alarm_severity: "resolve"` or `"terminate"` find the active alarm by this key), `alarm_timeout` (seconds), `alarm_timeout_event` (event code/name fired on timeout), `alarm_categories`, `create_ticket`, `terminate_by_regexp`.
+- **Incidents** - `create_incident`, `incident_delay`, `incident_title`, `incident_description`, `ai_analyze_incident`, `incident_ai_analysis_depth` (`quick`/`standard`/`thorough`), `incident_ai_prompt`.
+- **Downtime tracking** - `start_downtime`, `end_downtime`, `downtime_tag`.
+- **AI integration** - `request_ai_comment` (request AI-generated comment on alarm), `ai_agent_instructions`, `rca_script_name`.
+- **Side effects** - `pstorage_set` (object map - server persistent storage), `pstorage_delete` (array of keys), `custom_attribute_set` / `custom_attribute_delete` (act on the source object's custom attributes).
+
+### Identifier Resolution
+
+Where the tools accept "ID or name" (events, sources, source exclusions, alarm categories, action references inside `actions`), you can pass either form. Names are resolved at write time; an unknown name returns a structured error pointing to the offending field, and the policy is not modified.
+
+### Concurrency
+
+The policy uses optimistic concurrency. The write tools automatically retry once if another change lands between read and save. If the retry also conflicts the tool returns `{ "error": "concurrent_modification", "current_version": N }` - re-read the policy with `get-event-processing-policy` and try again. This is rare in practice.
+
+### Audit Logging
+
+Every successful mutation writes an entry to the system audit log under subsystem `SYSCFG`, prefixed with `"AI agent: …"` and including the rule GUID and the new policy version. Modify operations capture before/after values where available. No further audit logging is needed from the AI.
+
 ## Key Concepts
 
 ### Event Flow
@@ -150,6 +202,25 @@ NetXMS supports several types of server-side actions that can be executed when E
 - **Integration**: Forward events to external systems or other NetXMS servers
 - **Custom Logic**: Use NXSL scripts for complex decision-making and automation
 - **Problem Prevention**: Execute preventive actions before issues become critical
+
+### Managing Server-Side Actions
+
+#### create-server-action
+Create a new server-side action. Required: `name` (must be unique). Other fields depend on action type:
+- `type` - one of `local_command`, `agent_command`, `ssh_command`, `notification`, `forward_event`, `nxsl_script` (default: `local_command`)
+- `disabled` - create in disabled state (default: false)
+- `recipient` - recipient address for `notification`; destination server name for `forward_event`
+- `email_subject` - subject line for `notification`
+- `data` - the command line, NXSL source, or notification message body, depending on type
+- `channel` - notification channel name (notification type only)
+
+Use `get-event-processing-actions` or `get-event-processing-action` first to verify the name isn't already taken.
+
+#### modify-server-action
+Partial-update an action by `id` (required). Only fields you provide are changed. Renaming via `name` checks for duplicates and refuses with a conflict error if the new name is taken by another action.
+
+#### delete-server-action
+Remove an action by `id`. **Refused if the action is still referenced by any EPP rule.** The error response includes a hint to remove the action from referencing rules first (use `get-event-processing-policy` and look at each rule's `actions` array, then modify those rules to drop the reference).
 
 ## Use Cases
 
