@@ -1525,7 +1525,11 @@ FStringElements:
    }
 	MemFreeAndNull($1);
    uint32_t numElements = builder->getFStringElementCount();
-   if (numElements > 1)
+   if (numElements == 0)
+   {
+      builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(_T("")));
+   }
+   else if (numElements > 1)
    {
 	   builder->addInstruction(lexer->getCurrLine(), OPCODE_FSTRING, static_cast<int16_t>(numElements));
    }
