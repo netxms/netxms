@@ -1315,7 +1315,7 @@ uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCH
 /**
  * Delete object tool from database
  */
-uint32_t DeleteObjectToolFromDB(uint32_t toolId)
+uint32_t NXCORE_EXPORTABLE DeleteObjectToolFromDB(uint32_t toolId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -1366,7 +1366,7 @@ uint32_t DeleteObjectToolFromDB(uint32_t toolId)
 /**
  * Change Object Tool Disable status to opposit
  */
-uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled)
+uint32_t NXCORE_EXPORTABLE ChangeObjectToolStatus(uint32_t toolId, bool enabled)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

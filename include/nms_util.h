@@ -210,7 +210,7 @@ static inline WCHAR towupper(WCHAR c)
 #define CT_STRING_SET      11  /* Each value added to StringSet object */
 #define CT_STRING_LIST     12  /* Each value added to StringList object */
 #define CT_BOOLEAN         13  /* Data is pointer to bool variable which will be set to true or false */
-#define CT_DOUBLE          14  /* Data is pointer to souble variable */
+#define CT_DOUBLE          14  /* Data is pointer to double variable */
 
 /**
  * Uninitialized value for override indicator
