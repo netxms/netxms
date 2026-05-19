@@ -694,6 +694,7 @@ public:
 	bool isAggregationActive(bool globalEnabled) const;
 	void pushBackAggregationWatermark(int64_t timestampMs);
 	bool tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWatermark, int64_t *currentOut);
+	bool setInitialAggregationWatermark(int64_t timestampMs);
 
 	void setAnomalyProfile(json_t *profile);
 	bool saveAnomalyProfileToDatabase();
@@ -1194,6 +1195,7 @@ void StopV5DataMigration();
  */
 void CleanDCIAggregates(DB_HANDLE hdb);
 void ReconcileTSDBAggregation();
+void ReconcileNonTSDBAggregation();
 
 /**
  * Get database-specific expression for converting v5 second-precision timestamp to milliseconds.

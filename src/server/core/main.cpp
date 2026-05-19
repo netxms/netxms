@@ -1625,6 +1625,7 @@ retry_db_lock:
    AddUniqueRecurrentScheduledTask(L"DataCollection.Aggregation.HourlyRollup", L"5 * * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"DCI hourly data aggregation rollup", nullptr, true);
    AddUniqueRecurrentScheduledTask(L"DataCollection.Aggregation.DailyRollup", L"30 0 * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"DCI daily data aggregation rollup", nullptr, true);
    ReconcileTSDBAggregation();
+   ReconcileNonTSDBAggregation();
 
    // Send summary emails
    if (ConfigReadBoolean(_T("Alarms.SummaryEmail.Enable"), false))

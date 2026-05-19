@@ -905,6 +905,113 @@ static void BackfillTSDBAggregates()
 }
 
 /**
+ * Metadata key marking that the one-shot non-TSDB backfill has already
+ * initialized per-DCI watermarks. Value "1" means done.
+ */
+#define META_NONTSDB_BACKFILLED  L"DCIAggregationNonTSDBBackfilled"
+
+/**
+ * One-shot non-TSDB backfill: for each aggregation-eligible DCI whose watermark
+ * has never been set, query MIN(idata_timestamp) from idata_<N> and seed both
+ * the in-memory watermark and the items.aggregation_watermark column. The next
+ * hourly rollup pass then re-aggregates the full retained raw history instead
+ * of starting at now - HourlyCloseWindow (which is what RollupHourlyForDCI does
+ * for fresh DCIs).
+ *
+ * Runs in a worker thread because on large installs it may issue thousands of
+ * MIN(idata_timestamp) queries. Each is an index seek on the primary key
+ * (item_id, idata_timestamp), so per-DCI cost is sub-millisecond.
+ */
+static void BackfillNonTSDBAggregates()
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Backfilling non-TSDB aggregation watermarks");
+   int64_t startTime = GetMonotonicClockTime();
+
+   // Hourly tier eligibility (interval <= 30 min). Daily-only-eligible DCIs cannot
+   // produce daily aggregates without hourly aggregates anyway, so they're skipped.
+   const int minPollingIntervalSeconds = 1800;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hUpdate = DBPrepare(hdb,
+      L"UPDATE items SET aggregation_watermark=? "
+      L"WHERE item_id=? AND (aggregation_watermark IS NULL OR aggregation_watermark>?)", true);
+
+   int initialized = 0;
+   if (hUpdate != nullptr)
+   {
+      ForEachAggregationEligibleDCI(hdb, minPollingIntervalSeconds, true,
+         [&initialized, hUpdate] (DB_HANDLE hdb, DataCollectionTarget *target, DCItem *dci) -> void
+         {
+            if (dci->getAggregationWatermark() > 0)
+               return;   // Already initialized (prior backfill or rollup advanced it)
+
+            wchar_t query[128];
+            nx_swprintf(query, 128, L"SELECT MIN(idata_timestamp) FROM idata_%u WHERE item_id=%u",
+               target->getId(), dci->getId());
+            DB_RESULT hResult = DBSelect(hdb, query);
+            if (hResult == nullptr)
+               return;
+
+            int64_t minTs = 0;
+            if (DBGetNumRows(hResult) > 0)
+               minTs = DBGetFieldInt64(hResult, 0, 0);
+            DBFreeResult(hResult);
+
+            if (minTs <= 0)
+               return;   // No raw data for this DCI yet
+
+            if (!dci->setInitialAggregationWatermark(minTs))
+               return;
+
+            DBBind(hUpdate, 1, DB_SQLTYPE_BIGINT, minTs);
+            DBBind(hUpdate, 2, DB_SQLTYPE_INTEGER, dci->getId());
+            DBBind(hUpdate, 3, DB_SQLTYPE_BIGINT, minTs);
+            if (DBExecute(hUpdate))
+               initialized++;
+         });
+      DBFreeStatement(hUpdate);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   MetaDataWriteStr(META_NONTSDB_BACKFILLED, L"1");
+
+   uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Non-TSDB watermark backfill complete - %d DCI watermarks initialized in %u ms",
+      initialized, elapsed);
+}
+
+/**
+ * Reconcile non-TSDB aggregation state with the master switch. Called once
+ * during server startup, symmetric with ReconcileTSDBAggregation().
+ *
+ * Uses a metadata sentinel (META_NONTSDB_BACKFILLED) to detect first-enable;
+ * non-TSDB has no equivalent of TSDB's policy-attached check. When the switch
+ * is enabled and the sentinel is absent, queues a one-shot watermark backfill
+ * (or marks the sentinel without backfilling if BackfillOnEnable is false).
+ */
+void ReconcileNonTSDBAggregation()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+      return;
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      return;
+   if (!ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false))
+      return;
+   if (MetaDataReadInt32(META_NONTSDB_BACKFILLED, 0) != 0)
+      return;   // Already backfilled in a prior run
+
+   if (ConfigReadBoolean(L"DataCollection.Aggregation.BackfillOnEnable", true))
+   {
+      ThreadPoolExecute(g_mainThreadPool, BackfillNonTSDBAggregates);
+   }
+   else
+   {
+      MetaDataWriteStr(META_NONTSDB_BACKFILLED, L"1");
+      nxlog_debug_tag(DEBUG_TAG, 1, L"Non-TSDB aggregation enabled - backfill skipped (BackfillOnEnable=false)");
+   }
+}
+
+/**
  * Reconcile TSDB-side aggregation state with the master switch. Called once
  * during server startup. Aggregation.Enabled is need_server_restart=1 so we
  * don't track its value at runtime - flipping the switch and restarting the

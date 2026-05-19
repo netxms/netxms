@@ -808,6 +808,30 @@ bool DCItem::tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWa
 }
 
 /**
+ * Set the in-memory aggregation watermark to timestampMs unless the watermark already
+ * represents an equal or older bucket. Used by the one-shot non-TSDB backfill: unlike
+ * pushBackAggregationWatermark, this also acts when the current value is 0/NULL
+ * (the "fresh DCI" state), which is precisely the case the backfill targets. Caller
+ * is responsible for the corresponding UPDATE on items.aggregation_watermark.
+ *
+ * Returns true if the watermark was updated.
+ */
+bool DCItem::setInitialAggregationWatermark(int64_t timestampMs)
+{
+   if (timestampMs <= 0)
+      return false;
+   lock();
+   if ((m_aggregationWatermark > 0) && (m_aggregationWatermark <= timestampMs))
+   {
+      unlock();
+      return false;
+   }
+   m_aggregationWatermark = timestampMs;
+   unlock();
+   return true;
+}
+
+/**
  * Check last value for threshold violations. Original DCI is a pointer to source DCI
  * if threshold check is performed on shadow copy or nullptr otherwise.
  */
