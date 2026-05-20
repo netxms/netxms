@@ -3421,10 +3421,10 @@ restart_status_poll:
                m_pathCheckResult = patchCheckResult;
                unlockProperties();
 
-               static const TCHAR *reasonNames[] = {
+               static const wchar_t *reasonNames[] = {
                         _T("None"), _T("Router down"), _T("Switch down"), _T("Wireless AP down"),
                         _T("Proxy node down"), _T("Proxy agent unreachable"), _T("VPN tunnel down"),
-                        _T("Routing loop"), _T("Interface disabled")
+                        _T("Routing loop"), _T("Interface disabled"), L"Agent tunnel disconnected"
                };
                String description = patchCheckResult.buildDescription();
                EventBuilder(EVENT_NODE_UNREACHABLE, m_id)
@@ -3489,6 +3489,35 @@ restart_status_poll:
          else
          {
             sendPollerMsg(POLLER_INFO L"Node is connected\r\n");
+         }
+      }
+   }
+
+   // Special case: node without IP address but with agent - which means tunnel-only connectivity.
+   // Recovery from unreachable state is handled by the check above when the agent reconnects.
+   if (!m_ipAddress.isValidUnicast() && (m_capabilities & NC_IS_NATIVE_AGENT) && !agentConnected)
+   {
+      // Agent is not connected - check if tunnel as such is still there
+      if (GetTunnelForNode(m_id) == nullptr)
+      {
+         if (!(m_state & DCSF_UNREACHABLE))
+         {
+            m_state |= DCSF_UNREACHABLE;
+            m_downSince = time(nullptr);
+            EventBuilder(EVENT_NODE_UNREACHABLE, m_id)
+               .param(L"reasonCode", static_cast<int32_t>(NetworkPathFailureReason::AGENT_TUNNEL_DOWN))
+               .param(L"reason", L"Agent tunnel disconnected")
+               .param(L"rootCauseNodeId", static_cast<uint32_t>(0), EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"rootCauseNodeName", L"")
+               .param(L"rootCauseInterfaceId", static_cast<uint32_t>(0), EventBuilder::OBJECT_ID_FORMAT)
+               .param(L"rootCauseInterfaceName", L"")
+               .param(L"description", L"Agent tunnel disconnected")
+               .post();
+            sendPollerMsg(POLLER_WARNING L"Node is unreachable (agent tunnel disconnected)\r\n");
+         }
+         else
+         {
+            sendPollerMsg(POLLER_WARNING L"Node is still unreachable\r\n");
          }
       }
    }

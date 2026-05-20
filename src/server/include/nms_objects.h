@@ -3716,7 +3716,8 @@ enum class NetworkPathFailureReason
    PROXY_AGENT_UNREACHABLE = 5,
    VPN_TUNNEL_DOWN = 6,
    ROUTING_LOOP = 7,
-   INTERFACE_DISABLED = 8
+   INTERFACE_DISABLED = 8,
+   AGENT_TUNNEL_DOWN = 9
 };
 
 /**
