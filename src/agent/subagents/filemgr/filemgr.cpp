@@ -160,11 +160,30 @@ RootFolder::RootFolder(const TCHAR *folder)
 
    ConvertPathToHost(m_folder, false, false);
 
-   // Strip trailing path separator so that "/usr" and "/usr/" are equivalent
-   // and the prefix check in CheckFullPath has a consistent boundary. Length-1
-   // roots (bare "/" or "\") are kept as-is.
    size_t len = _tcslen(m_folder);
-   if ((len > 1) && (m_folder[len - 1] == FS_PATH_SEPARATOR_CHAR))
+
+#ifdef _WIN32
+   // On Windows a bare drive specification ("C:") is drive-relative — it refers
+   // to the current directory on that drive, not the drive root. Normalize it to
+   // a proper drive root ("C:\") so it cannot be expanded into an arbitrary path.
+   if ((len == 2) && (m_folder[1] == _T(':')))
+   {
+      m_folder = MemReallocArray(m_folder, 4);
+      m_folder[2] = FS_PATH_SEPARATOR_CHAR;
+      m_folder[3] = 0;
+      len = 3;
+   }
+#endif
+
+   // Strip trailing path separator so that "/usr" and "/usr/" are equivalent
+   // and the prefix check in CheckFullPath has a consistent boundary. Bare
+   // length-1 roots ("/" or "\") are kept as-is, and on Windows the trailing
+   // separator of a drive root ("C:\") is kept too — "C:" alone is drive-relative.
+   if ((len > 1) && (m_folder[len - 1] == FS_PATH_SEPARATOR_CHAR)
+#ifdef _WIN32
+       && !((len == 3) && (m_folder[1] == _T(':')))
+#endif
+      )
       m_folder[len - 1] = 0;
 }
 
