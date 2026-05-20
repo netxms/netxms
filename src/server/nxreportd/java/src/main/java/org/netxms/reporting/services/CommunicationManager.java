@@ -240,7 +240,8 @@ public class CommunicationManager
                }
 
                // Handle incoming file data for report package upload
-               if ((message.getMessageCode() == NXCPCodes.CMD_FILE_DATA || message.getMessageCode() == NXCPCodes.CMD_ABORT_FILE_TRANSFER) && pendingFileStream != null)
+               if ((message.getMessageCode() == NXCPCodes.CMD_FILE_DATA || message.getMessageCode() == NXCPCodes.CMD_ABORT_FILE_TRANSFER) && pendingFileStream != null &&
+                     pendingFileRequestId == message.getMessageId())
                {
                   processIncomingFileData(message);
                   continue;
