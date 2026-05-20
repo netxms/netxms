@@ -1639,23 +1639,6 @@ public class WidgetHelper
    }
 
    /**
-    * Create image descriptor from image data
-    *
-    * @param imageData image data
-    * @return image descriptor object
-    */
-   public static ImageDescriptor createImageDescriptor(ImageData imageData)
-   {
-      return ImageDescriptor.createFromImageDataProvider(new ImageDataProvider() {
-            @Override
-            public ImageData getImageData(int zoom)
-            {
-               return imageData;
-            }
-         });
-   }
-
-   /**
     * Save given image to file (will show file save dialog in desktop client and initiate download in web client).
     *
     * @param view parent view (can be null)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,8 +148,7 @@ public class ObjectToolsCache
                ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
                try
                {
-                  final ImageData imageData = new ImageData(input); 
-                  icons.put(tool.getId(), WidgetHelper.createImageDescriptor(imageData));
+                  icons.put(tool.getId(), ImageDescriptor.createFromImageData(new ImageData(input)));
                }
                catch(Exception e)
                {
