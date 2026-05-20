@@ -5219,6 +5219,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/at/Makefile
 	src/server/drivers/avaya/Makefile
 	src/server/drivers/bdcom/Makefile
+	src/server/drivers/bulat/Makefile
 	src/server/drivers/cambium/Makefile
 	src/server/drivers/cisco/Makefile
 	src/server/drivers/dell-pwc/Makefile
