@@ -1533,24 +1533,36 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       return true;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
    @Override
    public void addSelectionChangedListener(ISelectionChangedListener listener)
    {
       selectionListeners.add(listener);
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
    @Override
    public void removeSelectionChangedListener(ISelectionChangedListener listener)
    {
       selectionListeners.remove(listener);
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
    @Override
    public ISelection getSelection()
    {
       return selection;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
    @Override
    public void setSelection(ISelection selection)
    {
@@ -1651,66 +1663,12 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
        * {@link #drawLinks}; {@code null} before the first pass.
        */
       Color cachedColor;
-      /**
-       * Cumulative pixel distance from src to each vertex (cumDist[0] = 0,
-       * cumDist[xs.length-1] = total polyline length). Computed once per
-       * paint so {@code pointAtFraction} doesn't re-walk + Math.sqrt every
-       * segment for each of the five label positions per link.
-       */
-      double[] cumDist;
 
       LinkGeometry(NetworkMapLink link, int[] xs, int[] ys)
       {
          this.link = link;
          this.xs = xs;
          this.ys = ys;
-         this.cumDist = computeCumDist(xs, ys);
-      }
-
-      private static double[] computeCumDist(int[] xs, int[] ys)
-      {
-         double[] cum = new double[xs.length];
-         cum[0] = 0;
-         for(int i = 1; i < xs.length; i++)
-         {
-            double dx = xs[i] - xs[i - 1];
-            double dy = ys[i] - ys[i - 1];
-            cum[i] = cum[i - 1] + Math.sqrt(dx * dx + dy * dy);
-         }
-         return cum;
-      }
-
-      /** Total pixel length of the polyline. Constant after construction. */
-      double totalLength()
-      {
-         return cumDist[cumDist.length - 1];
-      }
-
-      /**
-       * Find the pixel-space point at the given fractional position along
-       * the polyline (0 = src, 1 = dst). O(N) but uses the cached cumulative
-       * distance table — no per-call segment length recomputation.
-       */
-      Point pointAtFraction(double fraction)
-      {
-         double total = totalLength();
-         if (total < 0.001 || fraction <= 0)
-            return new Point(xs[0], ys[0]);
-         if (fraction >= 1.0)
-            return new Point(xs[xs.length - 1], ys[ys.length - 1]);
-         double target = total * fraction;
-         for(int i = 1; i < cumDist.length; i++)
-         {
-            if (cumDist[i] >= target)
-            {
-               double segLen = cumDist[i] - cumDist[i - 1];
-               double t = (segLen < 0.001) ? 0 : (target - cumDist[i - 1]) / segLen;
-               int x = xs[i - 1] + (int)Math.round((xs[i] - xs[i - 1]) * t);
-               int y = ys[i - 1] + (int)Math.round((ys[i] - ys[i - 1]) * t);
-               return new Point(x, y);
-            }
-         }
-         return new Point(xs[xs.length - 1], ys[ys.length - 1]);
       }
 
       /**

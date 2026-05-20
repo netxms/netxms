@@ -42,7 +42,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -67,7 +66,6 @@ import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -1636,23 +1634,6 @@ public class WidgetHelper
    public static Image createImageFromImageData(Display display, ImageData imageData)
    {
       return new Image(display, imageData);
-   }
-
-   /**
-    * Create image descriptor from image data
-    *
-    * @param imageData image data
-    * @return image descriptor object
-    */
-   public static ImageDescriptor createImageDescriptor(ImageData imageData)
-   {
-      return ImageDescriptor.createFromImageDataProvider(new ImageDataProvider() {
-            @Override
-            public ImageData getImageData(int zoom)
-            {
-               return imageData;
-            }
-         });
    }
 
    /**
