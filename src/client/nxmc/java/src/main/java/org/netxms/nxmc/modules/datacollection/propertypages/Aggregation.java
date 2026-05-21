@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.constants.DciAggregationMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
@@ -47,9 +46,7 @@ public class Aggregation extends AbstractDCIPropertyPage
 
    private DataCollectionItem dci;
 
-   private Button modeDefault;
-   private Button modeEnabled;
-   private Button modeDisabled;
+   private Button disableAggregation;
 
    private Button hourlyDefault;
    private Button hourlyCustom;
@@ -87,7 +84,7 @@ public class Aggregation extends AbstractDCIPropertyPage
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      createModeGroup(dialogArea);
+      createDisableCheckbox(dialogArea);
       createHourlyGroup(dialogArea);
       createDailyGroup(dialogArea);
       createTsdbNotice(dialogArea);
@@ -96,31 +93,14 @@ public class Aggregation extends AbstractDCIPropertyPage
    }
 
    /**
-    * Three-radio "Aggregation mode" group: Server default (inherit), Enabled, Disabled.
+    * Per-DCI aggregation opt-out. When unchecked, the DCI aggregates whenever the
+    * server-wide aggregation switch is on; there is no per-DCI force-enable.
     */
-   private void createModeGroup(Composite dialogArea)
+   private void createDisableCheckbox(Composite dialogArea)
    {
-      Group group = new Group(dialogArea, SWT.NONE);
-      group.setText(i18n.tr("Aggregation mode"));
-      GridLayout layout = new GridLayout();
-      layout.marginHeight = WidgetHelper.OUTER_SPACING;
-      layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      group.setLayout(layout);
-      group.setLayoutData(fillHorizontal());
-
-      DciAggregationMode current = dci.getAggregationMode();
-
-      modeDefault = new Button(group, SWT.RADIO);
-      modeDefault.setText(i18n.tr("Server default (use server-wide setting)"));
-      modeDefault.setSelection(current == DciAggregationMode.INHERIT);
-
-      modeEnabled = new Button(group, SWT.RADIO);
-      modeEnabled.setText(i18n.tr("Enabled"));
-      modeEnabled.setSelection(current == DciAggregationMode.ENABLED);
-
-      modeDisabled = new Button(group, SWT.RADIO);
-      modeDisabled.setText(i18n.tr("Disabled"));
-      modeDisabled.setSelection(current == DciAggregationMode.DISABLED);
+      disableAggregation = new Button(dialogArea, SWT.CHECK);
+      disableAggregation.setText(i18n.tr("Disable data aggregation for this DCI"));
+      disableAggregation.setSelection(dci.isAggregationDisabled());
    }
 
    /**
@@ -270,12 +250,7 @@ public class Aggregation extends AbstractDCIPropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {
-      DciAggregationMode mode = DciAggregationMode.INHERIT;
-      if (modeEnabled.getSelection())
-         mode = DciAggregationMode.ENABLED;
-      else if (modeDisabled.getSelection())
-         mode = DciAggregationMode.DISABLED;
-      dci.setAggregationMode(mode);
+      dci.setAggregationDisabled(disableAggregation.getSelection());
 
       dci.setHourlyRetention(hourlyCustom.getSelection() ? parsePositiveInt(hourlyRetention.getText()) : 0);
       dci.setDailyRetention(dailyCustom.getSelection() ? parsePositiveInt(dailyRetention.getText()) : 0);
@@ -291,9 +266,7 @@ public class Aggregation extends AbstractDCIPropertyPage
    protected void performDefaults()
    {
       super.performDefaults();
-      modeDefault.setSelection(true);
-      modeEnabled.setSelection(false);
-      modeDisabled.setSelection(false);
+      disableAggregation.setSelection(false);
 
       hourlyDefault.setSelection(true);
       hourlyCustom.setSelection(false);

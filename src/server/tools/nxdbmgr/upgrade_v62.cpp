@@ -25,6 +25,23 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.15 to 62.16
+ */
+static bool H_UpgradeFromV15()
+{
+   if (DBMgrMetaDataReadInt32(L"BooleanAggregationMode", 0) == 0)
+   {
+      CHK_EXEC(DBDropColumn(g_dbHandle, L"items", L"aggregation_mode"));
+      CHK_EXEC(SQLQuery(L"ALTER TABLE items ADD aggregation_disabled char(1)"));
+      CHK_EXEC(SQLQuery(L"UPDATE items SET aggregation_disabled='0'"));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"aggregation_disabled"));
+   }
+   CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='BooleanAggregationMode'"));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Sniff image MIME type from leading magic bytes
  */
 static const char *SniffImageMimeType(const BYTE *data, size_t size)
@@ -451,14 +468,15 @@ static bool H_UpgradeFromV6()
 static bool H_UpgradeFromV5()
 {
    static const wchar_t *batch =
-      L"ALTER TABLE items ADD aggregation_mode char(1)\n"
+      L"ALTER TABLE items ADD aggregation_disabled char(1)\n"
       L"ALTER TABLE items ADD hourly_retention integer\n"
       L"ALTER TABLE items ADD daily_retention integer\n"
       L"ALTER TABLE items ADD aggregation_watermark $SQL:INT64\n"
-      L"UPDATE items SET aggregation_mode='0'\n"
+      L"UPDATE items SET aggregation_disabled='0'\n"
       L"<END>";
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"aggregation_mode"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"aggregation_disabled"));
+   CHK_EXEC(DBMgrMetaDataWriteInt32(L"BooleanAggregationMode", 1));
 
    CHK_EXEC(CreateConfigParam(L"DataCollection.Aggregation.Enabled",
             L"0",
@@ -622,6 +640,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 62, 16, H_UpgradeFromV15 },
    { 14, 62, 15, H_UpgradeFromV14 },
    { 13, 62, 14, H_UpgradeFromV13 },
    { 12, 62, 13, H_UpgradeFromV12 },

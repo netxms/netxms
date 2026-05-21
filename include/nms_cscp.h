@@ -1716,7 +1716,7 @@ typedef struct
 #define VID_DCI_TIER                ((uint32_t)980)
 #define VID_DCI_AGG_FUNCTION        ((uint32_t)981)
 #define VID_DCI_TIER_USED           ((uint32_t)982)
-#define VID_DCI_AGGREGATION_MODE    ((uint32_t)983)
+#define VID_DCI_AGGREGATION_DISABLED ((uint32_t)983)
 #define VID_DCI_HOURLY_RETENTION    ((uint32_t)984)
 #define VID_DCI_DAILY_RETENTION     ((uint32_t)985)
 #define VID_POLICY_FILE_GUID        ((uint32_t)986)

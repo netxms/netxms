@@ -283,16 +283,6 @@ enum DCObjectRetentionType
 };
 
 /**
- * DCI aggregation mode (per-item override of global aggregation enable)
- */
-enum DCItemAggregationMode
-{
-   DCI_AGGREGATION_INHERIT = 0,   // Follow global DataCollection.Aggregation.Enabled
-   DCI_AGGREGATION_ENABLED = 1,   // Force-enabled for this DCI
-   DCI_AGGREGATION_DISABLED = 2   // Force-disabled for this DCI
-};
-
-/**
  * DCI history query tier (selects which aggregation table to read from).
  * Sent over the wire in VID_DCI_TIER and VID_DCI_TIER_USED.
  */
@@ -604,7 +594,7 @@ protected:
    uint32_t m_allThresholdsRearmEvent; // Event to be generated when all thresholds are rearmed
    int32_t m_sampleSaveInterval;       // Save every N-th sample (1 = save all)
    int32_t m_sampleSaveCounter;        // Runtime counter for nth sample logic (not persisted)
-   BYTE m_aggregationMode;             // DCItemAggregationMode: inherit, enabled or disabled
+   bool m_aggregationDisabled;         // Per-DCI aggregation opt-out
    int32_t m_hourlyRetention;          // Per-DCI hourly aggregate retention override (days), 0 = use default
    int32_t m_dailyRetention;           // Per-DCI daily aggregate retention override (days), 0 = use default
    int64_t m_aggregationWatermark;     // Earliest bucket start (ms) not yet rolled up; non-TSDB only
@@ -686,7 +676,7 @@ public:
 	time_t getAnomalyProfileTimestamp() const { return m_anomalyProfileTimestamp; }
 	SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutex); }
 
-	BYTE getAggregationMode() const { return m_aggregationMode; }
+	bool isAggregationDisabled() const { return m_aggregationDisabled; }
 	int32_t getHourlyRetention() const { return m_hourlyRetention; }
 	int32_t getDailyRetention() const { return m_dailyRetention; }
 	int64_t getAggregationWatermark() const { return m_aggregationWatermark; }

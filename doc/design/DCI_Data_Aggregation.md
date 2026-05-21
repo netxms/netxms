@@ -250,7 +250,7 @@ All new server configuration variables live under `DataCollection.Aggregation.*`
 ### DCI properties (nxmc desktop + web)
 
 New section in the **General** tab:
-- **Aggregation mode**: *Default (inherit) / Enabled / Disabled*
+- **Disable data aggregation for this DCI**: checkbox, default unchecked. When unchecked, the DCI aggregates whenever the server-wide `DataCollection.Aggregation.Enabled` switch is on. There is no per-DCI force-enable — the global switch is the only way to turn aggregation on.
 - **Hourly retention**: *Default / Override (days)*
 - **Daily retention**: *Default / Override (days)*
 
@@ -277,7 +277,7 @@ New "Aggregation" section under Data Collection. TSDB-specific rows visible only
 Schema migration in the next available upgrade slot:
 
 1. Add to `items`:
-   - `aggregation_mode CHAR(1)` — `I` (inherit, default) / `E` (enabled) / `D` (disabled)
+   - `aggregation_disabled CHAR(1)` — per-DCI opt-out: `'0'` (aggregate, default) / `'1'` (disabled)
    - `hourly_retention INT NULL` — per-DCI override
    - `daily_retention INT NULL` — per-DCI override
    - `aggregation_watermark SQL_INT64 NULL` — non-TSDB only

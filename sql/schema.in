@@ -963,7 +963,7 @@ CREATE TABLE items
   anomaly_profile SQL_TEXT null,       // AI anomaly detection profile (JSON)
   anomaly_profile_timestamp integer not null,
   ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
-  aggregation_mode char(1) not null,   // Aggregation mode: '0'=inherit, '1'=enabled, '2'=disabled
+  aggregation_disabled char(1) not null, // Per-DCI aggregation opt-out: '0'=aggregate, '1'=disabled
   hourly_retention integer null,       // Per-DCI hourly aggregate retention override (days)
   daily_retention integer null,        // Per-DCI daily aggregate retention override (days)
   aggregation_watermark SQL_INT64 null, // Earliest bucket start not yet rolled up (ms); non-TSDB only

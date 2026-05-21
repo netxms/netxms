@@ -23,7 +23,6 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
-import org.netxms.client.constants.DciAggregationMode;
 
 /**
  * Data Collection Item representation
@@ -78,7 +77,7 @@ public class DataCollectionItem extends DataCollectionObject
    private List<Threshold> thresholds;
    private int allThresholdsRearmEvent;
    private String aiHint;
-   private DciAggregationMode aggregationMode;
+   private boolean aggregationDisabled;
    private int hourlyRetention;
    private int dailyRetention;
 
@@ -103,7 +102,7 @@ public class DataCollectionItem extends DataCollectionObject
 		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
       allThresholdsRearmEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
       aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
-      aggregationMode = DciAggregationMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_AGGREGATION_MODE));
+      aggregationDisabled = msg.getFieldAsBoolean(NXCPCodes.VID_DCI_AGGREGATION_DISABLED);
       hourlyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION);
       dailyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DAILY_RETENTION);
 
@@ -136,7 +135,7 @@ public class DataCollectionItem extends DataCollectionObject
 		mappingTableId = 0;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
       allThresholdsRearmEvent = 0;
-      aggregationMode = DciAggregationMode.INHERIT;
+      aggregationDisabled = false;
       hourlyRetention = 0;
       dailyRetention = 0;
 		thresholds = new ArrayList<Threshold>(0);
@@ -192,7 +191,7 @@ public class DataCollectionItem extends DataCollectionObject
       snmpRawValueType = src.snmpRawValueType;
       allThresholdsRearmEvent = src.allThresholdsRearmEvent;
       aiHint = src.aiHint;
-      aggregationMode = src.aggregationMode;
+      aggregationDisabled = src.aggregationDisabled;
       hourlyRetention = src.hourlyRetention;
       dailyRetention = src.dailyRetention;
       thresholds = new ArrayList<Threshold>(src.thresholds);
@@ -219,7 +218,7 @@ public class DataCollectionItem extends DataCollectionObject
       msg.setField(NXCPCodes.VID_UNITS_NAME, unitName);
       msg.setFieldInt32(NXCPCodes.VID_MAPPING_TABLE_ID, (int)mappingTableId);
       msg.setField(NXCPCodes.VID_AI_HINT, aiHint);
-      msg.setFieldInt16(NXCPCodes.VID_DCI_AGGREGATION_MODE, (aggregationMode != null) ? aggregationMode.getValue() : DciAggregationMode.INHERIT.getValue());
+      msg.setField(NXCPCodes.VID_DCI_AGGREGATION_DISABLED, aggregationDisabled);
       msg.setFieldInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION, hourlyRetention);
       msg.setFieldInt32(NXCPCodes.VID_DCI_DAILY_RETENTION, dailyRetention);
 
@@ -634,21 +633,22 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
-    * Get per-DCI aggregation mode override (INHERIT defers to global switch).
+    * Check if data aggregation is disabled for this DCI. When unset, the DCI
+    * aggregates whenever the server-wide aggregation switch is on.
     *
-    * @return aggregation mode
+    * @return true if aggregation is disabled for this DCI
     */
-   public DciAggregationMode getAggregationMode()
+   public boolean isAggregationDisabled()
    {
-      return (aggregationMode != null) ? aggregationMode : DciAggregationMode.INHERIT;
+      return aggregationDisabled;
    }
 
    /**
-    * @param aggregationMode aggregation mode to set
+    * @param aggregationDisabled true to opt this DCI out of data aggregation
     */
-   public void setAggregationMode(DciAggregationMode aggregationMode)
+   public void setAggregationDisabled(boolean aggregationDisabled)
    {
-      this.aggregationMode = aggregationMode;
+      this.aggregationDisabled = aggregationDisabled;
    }
 
    /**
