@@ -184,7 +184,7 @@ int ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
 
 ### Generic Webhook Driver
 
-`webhook/` is a generic, templated HTTP driver (`ncdrv/webhook.ncd`). Instead of hard-coding a vendor's payload it sends a user-supplied body template as an HTTP request, so most REST/JSON notification gateways can be onboarded via config alone. Pure helpers (placeholder substitution, percent-encoding, integer-list and JSON-pointer parsing) live in `webhook_helpers.{cpp,h}` and are unit-tested by `tests/test-ncd-webhook/` (libcurl-free by design).
+`webhook/` is a generic, templated HTTP driver (`ncdrv/webhook.ncd`). Instead of hard-coding a vendor's payload it sends a user-supplied body template as an HTTP request, so most REST/JSON notification gateways can be onboarded via config alone. Pure helpers (JSON-context placeholder substitution and integer-list parsing) live in `webhook_helpers.{cpp,h}` and are unit-tested by `tests/test-ncd-webhook/` (libcurl-free by design). URL percent-encoding uses `curl_easy_escape` and response JSON traversal uses `json_object_get_by_path_a` — both inline in `webhook.cpp`.
 
 **Config keys:**
 
@@ -198,13 +198,13 @@ int ShellDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR 
 | `Timeout` | int (sec) | `10` | `CURLOPT_TIMEOUT`. |
 | `SuccessHttpCodes` | csv | `200,201,202,204` | HTTP codes treated as success. |
 | `RetryHttpCodes` | csv | `429,502,503,504` | HTTP codes producing a retry. |
-| `SuccessJsonPath` | string | (empty) | RFC 6901 JSON pointer into the response body. Empty = skip body check. |
+| `SuccessJsonPath` | string | (empty) | Slash-separated path through nested response objects (`/data/status`). Empty = skip body check. |
 | `SuccessValue` | string | (empty) | Required stringified value at `SuccessJsonPath`. |
 | `[Headers]` section | name=value | none | Extra headers, literal values (no substitution). |
 
 **Placeholders:** `${recipient}`, `${subject}`, `${body}` are substituted in the URL and template body. Unknown tokens are left literal so typos stay visible.
 
-**Escaping rules:** in the URL, values are RFC 3986 percent-encoded (pure helper — not `curl_easy_escape`, so the test target stays libcurl-free); in the template body, values are JSON-escaped via `EscapeStringForJSON()`. Headers carry literal config values (no substitution).
+**Escaping rules:** in the URL, values are percent-encoded via `curl_easy_escape` (inline in `webhook.cpp`); in the template body, values are JSON-escaped via `EscapeStringForJSON()` (libcurl-free helper). Headers carry literal config values (no substitution).
 
 **Success-detection model:**
 

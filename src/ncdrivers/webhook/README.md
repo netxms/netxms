@@ -7,7 +7,7 @@ configuration alone, without writing a vendor-specific driver.
 ## Files
 
 - `webhook.cpp` — driver implementation (libcurl-based transport, config parsing, send loop)
-- `webhook_helpers.{cpp,h}` — pure helpers (placeholder substitution, percent-encoding, integer-list and JSON-pointer parsing), libcurl-free so they can be unit-tested in isolation
+- `webhook_helpers.{cpp,h}` — pure helpers (JSON-context placeholder substitution, integer-list parsing), libcurl-free so they can be unit-tested in isolation
 - Unit tests: `tests/test-ncd-webhook/`
 
 ## Configuration keys
@@ -22,16 +22,16 @@ configuration alone, without writing a vendor-specific driver.
 | `Timeout` | int (sec) | `10` | `CURLOPT_TIMEOUT`. |
 | `SuccessHttpCodes` | csv | `200,201,202,204` | HTTP codes treated as success. |
 | `RetryHttpCodes` | csv | `429,502,503,504` | HTTP codes producing a retry. |
-| `SuccessJsonPath` | string | (empty) | RFC 6901 JSON pointer into response body. |
+| `SuccessJsonPath` | string | (empty) | Slash-separated path through nested response objects (e.g. `/data/status`). |
 | `SuccessValue` | string | (empty) | Required stringified value at `SuccessJsonPath`. |
 | `[headers]` section | name=value | none | Extra headers; literal values, no substitution. |
 
 ## Placeholders
 
-`${recipient}`, `${subject}`, `${body}` are substituted in the URL (RFC 3986
-percent-encoded) and template body (JSON-escaped via `EscapeStringForJSON()`).
-Unknown tokens are left literal so typos stay visible. Headers are sent as
-literal config values — no substitution.
+`${recipient}`, `${subject}`, `${body}` are substituted in the URL
+(percent-encoded via `curl_easy_escape`) and template body (JSON-escaped via
+`EscapeStringForJSON()`). Unknown tokens are left literal so typos stay
+visible. Headers are sent as literal config values — no substitution.
 
 ## Return codes
 
