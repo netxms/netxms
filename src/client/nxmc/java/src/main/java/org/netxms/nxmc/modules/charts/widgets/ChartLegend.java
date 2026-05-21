@@ -47,8 +47,10 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Chart legend
@@ -58,6 +60,7 @@ public class ChartLegend extends Composite
    private static final int SYMBOL_WIDTH = 12;
    private static final int EXTENDED_LEGEND_DATA_SPACING = 6;
 
+   private final I18n i18n = LocalizationHelper.getI18n(ChartLegend.class);
    private final Color defaultForeground = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
 
    private Chart chart;
@@ -333,7 +336,8 @@ public class ChartLegend extends Composite
       if ((chart.getType() == ChartType.BAR) || (chart.getType() == ChartType.PIE))
       {
          for(DataSeries s : chart.getDataSeries())
-            total += s.getCurrentValue();
+            if (!s.isDataCollectionError())
+               total += s.getCurrentValue();
       }
 
       int row = 0;
@@ -350,7 +354,8 @@ public class ChartLegend extends Composite
                .setDataType(DataType.FLOAT)
                .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
-         labels[0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
+         boolean error = s.isDataCollectionError();
+         labels[0].setText(error ? i18n.tr("<< ERROR >>") : formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)
          {
             labels[1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));
@@ -359,7 +364,7 @@ public class ChartLegend extends Composite
          }
          else if (labels.length > 1)
          {
-            labels[1].setText(String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
+            labels[1].setText(error ? "" : String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
          }
          row++;
       }

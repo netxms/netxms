@@ -140,7 +140,6 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     */
    protected String getValueAsDisplayString(ChartDciConfig dci, DataSeries data)
    {
-      System.out.println(data.getDciName() + " mt=" + data.getMappingTableId() + " v=" + data.getCurrentValueAsString());
       String mapped = DciValueFormatter.lookup(data.getMappingTableId(), data.getCurrentValueAsString());
       if (mapped != null)
          return mapped;

@@ -279,6 +279,16 @@ public abstract class DciValue
 	}
 
    /**
+    * Check if DCI is in error state (disabled, unsupported, or has polling errors).
+    *
+    * @return true if DCI is in error state
+    */
+   public boolean isDataCollectionError()
+   {
+      return (status != DataCollectionObjectStatus.ACTIVE) || (errorCount > 0);
+   }
+
+   /**
     * Get severity of active threshold
     * 
     * @return severity of active threshold or NORMAL if there are no active thresholds

@@ -161,7 +161,7 @@ public class PieChart extends GenericComparisonChart
       double[] values = new double[series.size()];
       for(int i = 0; i < series.size(); i++)
       {
-         values[i] = series.get(i).getCurrentValue();
+         values[i] = series.get(i).isDataCollectionError() ? 0 : series.get(i).getCurrentValue();
          total += values[i] < 0 ? 0 : values[i];
       }
       if (total == 0)

@@ -135,15 +135,16 @@ public class BarChart extends GenericComparisonChart
       total = 0;
       if (chart.getConfiguration().isAutoScale())
       {
-         minValue = series.get(0).getCurrentValue();
+         minValue = effectiveValue(series.get(0));
          maxValue = minValue;
          for(DataSeries s : series)
          {
-            if (minValue > s.getCurrentValue())
-               minValue = s.getCurrentValue();
-            if (maxValue < s.getCurrentValue())
-               maxValue = s.getCurrentValue();
-            total += s.getCurrentValue();
+            double v = effectiveValue(s);
+            if (minValue > v)
+               minValue = v;
+            if (maxValue < v)
+               maxValue = v;
+            total += v;
          }
          if (minValue >= 0)
          {
@@ -169,7 +170,7 @@ public class BarChart extends GenericComparisonChart
          maxValue = chart.getConfiguration().getMaxYScaleValue();
          for(DataSeries s : series)
          {
-            total += s.getCurrentValue();
+            total += effectiveValue(s);
          }
       }
 
@@ -270,7 +271,7 @@ public class BarChart extends GenericComparisonChart
          int margin = Math.max(Math.min(10, itemWidth / 10), 1);
          for(int i = 0, x = MARGIN_WIDTH + labelWidth; i < items.size(); i++, x += itemWidth)
          {
-            double value = series.get(i).getCurrentValue();
+            double value = effectiveValue(series.get(i));
             if (value != 0)
             {
                int color = items.get(i).getColorAsInt();
@@ -375,7 +376,7 @@ public class BarChart extends GenericComparisonChart
          int margin = Math.max(Math.min(10, itemHeight / 10), 1);
          for(int i = 0, y = MARGIN_HEIGHT; i < items.size(); i++, y += itemHeight)
          {
-            double value = series.get(i).getCurrentValue();
+            double value = effectiveValue(series.get(i));
             if (value != 0)
             {
                int color = items.get(i).getColorAsInt();
@@ -458,6 +459,17 @@ public class BarChart extends GenericComparisonChart
             return m;
       }
       return 1;
+   }
+
+   /**
+    * Get effective value for given data series. Returns 0 for DCIs in error state so that they take no space on the chart.
+    *
+    * @param series data series
+    * @return current value, or 0 if DCI is in error state
+    */
+   private static double effectiveValue(DataSeries series)
+   {
+      return series.isDataCollectionError() ? 0 : series.getCurrentValue();
    }
 
    private static class Label
