@@ -197,6 +197,7 @@ public class TableToolResults extends ObjectToolResultView
 			viewer.createColumns(names, widths, 0, SWT.UP);
 			viewer.enablePersistence("TableToolResults." + Long.toString(tool.getId())); //$NON-NLS-1$
 			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
+			updateMenu(); // Column management actions become available only after columns are created
 		}
 		((TableLabelProvider)viewer.getLabelProvider()).setColumns(table.getColumns());
 		viewer.setInput(table);

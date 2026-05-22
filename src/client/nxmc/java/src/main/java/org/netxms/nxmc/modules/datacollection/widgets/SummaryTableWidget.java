@@ -88,6 +88,7 @@ public class SummaryTableWidget extends Composite
    private ObjectSelectionProvider objectSelectionProvider;
    private int showLineCount = 0;
    private List<String> sortingColumnList = null;
+   private Runnable viewerInitializationCallback = null;
 
    /**
     * Create summary table widget
@@ -326,6 +327,9 @@ public class SummaryTableWidget extends Composite
             }
          });
          viewer.setComparator(new SummaryTableItemComparator(table));
+
+         if (viewerInitializationCallback != null)
+            viewerInitializationCallback.run();
       }
 
       labelProvider.setColumnDataTypes(table.getColumns());
@@ -586,5 +590,17 @@ public class SummaryTableWidget extends Composite
    public void setSortColumns(List<String> sortingColumnList)
    {
       this.sortingColumnList = sortingColumnList;
+   }
+
+   /**
+    * Set callback to be invoked once the underlying viewer is initialized (columns created and persistence enabled).
+    * Column management actions (such as automatic column resize) become available only after that point, so a host
+    * view can use this callback to rebuild its menu.
+    *
+    * @param callback callback to invoke after viewer initialization, or null to remove existing callback
+    */
+   public void setViewerInitializationCallback(Runnable callback)
+   {
+      this.viewerInitializationCallback = callback;
    }
 }

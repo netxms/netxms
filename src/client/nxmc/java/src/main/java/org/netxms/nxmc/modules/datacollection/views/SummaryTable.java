@@ -92,6 +92,7 @@ public class SummaryTable extends AdHocObjectView
    protected void createContent(Composite parent)
 	{
 		viewer = new SummaryTableWidget(parent, SWT.NONE, this, tableId, baseObjectId);
+      viewer.setViewerInitializationCallback(() -> updateMenu());
       viewer.refresh();
 
 		createActions();
