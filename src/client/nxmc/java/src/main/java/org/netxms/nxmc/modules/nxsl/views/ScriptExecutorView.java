@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,20 +114,25 @@ public class ScriptExecutorView extends AdHocObjectView
       super.postClone(origin);
 
       ScriptExecutorView view = (ScriptExecutorView)origin;
-      scriptName.setText(view.scriptName.getText());      
+      scriptName.setText(view.scriptName.getText());
       parametersField.setText(view.parametersField.getText());
       output.setText(view.output.getText());
 
-      Runnable run = new Runnable() {
+      // Capture state from origin synchronously - origin view will be disposed
+      // before the deferred runnable below executes.
+      final int comboSelection = view.scriptCombo.getSelectionIndex();
+      final boolean saveEnabled = view.actionSave.isEnabled();
+      scriptEditor.setText(view.scriptEditor.getText());
+
+      // Combo selection can only be applied after the script list has been loaded.
+      updateScriptList(new Runnable() {
          @Override
          public void run()
          {
-            scriptCombo.select(view.scriptCombo.getSelectionIndex());
-            scriptEditor.setText(view.scriptEditor.getText());
-            actionSave.setEnabled(view.actionSave.isEnabled());        
+            scriptCombo.select(comboSelection);
+            actionSave.setEnabled(saveEnabled);
          }
-      };
-      updateScriptList(run);
+      });
    }
 
    /**
@@ -484,14 +489,13 @@ public class ScriptExecutorView extends AdHocObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {            
             final Script script = session.getScript(library.get(index).getId());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  scriptEditor.setText(script.getSource());
-                  clearModificationFlag();
-                  scriptName.setText(script.getName());
-               }
+            runInUIThread(() -> {
+               if (scriptEditor.isDisposed())
+                  return;
+
+               scriptEditor.setText(script.getSource());
+               clearModificationFlag();
+               scriptName.setText(script.getName());
             });
          }
 
