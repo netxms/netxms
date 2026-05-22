@@ -201,6 +201,7 @@ public class TableToolResults extends ObjectToolResultView
 				}
 			});
 			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
+			updateMenu(); // Column management actions become available only after columns are created
 		}
 		((TableLabelProvider)viewer.getLabelProvider()).setColumns(table.getColumns());
 		viewer.setInput(table);
