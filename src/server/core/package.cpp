@@ -449,10 +449,26 @@ void PackageDeploymentJob::notifyClients() const
  */
 static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionEx *upgradeConnection, uint32_t transferId, const wchar_t **errorMessage)
 {
-   if (upgradeConnection->startUpgrade(job->getPackageFile(), transferId) != ERR_SUCCESS)
+   uint32_t rcc = upgradeConnection->startUpgrade(job->getPackageFile(), transferId);
+   if (rcc != ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"UpgradeAgent(): cannot start agent upgrade on node %s [%u] in job [%u]", node->getName(), node->getId(), job->getId());
-      *errorMessage = L"Unable to start upgrade process";
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UpgradeAgent(): cannot start agent upgrade on node %s [%u] in job [%u] (%u: %s)",
+         node->getName(), node->getId(), job->getId(), rcc, AgentErrorCodeToText(rcc));
+      switch(rcc)
+      {
+         case ERR_ACCESS_DENIED:
+            *errorMessage = L"Access denied by agent";
+            break;
+         case ERR_BAD_SIGNATURE:
+            *errorMessage = L"Installer signature verification failed";
+            break;
+         case ERR_CONNECTION_BROKEN:
+            *errorMessage = L"Agent disconnected";
+            break;
+         default:
+            *errorMessage = L"Unable to start upgrade process";
+            break;
+      }
       return false;
    }
 
