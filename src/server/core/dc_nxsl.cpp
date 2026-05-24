@@ -23,6 +23,23 @@
 #include "nxcore.h"
 
 /**
+ * Convert last value of DCI (item or table) into NXSL value.
+ * For table DCIs the rawValue flag is ignored (raw == cooked for tables).
+ * Returns NXSL NULL when the DCI has no value yet or the type is unknown.
+ */
+NXSL_Value *DCObjectValueToNXSL(NXSL_VM *vm, DCObject *dci, bool rawValue)
+{
+   if (dci->getType() == DCO_TYPE_ITEM)
+      return rawValue ? static_cast<DCItem*>(dci)->getRawValueForNXSL(vm) : static_cast<DCItem*>(dci)->getValueForNXSL(vm, F_LAST, 1);
+   if (dci->getType() == DCO_TYPE_TABLE)
+   {
+      shared_ptr<Table> t = static_cast<DCTable*>(dci)->getLastValue();
+      return (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
+   }
+   return vm->createValue();
+}
+
+/**
  * NXSL function: Get DCI object
  * First argument is a node object (usually passed to script via $node variable),
  * and second is DCI ID
@@ -41,15 +58,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if (dci != NULL)
-	{
-		*result = dci->createNXSLObject(vm);
-	}
-	else
-	{
-		*result = vm->createValue();	// Return NULL if DCI not found
-	}
-
+   *result = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
 	return 0;
 }
 
@@ -70,27 +79,7 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if (dci != nullptr)
-   {
-      if (dci->getType() == DCO_TYPE_ITEM)
-	   {
-         *result = rawValue ? static_cast<DCItem*>(dci.get())->getRawValueForNXSL(vm) : static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
-	   }
-      else if (dci->getType() == DCO_TYPE_TABLE)
-      {
-         shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
-      }
-      else
-      {
-   		*result = vm->createValue();	// Return NULL
-      }
-   }
-	else
-	{
-		*result = vm->createValue();	// Return NULL if DCI not found
-	}
-
+   *result = (dci != nullptr) ? DCObjectValueToNXSL(vm, dci.get(), rawValue) : vm->createValue();
 	return 0;
 }
 
@@ -368,6 +357,24 @@ static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 }
 
 /**
+ * Compute aggregate (min/max/avg/sum) of DCI values for a period and wrap as NXSL value.
+ * Returns NXSL NULL for non-item DCIs and on query failure / empty result.
+ */
+NXSL_Value *DCItemAggregateValueToNXSL(NXSL_VM *vm, DCObject *dci, AggregationFunction func, time_t timeFrom, time_t timeTo)
+{
+   if (dci->getType() != DCO_TYPE_ITEM)
+      return vm->createValue();
+
+   TCHAR *result = static_cast<DCItem*>(dci)->getAggregateValue(func, static_cast<int32_t>(timeFrom), static_cast<int32_t>(timeTo));
+   if (result == nullptr)
+      return vm->createValue();   // Query failed
+   // Driver returns empty string instead of actual NULL read from database
+   NXSL_Value *v = (*result != 0) ? vm->createValue(result) : vm->createValue();
+   MemFree(result);
+   return v;
+}
+
+/**
  * Get min, max or average of DCI values for a period
  */
 static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, AggregationFunction func)
@@ -384,25 +391,9 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
-	{
-      TCHAR *result = static_cast<DCItem*>(dci.get())->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
-      if (result != nullptr)
-      {
-         // if there are no values driver will return empty string instead of actual NULL read from database
-         *ppResult = ((*result != 0) ? vm->createValue(result) : vm->createValue());
-         MemFree(result);
-      }
-      else
-      {
-		   *ppResult = vm->createValue();	// Return NULL if query failed
-      }
-	}
-	else
-	{
-		*ppResult = vm->createValue();	// Return NULL if DCI not found
-	}
-
+   *ppResult = (dci != nullptr)
+      ? DCItemAggregateValueToNXSL(vm, dci.get(), func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32())
+      : vm->createValue();
 	return 0;
 }
 
@@ -442,7 +433,7 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Parse a tier name string ("auto"/"raw"/"hourly"/"daily", case-insensitive).
  * Returns DCI_TIER_AUTO when no value supplied, or -1 on unknown name.
  */
-static int ParseDciTierName(const wchar_t *name)
+int ParseDciTierName(const wchar_t *name)
 {
    if ((name == nullptr) || (*name == 0))
       return DCI_TIER_AUTO;
@@ -457,7 +448,7 @@ static int ParseDciTierName(const wchar_t *name)
  * Parse an aggregation function name ("avg"/"min"/"max"/"minmax", case-insensitive).
  * Returns DCI_HAGG_AVG when no value supplied, or -1 on unknown name.
  */
-static int ParseDciAggFunctionName(const wchar_t *name)
+int ParseDciAggFunctionName(const wchar_t *name)
 {
    if ((name == nullptr) || (*name == 0))
       return DCI_HAGG_AVG;
@@ -466,6 +457,139 @@ static int ParseDciAggFunctionName(const wchar_t *name)
    if (!wcsicmp(name, L"max"))    return DCI_HAGG_MAX;
    if (!wcsicmp(name, L"minmax")) return DCI_HAGG_MINMAX;
    return -1;
+}
+
+/**
+ * Read DCI historical values for a period and wrap as NXSL array.
+ * If asDataPoints is true, returns array of DataPoint objects (timestamp + value); otherwise array of value strings.
+ * MINMAX function is not supported here. Returns NXSL NULL for non-item DCIs and on prepare/query failure.
+ */
+NXSL_Value *GetDCItemValuesForNXSL(NXSL_VM *vm, DCObject *dci, DataCollectionTarget *target,
+         time_t timeFrom, time_t timeTo, bool rawValue, DciTier requestedTier, DciAggregationFunction aggFunction, bool asDataPoints)
+{
+   if (dci->getType() != DCO_TYPE_ITEM)
+      return vm->createValue();
+
+   // Tier and function are meaningful only against the processed (non-raw) value column.
+   if (rawValue)
+      requestedTier = DCI_TIER_RAW;
+
+   int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
+   int64_t startMs = static_cast<int64_t>(timeFrom) * 1000;
+   int64_t endMs = static_cast<int64_t>(timeTo) * 1000;
+   DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, DCO_TYPE_ITEM, startMs, endMs,
+            target->getRuntimeFlags(), autoSelectThreshold);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = nullptr;
+   if (resolvedTier != DCI_TIER_RAW)
+   {
+      wchar_t condition[128];
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         wcscpy(condition, L" AND bucket_start BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)");
+      else
+         wcscpy(condition, L" AND bucket_start BETWEEN ? AND ?");
+      hStmt = PrepareTieredDataSelect(hdb, target->getId(), resolvedTier, aggFunction, MAX_DCI_DATA_RECORDS, condition);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dci->getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, startMs);
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, endMs);
+      }
+   }
+   else
+   {
+      StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
+      query.append(rawValue ? L"raw_value" : L"idata_value");
+      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      {
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+         {
+            query.append(L" FROM idata_sc_");
+            query.append(DCObject::getStorageClassName(dci->getStorageClass()));
+            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)");
+         }
+         else
+         {
+            query.append(L" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+         }
+      }
+      else if (target->hasV5IdataTable())
+      {
+         query.append(L" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_");
+         query.append(target->getId());
+         query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+         query.append(L" UNION ALL SELECT ");
+         query.append(V5TimestampToMs(false));
+         query.append(L",idata_value,raw_value FROM idata_v5_");
+         query.append(target->getId());
+         query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d");
+      }
+      else
+      {
+         query.append(L" FROM idata_");
+         query.append(target->getId());
+         query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
+      }
+      query.append(L" ORDER BY idata_timestamp DESC");
+
+      hStmt = DBPrepare(hdb, query);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dci->getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int64_t>(timeFrom) * 1000);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(timeTo) * 1000);
+         if (target->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
+         {
+            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dci->getId());
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int64_t>(timeFrom));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<int64_t>(timeTo));
+         }
+      }
+   }
+
+   NXSL_Value *result = nullptr;
+   if (hStmt != nullptr)
+   {
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         wchar_t buffer[MAX_RESULT_LENGTH];
+         NXSL_Array *array = new NXSL_Array(vm);
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            if (asDataPoints)
+            {
+               time_t t = DBGetFieldInt64(hResult, i, 0);
+               auto data = new std::pair<time_t, String>(t, DBGetFieldAsString(hResult, i, 1));
+               array->set(i, vm->createValue(vm->createObject(&g_nxslDataPointClass, data)));
+            }
+            else
+            {
+               // Raw read returns single-column SELECT (value at col 0); tier reads
+               // always return (bucket_start, value) so the value is at col 1.
+               DBGetField(hResult, i, (resolvedTier != DCI_TIER_RAW) ? 1 : 0, buffer, MAX_RESULT_LENGTH);
+               array->set(i, vm->createValue(buffer));
+            }
+         }
+         result = vm->createValue(array);
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         result = vm->createValue();   // Prepared select failed
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      result = vm->createValue();   // Prepare failed
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return result;
 }
 
 /**
@@ -510,135 +634,16 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
-	{
-      // Tier and function are meaningful only against the processed (non-raw) value column.
-      DciTier requestedTier = rawValue ? DCI_TIER_RAW : static_cast<DciTier>(parsedTier);
-      DciAggregationFunction aggFunction = static_cast<DciAggregationFunction>(parsedFunction);
-      int autoSelectThreshold = ConfigReadInt(L"DataCollection.Aggregation.MaxAutoSelectPoints", 5000);
-      int64_t startSec = argv[2]->getValueAsInt64();
-      int64_t endSec = (argc > 3) ? argv[3]->getValueAsInt64() : static_cast<int64_t>(time(nullptr));
-      DciTier resolvedTier = ResolveDciTier(requestedTier, *dci, DCO_TYPE_ITEM, startSec * 1000, endSec * 1000,
-               node->getRuntimeFlags(), autoSelectThreshold);
+   if (dci == nullptr)
+   {
+      *ppResult = vm->createValue();   // DCI not found
+      return 0;
+   }
 
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-      DB_STATEMENT hStmt = nullptr;
-      if (resolvedTier != DCI_TIER_RAW)
-      {
-         wchar_t condition[128];
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-         {
-            wcscpy(condition, L" AND bucket_start BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)");
-         }
-         else
-         {
-            wcscpy(condition, L" AND bucket_start BETWEEN ? AND ?");
-         }
-         hStmt = PrepareTieredDataSelect(hdb, node->getId(), resolvedTier, aggFunction, MAX_DCI_DATA_RECORDS, condition);
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-            DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, startSec * 1000);
-            DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, endSec * 1000);
-         }
-      }
-      else
-      {
-         StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
-         query.append(rawValue ? L"raw_value" : L"idata_value");
-         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-         {
-            if (g_dbSyntax == DB_SYNTAX_TSDB)
-            {
-               query.append(L" FROM idata_sc_");
-               query.append(DCObject::getStorageClassName(dci->getStorageClass()));
-               query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)");
-            }
-            else
-            {
-               query.append(L" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
-            }
-         }
-         else if (node->hasV5IdataTable())
-         {
-            query.append(L" FROM (SELECT idata_timestamp,idata_value,raw_value FROM idata_");
-            query.append(node->getId());
-            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
-            query.append(L" UNION ALL SELECT ");
-            query.append(V5TimestampToMs(false));
-            query.append(L",idata_value,raw_value FROM idata_v5_");
-            query.append(node->getId());
-            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d");
-         }
-         else
-         {
-            query.append(L" FROM idata_");
-            query.append(node->getId());
-            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?");
-         }
-         query.append(L" ORDER BY idata_timestamp DESC");
-
-         hStmt = DBPrepare(hdb, query);
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startSec * 1000);
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, endSec * 1000);
-            if (node->hasV5IdataTable() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
-            {
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, startSec);
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, endSec);
-            }
-         }
-      }
-
-		if (hStmt != nullptr)
-		{
-			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != nullptr)
-			{
-            wchar_t buffer[MAX_RESULT_LENGTH];
-            NXSL_Array *result = new NXSL_Array(vm);
-            int count = DBGetNumRows(hResult);
-            for(int i = 0; i < count; i++)
-            {
-               if (asDataPoints)
-               {
-                  time_t t = DBGetFieldInt64(hResult, i, 0);
-                  auto data = new std::pair<time_t, String>(t, DBGetFieldAsString(hResult, i, 1));
-                  result->set(i, vm->createValue(vm->createObject(&g_nxslDataPointClass, data)));
-               }
-               else
-               {
-                  // Raw GetDCIValues returns single-column SELECT (value at col 0); tier reads
-                  // always return (bucket_start, value) so the value is at col 1.
-                  DBGetField(hResult, i, (resolvedTier != DCI_TIER_RAW) ? 1 : 0, buffer, MAX_RESULT_LENGTH);
-                  result->set(i, vm->createValue(buffer));
-               }
-            }
-				*ppResult = vm->createValue(result);
-				DBFreeResult(hResult);
-			}
-			else
-			{
-				*ppResult = vm->createValue();	// Return NULL if prepared select failed
-			}
-			DBFreeStatement(hStmt);
-		}
-		else
-		{
-			*ppResult = vm->createValue();	// Return NULL if prepare failed
-		}
-
-		DBConnectionPoolReleaseConnection(hdb);
-	}
-	else
-	{
-		*ppResult = vm->createValue();	// Return NULL if DCI not found
-	}
-
+   time_t startSec = static_cast<time_t>(argv[2]->getValueAsInt64());
+   time_t endSec = (argc > 3) ? static_cast<time_t>(argv[3]->getValueAsInt64()) : time(nullptr);
+   *ppResult = GetDCItemValuesForNXSL(vm, dci.get(), node.get(), startSec, endSec, rawValue,
+            static_cast<DciTier>(parsedTier), static_cast<DciAggregationFunction>(parsedFunction), asDataPoints);
 	return 0;
 }
 
@@ -801,6 +806,22 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 }
 
 /**
+ * Detect anomalies on DCI within given period and wrap result as NXSL array.
+ * Returns NXSL NULL on failure.
+ */
+NXSL_Value *DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold)
+{
+   unique_ptr<StructArray<ScoredDciValue>> anomalies = DetectAnomalies(target, dciId, timeFrom, timeTo, threshold);
+   if (anomalies == nullptr)
+      return vm->createValue();
+
+   NXSL_Array *array = new NXSL_Array(vm);
+   for(int i = 0; i < anomalies->size(); i++)
+      array->append(vm->createValue(vm->createObject(&g_nxslScoredDciValueClass, new ScoredDciValue(*anomalies->get(i)))));
+   return vm->createValue(array);
+}
+
+/**
  * Detect anomalies for DCI within given period
  * Format: DetectAnomalies(node, dciId, startTime, endTime, threshold)
  * End time is optional (default is current time)
@@ -826,20 +847,33 @@ static int F_DetectAnomalies(int argc, NXSL_Value **argv, NXSL_Value **result, N
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-   unique_ptr<StructArray<ScoredDciValue>> anomalies = DetectAnomalies(*node, argv[1]->getValueAsUInt32(), static_cast<time_t>(argv[2]->getValueAsInt64()),
-      (argc > 3) ? static_cast<time_t>(argv[3]->getValueAsInt64()) : time(nullptr), (argc > 4) ? argv[4]->getValueAsReal() : 0.75);
-   if (anomalies != nullptr)
-   {
-      NXSL_Array *array = new NXSL_Array(vm);
-      for(int i = 0; i < anomalies->size(); i++)
-         array->append(vm->createValue(vm->createObject(&g_nxslScoredDciValueClass, new ScoredDciValue(*anomalies->get(i)))));
-      *result = vm->createValue(array);
-   }
-   else
-   {
-      *result = vm->createValue();
-   }
-   return NXSL_ERR_SUCCESS;;
+   *result = DetectAnomaliesForNXSL(vm, *node, argv[1]->getValueAsUInt32(),
+            static_cast<time_t>(argv[2]->getValueAsInt64()),
+            (argc > 3) ? static_cast<time_t>(argv[3]->getValueAsInt64()) : time(nullptr),
+            (argc > 4) ? argv[4]->getValueAsReal() : 0.75);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Resolve live DCObject from a DCI NXSL object's DCObjectInfo snapshot.
+ * Looks up the owner DataCollectionTarget by ID, then the DCI on it.
+ * Optionally fills *targetOut with the resolved live owner.
+ * Returns nullptr if either the owner or DCI is gone.
+ */
+shared_ptr<DCObject> ResolveLiveDCObjectFromNXSL(const DCObjectInfo *info, shared_ptr<DataCollectionTarget> *targetOut)
+{
+   if (info == nullptr)
+      return shared_ptr<DCObject>();
+   shared_ptr<NetObj> owner = FindObjectById(info->getOwnerId());
+   if ((owner == nullptr) || !owner->isDataCollectionTarget())
+      return shared_ptr<DCObject>();
+   shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(owner);
+   shared_ptr<DCObject> dci = target->getDCObjectById(info->getId(), 0);
+   if (dci == nullptr)
+      return shared_ptr<DCObject>();
+   if (targetOut != nullptr)
+      *targetOut = std::move(target);
+   return dci;
 }
 
 /**
@@ -847,28 +881,28 @@ static int F_DetectAnomalies(int argc, NXSL_Value **argv, NXSL_Value **result, N
  */
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
-   { "CreateDCI", F_CreateDCI, 7 },
-   { "DetectAnomalies", F_DetectAnomalies, -1 },
-   { "FindAllDCIs", F_FindAllDCIs, -1 },
-   { "FindDCIByName", F_FindDCIByName, 2 },
-   { "FindDCIByDescription", F_FindDCIByDescription, 2 },
-   { "FindDCIByTag", F_FindDCIByTag, 2 },
-   { "FindDCIByTagPattern", F_FindDCIByTagPattern, 2 },
-	{ "GetAvgDCIValue", F_GetAvgDCIValue, 4 },
-   { "GetDCIObject", F_GetDCIObject, 2 },
-   { "GetDCIRawValue", F_GetDCIRawValue, 2 },
-   { "GetDCIValue", F_GetDCIValue, 2 },
-   { "GetDCIValues", F_GetDCIValues, -1 },
-   { "GetDCIValuesEx", F_GetDCIValuesEx, -1 },
-   { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
-   { "GetDCIValueByName", F_GetDCIValueByName, 2 },
-   { "GetDCIValueByTag", F_GetDCIValueByTag, 2 },
-   { "GetDCIValueByTagPattern", F_GetDCIValueByTagPattern, 2 },
-	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
-	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
-	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
-   { "Instance", F_Instance, -1 , true },
-   { "PushDCIData", F_PushDCIData, -1 }
+   { "CreateDCI", F_CreateDCI, 7, true },
+   { "DetectAnomalies", F_DetectAnomalies, -1, true },
+   { "FindAllDCIs", F_FindAllDCIs, -1, true },
+   { "FindDCIByName", F_FindDCIByName, 2, true },
+   { "FindDCIByDescription", F_FindDCIByDescription, 2, true },
+   { "FindDCIByTag", F_FindDCIByTag, 2, true },
+   { "FindDCIByTagPattern", F_FindDCIByTagPattern, 2, true },
+   { "GetAvgDCIValue", F_GetAvgDCIValue, 4, true },
+   { "GetDCIObject", F_GetDCIObject, 2, true },
+   { "GetDCIRawValue", F_GetDCIRawValue, 2, true },
+   { "GetDCIValue", F_GetDCIValue, 2, true },
+   { "GetDCIValues", F_GetDCIValues, -1, true },
+   { "GetDCIValuesEx", F_GetDCIValuesEx, -1, true },
+   { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2, true },
+   { "GetDCIValueByName", F_GetDCIValueByName, 2, true },
+   { "GetDCIValueByTag", F_GetDCIValueByTag, 2, true },
+   { "GetDCIValueByTagPattern", F_GetDCIValueByTagPattern, 2, true },
+   { "GetMaxDCIValue", F_GetMaxDCIValue, 4, true },
+   { "GetMinDCIValue", F_GetMinDCIValue, 4, true },
+   { "GetSumDCIValue", F_GetSumDCIValue, 4, true },
+   { "Instance", F_Instance, -1, true },
+   { "PushDCIData", F_PushDCIData, -1, true }
 };
 
 /**

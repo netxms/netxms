@@ -454,6 +454,7 @@ public:
    Timestamp getLastPollTime() const { return m_lastPollTime; }
    Timestamp getLastValueTimestamp() const { return m_lastValueTimestamp; }
    uint32_t getErrorCount() const { return m_errorCount; }
+   bool isInErrorState() const { return (m_status != ITEM_STATUS_ACTIVE) || (m_errorCount > 0); }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    SharedString getSnmpContext() const { return GetAttributeWithLock(m_snmpContext, m_mutex); }

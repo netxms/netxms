@@ -723,6 +723,18 @@ public:
 class ScheduleParameters;
 
 /**
+ * DCI value/aggregate/history NXSL helpers (shared between deprecated global functions and DataCollectionTarget/DCI class methods).
+ */
+NXSL_Value *DCObjectValueToNXSL(NXSL_VM *vm, DCObject *dci, bool rawValue);
+NXSL_Value *DCItemAggregateValueToNXSL(NXSL_VM *vm, DCObject *dci, AggregationFunction func, time_t timeFrom, time_t timeTo);
+NXSL_Value *GetDCItemValuesForNXSL(NXSL_VM *vm, DCObject *dci, DataCollectionTarget *target,
+         time_t timeFrom, time_t timeTo, bool rawValue, DciTier requestedTier, DciAggregationFunction aggFunction, bool asDataPoints);
+NXSL_Value *DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold);
+shared_ptr<DCObject> ResolveLiveDCObjectFromNXSL(const DCObjectInfo *info, shared_ptr<DataCollectionTarget> *targetOut);
+int ParseDciTierName(const wchar_t *name);
+int ParseDciAggFunctionName(const wchar_t *name);
+
+/**
  * Get server script library
  */
 NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();

@@ -1660,6 +1660,247 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, removeTemplate)
 }
 
 /**
+ * Common implementation for findDCIBy* methods on DataCollectionTarget.
+ * Returns the DCI as NXSL object, or NXSL NULL if not found.
+ */
+static int FindDCIByAttributeMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, NXSL_VM *vm,
+         shared_ptr<DCObject> (DataCollectionOwner::*method)(const wchar_t*, uint32_t) const)
+{
+   if (!arg->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
+   shared_ptr<DCObject> dci = ((*target).*method)(arg->getValueAsCString(), 0);
+   *result = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * findDCIById(id) method - returns DCI object or null
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findDCIById)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
+   shared_ptr<DCObject> dci = target->getDCObjectById(argv[0]->getValueAsUInt32(), 0);
+   *result = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * findDCIByName(name) method - returns DCI object or null
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findDCIByName)
+{
+   return FindDCIByAttributeMethod(object, argv[0], result, vm, &DataCollectionOwner::getDCObjectByName);
+}
+
+/**
+ * findDCIByDescription(description) method - returns DCI object or null
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findDCIByDescription)
+{
+   return FindDCIByAttributeMethod(object, argv[0], result, vm, &DataCollectionOwner::getDCObjectByDescription);
+}
+
+/**
+ * findDCIByTag(tag) method - returns DCI object or null
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findDCIByTag)
+{
+   return FindDCIByAttributeMethod(object, argv[0], result, vm, &DataCollectionOwner::getDCObjectByTag);
+}
+
+/**
+ * findDCIByTagPattern(pattern) method - returns DCI object or null
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findDCIByTagPattern)
+{
+   return FindDCIByAttributeMethod(object, argv[0], result, vm, &DataCollectionOwner::getDCObjectByTagPattern);
+}
+
+/**
+ * findAllDCIs([name], [description], [tag], [relatedObject]) - returns array of DCI objects.
+ * Any of the four filters can be null/omitted.
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, findAllDCIs)
+{
+   if (argc > 4)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   const wchar_t *nameFilter = nullptr;
+   const wchar_t *descriptionFilter = nullptr;
+   const wchar_t *tagFilter = nullptr;
+   uint32_t relatedObjectId = 0;
+
+   if (argc > 0)
+   {
+      if (!argv[0]->isNull())
+      {
+         if (!argv[0]->isString())
+            return NXSL_ERR_NOT_STRING;
+         nameFilter = argv[0]->getValueAsCString();
+      }
+      if (argc > 1)
+      {
+         if (!argv[1]->isNull())
+         {
+            if (!argv[1]->isString())
+               return NXSL_ERR_NOT_STRING;
+            descriptionFilter = argv[1]->getValueAsCString();
+         }
+         if (argc > 2)
+         {
+            if (!argv[2]->isNull())
+            {
+               if (!argv[2]->isString())
+                  return NXSL_ERR_NOT_STRING;
+               tagFilter = argv[2]->getValueAsCString();
+            }
+            if ((argc > 3) && !argv[3]->isNull())
+            {
+               if (argv[3]->isObject(L"NetObj"))
+               {
+                  NXSL_Object *o = argv[3]->getValueAsObject();
+                  relatedObjectId = (*static_cast<shared_ptr<NetObj>*>(o->getData()))->getId();
+               }
+               else if (argv[3]->isInteger())
+               {
+                  relatedObjectId = argv[3]->getValueAsUInt32();
+               }
+               else
+               {
+                  return NXSL_ERR_NOT_INTEGER;
+               }
+            }
+         }
+      }
+   }
+
+   DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
+   *result = target->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
+   return 0;
+}
+
+/**
+ * createDCI(origin, name, description, dataType, [pollingInterval], [retentionTime]) method.
+ * Returns the new DCI as NXSL object, or null on failure.
+ * Origin/dataType accepted as either string name or integer constant; matches legacy CreateDCI() behaviour.
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, createDCI)
+{
+   if ((argc < 4) || (argc > 6))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!(argv[0]->isString() || argv[0]->isInteger()) ||
+       !argv[1]->isString() || !argv[2]->isString() ||
+       !(argv[3]->isString() || argv[3]->isInteger()) ||
+       ((argc > 4) && !(argv[4]->isString() || argv[4]->isNull())) ||
+       ((argc > 5) && !(argv[5]->isString() || argv[5]->isNull())))
+      return NXSL_ERR_NOT_STRING;
+
+   int origin = -1;
+   if (argv[0]->isInteger())
+   {
+      origin = argv[0]->getValueAsInt32();
+      if ((origin < 0) || (origin > 12))
+         origin = -1;
+   }
+   else
+   {
+      static const wchar_t *originNames[] = {
+         L"internal", L"agent", L"snmp", L"websvc", L"push", L"winperf",
+         L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", nullptr };
+      const wchar_t *name = argv[0]->getValueAsCString();
+      for(int i = 0; originNames[i] != nullptr; i++)
+         if (!wcsicmp(originNames[i], name))
+         {
+            origin = i;
+            break;
+         }
+   }
+
+   int dataType = -1;
+   if (argv[3]->isInteger())
+   {
+      dataType = argv[3]->getValueAsInt32();
+      if ((dataType < 0) || (dataType > 8))
+         dataType = -1;
+   }
+   else
+   {
+      dataType = TextToDataType(argv[3]->getValueAsCString());
+   }
+
+   if ((origin == -1) || (dataType == -1))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   StringBuffer pollingType(((argc > 4) && argv[4]->isString()) ? argv[4]->getValueAsCString() : L"");
+   pollingType.trim();
+   BYTE scheduleType = (pollingType.isEmpty() || pollingType.equals(L"0")) ? DC_POLLING_SCHEDULE_DEFAULT : DC_POLLING_SCHEDULE_CUSTOM;
+
+   StringBuffer retentionTypeArg(((argc > 5) && argv[5]->isString()) ? argv[5]->getValueAsCString() : L"");
+   retentionTypeArg.trim();
+   BYTE retentionType = DC_RETENTION_CUSTOM;
+   if (retentionTypeArg.isEmpty())
+      retentionType = DC_RETENTION_DEFAULT;
+   else if (retentionTypeArg.equals(L"0"))
+      retentionType = DC_RETENTION_NONE;
+
+   shared_ptr<DataCollectionTarget> target = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[1]->getValueAsCString(),
+            origin, dataType, scheduleType,
+            ((argc > 4) && argv[4]->isString()) ? argv[4]->getValueAsCString() : nullptr,
+            retentionType,
+            ((argc > 5) && argv[5]->isString()) ? argv[5]->getValueAsCString() : nullptr,
+            target, argv[2]->getValueAsCString());
+   target->addDCObject(dci);
+   *result = dci->createNXSLObject(vm);
+   return 0;
+}
+
+/**
+ * pushDCIData(dciId, value, [timestamp]) method.
+ * Returns true on success, false if the DCI is not eligible or push failed.
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, pushDCIData)
+{
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+   if ((argc > 2) && !argv[2]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   shared_ptr<DataCollectionTarget> target = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   bool success = false;
+   shared_ptr<DCObject> dci = target->getDCObjectById(argv[0]->getValueAsUInt32(), 0);
+   if ((dci != nullptr) && ((dci->getDataSource() == DS_PUSH_AGENT) || (dci->getDataSource() == DS_OTLP)) && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      Timestamp t = (argc < 3) ? Timestamp::now() : Timestamp::fromMilliseconds(argv[2]->getValueAsInt64());
+      if (dci->getLastValueTimestamp() == t)
+      {
+         // Ensure 1 ms difference between two consecutive values
+         ThreadSleepMs(1);
+         t = Timestamp::now();
+      }
+      success = target->processNewDCValue(dci, t, argv[1]->getValueAsCString(), shared_ptr<Table>(), argc > 2);
+      if (success && (dci->getLastPollTime() < t))
+         dci->setLastPollTime(t);
+   }
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
  * NXSL class DataCollectionTarget: constructor
  */
 NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
@@ -1667,9 +1908,17 @@ NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
    setName(_T("DataCollectionTarget"));
 
    NXSL_REGISTER_METHOD(DataCollectionTarget, applyTemplate, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, createDCI, -1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableDataCollection, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableStatusPolling, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findAllDCIs, -1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findDCIById, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findDCIByName, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findDCIByDescription, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findDCIByTag, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, findDCIByTagPattern, 1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, pushDCIData, -1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, readInternalParameter, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, removeTemplate, 1);
 }
@@ -6412,6 +6661,138 @@ NXSL_METHOD_DEFINITION(DCI, generateAnomalyProfile)
 }
 
 /**
+ * Common implementation for DCI aggregate methods (getMinValue/getMaxValue/getAverageValue/getSumValue).
+ */
+static int DciAggregateMethod(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, AggregationFunction func)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isInteger() || ((argc > 1) && !argv[1]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+   const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   shared_ptr<DCObject> dci = ResolveLiveDCObjectFromNXSL(info, nullptr);
+   if (dci == nullptr)
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+   time_t timeFrom = static_cast<time_t>(argv[0]->getValueAsInt64());
+   time_t timeTo = (argc > 1) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : time(nullptr);
+   *result = DCItemAggregateValueToNXSL(vm, dci.get(), func, timeFrom, timeTo);
+   return 0;
+}
+
+/**
+ * DCI::getMinValue(timeFrom, [timeTo]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getMinValue)
+{
+   return DciAggregateMethod(object, argc, argv, result, vm, DCI_AGG_MIN);
+}
+
+/**
+ * DCI::getMaxValue(timeFrom, [timeTo]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getMaxValue)
+{
+   return DciAggregateMethod(object, argc, argv, result, vm, DCI_AGG_MAX);
+}
+
+/**
+ * DCI::getAverageValue(timeFrom, [timeTo]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getAverageValue)
+{
+   return DciAggregateMethod(object, argc, argv, result, vm, DCI_AGG_AVG);
+}
+
+/**
+ * DCI::getSumValue(timeFrom, [timeTo]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getSumValue)
+{
+   return DciAggregateMethod(object, argc, argv, result, vm, DCI_AGG_SUM);
+}
+
+/**
+ * Common implementation for DCI::getValues / DCI::getValuesAsDataPoints.
+ * Signature: (timeFrom, [timeTo], [rawValue], [tier], [function])
+ */
+static int DciGetValuesMethod(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, bool asDataPoints)
+{
+   if ((argc < 1) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isInteger() || ((argc > 1) && !argv[1]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+   if (((argc > 3) && !argv[3]->isString()) || ((argc > 4) && !argv[4]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+   bool rawValue = (argc > 2) && argv[2]->isTrue();
+   int parsedTier = (argc > 3) ? ParseDciTierName(argv[3]->getValueAsCString()) : DCI_TIER_AUTO;
+   int parsedFunction = (argc > 4) ? ParseDciAggFunctionName(argv[4]->getValueAsCString()) : DCI_HAGG_AVG;
+   if ((parsedTier < 0) || (parsedFunction < 0) || (parsedFunction == DCI_HAGG_MINMAX))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   shared_ptr<DataCollectionTarget> target;
+   shared_ptr<DCObject> dci = ResolveLiveDCObjectFromNXSL(info, &target);
+   if (dci == nullptr)
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+   time_t timeFrom = static_cast<time_t>(argv[0]->getValueAsInt64());
+   time_t timeTo = (argc > 1) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : time(nullptr);
+   *result = GetDCItemValuesForNXSL(vm, dci.get(), target.get(), timeFrom, timeTo, rawValue,
+            static_cast<DciTier>(parsedTier), static_cast<DciAggregationFunction>(parsedFunction), asDataPoints);
+   return 0;
+}
+
+/**
+ * DCI::getValues(timeFrom, [timeTo], [rawValue], [tier], [function]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getValues)
+{
+   return DciGetValuesMethod(object, argc, argv, result, vm, false);
+}
+
+/**
+ * DCI::getValuesAsDataPoints(timeFrom, [timeTo], [rawValue], [tier], [function]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, getValuesAsDataPoints)
+{
+   return DciGetValuesMethod(object, argc, argv, result, vm, true);
+}
+
+/**
+ * DCI::detectAnomalies(timeFrom, [timeTo], [threshold]) method
+ */
+NXSL_METHOD_DEFINITION(DCI, detectAnomalies)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isInteger() || ((argc > 1) && !argv[1]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+   if ((argc > 2) && !argv[2]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   shared_ptr<DataCollectionTarget> target;
+   shared_ptr<DCObject> dci = ResolveLiveDCObjectFromNXSL(info, &target);
+   if (dci == nullptr)
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+   time_t timeFrom = static_cast<time_t>(argv[0]->getValueAsInt64());
+   time_t timeTo = (argc > 1) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : time(nullptr);
+   double threshold = (argc > 2) ? argv[2]->getValueAsReal() : 0.75;
+   *result = DetectAnomaliesForNXSL(vm, *target, dci->getId(), timeFrom, timeTo, threshold);
+   return 0;
+}
+
+/**
  * Implementation of "DataPoint" class: constructor
  */
 NXSL_DataPointClass::NXSL_DataPointClass() : NXSL_Class()
@@ -6456,8 +6837,15 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
    setName(_T("DCI"));
 
+   NXSL_REGISTER_METHOD(DCI, detectAnomalies, -1);
    NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
    NXSL_REGISTER_METHOD(DCI, generateAnomalyProfile, 0);
+   NXSL_REGISTER_METHOD(DCI, getAverageValue, -1);
+   NXSL_REGISTER_METHOD(DCI, getMaxValue, -1);
+   NXSL_REGISTER_METHOD(DCI, getMinValue, -1);
+   NXSL_REGISTER_METHOD(DCI, getSumValue, -1);
+   NXSL_REGISTER_METHOD(DCI, getValues, -1);
+   NXSL_REGISTER_METHOD(DCI, getValuesAsDataPoints, -1);
 }
 
 /**
@@ -6483,9 +6871,29 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
       value = vm->createValue(dci->getThresholdSeverity());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("cachedRawValue"))
+   {
+      shared_ptr<DCObject> live = ResolveLiveDCObjectFromNXSL(dci, nullptr);
+      value = (live != nullptr) ? DCObjectValueToNXSL(vm, live.get(), true) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("cachedValue"))
+   {
+      shared_ptr<DCObject> live = ResolveLiveDCObjectFromNXSL(dci, nullptr);
+      value = (live != nullptr) ? DCObjectValueToNXSL(vm, live.get(), false) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("comments"))
    {
 		value = vm->createValue(dci->getComments());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("currentRawValue"))
+   {
+      shared_ptr<DCObject> live = ResolveLiveDCObjectFromNXSL(dci, nullptr);
+      value = ((live != nullptr) && !live->isInErrorState()) ? DCObjectValueToNXSL(vm, live.get(), true) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("currentValue"))
+   {
+      shared_ptr<DCObject> live = ResolveLiveDCObjectFromNXSL(dci, nullptr);
+      value = ((live != nullptr) && !live->isInErrorState()) ? DCObjectValueToNXSL(vm, live.get(), false) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dataType") && (dci->getType() == DCO_TYPE_ITEM))
    {
