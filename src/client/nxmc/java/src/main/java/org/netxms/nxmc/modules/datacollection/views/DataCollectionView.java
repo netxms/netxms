@@ -201,6 +201,8 @@ public class DataCollectionView extends BaseDataCollectionView
 
       createActions();
 
+      hideModificationWarnings = PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideModificationWarnings", false);
+
       if (editMode)
          createDataCollectionViewer(parent);
       else
@@ -241,7 +243,6 @@ public class DataCollectionView extends BaseDataCollectionView
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
-            ds.set(configPrefix + ".hideModificationWarnings", hideModificationWarnings);
             ds.set(configPrefix + ".hideTemplateItems", actionHideTemplateItems.isChecked());
          }
       });
@@ -251,8 +252,6 @@ public class DataCollectionView extends BaseDataCollectionView
       actionExportAllToCsv.setViewer(viewer);
 
       createContextMenu();
-
-      hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false);
 
       final Display display = viewer.getControl().getDisplay();
       changeListener = new RemoteChangeListener() {
@@ -970,6 +969,7 @@ public class DataCollectionView extends BaseDataCollectionView
                data = MessageDialogHelper.openWarningWithCheckbox(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("Don't show this message again"), message);
             }
             hideModificationWarnings = data.getSaveSelection();
+            PreferenceStore.getInstance().set("DataCollectionConfiguration.hideModificationWarnings", hideModificationWarnings);
          }
       }
 
