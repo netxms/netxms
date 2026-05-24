@@ -25,6 +25,16 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.16 to 62.17
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET units='days',description='Grace period (in days) before removing an unbound template from a data collection target. If set to 0, templates are removed immediately.' WHERE var_name='DataCollection.TemplateRemovalGracePeriod'"));
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 62.15 to 62.16
  */
 static bool H_UpgradeFromV15()
@@ -640,6 +650,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 62, 17, H_UpgradeFromV16 },
    { 15, 62, 16, H_UpgradeFromV15 },
    { 14, 62, 15, H_UpgradeFromV14 },
    { 13, 62, 14, H_UpgradeFromV13 },
