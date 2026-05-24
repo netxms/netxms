@@ -47,7 +47,7 @@ public class SortableTreeViewer extends TreeViewer
 	public static final int DEFAULT_STYLE = -1;
 
 	private boolean initialized = false;
-   private List<TreeColumn> columns;
+   private List<TreeColumn> columns = new ArrayList<TreeColumn>(16);
 	private TreeSortingListener sortingListener;
 	private Action actionResetColumnOrder;
 	private Action actionShowAllColumns;
@@ -108,17 +108,6 @@ public class SortableTreeViewer extends TreeViewer
       }
    }
 
-   /**
-    * Create empty column set
-    */
-   public void createEmptyColumnSet()
-   {
-      if (initialized)
-         reset();
-      columns = new ArrayList<TreeColumn>(16);
-      initialized = true;
-   }
-
 	/**
 	 * Create columns
 	 *
@@ -133,7 +122,6 @@ public class SortableTreeViewer extends TreeViewer
 			return;
 		initialized = true;
 
-      columns = new ArrayList<TreeColumn>(names.length);
 		for(int i = 0; i < names.length; i++)
 		{
 			TreeColumn c = new TreeColumn(getTree(), SWT.LEFT);

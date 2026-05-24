@@ -50,7 +50,7 @@ public class SortableTableViewer extends TableViewer
 	public static final int DEFAULT_STYLE = -1;
 
 	private boolean initialized = false;
-   private List<TableColumn> columns;
+   private List<TableColumn> columns = new ArrayList<TableColumn>(16);
 	private TableSortingListener sortingListener;
 	private Action actionResetColumnOrder;
 	private Action actionShowAllColumns;
@@ -113,17 +113,6 @@ public class SortableTableViewer extends TableViewer
       }
    }
 
-   /**
-    * Create empty column set
-    */
-   public void createEmptyColumnSet()
-   {
-      if (initialized)
-         reset();
-      columns = new ArrayList<TableColumn>(16);
-      initialized = true;
-   }
-
 	/**
 	 * Create columns
 	 *
@@ -138,7 +127,6 @@ public class SortableTableViewer extends TableViewer
 			return;
 		initialized = true;
 
-      columns = new ArrayList<TableColumn>(names.length);
 		for(int i = 0; i < names.length; i++)
 		{
 			TableColumn c = new TableColumn(getTable(), SWT.LEFT);

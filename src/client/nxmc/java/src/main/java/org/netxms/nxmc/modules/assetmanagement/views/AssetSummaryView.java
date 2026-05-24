@@ -104,7 +104,6 @@ public class AssetSummaryView extends ObjectView
       propertyReader = new AssetPropertyReader();
 
       viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.createEmptyColumnSet();
       viewer.addColumn(i18n.tr("Asset"), SWT.DEFAULT);
 
       List<AssetAttribute> attributes = new ArrayList<>(session.getAssetManagementSchema().values());
