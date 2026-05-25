@@ -4729,6 +4729,19 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 }
 
 /**
+ * Certificate revocation check state: -1 = undefined (use registry), 0 = disabled, 1 = enabled
+ */
+static int s_revocationCheckState = -1;
+
+/**
+ * Set certificate revocation check mode for file signature verification
+ */
+void LIBNETXMS_EXPORTABLE SetFileSignatureRevocationCheck(bool enabled)
+{
+   s_revocationCheckState = enabled ? 1 : 0;
+}
+
+/**
  * Verify file signature
  */
 bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
@@ -4745,6 +4758,27 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
             return true;
       }
       RegCloseKey(hKey);
+   }
+
+   // Determine revocation check mode
+   bool revocationChecks;
+   if (s_revocationCheckState >= 0)
+   {
+      revocationChecks = (s_revocationCheckState != 0);
+   }
+   else
+   {
+      revocationChecks = false;
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         DWORD value = 0;
+         DWORD size = sizeof(DWORD);
+         if (RegQueryValueEx(hKey, _T("EnableCertificateRevocationChecks"), nullptr, nullptr, reinterpret_cast<BYTE*>(&value), &size) == ERROR_SUCCESS)
+         {
+            revocationChecks = (value != 0);
+         }
+         RegCloseKey(hKey);
+      }
    }
 
    WINTRUST_FILE_INFO fi;
@@ -4765,7 +4799,7 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
    memset(&wd, 0, sizeof(WINTRUST_DATA));
    wd.cbStruct = sizeof(WINTRUST_DATA);
    wd.dwUIChoice = WTD_UI_NONE;
-   wd.fdwRevocationChecks = WTD_REVOKE_NONE;
+   wd.fdwRevocationChecks = revocationChecks ? WTD_REVOKE_WHOLECHAIN : WTD_REVOKE_NONE;
    wd.dwUnionChoice = WTD_CHOICE_FILE;
    wd.dwStateAction = WTD_STATEACTION_VERIFY;
    wd.pFile = &fi;

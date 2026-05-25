@@ -5976,6 +5976,7 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destination);
 
 bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file);
+void LIBNETXMS_EXPORTABLE SetFileSignatureRevocationCheck(bool enabled);
 
 bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase);
 bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase);
