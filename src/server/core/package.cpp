@@ -204,6 +204,25 @@ ObjectArray<PackageDetails> *GetAllPackages(const TCHAR *platformFilter, const T
 }
 
 /**
+ * Deployment job comparator (used for task sorting)
+ */
+struct DeploymentJobComparator
+{
+   bool operator() (const shared_ptr<PackageDeploymentJob>& lhs, const shared_ptr<PackageDeploymentJob>& rhs) const
+   {
+      return lhs->getExecutionTime() > rhs->getExecutionTime();
+   }
+};
+
+/**
+ * Deployment jobs
+ */
+static Mutex s_jobLock(MutexType::FAST);
+static SharedPointerIndex<PackageDeploymentJob> s_jobs;
+static std::priority_queue<shared_ptr<PackageDeploymentJob>, std::vector<shared_ptr<PackageDeploymentJob>>, DeploymentJobComparator> s_jobQueue;
+static Condition s_wakeupCondition(true);
+
+/**
  * Uninstall (remove) package from server
  */
 uint32_t UninstallPackage(uint32_t packageId)
@@ -252,6 +271,26 @@ uint32_t UninstallPackage(uint32_t packageId)
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      LockGuard lockGuard(s_jobLock);
+      int cancelledCount = 0;
+      s_jobs.forEach(
+         [packageId, &cancelledCount] (PackageDeploymentJob *job) -> EnumerationCallbackResult
+         {
+            if ((job->getPackageId() == packageId) &&
+                ((job->getStatus() == PKG_JOB_SCHEDULED) || (job->getStatus() == PKG_JOB_PENDING)))
+            {
+               job->cancel(L"Package removed from server");
+               cancelledCount++;
+            }
+            return _CONTINUE;
+         });
+      if (cancelledCount > 0)
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Cancelled %d pending deployment job(s) for removed package [%u]", cancelledCount, packageId);
+   }
+
    return rcc;
 }
 
@@ -525,6 +564,12 @@ static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionE
  */
 void PackageDeploymentJob::execute()
 {
+   if (m_status == PKG_JOB_CANCELLED)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::execute(): job [%u] was cancelled before execution started", m_id);
+      return;
+   }
+
    setStatus(PKG_JOB_INITIALIZING);
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
@@ -669,25 +714,6 @@ void PackageDeploymentJob::execute()
 }
 
 /**
- * Deployment job comparator (used for task sorting)
- */
-struct DeploymentJobComparator
-{
-   bool operator() (const shared_ptr<PackageDeploymentJob>& lhs, const shared_ptr<PackageDeploymentJob>& rhs) const
-   {
-      return lhs->getExecutionTime() > rhs->getExecutionTime();
-   }
-};
-
-/**
- * Deployment jobs
- */
-static Mutex s_jobLock(MutexType::FAST);
-static SharedPointerIndex<PackageDeploymentJob> s_jobs;
-static std::priority_queue<shared_ptr<PackageDeploymentJob>, std::vector<shared_ptr<PackageDeploymentJob>>, DeploymentJobComparator> s_jobQueue;
-static Condition s_wakeupCondition(true);
-
-/**
  * Register new deployment job
  */
 void NXCORE_EXPORTABLE RegisterPackageDeploymentJob(const shared_ptr<PackageDeploymentJob>& job)
@@ -733,9 +759,11 @@ static void PackageDeploymentManager()
                sleepTime = delay;
             break;
          }
+         s_jobQueue.pop();
+         if (job->getStatus() == PKG_JOB_CANCELLED)
+            continue;
          job->setStatus(PKG_JOB_PENDING);
          ThreadPoolExecute(s_deploymentThreadPool, job, &PackageDeploymentJob::execute);
-         s_jobQueue.pop();
       }
       s_jobLock.unlock();
    }
@@ -849,7 +877,7 @@ uint32_t CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *n
       return RCC_OUT_OF_STATE_REQUEST;
 
    *nodeId = job->getNodeId();
-   job->setStatus(PKG_JOB_CANCELLED);
+   job->cancel();
    return RCC_SUCCESS;
 }
 
