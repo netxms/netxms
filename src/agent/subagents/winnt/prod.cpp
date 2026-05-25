@@ -227,32 +227,6 @@ static void ReadStorePackagesFromRegistryPath(HKEY hRootKey, const TCHAR *basePa
 }
 
 /**
- * Enable or disable a process privilege
- */
-static bool EnablePrivilege(const TCHAR *privilege, bool enable)
-{
-   HANDLE hToken;
-   if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-      return false;
-
-   LUID luid;
-   if (!LookupPrivilegeValue(nullptr, privilege, &luid))
-   {
-      CloseHandle(hToken);
-      return false;
-   }
-
-   TOKEN_PRIVILEGES tp;
-   tp.PrivilegeCount = 1;
-   tp.Privileges[0].Luid = luid;
-   tp.Privileges[0].Attributes = enable ? SE_PRIVILEGE_ENABLED : 0;
-
-   bool success = AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr) && (GetLastError() != ERROR_NOT_ALL_ASSIGNED);
-   CloseHandle(hToken);
-   return success;
-}
-
-/**
  * Check if a user's registry hive is already loaded in HKEY_USERS
  */
 static bool IsHiveLoaded(const TCHAR *sidString)
@@ -268,8 +242,7 @@ static bool IsHiveLoaded(const TCHAR *sidString)
 
 /**
  * Read Windows Store packages from all user profiles.
- * Returns false if any profile was skipped because the user's session was in transition
- * (NTUSER.DAT mounted but UsrClass.dat hive not yet mounted) - in that case the snapshot
+ * Returns false if any profile's UsrClass.dat was inaccessible - in that case the snapshot
  * is incomplete and the caller should signal a collection error so the server preserves
  * the previous snapshot rather than treating missing packages as removals.
  */
@@ -281,10 +254,6 @@ static bool ReadStorePackagesFromAllUsers(Table *table)
        _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList"),
        0, KEY_READ, &hProfileList) != ERROR_SUCCESS)
       return true;
-
-   // Enable SE_BACKUP_NAME and SE_RESTORE_NAME privileges needed for RegLoadKey/RegUnloadKey
-   bool backupPrivEnabled = EnablePrivilege(SE_BACKUP_NAME, true);
-   bool restorePrivEnabled = EnablePrivilege(SE_RESTORE_NAME, true);
 
    bool complete = true;
    DWORD index = 0;
@@ -305,29 +274,29 @@ static bool ReadStorePackagesFromAllUsers(Table *table)
       if (ResolveSidToUsername(sidName, userName, 512))
          userNamePtr = userName;
 
-      // Windows Store package data is in the UsrClass.dat hive (Software\Classes subtree),
+      // Windows Store package data lives in the UsrClass.dat hive (Software\Classes subtree),
       // not in NTUSER.DAT. When a user is logged in, Windows mounts UsrClass.dat automatically
-      // as HKEY_USERS\<SID>_Classes. For logged-out users, we need to load it manually.
+      // as HKEY_USERS\<SID>_Classes - we read directly from there. For logged-out users we
+      // load UsrClass.dat manually via RegLoadAppKey, which uses a process-private namespace
+      // and shared file access. RegLoadKey would have taken an exclusive file lock and
+      // prevented Windows from attaching UsrClass.dat during a concurrent user logon,
+      // causing Store apps to fail to launch (issue #3240).
       StringBuffer classesKeyName(sidName);
       classesKeyName.append(_T("_Classes"));
 
-      bool classesHiveLoadedByUs = false;
-      if (!IsHiveLoaded(classesKeyName))
+      HKEY rootKey;
+      HKEY hAppKey = nullptr;
+      StringBuffer path;
+      if (IsHiveLoaded(classesKeyName))
       {
-         // If NTUSER.DAT is mounted, the user has an active session and Windows is
-         // expected to mount UsrClass.dat as well. If it is not mounted yet, the session
-         // is in transition (logon/logoff). Loading UsrClass.dat manually here would
-         // exclusively lock the file and break AppX per-user package attachment, causing
-         // Store apps to fail to launch. Skip this profile and signal incomplete data.
-         if (IsHiveLoaded(sidName))
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Skipping classes hive for user %s (%s) - active session, classes hive not mounted yet",
-               (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
-            complete = false;
-            continue;
-         }
-
-         // Classes hive is not loaded - load UsrClass.dat from the user's profile directory
+         rootKey = HKEY_USERS;
+         path.append(classesKeyName);
+         path.append(L"\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
+      }
+      else
+      {
+         // Locate UsrClass.dat for this profile
+         wchar_t usrClassDat[MAX_PATH] = L"";
          HKEY hProfileKey;
          if (RegOpenKeyExW(hProfileList, sidName, 0, KEY_READ, &hProfileKey) == ERROR_SUCCESS)
          {
@@ -335,43 +304,55 @@ static bool ReadStorePackagesFromAllUsers(Table *table)
             DWORD type, size = sizeof(profilePath);
             if (RegQueryValueExW(hProfileKey, L"ProfileImagePath", nullptr, &type, reinterpret_cast<BYTE*>(profilePath), &size) == ERROR_SUCCESS)
             {
-               // Expand environment variables in profile path
                wchar_t expandedPath[MAX_PATH];
                ExpandEnvironmentStringsW(profilePath, expandedPath, MAX_PATH);
-
-               StringBuffer usrClassDat(expandedPath);
-               usrClassDat.append(L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat");
-
-               if (RegLoadKeyW(HKEY_USERS, classesKeyName, usrClassDat) == ERROR_SUCCESS)
-               {
-                  classesHiveLoadedByUs = true;
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded classes registry hive for user %s (%s)", (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot load classes registry hive for %s from %s", sidName, usrClassDat.cstr());
-               }
+               _sntprintf(usrClassDat, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat", expandedPath);
             }
             RegCloseKey(hProfileKey);
          }
+
+         if (usrClassDat[0] == 0)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot determine UsrClass.dat path for user %s (%s) - marking snapshot incomplete",
+               (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
+            complete = false;
+            continue;
+         }
+
+         LSTATUS status = RegLoadAppKeyW(usrClassDat, &hAppKey, KEY_READ, 0, 0);
+         if (status != ERROR_SUCCESS)
+         {
+            // ERROR_FILE_NOT_FOUND / ERROR_PATH_NOT_FOUND means there is genuinely no
+            // per-user Store data on disk (e.g. profile was never used for Store apps),
+            // which is not a collection error. Any other failure means the hive exists
+            // but we could not read it (sharing violation, access denied, etc.) - signal
+            // the collection error so missing packages are not reported as removals.
+            if (status != ERROR_FILE_NOT_FOUND && status != ERROR_PATH_NOT_FOUND)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 5, L"RegLoadAppKey failed for %s (status=0x%08X) - marking snapshot incomplete",
+                  usrClassDat, status);
+               complete = false;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, L"UsrClass.dat not present for user %s (%s)",
+                  (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
+            }
+            continue;
+         }
+
+         nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded classes registry hive via RegLoadAppKey for user %s (%s)",
+            (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
+
+         rootKey = hAppKey;
+         path.append(L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
       }
 
-      StringBuffer path(classesKeyName);
-      path.append(L"\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
-      ReadStorePackagesFromRegistryPath(HKEY_USERS, path, userNamePtr, table);
+      ReadStorePackagesFromRegistryPath(rootKey, path, userNamePtr, table);
 
-      if (classesHiveLoadedByUs)
-      {
-         RegUnLoadKey(HKEY_USERS, classesKeyName);
-         nxlog_debug_tag(DEBUG_TAG, 6, L"Unloaded classes registry hive for %s", sidName);
-      }
+      if (hAppKey != nullptr)
+         RegCloseKey(hAppKey);
    }
-
-   // Restore privileges
-   if (backupPrivEnabled)
-      EnablePrivilege(SE_BACKUP_NAME, false);
-   if (restorePrivEnabled)
-      EnablePrivilege(SE_RESTORE_NAME, false);
 
    RegCloseKey(hProfileList);
    return complete;
