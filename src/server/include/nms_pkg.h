@@ -126,6 +126,7 @@ public:
    const wchar_t *getVersion() const { return m_version; }
 
    void setStatus(PackageDeploymentStatus status);
+   void cancel(const wchar_t *reason = nullptr) { setCompletedStatus(PKG_JOB_CANCELLED, reason); }
    void execute();
 
    bool createDatabaseRecord();
