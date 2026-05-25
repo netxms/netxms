@@ -4755,7 +4755,10 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
       if (RegQueryValueEx(hKey, _T("DisableFileSignatureVerification"), nullptr, nullptr, reinterpret_cast<BYTE*>(&value), &size) == ERROR_SUCCESS)
       {
          if (value != 0)
+         {
+            nxlog_debug_tag(_T("crypto"), 6, _T("VerifyFileSignature(%s): signature validation disabled"), file);
             return true;
+         }
       }
       RegCloseKey(hKey);
    }
@@ -4800,6 +4803,7 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
    wd.cbStruct = sizeof(WINTRUST_DATA);
    wd.dwUIChoice = WTD_UI_NONE;
    wd.fdwRevocationChecks = revocationChecks ? WTD_REVOKE_WHOLECHAIN : WTD_REVOKE_NONE;
+   wd.dwProvFlags = revocationChecks ? WTD_REVOCATION_CHECK_CHAIN : 0;
    wd.dwUnionChoice = WTD_CHOICE_FILE;
    wd.dwStateAction = WTD_STATEACTION_VERIFY;
    wd.pFile = &fi;
@@ -4809,6 +4813,7 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
    wd.dwStateAction = WTD_STATEACTION_CLOSE;
    WinVerifyTrust((HWND)INVALID_HANDLE_VALUE, &action, &wd);
 
+   nxlog_debug_tag(_T("crypto"), 6, _T("VerifyFileSignature(%s): WinVerifyTrust status code %d (revocationChecks = %s)"), file, status, BooleanToString(revocationChecks));
    return status == 0;
 #else
    return false;
