@@ -108,6 +108,23 @@
 # SharedSecret = secret
 
 #
+# EnableCertificateRevocationChecks
+#
+# Enable certificate revocation checks (CRL/OCSP) during file signature
+# verification. When enabled, Windows will contact CRL distribution points
+# or OCSP responders to verify that certificates in the signing chain have
+# not been revoked. This requires network access to the CA's revocation
+# endpoints and may introduce delays during verification.
+# Default value is "no".
+#
+# Can also be controlled via registry key:
+# HKLM\Software\NetXMS\EnableCertificateRevocationChecks (DWORD)
+# Agent configuration takes precedence over registry.
+#
+# Example:
+# EnableCertificateRevocationChecks = no
+
+#
 # MaxSessions
 #
 # Maximum number of simultaneous communication sessions. Possible value can

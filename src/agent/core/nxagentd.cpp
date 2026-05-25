@@ -1307,6 +1307,14 @@ BOOL Initialize()
 
    shared_ptr<Config> config = g_config;
 
+#ifdef _WIN32
+   if (config->getValueAsBoolean(_T("/CORE/EnableCertificateRevocationChecks"), false))
+   {
+      SetFileSignatureRevocationCheck(true);
+      nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Certificate revocation checks enabled for file signature verification"));
+   }
+#endif
+
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
       InitSessionList();
