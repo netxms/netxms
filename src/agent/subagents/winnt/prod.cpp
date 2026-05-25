@@ -267,21 +267,26 @@ static bool IsHiveLoaded(const TCHAR *sidString)
 }
 
 /**
- * Read Windows Store packages from all user profiles
+ * Read Windows Store packages from all user profiles.
+ * Returns false if any profile was skipped because the user's session was in transition
+ * (NTUSER.DAT mounted but UsrClass.dat hive not yet mounted) - in that case the snapshot
+ * is incomplete and the caller should signal a collection error so the server preserves
+ * the previous snapshot rather than treating missing packages as removals.
  */
-static void ReadStorePackagesFromAllUsers(Table *table)
+static bool ReadStorePackagesFromAllUsers(Table *table)
 {
    // Enumerate all user profiles from ProfileList (includes logged-off users)
    HKEY hProfileList;
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
        _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList"),
        0, KEY_READ, &hProfileList) != ERROR_SUCCESS)
-      return;
+      return true;
 
    // Enable SE_BACKUP_NAME and SE_RESTORE_NAME privileges needed for RegLoadKey/RegUnloadKey
    bool backupPrivEnabled = EnablePrivilege(SE_BACKUP_NAME, true);
    bool restorePrivEnabled = EnablePrivilege(SE_RESTORE_NAME, true);
 
+   bool complete = true;
    DWORD index = 0;
    while(true)
    {
@@ -309,6 +314,19 @@ static void ReadStorePackagesFromAllUsers(Table *table)
       bool classesHiveLoadedByUs = false;
       if (!IsHiveLoaded(classesKeyName))
       {
+         // If NTUSER.DAT is mounted, the user has an active session and Windows is
+         // expected to mount UsrClass.dat as well. If it is not mounted yet, the session
+         // is in transition (logon/logoff). Loading UsrClass.dat manually here would
+         // exclusively lock the file and break AppX per-user package attachment, causing
+         // Store apps to fail to launch. Skip this profile and signal incomplete data.
+         if (IsHiveLoaded(sidName))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"Skipping classes hive for user %s (%s) - active session, classes hive not mounted yet",
+               (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
+            complete = false;
+            continue;
+         }
+
          // Classes hive is not loaded - load UsrClass.dat from the user's profile directory
          HKEY hProfileKey;
          if (RegOpenKeyExW(hProfileList, sidName, 0, KEY_READ, &hProfileKey) == ERROR_SUCCESS)
@@ -356,6 +374,7 @@ static void ReadStorePackagesFromAllUsers(Table *table)
       EnablePrivilege(SE_RESTORE_NAME, false);
 
    RegCloseKey(hProfileList);
+   return complete;
 }
 
 /**
@@ -423,15 +442,18 @@ static void ReadProvisionedStorePackages(Table *table)
 }
 
 /**
- * Read Windows Store packages from registry (all sources)
+ * Read Windows Store packages from registry (all sources).
+ * Returns false if the per-user enumeration was incomplete due to a session in transition.
  */
-static void ReadStorePackagesFromRegistry(Table *table)
+static bool ReadStorePackagesFromRegistry(Table *table)
 {
    // Read from all user profiles (HKEY_USERS\<SID>\...)
-   ReadStorePackagesFromAllUsers(table);
+   bool complete = ReadStorePackagesFromAllUsers(table);
 
    // Read provisioned (system-wide) packages
    ReadProvisionedStorePackages(table);
+
+   return complete;
 }
 
 /**
@@ -480,6 +502,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    bool success32 = ReadProductsFromRegistry(value, true);
 
    // Add Windows Store apps (Windows 10+) from all user profiles and provisioned packages
+   bool storeComplete = true;
    OSVERSIONINFO v;
    v.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 #pragma warning(push)
@@ -489,9 +512,15 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    if (v.dwMajorVersion >= 10)
    {
       CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-      ReadStorePackagesFromRegistry(value);
+      storeComplete = ReadStorePackagesFromRegistry(value);
       CoUninitialize();
    }
+
+   // Report collection error if Store package enumeration was incomplete - otherwise
+   // server would see missing per-user packages as removals and re-add them on the next
+   // successful poll, generating spurious uninstall/install events.
+   if (!storeComplete)
+      return SYSINFO_RC_ERROR;
 
    return (success64 || success32) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
