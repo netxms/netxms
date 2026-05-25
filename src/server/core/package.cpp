@@ -768,10 +768,12 @@ void PackageDeploymentJob::execute()
  */
 void NXCORE_EXPORTABLE RegisterPackageDeploymentJob(const shared_ptr<PackageDeploymentJob>& job)
 {
-   LockGuard lockGuard(s_jobLock);
+   s_jobLock.lock();
    s_jobs.put(job->getId(), job);
    s_jobQueue.push(job);
    s_wakeupCondition.pulse();
+   s_jobLock.unlock();
+   job->notifyClients();
 }
 
 /**

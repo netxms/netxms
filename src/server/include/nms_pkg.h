@@ -78,7 +78,6 @@ private:
 
    void setCompletedStatus(PackageDeploymentStatus status, const wchar_t *errorMessage = nullptr);
    void markAsFailed(const wchar_t *errorMessage, bool reschedule);
-   void notifyClients() const;
 
 public:
    PackageDeploymentJob(uint32_t nodeId, uint32_t userId, time_t executionTime, const PackageDetails& package) : m_packageFile(package.packageFile), m_command(package.command), m_description(package.description)
@@ -132,6 +131,7 @@ public:
    bool createDatabaseRecord();
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   void notifyClients() const;
 };
 
 /**
