@@ -6299,7 +6299,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dataType") && (dci->getType() == DCO_TYPE_ITEM))
    {
-		value = vm->createValue(dci->getDataType());
+		value = (dci->getType() == DCO_TYPE_ITEM) ? vm->createValue(dci->getDataType()) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
    {
@@ -6401,9 +6401,9 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
       value = vm->createValue(static_cast<int64_t>(dci->getThresholdDisableEndTime()));
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("transformedDataType") && (dci->getType() == DCO_TYPE_ITEM))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("transformedDataType"))
    {
-      value = vm->createValue(dci->getTransformedDataType());
+      value = (dci->getType() == DCO_TYPE_ITEM) ? vm->createValue(dci->getTransformedDataType()) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {

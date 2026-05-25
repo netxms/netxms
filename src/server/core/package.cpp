@@ -689,8 +689,7 @@ void PackageDeploymentJob::execute()
       if (maxWaitTime < 30)
          maxWaitTime = 30;
       agentConn->setCommandTimeout(maxWaitTime * 1000);
-      uint32_t rcc = agentConn->installPackage(m_packageFile, m_packageType,
-            (m_command.charAt(0) == '@') ? node->expandText(m_command.cstr() + 1) : m_command);
+      uint32_t rcc = agentConn->installPackage(m_packageFile, m_packageType, (m_command.charAt(0) == '@') ? node->expandText(m_command.cstr() + 1) : m_command);
       if (rcc == ERR_SUCCESS)
       {
          success = true;
