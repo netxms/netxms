@@ -25,6 +25,39 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.17 to 62.18
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_SNMP_TRAP_AUTH_FAILURE, _T("SYS_SNMP_TRAP_AUTH_FAILURE"),
+      EVENT_SEVERITY_WARNING, 1, _T("6a4b7d6e-49de-4fbf-823e-1e2750a1f2e5"),
+      _T("SNMP trap from %<sourceIP> rejected: %<reason> (SNMP version %<snmpVersion>)"),
+      _T("Generated when an SNMP trap is dropped because its credentials do not match the expected credentials configured for the source node. ")
+      _T("Rate-limited to one event per 24 hours per node; the timer is reset when SNMP credentials are changed on the node.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) reasonCode - Machine-readable reason (\"community-mismatch\", \"username-mismatch\", \"security-level-mismatch\", \"version-mismatch\")\r\n")
+      _T("   2) sourceIP - Source IP address of the trap\r\n")
+      _T("   3) reason - Human-readable reason\r\n")
+      _T("   4) snmpVersion - SNMP version of the rejected trap (\"1\", \"2c\", or \"3\")\r\n")
+      _T("   5) trapOid - SNMP trap OID (may be empty if not available, e.g. on v3 authentication failure)")));
+
+   int ruleId = NextFreeEPPruleID();
+   TCHAR query[2048];
+   _sntprintf(query, 2048,
+      _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth) ")
+      _T("VALUES (%d,'2620ee65-0ef5-4d28-9f45-14c19b34ff31',7944,'Generate alarm when SNMP trap is rejected due to credential mismatch',")
+      _T("'%%m',1,'SNMP_TRAP_AUTH_FAILURE_%%i','',0,%d,0,0)"),
+      ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 2048, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SNMP_TRAP_AUTH_FAILURE);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 62.16 to 62.17
  */
 static bool H_UpgradeFromV16()
@@ -650,6 +683,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 62, 18, H_UpgradeFromV17 },
    { 16, 62, 17, H_UpgradeFromV16 },
    { 15, 62, 16, H_UpgradeFromV15 },
    { 14, 62, 15, H_UpgradeFromV14 },

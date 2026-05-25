@@ -2096,6 +2096,19 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   6) eventCode - Original event code that triggered the action' CONCAT CRLF CONCAT
 		'   7) eventId - Original event ID that triggered the action'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_TRAP_AUTH_FAILURE, 'SYS_SNMP_TRAP_AUTH_FAILURE', '6a4b7d6e-49de-4fbf-823e-1e2750a1f2e5',
+		EVENT_SEVERITY_WARNING, 1,
+		'SNMP trap from %<sourceIP> rejected: %<reason> (SNMP version %<snmpVersion>)',
+		'Generated when an SNMP trap is dropped because its credentials do not match the expected credentials configured for the source node. Rate-limited to one event per 24 hours per node; the timer is reset when SNMP credentials are changed on the node.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) reasonCode - Machine-readable reason ("community-mismatch", "username-mismatch", "security-level-mismatch", "version-mismatch")' CONCAT CRLF CONCAT
+		'   2) sourceIP - Source IP address of the trap' CONCAT CRLF CONCAT
+		'   3) reason - Human-readable reason' CONCAT CRLF CONCAT
+		'   4) snmpVersion - SNMP version of the rejected trap ("1", "2c", or "3")' CONCAT CRLF CONCAT
+		'   5) trapOid - SNMP trap OID (may be empty if not available, e.g. on v3 authentication failure)'
+	);
 
 /*
 ** SNMP traps

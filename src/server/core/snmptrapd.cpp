@@ -458,40 +458,40 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
  * Validate SNMP trap credentials against expected security context.
  * For v1/v2c: checks community string match.
  * For v3: checks that PDU security level is not lower than expected and username matches.
- * Returns true if credentials are valid or no validation is needed (no context).
+ * Returns TrapCredentialCheckResult::OK if credentials are valid or no validation is needed (no context).
  */
-bool ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext)
+TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext)
 {
    if (securityContext == nullptr)
-      return true;
+      return TrapCredentialCheckResult::OK;
 
    if (pdu->getVersion() == SNMP_VERSION_3)
    {
       if (securityContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM)
-         return false;  // Community string expected, but PDU is v3 with USM security model
+         return TrapCredentialCheckResult::VersionMismatch;  // Community string expected, but PDU is v3 with USM security model
 
       // Verify username matches
       if (strcmp(pdu->getUser(), securityContext->getUserName()) != 0)
-         return false;
+         return TrapCredentialCheckResult::UsernameMismatch;
 
       // Verify security level is not lower than expected
       int pduFlags = pdu->getFlags();
       if ((securityContext->getAuthMethod() != SNMP_AUTH_NONE) && !(pduFlags & SNMP_AUTH_FLAG))
-         return false;
+         return TrapCredentialCheckResult::SecurityLevelMismatch;
       if ((securityContext->getPrivMethod() != SNMP_ENCRYPT_NONE) && !(pduFlags & SNMP_PRIV_FLAG))
-         return false;
+         return TrapCredentialCheckResult::SecurityLevelMismatch;
 
-      return true;
+      return TrapCredentialCheckResult::OK;
    }
 
    if (securityContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
-      return false;  // USM credentials expected, but PDU is v1/v2c
+      return TrapCredentialCheckResult::VersionMismatch;  // USM credentials expected, but PDU is v1/v2c
 
    // v1/v2c community string check
    const char *expected = securityContext->getCommunity();
    if (expected[0] == 0)
-      return true;
-   return strcmp(pdu->getCommunity(), expected) == 0;
+      return TrapCredentialCheckResult::OK;
+   return (strcmp(pdu->getCommunity(), expected) == 0) ? TrapCredentialCheckResult::OK : TrapCredentialCheckResult::CommunityMismatch;
 }
 
 /**
@@ -702,9 +702,13 @@ static void ReceiverThread()
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
-            if (!ValidateTrapCredentials(pdu, transport->getSecurityContext()))
+            TrapCredentialCheckResult credCheck = ValidateTrapCredentials(pdu, transport->getSecurityContext());
+            if (credCheck != TrapCredentialCheckResult::OK)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("SNMPTrapReceiver: SNMP credential validation failed for trap from %s, dropping"), (const TCHAR *)sourceAddr.toString());
+               shared_ptr<Node> sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
+               if (sourceNode != nullptr)
+                  sourceNode->reportSnmpTrapAuthFailure(credCheck, *pdu, sourceAddr);
             }
             else if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
             {

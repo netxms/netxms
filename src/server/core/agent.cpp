@@ -28,7 +28,7 @@
  * Externals
  */
 void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine);
-bool ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext);
+TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext);
 void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, uint32_t nodeId, time_t timestamp, const char *msg, int msgLen);
 void QueueWindowsEvent(WindowsEvent *event);
 
@@ -479,10 +479,13 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          if (pdu->parse(pduBytes, pduLenght, sctx, true))
          {
             debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): received PDU of type %d"), pdu->getCommand());
-            if ((sctx != nullptr) && !ValidateTrapCredentials(pdu, sctx))
+            TrapCredentialCheckResult credCheck = (sctx != nullptr) ? ValidateTrapCredentials(pdu, sctx) : TrapCredentialCheckResult::OK;
+            if (credCheck != TrapCredentialCheckResult::OK)
             {
                wchar_t buffer[64];
                debugPrintf(4, L"AgentConnectionEx::onSnmpTrap(): SNMP credential validation failed, dropping trap from %s", originSenderIP.toString(buffer));
+               if (originNode != nullptr)
+                  originNode->reportSnmpTrapAuthFailure(credCheck, *pdu, originSenderIP);
             }
             else if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
             {

@@ -204,6 +204,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpTrapLastTotal = 0;
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
+   m_lastSnmpTrapAuthFailureEventTime = 0;
    m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
@@ -340,6 +341,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_snmpTrapLastTotal = 0;
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
+   m_lastSnmpTrapAuthFailureEventTime = 0;
    m_sshKeyId = newNodeData->sshKeyId;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
@@ -10138,6 +10140,11 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       }
    }
 
+   // Reset SYS_SNMP_TRAP_AUTH_FAILURE rate-limit timer whenever SNMP credentials change,
+   // so the next mismatched trap after a credentials update fires an event immediately.
+   if (msg.isFieldExist(VID_SNMP_VERSION) || msg.isFieldExist(VID_SNMP_AUTH_OBJECT) || msg.isFieldExist(VID_SNMP_TRAP_AUTH_OBJECT))
+      m_lastSnmpTrapAuthFailureEventTime = 0;
+
    // Change EtherNet/IP port
    if (msg.isFieldExist(VID_ETHERNET_IP_PORT))
       m_eipPort = msg.getFieldAsUInt16(VID_ETHERNET_IP_PORT);
@@ -11804,6 +11811,75 @@ SNMP_SecurityContext *Node::getSnmpTrapSecurityContext() const
    SNMP_SecurityContext *ctx = (m_snmpTrapSecurity != nullptr) ? new SNMP_SecurityContext(m_snmpTrapSecurity) : new SNMP_SecurityContext(m_snmpSecurity);
    unlockProperties();
    return ctx;
+}
+
+/**
+ * Report SNMP trap credential validation failure.
+ * Posts SYS_SNMP_TRAP_AUTH_FAILURE at most once per 24 hours per node; the timer
+ * is reset by Node::modifyFromMessageInternal() when SNMP credentials are changed.
+ */
+void Node::reportSnmpTrapAuthFailure(TrapCredentialCheckResult reason, const SNMP_PDU& pdu, const InetAddress& sourceAddress)
+{
+   static const time_t INTERVAL = 86400;  // 24 hours
+
+   time_t now = time(nullptr);
+   lockProperties();
+   if ((m_lastSnmpTrapAuthFailureEventTime != 0) && (now - m_lastSnmpTrapAuthFailureEventTime < INTERVAL))
+   {
+      unlockProperties();
+      return;
+   }
+   m_lastSnmpTrapAuthFailureEventTime = now;
+   unlockProperties();
+
+   const wchar_t *reasonCode;
+   const wchar_t *reasonText;
+   switch (reason)
+   {
+      case TrapCredentialCheckResult::CommunityMismatch:
+         reasonCode = L"community-mismatch";
+         reasonText = L"community string does not match";
+         break;
+      case TrapCredentialCheckResult::UsernameMismatch:
+         reasonCode = L"username-mismatch";
+         reasonText = L"USM user name does not match";
+         break;
+      case TrapCredentialCheckResult::SecurityLevelMismatch:
+         reasonCode = L"security-level-mismatch";
+         reasonText = L"security level lower than configured";
+         break;
+      case TrapCredentialCheckResult::VersionMismatch:
+         reasonCode = L"version-mismatch";
+         reasonText = L"SNMP version does not match configured security model";
+         break;
+      default:
+         reasonCode = L"unknown";
+         reasonText = L"unknown reason";
+         break;
+   }
+
+   const wchar_t *versionText;
+   switch (pdu.getVersion())
+   {
+      case SNMP_VERSION_1: versionText = L"1"; break;
+      case SNMP_VERSION_2C: versionText = L"2c"; break;
+      case SNMP_VERSION_3: versionText = L"3"; break;
+      default: versionText = L"unknown"; break;
+   }
+
+   wchar_t oidText[1024];
+   oidText[0] = 0;
+   if (pdu.getTrapId().length() > 0)
+      pdu.getTrapId().toString(oidText, 1024);
+
+   EventBuilder(EVENT_SNMP_TRAP_AUTH_FAILURE, m_id)
+      .origin(EventOrigin::SNMP)
+      .param(L"reasonCode", reasonCode)
+      .param(L"sourceIP", sourceAddress)
+      .param(L"reason", reasonText)
+      .param(L"snmpVersion", versionText)
+      .param(L"trapOid", oidText)
+      .post();
 }
 
 /**

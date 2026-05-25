@@ -3870,6 +3870,18 @@ enum class DeviceBackupJobStatus
 };
 
 /**
+ * Result of SNMP trap credential validation
+ */
+enum class TrapCredentialCheckResult
+{
+   OK,
+   VersionMismatch,
+   UsernameMismatch,
+   SecurityLevelMismatch,
+   CommunityMismatch
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -4019,6 +4031,7 @@ protected:
    int64_t m_snmpTrapLastTotal;
    time_t m_snmpTrapStormLastCheckTime;
    uint32_t m_snmpTrapStormActualDuration;
+   time_t m_lastSnmpTrapAuthFailureEventTime;   // last time SYS_SNMP_TRAP_AUTH_FAILURE was posted for this node; 0 = never. Not persisted.
    SharedString m_sshLogin;
    SharedString m_sshPassword;
    uint32_t m_sshKeyId;
@@ -4488,6 +4501,7 @@ public:
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
    SNMP_SecurityContext *getSnmpTrapSecurityContext() const;
+   void reportSnmpTrapAuthFailure(TrapCredentialCheckResult reason, const SNMP_PDU& pdu, const InetAddress& sourceAddress);
 
    shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);
 
