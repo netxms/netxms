@@ -529,6 +529,14 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       DataSeries data = chart.getDataSeries().get(index);
       final DciDataRow[] values = data.getValues();
 
+      // Purge any band companion series from a previous render. Without this they keep painting
+      // their old data after the user disables the band toggle or switches to a non-aggregated tier.
+      ISeriesSet seriesSet = getSeriesSet();
+      if (seriesSet.getSeries(index + "_min") != null)
+         seriesSet.deleteSeries(index + "_min");
+      if (seriesSet.getSeries(index + "_max") != null)
+         seriesSet.deleteSeries(index + "_max");
+
 		// Create series
 		Date[] xSeries = new Date[values.length];
 		double[] ySeries = new double[values.length];
@@ -546,27 +554,30 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
       // Gap threshold: 4x the inter-sample interval. For aggregated tiers the spacing is the bucket size,
       // not the polling interval — using pollingInterval here makes every aggregated point look like a gap.
+      double gapThreshold = 0;
       DciTier tier = data.getTierServed();
       if (tier == DciTier.HOURLY)
       {
-         series.setLineGapThreshold(4.0 * 3600.0 * 1000.0);
+         gapThreshold = 4.0 * 3600.0 * 1000.0;
       }
       else if (tier == DciTier.DAILY)
       {
-         series.setLineGapThreshold(4.0 * 86400.0 * 1000.0);
+         gapThreshold = 4.0 * 86400.0 * 1000.0;
       }
       else
       {
          int pollingInterval = data.getPollingInterval();
          if ((pollingInterval > 0) && !data.isStoreChangesOnly())
          {
-            series.setLineGapThreshold(pollingInterval * 4.0 * 1000.0);
+            gapThreshold = pollingInterval * 4.0 * 1000.0;
          }
       }
+      if (gapThreshold > 0)
+         series.setLineGapThreshold(gapThreshold);
 
       // Render min/max companion lines in the same color when the data carries band info
       // (aggregated rows from on-the-fly bucketing or tier reads with function=MINMAX).
-      addMinMaxBandSeries(index, item, data, values);
+      addMinMaxBandSeries(index, item, data, values, gapThreshold);
 	}
 
    /**
@@ -594,7 +605,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
     * series color. The series are tagged with a "_min"/"_max" id suffix so we never collide with
     * the primary series id (which is the integer index).
     */
-   private void addMinMaxBandSeries(int index, ChartDciConfig item, DataSeries data, DciDataRow[] values)
+   private void addMinMaxBandSeries(int index, ChartDciConfig item, DataSeries data, DciDataRow[] values, double gapThreshold)
 	{
 	   if ((values.length == 0) || !values[0].isAggregated())
 	      return;
@@ -627,15 +638,15 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	         ? ColorConverter.colorFromInt(item.getColorAsInt(), colorCache)
 	         : ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString((index % ChartConfiguration.DEFAULT_PALETTE_SIZE) + 1));
 
-	   addBandLine(index + "_min", item.getLabel() + " (min)", xSeries, minSeries, baseColor);
-	   addBandLine(index + "_max", item.getLabel() + " (max)", xSeries, maxSeries, baseColor);
+	   addBandLine(index + "_min", item.getLabel() + " (min)", xSeries, minSeries, baseColor, gapThreshold);
+	   addBandLine(index + "_max", item.getLabel() + " (max)", xSeries, maxSeries, baseColor, gapThreshold);
 	}
 
 	/**
 	 * Helper: add a thin dashed companion line for min/max band rendering.
 	 */
    @SuppressWarnings("deprecation")
-	private void addBandLine(String id, String description, Date[] xSeries, double[] ySeries, Color baseColor)
+	private void addBandLine(String id, String description, Date[] xSeries, double[] ySeries, Color baseColor, double gapThreshold)
 	{
 	   ISeriesSet seriesSet = getSeriesSet();
 	   ILineSeries<?> series = (ILineSeries<?>)seriesSet.createSeries(SeriesType.LINE, id);
@@ -646,6 +657,8 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	   series.setLineColor(baseColor);
 	   series.setXDateSeries(xSeries);
 	   series.setYSeries(ySeries);
+	   if (gapThreshold > 0)
+	      series.setLineGapThreshold(gapThreshold);
 	}
 
    /**
