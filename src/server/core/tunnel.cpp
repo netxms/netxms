@@ -402,16 +402,16 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
    if (result != MSGRECV_SUCCESS)
    {
       if (result == MSGRECV_CLOSED)
-         debugPrintf(4, _T("Tunnel closed by peer"));
+         debugPrintf(4, L"Tunnel closed by peer");
       else
-         debugPrintf(4, _T("Communication error (%s)"), AbstractMessageReceiver::resultToText(result));
+         debugPrintf(4, L"Communication error (%s)", AbstractMessageReceiver::resultToText(result));
       return result;
    }
 
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
-      TCHAR buffer[64];
-      debugPrintf(6, _T("Received message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
+      wchar_t buffer[64];
+      debugPrintf(6, L"Received message %s (%u)", NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
    }
 
    if (msg->getCode() == CMD_CHANNEL_DATA)
@@ -1833,6 +1833,8 @@ void TunnelListenerThread()
       s_tunnelListenerLock.unlock();
       return;
    }
+
+   WaitForServerStartupCompletion();
 
    listener.mainLoop();
    listener.shutdown();

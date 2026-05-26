@@ -61,6 +61,8 @@ static void EventStormDetector()
 	uint64_t eventsPerSecond = ConfigReadInt(L"EventStorm.EventsPerSecond", 100);
 	int duration = ConfigReadInt(L"EventStorm.Duration", 15);
 
+   WaitForServerStartupCompletion();
+
 	int actualDuration = 0;
 	uint64_t prevEvents = g_totalEventsProcessed;
 	while(!(g_flags & AF_SHUTDOWN))

@@ -225,6 +225,8 @@ void ClientListenerThread()
    if (!listener.initialize())
       return;
 
+   WaitForServerStartupCompletion();
+
    listener.mainLoop();
    listener.shutdown();
 

@@ -1391,6 +1391,7 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 bool NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
+void NXCORE_EXPORTABLE WaitForServerStartupCompletion();
 
 int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);
 

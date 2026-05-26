@@ -1569,6 +1569,7 @@ void ActiveDiscoveryPoller()
    uint32_t sleepTime = 60000;
 
    // Main loop
+   WaitForServerStartupCompletion();
    while(!IsShutdownInProgress())
    {
       s_activeDiscoveryWakeup.wait(sleepTime);
