@@ -10,17 +10,17 @@
 
 DRIVERS = at avaya bdcom bulat cambium cisco dell-pwc dlink edgecore eltex \
 	etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper \
-	lenovo mds mikrotik moxa net-snmp netonix ping3 planet qtech rittal \
-	saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
+	lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech \
+	rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
 
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la bdcom.la bulat.la cambium.la cisco.la \
 	dell-pwc.la dlink.la edgecore.la eltex.la etherwan.la extreme.la \
 	fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la juniper.la \
-	lenovo.la mds.la mikrotik.la moxa.la net-snmp.la netonix.la ping3.la \
-	planet.la qtech.la rittal.la saf.la siemens.la symbol-ws.la tb.la \
-	tplink.la ubnt.la westerstrand.la zyxel.la
+	lenovo.la mds.la mikrotik.la moxa.la net-snmp.la netonix.la origo.la \
+	ping3.la planet.la qtech.la rittal.la saf.la siemens.la symbol-ws.la \
+	tb.la tplink.la ubnt.la westerstrand.la zyxel.la
 
 at_la_SOURCES = at/at.cpp
 at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -187,6 +187,13 @@ netonix_la_SOURCES = netonix/netonix.cpp
 netonix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 netonix_la_LDFLAGS = -module -avoid-version
 netonix_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+origo_la_SOURCES = origo/origo.cpp
+origo_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+origo_la_LDFLAGS = -module -avoid-version
+origo_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
