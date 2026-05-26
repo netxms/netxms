@@ -210,7 +210,7 @@ public class WelcomePage extends Composite
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            NXCSession session = Registry.getSession();
+            NXCSession session = Registry.getSession(getDisplay());
             String serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
             session.setAttributeForCurrentUser(".WelcomePage.SeenVersions", addVersion(serverSeen, serverVersion));
          }
