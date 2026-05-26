@@ -62,6 +62,7 @@ import org.netxms.nxmc.modules.datacollection.widgets.helpers.PathElement;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 /**
  * Editor for file delivery policy
  */
@@ -431,14 +432,15 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
 
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN | SWT.MULTI);
-      String selectionFolder = dlg.open();
-      if (selectionFolder == null)
+      if (dlg.open() == null)
          return;
 
+      final List<File> selectedFiles = new ArrayList<File>();
+      WidgetHelper.getFileDialogFileList(dlg, selectedFiles);
+
       final List<PathElement> uploadList = new ArrayList<PathElement>();
-      for(String name : dlg.getFileNames())
+      for(File f : selectedFiles)
       {
-         File f = (name.charAt(0) == File.separatorChar) ? new File(name) : new File(new File(selectionFolder).getParentFile(), name);
          if (f.exists())
          {
             PathElement e = ((PathElement)selection.getFirstElement()).findChild(f.getName());
@@ -456,14 +458,14 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             }
             else
             {
-               e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID(), new Date());  
-               notSavedFiles.add(e.getGuid().toString());             
+               e = new PathElement((PathElement)selection.getFirstElement(), f.getName(), f, UUID.randomUUID(), new Date());
+               notSavedFiles.add(e.getGuid().toString());
             }
             uploadList.add(e);
          }
          else
          {
-            logger.info("File does not exist: " + name);          
+            logger.info("File does not exist: " + f.getAbsolutePath());
          }
       }
 

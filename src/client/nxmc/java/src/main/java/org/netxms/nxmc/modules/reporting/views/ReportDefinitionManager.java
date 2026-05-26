@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.reporting.views;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -265,15 +264,13 @@ public class ReportDefinitionManager extends ConfigurationView implements Sessio
       fd.setText(i18n.tr("Select Report Packages"));
       WidgetHelper.setFileDialogFilterExtensions(fd, new String[] { "*.jar;*.zip", "*.*" });
       WidgetHelper.setFileDialogFilterNames(fd, new String[] { i18n.tr("Report packages (*.jar, *.zip)"), i18n.tr("All files") });
-      String selection = fd.open();
-      if (selection == null)
+      if (fd.open() == null)
          return;
 
       final List<File> files = new ArrayList<File>();
-      for(String fname : fd.getFileNames())
-      {
-         files.add(Paths.get(fname).isAbsolute() ? new File(fname) : new File(new File(selection).getParentFile(), fname));
-      }
+      WidgetHelper.getFileDialogFileList(fd, files);
+      if (files.isEmpty())
+         return;
       new Job(i18n.tr("Uploading report definition"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
