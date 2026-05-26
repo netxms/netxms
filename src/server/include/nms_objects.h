@@ -3849,6 +3849,7 @@ template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<DeviceView>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkPath>;
 template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<VlanList>;
+template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<VrrpInfo>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFArea>;
 template class NXCORE_TEMPLATE_EXPORTABLE StructArray<OSPFNeighbor>;
 #endif
