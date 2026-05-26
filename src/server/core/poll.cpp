@@ -379,6 +379,7 @@ void PollManager(Condition *startCondition)
    startCondition->set();
 
    WatchdogStartSleep(watchdogId);
+   WaitForServerStartupCompletion();
    while(!SleepAndCheckForShutdown(5))
    {
       WatchdogNotify(watchdogId);

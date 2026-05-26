@@ -243,10 +243,19 @@ static StringSet s_components;
 static ObjectArray<LicenseProblem> s_licenseProblems(0, 16, Ownership::True);
 static Mutex s_licenseProblemsLock;
 static uint32_t s_licenseProblemId = 1;
+static Condition s_initCompletedCondition(true);
 
 #ifndef _WIN32
 static pthread_t m_signalHandlerThread;
 #endif
+
+/**
+ * Wait for server startup completion
+ */
+void NXCORE_EXPORTABLE WaitForServerStartupCompletion()
+{
+   s_initCompletedCondition.wait();
+}
 
 /**
  * Register component
@@ -983,7 +992,7 @@ static void GetDatabasePassword()
 /**
  * Get log destination flags
  */
-static inline UINT32 GetLogDestinationFlag()
+static inline uint32_t GetLogDestinationFlag()
 {
    if (g_flags & AF_USE_SYSLOG)
       return NXLOG_USE_SYSLOG;
@@ -1651,6 +1660,7 @@ retry_db_lock:
    s_statCollectorThread = ThreadCreateEx(ServerStatCollector);
 
    g_flags |= AF_SERVER_INITIALIZED;
+   s_initCompletedCondition.set();
    PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode);
    RegenerateMaintenanceModeEvents();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));

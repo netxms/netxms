@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1275,6 +1275,7 @@ static void AdHocScheduler()
    uint32_t sleepTime = 1;
    uint32_t watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Ad hoc scheduler started"));
+   WaitForServerStartupCompletion();
    while(true)
    {
       WatchdogStartSleep(watchdogId);
@@ -1331,6 +1332,7 @@ static void RecurrentScheduler()
    ThreadSetName("Scheduler/R");
    uint32_t watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Recurrent scheduler started"));
+   WaitForServerStartupCompletion();
    do
    {
       WatchdogNotify(watchdogId);
