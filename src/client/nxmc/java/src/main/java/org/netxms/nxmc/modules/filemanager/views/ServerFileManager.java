@@ -61,6 +61,7 @@ import org.netxms.nxmc.modules.filemanager.views.helpers.ServerFileLabelProvider
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -308,15 +309,13 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    {
       FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN | SWT.MULTI);
       fd.setText("Select Files");
-      String selection = fd.open();
-      if (selection == null)
+      if (fd.open() == null)
          return;
 
       final List<File> files = new ArrayList<File>();
-      for(String fname : fd.getFileNames())
-      {
-         files.add((fname.charAt(0) == File.separatorChar) ? new File(fname) : new File(new File(selection).getParentFile(), fname));
-      }
+      WidgetHelper.getFileDialogFileList(fd, files);
+      if (files.isEmpty())
+         return;
       new Job(i18n.tr("Uploading file to server"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception

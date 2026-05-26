@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.snmp.views;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -337,15 +336,13 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    {
       FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN | SWT.MULTI);
       fd.setText("Select Files");
-      String selection = fd.open();
-      if (selection == null)
+      if (fd.open() == null)
          return;
 
       final List<File> files = new ArrayList<File>();
-      for(String fname : fd.getFileNames())
-      {
-         files.add(Paths.get(fname).isAbsolute() ? new File(fname) : new File(new File(selection).getParentFile(), fname));
-      }
+      WidgetHelper.getFileDialogFileList(fd, files);
+      if (files.isEmpty())
+         return;
       new Job(i18n.tr("Uploading file to server"), this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
