@@ -52,6 +52,8 @@ tags:
     description: User group management
   - name: Notification Channels
     description: Notification channel and driver management
+  - name: SNMP MIB
+    description: Browse the server's compiled SNMP MIB tree
   - name: SSH Keys
     description: SSH key management
   - name: Two-Factor Authentication
@@ -4183,6 +4185,57 @@ paths:
         - BearerAuth: []
       tags:
         - Notification Channels
+  /v1/snmp-mib:
+    get:
+      operationId: getMibRoot
+      summary: Get MIB tree root
+      description: Retrieve the synthetic root of the server's compiled SNMP MIB tree, including the list of immediate children (typically `ccitt(0)`, `iso(1)`, `joint-iso-ccitt(2)`).
+      responses:
+        '200':
+          description: MIB root node retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MibNode'
+        '401':
+          description: Unauthorized
+        '503':
+          description: MIB tree is not loaded
+      security:
+        - BearerAuth: []
+      tags:
+        - SNMP MIB
+  /v1/snmp-mib/{oid}:
+    get:
+      operationId: getMibNode
+      summary: Get MIB node by OID
+      description: Retrieve the MIB node identified by the given OID, including its immediate children. The OID is a dotted numeric path with no leading dot (for example `1.3.6.1.2.1.1.1`).
+      parameters:
+        - name: oid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Dotted numeric OID without a leading dot (e.g. `1.3.6.1.2.1.1.1`).
+      responses:
+        '200':
+          description: MIB node retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MibNode'
+        '400':
+          description: Invalid OID
+        '401':
+          description: Unauthorized
+        '404':
+          description: No MIB object found with the given OID
+        '503':
+          description: MIB tree is not loaded
+      security:
+        - BearerAuth: []
+      tags:
+        - SNMP MIB
   /v1/ssh-keys:
     get:
       operationId: listSshKeys
@@ -6226,6 +6279,133 @@ components:
                 type: number
                 format: double
                 description: Longitude in decimal degrees.
+    MibNode:
+      type: object
+      description: A node in the SNMP MIB tree, including its immediate children.
+      properties:
+        oid:
+          type: string
+          description: Full dotted OID for this node. Empty string for the synthetic root.
+        name:
+          type: string
+          nullable: true
+          description: Symbolic name of the node (e.g. `sysDescr`). Null if the node has no name (synthetic root).
+        type:
+          type: string
+          nullable: true
+          description: Symbolic name of the MIB type (e.g. `COUNTER32`). Null if the type code is unknown.
+          enum:
+            - OTHER
+            - IMPORT_ITEM
+            - OBJID
+            - BITSTRING
+            - INTEGER
+            - INTEGER32
+            - INTEGER64
+            - UNSIGNED32
+            - COUNTER
+            - COUNTER32
+            - COUNTER64
+            - GAUGE
+            - GAUGE32
+            - TIMETICKS
+            - OCTETSTR
+            - OPAQUE
+            - IPADDR
+            - PHYSADDR
+            - NETADDR
+            - NAMED_TYPE
+            - SEQID
+            - SEQUENCE
+            - CHOICE
+            - TEXTUAL_CONVENTION
+            - MACRO_DEFINITION
+            - MODCOMP
+            - TRAPTYPE
+            - NOTIFTYPE
+            - MODID
+            - NSAPADDRESS
+            - AGENTCAP
+            - UINTEGER
+            - "NULL"
+            - OBJGROUP
+            - NOTIFGROUP
+        typeCode:
+          type: integer
+          description: Numeric MIB type code as defined in `nxsnmp.h` (MIB_TYPE_*).
+        status:
+          type: string
+          nullable: true
+          description: Symbolic name of the MIB status. Null if the status code is unknown.
+          enum:
+            - MANDATORY
+            - OPTIONAL
+            - OBSOLETE
+            - DEPRECATED
+            - CURRENT
+        statusCode:
+          type: integer
+          description: Numeric MIB status code as defined in `nxsnmp.h` (MIB_STATUS_*).
+        access:
+          type: string
+          nullable: true
+          description: Symbolic name of the MIB access mode. Null if the access code is unknown.
+          enum:
+            - READONLY
+            - READWRITE
+            - WRITEONLY
+            - NOACCESS
+            - NOTIFY
+            - CREATE
+        accessCode:
+          type: integer
+          description: Numeric MIB access code as defined in `nxsnmp.h` (MIB_ACCESS_*).
+        description:
+          type: string
+          nullable: true
+          description: DESCRIPTION clause from the MIB module.
+        textualConvention:
+          type: string
+          nullable: true
+          description: Name of the textual convention applied to this object, if any.
+        displayHint:
+          type: string
+          nullable: true
+          description: DISPLAY-HINT clause for formatting raw values.
+        enumValues:
+          type: string
+          nullable: true
+          description: Comma-separated list of named enumeration values, if defined.
+        index:
+          type: string
+          nullable: true
+          description: INDEX clause for SMIv2 table entries.
+        parent:
+          type: string
+          nullable: true
+          description: Full dotted OID of the parent node. Null for the synthetic root.
+        children:
+          type: array
+          description: Immediate child nodes (one level deep).
+          items:
+            $ref: '#/components/schemas/MibNodeChild'
+    MibNodeChild:
+      type: object
+      description: Summary of a child node, used inside `MibNode.children`. Fetch `/v1/snmp-mib/{oid}` to retrieve full details.
+      properties:
+        subId:
+          type: integer
+          description: Sub-identifier under the parent (last component of the child's OID).
+        oid:
+          type: string
+          description: Full dotted OID of the child node.
+        name:
+          type: string
+          nullable: true
+          description: Symbolic name of the child node, if defined.
+        hasChildren:
+          type: boolean
+          description: True if this child has further descendants.
     ObjectCategory:
       type: object
       properties:

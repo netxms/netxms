@@ -162,6 +162,7 @@ int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
+int H_GetMibNode(Context *context);
 int H_EventProcessingPolicy(Context *context);
 int H_EventProcessingPolicyRule(Context *context);
 int H_EventProcessingPolicyUpdate(Context *context);
@@ -513,6 +514,12 @@ static bool InitModule(Config *config)
       .GET(H_ScriptDetails)
       .PUT(H_ScriptUpdate)
       .DELETE(H_ScriptDelete)
+      .build();
+   RouteBuilder("v1/snmp-mib")
+      .GET(H_GetMibNode)
+      .build();
+   RouteBuilder("v1/snmp-mib/:oid")
+      .GET(H_GetMibNode)
       .build();
    RouteBuilder("v1/ssh-keys")
       .GET(H_SshKeys)

@@ -706,6 +706,31 @@ void ReloadMIBTree()
 }
 
 /**
+ * Acquire read lock on the MIB tree and return the root node. Returns nullptr if the
+ * tree has not been loaded yet; in that case the lock is NOT held and the caller must
+ * not call ReleaseMIBTreeReadLock(). Every successful (non-null) return must be paired
+ * with exactly one ReleaseMIBTreeReadLock() call.
+ */
+SNMP_MIBObject NXCORE_EXPORTABLE *AcquireMIBTreeReadLock()
+{
+   s_mibTreeLock.readLock();
+   if (s_mibRoot == nullptr)
+   {
+      s_mibTreeLock.unlock();
+      return nullptr;
+   }
+   return s_mibRoot;
+}
+
+/**
+ * Release read lock previously acquired by AcquireMIBTreeReadLock()
+ */
+void NXCORE_EXPORTABLE ReleaseMIBTreeReadLock()
+{
+   s_mibTreeLock.unlock();
+}
+
+/**
  * Format SNMP value with display hint if available
  */
 wchar_t NXCORE_EXPORTABLE *FormatSNMPValue(const SNMP_Variable *var, wchar_t *buffer, size_t bufferSize)
