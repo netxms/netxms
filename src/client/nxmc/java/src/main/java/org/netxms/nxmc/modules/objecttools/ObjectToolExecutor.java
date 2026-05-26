@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
 public final class ObjectToolExecutor
 {
    /**
-    * Private constructor to forbid instantiation 
+    * Private constructor to forbid instantiation
     */
    private ObjectToolExecutor()
    {
@@ -71,7 +71,7 @@ public final class ObjectToolExecutor
 
    /**
     * Check if tool is allowed for execution on at least one object from set
-    * 
+    *
     * @param tool
     * @param objects
     * @return
@@ -97,7 +97,7 @@ public final class ObjectToolExecutor
 
    /**
     * Check if given tool is applicable for at least one object in set
-    * 
+    *
     * @param tool
     * @param objects
     * @return
@@ -112,7 +112,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute object tool on object set
-    * 
+    *
     * @param allObjects objects that involved in selection
     * @param nodes objects to execution tool on
     * @param tool Object tool
@@ -240,7 +240,7 @@ public final class ObjectToolExecutor
       new Job(i18n.tr("Execute object tool"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
-         {      
+         {
             List<String> expandedText = null;
 
             if (((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0) || (objects.size() >= 10))
@@ -257,7 +257,7 @@ public final class ObjectToolExecutor
                   }
                   ObjectContext node = objects.iterator().next();
                   expandedText = session.substituteMacros(node, textToExpand, inputValues);
-                  message = expandedText.remove(0);                  
+                  message = expandedText.remove(0);
                }
                else
                {
@@ -327,7 +327,7 @@ public final class ObjectToolExecutor
             int i = 0;
             if ((objects.size() > 1) &&
                   (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND ||
-                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && 
+                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) &&
                   ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0 || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
             {
                getDisplay().syncExec(new Runnable() {
@@ -361,7 +361,7 @@ public final class ObjectToolExecutor
                         {
                            executeOnNode(n, tool, inputValues, maskedFields, null, viewPlacement);
                         }
-                     });                  
+                     });
                   }
                }
             }
@@ -388,13 +388,13 @@ public final class ObjectToolExecutor
             {
                confirmed = MessageDialogHelper.openQuestion(Registry.getMainWindowShell(), i18n.tr("Confirm Tool Execution"), message);
             }
-            
+
             boolean isConfirmed()
             {
                return confirmed;
             }
-         }         
-         
+         }
+
       }.start();
    }
 
@@ -420,7 +420,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute object tool on single node
-    * 
+    *
     * @param node node to execute at
     * @param tool object tool
     * @param inputValues input values
@@ -457,7 +457,7 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
          case ObjectTool.TYPE_SNMP_TABLE:
-            executeTableTool(node, tool, viewPlacement);
+            executeTableTool(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_URL:
             openURL(node, tool, expandedToolData, viewPlacement);
@@ -483,15 +483,19 @@ public final class ObjectToolExecutor
 
    /**
     * Execute table tool
-    * 
-    * @param node
-    * @param tool
+    *
+    * @param node target node
+    * @param tool tool information
+    * @param inputValues input values provided by user (may be empty)
+    * @param maskedFields list of input fields to be masked (may be empty)
+    * @param viewPlacement view placement information
     */
-   private static void executeTableTool(final ObjectContext node, final ObjectTool tool, ViewPlacement viewPlacement)
+   private static void executeTableTool(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues,
+         final List<String> maskedFields, ViewPlacement viewPlacement)
    {
-      viewPlacement.openView(new TableToolResults(node, tool));
+      viewPlacement.openView(new TableToolResults(node, tool, inputValues, maskedFields));
    }
-   
+
    /**
     * Execute agent action.
     *
@@ -537,7 +541,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute server command
-    * 
+    *
     * @param node
     * @param tool
     * @param inputValues
@@ -549,7 +553,7 @@ public final class ObjectToolExecutor
       final NXCSession session = Registry.getSession();
       I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
-      {      
+      {
          new Job(i18n.tr("Executing server command"), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
@@ -563,7 +567,7 @@ public final class ObjectToolExecutor
                   });
                }
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
@@ -579,7 +583,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute SSH command
-    * 
+    *
     * @param node target node
     * @param tool tool information
     * @param inputValues input values provided by user
@@ -635,7 +639,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute server script
-    * 
+    *
     * @param node node to execute at
     * @param tool object tool
     * @param inputValues input values
@@ -646,7 +650,7 @@ public final class ObjectToolExecutor
       final NXCSession session = Registry.getSession();
       I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
-      {      
+      {
          new Job(i18n.tr("Execute server script"), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
@@ -674,7 +678,7 @@ public final class ObjectToolExecutor
 
    /**
     * Execute local command
-    * 
+    *
     * @param node node to execute at
     * @param tool object tool
     * @param inputValues input values
@@ -682,7 +686,7 @@ public final class ObjectToolExecutor
     * @param viewPlacement view placement information
     */
    private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, final String command, ViewPlacement viewPlacement)
-   {      
+   {
       I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
@@ -742,7 +746,7 @@ public final class ObjectToolExecutor
    /**
     * @param node
     * @param tool
-    * @param inputValues 
+    * @param inputValues
     */
    private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, ViewPlacement viewPlacement)
    {
@@ -803,7 +807,7 @@ public final class ObjectToolExecutor
    /**
     * @param node
     * @param tool
-    * @param inputValues 
+    * @param inputValues
     */
    private static void openURL(final ObjectContext node, final ObjectTool tool, final String url, ViewPlacement viewPlacement)
    {

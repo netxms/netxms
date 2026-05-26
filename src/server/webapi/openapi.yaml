@@ -4956,8 +4956,9 @@ paths:
                     type: string
                   description: |
                     Optional list of input field names whose values must be masked
-                    in the audit log (typically password-type fields). Names not
-                    present in inputFields are ignored.
+                    in the audit log and in user-visible context such as the result
+                    table title for table tools (typically password-type fields).
+                    Names not present in inputFields are ignored.
                 stream:
                   type: boolean
                   description: |

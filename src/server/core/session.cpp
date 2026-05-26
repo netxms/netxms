@@ -9939,9 +9939,16 @@ void ClientSession::execTableTool(const NXCPMessage& request)
          {
             if (object->getObjectClass() == OBJECT_NODE)
             {
-               uint32_t rcc = ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object), request.getId(), this);
+               StringMap inputFields(request, VID_FIELD_LIST_BASE, VID_NUM_FIELDS);
+               StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+
+               uint32_t rcc = ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object), request.getId(), this, &inputFields, &maskedFields);
                if (rcc == RCC_SUCCESS)
-                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed table tool [%u] on node %s"), dwToolId, object->getName());
+               {
+                  String inputFieldsLog = BuildAuditInputFieldsString(inputFields, &maskedFields);
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed table tool [%u] on node %s%s",
+                        dwToolId, object->getName(), inputFieldsLog.cstr());
+               }
                response.setField(VID_RCC, rcc);
             }
             else

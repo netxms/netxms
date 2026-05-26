@@ -85,7 +85,7 @@ struct OBJECT_TOOL_ACL
 /**
  * Tool startup info
  */
-struct ToolStartupInfo
+struct TableToolStartupInfo
 {
    uint32_t toolId;
    uint32_t requestId;
@@ -93,11 +93,15 @@ struct ToolStartupInfo
    shared_ptr<Node> node;
    ClientSession *session;
    wchar_t *toolData;
+   StringMap *inputFields;
+   StringMap *maskedInputFields;
 
-   ~ToolStartupInfo()
+   ~TableToolStartupInfo()
    {
       session->decRefCount();
       MemFree(toolData);
+      delete inputFields;
+      delete maskedInputFields;
    }
 };
 
@@ -124,6 +128,22 @@ static uint32_t ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
       DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
    return RCC_DB_FAILURE;
+}
+
+/**
+ * Build a copy of input field map with values of masked fields replaced by "******".
+ * Returns nullptr if there is nothing to mask.
+ */
+static StringMap *BuildMaskedInputFields(const StringMap *real, const StringList *maskedNames)
+{
+   if ((maskedNames == nullptr) || maskedNames->isEmpty())
+      return nullptr;
+   if ((real == nullptr) || real->isEmpty())
+      return nullptr;
+   StringMap *copy = new StringMap(*real);
+   for(int i = 0; i < maskedNames->size(); i++)
+      copy->set(maskedNames->get(i), L"******");
+   return copy;
 }
 
 /**
@@ -512,7 +532,7 @@ bool NXCORE_EXPORTABLE CheckObjectToolAccess(uint32_t toolId, uint32_t userId)
 /**
  * Agent table tool execution thread
  */
-static void GetAgentTable(ToolStartupInfo *toolData)
+static void GetAgentTable(TableToolStartupInfo *toolData)
 {
    NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
 
@@ -521,11 +541,13 @@ static void GetAgentTable(ToolStartupInfo *toolData)
    {
       *tableName = 0;
       tableName++;
+      StringBuffer expandedTableName = toolData->node->expandText(tableName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+            toolData->session->getLoginName(), nullptr, nullptr, toolData->inputFields, nullptr);
       shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
       if (pConn != nullptr)
       {
          Table *table;
-         UINT32 err = pConn->getTable(tableName, &table);
+         UINT32 err = pConn->getTable(expandedTableName.cstr(), &table);
          if (err == ERR_SUCCESS)
          {
             // Convert data types returned by agent into table tool codes
@@ -551,7 +573,10 @@ static void GetAgentTable(ToolStartupInfo *toolData)
             }
 
             msg.setField(VID_RCC, RCC_SUCCESS);
-            table->setTitle(toolData->toolData);
+            const StringMap *titleFields = (toolData->maskedInputFields != nullptr) ? toolData->maskedInputFields : toolData->inputFields;
+            StringBuffer expandedTitle = toolData->node->expandText(toolData->toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                  toolData->session->getLoginName(), nullptr, nullptr, titleFields, nullptr);
+            table->setTitle(expandedTitle.cstr());
             table->fillMessage(&msg, 0, -1);
             delete table;
          }
@@ -578,7 +603,7 @@ static void GetAgentTable(ToolStartupInfo *toolData)
 /**
  * Agent list tool execution thread
  */
-static void GetAgentList(ToolStartupInfo *toolData)
+static void GetAgentList(TableToolStartupInfo *toolData)
 {
    NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
 
@@ -600,7 +625,10 @@ static void GetAgentList(ToolStartupInfo *toolData)
    }
 
    Table table;
-	table.setTitle(toolData->toolData);
+   const StringMap *titleFields = (toolData->maskedInputFields != nullptr) ? toolData->maskedInputFields : toolData->inputFields;
+   StringBuffer expandedTitle = toolData->node->expandText(toolData->toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+         toolData->session->getLoginName(), nullptr, nullptr, titleFields, nullptr);
+   table.setTitle(expandedTitle.cstr());
 
    if ((listName != nullptr) && (regex != nullptr))
    {
@@ -635,8 +663,10 @@ static void GetAgentList(ToolStartupInfo *toolData)
                   shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
                   if (pConn != nullptr)
                   {
+                     StringBuffer expandedListName = toolData->node->expandText(listName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                           toolData->session->getLoginName(), nullptr, nullptr, toolData->inputFields, nullptr);
                      StringList *values;
-                     uint32_t rcc = pConn->getList(listName, &values);
+                     uint32_t rcc = pConn->getList(expandedListName.cstr(), &values);
                      if (rcc == ERR_SUCCESS)
                      {
                         Buffer<int, 64> offsets((numCols + 1) * 3);
@@ -829,7 +859,7 @@ static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SN
 /**
  * SNMP table tool execution thread
  */
-static void GetSNMPTable(ToolStartupInfo *toolData)
+static void GetSNMPTable(TableToolStartupInfo *toolData)
 {
    TCHAR buffer[256];
    SNMP_ENUM_ARGS args;
@@ -859,7 +889,11 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
             for(int i = 0; i < numColumns; i++)
             {
                DBGetField(hResult, i, 0, buffer, 256);
-               args.ppszOidList[i] = DBGetField(hResult, i, 1, nullptr, 0);
+               wchar_t *rawOid = DBGetField(hResult, i, 1, nullptr, 0);
+               StringBuffer expandedOid = toolData->node->expandText(rawOid, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                     toolData->session->getLoginName(), nullptr, nullptr, toolData->inputFields, nullptr);
+               MemFree(rawOid);
+               args.ppszOidList[i] = MemCopyString(expandedOid.cstr());
                args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
                table.addColumn(buffer, args.pnFormatList[i]);
             }
@@ -869,7 +903,10 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
             {
                // Fill in message with results
                msg.setField(VID_RCC, RCC_SUCCESS);
-               table.setTitle(toolData->toolData);
+               const StringMap *titleFields = (toolData->maskedInputFields != nullptr) ? toolData->maskedInputFields : toolData->inputFields;
+               StringBuffer expandedTitle = toolData->node->expandText(toolData->toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                     toolData->session->getLoginName(), nullptr, nullptr, titleFields, nullptr);
+               table.setTitle(expandedTitle.cstr());
                table.fillMessage(&msg, 0, -1);
             }
             else
@@ -909,7 +946,7 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
 /**
  * Execute table tool
  */
-uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session)
+uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session, const StringMap *inputFields, const StringList *maskedFields)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -932,13 +969,15 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
          if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
          {
             session->incRefCount();
-            auto startupInfo = new ToolStartupInfo();
+            auto startupInfo = new TableToolStartupInfo();
             startupInfo->toolId = toolId;
             startupInfo->requestId = requestId;
             startupInfo->toolData = DBGetField(hResult, 0, 1, nullptr, 0);
             startupInfo->flags = DBGetFieldULong(hResult, 0, 2);
             startupInfo->node = node;
             startupInfo->session = session;
+            startupInfo->inputFields = ((inputFields != nullptr) && !inputFields->isEmpty()) ? new StringMap(*inputFields) : nullptr;
+            startupInfo->maskedInputFields = BuildMaskedInputFields(inputFields, maskedFields);
             ThreadPoolExecute(g_mainThreadPool, (toolType == TOOL_TYPE_SNMP_TABLE) ? GetSNMPTable : ((toolType == TOOL_TYPE_AGENT_LIST) ? GetAgentList : GetAgentTable), startupInfo);
          }
          else
@@ -965,7 +1004,7 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
 /**
  * Execute SNMP table tool and collect result into Table object
  */
-static uint32_t ExecuteSNMPTableTool(uint32_t toolId, uint32_t flags, TCHAR *toolData, const shared_ptr<Node>& node, Table *table)
+static uint32_t ExecuteSNMPTableTool(uint32_t toolId, uint32_t flags, TCHAR *toolData, const shared_ptr<Node>& node, Table *table, const StringMap *inputFields, const StringMap *maskedInputFields, const wchar_t *userName)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
@@ -994,14 +1033,21 @@ static uint32_t ExecuteSNMPTableTool(uint32_t toolId, uint32_t flags, TCHAR *too
          for(int i = 0; i < numColumns; i++)
          {
             DBGetField(hResult, i, 0, buffer, 256);
-            args.ppszOidList[i] = DBGetField(hResult, i, 1, nullptr, 0);
+            wchar_t *rawOid = DBGetField(hResult, i, 1, nullptr, 0);
+            StringBuffer expandedOid = node->expandText(rawOid, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                  userName, nullptr, nullptr, inputFields, nullptr);
+            MemFree(rawOid);
+            args.ppszOidList[i] = MemCopyString(expandedOid.cstr());
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
             table->addColumn(buffer, args.pnFormatList[i]);
          }
 
          if (node->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
          {
-            table->setTitle(toolData);
+            const StringMap *titleFields = (maskedInputFields != nullptr) ? maskedInputFields : inputFields;
+            StringBuffer expandedTitle = node->expandText(toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                  userName, nullptr, nullptr, titleFields, nullptr);
+            table->setTitle(expandedTitle.cstr());
             rcc = RCC_SUCCESS;
          }
          else
@@ -1032,7 +1078,7 @@ static uint32_t ExecuteSNMPTableTool(uint32_t toolId, uint32_t flags, TCHAR *too
 /**
  * Execute agent table tool and return result as Table
  */
-static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& node, Table **result)
+static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& node, Table **result, const StringMap *inputFields, const StringMap *maskedInputFields, const wchar_t *userName)
 {
    TCHAR *tableName = _tcschr(toolData, _T('\x7F'));
    if (tableName == nullptr)
@@ -1041,12 +1087,15 @@ static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& n
    *tableName = 0;
    tableName++;
 
+   StringBuffer expandedTableName = node->expandText(tableName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+         userName, nullptr, nullptr, inputFields, nullptr);
+
    shared_ptr<AgentConnectionEx> pConn = node->createAgentConnection();
    if (pConn == nullptr)
       return RCC_COMM_FAILURE;
 
    Table *agentTable;
-   uint32_t err = pConn->getTable(tableName, &agentTable);
+   uint32_t err = pConn->getTable(expandedTableName.cstr(), &agentTable);
    if (err != ERR_SUCCESS)
       return AgentErrorToRCC(err);
 
@@ -1070,7 +1119,10 @@ static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& n
             break;
       }
    }
-   agentTable->setTitle(toolData);
+   const StringMap *titleFields = (maskedInputFields != nullptr) ? maskedInputFields : inputFields;
+   StringBuffer expandedTitle = node->expandText(toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+         userName, nullptr, nullptr, titleFields, nullptr);
+   agentTable->setTitle(expandedTitle.cstr());
    *result = agentTable;
    return RCC_SUCCESS;
 }
@@ -1078,7 +1130,7 @@ static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& n
 /**
  * Execute agent list tool and collect result into Table object
  */
-static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const shared_ptr<Node>& node, Table *table)
+static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const shared_ptr<Node>& node, Table *table, const StringMap *inputFields, const StringMap *maskedInputFields, const wchar_t *userName)
 {
    TCHAR *listName = _tcschr(toolData, _T('\x7F'));
    TCHAR *regex = nullptr;
@@ -1094,7 +1146,10 @@ static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const sha
       }
    }
 
-   table->setTitle(toolData);
+   const StringMap *titleFields = (maskedInputFields != nullptr) ? maskedInputFields : inputFields;
+   StringBuffer expandedTitle = node->expandText(toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+         userName, nullptr, nullptr, titleFields, nullptr);
+   table->setTitle(expandedTitle.cstr());
 
    if ((listName == nullptr) || (regex == nullptr))
       return RCC_INVALID_ARGUMENT;
@@ -1132,8 +1187,10 @@ static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const sha
             shared_ptr<AgentConnectionEx> pConn = node->createAgentConnection();
             if (pConn != nullptr)
             {
+               StringBuffer expandedListName = node->expandText(listName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+                     userName, nullptr, nullptr, inputFields, nullptr);
                StringList *values;
-               uint32_t agentRcc = pConn->getList(listName, &values);
+               uint32_t agentRcc = pConn->getList(expandedListName.cstr(), &values);
                if (agentRcc == ERR_SUCCESS)
                {
                   Buffer<int, 64> offsets((numCols + 1) * 3);
@@ -1196,9 +1253,10 @@ static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const sha
 }
 
 /**
- * Execute table tool and return result as JSON (synchronous, for WebAPI)
+ * Execute table tool and return result as JSON (synchronous, for WebAPI).
  */
-uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_ptr<Node>& node, json_t **result)
+uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_ptr<Node>& node, json_t **result,
+      const StringMap *inputFields, const StringList *maskedFields, const wchar_t *userName)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=?"));
@@ -1225,10 +1283,12 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
             DBFreeStatement(hStmt);
             DBConnectionPoolReleaseConnection(hdb);
 
+            StringMap *maskedInputFields = BuildMaskedInputFields(inputFields, maskedFields);
+
             if (toolType == TOOL_TYPE_AGENT_TABLE)
             {
                Table *agentTable = nullptr;
-               rcc = ExecuteAgentTableTool(toolData, node, &agentTable);
+               rcc = ExecuteAgentTableTool(toolData, node, &agentTable, inputFields, maskedInputFields, userName);
                if (rcc == RCC_SUCCESS)
                {
                   *result = agentTable->toJson();
@@ -1239,13 +1299,14 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
             {
                Table table;
                if (toolType == TOOL_TYPE_SNMP_TABLE)
-                  rcc = ExecuteSNMPTableTool(toolId, flags, toolData, node, &table);
+                  rcc = ExecuteSNMPTableTool(toolId, flags, toolData, node, &table, inputFields, maskedInputFields, userName);
                else
-                  rcc = ExecuteAgentListTool(toolId, toolData, node, &table);
+                  rcc = ExecuteAgentListTool(toolId, toolData, node, &table, inputFields, maskedInputFields, userName);
                if (rcc == RCC_SUCCESS)
                   *result = table.toJson();
             }
 
+            delete maskedInputFields;
             MemFree(toolData);
             return rcc;
          }

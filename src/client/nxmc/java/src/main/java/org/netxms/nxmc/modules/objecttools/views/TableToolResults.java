@@ -18,7 +18,12 @@
  */
 package org.netxms.nxmc.modules.objecttools.views;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -26,19 +31,26 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.InputField;
 import org.netxms.client.Table;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableContentProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableItemComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.TableLabelProvider;
 import org.netxms.nxmc.modules.objects.ObjectContext;
+import org.netxms.nxmc.modules.objects.dialogs.InputFieldEntryDialog;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -52,13 +64,23 @@ public class TableToolResults extends ObjectToolResultView
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+   private Map<String, String> inputValues;
+   private List<String> maskedFields;
+   private boolean askInputValues;
 
    /**
     * Constructor
+    *
+    * @param node target node
+    * @param tool tool information
+    * @param inputValues input values collected from the user (may be empty)
+    * @param maskedFields list of input field names that must be masked in audit log / title (may be empty)
     */
-   public TableToolResults(ObjectContext node, ObjectTool tool)
+   public TableToolResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/table.gif"), false);
+      this.inputValues = inputValues;
+      this.maskedFields = maskedFields;
 	}
 
    /**
@@ -67,6 +89,68 @@ public class TableToolResults extends ObjectToolResultView
    protected TableToolResults()
    {
       super();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      TableToolResults view = (TableToolResults)super.cloneView();
+      view.inputValues = inputValues;
+      view.maskedFields = maskedFields;
+      return view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objecttools.views.ObjectToolResultView#saveState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void saveState(Memento memento)
+   {
+      super.saveState(memento);
+      if (inputValues != null)
+      {
+         List<String> keys = new ArrayList<>(inputValues.size());
+         List<String> values = new ArrayList<>(inputValues.size());
+         for(Map.Entry<String, String> e : inputValues.entrySet())
+         {
+            keys.add(e.getKey());
+            if ((maskedFields != null) && maskedFields.contains(e.getKey()))
+               values.add("");
+            else
+               values.add(e.getValue() != null ? e.getValue() : "");
+         }
+         memento.set("inputValues.keys", keys);
+         memento.set("inputValues.values", values);
+      }
+      if (maskedFields != null)
+         memento.set("maskedFields", maskedFields);
+   }
+
+   /**
+    * Unlike AbstractCommandResultView, which restores a captured stdout snapshot and never re-runs the
+    * tool, table tools always re-execute against the agent / SNMP target on refresh. So if any of the
+    * collected input fields were masked, their values were cleared in saveState() and we must re-prompt
+    * the user before the next execution can succeed.
+    *
+    * @see org.netxms.nxmc.modules.objecttools.views.ObjectToolResultView#restoreState(org.netxms.nxmc.Memento)
+    */
+   @Override
+   public void restoreState(Memento memento) throws ViewNotRestoredException
+   {
+      super.restoreState(memento);
+      List<String> keys = memento.getAsStringList("inputValues.keys");
+      List<String> values = memento.getAsStringList("inputValues.values");
+      if ((keys != null) && (values != null) && (keys.size() == values.size()))
+      {
+         inputValues = new HashMap<>(keys.size());
+         for(int i = 0; i < keys.size(); i++)
+            inputValues.put(keys.get(i), values.get(i));
+      }
+      maskedFields = memento.getAsStringList("maskedFields");
+      askInputValues = (maskedFields != null) && !maskedFields.isEmpty();
    }
 
    /* (non-Javadoc)
@@ -152,17 +236,59 @@ public class TableToolResults extends ObjectToolResultView
 		manager.add(actionExportToCsv);
 	}
 
+   /**
+    * Re-prompt user for masked input values after view restoration.
+    *
+    * @return true if values are ready (either no prompt needed or user supplied them); false if user canceled
+    */
+   private boolean restoreUserInputFields()
+   {
+      if (!askInputValues)
+         return true;
+
+      final InputField[] fields = tool.getInputFields();
+      if (fields.length > 0)
+      {
+         Arrays.sort(fields, new Comparator<InputField>() {
+            @Override
+            public int compare(InputField f1, InputField f2)
+            {
+               return f1.getSequence() - f2.getSequence();
+            }
+         });
+         InputFieldEntryDialog dlg = new InputFieldEntryDialog(getWindow().getShell(), tool.getDisplayName(), fields, inputValues);
+         if (dlg.open() != Window.OK)
+            return false;  // askInputValues stays true so the next refresh re-prompts
+
+         inputValues = dlg.getValues();
+         if (maskedFields == null)
+            maskedFields = new ArrayList<>();
+         else
+            maskedFields.clear();
+         for(int i = 0; i < fields.length; i++)
+         {
+            if (fields[i].getType() == InputFieldType.PASSWORD)
+               maskedFields.add(fields[i].getName());
+         }
+      }
+      askInputValues = false;
+      return true;
+   }
+
 	/**
 	 * Refresh table
 	 */
 	public void refreshTable()
 	{
+      if (!restoreUserInputFields())
+         return;
+
 		viewer.setInput(null);
 		new Job(String.format(i18n.tr("Load data for table tool %s"), tool.getName()), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Table table = session.executeTableTool(tool.getId(), object.object.getObjectId());
+				final Table table = session.executeTableTool(tool.getId(), object.object.getObjectId(), inputValues, maskedFields);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

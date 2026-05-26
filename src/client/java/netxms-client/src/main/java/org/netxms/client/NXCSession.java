@@ -11120,9 +11120,39 @@ public class NXCSession
     */
    public Table executeTableTool(long toolId, long nodeId) throws IOException, NXCException
    {
+      return executeTableTool(toolId, nodeId, null, null);
+   }
+
+   /**
+    * Execute object tool of "table" type against given node, with input field values for macro expansion.
+    *
+    * @param toolId Tool ID
+    * @param nodeId Node object ID
+    * @param inputValues values for input fields (can be null)
+    * @param maskedFields list of input field names whose content should be masked in audit log and result title (can be null)
+    * @return Table with tool execution results
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Table executeTableTool(long toolId, long nodeId, Map<String, String> inputValues, List<String> maskedFields) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXEC_TABLE_TOOL);
       msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      if ((inputValues != null) && !inputValues.isEmpty())
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, inputValues.size());
+         long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+         for(Entry<String, String> e : inputValues.entrySet())
+         {
+            msg.setField(fieldId++, e.getKey());
+            msg.setField(fieldId++, e.getValue());
+         }
+      }
+      if ((maskedFields != null) && !maskedFields.isEmpty())
+      {
+         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
+      }
       sendMessage(msg);
 
       waitForRCC(msg.getMessageId());

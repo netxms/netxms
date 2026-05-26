@@ -791,9 +791,8 @@ static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& objec
 
 /**
  * Execute table tool (SNMP table, agent table, or agent list).
- * These tool types do not perform macro expansion, so input fields are not used.
  */
-static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, uint32_t toolId, json_t *response)
+static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, uint32_t toolId, const StringMap& inputFields, const StringList *maskedFields, json_t *response)
 {
    if (object->getObjectClass() != OBJECT_NODE)
    {
@@ -802,7 +801,7 @@ static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, 
    }
 
    json_t *tableResult = nullptr;
-   uint32_t rcc = ExecuteTableToolToJSON(toolId, static_pointer_cast<Node>(object), &tableResult);
+   uint32_t rcc = ExecuteTableToolToJSON(toolId, static_pointer_cast<Node>(object), &tableResult, &inputFields, maskedFields, context->getLoginName());
    if (rcc != RCC_SUCCESS)
    {
       context->setErrorResponse("Table tool execution failed");
@@ -811,7 +810,10 @@ static int ExecuteTableTool(Context *context, const shared_ptr<NetObj>& object, 
 
    json_object_set_new(response, "type", json_string("table"));
    json_object_set_new(response, "table", tableResult);
-   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed table tool [%u] on object %s [%u]", toolId, object->getName(), object->getId());
+   String inputFieldsLog = BuildAuditInputFieldsString(inputFields, maskedFields);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+         L"Executed table tool [%u] on object %s [%u]%s",
+         toolId, object->getName(), object->getId(), inputFieldsLog.cstr());
    return 200;
 }
 
@@ -1446,7 +1448,7 @@ int H_ObjectToolExecute(Context *context)
       case TOOL_TYPE_SNMP_TABLE:
       case TOOL_TYPE_AGENT_TABLE:
       case TOOL_TYPE_AGENT_LIST:
-         httpCode = ExecuteTableTool(context, object, toolId, response);
+         httpCode = ExecuteTableTool(context, object, toolId, inputFields, &maskedFields, response);
          break;
       case TOOL_TYPE_SSH_COMMAND:
          httpCode = ExecuteSSHCommand(context, object, toolData, toolFlags, alarm, &inputFields, &maskedFields, response);
