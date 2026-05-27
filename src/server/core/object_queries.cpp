@@ -489,7 +489,16 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE FindAndExecuteObjec
 }
 
 /**
- * Query objects
+ * Query objects.
+ *
+ * When readAllComputedFields is true, every script global is returned as a result column. Per-variable presentation can be
+ * controlled via NXSL meta declarations on the variable name:
+ *   meta varName (name = "Friendly Name")     -- rename the column key in the result
+ *   meta varName (visible = "false")          -- omit the column from the result
+ *   meta varName (order = "asc"|"desc")       -- include the column in the default sort order
+ * When readAllComputedFields is false and fields is non-null, only the listed variables are read, with no rename/filter applied
+ * (the dashboard Object Query element uses this mode when columns are configured explicitly, and the readAllComputedFields mode
+ * when no columns are configured, so the same meta declarations drive both Tools -> Object Query and dashboard rendering).
  */
 unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const wchar_t *query, uint32_t rootObjectId, uint32_t userId, wchar_t *errorMessage, size_t errorMessageLen,
       std::function<void(int)> progressCallback, bool readAllComputedFields, const StringList *fields, const StringList *orderBy,

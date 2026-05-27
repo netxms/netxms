@@ -19,7 +19,9 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
@@ -73,6 +75,8 @@ public class ObjectQuery extends ElementWidget
    private SortableTableViewer viewer;
    private ObjectSelectionProvider objectSelectionProvider;
    private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
+   private final List<ObjectProperty> displayProperties = new ArrayList<ObjectProperty>();
+   private final boolean dynamicColumns;
    private Action actionCopyToClipboard;
    private Action actionCopyAllToClipboard;
    private Action actionExportToCSV;
@@ -102,10 +106,13 @@ public class ObjectQuery extends ElementWidget
 
       processCommonSettings(config);
 
+      displayProperties.addAll(config.getProperties());
+      dynamicColumns = displayProperties.isEmpty();
+
       // Do not set sort column to leave element sorting provided form server
       viewer = new SortableTableViewer(getContentArea(), SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new ObjectDetailsLabelProvider(config.getProperties()));
+      viewer.setLabelProvider(new ObjectDetailsLabelProvider(displayProperties));
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
@@ -135,11 +142,8 @@ public class ObjectQuery extends ElementWidget
          }
       });
 
-      for(ObjectProperty p : config.getProperties())
-      {
-         TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
-         c.setData("ObjectProperty", p);
-      }
+      if (!dynamicColumns)
+         rebuildColumns();
 
       actionCopyToClipboard = new CopyTableRowsAction(viewer, true);
       actionCopyToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
@@ -258,15 +262,25 @@ public class ObjectQuery extends ElementWidget
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<ObjectProperty> properties = config.getProperties();
-            List<String> names = new ArrayList<String>(properties.size());
-            for(ObjectProperty p : properties)
-               names.add(p.name);
-            final List<ObjectQueryResult> objects = 
-                  session.queryObjectDetails(config.getQuery(), rootObjectId, names, config.getOrderingProperties(), null, contextObjectId, false, config.getRecordLimit(), null, null);
+            final List<String> names;
+            if (dynamicColumns)
+            {
+               names = null; // let server return all script-defined properties (honors meta .name/.visible/.order)
+            }
+            else
+            {
+               List<ObjectProperty> properties = config.getProperties();
+               names = new ArrayList<String>(properties.size());
+               for(ObjectProperty p : properties)
+                  names.add(p.name);
+            }
+            final List<ObjectQueryResult> objects =
+                  session.queryObjectDetails(config.getQuery(), rootObjectId, names, config.getOrderingProperties(), null, contextObjectId, dynamicColumns, config.getRecordLimit(), null, null);
             runInUIThread(() -> {
                if (viewer.getControl().isDisposed())
                   return;
+               if (dynamicColumns)
+                  updateDynamicColumns(objects);
                viewer.setInput(objects);
                viewer.packColumns();
                updateInProgress = false;
@@ -288,5 +302,59 @@ public class ObjectQuery extends ElementWidget
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Rebuild table columns from the current displayProperties list.
+    */
+   private void rebuildColumns()
+   {
+      for(TableColumn c : viewer.getTable().getColumns())
+         c.dispose();
+      for(ObjectProperty p : displayProperties)
+      {
+         TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
+         c.setData("ObjectProperty", p);
+      }
+   }
+
+   /**
+    * Update column set in dynamic mode from the latest query results. Server returns rows already keyed by the friendly names
+    * established via meta &lt;var&gt; (name = "...") and filtered by meta &lt;var&gt; (visible = "false"), so each unique result key
+    * becomes a column. Columns are rebuilt only when the set of property names actually changes, to preserve user column resizes.
+    *
+    * @param objects query results
+    */
+   private void updateDynamicColumns(List<ObjectQueryResult> objects)
+   {
+      Set<String> names = new LinkedHashSet<String>();
+      for(ObjectQueryResult r : objects)
+         names.addAll(r.getPropertyNames());
+
+      if (sameNames(names, displayProperties))
+         return;
+
+      displayProperties.clear();
+      for(String name : names)
+      {
+         ObjectProperty p = new ObjectProperty();
+         p.name = name;
+         displayProperties.add(p);
+      }
+      rebuildColumns();
+   }
+
+   /**
+    * Check whether a name set matches the names in the property list (same names, same order).
+    */
+   private static boolean sameNames(Set<String> names, List<ObjectProperty> properties)
+   {
+      if (names.size() != properties.size())
+         return false;
+      int i = 0;
+      for(String n : names)
+         if (!n.equals(properties.get(i++).name))
+            return false;
+      return true;
    }
 }
