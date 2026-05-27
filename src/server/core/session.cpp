@@ -17113,7 +17113,7 @@ void ClientSession::startActiveDiscovery(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_systemAccessRights & SYSTEM_ACCESS_SCAN_NETWORK)
    {
       int count = request.getFieldAsInt32(VID_NUM_RECORDS);
       if (count > 0)
@@ -17131,13 +17131,13 @@ void ClientSession::startActiveDiscovery(const NXCPMessage& request)
          }
 
          ThreadPoolExecute(g_clientThreadPool, StartManualActiveDiscovery, addressList);
-         WriteAuditLog(AUDIT_SYSCFG, true, m_userId, m_workstation, m_id, 0, _T("Manual active discovery started for ranges: %s"), (const TCHAR *)ranges);
+         WriteAuditLog(AUDIT_NETWORK, true, m_userId, m_workstation, m_id, 0, _T("Manual active discovery started for ranges: %s"), (const TCHAR *)ranges);
       }
    }
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      WriteAuditLog(AUDIT_SYSCFG, false, m_userId, m_workstation, m_id, 0, _T("Access denied on manual active discovery"));
+      WriteAuditLog(AUDIT_NETWORK, false, m_userId, m_workstation, m_id, 0, _T("Access denied on manual active discovery"));
    }
 
    sendMessage(response);

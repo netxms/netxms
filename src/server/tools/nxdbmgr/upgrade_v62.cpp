@@ -25,6 +25,29 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.18 to 62.19
+ */
+static bool H_UpgradeFromV18()
+{
+   // Add SYSTEM_ACCESS_SCAN_NETWORK (bit 57 = 0x200000000000000 = 144115188075855872) to Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+144115188075855872 WHERE id=1073741825 AND BITAND(system_access, 144115188075855872)=0"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+144115188075855872 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(144115188075855872 AS bigint))=0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+144115188075855872 WHERE id=1073741825 AND (system_access & 144115188075855872)=0"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 62.17 to 62.18
  */
 static bool H_UpgradeFromV17()
@@ -683,6 +706,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 62, 19, H_UpgradeFromV18 },
    { 17, 62, 18, H_UpgradeFromV17 },
    { 16, 62, 17, H_UpgradeFromV16 },
    { 15, 62, 16, H_UpgradeFromV15 },

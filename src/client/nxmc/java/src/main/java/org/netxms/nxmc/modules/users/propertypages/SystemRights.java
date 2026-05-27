@@ -107,7 +107,8 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, i18n.tr("Read server files")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_TUNNELS, i18n.tr("Manage agent tunnels")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, i18n.tr("Reporting server access")));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, i18n.tr("Schedule file upload"))); 
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCAN_NETWORK, i18n.tr("Scan network range")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, i18n.tr("Schedule file upload")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, i18n.tr("Schedule object maintenance")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, i18n.tr("Schedule script execution")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SEARCH_NETWORK, i18n.tr("Search network")));
