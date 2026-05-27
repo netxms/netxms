@@ -15007,6 +15007,74 @@ public class NXCSession
    }
 
    /**
+    * Run an interactive network range scan. The server probes each address in
+    * the supplied range in parallel (ICMP, optional NetXMS agent, optional
+    * SNMP, optional user-supplied TCP ports) and streams per-host updates back
+    * via the listener as detections come in. Multiple updates may be delivered
+    * for the same address as additional protocols are detected; each carries
+    * the full cumulative state for that host.
+    *
+    * @param range address range to scan (subnet or range form, zoneUIN embedded)
+    * @param tcpPorts additional TCP ports to probe on each host (may be null or empty)
+    * @param flags bitmask of NetworkScanResult.PROBE_* / REPORT_UNREACHABLE / RESOLVE_HOSTNAMES
+    * @param listener callback for per-host updates (may be null to discard results)
+    * @return number of hosts reported by the server
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int scanNetworkRange(InetAddressListElement range, int[] tcpPorts, int flags, final NetworkScanListener listener) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SCAN_NETWORK_RANGE);
+      range.fillMessage(msg, NXCPCodes.VID_ADDR_LIST_BASE);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      if ((tcpPorts != null) && (tcpPorts.length > 0))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, tcpPorts.length);
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         for(int port : tcpPorts)
+            msg.setFieldInt16(fieldId++, port);
+      }
+
+      MessageHandler handler = new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
+         {
+            if (m.isEndOfSequence())
+            {
+               setComplete();
+            }
+            else if (listener != null)
+            {
+               listener.resultReceived(new NetworkScanResult(m));
+            }
+            return true;
+         }
+      };
+      handler.setMessageWaitTimeout(1800000); // 30 min - large scans can take a while
+      addMessageSubscription(NXCPCodes.CMD_RANGE_SCAN_RESULT, msg.getMessageId(), handler);
+
+      try
+      {
+         sendMessage(msg);
+         NXCPMessage response = waitForRCC(msg.getMessageId());
+         handler.waitForCompletion();
+         if (handler.isExpired())
+            throw new NXCException(RCC.TIMEOUT);
+         return response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
+      }
+      catch(NXCException e)
+      {
+         removeMessageSubscription(NXCPCodes.CMD_RANGE_SCAN_RESULT, msg.getMessageId());
+         throw e;
+      }
+      catch(IOException e)
+      {
+         removeMessageSubscription(NXCPCodes.CMD_RANGE_SCAN_RESULT, msg.getMessageId());
+         throw e;
+      }
+   }
+
+   /**
     * Get list of physical links filtered by provided options
     *
     * @param objectId node id or rack id to filter out physical links

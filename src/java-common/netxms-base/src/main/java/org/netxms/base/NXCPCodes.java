@@ -536,6 +536,9 @@ public class NXCPCodes
    public static final int CMD_GET_AI_SKILLS_AND_FUNCTIONS = 0x0206;
    public static final int CMD_MODIFY_AI_DISABLED_LIST = 0x0207;
    public static final int CMD_GET_POLICY_FILE = 0x0208;
+   public static final int CMD_SETUP_AGENT_UPGRADE = 0x0209;
+   public static final int CMD_SCAN_NETWORK_RANGE = 0x020A;
+   public static final int CMD_RANGE_SCAN_RESULT = 0x020B;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
