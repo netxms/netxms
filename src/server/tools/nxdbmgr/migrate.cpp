@@ -159,6 +159,7 @@ static COLUMN_IDENTIFIER s_integerFixColumns[] =
    { _T("dct_threshold_instances"), "tt_row_number" },
    { _T("event_policy"), "modification_time" },
    { _T("graphs"), "flags" },
+   { _T("items"), "transformed_datatype" },
    { _T("network_maps"), "bg_zoom" },
    { _T("nodes"), "capabilities" },
    { _T("nodes"), "port_rows" },
