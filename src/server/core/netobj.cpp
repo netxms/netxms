@@ -2121,6 +2121,134 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientS
 }
 
 /**
+ * Modify object from JSON document - common wrapper
+ */
+uint32_t NetObj::modifyFromJSON(json_t *json, GenericClientSession *session)
+{
+   lockProperties();
+   uint32_t rcc = modifyFromJSONInternal(json, session);
+   unlockProperties();
+   if (rcc == RCC_SUCCESS)
+      rcc = modifyFromJSONInternalStage2(json, session);
+   markAsModified(MODIFY_ALL);
+   return rcc;
+}
+
+/**
+ * Modify object from JSON document - stage 1 (called under property lock).
+ * Mirrors modifyFromMessageInternal for the WebAPI JSON path. Subclasses
+ * should override to apply their own fields and chain to the base method
+ * when appropriate.
+ */
+uint32_t NetObj::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   if (!json_is_object(json))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *value;
+
+   value = json_object_get(json, "name");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      utf8_to_wchar(json_string_value(value), -1, m_name, MAX_OBJECT_NAME);
+      m_name[MAX_OBJECT_NAME - 1] = 0;
+      for(int i = 0; m_name[i] != 0; i++)
+      {
+         if (m_name[i] < 0x20)
+            m_name[i] = L' ';
+      }
+   }
+
+   value = json_object_get(json, "alias");
+   if (value != nullptr)
+   {
+      if (json_is_null(value))
+         m_alias = _T("");
+      else if (json_is_string(value))
+         m_alias = String(json_string_value(value), "utf8");
+      else
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   value = json_object_get(json, "nameOnMap");
+   if (value != nullptr)
+   {
+      if (json_is_null(value))
+         m_nameOnMap = _T("");
+      else if (json_is_string(value))
+         m_nameOnMap = String(json_string_value(value), "utf8");
+      else
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   value = json_object_get(json, "comments");
+   if (value != nullptr)
+   {
+      if (!json_is_null(value) && !json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      const String source = json_is_string(value) ? String(json_string_value(value), "utf8") : String(_T(""));
+      const StringBuffer expanded = expandText(source);
+      m_commentsSource = source;
+      m_comments = expanded;
+   }
+
+   value = json_object_get(json, "category");
+   if (value != nullptr)
+   {
+      if (json_is_null(value))
+         m_categoryId = 0;
+      else if (json_is_integer(value))
+         m_categoryId = static_cast<uint32_t>(json_integer_value(value));
+      else
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   value = json_object_get(json, "mapImage");
+   if (value != nullptr)
+   {
+      if (json_is_null(value))
+      {
+         m_mapImage = uuid::NULL_UUID;
+      }
+      else if (json_is_string(value))
+      {
+         uuid_t parsed;
+         if (_uuid_parseA(json_string_value(value), parsed) != 0)
+            return RCC_INVALID_ARGUMENT;
+         m_mapImage = uuid(parsed);
+      }
+      else
+      {
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   value = json_object_get(json, "drilldownObjectId");
+   if (value != nullptr)
+   {
+      if (json_is_null(value))
+         m_drilldownObjectId = 0;
+      else if (json_is_integer(value))
+         m_drilldownObjectId = static_cast<uint32_t>(json_integer_value(value));
+      else
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify object from JSON document - stage 2 (called OUTSIDE property lock).
+ * Mirrors modifyFromMessageInternalStage2 for the WebAPI JSON path.
+ */
+uint32_t NetObj::modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session)
+{
+   return RCC_SUCCESS;
+}
+
+/**
  * Post-modify hook
  */
 void NetObj::postModify()

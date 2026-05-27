@@ -1522,6 +1522,8 @@ protected:
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId);
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session);
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session);
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session);
+   virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session);
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
    void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session);
@@ -1574,6 +1576,9 @@ public:
 
    const uuid& getMapImage() const { return m_mapImage; }
    void setMapImage(const uuid& image) { lockProperties(); m_mapImage = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+
+   uint32_t getDrillDownObjectId() const { return m_drilldownObjectId; }
+   void setDrillDownObjectId(uint32_t id) { lockProperties(); m_drilldownObjectId = id; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    bool isModified() const { return m_modified != 0; }
    bool isModified(uint32_t bit) const { return (m_modified & bit) != 0; }
@@ -1634,6 +1639,7 @@ public:
 
    void fillMessage(NXCPMessage *msg, uint32_t userId, bool full = true);
    uint32_t modifyFromMessage(const NXCPMessage& msg, ClientSession *session);
+   uint32_t modifyFromJSON(json_t *json, GenericClientSession *session);
 
    virtual void postModify();
 

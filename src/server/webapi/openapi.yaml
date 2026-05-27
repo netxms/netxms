@@ -2390,6 +2390,77 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+    patch:
+      operationId: updateObjectProperties
+      summary: Update common object properties
+      description: |
+        Update common scalar properties on any NetObj. Request body uses JSON merge-patch
+        semantics (RFC 7396) — fields present in the body are updated, fields omitted are
+        left untouched, and explicit `null` clears the field. Returns the updated object
+        in the same shape as `GET /v1/objects/{object-id}`. Class-specific property groups
+        (snmp, agent, polling, etc.) are exposed as separate sub-resources.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Merge-patch document with any subset of the listed properties.
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                  description: Object name (control characters are replaced with spaces).
+                alias:
+                  type: string
+                  nullable: true
+                  description: Object alias. `null` or empty string clears the alias.
+                nameOnMap:
+                  type: string
+                  nullable: true
+                  description: Display name used on network maps. `null` clears the override.
+                comments:
+                  type: string
+                  nullable: true
+                  description: Free-form object comments. `null` or empty string clears them.
+                category:
+                  type: integer
+                  nullable: true
+                  description: Object category ID. `null` or `0` clears the category.
+                mapImage:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: Image library UUID for the object on maps. `null` clears the image.
+                drilldownObjectId:
+                  type: integer
+                  nullable: true
+                  description: ID of the object opened on drill-down. `null` or `0` clears the link.
+      responses:
+        '200':
+          description: Object updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body or invalid property value.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/children:
     get:
       operationId: getObjectChildren
