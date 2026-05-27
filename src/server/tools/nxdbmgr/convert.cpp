@@ -95,6 +95,70 @@ static bool CreateTDataTable(const TCHAR *storageClass)
 }
 
 /**
+ * Verify installed TimescaleDB version satisfies the minimum required for hierarchical
+ * continuous aggregates (>= 2.10). Mirrors the check performed by the v62.9 upgrade.
+ */
+static bool ValidateTimescaleDBVersion()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT extversion FROM pg_extension WHERE extname='timescaledb'"));
+   if (hResult == nullptr)
+      return false;
+
+   bool versionOk = false;
+   char version[64] = "";
+   if (DBGetNumRows(hResult) > 0)
+   {
+      DBGetFieldA(hResult, 0, 0, version, 64);
+      int major, minor;
+      if (sscanf(version, "%d.%d.", &major, &minor) == 2)
+         versionOk = (major > 2) || ((major == 2) && (minor >= 10));
+   }
+   DBFreeResult(hResult);
+
+   if (!versionOk)
+   {
+      WriteToTerminalEx(_T("\x1b[31mTimescaleDB %hs detected; DCI data aggregation requires TimescaleDB 2.10 or later. Upgrade TimescaleDB and re-run nxdbmgr convert.\x1b[0m\n"),
+            (version[0] != 0) ? version : "(unknown)");
+   }
+   return versionOk;
+}
+
+/**
+ * Create per-storage-class hourly and daily continuous aggregates. Mirrors the
+ * DDL emitted by the v62.9 upgrade and sql/schema.in.
+ */
+static bool CreateAggregateCAGGsForStorageClass(const TCHAR *cls)
+{
+   TCHAR query[1024];
+
+   nx_swprintf(query, 1024,
+      _T("CREATE MATERIALIZED VIEW idata_1h_sc_%s WITH (timescaledb.continuous) AS ")
+      _T("SELECT item_id, time_bucket(interval '1 hour', idata_timestamp) AS bucket_start, ")
+      _T("min(idata_value::double precision) AS min_value, ")
+      _T("max(idata_value::double precision) AS max_value, ")
+      _T("avg(idata_value::double precision) AS avg_value, count(*) AS sample_count ")
+      _T("FROM idata_sc_%s ")
+      _T("WHERE idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$' ")
+      _T("GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp) ")
+      _T("WITH NO DATA"), cls, cls);
+   if (!SQLQuery(query))
+      return false;
+
+   nx_swprintf(query, 1024,
+      _T("CREATE MATERIALIZED VIEW idata_1d_sc_%s WITH (timescaledb.continuous) AS ")
+      _T("SELECT item_id, time_bucket(interval '1 day', bucket_start) AS bucket_start, ")
+      _T("min(min_value) AS min_value, max(max_value) AS max_value, ")
+      _T("sum(avg_value * sample_count) / sum(sample_count) AS avg_value, ")
+      _T("sum(sample_count) AS sample_count ")
+      _T("FROM idata_1h_sc_%s ")
+      _T("GROUP BY item_id, time_bucket(interval '1 day', bucket_start) ")
+      _T("WITH NO DATA"), cls, cls);
+   if (!SQLQuery(query))
+      return false;
+   return true;
+}
+
+/**
  * Convert data tables
  */
 static bool ConvertDataTables(DB_HANDLE hdb)
@@ -153,6 +217,10 @@ bool ConvertDatabase()
       return false;
 
    CHK_EXEC_NO_SP(SQLQuery(_T("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE")));
+
+   // Fail fast on TimescaleDB < 2.10 so we don't leave a half-converted database without aggregates.
+   if (!ValidateTimescaleDBVersion() && !g_ignoreErrors)
+      return false;
 
    CHK_EXEC_NO_SP(ConvertTable(_T("asset_change_log"), _T("operation_timestamp"), _T("record_id,operation_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("certificate_action_log"), _T("operation_timestamp"), _T("record_id,operation_timestamp")));
@@ -226,6 +294,39 @@ bool ConvertDatabase()
       _T("   SELECT * FROM tdata_sc_180")
       _T("   UNION ALL")
       _T("   SELECT * FROM tdata_sc_other")));
+
+   static const TCHAR *storageClasses[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+   for(size_t i = 0; i < sizeof(storageClasses) / sizeof(storageClasses[0]); i++)
+   {
+      CHK_EXEC_NO_SP(CreateAggregateCAGGsForStorageClass(storageClasses[i]));
+   }
+
+   CHK_EXEC_NO_SP(SQLQuery(
+      _T("CREATE VIEW idata_1h AS")
+      _T("   SELECT * FROM idata_1h_sc_default")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1h_sc_7")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1h_sc_30")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1h_sc_90")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1h_sc_180")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1h_sc_other")));
+   CHK_EXEC_NO_SP(SQLQuery(
+      _T("CREATE VIEW idata_1d AS")
+      _T("   SELECT * FROM idata_1d_sc_default")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1d_sc_7")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1d_sc_30")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1d_sc_90")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1d_sc_180")
+      _T("   UNION ALL")
+      _T("   SELECT * FROM idata_1d_sc_other")));
 
    CHK_EXEC_NO_SP(SQLQuery(_T("UPDATE metadata SET var_value='TSDB' WHERE var_name='Syntax'")));
    CHK_EXEC_NO_SP(SQLQuery(_T("UPDATE metadata SET var_value='1' WHERE var_name='SingeTablePerfData'")));
