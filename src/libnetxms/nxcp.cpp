@@ -564,7 +564,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_AI_SKILLS_AND_FUNCTIONS"),
       _T("CMD_MODIFY_AI_DISABLED_LIST"),
       _T("CMD_GET_POLICY_FILE"),
-      _T("CMD_SETUP_AGENT_UPGRADE")
+      _T("CMD_SETUP_AGENT_UPGRADE"),
+      _T("CMD_SCAN_NETWORK_RANGE"),
+      _T("CMD_RANGE_SCAN_RESULT")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -580,7 +582,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_SETUP_AGENT_UPGRADE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_RANGE_SCAN_RESULT))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

@@ -147,4 +147,52 @@ void EnqueueDiscoveredAddress(DiscoveredAddress *address);
 
 int64_t GetDiscoveryPollerQueueSize();
 
+/**
+ * Per-host record produced by interactive network range scan. Accumulates
+ * protocol detection state as parallel scanners report hits for the same IP.
+ */
+struct InteractiveScanRecord
+{
+   uint32_t protocolFlags;
+   uint32_t rtt;
+   uint16_t agentPort;
+   int16_t snmpVersion;
+   IntegerArray<uint16_t> openTcpPorts;
+
+   InteractiveScanRecord() : openTcpPorts(0, 4)
+   {
+      protocolFlags = 0;
+      rtt = 0;
+      agentPort = 0;
+      snmpVersion = -1;
+   }
+};
+
+/**
+ * Caller-supplied context for an interactive network range scan. The emitter
+ * is invoked (potentially from multiple worker threads) each time a probe hit
+ * updates the per-host record; the snapshot passed in reflects the latest
+ * accumulated state for that address. cancelCheck (if set) is polled between
+ * protocol phases to allow early termination.
+ */
+class NXCORE_EXPORTABLE InteractiveScanContext
+{
+public:
+   InetAddress startAddress;
+   InetAddress endAddress;
+   int32_t zoneUIN;
+   uint32_t flags;
+   IntegerArray<uint16_t> tcpPorts;
+   std::function<void(const InetAddress&, const InteractiveScanRecord&)> emitter;
+   std::function<bool()> cancelCheck;
+
+   InteractiveScanContext() : tcpPorts(0, 4)
+   {
+      zoneUIN = 0;
+      flags = 0;
+   }
+};
+
+void NXCORE_EXPORTABLE ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t *reportedHosts);
+
 #endif

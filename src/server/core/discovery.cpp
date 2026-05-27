@@ -1249,7 +1249,7 @@ static void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to,
  * Scan address range via SNMP proxy
  */
 static void ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port, SNMP_Version snmpVersion, const TCHAR *community,
-      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console)
+      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("SNMP.ScanAddressRange(%s,%s,%u,%d,\"%s\")"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port, snmpVersion, CHECK_NULL_EX(community));
@@ -1258,7 +1258,7 @@ static void ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint
    {
       for(int i = 0; i < list->size(); i++)
       {
-         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("SNMP"), console, nullptr);
+         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("SNMP"), console, context);
       }
       delete list;
    }
@@ -1282,7 +1282,7 @@ static void ScanAddressRangeTCP(const InetAddress& from, const InetAddress& to, 
  * Scan address range via TCP proxy
  */
 static void ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port,
-      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console)
+      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("TCP.ScanAddressRange(%s,%s,%u)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port);
@@ -1291,7 +1291,26 @@ static void ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint3
    {
       for(int i = 0; i < list->size(); i++)
       {
-         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("TCP"), console, nullptr);
+         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("TCP"), console, context);
+      }
+      delete list;
+   }
+}
+
+/**
+ * Scan address range via ICMP proxy
+ */
+static void ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, uint32_t to,
+      void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
+{
+   TCHAR request[256], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
+   _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+   StringList *list;
+   if (conn->getList(request, &list) == ERR_SUCCESS)
+   {
+      for(int i = 0; i < list->size(); i++)
+      {
+         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("ICMP"), console, context);
       }
       delete list;
    }
@@ -1394,17 +1413,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 
          uint32_t blockEndAddr = std::min(to, from + blockSize - 1);
 
-         TCHAR request[256];
-         _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(blockEndAddr, ipAddr2));
-         StringList *list;
-         if (conn->getList(request, &list) == ERR_SUCCESS)
-         {
-            for(int i = 0; i < list->size(); i++)
-            {
-               callback(InetAddress::parse(list->get(i)), range.getZoneUIN(), proxy.get(), 0, _T("ICMP"), console, nullptr);
-            }
-            delete list;
-         }
+         ScanAddressRangeICMPProxy(conn.get(), from, blockEndAddr, callback, range.getZoneUIN(), proxy.get(), console, nullptr);
 
          if (snmpScanEnabled && !IsShutdownInProgress())
          {
@@ -1431,10 +1440,10 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
                for(int j = 0; (j < communities->size()) && !IsShutdownInProgress(); j++)
                {
                   const TCHAR *community = communities->get(j);
-                  ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_1, community, callback, range.getZoneUIN(), proxy.get(), console);
-                  ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_2C, community, callback, range.getZoneUIN(), proxy.get(), console);
+                  ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_1, community, callback, range.getZoneUIN(), proxy.get(), console, nullptr);
+                  ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_2C, community, callback, range.getZoneUIN(), proxy.get(), console, nullptr);
                }
-               ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_3, nullptr, callback, range.getZoneUIN(), proxy.get(), console);
+               ScanAddressRangeSNMPProxy(conn.get(), from, blockEndAddr, port, SNMP_VERSION_3, nullptr, callback, range.getZoneUIN(), proxy.get(), console, nullptr);
             }
          }
 
@@ -1460,7 +1469,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
             }
 
             for(int i = 0; (i < ports.size()) && !IsShutdownInProgress(); i++)
-               ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console);
+               ScanAddressRangeTCPProxy(conn.get(), from, blockEndAddr, ports.get(i), callback, range.getZoneUIN(), proxy.get(), console, nullptr);
          }
 
          from += blockSize;
@@ -1768,6 +1777,252 @@ void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList
       CheckRange(*addressList->get(i), RangeScanCallback, nullptr, nullptr);
    }
    delete addressList;
+}
+
+/**
+ * Internal aggregation state for a single interactive network range scan.
+ * Owned by ScanNetworkRangeInteractive; referenced from per-call callback
+ * contexts; protected by resultLock during record updates.
+ */
+namespace {
+
+struct InteractiveScanState
+{
+   const InteractiveScanContext *publicCtx;
+   Mutex resultLock;
+   HashMap<uint32_t, InteractiveScanRecord> records;
+
+   InteractiveScanState() : resultLock(MutexType::FAST), records(Ownership::True) { }
+};
+
+struct InteractiveScanPortContext
+{
+   InteractiveScanState *state;
+   uint32_t protocolFlag;
+   uint16_t port;
+   int16_t snmpVersion;
+};
+
+} // anonymous namespace
+
+/**
+ * Merge one probe hit into the aggregated per-host record and emit a snapshot
+ * of the current cumulative state. Snapshot is built under lock and passed to
+ * the user-supplied emitter outside it to keep socket I/O out of the critical
+ * section.
+ */
+static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolFlag, uint32_t rtt,
+      uint16_t port, int16_t snmpVersion, InteractiveScanState *state)
+{
+   if (addr.getFamily() != AF_INET)
+      return;
+
+   uint32_t key = addr.getAddressV4();
+
+   state->resultLock.lock();
+
+   InteractiveScanRecord *record = state->records.get(key);
+   if (record == nullptr)
+   {
+      record = new InteractiveScanRecord();
+      state->records.set(key, record);
+   }
+
+   record->protocolFlags |= protocolFlag;
+   if ((protocolFlag == NSCAN_HOST_REACHABLE) && (rtt != 0))
+      record->rtt = rtt;
+   if (protocolFlag == NSCAN_HAS_AGENT)
+      record->agentPort = port;
+   if (protocolFlag == NSCAN_HAS_SNMP)
+      record->snmpVersion = snmpVersion;
+   if ((protocolFlag == NSCAN_HAS_TCP_PORT_OPEN) && (port != 0) && !record->openTcpPorts.contains(port))
+      record->openTcpPorts.add(port);
+
+   InteractiveScanRecord snapshot;
+   snapshot.protocolFlags = record->protocolFlags;
+   snapshot.rtt = record->rtt;
+   snapshot.agentPort = record->agentPort;
+   snapshot.snmpVersion = record->snmpVersion;
+   for(int i = 0; i < record->openTcpPorts.size(); i++)
+      snapshot.openTcpPorts.add(record->openTcpPorts.get(i));
+
+   state->resultLock.unlock();
+
+   if (state->publicCtx->emitter)
+      state->publicCtx->emitter(addr, snapshot);
+}
+
+/**
+ * Callback for ScanAddressRangeICMP (7-argument server form).
+ */
+static void InteractiveScanIcmpCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy,
+      uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
+{
+   RecordInteractiveScanHit(addr, NSCAN_HOST_REACHABLE, rtt, 0, 0, static_cast<InteractiveScanState*>(context));
+}
+
+/**
+ * Callback for TCPScanAddressRange / SnmpScanAddressRange (3-argument form, direct).
+ */
+static void InteractiveScanPortCallback(const InetAddress& addr, uint32_t rtt, void *context)
+{
+   auto pctx = static_cast<InteractiveScanPortContext*>(context);
+   RecordInteractiveScanHit(addr, pctx->protocolFlag, 0, pctx->port, pctx->snmpVersion, pctx->state);
+}
+
+/**
+ * Callback for ScanAddressRangeTCPProxy / ScanAddressRangeSNMPProxy (7-argument form).
+ */
+static void InteractiveScanProxyPortCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy,
+      uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context)
+{
+   auto pctx = static_cast<InteractiveScanPortContext*>(context);
+   RecordInteractiveScanHit(addr, pctx->protocolFlag, rtt, pctx->port, pctx->snmpVersion, pctx->state);
+}
+
+/**
+ * Run an interactive network range scan, driving the parallel
+ * ScanAddressRangeICMP / TCPScanAddressRange / SnmpScanAddressRange primitives
+ * and aggregating per-host hits. The caller-supplied emitter is invoked each
+ * time a host's record is updated. Designed to be transport-agnostic so that
+ * it can be driven from both NXCP client sessions and the REST API.
+ */
+void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t *reportedHosts)
+{
+   InteractiveScanState state;
+   state.publicCtx = &context;
+
+   auto shouldCancel = [&context]() -> bool { return context.cancelCheck && context.cancelCheck(); };
+
+   // Resolve zone proxy if a non-default zone was requested
+   shared_ptr<Node> proxy;
+   shared_ptr<AgentConnectionEx> proxyConn;
+   if (context.zoneUIN != 0)
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(context.zoneUIN);
+      if (zone != nullptr)
+      {
+         uint32_t proxyId = zone->getProxyNodeId(nullptr);
+         if (proxyId != 0)
+         {
+            proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+            if (proxy != nullptr)
+            {
+               proxyConn = proxy->createAgentConnection();
+               if (proxyConn != nullptr)
+               {
+                  proxyConn->setCommandTimeout(10000);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: cannot connect to zone %d proxy node [%u]",
+                        context.zoneUIN, proxyId);
+                  proxy.reset();
+               }
+            }
+         }
+      }
+   }
+
+   if (proxy != nullptr && proxyConn != nullptr)
+   {
+      uint32_t from = context.startAddress.getAddressV4();
+      uint32_t to = context.endAddress.getAddressV4();
+      uint32_t blockSize = ConfigReadULong(L"NetworkDiscovery.ActiveDiscovery.BlockSize", 1024);
+
+      while((from <= to) && !shouldCancel())
+      {
+         uint32_t blockEnd = std::min(to, from + blockSize - 1);
+
+         ScanAddressRangeICMPProxy(proxyConn.get(), from, blockEnd, InteractiveScanIcmpCallback,
+               context.zoneUIN, proxy.get(), nullptr, &state);
+
+         if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
+         {
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
+            ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx);
+         }
+
+         for(int i = 0; (i < context.tcpPorts.size()) && !shouldCancel(); i++)
+         {
+            uint16_t port = context.tcpPorts.get(i);
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
+            ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx);
+         }
+
+         if ((context.flags & NSCAN_PROBE_SNMP) && !shouldCancel())
+         {
+            IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", 0);
+            if (snmpPorts.isEmpty())
+               snmpPorts.add(161);
+            unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
+            for(int i = 0; (i < snmpPorts.size()) && !shouldCancel(); i++)
+            {
+               uint16_t port = snmpPorts.get(i);
+               for(int j = 0; (j < communities->size()) && !shouldCancel(); j++)
+               {
+                  const wchar_t *community = communities->get(j);
+                  InteractiveScanPortContext pctxV1{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_1 };
+                  ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_1, community,
+                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV1);
+                  InteractiveScanPortContext pctxV2{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_2C };
+                  ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_2C, community,
+                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV2);
+               }
+               InteractiveScanPortContext pctxV3{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_3 };
+               ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_3, nullptr,
+                     InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV3);
+            }
+         }
+
+         from += blockSize;
+      }
+   }
+   else
+   {
+      ScanAddressRangeICMP(context.startAddress, context.endAddress, InteractiveScanIcmpCallback, nullptr, &state);
+
+      if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
+      {
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
+         TCPScanAddressRange(context.startAddress, context.endAddress, AGENT_LISTEN_PORT, InteractiveScanPortCallback, &pctx);
+      }
+
+      for(int i = 0; (i < context.tcpPorts.size()) && !shouldCancel(); i++)
+      {
+         uint16_t port = context.tcpPorts.get(i);
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
+         TCPScanAddressRange(context.startAddress, context.endAddress, port, InteractiveScanPortCallback, &pctx);
+      }
+
+      if ((context.flags & NSCAN_PROBE_SNMP) && !shouldCancel())
+      {
+         IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", 0);
+         if (snmpPorts.isEmpty())
+            snmpPorts.add(161);
+         unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
+         for(int i = 0; (i < snmpPorts.size()) && !shouldCancel(); i++)
+         {
+            uint16_t port = snmpPorts.get(i);
+            for(int j = 0; (j < communities->size()) && !shouldCancel(); j++)
+            {
+               char community[256];
+               wchar_to_mb(communities->get(j), -1, community, 256);
+               InteractiveScanPortContext pctxV1{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_1 };
+               SnmpScanAddressRange(context.startAddress, context.endAddress, port, SNMP_VERSION_1, community, InteractiveScanPortCallback, &pctxV1);
+               InteractiveScanPortContext pctxV2{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_2C };
+               SnmpScanAddressRange(context.startAddress, context.endAddress, port, SNMP_VERSION_2C, community, InteractiveScanPortCallback, &pctxV2);
+            }
+            InteractiveScanPortContext pctxV3{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_3 };
+            SnmpScanAddressRange(context.startAddress, context.endAddress, port, SNMP_VERSION_3, nullptr, InteractiveScanPortCallback, &pctxV3);
+         }
+      }
+   }
+
+   if (reportedHosts != nullptr)
+      *reportedHosts = static_cast<uint32_t>(state.records.size());
 }
 
 /**

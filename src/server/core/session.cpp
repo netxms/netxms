@@ -1915,6 +1915,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(*request);
          break;
+      case CMD_SCAN_NETWORK_RANGE:
+         scanNetworkRange(*request);
+         break;
       case CMD_GET_PHYSICAL_LINKS:
          getPhysicalLinks(*request);
          break;
@@ -17148,6 +17151,137 @@ void ClientSession::startActiveDiscovery(const NXCPMessage& request)
    }
 
    sendMessage(response);
+}
+
+/**
+ * Interactive network range scan. Validates the request, builds an
+ * InteractiveScanContext with an NXCP-streaming emitter, and delegates to
+ * ScanNetworkRangeInteractive in the discovery layer. The scan logic itself
+ * is transport-agnostic so it can also be driven from the REST API.
+ */
+void ClientSession::scanNetworkRange(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_SCAN_NETWORK))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      WriteAuditLog(AUDIT_NETWORK, false, m_userId, m_workstation, m_id, 0, L"Access denied on network range scan");
+      sendMessage(response);
+      return;
+   }
+
+   InetAddressListElement range(request, VID_ADDR_LIST_BASE);
+   if ((range.getZoneUIN() != 0) && (FindZoneByUIN(range.getZoneUIN()) == nullptr))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+      sendMessage(response);
+      return;
+   }
+
+   InetAddress start;
+   InetAddress end;
+   if (range.getType() == InetAddressListElement_RANGE)
+   {
+      start = range.getBaseAddress();
+      end = range.getEndAddress();
+   }
+   else
+   {
+      start = range.getBaseAddress().getSubnetAddress();
+      end = range.getBaseAddress().getSubnetBroadcast();
+   }
+
+   if (!start.isValid() || !end.isValid() || (start.getFamily() != AF_INET) || (end.getFamily() != AF_INET))
+   {
+      response.setField(VID_RCC, RCC_INVALID_IP_ADDR);
+      response.setField(VID_ERROR_TEXT, L"Only IPv4 ranges are supported");
+      sendMessage(response);
+      return;
+   }
+
+   uint32_t startV4 = start.getAddressV4();
+   uint32_t endV4 = end.getAddressV4();
+   if (startV4 > endV4)
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      response.setField(VID_ERROR_TEXT, L"Range start address is greater than end address");
+      sendMessage(response);
+      return;
+   }
+
+   uint64_t rangeSize = static_cast<uint64_t>(endV4) - static_cast<uint64_t>(startV4) + 1;
+   static const uint64_t MAX_SCAN_RANGE = 65536;
+   if (rangeSize > MAX_SCAN_RANGE)
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      wchar_t errText[256];
+      nx_swprintf(errText, 256, L"Range size %llu exceeds maximum of %llu addresses",
+            static_cast<unsigned long long>(rangeSize), static_cast<unsigned long long>(MAX_SCAN_RANGE));
+      response.setField(VID_ERROR_TEXT, errText);
+      sendMessage(response);
+      return;
+   }
+
+   InteractiveScanContext context;
+   context.startAddress = start;
+   context.endAddress = end;
+   context.zoneUIN = range.getZoneUIN();
+   context.flags = request.getFieldAsUInt32(VID_FLAGS);
+
+   int portCount = request.getFieldAsInt32(VID_NUM_ELEMENTS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < portCount; i++)
+   {
+      uint16_t port = static_cast<uint16_t>(request.getFieldAsUInt32(fieldId++));
+      if (port != 0)
+         context.tcpPorts.add(port);
+   }
+
+   uint32_t requestId = request.getId();
+   context.emitter = [this, requestId](const InetAddress& addr, const InteractiveScanRecord& record)
+   {
+      NXCPMessage msg(CMD_RANGE_SCAN_RESULT, requestId);
+      msg.setField(VID_IP_ADDRESS, addr);
+      msg.setField(VID_FLAGS, record.protocolFlags);
+      if (record.rtt != 0)
+         msg.setField(VID_RESPONSE_TIME, record.rtt);
+      if (record.agentPort != 0)
+         msg.setField(VID_AGENT_PORT, record.agentPort);
+      if (record.snmpVersion >= 0)
+         msg.setField(VID_SNMP_VERSION, record.snmpVersion);
+      if (!record.openTcpPorts.isEmpty())
+      {
+         msg.setField(VID_NUM_ELEMENTS, record.openTcpPorts.size());
+         uint32_t portField = VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < record.openTcpPorts.size(); i++)
+            msg.setField(portField++, record.openTcpPorts.get(i));
+      }
+      sendMessage(msg);
+   };
+   context.cancelCheck = [this]() { return isTerminated(); };
+
+   WriteAuditLog(AUDIT_NETWORK, true, m_userId, m_workstation, m_id, 0,
+         L"Network range scan started: %s - %s (zone=%d, %llu addresses, flags=0x%04x, %d TCP ports)",
+         start.toString().cstr(), end.toString().cstr(), context.zoneUIN,
+         static_cast<unsigned long long>(rangeSize), context.flags, context.tcpPorts.size());
+   nxlog_debug_tag(L"poll.discovery", 4, L"Network range scan from session [%d]: %s - %s (zone=%d, %llu addresses)",
+         m_id, start.toString().cstr(), end.toString().cstr(), context.zoneUIN, static_cast<unsigned long long>(rangeSize));
+
+   uint32_t reportedHosts = 0;
+   ScanNetworkRangeInteractive(context, &reportedHosts);
+
+   NXCPMessage terminator(CMD_RANGE_SCAN_RESULT, requestId);
+   terminator.setEndOfSequence();
+   sendMessage(terminator);
+
+   response.setField(VID_RCC, RCC_SUCCESS);
+   response.setField(VID_NUM_RECORDS, reportedHosts);
+   response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(rangeSize));
+   sendMessage(response);
+
+   nxlog_debug_tag(L"poll.discovery", 4, L"Network range scan from session [%d] finished: %u hosts reported across %llu addresses%s",
+         m_id, reportedHosts, static_cast<unsigned long long>(rangeSize), isTerminated() ? L" (session terminating)" : L"");
 }
 
 /**

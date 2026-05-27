@@ -944,6 +944,7 @@ private:
    void clearNotificationChannelQueue(const NXCPMessage& request);
    void getNotificationDrivers(const NXCPMessage& request);
    void startActiveDiscovery(const NXCPMessage& request);
+   void scanNetworkRange(const NXCPMessage& request);
    void getPhysicalLinks(const NXCPMessage& request);
    void updatePhysicalLink(const NXCPMessage& request);
    void deletePhysicalLink(const NXCPMessage& request);

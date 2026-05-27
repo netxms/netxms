@@ -719,6 +719,8 @@ typedef struct
 #define CMD_MODIFY_AI_DISABLED_LIST       0x0207
 #define CMD_GET_POLICY_FILE               0x0208
 #define CMD_SETUP_AGENT_UPGRADE           0x0209
+#define CMD_SCAN_NETWORK_RANGE            0x020A
+#define CMD_RANGE_SCAN_RESULT             0x020B
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

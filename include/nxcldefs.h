@@ -1353,6 +1353,22 @@ enum class MapInitialViewMode
 #define NXC_NCF_DISABLE_VNC          0x0800
 
 /**
+ * Network range scan request flags
+ */
+#define NSCAN_PROBE_AGENT          0x0001
+#define NSCAN_PROBE_SNMP           0x0002
+#define NSCAN_REPORT_UNREACHABLE   0x0004
+#define NSCAN_RESOLVE_HOSTNAMES    0x0008
+
+/**
+ * Network range scan per-host result flags
+ */
+#define NSCAN_HOST_REACHABLE       0x0001
+#define NSCAN_HAS_AGENT            0x0002
+#define NSCAN_HAS_SNMP             0x0004
+#define NSCAN_HAS_TCP_PORT_OPEN    0x0008
+
+/**
  * Agent data cache modes
  */
 #define AGENT_CACHE_DEFAULT      0
