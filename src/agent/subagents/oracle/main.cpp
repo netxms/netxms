@@ -293,6 +293,16 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 }
 
 /**
+ * Handler for Oracle.Databases list
+ */
+static LONG H_DatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_instances->size(); i++)
+      value->add(s_instances->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for generic list parameter
  */
 static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
@@ -505,6 +515,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("Oracle.ASM.DiskGroups(*)"), H_TagList, _T("^ASM_DISKGROUP/STATUS@(.*)$"), _T("List of ASM disk groups") },
+   { _T("Oracle.Databases"), H_DatabasesList, nullptr, _T("Oracle: configured database connections") },
    { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/STATUS@(.*)$"), _T("List of data files") },
    { _T("Oracle.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("List of Oracle data collection tags") },
    { _T("Oracle.TableSpaces(*)"), H_TagList, _T("^TABLESPACE/STATUS@(.*)$"), _T("List of tablespaces") }
