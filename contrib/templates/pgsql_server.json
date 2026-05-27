@@ -386,7 +386,7 @@
             "unitName": "%",
             "multiplier": 0,
             "allThresholdsRearmEvent": 0,
-            "perfTabSettings": "<config>\n   <enabled>false</enabled>\n   <autoScale>true</autoScale>\n   <logScaleEnabled>false</logScaleEnabled>\n   <stacked>false</stacked>\n   <showLegendAlways>false</showLegendAlways>\n   <extendedLegend>true</extendedLegend>\n   <useMultipliers>true</useMultipliers>\n   <minYScaleValue>0.0</minYScaleValue>\n   <maxYScaleValue>100.0</maxYScaleValue>\n   <timeRange>1</timeRange>\n   <timeUnits>1</timeUnits>\n   <type>1</type>\n   <color>49152</color>\n   <automaticColor>false</automaticColor>\n   <title></title>\n   <name></name>\n   <showThresholds>false</showThresholds>\n   <groupName></groupName>\n   <order>100</order>\n   <parentDciId>0</parentDciId>\n   <modifyYBase>false</modifyYBase>\n   <invertedValues>false</invertedValues>\n   <translucent>true</translucent>\n</config>",
+            "perfTabSettings": "<config>\n   <enabled>true</enabled>\n   <autoScale>true</autoScale>\n   <logScaleEnabled>false</logScaleEnabled>\n   <stacked>false</stacked>\n   <showLegendAlways>false</showLegendAlways>\n   <extendedLegend>true</extendedLegend>\n   <useMultipliers>true</useMultipliers>\n   <minYScaleValue>0.0</minYScaleValue>\n   <maxYScaleValue>100.0</maxYScaleValue>\n   <timeRange>1</timeRange>\n   <timeUnits>1</timeUnits>\n   <type>1</type>\n   <color>49152</color>\n   <automaticColor>false</automaticColor>\n   <title></title>\n   <name></name>\n   <showThresholds>true</showThresholds>\n   <groupName></groupName>\n   <order>100</order>\n   <parentDciId>0</parentDciId>\n   <modifyYBase>false</modifyYBase>\n   <invertedValues>false</invertedValues>\n   <translucent>true</translucent>\n</config>",
             "instanceDiscoveryData": "PostgreSQL.DBServers",
             "thresholds": [
               {
@@ -1870,7 +1870,7 @@
   "objectTools": [
     {
       "type": 9,
-      "flags": 8,
+      "flags": 0,
       "filter": "<objectMenuFilter><toolOS></toolOS><toolTemplate>PostgreSQL Server</toolTemplate><snmpOid></snmpOid><flags>18</flags></objectMenuFilter>",
       "confirmation": "",
       "image": "",
@@ -1889,14 +1889,14 @@
       "columns": [],
       "guid": "1a2c0b4a-9bf0-4c7e-9e74-2d9c0e7f1a01",
       "name": "&PostgreSQL->&Backends",
-      "data": "PostgreSQL.Backends($(instanceId))",
+      "data": "PostgreSQL.Backends(%(in:instanceId))",
       "description": "Show current PostgreSQL backend activity (pg_stat_activity).",
       "commandName": "PostgreSQL backends",
       "commandShortName": "PG Backends"
     },
     {
       "type": 9,
-      "flags": 8,
+      "flags": 0,
       "filter": "<objectMenuFilter><toolOS></toolOS><toolTemplate>PostgreSQL Server</toolTemplate><snmpOid></snmpOid><flags>18</flags></objectMenuFilter>",
       "confirmation": "",
       "image": "",
@@ -1915,14 +1915,14 @@
       "columns": [],
       "guid": "1a2c0b4a-9bf0-4c7e-9e74-2d9c0e7f1a02",
       "name": "&PostgreSQL->&Locks",
-      "data": "PostgreSQL.Locks($(instanceId))",
+      "data": "PostgreSQL.Locks(%(in:instanceId))",
       "description": "Show current PostgreSQL lock table (pg_locks).",
       "commandName": "PostgreSQL locks",
       "commandShortName": "PG Locks"
     },
     {
       "type": 9,
-      "flags": 8,
+      "flags": 0,
       "filter": "<objectMenuFilter><toolOS></toolOS><toolTemplate>PostgreSQL Server</toolTemplate><snmpOid></snmpOid><flags>18</flags></objectMenuFilter>",
       "confirmation": "",
       "image": "",
@@ -1941,7 +1941,7 @@
       "columns": [],
       "guid": "1a2c0b4a-9bf0-4c7e-9e74-2d9c0e7f1a03",
       "name": "&PostgreSQL->&Prepared transactions",
-      "data": "PostgreSQL.PreparedTransactions($(instanceId))",
+      "data": "PostgreSQL.PreparedTransactions(%(in:instanceId))",
       "description": "Show outstanding two-phase commit transactions (pg_prepared_xacts).",
       "commandName": "PostgreSQL prepared transactions",
       "commandShortName": "PG Prepared Tx"
