@@ -134,6 +134,9 @@ paths:
                         type: boolean
                       helpdeskLinkActive:
                         type: boolean
+                      dciAggregationEnabled:
+                        type: boolean
+                        description: True if DCI data aggregation (hourly/daily tiers) is enabled on the server
                       tileServerURL:
                         type: string
                   dateTimeFormat:

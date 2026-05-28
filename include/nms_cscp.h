@@ -1104,7 +1104,7 @@ typedef struct
 #define VID_LLDP_NODE_ID            ((uint32_t)366)
 #define VID_PHY_MODULE              ((uint32_t)367)
 #define VID_PHY_PORT                ((uint32_t)368)
-// unused: 369
+#define VID_DCI_AGGREGATION_ENABLED ((uint32_t)369)
 #define VID_IMAGE_PROTECTED         ((uint32_t)370)
 #define VID_NUM_IMAGES              ((uint32_t)371)
 #define VID_IMAGE_MIMETYPE          ((uint32_t)372)

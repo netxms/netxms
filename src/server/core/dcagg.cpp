@@ -852,7 +852,7 @@ static void AttachTSDBPolicies(DB_HANDLE hdb)
  */
 static void BackfillTSDBAggregates()
 {
-   nxlog_debug_tag(DEBUG_TAG, 1, L"Backfilling TSDB continuous aggregates");
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Backfilling TSDB continuous aggregates");
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    wchar_t query[256];
    for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
@@ -868,7 +868,7 @@ static void BackfillTSDBAggregates()
       DBQuery(hdb, query);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB continuous aggregate backfill complete");
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"TSDB continuous aggregate backfill complete");
 }
 
 /**
@@ -891,7 +891,7 @@ static void BackfillTSDBAggregates()
  */
 static void BackfillNonTSDBAggregates()
 {
-   nxlog_debug_tag(DEBUG_TAG, 1, L"Backfilling non-TSDB aggregation watermarks");
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Backfilling non-TSDB aggregation watermarks");
    int64_t startTime = GetMonotonicClockTime();
 
    // Hourly tier eligibility (interval <= 30 min). Daily-only-eligible DCIs cannot
@@ -943,8 +943,7 @@ static void BackfillNonTSDBAggregates()
    MetaDataWriteStr(META_NONTSDB_BACKFILLED, L"1");
 
    uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
-   nxlog_debug_tag(DEBUG_TAG, 1, L"Non-TSDB watermark backfill complete - %d DCI watermarks initialized in %u ms",
-      initialized, elapsed);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Non-TSDB watermark backfill complete - %d DCI watermarks initialized in %u ms", initialized, elapsed);
 }
 
 /**

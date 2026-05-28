@@ -733,6 +733,17 @@ bool DCItem::isAggregationEligible() const
 }
 
 /**
+ * Stricter variant of isAggregationEligible() for the hourly tier: requires the polling
+ * interval to be no coarser than half the hourly bucket (1800 s) so each bucket can
+ * carry >=2 samples. Without this, hourly aggregates degenerate to a single sample per
+ * bucket (min=max=avg) and the chart viewer should fall back to a coarser tier or raw.
+ */
+bool DCItem::isHourlyAggregationEligible() const
+{
+   return isAggregationEligible() && (getEffectivePollingInterval() <= 1800);
+}
+
+/**
  * Is aggregation actively producing rows for this DCI right now?
  *
  * Combines eligibility (numeric, not too coarse, not opted out) with the global

@@ -857,11 +857,14 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
 
-      MenuManager resolution = new MenuManager(i18n.tr("Data &resolution"));
-      resolution.add(actionTierAuto);
-      resolution.add(actionTierRaw);
-      resolution.add(actionTierHourly);
-      resolution.add(actionTierDaily);
+      MenuManager resolution = session.isDciAggregationEnabled() ? new MenuManager(i18n.tr("Data &resolution")) : null;
+      if (resolution != null)
+      {
+         resolution.add(actionTierAuto);
+         resolution.add(actionTierRaw);
+         resolution.add(actionTierHourly);
+         resolution.add(actionTierDaily);
+      }
 
       manager.add(presets);
       manager.add(new Separator());
@@ -879,7 +882,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());
-      manager.add(resolution);
+      if (resolution != null)
+         manager.add(resolution);
       manager.add(actionMinMaxBand);
       manager.add(new Separator());
       manager.add(actionRefresh);
@@ -926,11 +930,14 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
 
-      MenuManager resolution = new MenuManager(i18n.tr("Data &resolution"));
-      resolution.add(actionTierAuto);
-      resolution.add(actionTierRaw);
-      resolution.add(actionTierHourly);
-      resolution.add(actionTierDaily);
+      MenuManager resolution = session.isDciAggregationEnabled() ? new MenuManager(i18n.tr("Data &resolution")) : null;
+      if (resolution != null)
+      {
+         resolution.add(actionTierAuto);
+         resolution.add(actionTierRaw);
+         resolution.add(actionTierHourly);
+         resolution.add(actionTierDaily);
+      }
 
       manager.add(presets);
       manager.add(new Separator());
@@ -948,7 +955,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());
-      manager.add(resolution);
+      if (resolution != null)
+         manager.add(resolution);
       manager.add(actionMinMaxBand);
       manager.add(new Separator());
       manager.add(actionSave);

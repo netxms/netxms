@@ -682,6 +682,7 @@ public:
 	int32_t getDailyRetention() const { return m_dailyRetention; }
 	int64_t getAggregationWatermark() const { return m_aggregationWatermark; }
 	bool isAggregationEligible() const;
+	bool isHourlyAggregationEligible() const;
 	bool isAggregationActive(bool globalEnabled) const;
 	void pushBackAggregationWatermark(int64_t timestampMs);
 	bool tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWatermark, int64_t *currentOut);

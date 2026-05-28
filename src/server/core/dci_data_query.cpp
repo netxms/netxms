@@ -332,9 +332,11 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t n
  * Resolve DciTier from caller request to the actual tier the dispatcher will read.
  *
  * AUTO heuristic: pick the densest tier whose point count fits within autoSelectThreshold.
- * Explicit tiers are honored, with two safety downgrades:
- *   - String/table DCIs always read raw (aggregates are numeric only)
- *   - Non-TSDB tier read where the per-object aggregate table doesn't exist falls back to raw
+ * Explicit tiers are honored, with several safety downgrades that force RAW:
+ *   - Global DataCollection.Aggregation.Enabled switch is off
+ *   - DCI is not aggregation-eligible (per-DCI opt-out, non-numeric, or polling interval > 12h)
+ *   - Per-tier Rule B: hourly tier requires polling interval <= 1800 s (bucket/2)
+ *   - Non-TSDB tier read where the per-object aggregate table doesn't exist
  *
  * runtimeFlags is the data collection target's runtime flag bitmask (used to check
  * ODF_HAS_IDATA_1H_TABLE / ODF_HAS_IDATA_1D_TABLE on non-TSDB). On TSDB the unified views
@@ -346,7 +348,19 @@ DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci,
    // Aggregates are numeric single-value DCIs only
    if (dciType != DCO_TYPE_ITEM)
       return DCI_TIER_RAW;
-   if (static_cast<const DCItem&>(dci).getTransformedDataType() == DCI_DT_STRING)
+   const DCItem& item = static_cast<const DCItem&>(dci);
+   if (item.getTransformedDataType() == DCI_DT_STRING)
+      return DCI_TIER_RAW;
+
+   // Global master switch gates all aggregate tier dispatch. When off, aggregate tables
+   // are either missing (fresh install) or stale (toggled off after a previous enable),
+   // so routing AUTO long-range requests to them returns empty or frozen data.
+   if (!ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false))
+      return DCI_TIER_RAW;
+
+   // Per-DCI eligibility: opt-out flag, numeric data type, polling interval <= 12 h.
+   // Stricter hourly eligibility (interval <= 30 min) is checked per-tier below.
+   if (!item.isAggregationEligible())
       return DCI_TIER_RAW;
 
    auto hasTierTable = [&](DciTier tier) -> bool
@@ -357,12 +371,15 @@ DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci,
       return (runtimeFlags & flag) != 0;
    };
 
+   const bool hourlyAvailable = hasTierTable(DCI_TIER_HOURLY) && item.isHourlyAggregationEligible();
+   const bool dailyAvailable = hasTierTable(DCI_TIER_DAILY);   // daily eligibility already covered above
+
    if (requested == DCI_TIER_RAW)
       return DCI_TIER_RAW;
    if (requested == DCI_TIER_HOURLY)
-      return hasTierTable(DCI_TIER_HOURLY) ? DCI_TIER_HOURLY : DCI_TIER_RAW;
+      return hourlyAvailable ? DCI_TIER_HOURLY : DCI_TIER_RAW;
    if (requested == DCI_TIER_DAILY)
-      return hasTierTable(DCI_TIER_DAILY) ? DCI_TIER_DAILY : DCI_TIER_RAW;
+      return dailyAvailable ? DCI_TIER_DAILY : DCI_TIER_RAW;
 
    // AUTO: choose the densest tier whose point count fits the threshold.
    // Time arithmetic on the wire is in milliseconds.
@@ -379,12 +396,12 @@ DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci,
       return DCI_TIER_RAW;
 
    int64_t pointsHourly = spanMs / (3600LL * 1000);
-   if ((pointsHourly <= autoSelectThreshold) && hasTierTable(DCI_TIER_HOURLY))
+   if ((pointsHourly <= autoSelectThreshold) && hourlyAvailable)
       return DCI_TIER_HOURLY;
 
-   if (hasTierTable(DCI_TIER_DAILY))
+   if (dailyAvailable)
       return DCI_TIER_DAILY;
-   if (hasTierTable(DCI_TIER_HOURLY))
+   if (hourlyAvailable)
       return DCI_TIER_HOURLY;
    return DCI_TIER_RAW;
 }

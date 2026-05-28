@@ -404,6 +404,7 @@ public class NXCSession
    private int templateRemovalGracePeriod;
    private boolean strictAlarmStatusFlow;
    private boolean timedAlarmAckEnabled;
+   private boolean dciAggregationEnabled;
    private int minViewRefreshInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
@@ -2638,6 +2639,7 @@ public class NXCSession
 
       strictAlarmStatusFlow = response.getFieldAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
       timedAlarmAckEnabled = response.getFieldAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
+      dciAggregationEnabled = response.getFieldAsBoolean(NXCPCodes.VID_DCI_AGGREGATION_ENABLED);
 
       serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVER_COMMAND_TIMEOUT) * 1000;
       serverColor = response.getFieldAsString(NXCPCodes.VID_SERVER_COLOR);
@@ -13623,6 +13625,14 @@ public class NXCSession
    public boolean isTimedAlarmAckEnabled()
    {
       return timedAlarmAckEnabled;
+   }
+
+   /**
+    * @return true if DCI data aggregation (hourly/daily tiers) is enabled on the server
+    */
+   public boolean isDciAggregationEnabled()
+   {
+      return dciAggregationEnabled;
    }
 
    /**
