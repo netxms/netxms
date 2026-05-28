@@ -26,6 +26,7 @@
 **/
 
 #include "nxcore.h"
+#include <dci_table_creation.h>
 
 /**
  * Housekeeper back-pressure helper defined in hk.cpp.
@@ -36,32 +37,6 @@ bool ThrottleHousekeeper();
 
 #define ONE_HOUR_MS   _LL(3600000)
 #define ONE_DAY_MS    _LL(86400000)
-
-/**
- * Column types for per-object aggregate tables, by database dialect - 64 bit integer
- */
-static inline const wchar_t *GetAggregateBigIntType()
-{
-   return (g_dbSyntax == DB_SYNTAX_ORACLE) ? L"number(20)" : L"bigint";
-}
-
-/**
- * Column types for per-object aggregate tables, by database dialect - double
- */
-static inline const wchar_t *GetAggregateDoubleType()
-{
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         return L"float";
-      case DB_SYNTAX_ORACLE:
-         return L"binary_double";
-      case DB_SYNTAX_SQLITE:
-         return L"real";
-      default:
-         return L"double precision";
-   }
-}
 
 /**
  * SQL expression for casting raw idata_value (varchar) to double precision.
@@ -123,16 +98,8 @@ bool DataCollectionTarget::ensureAggregateTable(DB_HANDLE hdb, bool hourly)
       return true;
 
    const wchar_t *suffix = hourly ? L"1h" : L"1d";
-   const wchar_t *int64Type = GetAggregateBigIntType();
-   const wchar_t *doubleType = GetAggregateDoubleType();
-
    wchar_t query[512];
-   nx_swprintf(query, 512,
-      L"CREATE TABLE idata_%s_%u (item_id integer not null,bucket_start %s not null,"
-      L"min_value %s null,max_value %s null,avg_value %s null,sample_count integer not null,"
-      L"PRIMARY KEY(item_id,bucket_start))",
-      suffix, m_id, int64Type, doubleType, doubleType, doubleType);
-   if (!DBQuery(hdb, query))
+   if (!BuildIDataAggregateCreationQuery(g_dbSyntax, hourly, m_id, 0, query, 512) || !DBQuery(hdb, query))
    {
       nxlog_debug_tag(DEBUG_TAG, 3, L"Failed to create aggregate table idata_%s_%u", suffix, m_id);
       return false;

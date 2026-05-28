@@ -857,6 +857,23 @@ bool CreateTDataTable(uint32_t objectId)
 }
 
 /**
+ * Create idata_1h_xx / idata_1d_xx aggregate table (issue #419).
+ */
+bool CreateIDataAggregateTable(uint32_t objectId, bool hourly)
+{
+   wchar_t query[512];
+   for(int i = 0; i < DCI_TABLE_CREATION_SLOT_COUNT; i++)
+   {
+      if (BuildIDataAggregateCreationQuery(g_dbSyntax, hourly, objectId, i, query, 512))
+      {
+         if (!SQLQuery(query))
+            return false;
+      }
+   }
+   return true;
+}
+
+/**
  * DCI information
  */
 struct DciInfo

@@ -75,6 +75,7 @@ bool IsDataTableExist(const TCHAR *format, uint32_t id);
 
 bool CreateIDataTable(uint32_t objectId);
 bool CreateTDataTable(uint32_t objectId);
+bool CreateIDataAggregateTable(uint32_t objectId, bool hourly);
 
 void ResetSystemAccount();
 void ResetMonitoringState();

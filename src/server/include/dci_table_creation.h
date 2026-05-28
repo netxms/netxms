@@ -82,6 +82,47 @@ static inline bool BuildIDataCreationQuery(int dbSyntax, uint32_t objectId, int 
 
 /**
  * Build DDL statement (CREATE TABLE at slot 0, CREATE INDEX at slot 1+)
+ * for per-object hourly or daily aggregate table
+ * (idata_1h_<objectId> / idata_1d_<objectId>).
+ *
+ * Only meaningful for non-TSDB dialects - TSDB aggregation lives in
+ * global continuous aggregates, so callers must filter g_dbSyntax themselves.
+ */
+static inline bool BuildIDataAggregateCreationQuery(int dbSyntax, bool hourly, uint32_t objectId, int slot, wchar_t *query, size_t size)
+{
+   if (slot != 0)
+      return false;
+
+   const wchar_t *suffix = hourly ? L"1h" : L"1d";
+
+   const wchar_t *int64Type = (dbSyntax == DB_SYNTAX_ORACLE) ? L"number(20)" : L"bigint";
+   const wchar_t *doubleType;
+   switch(dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         doubleType = L"float";
+         break;
+      case DB_SYNTAX_ORACLE:
+         doubleType = L"binary_double";
+         break;
+      case DB_SYNTAX_SQLITE:
+         doubleType = L"real";
+         break;
+      default:
+         doubleType = L"double precision";
+         break;
+   }
+
+   nx_swprintf(query, size,
+      L"CREATE TABLE idata_%s_%u (item_id integer not null,bucket_start %s not null,"
+      L"min_value %s null,max_value %s null,avg_value %s null,sample_count integer not null,"
+      L"PRIMARY KEY(item_id,bucket_start))",
+      suffix, objectId, int64Type, doubleType, doubleType, doubleType);
+   return true;
+}
+
+/**
+ * Build DDL statement (CREATE TABLE at slot 0, CREATE INDEX at slot 1+)
  * for per-object tdata_<objectId> table.
  */
 static inline bool BuildTDataCreationQuery(int dbSyntax, uint32_t objectId, int slot, wchar_t *query, size_t size)

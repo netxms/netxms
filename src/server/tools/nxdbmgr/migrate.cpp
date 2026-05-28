@@ -23,6 +23,7 @@
 #include "nxdbmgr.h"
 #include <nms_threads.h>
 #include <nxqueue.h>
+#include <vector>
 
 /**
  * Tables to migrate
@@ -650,11 +651,41 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
 }
 
 /**
+ * Migrate per-object aggregate table idata_1h_<id> / idata_1d_<id> if present
+ * on the source (issue #419). Aggregate tables are created lazily by the server
+ * and may not exist for every target. TSDB destinations use global continuous
+ * aggregates and have no per-object table to migrate into.
+ */
+static bool MigrateAggregateTable(DB_HANDLE hSource, DB_HANDLE hDest, uint32_t id, bool hourly, bool ignoreDataMigrationErrors)
+{
+   wchar_t table[32];
+   nx_swprintf(table, 32, L"idata_%s_%u", hourly ? L"1h" : L"1d", id);
+
+   if (DBIsTableExist(hSource, table) != DBIsTableExist_Found)
+      return true;   // source has no aggregate table for this target
+
+   if (!g_dataOnlyMigration)
+   {
+      if (!CreateIDataAggregateTable(id, hourly))
+         return false;
+   }
+
+   if (!g_skipDataMigration)
+   {
+      if (!MigrateTable(table, hSource, hDest) && !ignoreDataMigrationErrors)
+         return false;
+   }
+
+   return true;
+}
+
+/**
  * Migrate data tables
  */
 static bool MigrateDataTables(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDataMigrationErrors)
 {
    IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+   bool migrateAggregates = (g_dbSyntax != DB_SYNTAX_TSDB);
 
    // Create and import idata_xx and tdata_xx tables for each data collection target
    int count = targets.size();
@@ -687,6 +718,14 @@ static bool MigrateDataTables(DB_HANDLE hSource, DB_HANDLE hDest, bool ignoreDat
          wchar_t table[32];
          nx_swprintf(table, 32, L"tdata_%u", id);
          if (!MigrateTable(table, hSource, hDest) && !ignoreDataMigrationErrors)
+            break;
+      }
+
+      if (migrateAggregates)
+      {
+         if (!MigrateAggregateTable(hSource, hDest, id, true, ignoreDataMigrationErrors))
+            break;
+         if (!MigrateAggregateTable(hSource, hDest, id, false, ignoreDataMigrationErrors))
             break;
       }
    }
@@ -1720,6 +1759,12 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
          if (useParallel)
          {
             IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+            bool migrateAggregates = (g_dbSyntax != DB_SYNTAX_TSDB);
+
+            // Track which targets have per-object aggregate tables on the source so
+            // phase 2 only dispatches migrations for tables that actually exist (issue #419).
+            std::vector<bool> hasHourlyAggregate(targets.size(), false);
+            std::vector<bool> hasDailyAggregate(targets.size(), false);
 
             // Phase 1: Create tables serially (DDL on destination)
             bool tableCreationOk = true;
@@ -1732,6 +1777,31 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
                   {
                      tableCreationOk = false;
                      break;
+                  }
+
+                  if (migrateAggregates)
+                  {
+                     wchar_t table[32];
+                     nx_swprintf(table, 32, L"idata_1h_%u", id);
+                     if (DBIsTableExist(s_hdbSource, table) == DBIsTableExist_Found)
+                     {
+                        if (!CreateIDataAggregateTable(id, true))
+                        {
+                           tableCreationOk = false;
+                           break;
+                        }
+                        hasHourlyAggregate[ti] = true;
+                     }
+                     nx_swprintf(table, 32, L"idata_1d_%u", id);
+                     if (DBIsTableExist(s_hdbSource, table) == DBIsTableExist_Found)
+                     {
+                        if (!CreateIDataAggregateTable(id, false))
+                        {
+                           tableCreationOk = false;
+                           break;
+                        }
+                        hasDailyAggregate[ti] = true;
+                     }
                   }
                }
             }
@@ -1750,6 +1820,16 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
                   DispatchTableMigration(threadPool, table);
                   nx_swprintf(table, 32, L"tdata_%u", id);
                   DispatchTableMigration(threadPool, table);
+                  if (hasHourlyAggregate[ti])
+                  {
+                     nx_swprintf(table, 32, L"idata_1h_%u", id);
+                     DispatchTableMigration(threadPool, table);
+                  }
+                  if (hasDailyAggregate[ti])
+                  {
+                     nx_swprintf(table, 32, L"idata_1d_%u", id);
+                     DispatchTableMigration(threadPool, table);
+                  }
                }
                WaitForPendingMigrations();
                if (s_migrationErrors > 0 && !ignoreDataMigrationErrors)

@@ -413,12 +413,56 @@ static bool RunExportDDL(sqlite3 *db, const wchar_t *query)
 }
 
 /**
+ * Export per-object aggregate table idata_1h_<id> / idata_1d_<id> (issue #419).
+ * Per-object aggregate tables exist only on non-TSDB sources that are not in
+ * single-table mode - on TSDB the aggregates live in global continuous aggregates,
+ * and single-table mode disables aggregation in the rollup task. Tables are created
+ * on demand by the server, so a given target may or may not have them.
+ */
+static bool ExportAggregateTable(sqlite3 *db, uint32_t id, bool hourly, const StringList& excludedTables)
+{
+   wchar_t tableName[128];
+   nx_swprintf(tableName, 128, L"idata_%s_%u", hourly ? L"1h" : L"1d", id);
+
+   if (excludedTables.contains(tableName))
+   {
+      WriteToTerminalEx(L"Skipping table %s\n", tableName);
+      return true;
+   }
+
+   if (DBIsTableExist(g_dbHandle, tableName) != DBIsTableExist_Found)
+      return true;   // aggregation never enabled for this target - nothing to export
+
+   if (!g_skipDataSchemaMigration)
+   {
+      wchar_t query[512];
+      for(int j = 0; j < DCI_TABLE_CREATION_SLOT_COUNT; j++)
+      {
+         if (BuildIDataAggregateCreationQuery(DB_SYNTAX_SQLITE, hourly, id, j, query, 512))
+         {
+            if (!RunExportDDL(db, query))
+               return false;
+         }
+      }
+   }
+
+   if (!g_skipDataMigration)
+   {
+      if (!ExportTable(db, tableName))
+         return false;
+   }
+
+   return true;
+}
+
+/**
  * Export multi-table performance data
  */
 static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 {
    IntegerArray<uint32_t> targets = GetDataCollectionTargets();
    bool singleTable = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
+   bool exportAggregates = (g_dbSyntax != DB_SYNTAX_TSDB) && !singleTable;
 
    for(int i = 0; i < targets.size(); i++)
    {
@@ -486,6 +530,14 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
             WriteToTerminalEx(L"Skipping table %s\n", idataTable);
          }
       }
+
+      if (exportAggregates)
+      {
+         if (!ExportAggregateTable(db, id, true, excludedTables))
+            return false;
+         if (!ExportAggregateTable(db, id, false, excludedTables))
+            return false;
+      }
    }
    return true;
 }
@@ -529,7 +581,7 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
 	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
 	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
 	{
-	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQL query failed (%hs)\n"), errmsg);
+	   WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m SQL query failed (%hs)\n", errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
@@ -537,27 +589,27 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
 	int32_t dbmajor, dbminor;
 	if (!DBGetSchemaVersion(g_dbHandle, &dbmajor, &dbminor))
 	{
-	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
+	   WriteToTerminal(L"\x1b[31;1mERROR:\x1b[0m Cannot determine database schema version. Please check that NetXMS server installed correctly.\n");
       goto cleanup;
 	}
 	if ((dbmajor != major) || (dbminor != minor))
 	{
-	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n"));
+	   WriteToTerminal(L"\x1b[31;1mERROR:\x1b[0m Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n");
 		goto cleanup;
 	}
 
 	// Export tables
 	for(int i = 0; g_tables[i] != nullptr; i++)
 	{
-	   const TCHAR *table = g_tables[i];
-      if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
-          !_tcsncmp(g_tables[i], _T("tdata"), 5))
+	   const wchar_t *table = g_tables[i];
+      if (!wcsncmp(g_tables[i], L"idata", 5) ||
+          !wcsncmp(g_tables[i], L"tdata", 5))
          continue;  // idata and tdata exported separately
-	   if (((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+	   if (((g_skipDataMigration || g_skipDataSchemaMigration) && !wcscmp(table, L"raw_dci_values")) ||
 	       excludedTables.contains(table) ||
 	       (!includedTables.isEmpty() && !includedTables.contains(table)))
 	   {
-	      _tprintf(_T("Skipping table %s\n"), table);
+	      WriteToTerminalEx(L"Skipping table %s\n", table);
          continue;
 	   }
       if (!ExportTable(db, table))
