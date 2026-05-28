@@ -2161,48 +2161,45 @@ uint32_t NetObj::modifyFromJSONInternal(json_t *json, GenericClientSession *sess
       }
    }
 
-   value = json_object_get(json, "alias");
-   if (value != nullptr)
+   // SharedString fields where null and empty string both clear to empty.
+   const struct { const char *key; SharedString *target; } stringFields[] = {
+      { "alias",     &m_alias     },
+      { "nameOnMap", &m_nameOnMap }
+   };
+   for(const auto& field : stringFields)
    {
-      if (json_is_null(value))
-         m_alias = _T("");
-      else if (json_is_string(value))
-         m_alias = String(json_string_value(value), "utf8");
-      else
+      value = json_object_get(json, field.key);
+      if (value == nullptr)
+         continue;
+      if (!json_is_null(value) && !json_is_string(value))
          return RCC_INVALID_ARGUMENT;
+      *field.target = String(json_is_string(value) ? json_string_value(value) : "", "utf8");
    }
 
-   value = json_object_get(json, "nameOnMap");
-   if (value != nullptr)
-   {
-      if (json_is_null(value))
-         m_nameOnMap = _T("");
-      else if (json_is_string(value))
-         m_nameOnMap = String(json_string_value(value), "utf8");
-      else
-         return RCC_INVALID_ARGUMENT;
-   }
-
+   // Comments: stored as source+expanded pair; null/empty both clear.
    value = json_object_get(json, "comments");
    if (value != nullptr)
    {
       if (!json_is_null(value) && !json_is_string(value))
          return RCC_INVALID_ARGUMENT;
-      const String source = json_is_string(value) ? String(json_string_value(value), "utf8") : String(_T(""));
-      const StringBuffer expanded = expandText(source);
+      const String source(json_is_string(value) ? json_string_value(value) : "", "utf8");
       m_commentsSource = source;
-      m_comments = expanded;
+      m_comments = expandText(source);
    }
 
-   value = json_object_get(json, "category");
-   if (value != nullptr)
+   // uint32_t fields where null clears to 0.
+   const struct { const char *key; uint32_t *target; } uint32Fields[] = {
+      { "category",          &m_categoryId        },
+      { "drilldownObjectId", &m_drilldownObjectId }
+   };
+   for(const auto& field : uint32Fields)
    {
-      if (json_is_null(value))
-         m_categoryId = 0;
-      else if (json_is_integer(value))
-         m_categoryId = static_cast<uint32_t>(json_integer_value(value));
-      else
+      value = json_object_get(json, field.key);
+      if (value == nullptr)
+         continue;
+      if (!json_is_integer(value) && !json_is_null(value))
          return RCC_INVALID_ARGUMENT;
+      *field.target = static_cast<uint32_t>(json_integer_value(value));
    }
 
    value = json_object_get(json, "mapImage");
@@ -2225,15 +2222,120 @@ uint32_t NetObj::modifyFromJSONInternal(json_t *json, GenericClientSession *sess
       }
    }
 
-   value = json_object_get(json, "drilldownObjectId");
-   if (value != nullptr)
+   // Location: combines geoLocation (type/latitude/longitude/accuracy/timestamp)
+   // and postalAddress (country/region/city/district/streetAddress/postcode).
+   // JSON null clears the whole group; merge-patch otherwise.
+   json_t *locationGroup = json_object_get(json, "location");
+   if (locationGroup != nullptr)
    {
-      if (json_is_null(value))
-         m_drilldownObjectId = 0;
-      else if (json_is_integer(value))
-         m_drilldownObjectId = static_cast<uint32_t>(json_integer_value(value));
+      if (json_is_null(locationGroup))
+      {
+         m_geoLocation = GeoLocation();
+         m_postalAddress = PostalAddress();
+      }
+      else if (json_is_object(locationGroup))
+      {
+         json_t *geo = json_object_get(locationGroup, "geoLocation");
+         if (geo != nullptr)
+         {
+            if (json_is_null(geo))
+            {
+               m_geoLocation = GeoLocation();
+            }
+            else if (json_is_object(geo))
+            {
+               auto jsonReal = [](json_t *v, double defval) -> double {
+                  if (json_is_real(v))
+                     return json_real_value(v);
+                  if (json_is_integer(v))
+                     return static_cast<double>(json_integer_value(v));
+                  return defval;
+               };
+               int type = static_cast<int>(json_object_get_int32(geo, "type", m_geoLocation.getType()));
+               double lat = jsonReal(json_object_get(geo, "latitude"), m_geoLocation.getLatitude());
+               double lon = jsonReal(json_object_get(geo, "longitude"), m_geoLocation.getLongitude());
+               int accuracy = json_object_get_int32(geo, "accuracy", m_geoLocation.getAccuracy());
+               time_t timestamp = static_cast<time_t>(json_object_get_int64(geo, "timestamp", m_geoLocation.getTimestamp()));
+               m_geoLocation = GeoLocation(type, lat, lon, accuracy, timestamp);
+            }
+            else
+            {
+               return RCC_INVALID_ARGUMENT;
+            }
+            wchar_t key[32];
+            _sntprintf(key, 32, L"GLupd-%u", m_id);
+            ThreadPoolExecuteSerialized(g_mainThreadPool, key, self(), &NetObj::updateGeoLocationHistory, m_geoLocation);
+         }
+
+         json_t *postal = json_object_get(locationGroup, "postalAddress");
+         if (postal != nullptr)
+         {
+            if (json_is_null(postal))
+            {
+               m_postalAddress = PostalAddress();
+            }
+            else if (json_is_object(postal))
+            {
+               static const struct { const char *key; void (PostalAddress::*setter)(const wchar_t *); size_t bufferSize; } postalFields[] = {
+                  { "country",       &PostalAddress::setCountry,       64 },
+                  { "region",        &PostalAddress::setRegion,        64 },
+                  { "city",          &PostalAddress::setCity,          64 },
+                  { "district",      &PostalAddress::setDistrict,      64 },
+                  { "streetAddress", &PostalAddress::setStreetAddress, 256 },
+                  { "postcode",      &PostalAddress::setPostCode,      32 }
+               };
+               for(const auto& field : postalFields)
+               {
+                  json_t *f = json_object_get(postal, field.key);
+                  if (f == nullptr)
+                     continue;
+                  if (!json_is_null(f) && !json_is_string(f))
+                     return RCC_INVALID_ARGUMENT;
+                  wchar_t buffer[256];
+                  utf8_to_wchar(json_is_string(f) ? json_string_value(f) : "", -1, buffer, field.bufferSize);
+                  buffer[field.bufferSize - 1] = 0;
+                  (m_postalAddress.*field.setter)(buffer);
+               }
+            }
+            else
+            {
+               return RCC_INVALID_ARGUMENT;
+            }
+         }
+      }
       else
+      {
          return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   // Status calculation: merge-patch within group.
+   json_t *statusCalc = json_object_get(json, "statusCalculation");
+   if (statusCalc != nullptr)
+   {
+      if (!json_is_object(statusCalc))
+         return RCC_INVALID_ARGUMENT;
+
+      m_statusCalcAlg = static_cast<int16_t>(json_object_get_int32(statusCalc, "calcAlg", m_statusCalcAlg));
+      m_statusPropAlg = static_cast<int16_t>(json_object_get_int32(statusCalc, "propAlg", m_statusPropAlg));
+      m_fixedStatus = static_cast<int16_t>(json_object_get_int32(statusCalc, "fixedStatus", m_fixedStatus));
+      m_statusShift = static_cast<int16_t>(json_object_get_int32(statusCalc, "shift", m_statusShift));
+      m_statusSingleThreshold = static_cast<int16_t>(json_object_get_int32(statusCalc, "singleThreshold", m_statusSingleThreshold));
+
+      const struct { const char *key; int *target; } arrayFields[] = {
+         { "translation", m_statusTranslation },
+         { "thresholds",  m_statusThresholds  }
+      };
+      for(const auto& field : arrayFields)
+      {
+         json_t *array = json_object_get(statusCalc, field.key);
+         if (array == nullptr)
+            continue;
+         if (!json_is_array(array) || (json_array_size(array) != 4))
+            return RCC_INVALID_ARGUMENT;
+         for(int i = 0; i < 4; i++)
+            field.target[i] = static_cast<int>(json_integer_value_ex(json_array_get(array, i), field.target[i]));
+      }
    }
 
    return RCC_SUCCESS;

@@ -2464,6 +2464,160 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/location:
+    patch:
+      operationId: updateObjectLocation
+      summary: Update object geo location and postal address
+      description: |
+        Update the object's geo location and/or postal address. Body uses JSON merge-patch
+        semantics — present fields are applied, omitted fields are left alone. Setting
+        `geoLocation` to `null` clears the location (type becomes UNSET); setting
+        `postalAddress` to `null` clears every postal field. Updating `geoLocation`
+        also queues an entry in the object's geo-location history.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                geoLocation:
+                  type: object
+                  nullable: true
+                  additionalProperties: false
+                  properties:
+                    type:
+                      type: integer
+                      description: 0=unset, 1=manual, 2=GPS, 3=network.
+                    latitude:
+                      type: number
+                    longitude:
+                      type: number
+                    accuracy:
+                      type: integer
+                    timestamp:
+                      type: integer
+                      description: Seconds since epoch.
+                postalAddress:
+                  type: object
+                  nullable: true
+                  additionalProperties: false
+                  properties:
+                    country:
+                      type: string
+                      nullable: true
+                    region:
+                      type: string
+                      nullable: true
+                    city:
+                      type: string
+                      nullable: true
+                    district:
+                      type: string
+                      nullable: true
+                    streetAddress:
+                      type: string
+                      nullable: true
+                    postcode:
+                      type: string
+                      nullable: true
+      responses:
+        '200':
+          description: Location updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body or invalid value.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/status-calculation:
+    patch:
+      operationId: updateObjectStatusCalculation
+      summary: Update object status calculation/propagation parameters
+      description: |
+        Update the algorithms and thresholds used to derive the object's compound status
+        from its children, and to propagate that status upward. Merge-patch semantics:
+        any subset of fields can be sent; omitted fields are unchanged. The four-element
+        `translation` and `thresholds` arrays must be sent as complete four-element arrays.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                calcAlg:
+                  type: integer
+                  description: Status calculation algorithm.
+                propAlg:
+                  type: integer
+                  description: Status propagation algorithm.
+                fixedStatus:
+                  type: integer
+                  description: Fixed status value used with the "fixed" propagation algorithm.
+                shift:
+                  type: integer
+                  description: Status shift used with the "relative" propagation algorithm.
+                singleThreshold:
+                  type: integer
+                  description: Single percentage threshold used with the "single threshold" calc algorithm.
+                translation:
+                  type: array
+                  description: Four-element status translation table (used with the "translated" propagation algorithm).
+                  minItems: 4
+                  maxItems: 4
+                  items:
+                    type: integer
+                thresholds:
+                  type: array
+                  description: Four-element percentage thresholds (used with the "multiple thresholds" calc algorithm).
+                  minItems: 4
+                  maxItems: 4
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Status calculation updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body or invalid value.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/children:
     get:
       operationId: getObjectChildren
