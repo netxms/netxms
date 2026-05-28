@@ -157,18 +157,21 @@ static DB_HANDLE CreateSourceConnection()
  */
 static COLUMN_IDENTIFIER s_integerFixColumns[] =
 {
-   { _T("dct_threshold_instances"), "tt_row_number" },
-   { _T("event_policy"), "modification_time" },
-   { _T("graphs"), "flags" },
-   { _T("items"), "transformed_datatype" },
-   { _T("network_maps"), "bg_zoom" },
-   { _T("nodes"), "capabilities" },
-   { _T("nodes"), "port_rows" },
-   { _T("nodes"), "port_numbering_scheme" },
-   { _T("object_properties"), "state_before_maint" },
-   { _T("snmp_communities"), "zone" },
-   { _T("thresholds"), "state_before_maint" },
-   { _T("usm_credentials"), "zone" },
+   { L"dct_threshold_instances", "tt_row_number" },
+   { L"event_policy", "modification_time" },
+   { L"graphs", "flags" },
+   { L"items", "aggregation_watermark" },
+   { L"items", "daily_retention" },
+   { L"items", "hourly_retention" },
+   { L"items", "transformed_datatype" },
+   { L"network_maps", "bg_zoom" },
+   { L"nodes", "capabilities" },
+   { L"nodes", "port_rows" },
+   { L"nodes", "port_numbering_scheme" },
+   { L"object_properties", "state_before_maint" },
+   { L"snmp_communities", "zone" },
+   { L"thresholds", "state_before_maint" },
+   { L"usm_credentials", "zone" },
    { nullptr, nullptr },
 };
 
@@ -177,20 +180,20 @@ static COLUMN_IDENTIFIER s_integerFixColumns[] =
  */
 static COLUMN_IDENTIFIER s_timestampColumns[] =
 {
-   { _T("ai_task_execution_log"), "execution_timestamp" },
-   { _T("asset_change_log"), "operation_timestamp" },
-   { _T("certificate_action_log"), "operation_timestamp" },
-   { _T("connection_history"), "event_timestamp" },
-   { _T("event_log"), "event_timestamp" },
-   { _T("maintenance_journal"), "creation_time" },
-   { _T("maintenance_journal"), "modification_time" },
-   { _T("notification_log"), "notification_timestamp" },
-   { _T("package_deployment_log"), "completion_time" },
-   { _T("package_deployment_log"), "execution_time" },
-   { _T("server_action_execution_log"), "action_timestamp" },
-   { _T("syslog"), "msg_timestamp" },
-   { _T("snmp_trap_log"), "trap_timestamp" },
-   { _T("win_event_log"), "event_timestamp" },
+   { L"ai_task_execution_log", "execution_timestamp" },
+   { L"asset_change_log", "operation_timestamp" },
+   { L"certificate_action_log", "operation_timestamp" },
+   { L"connection_history", "event_timestamp" },
+   { L"event_log", "event_timestamp" },
+   { L"maintenance_journal", "creation_time" },
+   { L"maintenance_journal", "modification_time" },
+   { L"notification_log", "notification_timestamp" },
+   { L"package_deployment_log", "completion_time" },
+   { L"package_deployment_log", "execution_time" },
+   { L"server_action_execution_log", "action_timestamp" },
+   { L"syslog", "msg_timestamp" },
+   { L"snmp_trap_log", "trap_timestamp" },
+   { L"win_event_log", "event_timestamp" },
    { nullptr, nullptr },
 };
 
@@ -244,7 +247,7 @@ static bool ConnectToSource()
    s_driver = DBLoadDriver(s_dbDriver, s_dbDriverOptions, nullptr, nullptr);
    if (s_driver == nullptr)
    {
-	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
+	   WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Unable to load and initialize database driver \"%s\"\n", s_dbDriver);
       return false;
    }
    WriteToTerminalEx(_T("Database driver \x1b[1m%s\x1b[0m loaded\n"), s_dbDriver);
@@ -350,7 +353,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
 
    if ((s_sourceSyntax == DB_SYNTAX_TSDB) && IsTimestampConversionNeeded(table))
    {
-      _sntprintf(buffer, 512, _T("SELECT * FROM %s WHERE 1=0"), table);
+      nx_swprintf(buffer, 512, L"SELECT * FROM %s WHERE 1=0", table);
       DB_RESULT hMetaResult = DBSelectEx(hSource, buffer, errorText);
       if (hMetaResult != nullptr)
       {
@@ -365,9 +368,9 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
             DBGetColumnNameA(hMetaResult, i, columnName, 256);
             if (IsTimestampColumn(table, columnName))
             {
-               columns.append(_T("date_part('epoch',"));
+               columns.append(L"date_part('epoch',");
                columns.appendUtf8String(columnName);
-               columns.append(_T(")::int AS "));
+               columns.append(L")::int AS ");
                columns.appendUtf8String(columnName);
             }
             else
@@ -393,7 +396,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(hSource, buffer, errorText);
    if (hResult == nullptr)
    {
-      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      WriteToTerminalEx(L"ERROR: unable to read data from source table (%s)\n", errorText);
       DBRollback(hDest);
       return false;
    }
@@ -479,7 +482,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
                TCHAR *value = DBGetField(hResult, i, nullptr, 0);
                if ((value == nullptr) || (*value == 0))
                {
-                  DBBind(hStmt, i + 1, sqlType, integerFixNeeded[i] ? _T("0") : _T(""), DB_BIND_STATIC);
+                  DBBind(hStmt, i + 1, sqlType, integerFixNeeded[i] ? L"0" : L"", DB_BIND_STATIC);
                   MemFree(value);
                }
                else

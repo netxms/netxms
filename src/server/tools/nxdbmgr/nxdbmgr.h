@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2025 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
  */
 struct COLUMN_IDENTIFIER
 {
-   const TCHAR *table;
+   const wchar_t *table;
    const char *column;
 };
 
