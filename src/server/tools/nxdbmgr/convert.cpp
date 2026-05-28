@@ -247,6 +247,24 @@ bool ConvertDatabase()
    CHK_EXEC_NO_SP(CreateTDataTable(_T("180")));
    CHK_EXEC_NO_SP(CreateTDataTable(_T("other")));
 
+   CHK_EXEC_NO_SP(SQLQuery(
+      L"CREATE TABLE dc_storage_class_migrations ("
+      L"   id integer not null,"
+      L"   dci_id integer not null,"
+      L"   dci_type char(1) not null,"
+      L"   old_storage_class char(1) not null,"
+      L"   new_storage_class char(1) not null,"
+      L"   status char(1) not null,"
+      L"   create_time integer not null,"
+      L"   start_time integer null,"
+      L"   end_time integer null,"
+      L"   last_processed_timestamp bigint null,"
+      L"   records_copied integer not null,"
+      L"   error_message varchar(255) null,"
+      L"   PRIMARY KEY(id))"));
+   CHK_EXEC_NO_SP(SQLQuery(L"CREATE INDEX idx_scm_status ON dc_storage_class_migrations(status)"));
+   CHK_EXEC_NO_SP(SQLQuery(L"CREATE INDEX idx_scm_dci_id ON dc_storage_class_migrations(dci_id)"));
+
    if (!g_skipDataMigration)
    {
       DB_HANDLE hdb = ConnectToDatabase();
