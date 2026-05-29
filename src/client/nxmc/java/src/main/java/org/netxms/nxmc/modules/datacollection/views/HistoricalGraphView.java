@@ -279,8 +279,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             || (((AbstractObject)newContext).getObjectId() != objectId))
          return;
 
-      configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
-      configuration.setTimeTo(new Date(System.currentTimeMillis()));
+      if (configuration.getTimePeriod().isBackFromNow())
+      {
+         configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
+         configuration.setTimeTo(new Date(System.currentTimeMillis()));
+      }
 
       configureGraphFromSettings();
    }
@@ -1336,7 +1339,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    public void restoreState(Memento memento) throws ViewNotRestoredException
    {      
       super.restoreState(memento);
-      objectId = memento.getAsLong("editMode", 0);
+      objectId = memento.getAsLong("objectId", 0);
       multipleSourceNodes = memento.getAsBoolean("multipleSourceNodes", true);
       try
       {
