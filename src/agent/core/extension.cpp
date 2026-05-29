@@ -215,7 +215,7 @@ void AgentExtension::stop(bool restart)
  * Main I/O loop.
  *
  * Pre-conditions: m_socket is a connected TCP socket, set up by the supervisor
- * (Phase 3).  The loop performs the JSON-RPC handshake, fetches capabilities,
+ * (see extension_lifecycle.cpp).  The loop performs the JSON-RPC handshake, fetches capabilities,
  * then services the bidirectional stream until disconnect or stop.
  */
 void AgentExtension::ioLoop()
@@ -310,19 +310,16 @@ bool AgentExtension::sendJsonRpc(json_t *msg)
  */
 json_t *AgentExtension::call(const char *method, json_t *params, uint32_t timeoutMs)
 {
-   uint32_t id;
-   {
-      LockGuard guard(m_pendingLock);
+   m_pendingLock.lock();
+   uint32_t id = m_nextRequestId++;
+   if (id == 0)
       id = m_nextRequestId++;
-      if (id == 0)
-         id = m_nextRequestId++;
-   }
+   m_pendingLock.unlock();
 
    PendingExtRequest *req = new PendingExtRequest(id);
-   {
-      LockGuard guard(m_pendingLock);
-      m_pending.set(id, req);
-   }
+   m_pendingLock.lock();
+   m_pending.set(id, req);
+   m_pendingLock.unlock();
 
    json_t *envelope = json_object();
    json_object_set_new(envelope, "jsonrpc", json_string("2.0"));
@@ -343,10 +340,9 @@ json_t *AgentExtension::call(const char *method, json_t *params, uint32_t timeou
    }
 
    bool signalled = req->completion.wait(timeoutMs);
-   {
-      LockGuard guard(m_pendingLock);
-      m_pending.unlink(id);
-   }
+   m_pendingLock.lock();
+   m_pending.unlink(id);
+   m_pendingLock.unlock();
 
    if (!signalled || !req->completed)
    {
@@ -392,10 +388,9 @@ json_t *AgentExtension::callSync(const char *method, json_t *params, uint32_t ti
    }
 
    PendingExtRequest *req = new PendingExtRequest(id);
-   {
-      LockGuard guard(m_pendingLock);
-      m_pending.set(id, req);
-   }
+   m_pendingLock.lock();
+   m_pending.set(id, req);
+   m_pendingLock.unlock();
 
    json_t *envelope = json_object();
    json_object_set_new(envelope, "jsonrpc", json_string("2.0"));
@@ -428,15 +423,13 @@ json_t *AgentExtension::callSync(const char *method, json_t *params, uint32_t ti
       }
    }
 
-   {
-      LockGuard guard(m_pendingLock);
-      m_pending.unlink(id);
-   }
+   m_pendingLock.lock();
+   m_pending.unlink(id);
+   m_pendingLock.unlock();
 
    if (!req->completed)
    {
-      setLastError(ioOk ? _T("callSync(%hs) timed out after %u ms") : _T("callSync(%hs) failed: connection lost"),
-               method, timeoutMs);
+      setLastError(ioOk ? _T("callSync(%hs) timed out after %u ms") : _T("callSync(%hs) failed: connection lost"), method, timeoutMs);
       delete req;
       return nullptr;
    }
@@ -615,7 +608,7 @@ void AgentExtension::handleResponse(uint32_t id, json_t *result, json_t *error)
    if (req == nullptr)
    {
       // Not a tracked request — common case: ping responses we sent with a sentinel id.
-      // Phase 2 simply discards.  (Phase 3 may track ping ids more strictly.)
+      // We simply treat any such response as a liveness signal.
       nxlog_debug_tag(getDebugTag(), 6, _T("Extension(%s): response for unknown id %u"), m_config.name, id);
       if (result != nullptr) json_decref(result);
       if (error != nullptr) json_decref(error);
@@ -788,7 +781,9 @@ void AgentExtension::clearCapabilities()
 }
 
 /**
- * Connection lost — clean up and (Phase 3) trigger reconnect.
+ * Connection lost — clean up.  The supervisor loop (see extension_lifecycle.cpp)
+ * drives reconnection: once ioLoop() returns it tears down and re-enters
+ * setupConnection() after applyBackoff().
  */
 void AgentExtension::onDisconnect(const TCHAR *reason)
 {
@@ -796,18 +791,17 @@ void AgentExtension::onDisconnect(const TCHAR *reason)
    clearCapabilities();
 
    // wake any callers blocked on pending requests
+   m_pendingLock.lock();
+   auto it = m_pending.begin();
+   auto end = m_pending.end();
+   while (it != end)
    {
-      LockGuard guard(m_pendingLock);
-      auto it = m_pending.begin();
-      auto end = m_pending.end();
-      while (it != end)
-      {
-         PendingExtRequest *req = *it;
-         req->completed = true;
-         req->completion.set();
-         ++it;
-      }
+      PendingExtRequest *req = *it;
+      req->completed = true;
+      req->completion.set();
+      ++it;
    }
+   m_pendingLock.unlock();
 
    if (m_socket != INVALID_SOCKET)
    {
@@ -815,15 +809,8 @@ void AgentExtension::onDisconnect(const TCHAR *reason)
       m_socket = INVALID_SOCKET;
    }
    setState(ExtensionState::RECONNECT_BACKOFF);
-   // TODO(phase 3): scheduleReconnect()
-}
 
-/**
- * Schedule a reconnect with exponential backoff. Phase 3.
- */
-void AgentExtension::scheduleReconnect()
-{
-   // TODO(phase 3)
+   m_handshakeTime = 0;
 }
 
 /**

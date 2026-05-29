@@ -196,7 +196,6 @@ private:
    void clearCapabilities();
 
    void onDisconnect(const TCHAR *reason);
-   void scheduleReconnect();
    void setState(ExtensionState newState);
    void setLastError(const TCHAR *fmt, ...);
 
