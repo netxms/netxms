@@ -35,6 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -55,11 +56,11 @@ public class StatusExplanationDialog extends Dialog
 
    private AbstractObject object;
    private NXCSession session;
-   private Label statusLabel;
+   private RoundedLabel statusLabel;
    private Label algorithmLabel;
    private Table childrenTable;
-   private Label alarmLabel;
-   private Label additionalLabel;
+   private RoundedLabel alarmLabel;
+   private RoundedLabel additionalLabel;
    private Label decidingFactorLabel;
 
    /**
@@ -146,10 +147,11 @@ public class StatusExplanationDialog extends Dialog
       Label statusHeader = new Label(dialogArea, SWT.NONE);
       statusHeader.setText(i18n.tr("Current status:"));
 
-      statusLabel = new Label(dialogArea, SWT.NONE);
+      statusLabel = new RoundedLabel(dialogArea);
+      statusLabel.setBlendMode(false);
       statusLabel.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-      statusLabel.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
-      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      statusLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       statusLabel.setLayoutData(gd);
 
       Label algHeader = new Label(dialogArea, SWT.NONE);
@@ -212,18 +214,20 @@ public class StatusExplanationDialog extends Dialog
       Label alarmHeader = new Label(dialogArea, SWT.NONE);
       alarmHeader.setText(i18n.tr("Alarm severity:"));
 
-      alarmLabel = new Label(dialogArea, SWT.NONE);
+      alarmLabel = new RoundedLabel(dialogArea);
+      alarmLabel.setBlendMode(false);
       alarmLabel.setText("");
-      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       alarmLabel.setLayoutData(gd);
 
       // Additional status
       Label additionalHeader = new Label(dialogArea, SWT.NONE);
       additionalHeader.setText(i18n.tr("Additional status:"));
 
-      additionalLabel = new Label(dialogArea, SWT.NONE);
+      additionalLabel = new RoundedLabel(dialogArea);
+      additionalLabel.setBlendMode(false);
       additionalLabel.setText("");
-      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       additionalLabel.setLayoutData(gd);
 
       // Separator
@@ -288,7 +292,9 @@ public class StatusExplanationDialog extends Dialog
          algorithmLabel.setText(i18n.tr("(unmanaged)"));
          childrenTable.removeAll();
          alarmLabel.setText(i18n.tr("(unmanaged)"));
+         alarmLabel.setLabelBackground(null);
          additionalLabel.setText(i18n.tr("(unmanaged)"));
+         additionalLabel.setLabelBackground(null);
          decidingFactorLabel.setText(i18n.tr("Object is unmanaged"));
          return;
       }
@@ -316,8 +322,8 @@ public class StatusExplanationDialog extends Dialog
             int propagatedStatus = child.get("propagatedStatus").getAsInt();
             if (propagatedStatus >= 0 && propagatedStatus <= 4)
             {
-               item.setForeground(1, StatusDisplayInfo.getStatusColor(child.get("status").getAsInt()));
-               item.setForeground(2, StatusDisplayInfo.getStatusColor(propagatedStatus));
+               item.setBackground(1, StatusDisplayInfo.getStatusBackgroundColor(child.get("status").getAsInt()));
+               item.setBackground(2, StatusDisplayInfo.getStatusBackgroundColor(propagatedStatus));
             }
          }
       }
@@ -331,12 +337,12 @@ public class StatusExplanationDialog extends Dialog
       if (alarmSeverity == 5)
       {
          alarmLabel.setText(i18n.tr("(none)"));
-         alarmLabel.setForeground(null);
+         alarmLabel.setLabelBackground(null);
       }
       else
       {
          alarmLabel.setText(alarmText);
-         alarmLabel.setForeground(StatusDisplayInfo.getStatusColor(alarmSeverity));
+         alarmLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(alarmSeverity));
       }
 
       // Additional status
@@ -346,7 +352,7 @@ public class StatusExplanationDialog extends Dialog
       if (additionalStatus == 5)
       {
          additionalLabel.setText(i18n.tr("(none)"));
-         additionalLabel.setForeground(null);
+         additionalLabel.setLabelBackground(null);
       }
       else
       {
@@ -354,7 +360,7 @@ public class StatusExplanationDialog extends Dialog
          if (additionalExplanation != null)
             text += " (" + additionalExplanation + ")";
          additionalLabel.setText(text);
-         additionalLabel.setForeground(StatusDisplayInfo.getStatusColor(additionalStatus));
+         additionalLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(additionalStatus));
       }
 
       // Deciding factor
