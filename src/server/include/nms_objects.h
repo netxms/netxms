@@ -1526,7 +1526,7 @@ protected:
    virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session);
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
-   void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, ClientSession *session);
+   void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, GenericClientSession *session);
    void setPortStopListFromMessage(const NXCPMessage& msg);
 
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
@@ -1722,7 +1722,10 @@ public:
    void updateGeoLocationHistory(GeoLocation location);
 
    unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(const TCHAR *tag = nullptr) const;
+   unique_ptr<StructArray<ResponsibleUser>> getResponsibleUsers() const;
    void setResponsibleUsersFromMessage(const NXCPMessage& msg, ClientSession *session);
+   void updateResponsibleUser(uint32_t userId, const wchar_t *tag, GenericClientSession *session);
+   bool deleteResponsibleUser(uint32_t userId, GenericClientSession *session);
 
    bool hasOwnPortStopList() const;
    void getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerArray<uint16_t> *udpPorts) const;

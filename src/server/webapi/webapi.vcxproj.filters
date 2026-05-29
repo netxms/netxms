@@ -96,11 +96,23 @@
     <ClCompile Include="object_categories.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="object_collections.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object_properties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="topology.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="object_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="webapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>

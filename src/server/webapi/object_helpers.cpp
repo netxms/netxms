@@ -24,11 +24,11 @@
 
 /**
  * Load object addressed by URL placeholder "object-id" and check that the
- * caller has OBJECT_ACCESS_MODIFY rights on it. On any failure returns
- * nullptr and writes the matching HTTP status code (400 / 403 / 404) to
- * *httpCode.
+ * caller has the given access rights on it. On any failure returns nullptr and
+ * writes the matching HTTP status code (400 / 403 / 404) to *httpCode. A denied
+ * modify request is recorded in the audit log.
  */
-shared_ptr<NetObj> LoadObjectForModify(Context *context, int *httpCode)
+shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode)
 {
    uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
    if (objectId == 0)
@@ -44,10 +44,11 @@ shared_ptr<NetObj> LoadObjectForModify(Context *context, int *httpCode)
       return shared_ptr<NetObj>();
    }
 
-   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY))
+   if (!object->checkAccessRights(context->getUserId(), requiredRights))
    {
-      context->writeAuditLog(AUDIT_OBJECTS, false, object->getId(),
-         L"Access denied on modification of object %s [%u]", object->getName(), object->getId());
+      if (requiredRights & OBJECT_ACCESS_MODIFY)
+         context->writeAuditLog(AUDIT_OBJECTS, false, object->getId(),
+            L"Access denied on modification of object %s [%u]", object->getName(), object->getId());
       *httpCode = 403;
       return shared_ptr<NetObj>();
    }

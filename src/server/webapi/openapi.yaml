@@ -2618,6 +2618,266 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/custom-attributes:
+    get:
+      operationId: getObjectCustomAttributes
+      summary: Get object custom attributes
+      description: |
+        Retrieve the object's own custom attributes as a map of name to value object.
+        Attributes inherited from parent objects that are not redefined on this object
+        are not included.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Map of custom attribute name to its value and inheritable flag.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    inheritable:
+                      type: boolean
+                example:
+                  rack:
+                    value: A12
+                    inheritable: false
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/custom-attributes/{name}:
+    put:
+      operationId: updateObjectCustomAttribute
+      summary: Create or update a single custom attribute
+      description: |
+        Upsert a single custom attribute identified by name. The name is taken from the
+        URL path (URL-encoded). It must be 1-127 characters, must not contain a slash or
+        any control character; spaces, dots, dashes, colons and unicode are allowed.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Custom attribute name (URL-encoded).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: string
+                  nullable: true
+                  description: Attribute value. Null or absent is treated as an empty string.
+                inheritable:
+                  type: boolean
+                  description: Whether the attribute is inherited by child objects. Defaults to false.
+      responses:
+        '200':
+          description: Attribute created or updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  value:
+                    type: string
+                  inheritable:
+                    type: boolean
+        '400':
+          description: Invalid attribute name or request body.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteObjectCustomAttribute
+      summary: Delete a single custom attribute
+      description: |
+        Remove a custom attribute by name. Idempotent — deleting an attribute that does
+        not exist still returns 204.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Custom attribute name (URL-encoded).
+      responses:
+        '204':
+          description: Attribute deleted (or was already absent).
+        '400':
+          description: Invalid attribute name.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/responsible-users:
+    get:
+      operationId: getObjectResponsibleUsers
+      summary: Get object responsible users
+      description: |
+        Retrieve the object's own responsible users (users inherited from parent objects
+        are not included). Each entry pairs a user or group ID with its tag.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Array of responsible users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                    tag:
+                      type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/responsible-users/{user-id}:
+    put:
+      operationId: updateObjectResponsibleUser
+      summary: Add or update a responsible user
+      description: |
+        Set the tag for a single responsible user or group. If the user is not yet
+        responsible for the object it is added; otherwise its tag is updated. The user
+        or group must exist. An absent or null tag is treated as an empty string.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User or group ID.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag:
+                  type: string
+                  nullable: true
+                  description: Responsible user tag (max 31 characters). Null or absent is treated as empty.
+      responses:
+        '200':
+          description: Responsible user added or updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                  tag:
+                    type: string
+        '400':
+          description: User or group does not exist, or tag is too long.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteObjectResponsibleUser
+      summary: Remove a responsible user
+      description: |
+        Remove a user or group from the object's responsible users. Idempotent — removing
+        a user that is not responsible still returns 204.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User or group ID.
+      responses:
+        '204':
+          description: Responsible user removed (or was already absent).
+        '400':
+          description: Invalid user ID.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/children:
     get:
       operationId: getObjectChildren

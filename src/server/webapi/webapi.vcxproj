@@ -344,6 +344,9 @@
     <ClCompile Include="notifications.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="object_categories.cpp" />
+    <ClCompile Include="object_collections.cpp" />
+    <ClCompile Include="object_helpers.cpp" />
+    <ClCompile Include="object_properties.cpp" />
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="schedules.cpp" />
     <ClCompile Include="scripts.cpp" />
@@ -362,6 +365,7 @@
     <ClInclude Include="..\include\nms_objects.h" />
     <ClInclude Include="..\include\nxmodule.h" />
     <ClInclude Include="..\include\nxsrvapi.h" />
+    <ClInclude Include="object_helpers.h" />
     <ClInclude Include="webapi.h" />
   </ItemGroup>
   <ItemGroup>

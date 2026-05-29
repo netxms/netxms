@@ -90,7 +90,7 @@ static EnumerationCallbackResult CustomAttributeToMap(const wchar_t *name, const
 int H_ObjectCustomAttributes(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_READ, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -108,7 +108,7 @@ int H_ObjectCustomAttributes(Context *context)
 int H_ObjectCustomAttributeUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -161,7 +161,7 @@ int H_ObjectCustomAttributeUpdate(Context *context)
 int H_ObjectCustomAttributeDelete(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -182,7 +182,7 @@ int H_ObjectCustomAttributeDelete(Context *context)
 int H_ObjectResponsibleUsers(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_READ, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -208,7 +208,7 @@ int H_ObjectResponsibleUsers(Context *context)
 int H_ObjectResponsibleUserUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -216,7 +216,9 @@ int H_ObjectResponsibleUserUpdate(Context *context)
    wchar_t userName[MAX_USER_NAME];
    if ((userId == 0) || (ResolveUserId(userId, userName, false) == nullptr))
    {
-      context->setErrorResponse(L"User or group not found");
+      wchar_t message[64];
+      _sntprintf(message, 64, L"User or group %u not found", userId);
+      context->setErrorResponse(message);
       return 400;
    }
 
@@ -260,7 +262,7 @@ int H_ObjectResponsibleUserUpdate(Context *context)
 int H_ObjectResponsibleUserDelete(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
 

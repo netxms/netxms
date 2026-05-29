@@ -114,9 +114,15 @@ int H_GrafanaObjectList(Context *context);
 int H_GrafanaGetObjectQuery(Context *context);
 int H_GrafanaGetObjectsStatus(Context *context);
 int H_ObjectChildren(Context *context);
+int H_ObjectCustomAttributes(Context *context);
+int H_ObjectCustomAttributeUpdate(Context *context);
+int H_ObjectCustomAttributeDelete(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
 int H_ObjectPropertiesUpdate(Context *context);
+int H_ObjectResponsibleUsers(Context *context);
+int H_ObjectResponsibleUserUpdate(Context *context);
+int H_ObjectResponsibleUserDelete(Context *context);
 int H_ObjectStatusCalculationUpdate(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
@@ -437,6 +443,20 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/children")
       .GET(H_ObjectChildren)
+      .build();
+   RouteBuilder("v1/objects/:object-id/custom-attributes")
+      .GET(H_ObjectCustomAttributes)
+      .build();
+   RouteBuilder("v1/objects/:object-id/custom-attributes/:name")
+      .PUT(H_ObjectCustomAttributeUpdate)
+      .DELETE(H_ObjectCustomAttributeDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/responsible-users")
+      .GET(H_ObjectResponsibleUsers)
+      .build();
+   RouteBuilder("v1/objects/:object-id/responsible-users/:user-id")
+      .PUT(H_ObjectResponsibleUserUpdate)
+      .DELETE(H_ObjectResponsibleUserDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/location")
       .PATCH(H_ObjectLocationUpdate)

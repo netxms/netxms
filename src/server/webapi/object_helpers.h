@@ -30,10 +30,11 @@
 #include "webapi.h"
 
 /**
- * Load object by URL placeholder "object-id" and check OBJECT_ACCESS_MODIFY.
+ * Load object by URL placeholder "object-id" and check the given access rights.
  * Returns the object on success. On failure returns nullptr and writes the
- * corresponding HTTP status code to *httpCode (400 / 403 / 404).
+ * corresponding HTTP status code to *httpCode (400 / 403 / 404). A denied
+ * OBJECT_ACCESS_MODIFY request is recorded in the audit log.
  */
-shared_ptr<NetObj> LoadObjectForModify(Context *context, int *httpCode);
+shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode);
 
 #endif

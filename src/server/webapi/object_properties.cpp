@@ -82,7 +82,7 @@ static int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey
 int H_ObjectPropertiesUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
    return ApplyJsonPatch(context, object.get(), nullptr, L"Modified properties of object %s [%u]");
@@ -94,7 +94,7 @@ int H_ObjectPropertiesUpdate(Context *context)
 int H_ObjectLocationUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
    return ApplyJsonPatch(context, object.get(), "location", L"Modified location of object %s [%u]");
@@ -107,7 +107,7 @@ int H_ObjectLocationUpdate(Context *context)
 int H_ObjectStatusCalculationUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
    if (object == nullptr)
       return httpCode;
    return ApplyJsonPatch(context, object.get(), "statusCalculation", L"Modified status calculation of object %s [%u]");
