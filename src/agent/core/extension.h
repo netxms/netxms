@@ -227,15 +227,13 @@ public:
    uint16_t getAssignedPort() const { return m_assignedPort; }
    uint32_t getProcessPid() const;    // defined in extension_lifecycle.cpp (ExtensionProcess is opaque here)
 
-   // dispatch surface — mirrors ExternalSubagent
-   uint32_t getParameter(const TCHAR *name, TCHAR *buffer);
+   uint32_t getMetric(const TCHAR *name, TCHAR *buffer);
    uint32_t getList(const TCHAR *name, StringList *value);
    uint32_t getTable(const TCHAR *name, Table *value);
-   uint32_t executeAction(const TCHAR *name, const StringList& args,
-            AbstractCommSession *session, uint32_t requestId, bool sendOutput);
+   uint32_t executeAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
 
-   void listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
-   void listParameters(StringList *list);
+   void listMetrics(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
+   void listMetrics(StringList *list);
    void listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
    void listLists(StringList *list);
    void listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
@@ -253,14 +251,13 @@ bool AddExtensionFromShorthand(const TCHAR *shorthand);
 void StartExtensions();
 void StopExtensions(bool restart);
 
-uint32_t GetParameterValueFromExtension(const TCHAR *name, TCHAR *buffer);
+uint32_t GetMetricValueFromExtension(const TCHAR *name, TCHAR *buffer);
 uint32_t GetListValueFromExtension(const TCHAR *name, StringList *value);
 uint32_t GetTableValueFromExtension(const TCHAR *name, Table *value);
-uint32_t ExecuteActionByExtension(const TCHAR *name, const StringList& args,
-         const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
+uint32_t ExecuteActionByExtension(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
 
-void ListParametersFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
-void ListParametersFromExtensions(StringList *list);
+void ListMetricsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
+void ListMetricsFromExtensions(StringList *list);
 void ListListsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListListsFromExtensions(StringList *list);
 void ListTablesFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
@@ -276,6 +273,7 @@ const TCHAR *ExtensionStateName(ExtensionState state);
 // Metric / table handlers for Agent.Extension.* (defined in extension_registry.cpp)
 LONG H_ExtensionIsConnected(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExtensionUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExtensionRestartCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExtensionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 #endif   /* _nxagent_extension_h_ */

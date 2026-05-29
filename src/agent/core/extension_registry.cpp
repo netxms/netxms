@@ -327,9 +327,9 @@ void StopExtensions(bool restart)
 }
 
 /**
- * Dispatch helpers — iterate connected extensions and forward requests.
+ * Dispatch helper: iterate connected extensions and forward metric read request
  */
-uint32_t GetParameterValueFromExtension(const TCHAR *name, TCHAR *buffer)
+uint32_t GetMetricValueFromExtension(const TCHAR *name, TCHAR *buffer)
 {
    LockGuard guard(s_registryLock);
    uint32_t rc = ERR_UNKNOWN_METRIC;
@@ -338,7 +338,7 @@ uint32_t GetParameterValueFromExtension(const TCHAR *name, TCHAR *buffer)
       AgentExtension *ext = s_extensions.get(i);
       if (ext->isConnected())
       {
-         rc = ext->getParameter(name, buffer);
+         rc = ext->getMetric(name, buffer);
          if (rc != ERR_UNKNOWN_METRIC)
             break;
       }
@@ -346,6 +346,9 @@ uint32_t GetParameterValueFromExtension(const TCHAR *name, TCHAR *buffer)
    return rc;
 }
 
+/**
+ * Dispatch helper: iterate connected extensions and forward list read request
+ */
 uint32_t GetListValueFromExtension(const TCHAR *name, StringList *value)
 {
    LockGuard guard(s_registryLock);
@@ -363,6 +366,9 @@ uint32_t GetListValueFromExtension(const TCHAR *name, StringList *value)
    return rc;
 }
 
+/**
+ * Dispatch helper: iterate connected extensions and forward table read request
+ */
 uint32_t GetTableValueFromExtension(const TCHAR *name, Table *value)
 {
    LockGuard guard(s_registryLock);
@@ -380,8 +386,10 @@ uint32_t GetTableValueFromExtension(const TCHAR *name, Table *value)
    return rc;
 }
 
-uint32_t ExecuteActionByExtension(const TCHAR *name, const StringList& args,
-         const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
+/**
+ * Dispatch helper: iterate connected extensions and forward action execution request
+ */
+uint32_t ExecuteActionByExtension(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
 {
    LockGuard guard(s_registryLock);
    uint32_t rc = ERR_UNKNOWN_METRIC;
@@ -399,24 +407,30 @@ uint32_t ExecuteActionByExtension(const TCHAR *name, const StringList& args,
 }
 
 /**
- * Listing helpers — iterate all (connected) extensions.
+ * List all metrics provided by all extensions
  */
-void ListParametersFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+void ListMetricsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(s_registryLock);
    for (int i = 0; i < s_extensions.size(); i++)
       if (s_extensions.get(i)->isConnected())
-         s_extensions.get(i)->listParameters(msg, baseId, count);
+         s_extensions.get(i)->listMetrics(msg, baseId, count);
 }
 
-void ListParametersFromExtensions(StringList *list)
+/**
+ * List all metrics provided by all extensions
+ */
+void ListMetricsFromExtensions(StringList *list)
 {
    LockGuard guard(s_registryLock);
    for (int i = 0; i < s_extensions.size(); i++)
       if (s_extensions.get(i)->isConnected())
-         s_extensions.get(i)->listParameters(list);
+         s_extensions.get(i)->listMetrics(list);
 }
 
+/**
+ * List all lists provided by all extensions
+ */
 void ListListsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(s_registryLock);
@@ -425,6 +439,9 @@ void ListListsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count
          s_extensions.get(i)->listLists(msg, baseId, count);
 }
 
+/**
+ * List all lists provided by all extensions
+ */
 void ListListsFromExtensions(StringList *list)
 {
    LockGuard guard(s_registryLock);
@@ -433,6 +450,9 @@ void ListListsFromExtensions(StringList *list)
          s_extensions.get(i)->listLists(list);
 }
 
+/**
+ * List all tables provided by all extensions
+ */
 void ListTablesFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(s_registryLock);
@@ -441,6 +461,9 @@ void ListTablesFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *coun
          s_extensions.get(i)->listTables(msg, baseId, count);
 }
 
+/**
+ * List all tables provided by all extensions
+ */
 void ListTablesFromExtensions(StringList *list)
 {
    LockGuard guard(s_registryLock);
@@ -449,6 +472,9 @@ void ListTablesFromExtensions(StringList *list)
          s_extensions.get(i)->listTables(list);
 }
 
+/**
+ * List all actions provided by all extensions
+ */
 void ListActionsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(s_registryLock);
@@ -457,6 +483,9 @@ void ListActionsFromExtensions(NXCPMessage *msg, uint32_t *baseId, uint32_t *cou
          s_extensions.get(i)->listActions(msg, baseId, count);
 }
 
+/**
+ * List all actions provided by all extensions
+ */
 void ListActionsFromExtensions(StringList *list)
 {
    LockGuard guard(s_registryLock);
@@ -466,7 +495,7 @@ void ListActionsFromExtensions(StringList *list)
 }
 
 /**
- * Observability helpers — Phase 6 will surface these via Agent.Extension.* metrics.
+ * Check if extension is connected
  */
 bool IsExtensionConnected(const TCHAR *name)
 {
@@ -475,6 +504,9 @@ bool IsExtensionConnected(const TCHAR *name)
    return (ext != nullptr) && ext->isConnected();
 }
 
+/**
+ * Get uptime for given extension
+ */
 time_t GetExtensionUptime(const TCHAR *name)
 {
    LockGuard guard(s_registryLock);
@@ -534,6 +566,7 @@ LONG H_ExtensionUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
    AgentExtension *ext = FindExtension(name);
    if (ext == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
+
    time_t uptime = 0;
    if (ext->isConnected())
    {
@@ -543,6 +576,24 @@ LONG H_ExtensionUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
          uptime = now - hs;
    }
    ret_uint64(value, static_cast<uint64_t>(uptime));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.Extension.RestartCount(*)
+ */
+LONG H_ExtensionRestartCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[MAX_SUBAGENT_NAME];
+   if (!AgentGetParameterArg(cmd, 1, name, MAX_SUBAGENT_NAME))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   LockGuard guard(s_registryLock);
+   AgentExtension *ext = FindExtension(name);
+   if (ext == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   ret_uint(value, ext->getRestartCount());
    return SYSINFO_RC_SUCCESS;
 }
 

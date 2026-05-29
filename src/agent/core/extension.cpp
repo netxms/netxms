@@ -106,14 +106,6 @@ static bool JsonStringToBuffer(json_t *obj, const char *key, TCHAR *buffer, size
 }
 
 /**
- * Get a current monotonic-ish timestamp in milliseconds.
- */
-static int64_t MillisNow()
-{
-   return GetCurrentTimeMs();
-}
-
-/**
  * PendingExtRequest destructor — release any held JSON
  */
 PendingExtRequest::~PendingExtRequest()
@@ -250,7 +242,7 @@ void AgentExtension::ioLoop()
    }
    setState(ExtensionState::READY);
    m_handshakeTime = time(nullptr);
-   m_lastPingSentMs = MillisNow();
+   m_lastPingSentMs = GetCurrentTimeMs();
    m_lastPingReplyMs = m_lastPingSentMs;
    m_pingStrikes = 0;
    nxlog_debug_tag(getDebugTag(), 2, _T("Extension(%s): handshake complete, %d metrics / %d lists / %d tables / %d actions"),
@@ -274,7 +266,7 @@ void AgentExtension::ioLoop()
             return;
          }
       }
-      maybeSendPing(MillisNow());
+      maybeSendPing(GetCurrentTimeMs());
    }
 
    onDisconnect(_T("stop requested"));
@@ -422,11 +414,11 @@ json_t *AgentExtension::callSync(const char *method, json_t *params, uint32_t ti
       return nullptr;
    }
 
-   int64_t deadline = MillisNow() + timeoutMs;
+   int64_t deadline = GetCurrentTimeMs() + timeoutMs;
    bool ioOk = true;
    while (!req->completed && !m_stopRequested)
    {
-      int64_t remaining = deadline - MillisNow();
+      int64_t remaining = deadline - GetCurrentTimeMs();
       if (remaining <= 0)
          break;
       if (!readAndDispatch(static_cast<uint32_t>(std::min<int64_t>(remaining, 500))))
@@ -627,7 +619,7 @@ void AgentExtension::handleResponse(uint32_t id, json_t *result, json_t *error)
       nxlog_debug_tag(getDebugTag(), 6, _T("Extension(%s): response for unknown id %u"), m_config.name, id);
       if (result != nullptr) json_decref(result);
       if (error != nullptr) json_decref(error);
-      m_lastPingReplyMs = MillisNow();
+      m_lastPingReplyMs = GetCurrentTimeMs();
       m_pingStrikes = 0;
       return;
    }
@@ -719,6 +711,7 @@ bool AgentExtension::fetchCapabilities()
          NETXMS_SUBAGENT_LIST l;
          memset(&l, 0, sizeof(l));
          JsonStringToBuffer(entry, "name", l.name, MAX_PARAM_NAME);
+         JsonStringToBuffer(entry, "description", l.description, MAX_DB_STRING);
          m_lists.add(l);
       }
    }
@@ -872,7 +865,7 @@ void AgentExtension::maybeSendPing(int64_t now)
 /**
  * Dispatch surface — Phase 2 wires through call().
  */
-uint32_t AgentExtension::getParameter(const TCHAR *name, TCHAR *buffer)
+uint32_t AgentExtension::getMetric(const TCHAR *name, TCHAR *buffer)
 {
    if (!isConnected())
       return ERR_UNKNOWN_METRIC;
@@ -915,6 +908,9 @@ uint32_t AgentExtension::getParameter(const TCHAR *name, TCHAR *buffer)
    return ERR_SUCCESS;
 }
 
+/**
+ * Get list value
+ */
 uint32_t AgentExtension::getList(const TCHAR *name, StringList *value)
 {
    if (!isConnected())
@@ -972,6 +968,9 @@ uint32_t AgentExtension::getList(const TCHAR *name, StringList *value)
    return ERR_SUCCESS;
 }
 
+/**
+ * Get table value
+ */
 uint32_t AgentExtension::getTable(const TCHAR *name, Table *value)
 {
    if (!isConnected())
@@ -1060,8 +1059,10 @@ uint32_t AgentExtension::getTable(const TCHAR *name, Table *value)
    return ERR_SUCCESS;
 }
 
-uint32_t AgentExtension::executeAction(const TCHAR *name, const StringList& args,
-         AbstractCommSession *session, uint32_t requestId, bool sendOutput)
+/**
+ * Execute action
+ */
+uint32_t AgentExtension::executeAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
    if (!isConnected())
       return ERR_UNKNOWN_METRIC;
@@ -1330,9 +1331,9 @@ void AgentExtension::handleActionOutput(json_t *params)
 }
 
 /**
- * Listing helpers — populate NXCP messages for the master agent's discovery requests.
+ * List all metrics provided by extension
  */
-void AgentExtension::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
+void AgentExtension::listMetrics(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(m_capabilitiesLock);
    uint32_t fieldId = *baseId;
@@ -1347,23 +1348,36 @@ void AgentExtension::listParameters(NXCPMessage *msg, uint32_t *baseId, uint32_t
    *baseId = fieldId;
 }
 
-void AgentExtension::listParameters(StringList *list)
+/**
+ * List all metrics provided by extension
+ */
+void AgentExtension::listMetrics(StringList *list)
 {
    LockGuard guard(m_capabilitiesLock);
    for (int i = 0; i < m_parameters.size(); i++)
       list->add(m_parameters.get(i)->name);
 }
 
+/**
+ * List all lists provided by extension
+ */
 void AgentExtension::listLists(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(m_capabilitiesLock);
    uint32_t fieldId = *baseId;
    for (int i = 0; i < m_lists.size(); i++)
+   {
       msg->setField(fieldId++, m_lists.get(i)->name);
+      msg->setField(fieldId++, m_lists.get(i)->description);
+      fieldId += 8;
+   }
    *count += m_lists.size();
    *baseId = fieldId;
 }
 
+/**
+ * List all lists provided by extension
+ */
 void AgentExtension::listLists(StringList *list)
 {
    LockGuard guard(m_capabilitiesLock);
@@ -1371,6 +1385,9 @@ void AgentExtension::listLists(StringList *list)
       list->add(m_lists.get(i)->name);
 }
 
+/**
+ * List all tables provided by extension
+ */
 void AgentExtension::listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(m_capabilitiesLock);
@@ -1386,6 +1403,9 @@ void AgentExtension::listTables(NXCPMessage *msg, uint32_t *baseId, uint32_t *co
    *baseId = fieldId;
 }
 
+/**
+ * List all tables provided by extension
+ */
 void AgentExtension::listTables(StringList *list)
 {
    LockGuard guard(m_capabilitiesLock);
@@ -1393,6 +1413,9 @@ void AgentExtension::listTables(StringList *list)
       list->add(m_tables.get(i)->name);
 }
 
+/**
+ * List all actions provided by extension
+ */
 void AgentExtension::listActions(NXCPMessage *msg, uint32_t *baseId, uint32_t *count)
 {
    LockGuard guard(m_capabilitiesLock);
@@ -1409,6 +1432,9 @@ void AgentExtension::listActions(NXCPMessage *msg, uint32_t *baseId, uint32_t *c
    *baseId = fieldId;
 }
 
+/**
+ * List all actions provided by extension
+ */
 void AgentExtension::listActions(StringList *list)
 {
    LockGuard guard(m_capabilitiesLock);

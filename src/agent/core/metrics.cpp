@@ -511,6 +511,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
    { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },
    { _T("Agent.Extension.IsConnected(*)"), H_ExtensionIsConnected, nullptr, DCI_DT_INT, _T("Check if agent extension {instance} is connected") },
+   { _T("Agent.Extension.RestartCount(*)"), H_ExtensionRestartCount, nullptr, DCI_DT_UINT, _T("Agent extension {instance}: restart count") },
    { _T("Agent.Extension.Uptime(*)"), H_ExtensionUptime, nullptr, DCI_DT_UINT64, _T("Agent extension {instance}: connection uptime in seconds") },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&s_failedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
 #ifndef _WIN32
@@ -710,7 +711,7 @@ static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
    }
    ListParametersFromExtProviders(value);
    ListParametersFromExtSubagents(value);
-   ListParametersFromExtensions(value);
+   ListMetricsFromExtensions(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -1293,7 +1294,7 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
 
    if (errorCode == ERR_UNKNOWN_METRIC)
    {
-		errorCode = GetParameterValueFromExtension(param, value);
+		errorCode = GetMetricValueFromExtension(param, value);
 		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
@@ -1583,7 +1584,7 @@ void GetParameterList(NXCPMessage *msg)
 
 	ListParametersFromExtProviders(msg, &fieldId, &count);
 	ListParametersFromExtSubagents(msg, &fieldId, &count);
-	ListParametersFromExtensions(msg, &fieldId, &count);
+	ListMetricsFromExtensions(msg, &fieldId, &count);
    msg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
