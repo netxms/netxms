@@ -556,3 +556,129 @@ int H_ObjectUrlDelete(Context *context)
       L"URL [%u] removed from object %s [%u]", urlId, object->getName(), object->getId());
    return 204;
 }
+
+/**
+ * Map a binding result code returned by ChangeObjectBinding() to an HTTP status
+ * code and write the matching error response to the context. Must only be called
+ * for failure codes (rcc != RCC_SUCCESS).
+ */
+static int BindingErrorResponse(Context *context, uint32_t rcc, const NetObj& parent, const NetObj& child, const SharedString& conflictingTemplateName)
+{
+   wchar_t message[512];
+   switch(rcc)
+   {
+      case RCC_ACCESS_DENIED:
+         context->setErrorResponse("Access denied");
+         return 403;
+      case RCC_INCOMPATIBLE_OPERATION:
+         _sntprintf(message, 512, L"Object of class %s cannot be bound as a child of object of class %s",
+            child.getObjectClassName(), parent.getObjectClassName());
+         context->setErrorResponse(message);
+         return 400;
+      case RCC_OBJECT_LOOP:
+         context->setErrorResponse("Binding would create a loop in the object hierarchy");
+         return 409;
+      case RCC_TEMPLATE_EXCLUSION_CONFLICT:
+         _sntprintf(message, 512, L"Template conflicts with already applied template \"%s\" from the same exclusion group",
+            conflictingTemplateName.cstr());
+         context->setErrorResponse(message);
+         return 409;
+      case RCC_DCI_COPY_ERRORS:
+         context->setErrorResponse("Errors occurred while copying data collection configuration from template");
+         return 500;
+      case RCC_INVALID_ARGUMENT:
+         _sntprintf(message, 512, L"Object %s [%u] is not a direct child of object %s [%u]",
+            child.getName(), child.getId(), parent.getName(), parent.getId());
+         context->setErrorResponse(message);
+         return 400;
+      default:
+         context->setErrorResponse("Internal error");
+         return 500;
+   }
+}
+
+/**
+ * Load the child object addressed by URL placeholder "child-id" and check that
+ * the caller has modify access on it. On failure returns nullptr and writes the
+ * matching HTTP status code (400 / 403 / 404) to *httpCode.
+ */
+static shared_ptr<NetObj> LoadChildForBinding(Context *context, int *httpCode)
+{
+   uint32_t childId = context->getPlaceholderValueAsUInt32(L"child-id");
+   if (childId == 0)
+   {
+      *httpCode = 400;
+      return shared_ptr<NetObj>();
+   }
+
+   shared_ptr<NetObj> child = FindObjectById(childId);
+   if ((child == nullptr) || child->isUnpublished() || child->isDeleted())
+   {
+      *httpCode = 404;
+      return shared_ptr<NetObj>();
+   }
+
+   if (!child->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, child->getId(),
+         L"Access denied on modification of object %s [%u]", child->getName(), child->getId());
+      *httpCode = 403;
+      return shared_ptr<NetObj>();
+   }
+
+   return child;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/children/:child-id
+ * Binds the child object to the object addressed by the URL as its parent. Query
+ * parameter "force=true" overrides a template exclusion group conflict. Requires
+ * modify access on both the parent and the child object.
+ */
+int H_ObjectBindChild(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> parent = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (parent == nullptr)
+      return httpCode;
+
+   shared_ptr<NetObj> child = LoadChildForBinding(context, &httpCode);
+   if (child == nullptr)
+      return httpCode;
+
+   SharedString conflictingTemplateName;
+   uint32_t rcc = ChangeObjectBinding(parent, child, true, context->getQueryParameterAsBoolean("force", false), false, context, &conflictingTemplateName);
+   if (rcc != RCC_SUCCESS)
+      return BindingErrorResponse(context, rcc, *parent, *child, conflictingTemplateName);
+
+   json_t *output = child->toJson(true);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id/children/:child-id
+ * Unbinds the child object from the object addressed by the URL. Query parameter
+ * "remove-dci=true" removes data collection items created from a template when a
+ * template is unbound from a data collection target. Requires modify access on
+ * both the parent and the child object.
+ */
+int H_ObjectUnbindChild(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> parent = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (parent == nullptr)
+      return httpCode;
+
+   shared_ptr<NetObj> child = LoadChildForBinding(context, &httpCode);
+   if (child == nullptr)
+      return httpCode;
+
+   SharedString conflictingTemplateName;
+   uint32_t rcc = ChangeObjectBinding(parent, child, false, false, context->getQueryParameterAsBoolean("remove-dci", false), context, &conflictingTemplateName);
+   if (rcc != RCC_SUCCESS)
+      return BindingErrorResponse(context, rcc, *parent, *child, conflictingTemplateName);
+
+   return 204;
+}

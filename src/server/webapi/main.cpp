@@ -114,6 +114,8 @@ int H_GrafanaObjectList(Context *context);
 int H_GrafanaGetObjectQuery(Context *context);
 int H_GrafanaGetObjectsStatus(Context *context);
 int H_ObjectChildren(Context *context);
+int H_ObjectBindChild(Context *context);
+int H_ObjectUnbindChild(Context *context);
 int H_ObjectCustomAttributes(Context *context);
 int H_ObjectCustomAttributeUpdate(Context *context);
 int H_ObjectCustomAttributeDelete(Context *context);
@@ -449,6 +451,10 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/children")
       .GET(H_ObjectChildren)
+      .build();
+   RouteBuilder("v1/objects/:object-id/children/:child-id")
+      .PUT(H_ObjectBindChild)
+      .DELETE(H_ObjectUnbindChild)
       .build();
    RouteBuilder("v1/objects/:object-id/custom-attributes")
       .GET(H_ObjectCustomAttributes)

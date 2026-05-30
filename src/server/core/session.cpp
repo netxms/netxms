@@ -6997,114 +6997,13 @@ void ClientSession::changeObjectBinding(const NXCPMessage& request, bool bind)
          // Parent object should be container or service root,
 			// or template group/root for templates and template groups
          // For unbind, it can also be template or cluster
-         if (IsValidParentClass(child->getObjectClass(), parent->getObjectClass()))
-         {
-            if (bind)
-            {
-               bool success = false;
-               if (parent->getObjectClass() == OBJECT_TEMPLATE)
-               {
-                  // Check exclusion group
-                  Template &tmpl = static_cast<Template&>(*parent);
-                  SharedString exclusionGroup = tmpl.getExclusionGroup();
-                  shared_ptr<NetObj> conflictingTemplate;
-                  if (!exclusionGroup.isEmpty())
-                  {
-                     unique_ptr<SharedObjectArray<NetObj>> parents = child->getParents(OBJECT_TEMPLATE);
-                     for (int i = 0; i < parents->size(); i++)
-                     {
-                        Template *t = static_cast<Template*>(parents->get(i));
-                        if ((t->getId() != parent->getId()) && t->getExclusionGroup().str().equals(exclusionGroup.str()))
-                        {
-                           conflictingTemplate = parents->getShared(i);
-                           break;
-                        }
-                     }
-                  }
-
-                  if (conflictingTemplate != nullptr && !request.getFieldAsBoolean(VID_FORCE_APPLY))
-                  {
-                     response.setField(VID_RCC, RCC_TEMPLATE_EXCLUSION_CONFLICT);
-                     response.setField(VID_ERROR_TEXT, conflictingTemplate->getName());
-                     nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"Binding of template %s [%u] to %s %s [%u] failed due to exclusion group conflict with template %s [%u]",
-                           tmpl.getName(), tmpl.getId(), child->getObjectClassName(), child->getName(), child->getId(),
-                           conflictingTemplate->getName(), conflictingTemplate->getId());
-                  }
-                  else
-                  {
-                     if (conflictingTemplate != nullptr)
-                     {
-                        // Force apply - remove conflicting template first
-                        nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"Force applying template %s [%u] to %s %s [%u] - removing conflicting template %s [%u]",
-                              tmpl.getName(), tmpl.getId(), child->getObjectClassName(), child->getName(), child->getId(),
-                              conflictingTemplate->getName(), conflictingTemplate->getId());
-                        NetObj::unlinkObjects(conflictingTemplate.get(), child.get());
-                        conflictingTemplate->calculateCompoundStatus();
-                        static_cast<Template&>(*conflictingTemplate).queueRemoveFromTarget(child->getId(), true);
-                     }
-                     success = tmpl.applyToTarget(static_pointer_cast<DataCollectionTarget>(child));
-                     if (success)
-                     {
-                        static_cast<DataCollectionOwner&>(*child).applyDCIChanges(false);
-                        response.setField(VID_RCC, RCC_SUCCESS);
-                     }
-                     else
-                     {
-                        response.setField(VID_RCC, RCC_DCI_COPY_ERRORS);
-                     }
-                  }
-               }
-               else
-               {
-                  // Prevent loops
-                  if (!child->isChild(parent->getId()))
-                  {
-                     NetObj::linkObjects(parent, child);
-                     parent->calculateCompoundStatus();
-                     response.setField(VID_RCC, RCC_SUCCESS);
-                     success = true;
-                  }
-                  else
-                  {
-                     response.setField(VID_RCC, RCC_OBJECT_LOOP);
-                  }
-               }
-               if (success)
-               {
-                  writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] bound to %s %s [%u] as parent object"),
-                        parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
-                  writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] bound to %s %s [%u] as child object"),
-                        child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
-               }
-            }
-            else if (child->isDirectParent(parent->getId()))
-            {
-               NetObj::unlinkObjects(parent.get(), child.get());
-               parent->calculateCompoundStatus();
-               if ((parent->getObjectClass() == OBJECT_TEMPLATE) && child->isDataCollectionTarget())
-               {
-                  static_cast<Template&>(*parent).queueRemoveFromTarget(child->getId(), request.getFieldAsBoolean(VID_REMOVE_DCI));
-               }
-               else if ((parent->getObjectClass() == OBJECT_CLUSTER) && (child->getObjectClass() == OBJECT_NODE))
-               {
-                  static_pointer_cast<Cluster>(parent)->removeNode(static_pointer_cast<Node>(child));
-               }
-               response.setField(VID_RCC, RCC_SUCCESS);
-
-               writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] unbound from %s %s [%u] as parent object"),
-                     parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
-               writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] unbound from %s %s [%u] as child object"),
-                     child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-            }
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-         }
+         SharedString conflictingTemplateName;
+         uint32_t rcc = ChangeObjectBinding(parent, child, bind,
+               request.getFieldAsBoolean(VID_FORCE_APPLY), request.getFieldAsBoolean(VID_REMOVE_DCI),
+               this, &conflictingTemplateName);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_TEMPLATE_EXCLUSION_CONFLICT)
+            response.setField(VID_ERROR_TEXT, conflictingTemplateName);
       }
       else
       {

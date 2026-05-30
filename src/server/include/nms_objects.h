@@ -6278,8 +6278,11 @@ void DeleteUserFromAllObjects(uint32_t userId);
 void ClearAllObjectsInheritedAccessCache();
 
 bool IsValidParentClass(int childClass, int parentClass);
-bool IsEventSource(int objectClass);
-bool IsValidAssetLinkTargetClass(int objectClass);
+
+uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child, bool bind,
+         bool forceApply, bool removeDataCollection, GenericClientSession *session, SharedString *conflictingTemplateName);
+bool NXCORE_EXPORTABLE IsEventSource(int objectClass);
+bool NXCORE_EXPORTABLE IsValidAssetLinkTargetClass(int objectClass);
 
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);

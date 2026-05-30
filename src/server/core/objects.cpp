@@ -2199,9 +2199,14 @@ bool IsValidParentClass(int childClass, int parentClass)
 /**
  * Check if given class is a valid taget for asset link
  */
-bool IsValidAssetLinkTargetClass(int objectClass)
+bool NXCORE_EXPORTABLE IsValidAssetLinkTargetClass(int objectClass)
 {
-   return (objectClass == OBJECT_ACCESSPOINT) || (objectClass == OBJECT_CHASSIS) || (objectClass == OBJECT_MOBILEDEVICE) || (objectClass == OBJECT_NODE) || (objectClass == OBJECT_RACK) || (objectClass == OBJECT_SENSOR);
+   return (objectClass == OBJECT_ACCESSPOINT) ||
+          (objectClass == OBJECT_CHASSIS) ||
+          (objectClass == OBJECT_MOBILEDEVICE) ||
+          (objectClass == OBJECT_NODE) ||
+          (objectClass == OBJECT_RACK) ||
+          (objectClass == OBJECT_SENSOR);
 }
 
 /**
@@ -2313,7 +2318,7 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 /**
  * Returns true if object of given class can be event source
  */
-bool IsEventSource(int objectClass)
+bool NXCORE_EXPORTABLE IsEventSource(int objectClass)
 {
 	return (objectClass == OBJECT_NODE) ||
 	       (objectClass == OBJECT_CIRCUIT) ||
@@ -2575,4 +2580,127 @@ int GetMaxAllowedNodeCount()
 #else
    return 0;
 #endif
+}
+
+/**
+ * Bind or unbind a child object to/from a parent object. Shared implementation
+ * used by both the NXCP client session handler and the WebAPI binding endpoints.
+ * Validates parent/child class compatibility, handles template exclusion groups
+ * and template/cluster specific bind/unbind side effects, performs the actual
+ * link/unlink, recalculates compound status, and writes audit log entries on
+ * success. The caller is responsible for access control checks. When the result
+ * is RCC_TEMPLATE_EXCLUSION_CONFLICT the name of the conflicting template is
+ * returned via conflictingTemplateName.
+ */
+uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child, bool bind,
+      bool forceApply, bool removeDataCollection, GenericClientSession *session, SharedString *conflictingTemplateName)
+{
+   // Parent object should be container or service root,
+   // or template group/root for templates and template groups
+   // For unbind, it can also be template or cluster
+   if (!IsValidParentClass(child->getObjectClass(), parent->getObjectClass()))
+      return RCC_INCOMPATIBLE_OPERATION;
+
+   uint32_t rcc;
+   if (bind)
+   {
+      bool success = false;
+      if (parent->getObjectClass() == OBJECT_TEMPLATE)
+      {
+         // Check exclusion group
+         Template &tmpl = static_cast<Template&>(*parent);
+         SharedString exclusionGroup = tmpl.getExclusionGroup();
+         shared_ptr<NetObj> conflictingTemplate;
+         if (!exclusionGroup.isEmpty())
+         {
+            unique_ptr<SharedObjectArray<NetObj>> parents = child->getParents(OBJECT_TEMPLATE);
+            for (int i = 0; i < parents->size(); i++)
+            {
+               Template *t = static_cast<Template*>(parents->get(i));
+               if ((t->getId() != parent->getId()) && t->getExclusionGroup().str().equals(exclusionGroup.str()))
+               {
+                  conflictingTemplate = parents->getShared(i);
+                  break;
+               }
+            }
+         }
+
+         if ((conflictingTemplate != nullptr) && !forceApply)
+         {
+            if (conflictingTemplateName != nullptr)
+               *conflictingTemplateName = conflictingTemplate->getName();
+            nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"Binding of template %s [%u] to %s %s [%u] failed due to exclusion group conflict with template %s [%u]",
+                  tmpl.getName(), tmpl.getId(), child->getObjectClassName(), child->getName(), child->getId(),
+                  conflictingTemplate->getName(), conflictingTemplate->getId());
+            return RCC_TEMPLATE_EXCLUSION_CONFLICT;
+         }
+
+         if (conflictingTemplate != nullptr)
+         {
+            // Force apply - remove conflicting template first
+            nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"Force applying template %s [%u] to %s %s [%u] - removing conflicting template %s [%u]",
+                  tmpl.getName(), tmpl.getId(), child->getObjectClassName(), child->getName(), child->getId(),
+                  conflictingTemplate->getName(), conflictingTemplate->getId());
+            NetObj::unlinkObjects(conflictingTemplate.get(), child.get());
+            conflictingTemplate->calculateCompoundStatus();
+            static_cast<Template&>(*conflictingTemplate).queueRemoveFromTarget(child->getId(), true);
+         }
+         success = tmpl.applyToTarget(static_pointer_cast<DataCollectionTarget>(child));
+         if (success)
+         {
+            static_cast<DataCollectionOwner&>(*child).applyDCIChanges(false);
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_DCI_COPY_ERRORS;
+         }
+      }
+      else
+      {
+         // Prevent loops
+         if (!child->isChild(parent->getId()))
+         {
+            NetObj::linkObjects(parent, child);
+            parent->calculateCompoundStatus();
+            rcc = RCC_SUCCESS;
+            success = true;
+         }
+         else
+         {
+            rcc = RCC_OBJECT_LOOP;
+         }
+      }
+      if (success)
+      {
+         session->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] bound to %s %s [%u] as parent object"),
+               parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
+         session->writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] bound to %s %s [%u] as child object"),
+               child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+      }
+   }
+   else if (child->isDirectParent(parent->getId()))
+   {
+      NetObj::unlinkObjects(parent.get(), child.get());
+      parent->calculateCompoundStatus();
+      if ((parent->getObjectClass() == OBJECT_TEMPLATE) && child->isDataCollectionTarget())
+      {
+         static_cast<Template&>(*parent).queueRemoveFromTarget(child->getId(), removeDataCollection);
+      }
+      else if ((parent->getObjectClass() == OBJECT_CLUSTER) && (child->getObjectClass() == OBJECT_NODE))
+      {
+         static_pointer_cast<Cluster>(parent)->removeNode(static_pointer_cast<Node>(child));
+      }
+      rcc = RCC_SUCCESS;
+
+      session->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), _T("%s %s [%u] unbound from %s %s [%u] as parent object"),
+            parent->getObjectClassName(), parent->getName(), parent->getId(), child->getObjectClassName(), child->getName(), child->getId());
+      session->writeAuditLog(AUDIT_OBJECTS, true, child->getId(), _T("%s %s [%u] unbound from %s %s [%u] as child object"),
+            child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+   }
+   else
+   {
+      rcc = RCC_INVALID_ARGUMENT;
+   }
+   return rcc;
 }

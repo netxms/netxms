@@ -3171,6 +3171,91 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/children/{child-id}:
+    put:
+      operationId: bindObjectChild
+      summary: Bind child object to parent
+      description: Bind the object identified by child-id to the object identified by object-id as a parent. When the parent is a template the template is applied to the child. Requires modify access to both the parent and the child object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Parent object ID
+        - name: child-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Child object ID
+        - name: force
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: When true, override a template exclusion group conflict by removing the conflicting template first.
+      responses:
+        '200':
+          description: Child object bound successfully. Returns full details of the child object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Invalid request or incompatible parent/child object classes
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to parent or child object
+        '404':
+          description: Parent or child object with given ID does not exist
+        '409':
+          description: Binding would create a loop, or conflicts with a template from the same exclusion group
+        '500':
+          description: Errors occurred while copying data collection configuration from template
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: unbindObjectChild
+      summary: Unbind child object from parent
+      description: Unbind the object identified by child-id from the object identified by object-id. Requires modify access to both the parent and the child object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Parent object ID
+        - name: child-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Child object ID
+        - name: remove-dci
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: When true and unbinding a template from a data collection target, remove data collection items that were created from the template.
+      responses:
+        '204':
+          description: Child object unbound successfully
+        '400':
+          description: Invalid request, or child object is not a direct child of the parent
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to parent or child object
+        '404':
+          description: Parent or child object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/execute-agent-command:
     post:
       operationId: executeAgentCommand
