@@ -3642,7 +3642,7 @@ json_t *NetObj::toJson(bool includeSensitiveData)
       {
          ResponsibleUser *r = m_responsibleUsers->get(i);
          json_t *jr = json_object();
-         json_object_set_new(jr, "id", json_integer(r->userId));
+         json_object_set_new(jr, "userId", json_integer(r->userId));
          json_object_set_new(jr, "tag", json_string_t(r->tag));
          json_array_append_new(responsibleUsers, jr);
       }

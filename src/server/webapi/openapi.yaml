@@ -8230,6 +8230,18 @@ components:
         name:
           type: string
           description: Object name
+        responsibleUsers:
+          type: array
+          description: Users or groups responsible for the object (the object's own list; entries inherited from parent objects are not included).
+          items:
+            type: object
+            properties:
+              userId:
+                type: integer
+                description: User or group ID
+              tag:
+                type: string
+                description: Responsible user tag
         timestamp:
           type: string
           format: date-time
