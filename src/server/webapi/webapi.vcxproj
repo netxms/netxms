@@ -381,6 +381,9 @@
     <ProjectReference Include="..\..\libnxsl\libnxsl.vcxproj">
       <Project>{b2988503-1921-4b9f-bbc1-5e5cf62f335e}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\snmp\libnxsnmp\libnxsnmp.vcxproj">
+      <Project>{7dc90ee4-e31c-4f12-8f1e-81f10e9099fb}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\core\nxcore.vcxproj">
       <Project>{3b172035-5eec-45a3-8471-2c390b7ed683}</Project>
     </ProjectReference>
