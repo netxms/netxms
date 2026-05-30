@@ -106,7 +106,7 @@ extreme_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-fortinet_la_SOURCES = fortinet/fortigate.cpp fortinet/fortinet.cpp
+fortinet_la_SOURCES = fortinet/fortigate.cpp fortinet/fortiswitch.cpp fortinet/fortinet.cpp
 fortinet_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 fortinet_la_LDFLAGS = -module -avoid-version
 fortinet_la_LIBADD = ../../libnetxms/libnetxms.la \

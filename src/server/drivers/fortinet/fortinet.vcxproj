@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="fortigate.cpp" />
+    <ClCompile Include="fortiswitch.cpp" />
     <ClCompile Include="fortinet.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -46,4 +46,20 @@ public:
             uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
 };
 
+/**
+ * Driver for Fortinet FortiSwitch devices
+ */
+class FortiSwitchDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData) override;
+   virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData) override;
+};
+
 #endif

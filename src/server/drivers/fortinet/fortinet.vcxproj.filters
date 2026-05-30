@@ -21,6 +21,9 @@
     <ClCompile Include="fortigate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fortiswitch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h">
