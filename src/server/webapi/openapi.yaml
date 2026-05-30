@@ -2878,6 +2878,256 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/dashboards:
+    put:
+      operationId: updateObjectDashboards
+      summary: Replace associated dashboards
+      description: |
+        Replace the full list of dashboards and network maps associated with the object.
+        The body is a JSON array of object IDs; the previous list is replaced entirely.
+        An empty array clears all associations.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+              description: Object IDs of associated dashboards / network maps.
+      responses:
+        '200':
+          description: Dashboard associations replaced; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body (not a JSON array of integers).
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/trusted-objects:
+    put:
+      operationId: updateObjectTrustedObjects
+      summary: Replace trusted objects
+      description: |
+        Replace the full list of trusted object IDs. The body is a JSON array of object
+        IDs; the previous list is replaced entirely. An empty array clears the trust list.
+        The list may not contain the object's own ID or references to non-existent objects.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+              description: Object IDs of trusted objects.
+      responses:
+        '200':
+          description: Trusted objects replaced; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: |
+            Malformed request body, the list contains the object's own ID
+            ("Cannot trust object itself"), or a referenced object does not exist
+            ("Trusted object N not found").
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/urls:
+    get:
+      operationId: getObjectUrls
+      summary: Get object URLs
+      description: Retrieve the list of URLs associated with the object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Array of associated URLs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectUrl'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    post:
+      operationId: createObjectUrl
+      summary: Add an object URL
+      description: |
+        Add a new URL to the object. The server assigns the URL ID. The created
+        resource is returned and its location is provided in the `Location` header.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  description: The URL (1-2000 characters).
+                description:
+                  type: string
+                  nullable: true
+                  description: Optional human-readable description (max 2000 characters).
+      responses:
+        '201':
+          description: URL created.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Path of the created URL resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectUrl'
+        '400':
+          description: Missing or invalid url/description.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/urls/{url-id}:
+    put:
+      operationId: updateObjectUrl
+      summary: Update an object URL
+      description: Update an existing associated URL identified by its ID.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: url-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  description: The URL (1-2000 characters).
+                description:
+                  type: string
+                  nullable: true
+                  description: Optional human-readable description (max 2000 characters).
+      responses:
+        '200':
+          description: URL updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectUrl'
+        '400':
+          description: Missing or invalid url/description.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object or URL with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteObjectUrl
+      summary: Delete an object URL
+      description: Remove an associated URL identified by its ID.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: url-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: URL deleted.
+        '400':
+          description: Invalid URL ID.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object or URL with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/children:
     get:
       operationId: getObjectChildren
@@ -8209,6 +8459,18 @@ components:
           type: string
           format: date-time
           description: Last change time of the alarm
+    ObjectUrl:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: URL ID (assigned by the server)
+        url:
+          type: string
+          description: The URL
+        description:
+          type: string
+          description: Human-readable description
     ObjectDetails:
       type: object
       properties:

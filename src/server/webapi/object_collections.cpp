@@ -277,3 +277,282 @@ int H_ObjectResponsibleUserDelete(Context *context)
    }
    return 204;
 }
+
+/**
+ * Parse the request body as a JSON array of object identifiers into the given
+ * IntegerArray. On failure writes a 400 error response and returns false.
+ */
+static bool ParseObjectIdArray(json_t *request, IntegerArray<uint32_t> *out, Context *context)
+{
+   if (!json_is_array(request))
+   {
+      context->setErrorResponse("Request body must be a JSON array of object identifiers");
+      return false;
+   }
+   size_t i;
+   json_t *element;
+   json_array_foreach(request, i, element)
+   {
+      if (!json_is_integer(element))
+      {
+         context->setErrorResponse("Object identifier list must contain only integers");
+         return false;
+      }
+      out->add(static_cast<uint32_t>(json_integer_value(element)));
+   }
+   return true;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/dashboards
+ * Replaces the full list of dashboards/network maps associated with the object.
+ * Body is a JSON array of object IDs.
+ */
+int H_ObjectDashboards(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Request body must be a JSON array");
+      return 400;
+   }
+
+   IntegerArray<uint32_t> dashboards;
+   if (!ParseObjectIdArray(request, &dashboards, context))
+      return 400;
+
+   json_t *oldSnapshot = object->toJson(false);
+   object->setDashboards(dashboards);
+
+   json_t *newSnapshot = object->toJson(false);
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
+      L"Associated dashboards of object %s [%u] changed", object->getName(), object->getId());
+   json_decref(oldSnapshot);
+
+   context->setResponseData(newSnapshot);
+   json_decref(newSnapshot);
+   return 200;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/trusted-objects
+ * Replaces the full list of trusted object IDs. Body is a JSON array of object
+ * IDs. Rejects the object's own ID and references to non-existent objects.
+ */
+int H_ObjectTrustedObjects(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Request body must be a JSON array");
+      return 400;
+   }
+
+   IntegerArray<uint32_t> trustedObjects;
+   if (!ParseObjectIdArray(request, &trustedObjects, context))
+      return 400;
+
+   for(int i = 0; i < trustedObjects.size(); i++)
+   {
+      uint32_t id = trustedObjects.get(i);
+      if (id == object->getId())
+      {
+         context->setErrorResponse("Cannot trust object itself");
+         return 400;
+      }
+      if (FindObjectById(id) == nullptr)
+      {
+         wchar_t message[64];
+         _sntprintf(message, 64, L"Trusted object %u not found", id);
+         context->setErrorResponse(message);
+         return 400;
+      }
+   }
+
+   json_t *oldSnapshot = object->toJson(false);
+   object->setTrustedObjects(trustedObjects);
+
+   json_t *newSnapshot = object->toJson(false);
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
+      L"Trusted objects of object %s [%u] changed", object->getName(), object->getId());
+   json_decref(oldSnapshot);
+
+   context->setResponseData(newSnapshot);
+   json_decref(newSnapshot);
+   return 200;
+}
+
+/**
+ * Maximum length of a URL or its description (matches object_urls varchar(2000)).
+ */
+#define MAX_OBJECT_URL_LEN  2000
+
+/**
+ * Read and validate the { url, description } body for a URL create/update. On
+ * failure writes a 400 error response and returns false. "url" is required and
+ * non-empty; "description" is optional (absent/null treated as empty string).
+ */
+static bool ParseUrlBody(Context *context, SharedString *url, SharedString *description)
+{
+   json_t *request = context->getRequestDocument();
+   if ((request == nullptr) || !json_is_object(request))
+   {
+      context->setErrorResponse("Request body must be a JSON object");
+      return false;
+   }
+
+   json_t *jsonUrl = json_object_get(request, "url");
+   if (!json_is_string(jsonUrl))
+   {
+      context->setErrorResponse("Field \"url\" is required and must be a string");
+      return false;
+   }
+   json_t *jsonDescription = json_object_get(request, "description");
+   if ((jsonDescription != nullptr) && !json_is_string(jsonDescription) && !json_is_null(jsonDescription))
+   {
+      context->setErrorResponse("Field \"description\" must be a string");
+      return false;
+   }
+
+   *url = SharedString(json_string_value(jsonUrl), "utf8");
+   if (url->isEmpty())
+   {
+      context->setErrorResponse("Field \"url\" cannot be empty");
+      return false;
+   }
+   if (url->length() > MAX_OBJECT_URL_LEN)
+   {
+      context->setErrorResponse("Field \"url\" is too long");
+      return false;
+   }
+
+   *description = json_is_string(jsonDescription) ? SharedString(json_string_value(jsonDescription), "utf8") : SharedString(L"");
+   if (description->length() > MAX_OBJECT_URL_LEN)
+   {
+      context->setErrorResponse("Field \"description\" is too long");
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Build the JSON representation of a single URL: { id, url, description }.
+ */
+static json_t *UrlToJson(uint32_t urlId, const SharedString& url, const SharedString& description)
+{
+   json_t *entry = json_object();
+   json_object_set_new(entry, "id", json_integer(urlId));
+   json_object_set_new(entry, "url", json_string_t(url.cstr()));
+   json_object_set_new(entry, "description", json_string_t(description.cstr()));
+   return entry;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/urls
+ * Returns the object's associated URLs as an array of { id, url, description }.
+ */
+int H_ObjectUrls(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_READ, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *output = object->getUrlsAsJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for POST /v1/objects/:object-id/urls
+ * Creates a new associated URL. The server assigns the URL ID.
+ */
+int H_ObjectUrlCreate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   SharedString url, description;
+   if (!ParseUrlBody(context, &url, &description))
+      return 400;
+
+   uint32_t urlId = object->addUrl(url, description);
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+      L"URL [%u] \"%s\" added to object %s [%u]", urlId, url.cstr(), object->getName(), object->getId());
+
+   wchar_t location[256];
+   _sntprintf(location, 256, L"/v1/objects/%u/urls/%u", object->getId(), urlId);
+   context->setResponseHeader(L"Location", location);
+
+   json_t *output = UrlToJson(urlId, url, description);
+   context->setResponseData(output);
+   json_decref(output);
+   return 201;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/urls/:url-id
+ * Updates an existing associated URL.
+ */
+int H_ObjectUrlUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   uint32_t urlId = context->getPlaceholderValueAsUInt32(L"url-id");
+   if (urlId == 0)
+      return 400;
+
+   SharedString url, description;
+   if (!ParseUrlBody(context, &url, &description))
+      return 400;
+
+   if (!object->updateUrl(urlId, url, description))
+      return 404;
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+      L"URL [%u] of object %s [%u] changed to \"%s\"", urlId, object->getName(), object->getId(), url.cstr());
+
+   json_t *output = UrlToJson(urlId, url, description);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id/urls/:url-id
+ * Removes an associated URL.
+ */
+int H_ObjectUrlDelete(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   uint32_t urlId = context->getPlaceholderValueAsUInt32(L"url-id");
+   if (urlId == 0)
+      return 400;
+
+   if (!object->deleteUrl(urlId))
+      return 404;
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
+      L"URL [%u] removed from object %s [%u]", urlId, object->getName(), object->getId());
+   return 204;
+}

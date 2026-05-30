@@ -2840,6 +2840,29 @@ bool NetObj::isTrustedObject(uint32_t id) const
 }
 
 /**
+ * Replace full list of trusted objects. An empty list clears the trust list.
+ */
+void NetObj::setTrustedObjects(const IntegerArray<uint32_t>& trustedObjects)
+{
+   lockProperties();
+   if (trustedObjects.isEmpty())
+   {
+      delete_and_null(m_trustedObjects);
+   }
+   else if (m_trustedObjects != nullptr)
+   {
+      m_trustedObjects->clear();
+      m_trustedObjects->addAll(trustedObjects);
+   }
+   else
+   {
+      m_trustedObjects = new IntegerArray<uint32_t>(trustedObjects);
+   }
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+}
+
+/**
  * Get list of parent objects for NXSL script
  */
 NXSL_Value *NetObj::getParentsForNXSL(NXSL_VM *vm)
@@ -4675,4 +4698,88 @@ bool NetObj::removeDashboard(uint32_t id)
    }
    unlockProperties();
    return index != -1;
+}
+
+/**
+ * Replace full list of associated dashboards
+ */
+void NetObj::setDashboards(const IntegerArray<uint32_t>& dashboards)
+{
+   lockProperties();
+   m_dashboards.clear();
+   m_dashboards.addAll(dashboards);
+   setModified(MODIFY_DASHBOARD_LIST);
+   unlockProperties();
+}
+
+/**
+ * Get associated URLs as JSON array
+ */
+json_t *NetObj::getUrlsAsJson() const
+{
+   lockProperties();
+   json_t *urls = json_object_array(m_urls);
+   unlockProperties();
+   return urls;
+}
+
+/**
+ * Add new associated URL. Server assigns a unique ID. Returns the new URL ID.
+ */
+uint32_t NetObj::addUrl(const wchar_t *url, const wchar_t *description)
+{
+   lockProperties();
+   uint32_t urlId = 1;
+   for(int i = 0; i < m_urls.size(); i++)
+   {
+      uint32_t id = m_urls.get(i)->getId();
+      if (id >= urlId)
+         urlId = id + 1;
+   }
+   m_urls.add(new ObjectUrl(urlId, url, description));
+   setModified(MODIFY_OBJECT_URLS);
+   unlockProperties();
+   return urlId;
+}
+
+/**
+ * Update existing associated URL. Returns false if URL with given ID does not exist.
+ */
+bool NetObj::updateUrl(uint32_t urlId, const wchar_t *url, const wchar_t *description)
+{
+   lockProperties();
+   bool found = false;
+   for(int i = 0; i < m_urls.size(); i++)
+   {
+      if (m_urls.get(i)->getId() == urlId)
+      {
+         m_urls.replace(i, new ObjectUrl(urlId, url, description));
+         setModified(MODIFY_OBJECT_URLS);
+         found = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return found;
+}
+
+/**
+ * Delete associated URL. Returns false if URL with given ID does not exist.
+ */
+bool NetObj::deleteUrl(uint32_t urlId)
+{
+   lockProperties();
+   bool found = false;
+   for(int i = 0; i < m_urls.size(); i++)
+   {
+      if (m_urls.get(i)->getId() == urlId)
+      {
+         m_urls.remove(i);
+         setModified(MODIFY_OBJECT_URLS);
+         found = true;
+         break;
+      }
+   }
+   unlockProperties();
+   return found;
 }

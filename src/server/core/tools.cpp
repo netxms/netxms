@@ -434,6 +434,16 @@ ObjectUrl::ObjectUrl(DB_RESULT hResult, int row)
 }
 
 /**
+ * Create object URL from explicit values
+ */
+ObjectUrl::ObjectUrl(uint32_t id, const TCHAR *url, const TCHAR *description)
+{
+   m_id = id;
+   m_url = MemCopyString(url);
+   m_description = MemCopyString(description);
+}
+
+/**
  * Object URL destructor
  */
 ObjectUrl::~ObjectUrl()

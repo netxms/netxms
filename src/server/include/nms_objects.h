@@ -1023,6 +1023,7 @@ private:
 public:
    ObjectUrl(const NXCPMessage& msg, uint32_t baseId);
    ObjectUrl(DB_RESULT hResult, int row);
+   ObjectUrl(uint32_t id, const TCHAR *url, const TCHAR *description);
    ~ObjectUrl();
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId);
@@ -1591,6 +1592,7 @@ public:
    void clearFlag(uint32_t flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    bool isTrustedObject(uint32_t id) const;
+   void setTrustedObjects(const IntegerArray<uint32_t>& trustedObjects);
 
    virtual void onCustomAttributeChange(const TCHAR *name, const TCHAR *value) override;
 
@@ -1673,6 +1675,12 @@ public:
 
    bool addDashboard(uint32_t id);
    bool removeDashboard(uint32_t id);
+   void setDashboards(const IntegerArray<uint32_t>& dashboards);
+
+   json_t *getUrlsAsJson() const;
+   uint32_t addUrl(const wchar_t *url, const wchar_t *description);
+   bool updateUrl(uint32_t urlId, const wchar_t *url, const wchar_t *description);
+   bool deleteUrl(uint32_t urlId);
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);

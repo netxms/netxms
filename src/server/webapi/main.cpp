@@ -117,6 +117,7 @@ int H_ObjectChildren(Context *context);
 int H_ObjectCustomAttributes(Context *context);
 int H_ObjectCustomAttributeUpdate(Context *context);
 int H_ObjectCustomAttributeDelete(Context *context);
+int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
 int H_ObjectPropertiesUpdate(Context *context);
@@ -124,6 +125,11 @@ int H_ObjectResponsibleUsers(Context *context);
 int H_ObjectResponsibleUserUpdate(Context *context);
 int H_ObjectResponsibleUserDelete(Context *context);
 int H_ObjectStatusCalculationUpdate(Context *context);
+int H_ObjectTrustedObjects(Context *context);
+int H_ObjectUrls(Context *context);
+int H_ObjectUrlCreate(Context *context);
+int H_ObjectUrlUpdate(Context *context);
+int H_ObjectUrlDelete(Context *context);
 int H_ObjectSubTree(Context *context);
 int H_ObjectExecuteAgentCommand(Context *context);
 int H_ObjectExecuteDashboardScript(Context *context);
@@ -457,6 +463,20 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/responsible-users/:user-id")
       .PUT(H_ObjectResponsibleUserUpdate)
       .DELETE(H_ObjectResponsibleUserDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/dashboards")
+      .PUT(H_ObjectDashboards)
+      .build();
+   RouteBuilder("v1/objects/:object-id/trusted-objects")
+      .PUT(H_ObjectTrustedObjects)
+      .build();
+   RouteBuilder("v1/objects/:object-id/urls")
+      .GET(H_ObjectUrls)
+      .POST(H_ObjectUrlCreate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/urls/:url-id")
+      .PUT(H_ObjectUrlUpdate)
+      .DELETE(H_ObjectUrlDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/location")
       .PATCH(H_ObjectLocationUpdate)
