@@ -274,6 +274,7 @@ public class LogViewer extends ViewWithContext
 		{
 			case LogColumn.LC_INTEGER:
 				return 80;
+			case LogColumn.LC_TIMESTAMP_MS:
 			case LogColumn.LC_TIMESTAMP:
 				return 120;
 			case LogColumn.LC_SEVERITY:
@@ -311,7 +312,7 @@ public class LogViewer extends ViewWithContext
             {
                orderingColumn = lc;
             }
-            else if ((orderingColumn == null) && (lc.getType() == LogColumn.LC_TIMESTAMP))
+            else if ((orderingColumn == null) && ((lc.getType() == LogColumn.LC_TIMESTAMP) || (lc.getType() == LogColumn.LC_TIMESTAMP_MS)))
             {
                orderingColumn = lc;
             }

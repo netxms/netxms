@@ -240,6 +240,17 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
             {
                return i18n.tr("<error>");
             }
+         case LogColumn.LC_TIMESTAMP_MS:
+            try
+            {
+               long timestamp = Long.parseLong(value);
+               Date date = new Date(timestamp);
+               return DateFormatFactory.getDateTimeFormat().format(date) + String.format(".%03d", timestamp % 1000);
+            }
+            catch(NumberFormatException e)
+            {
+               return i18n.tr("<error>");
+            }
 			case LogColumn.LC_USER_ID:
 				try
 				{

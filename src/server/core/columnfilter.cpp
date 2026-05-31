@@ -32,6 +32,7 @@ ColumnFilter::ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32
 
 	m_column = MemCopyStringW(column);
 	const LOG_COLUMN *cd = log->getColumnDefinition(m_column);
+	m_columnType = (cd != nullptr) ? cd->type : LC_TEXT;
 	m_columnFlags = (cd != nullptr) ? cd->flags : 0;
 
 	m_type = msg.getFieldAsInt16(baseId);
@@ -102,6 +103,10 @@ StringBuffer ColumnFilter::generateSql()
 {
 	StringBuffer sql;
 
+	// Conversion from the client-supplied epoch value to TSDB timestamptz: millisecond
+	// timestamp columns send epoch milliseconds, all other timestamp columns send epoch seconds.
+	const wchar_t *tsToTimestamp = (m_columnType == LC_TIMESTAMP_MS) ? L"ms_to_timestamptz(" : L"to_timestamp(";
+
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
@@ -111,7 +116,7 @@ StringBuffer ColumnFilter::generateSql()
 			sql.append(_T(" = "));
 			if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
 			{
-	         sql.append(_T("to_timestamp("));
+	         sql.append(tsToTimestamp);
             sql.append(m_value.numericValue);
             sql.append(_T(")"));
 			}
@@ -133,7 +138,7 @@ StringBuffer ColumnFilter::generateSql()
          sql.append(_T(" < "));
          if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
          {
-            sql.append(_T("to_timestamp("));
+            sql.append(tsToTimestamp);
             sql.append(m_value.numericValue);
             sql.append(_T(")"));
          }
@@ -149,7 +154,7 @@ StringBuffer ColumnFilter::generateSql()
          sql.append(_T(" > "));
          if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
          {
-            sql.append(_T("to_timestamp("));
+            sql.append(tsToTimestamp);
             sql.append(m_value.numericValue);
             sql.append(_T(")"));
          }
@@ -165,9 +170,10 @@ StringBuffer ColumnFilter::generateSql()
          sql.append(_T(" BETWEEN "));
          if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
          {
-            sql.append(_T("to_timestamp("));
+            sql.append(tsToTimestamp);
             sql.append(m_value.range.start);
-            sql.append(_T(") AND to_timestamp("));
+            sql.append(L") AND ");
+            sql.append(tsToTimestamp);
             sql.append(m_value.range.end);
             sql.append(_T(")"));
          }

@@ -44,13 +44,24 @@ public class TimestampConditionEditor extends ConditionEditor
 	private DateTime datePicker2;
 	private DateTime timePicker2;
 	private Label andLabel;
-	
+	private boolean millisecondTimestamp;
+
 	/**
 	 * @param parent
 	 */
    public TimestampConditionEditor(Composite parent)
 	{
+      this(parent, false);
+	}
+
+   /**
+    * @param parent
+    * @param millisecondTimestamp true if associated column stores millisecond timestamps
+    */
+   public TimestampConditionEditor(Composite parent, boolean millisecondTimestamp)
+	{
       super(parent);
+      this.millisecondTimestamp = millisecondTimestamp;
 	}
 
    /**
@@ -135,14 +146,22 @@ public class TimestampConditionEditor extends ConditionEditor
    }
 
    /**
-    * Set date/time picker pair from Unix timestamp (seconds since epoch).
+    * Set date/time picker pair from epoch timestamp (seconds or milliseconds depending on column type).
     */
-   private static void setPickerDateTime(DateTime datePicker, DateTime timePicker, long timestamp)
+   private void setPickerDateTime(DateTime datePicker, DateTime timePicker, long timestamp)
    {
       Calendar c = Calendar.getInstance();
-      c.setTimeInMillis(timestamp * 1000L);
+      c.setTimeInMillis(millisecondTimestamp ? timestamp : timestamp * 1000L);
       datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
       timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+   }
+
+   /**
+    * Convert calendar time in milliseconds to the unit expected for this column (seconds or milliseconds).
+    */
+   private long toFilterValue(long millis)
+   {
+      return millisecondTimestamp ? millis : millis / 1000;
    }
 
    /**
@@ -187,7 +206,7 @@ public class TimestampConditionEditor extends ConditionEditor
 		c.clear();
 		c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
 				timePicker1.getHours(), timePicker1.getMinutes(), timePicker1.getSeconds());
-		final long timestamp = c.getTimeInMillis() / 1000;
+		final long timestamp = toFilterValue(c.getTimeInMillis());
 
 		ColumnFilter filter;
 		switch(getSelectedOperation())
@@ -196,7 +215,7 @@ public class TimestampConditionEditor extends ConditionEditor
 				c.clear();
 				c.set(datePicker2.getYear(), datePicker2.getMonth(), datePicker2.getDay(),
 						timePicker2.getHours(), timePicker2.getMinutes(), timePicker2.getSeconds());
-				filter = new ColumnFilter(timestamp, c.getTimeInMillis() / 1000);
+				filter = new ColumnFilter(timestamp, toFilterValue(c.getTimeInMillis()));
 				break;
 			case 1:	// before
 				filter = new ColumnFilter(ColumnFilterType.LESS, timestamp);
@@ -208,11 +227,11 @@ public class TimestampConditionEditor extends ConditionEditor
 			   c.clear();
 			   c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
 		            0, 0, 0);
-			   long from = c.getTimeInMillis() / 1000;
+			   long from = toFilterValue(c.getTimeInMillis());
 			   c.clear();
 			   c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
                   23, 59, 59);
-			   long to = c.getTimeInMillis() / 1000;
+			   long to = toFilterValue(c.getTimeInMillis());
 			   filter = new ColumnFilter(from, to);
 			   break;
 			default:

@@ -129,7 +129,7 @@ When using `get-log-schema`, columns have the following types:
 |------|-------------|
 | text | Free-form text |
 | text_details | Large text (details view) |
-| timestamp | Unix timestamp |
+| timestamp | Point in time (column may store second or millisecond precision; always returned in results as an ISO-8601 UTC string with milliseconds) |
 | integer | Numeric value |
 | object_id | Reference to NetXMS object |
 | user_id | Reference to user |
@@ -140,9 +140,12 @@ When using `get-log-schema`, columns have the following types:
 
 ## Time Parameters
 
-All time parameters support:
+Input time parameters (e.g. `time_from` / `time_to`) support:
 - **ISO 8601 format**: `2026-01-07T10:30:00Z`
 - **Relative format**: `-60m` (60 minutes ago), `-1h` (1 hour ago), `-1d` (1 day ago)
+- **Epoch seconds**: a plain integer number of seconds since the Unix epoch
+
+Output time values: timestamp columns in returned log records are always emitted as ISO-8601 UTC strings with millisecond precision (e.g. `2026-05-31T12:34:56.789Z`). Logs whose timestamps have only second resolution report `.000` for the milliseconds. Read the ISO string directly — no epoch-integer conversion is needed.
 
 ## Pattern Types
 

@@ -233,6 +233,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			case LogColumn.LC_TIMESTAMP:
             editor = new TimestampConditionEditor(this);
             break;
+         case LogColumn.LC_TIMESTAMP_MS:
+            editor = new TimestampConditionEditor(this, true);
+            break;
 			case LogColumn.LC_USER_ID:
             editor = new UserConditionEditor(this);
             break;

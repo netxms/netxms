@@ -358,6 +358,7 @@ static const char *GetColumnTypeName(int type)
       case LC_USER_ID:          return "user_id";
       case LC_EVENT_CODE:       return "event_code";
       case LC_TIMESTAMP:        return "timestamp";
+      case LC_TIMESTAMP_MS:     return "timestamp";
       case LC_INTEGER:          return "integer";
       case LC_ALARM_STATE:      return "alarm_state";
       case LC_ALARM_HD_STATE:   return "alarm_hd_state";
@@ -540,12 +541,14 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
 
    // Find timestamp column
    const TCHAR *timestampColumn = nullptr;
+   bool timestampColumnIsMs = false;
    for (int i = 0; log->columns[i].name != nullptr; i++)
    {
-      if ((log->columns[i].type == LC_TIMESTAMP) &&
+      if (((log->columns[i].type == LC_TIMESTAMP) || (log->columns[i].type == LC_TIMESTAMP_MS)) &&
           (log->columns[i].flags & LCF_TSDB_TIMESTAMPTZ))
       {
          timestampColumn = log->columns[i].name;
+         timestampColumnIsMs = (log->columns[i].type == LC_TIMESTAMP_MS);
          break;
       }
    }
@@ -554,9 +557,10 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
       // Fallback: use first timestamp column
       for (int i = 0; log->columns[i].name != nullptr; i++)
       {
-         if (log->columns[i].type == LC_TIMESTAMP)
+         if ((log->columns[i].type == LC_TIMESTAMP) || (log->columns[i].type == LC_TIMESTAMP_MS))
          {
             timestampColumn = log->columns[i].name;
+            timestampColumnIsMs = (log->columns[i].type == LC_TIMESTAMP_MS);
             break;
          }
       }
@@ -608,9 +612,10 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
       firstCol = false;
 
       const LOG_COLUMN *col = &log->columns[i];
-      if ((col->type == LC_TIMESTAMP) && useTsdbTimestamp && (col->flags & LCF_TSDB_TIMESTAMPTZ))
+      if (((col->type == LC_TIMESTAMP) || (col->type == LC_TIMESTAMP_MS)) && useTsdbTimestamp && (col->flags & LCF_TSDB_TIMESTAMPTZ))
       {
-         query.appendFormattedString(_T("date_part('epoch',%s)::int AS %s"),
+         // Project timestamptz columns as epoch milliseconds; formatted as ISO-8601 on output
+         query.appendFormattedString(_T("timestamptz_to_ms(%s) AS %s"),
                                       col->name, col->name);
       }
       else
@@ -621,10 +626,13 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
 
    query.appendFormattedString(_T(" FROM %s WHERE "), log->table);
 
-   // Time filter
+   // Time filter (time_from/time_to are epoch seconds)
    if (useTsdbTimestamp)
       query.appendFormattedString(_T("%s BETWEEN to_timestamp(%u) AND to_timestamp(%u)"),
                                    timestampColumn, static_cast<uint32_t>(timeFrom), static_cast<uint32_t>(timeTo));
+   else if (timestampColumnIsMs)
+      query.appendFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT,
+                                   timestampColumn, static_cast<int64_t>(timeFrom) * 1000, static_cast<int64_t>(timeTo) * 1000);
    else
       query.appendFormattedString(_T("%s BETWEEN %u AND %u"),
                                    timestampColumn, static_cast<uint32_t>(timeFrom), static_cast<uint32_t>(timeTo));
@@ -767,7 +775,14 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
                   break;
 
                case LC_TIMESTAMP:
-                  json_object_set_new(record, colNameUtf8, json_integer(DBGetFieldULong(hResult, row, colIndex)));
+               case LC_TIMESTAMP_MS:
+                  {
+                     int64_t ts = DBGetFieldInt64(hResult, row, colIndex);
+                     // Normalize to epoch milliseconds: TSDB projects ms (timestamptz_to_ms);
+                     // non-TSDB stores raw epoch seconds or milliseconds depending on column type
+                     int64_t ms = useTsdbTimestamp ? ts : ((col->type == LC_TIMESTAMP_MS) ? ts : ts * 1000);
+                     json_object_set_new(record, colNameUtf8, json_time_string_ms(ms));
+                  }
                   break;
 
                case LC_OBJECT_ID:
@@ -1007,7 +1022,7 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
          json_t *msg = json_object();
 
          json_object_set_new(msg, "id", json_integer(DBGetFieldInt64(hResult, i, 0)));
-         json_object_set_new(msg, "timestamp", json_integer(DBGetFieldULong(hResult, i, 1)));
+         json_object_set_new(msg, "timestamp", json_time_string(DBGetFieldULong(hResult, i, 1)));
 
          uint32_t objId = DBGetFieldULong(hResult, i, 2);
          json_object_set_new(msg, "sourceObjectId", json_integer(objId));
@@ -1238,8 +1253,8 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
          json_t *event = json_object();
 
          json_object_set_new(event, "id", json_integer(DBGetFieldInt64(hResult, i, 0)));
-         json_object_set_new(event, "timestamp", json_integer(DBGetFieldULong(hResult, i, 1)));
-         json_object_set_new(event, "originTimestamp", json_integer(DBGetFieldULong(hResult, i, 2)));
+         json_object_set_new(event, "timestamp", json_time_string(DBGetFieldULong(hResult, i, 1)));
+         json_object_set_new(event, "originTimestamp", json_time_string(DBGetFieldULong(hResult, i, 2)));
 
          uint32_t objId = DBGetFieldULong(hResult, i, 3);
          json_object_set_new(event, "nodeId", json_integer(objId));
@@ -1403,7 +1418,7 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
          json_t *trap = json_object();
 
          json_object_set_new(trap, "id", json_integer(DBGetFieldInt64(hResult, i, 0)));
-         json_object_set_new(trap, "timestamp", json_integer(DBGetFieldULong(hResult, i, 1)));
+         json_object_set_new(trap, "timestamp", json_time_string(DBGetFieldULong(hResult, i, 1)));
 
          uint32_t objId = DBGetFieldULong(hResult, i, 2);
          json_object_set_new(trap, "objectId", json_integer(objId));
@@ -1657,8 +1672,8 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
          json_t *event = json_object();
 
          json_object_set_new(event, "id", json_integer(DBGetFieldInt64(hResult, i, 0)));
-         json_object_set_new(event, "timestamp", json_integer(DBGetFieldULong(hResult, i, 1)));
-         json_object_set_new(event, "originTimestamp", json_integer(DBGetFieldULong(hResult, i, 2)));
+         json_object_set_new(event, "timestamp", json_time_string(DBGetFieldULong(hResult, i, 1)));
+         json_object_set_new(event, "originTimestamp", json_time_string(DBGetFieldULong(hResult, i, 2)));
 
          uint32_t objId = DBGetFieldULong(hResult, i, 3);
          json_object_set_new(event, "sourceObjectId", json_integer(objId));
@@ -1837,10 +1852,10 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
       if (useTsdbTimestamp)
       {
          if (!stricmp(groupBy, "hour"))
-            statsQuery.appendFormattedString(_T("SELECT date_trunc('hour', %s) AS period, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY period ORDER BY period DESC"),
+            statsQuery.appendFormattedString(_T("SELECT date_part('epoch', date_trunc('hour', %s))::bigint AS period, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY period ORDER BY period DESC"),
                                               timestampColumn, tableName, whereClause.cstr());
          else
-            statsQuery.appendFormattedString(_T("SELECT date_trunc('day', %s) AS period, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY period ORDER BY period DESC"),
+            statsQuery.appendFormattedString(_T("SELECT date_part('epoch', date_trunc('day', %s))::bigint AS period, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY period ORDER BY period DESC"),
                                               timestampColumn, tableName, whereClause.cstr());
       }
       else
@@ -1858,7 +1873,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
          for (int i = 0; i < count; i++)
          {
             json_t *stat = json_object();
-            json_object_set_new(stat, "period", json_integer(DBGetFieldInt64(hResult, i, 0)));
+            json_object_set_new(stat, "period", json_time_string(DBGetFieldInt64(hResult, i, 0)));
             json_object_set_new(stat, "count", json_integer(DBGetFieldInt64(hResult, i, 1)));
             json_array_append_new(statistics, stat);
          }
@@ -2447,8 +2462,8 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    json_t *output = json_object();
 
    json_t *correlationWindow = json_object();
-   json_object_set_new(correlationWindow, "from", json_integer(timeFrom));
-   json_object_set_new(correlationWindow, "to", json_integer(timeTo));
+   json_object_set_new(correlationWindow, "from", json_time_string(timeFrom));
+   json_object_set_new(correlationWindow, "to", json_time_string(timeTo));
    json_object_set_new(output, "correlationWindow", correlationWindow);
 
    json_t *primaryObj = json_object();
@@ -2474,7 +2489,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    {
       TimelineEntry *entry = timeline.get(i);
       json_t *item = json_object();
-      json_object_set_new(item, "timestamp", json_integer(entry->timestamp));
+      json_object_set_new(item, "timestamp", json_time_string(entry->timestamp));
       json_object_set_new(item, "type", json_string(entry->type));
       json_object_set_new(item, "objectId", json_integer(entry->objectId));
       if (!entry->objectName.isEmpty())
@@ -2815,8 +2830,8 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    json_t *output = json_object();
 
    json_t *analysisWindow = json_object();
-   json_object_set_new(analysisWindow, "from", json_integer(timeFrom));
-   json_object_set_new(analysisWindow, "to", json_integer(timeTo));
+   json_object_set_new(analysisWindow, "from", json_time_string(timeFrom));
+   json_object_set_new(analysisWindow, "to", json_time_string(timeTo));
    json_object_set_new(output, "analysisWindow", analysisWindow);
 
    json_t *baseline = json_object();
@@ -2840,7 +2855,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
             if (zScore >= 3.0)
             {
                json_t *burst = json_object();
-               json_object_set_new(burst, "timestamp", json_integer(bucket->startTime));
+               json_object_set_new(burst, "timestamp", json_time_string(bucket->startTime));
                json_object_set_new(burst, "durationSeconds", json_integer(bucketSize));
                json_object_set_new(burst, "messageCount", json_integer(bucket->totalCount));
                json_object_set_new(burst, "normalRate", json_real(mean));
@@ -2903,8 +2918,8 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
                json_object_set_new(pattern, "intervalSeconds", json_integer(expectedInterval));
                json_object_set_new(pattern, "intervalDescription", json_string(s_intervalNames[j]));
                json_object_set_new(pattern, "regularity", json_real(regularity));
-               json_object_set_new(pattern, "firstSeen", json_integer(stats->firstSeen));
-               json_object_set_new(pattern, "lastSeen", json_integer(stats->lastSeen));
+               json_object_set_new(pattern, "firstSeen", json_time_string(stats->firstSeen));
+               json_object_set_new(pattern, "lastSeen", json_time_string(stats->lastSeen));
                json_array_append_new(recurring, pattern);
                break;
             }
@@ -2943,7 +2958,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
          PatternStats *stats = newPatternsList.get(i);
          json_t *pattern = json_object();
          json_object_set_new(pattern, "pattern", json_string_t(stats->pattern));
-         json_object_set_new(pattern, "firstSeen", json_integer(stats->firstSeen));
+         json_object_set_new(pattern, "firstSeen", json_time_string(stats->firstSeen));
          json_object_set_new(pattern, "count", json_integer(stats->count));
          json_object_set_new(pattern, "severity", json_integer(stats->maxSeverity));
 
@@ -2997,8 +3012,8 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
          json_t *pattern = json_object();
          json_object_set_new(pattern, "pattern", json_string_t(stats->pattern));
          json_object_set_new(pattern, "count", json_integer(stats->count));
-         json_object_set_new(pattern, "firstSeen", json_integer(stats->firstSeen));
-         json_object_set_new(pattern, "lastSeen", json_integer(stats->lastSeen));
+         json_object_set_new(pattern, "firstSeen", json_time_string(stats->firstSeen));
+         json_object_set_new(pattern, "lastSeen", json_time_string(stats->lastSeen));
          json_array_append_new(topPatterns, pattern);
       }
 

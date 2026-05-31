@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,9 +203,10 @@ bool AccessList::getCachedUserRights(uint32_t userId, uint32_t *accessRights) co
  */
 void AccessList::enumerateElements(void (*handler)(uint32_t, uint32_t, void *), void *context) const
 {
-   LockGuard lockGuard(m_mutex);
+   m_mutex.lock();
    for(int i = 0; i < m_elements.size(); i++)
       handler(m_elements.get(i)->userId, m_elements.get(i)->accessRights, context);
+   m_mutex.unlock();
 }
 
 /**

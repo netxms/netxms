@@ -137,9 +137,20 @@ void LogHandle::buildQueryColumnList()
 		}
 		if ((column->flags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
       {
-         m_queryColumns.append(_T("date_part('epoch',"));
-         m_queryColumns.append(column->name);
-         m_queryColumns.append(_T(")::int"));
+         if (column->type == LC_TIMESTAMP_MS)
+         {
+            // Millisecond timestamp column - project timestamptz as epoch milliseconds
+            m_queryColumns.append(L"timestamptz_to_ms(");
+            m_queryColumns.append(column->name);
+            m_queryColumns.append(L")");
+         }
+         else
+         {
+            // Project timestamptz as epoch seconds
+            m_queryColumns.append(L"date_part('epoch',");
+            m_queryColumns.append(column->name);
+            m_queryColumns.append(L")::int");
+         }
       }
 		else
 		{

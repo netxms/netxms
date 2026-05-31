@@ -1277,15 +1277,17 @@ public:
 
    void deleteAll()
    {
-      LockGuard lockGuard(m_mutex);
+      m_mutex.lock();
       m_elements.clear();
       m_cache.clear();
+      m_mutex.unlock();
    }
 
    void clearCache()
    {
-      LockGuard lockGuard(m_mutex);
+      m_mutex.lock();
       m_cache.clear();
+      m_mutex.unlock();
    }
 
    bool getUserRights(uint32_t userId, uint32_t *accessRights) const;

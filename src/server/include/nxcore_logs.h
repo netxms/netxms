@@ -51,6 +51,7 @@
 #define LC_AI_TASK_STATUS     18
 #define LC_MAC_ADDRESS        19
 #define LC_CONNECTION_EVENT   20
+#define LC_TIMESTAMP_MS       21
 
 /**
  * Column filter types
@@ -124,6 +125,7 @@ private:
    int m_varCount;   // Number of variables read from NXCP message during construction
    int m_type;
    wchar_t *m_column;
+   int m_columnType;
    uint32_t m_columnFlags;
    bool m_negated;
 	union t_ColumnFilterValue
