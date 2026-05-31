@@ -402,7 +402,7 @@ int H_ObjectTrustedObjects(Context *context)
  * failure writes a 400 error response and returns false. "url" is required and
  * non-empty; "description" is optional (absent/null treated as empty string).
  */
-static bool ParseUrlBody(Context *context, SharedString *url, SharedString *description)
+static bool ParseUrlBody(Context *context, std::string *url, std::string *description)
 {
    json_t *request = context->getRequestDocument();
    if ((request == nullptr) || !json_is_object(request))
@@ -424,8 +424,8 @@ static bool ParseUrlBody(Context *context, SharedString *url, SharedString *desc
       return false;
    }
 
-   *url = SharedString(json_string_value(jsonUrl), "utf8");
-   if (url->isEmpty())
+   *url = json_string_value(jsonUrl);
+   if (url->empty())
    {
       context->setErrorResponse("Field \"url\" cannot be empty");
       return false;
@@ -436,7 +436,7 @@ static bool ParseUrlBody(Context *context, SharedString *url, SharedString *desc
       return false;
    }
 
-   *description = json_is_string(jsonDescription) ? SharedString(json_string_value(jsonDescription), "utf8") : SharedString(L"");
+   *description = json_is_string(jsonDescription) ? std::string(json_string_value(jsonDescription)) : std::string("");
    if (description->length() > MAX_OBJECT_URL_LEN)
    {
       context->setErrorResponse("Field \"description\" is too long");
@@ -448,12 +448,12 @@ static bool ParseUrlBody(Context *context, SharedString *url, SharedString *desc
 /**
  * Build the JSON representation of a single URL: { id, url, description }.
  */
-static json_t *UrlToJson(uint32_t urlId, const SharedString& url, const SharedString& description)
+static json_t *UrlToJson(uint32_t urlId, const std::string& url, const std::string& description)
 {
    json_t *entry = json_object();
    json_object_set_new(entry, "id", json_integer(urlId));
-   json_object_set_new(entry, "url", json_string_t(url.cstr()));
-   json_object_set_new(entry, "description", json_string_t(description.cstr()));
+   json_object_set_new(entry, "url", json_string(url.c_str()));
+   json_object_set_new(entry, "description", json_string(description.c_str()));
    return entry;
 }
 
@@ -468,7 +468,7 @@ int H_ObjectUrls(Context *context)
    if (object == nullptr)
       return httpCode;
 
-   json_t *output = object->getUrlsAsJson();
+   json_t *output = object->getURLsAsJson();
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -485,13 +485,13 @@ int H_ObjectUrlCreate(Context *context)
    if (object == nullptr)
       return httpCode;
 
-   SharedString url, description;
+   std::string url, description;
    if (!ParseUrlBody(context, &url, &description))
       return 400;
 
-   uint32_t urlId = object->addUrl(url, description);
+   uint32_t urlId = object->addURL(url.c_str(), description.c_str());
    context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
-      L"URL [%u] \"%s\" added to object %s [%u]", urlId, url.cstr(), object->getName(), object->getId());
+      L"URL [%u] \"%hs\" added to object %s [%u]", urlId, url.c_str(), object->getName(), object->getId());
 
    wchar_t location[256];
    _sntprintf(location, 256, L"/v1/objects/%u/urls/%u", object->getId(), urlId);
@@ -518,15 +518,15 @@ int H_ObjectUrlUpdate(Context *context)
    if (urlId == 0)
       return 400;
 
-   SharedString url, description;
+   std::string url, description;
    if (!ParseUrlBody(context, &url, &description))
       return 400;
 
-   if (!object->updateUrl(urlId, url, description))
+   if (!object->updateURL(urlId, url.c_str(), description.c_str()))
       return 404;
 
    context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),
-      L"URL [%u] of object %s [%u] changed to \"%s\"", urlId, object->getName(), object->getId(), url.cstr());
+      L"URL [%u] of object %s [%u] changed to \"%hs\"", urlId, object->getName(), object->getId(), url.c_str());
 
    json_t *output = UrlToJson(urlId, url, description);
    context->setResponseData(output);
@@ -549,7 +549,7 @@ int H_ObjectUrlDelete(Context *context)
    if (urlId == 0)
       return 400;
 
-   if (!object->deleteUrl(urlId))
+   if (!object->deleteURL(urlId))
       return 404;
 
    context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(),

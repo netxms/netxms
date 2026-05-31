@@ -463,8 +463,8 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
             {
                const ObjectUrl *url = m_urls.get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, url->getUrl(), DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, url->getDescription(), DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
             unlockProperties();
@@ -4715,7 +4715,7 @@ void NetObj::setDashboards(const IntegerArray<uint32_t>& dashboards)
 /**
  * Get associated URLs as JSON array
  */
-json_t *NetObj::getUrlsAsJson() const
+json_t *NetObj::getURLsAsJson() const
 {
    lockProperties();
    json_t *urls = json_object_array(m_urls);
@@ -4726,7 +4726,7 @@ json_t *NetObj::getUrlsAsJson() const
 /**
  * Add new associated URL. Server assigns a unique ID. Returns the new URL ID.
  */
-uint32_t NetObj::addUrl(const wchar_t *url, const wchar_t *description)
+uint32_t NetObj::addURL(const char *url, const char *description)
 {
    lockProperties();
    uint32_t urlId = 1;
@@ -4745,7 +4745,7 @@ uint32_t NetObj::addUrl(const wchar_t *url, const wchar_t *description)
 /**
  * Update existing associated URL. Returns false if URL with given ID does not exist.
  */
-bool NetObj::updateUrl(uint32_t urlId, const wchar_t *url, const wchar_t *description)
+bool NetObj::updateURL(uint32_t urlId, const char *url, const char *description)
 {
    lockProperties();
    bool found = false;
@@ -4766,7 +4766,7 @@ bool NetObj::updateUrl(uint32_t urlId, const wchar_t *url, const wchar_t *descri
 /**
  * Delete associated URL. Returns false if URL with given ID does not exist.
  */
-bool NetObj::deleteUrl(uint32_t urlId)
+bool NetObj::deleteURL(uint32_t urlId)
 {
    lockProperties();
    bool found = false;

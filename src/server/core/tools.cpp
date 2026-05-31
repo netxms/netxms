@@ -419,8 +419,8 @@ bool EventNameResolver(const wchar_t *name, uint32_t *code)
 ObjectUrl::ObjectUrl(const NXCPMessage& msg, uint32_t baseId)
 {
    m_id = msg.getFieldAsUInt32(baseId);
-   m_url = msg.getFieldAsString(baseId + 1);
-   m_description = msg.getFieldAsString(baseId + 2);
+   m_url = msg.getFieldAsUtf8String(baseId + 1);
+   m_description = msg.getFieldAsUtf8String(baseId + 2);
 }
 
 /**
@@ -429,18 +429,18 @@ ObjectUrl::ObjectUrl(const NXCPMessage& msg, uint32_t baseId)
 ObjectUrl::ObjectUrl(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_url = DBGetField(hResult, row, 1, nullptr, 0);
-   m_description = DBGetField(hResult, row, 2, nullptr, 0);
+   m_url = DBGetFieldUTF8(hResult, row, 1, nullptr, 0);
+   m_description = DBGetFieldUTF8(hResult, row, 2, nullptr, 0);
 }
 
 /**
  * Create object URL from explicit values
  */
-ObjectUrl::ObjectUrl(uint32_t id, const TCHAR *url, const TCHAR *description)
+ObjectUrl::ObjectUrl(uint32_t id, const char *url, const char *description)
 {
    m_id = id;
-   m_url = MemCopyString(url);
-   m_description = MemCopyString(description);
+   m_url = MemCopyStringA(url);
+   m_description = MemCopyStringA(description);
 }
 
 /**
@@ -458,8 +458,8 @@ ObjectUrl::~ObjectUrl()
 void ObjectUrl::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
    msg->setField(baseId, m_id);
-   msg->setField(baseId + 1, m_url);
-   msg->setField(baseId + 2, m_description);
+   msg->setFieldFromUtf8String(baseId + 1, m_url);
+   msg->setFieldFromUtf8String(baseId + 2, m_description);
 }
 
 /**
@@ -469,8 +469,8 @@ json_t *ObjectUrl::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
-   json_object_set_new(root, "url", json_string_t(m_url));
-   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "url", json_string(m_url));
+   json_object_set_new(root, "description", json_string(m_description));
    return root;
 }
 

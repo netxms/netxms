@@ -1017,20 +1017,20 @@ class NXCORE_EXPORTABLE ObjectUrl
 {
 private:
    uint32_t m_id;
-   TCHAR *m_url;
-   TCHAR *m_description;
+   char *m_url;
+   char *m_description;
 
 public:
    ObjectUrl(const NXCPMessage& msg, uint32_t baseId);
    ObjectUrl(DB_RESULT hResult, int row);
-   ObjectUrl(uint32_t id, const TCHAR *url, const TCHAR *description);
+   ObjectUrl(uint32_t id, const char *url, const char *description);
    ~ObjectUrl();
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId);
 
    uint32_t getId() const { return m_id; }
-   const TCHAR *getUrl() const { return m_url; }
-   const TCHAR *getDescription() const { return m_description; }
+   const char *getUrl() const { return m_url; }
+   const char *getDescription() const { return m_description; }
 
    json_t *toJson() const;
 };
@@ -1677,10 +1677,10 @@ public:
    bool removeDashboard(uint32_t id);
    void setDashboards(const IntegerArray<uint32_t>& dashboards);
 
-   json_t *getUrlsAsJson() const;
-   uint32_t addUrl(const wchar_t *url, const wchar_t *description);
-   bool updateUrl(uint32_t urlId, const wchar_t *url, const wchar_t *description);
-   bool deleteUrl(uint32_t urlId);
+   json_t *getURLsAsJson() const;
+   uint32_t addURL(const char *url, const char *description);
+   bool updateURL(uint32_t urlId, const char *url, const char *description);
+   bool deleteURL(uint32_t urlId);
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
