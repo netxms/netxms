@@ -18,6 +18,8 @@ This is a large multi-language project (Java, C/C++, JavaScript, Python). The pr
 
 Do not introduce unnecessary abstraction layers or wrapper functions. Call existing methods directly unless there is a clear architectural reason for indirection. When in doubt, prefer the simpler approach.
 
+Do not promote a value to a `g_*` global or a config-template field just to surface it to a single one-shot caller — read it into a local variable instead. Globals and template entries are long-lived surface area that only pay off when many callers need the value or it must persist across the run.
+
 ## Component Documentation
 
 This monorepo has component-specific CLAUDE.md files:
@@ -185,6 +187,7 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 - Follow standard Java conventions
 - Minimize external dependencies
 - Desktop client uses SWT, web client uses RWT
+- Always add an `import` for any class referenced in code — never write a fully-qualified name inline (e.g. `org.netxms.nxmc.modules.X.Y.method()`). Exceptions: `java.lang.*` and same-package classes.
 
 ## Key Documentation
 
@@ -205,7 +208,9 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 
 When implementing changes, ensure ALL call sites and consumers are updated. After making a rename or API change, run a project-wide grep for the old name to catch missed references before attempting a build.
 
-When adding a new NXCP command code or renaming an existing one, update the `NXCPMessageCodeName()` function in `src/libnetxms/nxcp.cpp` to include the corresponding command code to name mapping.
+When adding a new NXCP command code or renaming an existing one, update the `NXCPMessageCodeName()` function in `src/libnetxms/nxcp.cpp` to include the corresponding command code to name mapping. Also mirror the new `CMD_*` constant into `src/java-common/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java` — the Java enum tracks the full command-code namespace even for codes the Java client does not yet use, so fill any adjacent gaps you notice while in the file.
+
+When adding an NXCP field that semantically matches an existing `VID_*` constant (e.g. "ID of a mapping table" → `VID_MAPPING_TABLE_ID`), reuse the existing constant rather than minting a new one. NXCP fields are not typed by ID, so a duplicate just bloats the constant table. Grep for an existing `VID_*` for the concept before adding one.
 
 ## Implementation Discipline
 

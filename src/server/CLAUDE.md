@@ -17,6 +17,12 @@ extern NXCORE_EXPORTABLE_VAR(int) g_myGlobal;
 
 Server code is always built in Unicode mode. Use `L"..."` string literals and wide-character functions (`wcsncmp`, `wcslen`, etc.) directly. Do **not** use `_T()` / `TCHAR` / `_tcsncmp` wrappers in new server code — those are remnants from older versions that supported non-Unicode builds. The `_T()` abstraction is only needed in agent code and shared libraries that may be built in either mode.
 
+For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...", ...)` rather than `swprintf()` / `_snwprintf()`: `%s` means `wchar_t*` on Windows but `char*` on glibc, and `nx_swprintf` normalizes `%s` to `wchar_t*` on both platforms. Same argument order as `swprintf`.
+
+## Server Core Conventions
+
+- **Console commands:** when adding or substantially rewriting a branch in `ProcessConsoleCommand()` (`core/console.cpp`, already >1000 lines), extract the logic into a dedicated `static void HandleXxxCommand(ServerConsole*, const wchar_t *arg)` defined earlier in the file. The branch body should be a one- or two-line call.
+
 ## Overview
 
 The NetXMS server (`netxmsd`) is the central management component that handles:
@@ -137,6 +143,8 @@ DECLARE_NDD_MODULE_ENTRY_POINT
 | `getInterfaces(...)` | Get interface list with physical port locations |
 | `getVlans(...)` | Get VLAN configuration |
 | `getSSHDriverHints(hints)` | Provide SSH CLI interaction parameters |
+
+Do **not** override `getHardwareInformation()` in a new driver when the device supports standard ENTITY-MIB — the generic driver already reads vendor/model/serial from it. Override only for devices that expose hardware info via a proprietary MIB or lack ENTITY-MIB support.
 
 ### SSH Driver Hints
 

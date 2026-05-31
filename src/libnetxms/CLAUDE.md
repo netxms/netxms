@@ -41,6 +41,11 @@ StringMap map;
 map.set(_T("key"), _T("value"));
 ```
 
+**Choosing a string class for a member field:**
+- Set once at construction (ctor arg or move) → `String` (its `operator=` is deleted, so it can't be reassigned later).
+- Reassigned wholesale but never appended/inserted → `MutableString` (lightweight assignable variant; supports `operator=` from `String` / `MutableString` / `const TCHAR*`).
+- Built up incrementally (append/insert/format) → `StringBuffer`.
+
 ### Container Classes
 
 | File | Class | Description |
@@ -187,6 +192,18 @@ nxlog_write(NXLOG_WARNING, _T("Warning message"));
 | `procexec.cpp` | Process execution |
 | `subproc.cpp` | Subprocess management |
 | `vault.cpp` | Secret vault integration |
+
+### JSON (jansson) Helpers
+
+A family of typed convenience helpers wraps raw jansson access — prefer them over manual `json_object_get` + `json_is_*` + `json_*_value` chains. They give consistent default handling and one fewer place to forget a type check:
+
+- `json_object_get_string_t` (allocated `TCHAR*`, caller frees) / `json_object_get_string_utf8` (no-alloc view) / `json_object_get_string` (returns `String`)
+- `json_object_get_int32` / `int64` / `uint32` / `uint64` / `json_object_get_boolean` / `json_object_get_time` / `json_object_get_uuid`
+- For LLM/AI tool arguments that may arrive stringified, the lenient `json_object_get_array_ex` / `json_object_get_object_ex` (declared in `nms_util.h`).
+
+See the full list near `json_object_get` in `include/nms_util.h`. When emitting a `uuid` as JSON, use `guid.toJson()` (from `include/uuid.h`) — don't format into a `char[]` and wrap in `json_string()` by hand.
+
+**Helper placement** when adding a new shared JSON/argument helper: trivial single-expression helpers go `static inline` directly in `include/nms_util.h`; anything with a non-trivial body or extra dependencies gets a `LIBNETXMS_EXPORTABLE` declaration in the header and its body in `src/libnetxms/tools.cpp`, next to the existing ones. Don't bloat every TU with a heavy `static inline`.
 
 ### Compression
 

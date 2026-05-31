@@ -238,6 +238,14 @@ uuid guid = DBGetFieldGUID(result, row, col);
 
 Database schema is managed in `sql/` directory at repository root.
 
+### Editing the Schema
+
+- Edit `sql/schema.in` — **never** the generated `sql/dbschema_*.sql` files (those are produced from `schema.in` and will be overwritten).
+- After any schema change, bump `DB_SCHEMA_VERSION_MINOR` (and `DB_SCHEMA_VERSION_V<major>_MINOR` where applicable) in `include/netxmsdb.h`, and add the matching upgrade step in `src/server/tools/nxdbmgr/upgrade_v<major>.cpp`.
+- A new server **configuration variable** must be added in **both** places: a `CreateConfigParam(...)` call in the upgrade step (covers existing installs) **and** an `INSERT INTO config (...)` row in `sql/setup.in` (covers fresh installs, which never run the upgrade path). Keep `setup.in` rows alphabetical within their section.
+- Small enums stored as `CHAR(1)` store the **ASCII digit** of the value (`'0'`, `'1'`, `'2'`…), not letter mnemonics — so `DBGetFieldULong()` returns the value directly and save is `buf[0] = value + '0'`. Match the pattern of `retention_type` / `m_retentionType` in `dcitem.cpp`.
+- Size a C/C++ buffer that mirrors a `varchar(N)` column to exactly `N + 1`. The column is the canonical constraint; don't add speculative headroom (propose a schema change instead if the column is too narrow).
+
 ### SQL Type Macros — Two Different Systems
 
 There are two separate macro systems for database-portable type names. Do NOT mix them up:
@@ -268,6 +276,13 @@ static bool H_UpgradeFromV42(int currVersion, int newVersion)
    return true;
 }
 ```
+
+Upgrade conventions:
+
+- **Backfill instead of DEFAULT.** Since columns have no `DEFAULT` (see below), add a new column as nullable, `UPDATE` it to backfill, then apply `NOT NULL` via the upgrade helpers — don't rely on a default value.
+- **Fail hard on a missing external prerequisite.** When a step depends on something outside the SQL (TimescaleDB extension/version, an OS feature, an optional runtime), log a clear error and `return false` *before* `SetMinorSchemaVersion(...)`. Never warn-and-continue: bumping the version while leaving CAGGs/hypertables/etc. uncreated leaves the database in an inconsistent state. The `MajorSchemaUpgrade_VNN` driver rolls back the transaction so re-runs work after the admin fixes the dependency.
+- **Freeze helpers used by historical upgrades.** A historical upgrade must always emit the exact schema it emitted the day it was written. When refactoring a helper that older `upgrade_v*.cpp` procedures call (DDL emitters like `CreateIDataTable`/`CreateTDataTable`, metadata writers, anything schema-sensitive), fork a file-local `*_V<major>` copy preserving the old behavior and point the historical call sites at it. Precedent: `CreateTDataTable_preV281`.
+- **Adding EPP rules needs no existence check.** Upgrades run from a known prior version, so a rule being added is guaranteed not to exist — just call `NextFreeEPPruleID()` and insert; don't `SELECT` by GUID first.
 
 ## Driver Development
 

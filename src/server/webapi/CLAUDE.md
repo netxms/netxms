@@ -79,6 +79,12 @@ RouteBuilder("v1/my-resource/:resource-id")
    .build();
 ```
 
+## Modifying Objects — Use `modifyFromJSON`, Not NXCP Translation
+
+Do **not** translate incoming JSON into an `NXCPMessage` just to reuse `modifyFromMessage()` / `updateFromMessage()`. Instead, extend the affected class with a parallel `modifyFromJSON()` / `updateFromJSON()` method that operates on `json_t*` directly (same virtual dispatch, per-class overrides, stage1/stage2 split where applicable). The webapi handler stays thin: load → ACL check → call the JSON method → return the updated representation. No `NXCPMessage` construction belongs in `webapi/` source files.
+
+The JSON interface is becoming the primary interface to the system; a JSON→NXCP shim would tie the REST API to NXCP encoding permanently. Most of `modifyFromMessageInternal` is "is field X present? apply it" — trivially preserved under JSON via `json_object_get(body, key) != nullptr` plus the jansson helpers (see [libnetxms](../../libnetxms/CLAUDE.md)). When emitting a GUID, use `guid.toJson()`.
+
 ## API Documentation
 
 When changes are made to API endpoints (adding, modifying, or removing), the OpenAPI specification in `openapi.yaml` must also be updated to reflect those changes. This file serves as the authoritative API reference for external consumers.

@@ -118,6 +118,14 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 
 ## Creating a New Subagent
 
+### Where Does It Belong?
+
+Before bundling an optional-dependency capability into an existing subagent, check the underlying library/tool's cross-platform availability:
+
+- Linux-only with no extra deps → fold into the `linux` subagent.
+- Cross-platform (Linux + BSD + macOS + …) → create a **dedicated** subagent (the `lldpd.nsm` / `ssh.nsm` / `mqtt.nsm` / `modbus.nsm` pattern), one per optional capability.
+- The core agent is rarely the right home — it forces link dependencies into the base binary and breaks the one-subagent-per-optional-capability convention.
+
 ### Basic Structure
 
 ```cpp

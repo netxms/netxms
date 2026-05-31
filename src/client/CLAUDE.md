@@ -93,6 +93,12 @@ modules/
 └── worldmap/         # Geographic maps
 ```
 
+### Tools vs Configuration Perspective
+
+A new **on-demand utility** view (search, scan, probe, ad-hoc query) belongs in the **Tools perspective**, registered via an `org.netxms.nxmc.services.ToolDescriptor` implementation in `modules/tools/` (e.g. `FindByMacAddressDescriptor`, `ObjectFinderDescriptor`, `ServerConsoleDescriptor`), with the view class in `modules/tools/views/`. The descriptor returns a `View` from `createView()` plus name/icon/optional required-component ID, and the Tools perspective picks it up automatically.
+
+The **Configuration perspective** is for persistent server-side config (network discovery, credentials, EPP) — different SPI and registration. `NetworkCredentialsView` is a Configuration view and is *not* the reference for transient tool windows.
+
 ### SWT vs RWT
 
 - **Desktop**: Uses SWT (Standard Widget Toolkit)
