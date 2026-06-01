@@ -41,6 +41,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       new AccessBit(UserAccessRights.OBJECT_ACCESS_READ, 'R'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_AGENT, 'a'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_SNMP, 's'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_CREDENTIALS, 'k'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MODIFY, 'M'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS, 'M'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_DELEGATED_READ, 'r'),

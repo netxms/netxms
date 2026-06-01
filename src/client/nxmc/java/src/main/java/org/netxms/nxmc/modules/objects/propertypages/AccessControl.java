@@ -211,6 +211,7 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Read"), UserAccessRights.OBJECT_ACCESS_READ);
       createAccessCheck(rights, i18n.tr("Read agent data"), UserAccessRights.OBJECT_ACCESS_READ_AGENT);
       createAccessCheck(rights, i18n.tr("Read SNMP data"), UserAccessRights.OBJECT_ACCESS_READ_SNMP);
+      createAccessCheck(rights, i18n.tr("Read credentials"), UserAccessRights.OBJECT_ACCESS_READ_CREDENTIALS);
       createAccessCheck(rights, i18n.tr("Modify"), UserAccessRights.OBJECT_ACCESS_MODIFY);
       createAccessCheck(rights, i18n.tr("Edit comments"), UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS);
       createAccessCheck(rights, i18n.tr("Manage responsible users"), UserAccessRights.OBJECT_ACCESS_EDIT_RESP_USERS);

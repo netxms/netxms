@@ -14570,6 +14570,9 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "useIfXTable", json_integer(m_nUseIfXTable));
    if (includeSensitiveData)
       json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != nullptr) ? m_snmpSecurity->toJson(true) : json_object());
+   json_object_set_new(root, "snmpTrapVersion", json_integer(m_snmpTrapVersion));
+   if (includeSensitiveData)
+      json_object_set_new(root, "snmpTrapSecurity", (m_snmpTrapSecurity != nullptr) ? m_snmpTrapSecurity->toJson(true) : json_object());
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));
    json_object_set_new(root, "agentPlatformName", json_string_t(m_agentPlatformName));

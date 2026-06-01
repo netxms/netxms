@@ -3205,6 +3205,28 @@ void ClientSession::generateEventCode(const NXCPMessage& request)
 }
 
 /**
+ * Mask credential fields in object message for users that may not see them.
+ * Node credentials are visible only to users holding MODIFY or READ_CREDENTIALS access.
+ */
+static void MaskNodeCredentials(NXCPMessage *msg, const NetObj& object, uint32_t userId)
+{
+   if ((object.getObjectClass() != OBJECT_NODE) ||
+       object.checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
+       object.checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS))
+      return;
+
+   static const wchar_t *mask = L"********";
+   msg->setField(VID_SHARED_SECRET, mask);
+   msg->setField(VID_SNMP_AUTH_OBJECT, mask);
+   msg->setField(VID_SNMP_AUTH_PASSWORD, mask);
+   msg->setField(VID_SNMP_PRIV_PASSWORD, mask);
+   msg->setField(VID_SSH_PASSWORD, mask);
+   msg->setField(VID_VNC_PASSWORD, mask);
+   msg->setField(VID_SNMP_TRAP_AUTH_PASSWORD, mask);
+   msg->setField(VID_SNMP_TRAP_PRIV_PASSWORD, mask);
+}
+
+/**
  * Send all objects to client
  */
 void ClientSession::getObjects(const NXCPMessage& request)
@@ -3241,15 +3263,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 	   }
 
       object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
-      if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
-      {
-         // mask passwords
-         response.setField(VID_SHARED_SECRET, _T("********"));
-         response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
-         response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-         response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
-         response.setField(VID_SSH_PASSWORD, _T("********"));
-      }
+      MaskNodeCredentials(&response, *object, m_userId);
       sendMessage(response);
       response.deleteAllFields();
 	}
@@ -3310,15 +3324,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
          {
             object->fillMessage(&response, m_userId);
-            if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
-            {
-               // mask passwords
-               response.setField(VID_SHARED_SECRET, _T("********"));
-               response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
-               response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-               response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
-               response.setField(VID_SSH_PASSWORD, _T("********"));
-            }
+            MaskNodeCredentials(&response, *object, m_userId);
             sendMessage(response);
             response.deleteAllFields();
          }
@@ -3876,15 +3882,7 @@ void ClientSession::sendObjectUpdates()
          // Zone objects might be scheduled for update without read access - in that case send essential info only
          // Other objects will be queued only if read access is granted
          object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
-         if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
-         {
-            // mask passwords
-            response.setField(VID_SHARED_SECRET, _T("********"));
-            response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
-            response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-            response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
-            response.setField(VID_SSH_PASSWORD, _T("********"));
-         }
+         MaskNodeCredentials(&response, *object, m_userId);
       }
       else
       {

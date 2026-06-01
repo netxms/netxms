@@ -220,7 +220,9 @@ int H_ObjectDetails(Context *context)
    if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
       return 403;
 
-   json_t *output = object->toJson(object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY));
+   uint32_t userId = context->getUserId();
+   bool includeSensitiveData = object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
+   json_t *output = object->toJson(includeSensitiveData);
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -429,7 +431,8 @@ int H_ObjectChildren(Context *context)
       if ((nameFilter[0] != 0) && (wcsistr(child->getName(), nameFilter) == nullptr) && (wcsistr(child->getAlias(), nameFilter) == nullptr))
          continue;
 
-      json_array_append_new(output, child->toJson(child->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)));
+      bool includeSensitiveData = child->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || child->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
+      json_array_append_new(output, child->toJson(includeSensitiveData));
    }
 
    context->setResponseData(output);
