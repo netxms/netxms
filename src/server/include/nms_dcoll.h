@@ -1178,7 +1178,6 @@ void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script);
 /**
  * V5 collected data migration
  */
-void MigrateRecentV5Data();
 void StartV5DataMigration();
 void StopV5DataMigration();
 

@@ -1494,8 +1494,6 @@ retry_db_lock:
       return false;
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
-   MigrateRecentV5Data();
-
    // Check if management node object presented in database
    CheckForMgmtNode();
    if (g_dwMgmtNode == 0)

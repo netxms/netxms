@@ -689,6 +689,36 @@ void DataCollectionTarget::deleteV5DataTable(DB_HANDLE hdb, bool tdata, const wc
 }
 
 /**
+ * Ensure that a timestamp-leading index exists on the v5 data table so that the migration and
+ * housekeeper queries (which filter/delete by timestamp range) use an index range scan instead of
+ * a full sequential scan. The v5 per-object tables were created with their only index leading on
+ * item_id, which cannot serve a timestamp-range predicate.
+ *
+ * The index is created at most once per server run: the corresponding runtime flag is set
+ * unconditionally to avoid re-attempting on every migration cycle. Creation is idempotent across
+ * restarts - if the index already exists (migration spanned a restart) the CREATE simply fails and
+ * the existing index is reused.
+ */
+void DataCollectionTarget::ensureV5Index(DB_HANDLE hdb, bool tdata)
+{
+   uint32_t flag = tdata ? ODF_TDATA_V5_INDEXED : ODF_IDATA_V5_INDEXED;
+   lockProperties();
+   bool alreadyAttempted = (m_runtimeFlags & flag) != 0;
+   m_runtimeFlags |= flag;
+   unlockProperties();
+   if (alreadyAttempted)
+      return;
+
+   const wchar_t *prefix = tdata ? L"tdata" : L"idata";
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"CREATE INDEX idx_%s_v5_%u_ts ON %s_v5_%u(%s_timestamp)", prefix, m_id, prefix, m_id, prefix);
+   if (DBQuery(hdb, query))
+      nxlog_debug_tag(L"dc.v5migrate", 5, L"DataCollectionTarget::ensureV5Index(%s [%u]): created migration index on %s_v5_%u", m_name, m_id, prefix, m_id);
+   else
+      nxlog_debug_tag(L"dc.v5migrate", 5, L"DataCollectionTarget::ensureV5Index(%s [%u]): migration index on %s_v5_%u already exists or could not be created", m_name, m_id, prefix, m_id);
+}
+
+/**
  * Schedule cleanup of DCI data after DCI deletion
  */
 void DataCollectionTarget::scheduleItemDataCleanup(uint32_t dciId)
