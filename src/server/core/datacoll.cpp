@@ -61,7 +61,7 @@ uuid g_nxslExitDCNoSuchInstance = uuid::parseA("0043db2a-17f0-464c-83ee-bf0ac6e8
 /**
  * Collect data for DCI
  */
-static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR *buffer, uint32_t *error)
+static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar_t *buffer, uint32_t *error)
 {
    if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
@@ -195,8 +195,8 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, TCHAR
                shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveMqttProxy(), OBJECT_NODE));
                if (proxy != nullptr)
                {
-                  TCHAR name[MAX_PARAM_NAME];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(dci.getName()).cstr());
+                  wchar_t name[MAX_PARAM_NAME];
+                  nx_swprintf(name, MAX_PARAM_NAME, L"MQTT.TopicData(\"%s\")", EscapeStringForAgent(dci.getName()).cstr());
                   *error = proxy->getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH);
                }
                else
@@ -664,9 +664,6 @@ int GetDCObjectType(uint32_t nodeId, uint32_t dciId)
  */
 bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **source, int *address, const TCHAR **conversion)
 {
-   // Expected metric format is
-   // [unit:][source:]address[|conversion]
-
    const TCHAR *addressPart = metric;
    *source = _T("hold:");
    const TCHAR *p = _tcschr(metric, _T(':'));
@@ -712,62 +709,126 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 #define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
 
 /**
- * Migrate recent (last 24 hours) data from v5 per-object tables to new tables.
- * This is a blocking call that runs at startup before DCI caches are loaded and
- * before clients can connect, ensuring recent data is immediately visible.
+ * Migrate V5 data for given data collection target
  */
-void MigrateRecentV5Data()
+static void MigrateV5Data(DataCollectionTarget *target)
 {
-   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   if (IsShutdownInProgress())
       return;
 
-   SharedObjectArray<NetObj> objects(1024, 1024);
-   g_idxAccessPointById.getObjects(&objects);
-   g_idxChassisById.getObjects(&objects);
-   g_idxClusterById.getObjects(&objects);
-   g_idxCollectorById.getObjects(&objects);
-   g_idxMobileDeviceById.getObjects(&objects);
-   g_idxNodeById.getObjects(&objects);
-   g_idxSensorById.getObjects(&objects);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   // Collect objects that have v5 tables
-   SharedObjectArray<NetObj> idataObjects(256, 256);
-   for(int i = 0; i < objects.size(); i++)
+   uint32_t id = target->getId();
+   wchar_t query[1024];
+
+   if (target->hasV5IdataTable())
    {
-      DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(objects.get(i));
-      if (dct->hasV5IdataTable())
-         idataObjects.add(objects.getShared(i));
+      target->ensureV5Index(hdb, false);
+      if (DBBegin(hdb))
+      {
+         bool success = false;
+         nx_swprintf(query, 1024, L"SELECT max(idata_timestamp) FROM idata_v5_%u", id);
+         DB_RESULT hResult = DBSelect(hdb, query);
+         if (hResult != nullptr)
+         {
+            int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+            DBFreeResult(hResult);
+
+            if (maxTs == 0)
+            {
+               target->deleteV5DataTable(hdb, false, L"migration complete");
+               success = true;
+            }
+            else
+            {
+               int64_t batchStart = maxTs - 86400;
+               nx_swprintf(query, 1024,
+                  L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+                  L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
+                  L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
+                  L" GROUP BY item_id,idata_timestamp",
+                  id, V5TimestampToMs(false), id, batchStart);
+               if (DBQuery(hdb, query))
+               {
+                  nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT, id, batchStart);
+                  success = DBQuery(hdb, query);
+               }
+            }
+         }
+
+         if (success)
+            DBCommit(hdb);
+         else
+            DBRollback(hdb);
+      }
    }
 
-   if (idataObjects.isEmpty())
-      return;
-
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Migrating recent data from v5 tables (%d tables to process)", idataObjects.size());
-
-   int64_t cutoffSeconds = time(nullptr) - 86400;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   wchar_t query[1024];
-   int migratedCount = 0;
-   const wchar_t *idataTsExpr = V5TimestampToMs(false);
-   for(int i = 0; i < idataObjects.size(); i++)
+   if (target->hasV5TdataTable())
    {
-      uint32_t id = idataObjects.get(i)->getId();
-      nx_swprintf(query, 1024,
-         L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-         L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
-         L" FROM idata_v5_%u WHERE idata_timestamp>=" INT64_FMT
-         L" GROUP BY item_id,idata_timestamp",
-         id, idataTsExpr, id, cutoffSeconds);
-      if (DBQuery(hdb, query))
+      target->ensureV5Index(hdb, true);
+      if (DBBegin(hdb))
       {
-         nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>=" INT64_FMT, id, cutoffSeconds);
-         DBQuery(hdb, query);
-         migratedCount++;
+         bool success = false;
+         nx_swprintf(query, 1024, L"SELECT max(tdata_timestamp) FROM tdata_v5_%u", id);
+         DB_RESULT hResult = DBSelect(hdb, query);
+         if (hResult != nullptr)
+         {
+            int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+            DBFreeResult(hResult);
+
+            if (maxTs == 0)
+            {
+               target->deleteV5DataTable(hdb, true, L"migration complete");
+               success = true;
+            }
+            else
+            {
+               int64_t batchStart = maxTs - 86400;
+               switch(g_dbSyntax)
+               {
+                  case DB_SYNTAX_MYSQL:
+                     nx_swprintf(query, 1024,
+                        L"INSERT IGNORE INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                        L" SELECT item_id,%s,tdata_value"
+                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
+                        id, V5TimestampToMs(true), id, batchStart);
+                     break;
+                  case DB_SYNTAX_PGSQL:
+                  case DB_SYNTAX_SQLITE:
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                        L" SELECT item_id,%s,tdata_value"
+                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
+                        L" ON CONFLICT DO NOTHING",
+                        id, V5TimestampToMs(true), id, batchStart);
+                     break;
+                  default:
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
+                        L" SELECT item_id,tdata_timestamp,tdata_value FROM ("
+                        L"    SELECT item_id,%s AS tdata_timestamp,tdata_value,"
+                        L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY tdata_timestamp) AS rn"
+                        L"    FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
+                        L" ) sub WHERE rn=1",
+                        id, V5TimestampToMs(true), V5TimestampToMs(true), id, batchStart);
+                     break;
+               }
+               if (DBQuery(hdb, query))
+               {
+                  nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT, id, batchStart);
+                  success = DBQuery(hdb, query);
+               }
+            }
+         }
+
+         if (success)
+            DBCommit(hdb);
+         else
+            DBRollback(hdb);
       }
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"Recent v5 data migration completed (%d tables migrated)", migratedCount);
 }
 
 /**
@@ -776,26 +837,31 @@ void MigrateRecentV5Data()
 static THREAD s_v5DataMigrationThread = INVALID_THREAD_HANDLE;
 
 /**
- * Background thread for migrating remaining v5 data (older than 24 hours).
+ * Background thread for managing migration of v5 data.
  * Each cycle processes one 1-day batch (newest first) for every eligible object, then sleeps.
+ * Eligible objects within a cycle are processed in parallel across several pooled connections.
  * When a v5 table is fully emptied, it is dropped and the corresponding flag is cleared.
  */
-static void V5DataMigrationThread()
+static void V5DataMigrationManager()
 {
-   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration thread started");
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration manager started");
 
-   const wchar_t *idataTsExpr = V5TimestampToMs(false);
-   const wchar_t *tdataTsExpr = V5TimestampToMs(true);
-
-   while(!SleepAndCheckForShutdown(10))
-   {
-      bool anyRemaining = false;
-
-      auto filter = [] (NetObj *object) -> bool
+   auto filter =
+      [] (NetObj *object) -> bool
       {
          DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(object);
          return dct->hasV5IdataTable() || dct->hasV5TdataTable();
       };
+
+   int workers = ConfigReadInt(L"DBConnectionPool.MaxSize", 30) / 3;
+   if (workers < 2)
+      workers = 2;
+   else if (workers > 16)
+      workers = 16;
+   ThreadPool *migrationPool = ThreadPoolCreate(L"V5MIGRATE", workers, workers);
+
+   while(!SleepAndCheckForShutdown(5))
+   {
       SharedObjectArray<NetObj> objects(1024, 1024);
       g_idxAccessPointById.getObjects(&objects, filter);
       g_idxChassisById.getObjects(&objects, filter);
@@ -805,140 +871,36 @@ static void V5DataMigrationThread()
       g_idxNodeById.getObjects(&objects, filter);
       g_idxSensorById.getObjects(&objects, filter);
 
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      wchar_t query[1024];
-
-      for(int i = 0; i < objects.size(); i++)
-      {
-         if (IsShutdownInProgress())
-            break;
-
-         DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(objects.get(i));
-         uint32_t id = dct->getId();
-
-         if (dct->hasV5IdataTable())
-         {
-            if (DBBegin(hdb))
-            {
-               bool success = false;
-               nx_swprintf(query, 1024, L"SELECT max(idata_timestamp) FROM idata_v5_%u", id);
-               DB_RESULT hResult = DBSelect(hdb, query);
-               if (hResult != nullptr)
-               {
-                  int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-                  DBFreeResult(hResult);
-
-                  if (maxTs == 0)
-                  {
-                     dct->deleteV5DataTable(hdb, false, L"migration complete");
-                     success = true;
-                  }
-                  else
-                  {
-                     int64_t batchStart = maxTs - 86400;
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                        L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
-                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
-                        L" GROUP BY item_id,idata_timestamp",
-                        id, idataTsExpr, id, batchStart);
-                     if (DBQuery(hdb, query))
-                     {
-                        nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT, id, batchStart);
-                        success = DBQuery(hdb, query);
-                     }
-                     anyRemaining = true;
-                  }
-               }
-
-               if (success)
-                  DBCommit(hdb);
-               else
-                  DBRollback(hdb);
-            }
-         }
-
-         if (dct->hasV5TdataTable())
-         {
-            if (DBBegin(hdb))
-            {
-               bool success = false;
-               nx_swprintf(query, 1024, L"SELECT max(tdata_timestamp) FROM tdata_v5_%u", id);
-               DB_RESULT hResult = DBSelect(hdb, query);
-               if (hResult != nullptr)
-               {
-                  int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-                  DBFreeResult(hResult);
-
-                  if (maxTs == 0)
-                  {
-                     dct->deleteV5DataTable(hdb, true, L"migration complete");
-                     success = true;
-                  }
-                  else
-                  {
-                     int64_t batchStart = maxTs - 86400;
-                     switch(g_dbSyntax)
-                     {
-                        case DB_SYNTAX_MYSQL:
-                           nx_swprintf(query, 1024,
-                              L"INSERT IGNORE INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                              L" SELECT item_id,%s,tdata_value"
-                              L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
-                              id, tdataTsExpr, id, batchStart);
-                           break;
-                        case DB_SYNTAX_PGSQL:
-                        case DB_SYNTAX_SQLITE:
-                           nx_swprintf(query, 1024,
-                              L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                              L" SELECT item_id,%s,tdata_value"
-                              L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
-                              L" ON CONFLICT DO NOTHING",
-                              id, tdataTsExpr, id, batchStart);
-                           break;
-                        default:
-                           nx_swprintf(query, 1024,
-                              L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                              L" SELECT item_id,tdata_timestamp,tdata_value FROM ("
-                              L"    SELECT item_id,%s AS tdata_timestamp,tdata_value,"
-                              L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY tdata_timestamp) AS rn"
-                              L"    FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
-                              L" ) sub WHERE rn=1",
-                              id, tdataTsExpr, tdataTsExpr, id, batchStart);
-                           break;
-                     }
-                     if (DBQuery(hdb, query))
-                     {
-                        nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
-                           id, batchStart);
-                        success = DBQuery(hdb, query);
-                     }
-                     anyRemaining = true;
-                  }
-               }
-
-               if (success)
-                  DBCommit(hdb);
-               else
-                  DBRollback(hdb);
-            }
-         }
-      }
-
-      DBConnectionPoolReleaseConnection(hdb);
-
-      if (!anyRemaining)
+      if (objects.isEmpty())
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"All v5 data migration completed");
          break;
       }
+
+      nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 5, L"Starting data migration batch (%d objects)", objects.size());
+      for(int i = 0; i < objects.size(); i++)
+      {
+         ThreadPoolExecute(migrationPool, MigrateV5Data, static_cast<DataCollectionTarget*>(objects.get(i)));
+      }
+
+      while(!SleepAndCheckForShutdown(1))
+      {
+         ThreadPoolInfo tpi;
+         ThreadPoolGetInfo(migrationPool, &tpi);
+         if (tpi.activeRequests == 0)
+         {
+            nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 5, L"Batch completed");
+            break;
+         }
+      }
    }
 
-   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration thread stopped"));
+   ThreadPoolDestroy(migrationPool);
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration manager stopped"));
 }
 
 /**
- * Start background v5 data migration thread
+ * Start background v5 data migration
  */
 void StartV5DataMigration()
 {
@@ -972,13 +934,13 @@ void StartV5DataMigration()
       g_idxSensorById.forEach(callback);
 
    if (hasV5Tables)
-      s_v5DataMigrationThread = ThreadCreateEx(V5DataMigrationThread);
+      s_v5DataMigrationThread = ThreadCreateEx(V5DataMigrationManager);
    else
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"No v5 data tables found, skipping migration");
 }
 
 /**
- * Stop background v5 data migration thread
+ * Stop background v5 data migration
  */
 void StopV5DataMigration()
 {
