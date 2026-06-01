@@ -45,6 +45,7 @@ public class DciTemplateSelectionWidget extends Composite
    private TemplateDciSelector dciTagSelector;
    private Button checkRegexMatch;
    private Button checkMultiMatch;
+   private boolean multiMatchVisible = true;
    private List<ModifyListener> modifyListeners = new ArrayList<>();
 
    /**
@@ -70,19 +71,19 @@ public class DciTemplateSelectionWidget extends Composite
       dciNameSelector = new TemplateDciSelector(optionsGroup, SWT.NONE);
       dciNameSelector.setLabel(i18n.tr("Metric"));
       dciNameSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      dciNameSelector.addModifyListener(this::fireModifyListeners);
+      dciNameSelector.addModifyListener(this::onSelectorModify);
 
       dciDescriptionSelector = new TemplateDciSelector(optionsGroup, SWT.NONE);
       dciDescriptionSelector.setLabel(i18n.tr("DCI display name"));
       dciDescriptionSelector.setField(TemplateDciSelector.Field.DESCRIPTION);
       dciDescriptionSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      dciDescriptionSelector.addModifyListener(this::fireModifyListeners);
+      dciDescriptionSelector.addModifyListener(this::onSelectorModify);
 
       dciTagSelector = new TemplateDciSelector(optionsGroup, SWT.NONE);
       dciTagSelector.setLabel(i18n.tr("DCI tag"));
       dciTagSelector.setField(TemplateDciSelector.Field.TAG);
       dciTagSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      dciTagSelector.addModifyListener(this::fireModifyListeners);
+      dciTagSelector.addModifyListener(this::onSelectorModify);
 
       checkRegexMatch = new Button(optionsGroup, SWT.CHECK);
       checkRegexMatch.setText(i18n.tr("Use regular expressions for DCI matching"));
@@ -129,8 +130,36 @@ public class DciTemplateSelectionWidget extends Composite
     */
    public void setMultiMatchVisible(boolean visible)
    {
+      multiMatchVisible = visible;
       checkMultiMatch.setVisible(visible);
       ((GridData)checkMultiMatch.getLayoutData()).exclude = !visible;
+   }
+
+   /**
+    * Check if a no-value object (instance discovery prototype) is currently selected in any of the pattern fields.
+    *
+    * @return true if a no-value object is selected
+    */
+   public boolean isNoValueObjectSelected()
+   {
+      return dciNameSelector.isNoValueObject() || dciDescriptionSelector.isNoValueObject() || dciTagSelector.isNoValueObject();
+   }
+
+   /**
+    * Handle modification of a pattern selector. Picking an instance discovery prototype turns the pattern into a
+    * regular expression with a capture group, so enable regex matching (and multiple match when applicable) automatically.
+    *
+    * @param e modify event from child widget
+    */
+   private void onSelectorModify(ModifyEvent e)
+   {
+      if (isNoValueObjectSelected())
+      {
+         checkRegexMatch.setSelection(true);
+         if (multiMatchVisible)
+            checkMultiMatch.setSelection(true);
+      }
+      fireModifyListeners(e);
    }
 
    /**

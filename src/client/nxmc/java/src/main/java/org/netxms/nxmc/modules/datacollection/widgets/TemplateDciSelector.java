@@ -81,12 +81,12 @@ public class TemplateDciSelector extends AbstractSelector
                   value = dci.get(0).getUserTag();
                   break;
             }
-            if (dci.get(0).isNoValueObject())
+            noValueObject = dci.get(0).isNoValueObject();
+            if (noValueObject)
             {
-               noValueObject = true;
                value = Pattern.quote(value);
                value = value.replace("{instance}", "\\E(.*)\\Q").replace("{instance-name}", "\\E(.*)\\Q");
-            } 
+            }
             setText(value);
          }
          fireModifyListeners();

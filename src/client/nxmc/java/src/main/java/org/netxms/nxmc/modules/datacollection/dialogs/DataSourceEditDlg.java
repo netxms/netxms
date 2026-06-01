@@ -130,6 +130,14 @@ public class DataSourceEditDlg extends Dialog
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
 
+      if (isTemplate)
+      {
+         templateDciWidget.addModifyListener((e) -> {
+            if (templateDciWidget.isNoValueObjectSelected() && name.getText().isEmpty())
+               name.setText("\\1");
+         });
+      }
+
       displayFormat = new LabeledText(dialogArea, SWT.NONE);
       displayFormat.setLabel(i18n.tr("Display format"));
       displayFormat.setText(dci.displayFormat);
