@@ -1356,7 +1356,7 @@ public class ExtendedGraphViewer extends GraphViewer
        */
       public void resizeToolTipShell()
       {
-         if (toolTipHelper.isShowing())
+         if ((toolTipHelper != null) && toolTipHelper.isShowing())
             toolTipHelper.resizeShell();
       }
    }
