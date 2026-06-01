@@ -1,0 +1,471 @@
+{
+  "formatVersion": 6,
+  "nxslVersionV5": true,
+  "description": "VMware ESXi host and vCenter Server SNMP trap monitoring. Maps the VMware enterprise (.1.3.6.1.4.1.6876) SNMP notifications for virtual machine power state changes (powered on/off, suspended), ESXi environmental and hardware alerts (hardware, chassis, thermal, disk, power supply, battery, processor, memory, BIOS) and vCenter Server alarm state changes to NetXMS events, and adds event-processing rules that raise alarms for them.",
+  "events": [
+    {
+      "guid": "a1c0e501-1f2a-4b3c-8d4e-6876aa000001",
+      "name": "SNMP_ESXI_VM_POWERED_ON",
+      "code": 100240,
+      "description": "Generated when the system receives a vmwVmPoweredOn SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID\r\n   2) Virtual machine display name",
+      "severity": 1,
+      "flags": 1,
+      "message": "Virtual machine \"%2\" has been powered ON",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e502-1f2a-4b3c-8d4e-6876aa000002",
+      "name": "SNMP_ESXI_VM_POWERED_OFF",
+      "code": 100241,
+      "description": "Generated when the system receives a vmwVmPoweredOff SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID\r\n   2) Virtual machine display name",
+      "severity": 2,
+      "flags": 1,
+      "message": "Virtual machine \"%2\" has been powered OFF",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e503-1f2a-4b3c-8d4e-6876aa000003",
+      "name": "SNMP_ESXI_VM_SUSPENDED",
+      "code": 100242,
+      "description": "Generated when the system receives a vmwVmSuspended SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID\r\n   2) Virtual machine display name",
+      "severity": 2,
+      "flags": 1,
+      "message": "Virtual machine \"%2\" has been suspended",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e504-1f2a-4b3c-8d4e-6876aa000004",
+      "name": "SNMP_VCENTER_ALARM_UPDATE",
+      "code": 100243,
+      "description": "Generated when the system receives a vpxdAlarmInfo SNMP trap from VMware vCenter Server.\r\nParameters:\r\n   1) SNMP trap OID\r\n   2) Object of the alarm\r\n   3) Object type\r\n   4) New status of the alarm\r\n   5) Old status of the alarm\r\n   6) Alarm value",
+      "severity": 1,
+      "flags": 1,
+      "message": "vCenter alarm on \"%2\" - \"%6\" - changed from \"%5\" to \"%4\"",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e505-1f2a-4b3c-8d4e-6876aa000005",
+      "name": "SNMP_ESXI_HARDWARE_ALERT",
+      "code": 100244,
+      "description": "Generated when the system receives a vmwESXEnvHardwareAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 2,
+      "flags": 1,
+      "message": "Hardware alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e506-1f2a-4b3c-8d4e-6876aa000006",
+      "name": "SNMP_ESXI_CHASSIS_ALERT",
+      "code": 100245,
+      "description": "Generated when the system receives a vmwESXEnvChassisAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 3,
+      "flags": 1,
+      "message": "Chassis alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e507-1f2a-4b3c-8d4e-6876aa000007",
+      "name": "SNMP_ESXI_THERMAL_ALERT",
+      "code": 100246,
+      "description": "Generated when the system receives a vmwESXEnvThermalAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 2,
+      "flags": 1,
+      "message": "Thermal alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e508-1f2a-4b3c-8d4e-6876aa000008",
+      "name": "SNMP_ESXI_DISK_ALERT",
+      "code": 100247,
+      "description": "Generated when the system receives a vmwESXEnvDiskAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 3,
+      "flags": 1,
+      "message": "Disk alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e509-1f2a-4b3c-8d4e-6876aa000009",
+      "name": "SNMP_ESXI_POWER_SUPPLY_ALERT",
+      "code": 100248,
+      "description": "Generated when the system receives a vmwESXEnvPowerAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 4,
+      "flags": 1,
+      "message": "Power supply alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e50a-1f2a-4b3c-8d4e-6876aa00000a",
+      "name": "SNMP_ESXI_BATTERY_ALERT",
+      "code": 100249,
+      "description": "Generated when the system receives a vmwESXEnvBatteryAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 3,
+      "flags": 1,
+      "message": "Battery alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e50b-1f2a-4b3c-8d4e-6876aa00000b",
+      "name": "SNMP_ESXI_PROCESSOR_ALERT",
+      "code": 100250,
+      "description": "Generated when the system receives a vmwESXEnvProcessorAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 3,
+      "flags": 1,
+      "message": "Processor alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e50c-1f2a-4b3c-8d4e-6876aa00000c",
+      "name": "SNMP_ESXI_MEMORY_ALERT",
+      "code": 100251,
+      "description": "Generated when the system receives a vmwESXEnvMemoryAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 3,
+      "flags": 1,
+      "message": "Memory alert received",
+      "tags": "vmware"
+    },
+    {
+      "guid": "a1c0e50d-1f2a-4b3c-8d4e-6876aa00000d",
+      "name": "SNMP_ESXI_BIOS_ALERT",
+      "code": 100252,
+      "description": "Generated when the system receives a vmwESXEnvBIOSAlert SNMP trap from a VMware ESXi host.\r\nParameters:\r\n   1) SNMP trap OID",
+      "severity": 2,
+      "flags": 1,
+      "message": "BIOS alert received",
+      "tags": "vmware"
+    }
+  ],
+  "templates": [],
+  "traps": [
+    {
+      "id": 1,
+      "guid": "b2d1f601-2a3b-4c5d-9e6f-6876bb000001",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.1",
+      "description": "VMware ESXi - virtual machine powered on",
+      "eventTag": "",
+      "event": "SNMP_ESXI_VM_POWERED_ON",
+      "transformationScript": "",
+      "parameters": [
+        {
+          "id": 1,
+          "flags": 1,
+          "description": "Virtual machine display name",
+          "oid": ".1.3.6.1.4.1.6876.2.1.1.2"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "guid": "b2d1f602-2a3b-4c5d-9e6f-6876bb000002",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.2",
+      "description": "VMware ESXi - virtual machine powered off",
+      "eventTag": "",
+      "event": "SNMP_ESXI_VM_POWERED_OFF",
+      "transformationScript": "",
+      "parameters": [
+        {
+          "id": 1,
+          "flags": 1,
+          "description": "Virtual machine display name",
+          "oid": ".1.3.6.1.4.1.6876.2.1.1.2"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "guid": "b2d1f603-2a3b-4c5d-9e6f-6876bb000003",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.5",
+      "description": "VMware ESXi - virtual machine suspended",
+      "eventTag": "",
+      "event": "SNMP_ESXI_VM_SUSPENDED",
+      "transformationScript": "",
+      "parameters": [
+        {
+          "id": 1,
+          "flags": 1,
+          "description": "Virtual machine display name",
+          "oid": ".1.3.6.1.4.1.6876.2.1.1.2"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "guid": "b2d1f604-2a3b-4c5d-9e6f-6876bb000004",
+      "oid": ".1.3.6.1.4.1.6876.4.3.0.203",
+      "description": "VMware vCenter Server - alarm state change",
+      "eventTag": "",
+      "event": "SNMP_VCENTER_ALARM_UPDATE",
+      "transformationScript": "",
+      "parameters": [
+        {
+          "id": 1,
+          "flags": 0,
+          "description": "Object of the alarm",
+          "oid": ".1.3.6.1.4.1.6876.4.3.307"
+        },
+        {
+          "id": 2,
+          "flags": 0,
+          "description": "Object type",
+          "oid": ".1.3.6.1.4.1.6876.4.3.308"
+        },
+        {
+          "id": 3,
+          "flags": 0,
+          "description": "New status of the alarm",
+          "oid": ".1.3.6.1.4.1.6876.4.3.305"
+        },
+        {
+          "id": 4,
+          "flags": 0,
+          "description": "Old status of the alarm",
+          "oid": ".1.3.6.1.4.1.6876.4.3.304"
+        },
+        {
+          "id": 5,
+          "flags": 0,
+          "description": "Alarm value",
+          "oid": ".1.3.6.1.4.1.6876.4.3.306"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "guid": "b2d1f605-2a3b-4c5d-9e6f-6876bb000005",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.302",
+      "description": "VMware ESXi - hardware status alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_HARDWARE_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 6,
+      "guid": "b2d1f606-2a3b-4c5d-9e6f-6876bb000006",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.304",
+      "description": "VMware ESXi - chassis alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_CHASSIS_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 7,
+      "guid": "b2d1f607-2a3b-4c5d-9e6f-6876bb000007",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.305",
+      "description": "VMware ESXi - cooling/thermal alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_THERMAL_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 8,
+      "guid": "b2d1f608-2a3b-4c5d-9e6f-6876bb000008",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.306",
+      "description": "VMware ESXi - disk status alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_DISK_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 9,
+      "guid": "b2d1f609-2a3b-4c5d-9e6f-6876bb000009",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.307",
+      "description": "VMware ESXi - power supply alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_POWER_SUPPLY_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 10,
+      "guid": "b2d1f60a-2a3b-4c5d-9e6f-6876bb00000a",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.303",
+      "description": "VMware ESXi - battery alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_BATTERY_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 11,
+      "guid": "b2d1f60b-2a3b-4c5d-9e6f-6876bb00000b",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.308",
+      "description": "VMware ESXi - processor alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_PROCESSOR_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 12,
+      "guid": "b2d1f60c-2a3b-4c5d-9e6f-6876bb00000c",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.309",
+      "description": "VMware ESXi - memory alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_MEMORY_ALERT",
+      "transformationScript": ""
+    },
+    {
+      "id": 13,
+      "guid": "b2d1f60d-2a3b-4c5d-9e6f-6876bb00000d",
+      "oid": ".1.3.6.1.4.1.6876.4.1.0.310",
+      "description": "VMware ESXi - BIOS alert",
+      "eventTag": "",
+      "event": "SNMP_ESXI_BIOS_ALERT",
+      "transformationScript": ""
+    }
+  ],
+  "rules": [
+    {
+      "guid": "c3e2a701-3b4c-4d6e-af70-6876cc000001",
+      "flags": 7944,
+      "sources": [],
+      "sourceExclusions": [],
+      "events": [
+        {
+          "name": "SNMP_ESXI_VM_POWERED_ON",
+          "id": 100240
+        },
+        {
+          "name": "SNMP_ESXI_VM_POWERED_OFF",
+          "id": 100241
+        },
+        {
+          "name": "SNMP_ESXI_VM_SUSPENDED",
+          "id": 100242
+        }
+      ],
+      "timeFrames": [],
+      "actions": [],
+      "timerCancellations": [],
+      "comments": "Raise an alarm on VMware ESXi virtual machine power state change. One alarm per virtual machine and source node; a later power event for the same virtual machine updates it.",
+      "downtimeTag": "",
+      "filterScript": "",
+      "actionScript": "",
+      "alarmMessage": "%m",
+      "alarmImpact": null,
+      "alarmSeverity": 5,
+      "alarmKey": "ESXI_VM_POWER_%i_%2",
+      "alarmTimeout": 0,
+      "alarmTimeoutEvent": "SYS_ALARM_TIMEOUT",
+      "rootCauseAnalysisScript": null,
+      "alarmCategories": [],
+      "pstorageSetActions": {},
+      "pstorageDeleteActions": [],
+      "customAttributeSetActions": {},
+      "customAttributeDeleteActions": [],
+      "aiAgentInstructions": null,
+      "incidentDelay": 0,
+      "incidentTitle": null,
+      "incidentDescription": null,
+      "incidentAIAnalysisDepth": 0,
+      "incidentAIPrompt": null
+    },
+    {
+      "guid": "c3e2a702-3b4c-4d6e-af70-6876cc000002",
+      "flags": 7944,
+      "sources": [],
+      "sourceExclusions": [],
+      "events": [
+        {
+          "name": "SNMP_VCENTER_ALARM_UPDATE",
+          "id": 100243
+        }
+      ],
+      "timeFrames": [],
+      "actions": [],
+      "timerCancellations": [],
+      "comments": "Raise an alarm on VMware vCenter Server alarm state change. One alarm per monitored object and source node.",
+      "downtimeTag": "",
+      "filterScript": "",
+      "actionScript": "",
+      "alarmMessage": "%m",
+      "alarmImpact": null,
+      "alarmSeverity": 5,
+      "alarmKey": "VCENTER_ALARM_%i_%2",
+      "alarmTimeout": 0,
+      "alarmTimeoutEvent": "SYS_ALARM_TIMEOUT",
+      "rootCauseAnalysisScript": null,
+      "alarmCategories": [],
+      "pstorageSetActions": {},
+      "pstorageDeleteActions": [],
+      "customAttributeSetActions": {},
+      "customAttributeDeleteActions": [],
+      "aiAgentInstructions": null,
+      "incidentDelay": 0,
+      "incidentTitle": null,
+      "incidentDescription": null,
+      "incidentAIAnalysisDepth": 0,
+      "incidentAIPrompt": null
+    },
+    {
+      "guid": "c3e2a703-3b4c-4d6e-af70-6876cc000003",
+      "flags": 7944,
+      "sources": [],
+      "sourceExclusions": [],
+      "events": [
+        {
+          "name": "SNMP_ESXI_HARDWARE_ALERT",
+          "id": 100244
+        },
+        {
+          "name": "SNMP_ESXI_CHASSIS_ALERT",
+          "id": 100245
+        },
+        {
+          "name": "SNMP_ESXI_DISK_ALERT",
+          "id": 100247
+        },
+        {
+          "name": "SNMP_ESXI_THERMAL_ALERT",
+          "id": 100246
+        },
+        {
+          "name": "SNMP_ESXI_POWER_SUPPLY_ALERT",
+          "id": 100248
+        },
+        {
+          "name": "SNMP_ESXI_BATTERY_ALERT",
+          "id": 100249
+        },
+        {
+          "name": "SNMP_ESXI_PROCESSOR_ALERT",
+          "id": 100250
+        },
+        {
+          "name": "SNMP_ESXI_MEMORY_ALERT",
+          "id": 100251
+        },
+        {
+          "name": "SNMP_ESXI_BIOS_ALERT",
+          "id": 100252
+        }
+      ],
+      "timeFrames": [],
+      "actions": [],
+      "timerCancellations": [],
+      "comments": "Raise an alarm on VMware ESXi environmental and hardware alerts. One alarm per alert type and source node.",
+      "downtimeTag": "",
+      "filterScript": "",
+      "actionScript": "",
+      "alarmMessage": "%m",
+      "alarmImpact": null,
+      "alarmSeverity": 5,
+      "alarmKey": "ESXI_%i_%c",
+      "alarmTimeout": 0,
+      "alarmTimeoutEvent": "SYS_ALARM_TIMEOUT",
+      "rootCauseAnalysisScript": null,
+      "alarmCategories": [],
+      "pstorageSetActions": {},
+      "pstorageDeleteActions": [],
+      "customAttributeSetActions": {},
+      "customAttributeDeleteActions": [],
+      "aiAgentInstructions": null,
+      "incidentDelay": 0,
+      "incidentTitle": null,
+      "incidentDescription": null,
+      "incidentAIAnalysisDepth": 0,
+      "incidentAIPrompt": null
+    }
+  ],
+  "scripts": [],
+  "objectTools": [],
+  "dciSummaryTables": [],
+  "actions": [],
+  "webServiceDefinitions": []
+}

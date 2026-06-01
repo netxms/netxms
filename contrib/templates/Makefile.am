@@ -49,6 +49,7 @@ templates_DATA = \
 	tplink.xml \
 	ubiquity.xml \
 	unifi.xml \
+	vmware.json \
 	watchguard.xml \
 	wd_mycloud.xml \
 	windows.xml \
