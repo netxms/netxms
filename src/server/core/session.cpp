@@ -17064,12 +17064,12 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
    if (!(m_systemAccessRights & SYSTEM_ACCESS_SCAN_NETWORK))
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      WriteAuditLog(AUDIT_NETWORK, false, m_userId, m_workstation, m_id, 0, L"Access denied on network range scan");
+      writeAuditLog(AUDIT_NETWORK, false, 0, L"Access denied on network range scan");
       sendMessage(response);
       return;
    }
 
-   InetAddressListElement range(request, VID_ADDR_LIST_BASE);
+   InetAddressListElement range(request, VID_IP_ADDRESS_LIST_BASE);
    if ((range.getZoneUIN() != 0) && (FindZoneByUIN(range.getZoneUIN()) == nullptr))
    {
       response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
@@ -17100,22 +17100,21 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
 
    uint32_t startV4 = start.getAddressV4();
    uint32_t endV4 = end.getAddressV4();
-   if (startV4 > endV4)
+   if ((startV4 > endV4) || end.isBroadcast() || start.isAnyLocal())
    {
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      response.setField(VID_ERROR_TEXT, L"Range start address is greater than end address");
+      response.setField(VID_ERROR_TEXT, L"Invalid address range");
       sendMessage(response);
       return;
    }
 
-   uint64_t rangeSize = static_cast<uint64_t>(endV4) - static_cast<uint64_t>(startV4) + 1;
-   static const uint64_t MAX_SCAN_RANGE = 65536;
+   uint32_t rangeSize = endV4 - startV4 + 1;
+   static const uint32_t MAX_SCAN_RANGE = 65536;
    if (rangeSize > MAX_SCAN_RANGE)
    {
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
       wchar_t errText[256];
-      nx_swprintf(errText, 256, L"Range size %llu exceeds maximum of %llu addresses",
-            static_cast<unsigned long long>(rangeSize), static_cast<unsigned long long>(MAX_SCAN_RANGE));
+      nx_swprintf(errText, 256, L"Range size %u exceeds maximum of %u addresses", rangeSize, MAX_SCAN_RANGE);
       response.setField(VID_ERROR_TEXT, errText);
       sendMessage(response);
       return;
@@ -17159,12 +17158,11 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
    };
    context.cancelCheck = [this]() { return isTerminated(); };
 
-   WriteAuditLog(AUDIT_NETWORK, true, m_userId, m_workstation, m_id, 0,
+   writeAuditLog(AUDIT_NETWORK, true, 0,
          L"Network range scan started: %s - %s (zone=%d, %llu addresses, flags=0x%04x, %d TCP ports)",
          start.toString().cstr(), end.toString().cstr(), context.zoneUIN,
          static_cast<unsigned long long>(rangeSize), context.flags, context.tcpPorts.size());
-   nxlog_debug_tag(L"poll.discovery", 4, L"Network range scan from session [%d]: %s - %s (zone=%d, %llu addresses)",
-         m_id, start.toString().cstr(), end.toString().cstr(), context.zoneUIN, static_cast<unsigned long long>(rangeSize));
+   debugPrintf(4, L"Network range scan %s - %s (zone=%d, %u addresses)", start.toString().cstr(), end.toString().cstr(), context.zoneUIN, rangeSize);
 
    uint32_t reportedHosts = 0;
    ScanNetworkRangeInteractive(context, &reportedHosts);
@@ -17175,11 +17173,10 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
 
    response.setField(VID_RCC, RCC_SUCCESS);
    response.setField(VID_NUM_RECORDS, reportedHosts);
-   response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(rangeSize));
+   response.setField(VID_NUM_ELEMENTS, rangeSize);
    sendMessage(response);
 
-   nxlog_debug_tag(L"poll.discovery", 4, L"Network range scan from session [%d] finished: %u hosts reported across %llu addresses%s",
-         m_id, reportedHosts, static_cast<unsigned long long>(rangeSize), isTerminated() ? L" (session terminating)" : L"");
+   debugPrintf(4, L"Network range scan finished: %u hosts reported across %u addresses%s", reportedHosts, rangeSize, isTerminated() ? L" (session terminating)" : L"");
 }
 
 /**

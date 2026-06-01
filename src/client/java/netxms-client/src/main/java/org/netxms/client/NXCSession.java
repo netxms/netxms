@@ -15035,7 +15035,7 @@ public class NXCSession
    public int scanNetworkRange(InetAddressListElement range, int[] tcpPorts, int flags, final NetworkScanListener listener) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SCAN_NETWORK_RANGE);
-      range.fillMessage(msg, NXCPCodes.VID_ADDR_LIST_BASE);
+      range.fillMessage(msg, NXCPCodes.VID_IP_ADDRESS_LIST_BASE);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
       if ((tcpPorts != null) && (tcpPorts.length > 0))
       {
@@ -15066,18 +15066,14 @@ public class NXCSession
       try
       {
          sendMessage(msg);
-         NXCPMessage response = waitForRCC(msg.getMessageId());
          handler.waitForCompletion();
          if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
+         // Final confirmation will be sent by server only after final progress message
+         NXCPMessage response = waitForRCC(msg.getMessageId());
          return response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
       }
-      catch(NXCException e)
-      {
-         removeMessageSubscription(NXCPCodes.CMD_RANGE_SCAN_RESULT, msg.getMessageId());
-         throw e;
-      }
-      catch(IOException e)
+      catch(Exception e)
       {
          removeMessageSubscription(NXCPCodes.CMD_RANGE_SCAN_RESULT, msg.getMessageId());
          throw e;

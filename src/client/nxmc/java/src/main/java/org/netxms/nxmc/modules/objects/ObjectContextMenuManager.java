@@ -61,6 +61,9 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.WirelessDomain;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -110,6 +113,7 @@ import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
+import org.netxms.nxmc.modules.tools.views.NetworkScanView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
@@ -153,6 +157,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemoveObjectsTemplate;
    private Action actionAddClusterNode;
    private Action actionRemoveClusterNode;
+   private Action actionScanSubnet;
    private Action actionAddWirelessController;
    private Action actionRemoveWirelessController;
    private Action actionRouteFrom;
@@ -461,6 +466,14 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionScanSubnet = new Action(i18n.tr("&Scan subnet...")) {
+         @Override
+         public void run()
+         {
+            scanSubnet();
+         }
+      };
+
       actionAddWirelessController = new Action(i18n.tr("&Add controller node...")) {
          @Override
          public void run()
@@ -626,6 +639,11 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionAddClusterNode);
             add(actionRemoveClusterNode);
+            add(new Separator());
+         }
+         if ((object instanceof Subnet) && ((Registry.getSession().getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCAN_NETWORK) != 0))
+         {
+            add(actionScanSubnet);
             add(new Separator());
          }
          if (actionLinkObjectToAsset.isValidForSelection(selection))
@@ -1849,6 +1867,47 @@ public class ObjectContextMenuManager extends MenuManager
             return i18n.tr("Cannot unbind objects");
          }
       }.start();
+   }
+
+   /**
+    * Open Network Scan tool view for the selected subnet, pre-populated with
+    * its address range (excluding the network and broadcast addresses for
+    * normal subnets) and zone.
+    */
+   private void scanSubnet()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Subnet))
+         return;
+      Subnet subnet = (Subnet)object;
+      InetAddress base = subnet.getSubnetAddress();
+      byte[] raw = base.getAddress();
+      if (raw.length != 4)
+      {
+         MessageDialogHelper.openWarning(view.getWindow().getShell(), i18n.tr("Scan subnet"),
+               i18n.tr("Only IPv4 subnets can be scanned interactively"));
+         return;
+      }
+      int network = ((raw[0] & 0xFF) << 24) | ((raw[1] & 0xFF) << 16) | ((raw[2] & 0xFF) << 8) | (raw[3] & 0xFF);
+      int hostBits = 32 - subnet.getSubnetMask();
+      int broadcast = (hostBits == 32) ? 0xFFFFFFFF : network | ((1 << hostBits) - 1);
+      int start = (hostBits > 1) ? network + 1 : network;
+      int end = (hostBits > 1) ? broadcast - 1 : broadcast;
+      try
+      {
+         InetAddress startAddr = InetAddress.getByAddress(new byte[] {
+               (byte)((start >> 24) & 0xFF), (byte)((start >> 16) & 0xFF),
+               (byte)((start >> 8) & 0xFF), (byte)(start & 0xFF) });
+         InetAddress endAddr = InetAddress.getByAddress(new byte[] {
+               (byte)((end >> 24) & 0xFF), (byte)((end >> 16) & 0xFF),
+               (byte)((end >> 8) & 0xFF), (byte)(end & 0xFF) });
+         new ViewPlacement(view).openView(new NetworkScanView(startAddr, endAddr, subnet.getZoneId()));
+      }
+      catch(UnknownHostException e)
+      {
+         MessageDialogHelper.openWarning(view.getWindow().getShell(), i18n.tr("Scan subnet"),
+               i18n.tr("Cannot derive scan range from subnet"));
+      }
    }
 
    /**
