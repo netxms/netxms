@@ -3222,6 +3222,7 @@ static void MaskNodeCredentials(NXCPMessage *msg, const NetObj& object, uint32_t
    msg->setField(VID_SNMP_PRIV_PASSWORD, mask);
    msg->setField(VID_SSH_PASSWORD, mask);
    msg->setField(VID_VNC_PASSWORD, mask);
+   msg->setField(VID_SNMP_TRAP_AUTH_OBJECT, mask);
    msg->setField(VID_SNMP_TRAP_AUTH_PASSWORD, mask);
    msg->setField(VID_SNMP_TRAP_PRIV_PASSWORD, mask);
 }
