@@ -1757,11 +1757,8 @@ void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    fieldId = VID_URL_LIST_BASE;
    for(int i = 0; i < m_urls.size(); i++)
    {
-      const ObjectUrl *url = m_urls.get(i);
-      msg->setField(fieldId++, url->getId());
-      msg->setField(fieldId++, url->getUrl());
-      msg->setField(fieldId++, url->getDescription());
-      fieldId += 7;
+      m_urls.get(i)->fillMessage(msg, fieldId);
+      fieldId += 10;
    }
 }
 
