@@ -274,6 +274,30 @@ static NXCORE_LOG s_logs[] =
          { nullptr, nullptr, 0, 0 }
       }
    },
+   { L"OpenTelemetryLog", L"otel_log", L"id", L"node_id", SYSTEM_ACCESS_VIEW_SYSLOG,
+      "OpenTelemetry log records ingested via OTLP/HTTP. Contains service and instrumentation scope names, "
+      "OTLP severity (1=TRACE to 24=FATAL) with optional severity text, trace and span identifiers for correlation, "
+      "the log body, and flattened resource/record attributes as JSON. Useful for application-level observability.",
+      {
+         { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"log_timestamp", L"Time", LC_TIMESTAMP_MS, LCF_TSDB_TIMESTAMPTZ },
+         { L"origin_timestamp", L"Origin time", LC_TIMESTAMP_MS, 0 },
+         { L"observed_timestamp", L"Observed time", LC_TIMESTAMP_MS, 0 },
+         { L"node_id", L"Source", LC_OBJECT_ID, 0 },
+         { L"zone_uin", L"Zone", LC_ZONE_UIN, 0 },
+         { L"service_name", L"Service", LC_TEXT, 0 },
+         { L"scope_name", L"Scope", LC_TEXT, 0 },
+         { L"severity_number", L"Severity", LC_INTEGER, 0 },
+         { L"severity_text", L"Severity text", LC_TEXT, 0 },
+         { L"trace_id", L"Trace ID", LC_TEXT, 0 },
+         { L"span_id", L"Span ID", LC_TEXT, 0 },
+         { L"flags", L"Flags", LC_INTEGER, 0 },
+         { L"dropped_attributes_count", L"Dropped attributes", LC_INTEGER, 0 },
+         { L"body", L"Body", LC_TEXT, 0 },
+         { L"attributes", L"Attributes", LC_JSON_DETAILS, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ nullptr, nullptr, nullptr, nullptr, 0, nullptr, {} }
 };
 

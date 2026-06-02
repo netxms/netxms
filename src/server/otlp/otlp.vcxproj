@@ -340,10 +340,13 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matching.cpp" />
     <ClCompile Include="receiver.cpp" />
+    <ClCompile Include="logs.cpp" />
     <ClCompile Include="generated\common.pb.cc" />
     <ClCompile Include="generated\resource.pb.cc" />
     <ClCompile Include="generated\metrics.pb.cc" />
     <ClCompile Include="generated\metrics_service.pb.cc" />
+    <ClCompile Include="generated\logs.pb.cc" />
+    <ClCompile Include="generated\logs_service.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />
@@ -355,12 +358,15 @@
     <ClInclude Include="..\include\nxmodule.h" />
     <ClInclude Include="..\include\nxsrvapi.h" />
     <ClInclude Include="otlp.h" />
+    <ClInclude Include="otlp_attributes.h" />
   </ItemGroup>
   <ItemGroup>
     <PROTOC Include="common.proto" />
     <PROTOC Include="resource.proto" />
     <PROTOC Include="metrics.proto" />
     <PROTOC Include="metrics_service.proto" />
+    <PROTOC Include="logs.proto" />
+    <PROTOC Include="logs_service.proto" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\db\libnxdb\libnxdb.vcxproj">

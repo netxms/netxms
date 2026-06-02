@@ -162,6 +162,9 @@ nxsl.ssh	NXSL SSH session operations
 
 nxcp.streamcomp	NXCP stream compression
 
+otel.log	OpenTelemetry log processing (server side)
+otlp		OTLP receiver module
+
 oxidized	Oxidized integration module
 
 obj.*		Object related

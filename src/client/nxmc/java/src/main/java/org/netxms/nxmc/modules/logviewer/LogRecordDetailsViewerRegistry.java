@@ -24,6 +24,7 @@ import org.netxms.nxmc.modules.logviewer.views.helpers.AlarmLogRecordDetailsView
 import org.netxms.nxmc.modules.logviewer.views.helpers.AuditLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.EventLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.NotificationLogRecordDetailsViewer;
+import org.netxms.nxmc.modules.logviewer.views.helpers.OpenTelemetryLogRecordDetailsViewer;
 import org.netxms.nxmc.modules.logviewer.views.helpers.WindowsEventLogRecordDetailsViewer;
 
 /**
@@ -41,6 +42,7 @@ public final class LogRecordDetailsViewerRegistry
       registry.put("AuditLog", new AuditLogRecordDetailsViewer());
       registry.put("EventLog", new EventLogRecordDetailsViewer());
       registry.put("NotificationLog", new NotificationLogRecordDetailsViewer());
+      registry.put("OpenTelemetryLog", new OpenTelemetryLogRecordDetailsViewer());
       registry.put("WindowsEventLog", new WindowsEventLogRecordDetailsViewer());
       registry.put("AlarmLog", new AlarmLogRecordDetailsViewer());
    }

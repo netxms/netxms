@@ -38,7 +38,8 @@ enum class EventOrigin
    SNMP = 4,
    NXSL = 5,
    REMOTE_SERVER = 6,
-   WINDOWS_EVENT = 7
+   WINDOWS_EVENT = 7,
+   OPENTELEMETRY = 8
 };
 
 /**
@@ -739,7 +740,8 @@ enum class EventReferenceType
    SNMP_TRAP = 3,
    CONDITION = 4,
    SYSLOG = 5,
-   WIN_EVENT_LOG = 6
+   WIN_EVENT_LOG = 6,
+   OTEL_LOG = 7
 };
 
 /**

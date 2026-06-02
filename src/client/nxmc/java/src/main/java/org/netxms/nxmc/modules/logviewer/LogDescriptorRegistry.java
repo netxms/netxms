@@ -101,6 +101,7 @@ public final class LogDescriptorRegistry
             return (session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_VIEW_NOTIFICATION_LOG) != 0;
          }
       });
+      descriptors.add(new LogDescriptor("OpenTelemetryLog", i18n.tr("OpenTelemetry"), i18n.tr("OpenTelemetry"), "node_id"));
       descriptors.add(new LogDescriptor("ServerActionExecutionLog", i18n.tr("Server Action Executions"), null, null) {
          @Override
          public boolean isValidForSession(NXCSession session)

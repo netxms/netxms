@@ -679,6 +679,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       InitializeWindowsEventParser();
    }
+   if (isCLOB && !wcscmp(name, L"OpenTelemetryLogParser"))
+   {
+      InitializeOtelLogParser();
+   }
    else if (!wcscmp(name, L"Agent.RestartWaitTime"))
    {
       g_agentRestartWaitTime = ConvertToUint32(value, 0);
@@ -959,6 +963,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcsncmp(name, L"WindowsEvents.", 14))
    {
       OnWindowsEventsConfigurationChange(name, value);
+   }
+   else if (!_tcsncmp(name, L"OTLP.Logs.", 10))
+   {
+      OnOtelLogsConfigurationChange(name, value);
    }
 }
 

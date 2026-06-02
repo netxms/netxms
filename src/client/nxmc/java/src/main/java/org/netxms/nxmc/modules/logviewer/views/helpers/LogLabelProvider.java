@@ -368,7 +368,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
    {
       if (i18n == null)
          i18n = LocalizationHelper.getI18n(LogLabelProvider.class);
-      return new String[] { i18n.tr("System"), i18n.tr("Agent"), i18n.tr("Client"), i18n.tr("Syslog"), i18n.tr("SNMP"), i18n.tr("Script"), i18n.tr("Remote Server"), i18n.tr("Windows Event") };
+      return new String[] { i18n.tr("System"), i18n.tr("Agent"), i18n.tr("Client"), i18n.tr("Syslog"), i18n.tr("SNMP"), i18n.tr("Script"), i18n.tr("Remote Server"), i18n.tr("Windows Event"), i18n.tr("OpenTelemetry") };
    }
 
    /**

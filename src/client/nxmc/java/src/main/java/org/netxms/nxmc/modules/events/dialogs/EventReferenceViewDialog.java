@@ -271,6 +271,8 @@ public class EventReferenceViewDialog extends Dialog
                return "Syslog Parser";
             case WINDOWS_EVENT_LOG:
                return "Windows Event Log Parser";
+            case OTEL_LOG:
+               return "OpenTelemetry Log Parser";
             default:
                return "Error";
          }

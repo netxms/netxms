@@ -27,7 +27,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
 			netsrv.cpp network_cred.cpp node.cpp notification_channel.cpp \
 			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
-			object_queries.cpp objects.cpp objtools.cpp ospf.cpp package.cpp \
+			object_queries.cpp objects.cpp objtools.cpp ospf.cpp otellog.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \

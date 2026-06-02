@@ -62,13 +62,21 @@ public class LogParserConfigurator extends ConfigurationView
    /**
     * Create global log parser configuration view
     */
-   public LogParserConfigurator(LogParserType parserType, String configName, String displayName)
+   public LogParserConfigurator(LogParserType parserType, String configName, String displayName, String iconName)
    {
-      super(String.format(LocalizationHelper.getI18n(LogParserConfigurator.class).tr("%s Parser"), displayName), ResourceManager.getImageDescriptor("icons/config-views/log-parser.png"), configName, false);
+      super(String.format(LocalizationHelper.getI18n(LogParserConfigurator.class).tr("%s Parser"), displayName), ResourceManager.getImageDescriptor(iconName), configName, false);
       this.parserType = parserType;
       this.configName = configName;
       this.displayName = displayName;
       session = Registry.getSession();
+   }
+
+   /**
+    * Create global log parser configuration view
+    */
+   public LogParserConfigurator(LogParserType parserType, String configName, String displayName)
+   {
+      this(parserType, configName, displayName, "icons/config-views/log-parser.png");
    }
 
    /**

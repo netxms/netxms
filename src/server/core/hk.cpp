@@ -325,7 +325,7 @@ static void BuildDropChunksQuery(const TCHAR *table, time_t cutoffTime, TCHAR *q
 /**
  * Delete expired log records and throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
  */
-static bool DeleteExpiredLogRecords(const TCHAR *logName, const TCHAR *logTable, const TCHAR *timestampColumn, const TCHAR *retentionParameter, DB_HANDLE hdb, time_t cycleStartTime)
+static bool DeleteExpiredLogRecords(const TCHAR *logName, const TCHAR *logTable, const TCHAR *timestampColumn, const TCHAR *retentionParameter, DB_HANDLE hdb, time_t cycleStartTime, bool millisecondTimestamp = false)
 {
    uint32_t retentionTime = ConfigReadULong(retentionParameter, 90);
    if (retentionTime <= 0)
@@ -335,9 +335,17 @@ static bool DeleteExpiredLogRecords(const TCHAR *logName, const TCHAR *logTable,
    retentionTime *= 86400; // Convert days to seconds
    TCHAR query[256];
    if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      // Drop chunks operates on the timestamptz partitioning column regardless of stored precision
       BuildDropChunksQuery(logTable, cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
+   }
    else
-      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM %s WHERE %s<") INT64_FMT, logTable, timestampColumn, static_cast<int64_t>(cycleStartTime - retentionTime));
+   {
+      int64_t cutoff = static_cast<int64_t>(cycleStartTime - retentionTime);
+      if (millisecondTimestamp)
+         cutoff *= 1000;  // Column stores epoch milliseconds
+      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM %s WHERE %s<") INT64_FMT, logTable, timestampColumn, cutoff);
+   }
    DBQuery(hdb, query);
 
    return ThrottleHousekeeper();
@@ -415,6 +423,8 @@ static void HouseKeeper()
       if (!DeleteExpiredLogRecords(_T("syslog"), _T("syslog"), _T("msg_timestamp"), _T("Syslog.RetentionTime"), hdb, cycleStartTime))
          break;
       if (!DeleteExpiredLogRecords(_T("windows event log"), _T("win_event_log"), _T("event_timestamp"), _T("WindowsEvents.LogRetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("opentelemetry log"), _T("otel_log"), _T("log_timestamp"), _T("OTLP.Logs.RetentionTime"), hdb, cycleStartTime, true))
          break;
       if (!DeleteExpiredLogRecords(_T("SNMP trap log"), _T("snmp_trap_log"), _T("trap_timestamp"), _T("SNMP.Traps.LogRetentionTime"), hdb, cycleStartTime))
          break;

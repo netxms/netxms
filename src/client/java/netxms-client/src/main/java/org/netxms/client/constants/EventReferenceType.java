@@ -36,7 +36,8 @@ public enum EventReferenceType
    SNMP_TRAP(3),
    CONDITION(4),
    SYSLOG(5),
-   WINDOWS_EVENT_LOG(6);
+   WINDOWS_EVENT_LOG(6),
+   OTEL_LOG(7);
 
    private static Logger logger = LoggerFactory.getLogger(EventReferenceType.class);
    private static Map<Integer, EventReferenceType> lookupTable = new HashMap<Integer, EventReferenceType>();

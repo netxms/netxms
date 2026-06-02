@@ -3108,6 +3108,47 @@ SELECT create_hypertable('win_event_log', 'event_timestamp', chunk_time_interval
 #endif
 
 /**
+ * Stored OpenTelemetry log records.
+ * Timestamps are stored with millisecond precision (epoch milliseconds on non-TSDB backends).
+ */
+CREATE TABLE otel_log
+(
+   id SQL_INT64 not null,
+#ifdef DB_TSDB
+   log_timestamp timestamptz not null,
+#else
+   log_timestamp SQL_INT64 not null,
+#endif
+   origin_timestamp SQL_INT64 not null,
+   observed_timestamp SQL_INT64 not null,
+   node_id integer not null,
+   zone_uin integer not null,
+   service_name varchar(127) null,
+   scope_name varchar(127) null,
+   severity_number integer not null,
+   severity_text varchar(31) null,
+   trace_id varchar(32) null,
+   span_id varchar(16) null,
+   flags integer not null,
+   dropped_attributes_count integer not null,
+   body SQL_TEXT null,
+   attributes SQL_TEXT null,
+#ifdef DB_TSDB
+   PRIMARY KEY(id,log_timestamp)
+#else
+   PRIMARY KEY(id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_otel_log_timestamp ON otel_log(log_timestamp);
+CREATE INDEX idx_otel_log_node ON otel_log(node_id);
+CREATE INDEX idx_otel_log_trace ON otel_log(trace_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('otel_log', 'log_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+
+/**
  * Geographical areas
  */
 CREATE TABLE geo_areas

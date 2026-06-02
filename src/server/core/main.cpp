@@ -160,6 +160,12 @@ void StartWindowsEventProcessing();
 void StopWindowsEventProcessing();
 
 /**
+ * OpenTelemetry log server control
+ */
+void StartOtelLogProcessing();
+void StopOtelLogProcessing();
+
+/**
  * Thread functions
  */
 void Syncer();
@@ -1579,6 +1585,7 @@ retry_db_lock:
 
    StartSyslogServer();
    StartWindowsEventProcessing();
+   StartOtelLogProcessing();
 
    // Start beacon host poller
    ThreadCreate(BeaconPoller);
@@ -1748,6 +1755,7 @@ void NXCORE_EXPORTABLE Shutdown()
    CloseAgentTunnels();
    StopSyslogServer();
    StopWindowsEventProcessing();
+   StopOtelLogProcessing();
 
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 2, _T("Waiting for event processor to stop"));
    g_eventQueue.put(INVALID_POINTER_VALUE);

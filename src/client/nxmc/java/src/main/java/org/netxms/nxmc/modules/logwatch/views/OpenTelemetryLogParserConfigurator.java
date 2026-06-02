@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.logwatch.widgets.helpers;
+package org.netxms.nxmc.modules.logwatch.views;
+
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
 
 /**
- * Log parser type
+ * Parser configurator for OpenTelemetry log parser
  */
-public enum LogParserType
+public class OpenTelemetryLogParserConfigurator extends LogParserConfigurator
 {
-   POLICY,
-   SYSLOG,
-   WIN_EVENT,
-   OTEL
+   /**
+    * Create OpenTelemetry log parser configuration view
+    */
+   public OpenTelemetryLogParserConfigurator()
+   {
+      super(LogParserType.OTEL, "OpenTelemetryLogParser", LocalizationHelper.getI18n(OpenTelemetryLogParserConfigurator.class).tr("OpenTelemetry Log"), "icons/config-views/otel-log-parser.png");
+   }
 }

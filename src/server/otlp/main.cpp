@@ -41,6 +41,11 @@ static bool InitModule(Config *config)
       .acceptProtobuf()
       .build();
 
+   RouteBuilder("otlp-backend/v1/logs")
+      .POST(H_OtlpLogs)
+      .acceptProtobuf()
+      .build();
+
    nxlog_debug_tag(DEBUG_TAG_OTLP, 1, L"OTLP receiver module initialized");
    return true;
 }

@@ -333,6 +333,9 @@
     <ClCompile Include="ospf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="otellog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="package.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

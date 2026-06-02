@@ -422,7 +422,7 @@ public class LogParserRuleEditor extends DashboardComposite
       updateAbsenceFields();
 
       severity = new LabeledText(area, SWT.NONE);
-      severity.setLabel(editor.getParserType() == LogParserType.SYSLOG ? i18n.tr("Severity") : i18n.tr("Level"));
+      severity.setLabel(((editor.getParserType() == LogParserType.SYSLOG) || (editor.getParserType() == LogParserType.OTEL)) ? i18n.tr("Severity") : i18n.tr("Level"));
       severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -431,7 +431,8 @@ public class LogParserRuleEditor extends DashboardComposite
       severity.getTextControl().addModifyListener(listener);
 
       facility = new LabeledText(area, SWT.NONE);
-      facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? i18n.tr("Facility") : i18n.tr("Event ID or ID range"));
+      facility.setLabel((editor.getParserType() == LogParserType.SYSLOG) ? i18n.tr("Facility") :
+            ((editor.getParserType() == LogParserType.OTEL) ? i18n.tr("Severity number or range") : i18n.tr("Event ID or ID range")));
       facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -440,7 +441,8 @@ public class LogParserRuleEditor extends DashboardComposite
       facility.getTextControl().addModifyListener(listener);
 
       tag = new LabeledText(area, SWT.NONE);
-      tag.setLabel(editor.getParserType() == LogParserType.SYSLOG ? i18n.tr("Tag") : i18n.tr("Source"));
+      tag.setLabel((editor.getParserType() == LogParserType.SYSLOG) ? i18n.tr("Tag") :
+            ((editor.getParserType() == LogParserType.OTEL) ? i18n.tr("Service") : i18n.tr("Source")));
       tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -448,10 +450,10 @@ public class LogParserRuleEditor extends DashboardComposite
       tag.setLayoutData(gd);
       tag.getTextControl().addModifyListener(listener);
 
-      if (editor.getParserType() == LogParserType.WIN_EVENT)
+      if ((editor.getParserType() == LogParserType.WIN_EVENT) || (editor.getParserType() == LogParserType.OTEL))
       {
          logName = new LabeledText(area, SWT.NONE);
-         logName.setLabel("Log name");
+         logName.setLabel((editor.getParserType() == LogParserType.OTEL) ? i18n.tr("Scope") : i18n.tr("Log name"));
          logName.setText(rule.getLogName());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
@@ -493,7 +495,7 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() == LogParserType.SYSLOG)
          return;
 
-      if (editor.isWindowsEventLogParser() || editor.getParserType() == LogParserType.WIN_EVENT)
+      if (editor.isWindowsEventLogParser() || (editor.getParserType() == LogParserType.WIN_EVENT) || (editor.getParserType() == LogParserType.OTEL))
       {
          severity.setEnabled(true);
          facility.setEnabled(true);
@@ -821,7 +823,7 @@ public class LogParserRuleEditor extends DashboardComposite
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
       rule.setTagOrSource(tag.getText());
 
-      if (editor.getParserType() == LogParserType.WIN_EVENT)
+      if ((editor.getParserType() == LogParserType.WIN_EVENT) || (editor.getParserType() == LogParserType.OTEL))
          rule.setLogName(logName.getText());
       else
          rule.setLogName("");

@@ -122,4 +122,9 @@ void ShutdownCounterState();
  */
 int H_OtlpMetrics(Context *context);
 
+/**
+ * Handler for OTLP logs endpoint
+ */
+int H_OtlpLogs(Context *context);
+
 #endif

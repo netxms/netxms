@@ -1266,6 +1266,59 @@ struct WindowsEvent
 };
 
 /**
+ * Normalized OpenTelemetry log record handed off from the OTLP module to core.
+ * All timestamps are epoch milliseconds.
+ */
+struct OtelLogRecord
+{
+   uint32_t nodeId;
+   int32_t zoneUIN;
+   int64_t timestamp;            // Server receive time (set by core)
+   int64_t originTimestamp;      // OTLP time_unix_nano converted to ms (0 if unset)
+   int64_t observedTimestamp;    // OTLP observed_time_unix_nano converted to ms
+   int severityNumber;           // Raw OTLP severity number (1-24)
+   uint32_t mappedSeverity;      // NetXMS severity used as LogParser level
+   wchar_t severityText[32];
+   wchar_t serviceName[128];
+   wchar_t scopeName[128];
+   wchar_t traceId[33];          // Hex representation of 16-byte trace ID
+   wchar_t spanId[17];           // Hex representation of 8-byte span ID
+   uint32_t flags;
+   uint32_t droppedAttributesCount;
+   wchar_t *body;
+   StringMap attributes;         // Flattened resource and record attributes
+
+   OtelLogRecord()
+   {
+      nodeId = 0;
+      zoneUIN = 0;
+      timestamp = 0;
+      originTimestamp = 0;
+      observedTimestamp = 0;
+      severityNumber = 0;
+      mappedSeverity = 0;
+      severityText[0] = 0;
+      serviceName[0] = 0;
+      scopeName[0] = 0;
+      traceId[0] = 0;
+      spanId[0] = 0;
+      flags = 0;
+      droppedAttributesCount = 0;
+      body = nullptr;
+   }
+
+   ~OtelLogRecord()
+   {
+      MemFree(body);
+   }
+};
+
+/**
+ * Queue OpenTelemetry log record for processing (called from OTLP module)
+ */
+void NXCORE_EXPORTABLE QueueOtelLog(OtelLogRecord *record);
+
+/**
  * Watchdog thread state codes
  */
 enum WatchdogState
@@ -1596,6 +1649,8 @@ IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
 
 void InitializeWindowsEventParser();
 void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);
+void InitializeOtelLogParser();
+void OnOtelLogsConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(StringBuffer &str);
 

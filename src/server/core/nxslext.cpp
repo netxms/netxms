@@ -2805,6 +2805,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("EventOrigin::AGENT", static_cast<int32_t>(EventOrigin::AGENT));
       NXSL_ENV_CONSTANT("EventOrigin::CLIENT", static_cast<int32_t>(EventOrigin::CLIENT));
       NXSL_ENV_CONSTANT("EventOrigin::NXSL", static_cast<int32_t>(EventOrigin::NXSL));
+      NXSL_ENV_CONSTANT("EventOrigin::OPENTELEMETRY", static_cast<int32_t>(EventOrigin::OPENTELEMETRY));
       NXSL_ENV_CONSTANT("EventOrigin::REMOTE_SERVER", static_cast<int32_t>(EventOrigin::REMOTE_SERVER));
       NXSL_ENV_CONSTANT("EventOrigin::SNMP", static_cast<int32_t>(EventOrigin::SNMP));
       NXSL_ENV_CONSTANT("EventOrigin::SYSLOG", static_cast<int32_t>(EventOrigin::SYSLOG));

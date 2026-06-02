@@ -25,6 +25,72 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.19 to 62.20
+ */
+static bool H_UpgradeFromV19()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE otel_log ("
+         L"  id bigint not null,"
+         L"  log_timestamp timestamptz not null,"
+         L"  origin_timestamp bigint not null,"
+         L"  observed_timestamp bigint not null,"
+         L"  node_id integer not null,"
+         L"  zone_uin integer not null,"
+         L"  service_name varchar(127) null,"
+         L"  scope_name varchar(127) null,"
+         L"  severity_number integer not null,"
+         L"  severity_text varchar(31) null,"
+         L"  trace_id varchar(32) null,"
+         L"  span_id varchar(16) null,"
+         L"  flags integer not null,"
+         L"  dropped_attributes_count integer not null,"
+         L"  body text null,"
+         L"  attributes text null,"
+         L"  PRIMARY KEY(id,log_timestamp))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('otel_log', 'log_timestamp', chunk_time_interval => interval '86400 seconds')"));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE otel_log ("
+         L"  id $SQL:INT64 not null,"
+         L"  log_timestamp $SQL:INT64 not null,"
+         L"  origin_timestamp $SQL:INT64 not null,"
+         L"  observed_timestamp $SQL:INT64 not null,"
+         L"  node_id integer not null,"
+         L"  zone_uin integer not null,"
+         L"  service_name varchar(127) null,"
+         L"  scope_name varchar(127) null,"
+         L"  severity_number integer not null,"
+         L"  severity_text varchar(31) null,"
+         L"  trace_id varchar(32) null,"
+         L"  span_id varchar(16) null,"
+         L"  flags integer not null,"
+         L"  dropped_attributes_count integer not null,"
+         L"  body $SQL:TEXT null,"
+         L"  attributes $SQL:TEXT null,"
+         L"  PRIMARY KEY(id))"));
+   }
+
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_otel_log_timestamp ON otel_log(log_timestamp)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_otel_log_node ON otel_log(node_id)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_otel_log_trace ON otel_log(trace_id)"));
+
+   CHK_EXEC(CreateConfigParam(L"OTLP.Logs.EnableStorage", L"1",
+      L"Enable/disable local storage of received OpenTelemetry log records in NetXMS database.",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"OTLP.Logs.RetentionTime", L"90",
+      L"Retention time in days for stored OpenTelemetry log records. All records older than specified will be deleted by housekeeping process.",
+      L"days", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 62.18 to 62.19
  */
 static bool H_UpgradeFromV18()
@@ -706,6 +772,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 62, 20, H_UpgradeFromV19 },
    { 18, 62, 19, H_UpgradeFromV18 },
    { 17, 62, 18, H_UpgradeFromV17 },
    { 16, 62, 17, H_UpgradeFromV16 },

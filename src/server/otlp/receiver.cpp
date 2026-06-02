@@ -22,6 +22,7 @@
 
 #include "otlp.h"
 #include "generated/metrics_service.pb.h"
+#include "otlp_attributes.h"
 #include <uthash.h>
 
 /**
@@ -37,74 +38,6 @@ struct CounterState
 
 static CounterState *s_counterState = nullptr;
 static Mutex s_counterStateLock;
-
-/**
- * Extract resource attributes into a map
- */
-static void ExtractResourceAttributes(const opentelemetry::proto::resource::v1::Resource& resource, std::map<std::string, std::string>& attributes)
-{
-   for (int i = 0; i < resource.attributes_size(); i++)
-   {
-      const auto& kv = resource.attributes(i);
-      const auto& av = kv.value();
-      char buffer[32];
-      switch (av.value_case())
-      {
-         case opentelemetry::proto::common::v1::AnyValue::kStringValue:
-            attributes.emplace(kv.key(), av.string_value());
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kIntValue:
-            IntegerToString(av.int_value(), buffer);
-            attributes.emplace(kv.key(), buffer);
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kDoubleValue:
-            snprintf(buffer, 32, "%f", av.double_value());
-            attributes.emplace(kv.key(), buffer);
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kBoolValue:
-            attributes.emplace(kv.key(), av.bool_value() ? "true" : "false");
-            break;
-         default:
-            attributes.emplace(kv.key(), "");
-            break;
-      }
-   }
-}
-
-/**
- * Extract data point attributes into a map.
- * Works with any protobuf message type that has attributes() returning KeyValue repeated field.
- */
-template<typename T>
-static void ExtractDataPointAttributes(const T& dp, std::map<std::string, std::string>& attributes)
-{
-   for (int i = 0; i < dp.attributes_size(); i++)
-   {
-      const auto& kv = dp.attributes(i);
-      const auto& av = kv.value();
-      char buffer[32];
-      switch (av.value_case())
-      {
-         case opentelemetry::proto::common::v1::AnyValue::kStringValue:
-            attributes.emplace(kv.key(), av.string_value());
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kIntValue:
-            IntegerToString(av.int_value(), buffer);
-            attributes.emplace(kv.key(), buffer);
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kDoubleValue:
-            snprintf(buffer, 32, "%f", av.double_value());
-            attributes.emplace(kv.key(), buffer);
-            break;
-         case opentelemetry::proto::common::v1::AnyValue::kBoolValue:
-            attributes.emplace(kv.key(), av.bool_value() ? "true" : "false");
-            break;
-         default:
-            attributes.emplace(kv.key(), "");
-            break;
-      }
-   }
-}
 
 /**
  * Get numeric value from a NumberDataPoint as double

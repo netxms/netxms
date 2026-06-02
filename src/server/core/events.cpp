@@ -29,6 +29,7 @@
 void GetSNMPTrapsEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences);
 void GetSyslogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences);
 void GetWindowsEventLogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences);
+void GetOtelLogEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences);
 
 /**
  * Event processing queue
@@ -1378,6 +1379,7 @@ unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode
    GetSNMPTrapsEventReferences(eventCode, eventReferences);
    GetSyslogEventReferences(eventCode, eventReferences);
    GetWindowsEventLogEventReferences(eventCode, eventReferences);
+   GetOtelLogEventReferences(eventCode, eventReferences);
 
    return unique_ptr<ObjectArray<EventReference>>(eventReferences);
 }
