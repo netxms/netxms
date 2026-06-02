@@ -563,7 +563,7 @@ public:
 /**
  * Custom attribute
  */
-struct CustomAttribute
+struct LIBNXSRV_EXPORTABLE CustomAttribute
 {
    SharedString value;
    uint32_t sourceObject; // source object ID for inherited attribute
@@ -597,15 +597,7 @@ struct CustomAttribute
       return sourceObject != 0;
    }
 
-   json_t *toJson(const TCHAR *name)const
-   {
-      json_t *root = json_object();
-      json_object_set_new(root, "name", json_string_t(name));
-      json_object_set_new(root, "value", json_string_t(value));
-      json_object_set_new(root, "flags", json_integer(flags));
-      json_object_set_new(root, "sourceObject", json_integer(sourceObject));
-      return root;
-   }
+   json_t *toJson(const TCHAR *name) const;
 };
 
 #ifdef _WIN32

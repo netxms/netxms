@@ -25,6 +25,30 @@
 #include <netxms-regex.h>
 
 /**
+ * Bit flag mapping for custom attributes
+ */
+static FlagNameMapping s_customAttrFlagMapping[] =
+{
+   { CAF_INHERITABLE, "inheritable" },
+   { CAF_REDEFINED, "redefined" },
+   { CAF_CONFLICT, "conflict" },
+   { 0, nullptr }
+};
+
+/**
+ * Create JSON representation of custom attribute
+ */
+json_t *CustomAttribute::toJson(const TCHAR *name) const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "name", json_string_t(name));
+   json_object_set_new(root, "value", json_string_t(value));
+   json_object_set_new(root, "flags", json_boolean_object(flags, s_customAttrFlagMapping));
+   json_object_set_new(root, "sourceObject", json_integer(sourceObject));
+   return root;
+}
+
+/**
  * Default constructor for the class
  */
 NObject::NObject() : m_childList(0, 32), m_parentList(8, 8), m_customAttributes(Ownership::True), m_customAttributeLock(MutexType::FAST)

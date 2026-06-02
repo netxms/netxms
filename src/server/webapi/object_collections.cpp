@@ -63,29 +63,19 @@ static bool ValidateCustomAttributeName(const wchar_t *name, Context *context)
 }
 
 /**
- * Callback for serializing object's own custom attributes as a JSON map
- * name -> { value, inheritable }. Inherited attributes that are not redefined
- * on this object are skipped (mirrors NetObj::toJson filtering).
+ * Callback for serializing object's custom attributes into a JSON array
+ * [ { name, value, flags, sourceObject } ], matching NetObj::toJson.
  */
-static EnumerationCallbackResult CustomAttributeToMap(const wchar_t *name, const CustomAttribute *attr, json_t *map)
+static EnumerationCallbackResult CustomAttributeToArray(const wchar_t *name, const CustomAttribute *attr, json_t *array)
 {
-   if ((attr->sourceObject != 0) && !attr->isRedefined())
-      return _CONTINUE;
-
-   json_t *entry = json_object();
-   json_object_set_new(entry, "value", json_string_t(attr->value));
-   json_object_set_new(entry, "inheritable", json_boolean(attr->isInheritable()));
-
-   char utf8name[512];
-   wchar_to_utf8(name, -1, utf8name, sizeof(utf8name));
-   utf8name[sizeof(utf8name) - 1] = 0;
-   json_object_set_new(map, utf8name, entry);
+   json_array_append_new(array, attr->toJson(name));
    return _CONTINUE;
 }
 
 /**
  * Handler for GET /v1/objects/:object-id/custom-attributes
- * Returns a map of the object's own custom attributes: name -> { value, inheritable }.
+ * Returns the object's custom attributes as an array of { name, value, flags, sourceObject },
+ * matching the representation embedded in the full object document.
  */
 int H_ObjectCustomAttributes(Context *context)
 {
@@ -94,8 +84,8 @@ int H_ObjectCustomAttributes(Context *context)
    if (object == nullptr)
       return httpCode;
 
-   json_t *output = json_object();
-   object->forEachCustomAttribute(CustomAttributeToMap, output);
+   json_t *output = json_array();
+   object->forEachCustomAttribute(CustomAttributeToArray, output);
    context->setResponseData(output);
    json_decref(output);
    return 200;

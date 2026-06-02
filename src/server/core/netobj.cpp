@@ -3587,18 +3587,6 @@ void NetObj::executeHookScript(const TCHAR *hookName)
 }
 
 /**
- * Callback for serializing custom attributes to JSON document
- */
-EnumerationCallbackResult CustomAttributeToJson(const TCHAR *key, const CustomAttribute *attr, json_t *customAttributes)
-{
-   if(attr->sourceObject != 0 && (attr->flags & CAF_REDEFINED) == 0)
-      return _CONTINUE;
-
-   json_array_append_new(customAttributes, attr->toJson(key));
-   return _CONTINUE;
-}
-
-/**
  * Serialize object to JSON
  */
 json_t *NetObj::toJson(bool includeSensitiveData)
@@ -3639,7 +3627,12 @@ json_t *NetObj::toJson(bool includeSensitiveData)
    json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
 
    json_t *customAttributes = json_array();
-   forEachCustomAttribute(CustomAttributeToJson, customAttributes);
+   forEachCustomAttribute(
+      [customAttributes] (const TCHAR *key, const CustomAttribute *attr) -> EnumerationCallbackResult
+      {
+         json_array_append_new(customAttributes, attr->toJson(key));
+         return _CONTINUE;
+      });
    json_object_set_new(root, "customAttributes", customAttributes);
    unlockProperties();
 
