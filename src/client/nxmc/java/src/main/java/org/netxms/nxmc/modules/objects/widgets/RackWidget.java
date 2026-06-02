@@ -28,7 +28,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
@@ -58,7 +57,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 /**
  * Rack display widget
  */
-public class RackWidget extends Canvas implements PaintListener, ImageUpdateListener, MouseListener, MouseTrackListener
+public class RackWidget extends Canvas implements PaintListener, ImageUpdateListener, MouseListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 16;
@@ -109,8 +108,6 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
    private Object selectedObject = null;
    private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
-   private Object tooltipObject = null;
-   private ObjectPopupDialog tooltipDialog = null;
    private RackOrientation side;
    private View view;
 
@@ -132,7 +129,6 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
 
       addPaintListener(this);
       addMouseListener(this);
-      WidgetHelper.attachMouseTrackListener(this, this);
       ImageProvider.getInstance().addUpdateListener(this);
       createImages();
 
@@ -440,6 +436,27 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
             }
          }
       }
+
+      // Highlight the selected element (2D counterpart of the 3D selection accent)
+      if (selectedObject != null)
+      {
+         for(ObjectImage oi : objects)
+         {
+            if (oi.object == selectedObject)
+            {
+               Rectangle hr = oi.rect;
+               gc.setAlpha(48);
+               gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION));
+               gc.fillRoundRectangle(hr.x, hr.y, hr.width, hr.height, 4, 4);
+               gc.setAlpha(255);
+               gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION));
+               gc.setLineWidth(2);
+               gc.setLineStyle(SWT.LINE_SOLID);
+               gc.drawRoundRectangle(hr.x, hr.y, hr.width - 1, hr.height - 1, 4, 4);
+               break;
+            }
+         }
+      }
    }
 
    /**
@@ -580,13 +597,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
     */
    @Override
    public void mouseDown(MouseEvent e)
-   {  
-      if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
-      {
-         tooltipDialog.close();
-         tooltipDialog = null;
-      }
-      tooltipObject = null;
+   {
       setCurrentObject(getObjectAtPoint(new Point(e.x, e.y)));
    }
 
@@ -596,51 +607,6 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    @Override
    public void mouseUp(MouseEvent e)
    {
-   }
-   
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseEnter(MouseEvent e)
-   {
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseExit(MouseEvent e)
-   {
-      if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
-      {
-         tooltipDialog.close();
-         tooltipDialog = null;
-      }
-      tooltipObject = null;
-   }
-
-   /**
-    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
-    */
-   @Override
-   public void mouseHover(MouseEvent e)
-   {
-      Object object = getObjectAtPoint(new Point(e.x, e.y));
-      if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
-      {
-         if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
-            tooltipDialog.close();
-      
-         tooltipObject = object;
-         tooltipDialog = new ObjectPopupDialog(getShell(), object, toDisplay(e.x, e.y));
-         tooltipDialog.open();
-      }
-      else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
-      {
-         tooltipDialog.close();
-         tooltipDialog = null;
-      }
    }
 
    /**
@@ -671,8 +637,23 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private void setCurrentObject(Object o)
    {
       selectedObject = o;
+      redraw();
       for(ElementSelectionListener l : selectionListeners)
          l.objectSelected(selectedObject);
+   }
+
+   /**
+    * Set selected object without firing selection listeners, repainting to show
+    * the selection highlight. Used to keep the front and rear widgets in sync.
+    *
+    * @param o object to select, or null to clear selection
+    */
+   public void setSelectedObject(Object o)
+   {
+      if (selectedObject == o)
+         return;
+      selectedObject = o;
+      redraw();
    }
    
    /**

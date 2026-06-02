@@ -723,6 +723,12 @@
          <version>1.2</version>
          <scope>${lib.scope}</scope>
       </dependency>
+      <dependency>
+         <groupId>org.netxms</groupId>
+         <artifactId>webgl-resources</artifactId>
+         <version>1.0.0</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
    </dependencies>
    <build>
       <finalName>${build.finalName}</finalName>

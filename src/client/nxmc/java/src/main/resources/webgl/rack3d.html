@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<!--
+  NetXMS 3D rack view page template.
+
+  Loaded by org.netxms.nxmc.modules.objects.widgets.Rack3DWidget via
+  Browser.setText(). The "/*__THREEJS__*/" marker below is replaced at load time
+  with the contents of /webgl/three.min.js (inlining is required because
+  setText() renders without a base URL, so an external <script src> would not
+  resolve).
+
+  Java -> JS entry point:  nxSetScene(jsonText)
+  JS  -> Java callbacks:   nxOnSelect(objectId), nxGetTexture(imageGuid)
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+   html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: __BG_COLOR__; }
+   /* position:fixed + viewport units keep the canvas filled even when the
+      html/body percentage-height chain fails to resolve inside a setText()
+      document (WebKitGTK), which otherwise collapses the canvas to ~0px. */
+   #c { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; display: block; }
+   #msg { position: fixed; left: 0; top: 0; right: 0; padding: 8px 12px; margin: 0;
+          font-family: sans-serif; font-size: 12px; color: #e0a0a0; background: rgba(0,0,0,0.6);
+          white-space: pre-wrap; display: none; }
+</style>
+<script>/*__THREEJS__*/</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<pre id="msg"></pre>
+<script>
+"use strict";
+
+// --- physical constants (metres) -------------------------------------------
+var U = 0.04445;        // 1U = 44.45 mm
+var RACK_W = 0.48;      // 19" usable mounting width
+var RACK_D = 0.7;       // internal rack depth (front-to-back)
+var PARTIAL_DEPTH = 0.5; // fraction of rack depth used by a FRONT- or REAR-only element
+// +Z is the front of the rack (default camera vantage point)
+
+var DEVICE_COLOR = 0x808080;  // neutral grey for element box faces
+var EDGE_COLOR = 0x3a3a3a;    // dark edge outline, so adjacent boxes stay distinct
+
+var themeBg = "#2b2b2b";      // page/scene background (from the SWT theme)
+var themeFg = "#e0e0e0";      // text and cabinet outline color (from the SWT theme)
+
+var scene, camera, renderer, controls, raycaster, pointer;
+var rackGroup = null;   // holds all rack + device meshes for easy teardown
+var pickable = [];      // device meshes carrying userData.objectId
+var sceneData = null;
+var sizeRetries = 0;
+var selectedMesh = null;   // currently selected device mesh
+
+// Surface a message to the user (errors are otherwise silent in the embedded browser)
+function showMessage(text)
+{
+   var el = document.getElementById("msg");
+   if (el)
+   {
+      el.textContent = text;
+      el.style.display = "block";
+   }
+}
+
+function boot()
+{
+   try
+   {
+      if (typeof THREE === "undefined")
+      {
+         showMessage("Three.js library not bundled. Add three.min.js to " +
+            "src/main/resources/webgl/ (see README).");
+         return;
+      }
+
+      var canvas = document.getElementById("c");
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(themeBg);
+
+      camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+
+      // Lighting: ambient + directional key light
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      var key = new THREE.DirectionalLight(0xffffff, 0.6);
+      key.position.set(1, 2, 2);
+      scene.add(key);
+
+      raycaster = new THREE.Raycaster();
+      pointer = new THREE.Vector2();
+
+      if (typeof THREE.OrbitControls === "function")
+      {
+         controls = new THREE.OrbitControls(camera, renderer.domElement);
+         controls.enableDamping = true;
+      }
+
+      canvas.addEventListener("click", onClick, false);
+      window.addEventListener("resize", onResize, false);
+
+      resizeToWindow();
+      animate();
+
+      if (sceneData !== null)
+         buildScene(sceneData);
+   }
+   catch(e)
+   {
+      // Most likely WebGL is unavailable in the embedded browser (WebKitGTK)
+      showMessage("3D rendering unavailable: " + (e && e.message ? e.message : e) +
+         "\nThe embedded browser may not support WebGL on this platform.");
+   }
+}
+
+// --- Java -> JS -------------------------------------------------------------
+function nxSetScene(jsonText)
+{
+   sceneData = JSON.parse(jsonText);
+   if (scene)
+      buildScene(sceneData);
+}
+
+// Apply theme colors (background, text/outline) carried in the scene description
+function applyTheme(data)
+{
+   if (data.bgColor)
+      themeBg = data.bgColor;
+   if (data.fgColor)
+      themeFg = data.fgColor;
+
+   document.documentElement.style.background = themeBg;
+   document.body.style.background = themeBg;
+   if (scene)
+      scene.background = new THREE.Color(themeBg);
+   if (renderer)
+      renderer.setClearColor(new THREE.Color(themeBg), 1);
+}
+
+function buildScene(data)
+{
+   applyTheme(data);
+
+   if (rackGroup !== null)
+   {
+      scene.remove(rackGroup);
+      disposeGroup(rackGroup);
+   }
+   rackGroup = new THREE.Group();
+   pickable = [];
+   selectedMesh = null;
+
+   drawRackEnclosure(data.height);
+   addUnitNumbers(data);
+   for (var i = 0; i < data.units.length; i++)
+      addUnit(data.units[i], data);
+
+   scene.add(rackGroup);
+   frameCamera(data.height);
+}
+
+// Draw the rack as a cabinet: semi-transparent left/right/top/bottom panels with
+// a subtle edge outline. Front and back are left open so device faces (and any
+// rear images) stay fully visible.
+function drawRackEnclosure(heightU)
+{
+   var h = heightU * U;
+   var EW = RACK_W + 0.05;  // enclosure width
+   var ED = RACK_D + 0.05;  // enclosure depth
+
+   // Edge outline for crisp cabinet definition (follows the theme text color)
+   var box = new THREE.BoxGeometry(EW, h, ED);
+   var edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(box),
+      new THREE.LineBasicMaterial({ color: new THREE.Color(themeFg) }));
+   edges.position.set(0, h / 2, 0);
+   rackGroup.add(edges);
+
+   // Glass-like panels: unlit, translucent, no depth write so they never occlude
+   // the contents in the depth buffer.
+   var panelMat = new THREE.MeshBasicMaterial({
+      color: 0x8fa3b8, transparent: true, opacity: 0.14,
+      side: THREE.DoubleSide, depthWrite: false });
+
+   function addPanel(geo, x, y, z, axis, angle)
+   {
+      var m = new THREE.Mesh(geo, panelMat);
+      if (axis === "y")
+         m.rotation.y = angle;
+      else if (axis === "x")
+         m.rotation.x = angle;
+      m.position.set(x, y, z);
+      rackGroup.add(m);
+   }
+
+   // Left and right side panels (normal along X)
+   addPanel(new THREE.PlaneGeometry(ED, h), -EW / 2, h / 2, 0, "y", Math.PI / 2);
+   addPanel(new THREE.PlaneGeometry(ED, h),  EW / 2, h / 2, 0, "y", Math.PI / 2);
+   // Top and bottom caps (normal along Y)
+   addPanel(new THREE.PlaneGeometry(EW, ED), 0, h, 0, "x", -Math.PI / 2);
+   addPanel(new THREE.PlaneGeometry(EW, ED), 0, 0, 0, "x", -Math.PI / 2);
+}
+
+function addUnit(u, data)
+{
+   var h = u.height * U;
+   var depth = unitDepth(u);
+   var geo = new THREE.BoxGeometry(RACK_W, h, depth);
+
+   // Neutral grey box; status is conveyed on selection (accent), not by fill color
+   var mesh = new THREE.Mesh(geo, boxMaterials(DEVICE_COLOR, null, null));
+
+   // A FILL-oriented passive panel is a front-mounted faceplate, so seat it at
+   // the front plane rather than floating it in the middle of the rack depth.
+   var placement = (u.passive && (u.side === "FILL")) ? "FRONT" : u.side;
+   mesh.position.set(0, unitCenterY(u, data), unitCenterZ(placement, depth));
+   mesh.userData.objectId = u.id;
+   mesh.userData.passive = u.passive;
+   mesh.userData.unit = u;
+   mesh.userData.selected = false;
+
+   // Edge outline (child of the mesh, so it follows its transform)
+   var edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({ color: EDGE_COLOR }));
+   mesh.add(edges);
+   mesh.userData.edges = edges;
+
+   rackGroup.add(mesh);
+   pickable.push(mesh); // devices and passive elements are both selectable
+
+   // Texture the outward faces from the image library, lazily fetched. A FILL
+   // element is visible from both sides, so it can carry both a front (+Z) and a
+   // rear (-Z) image; FRONT/REAR elements carry only the matching one.
+   var frontTex = null, rearTex = null;
+   var applyTextures = function() {
+      mesh.material = boxMaterials(DEVICE_COLOR, frontTex, rearTex);
+      applySelectionVisual(mesh); // reassigning materials drops the accent - restore it
+   };
+
+   if (((u.side === "FRONT") || (u.side === "FILL")) && u.frontImage)
+   {
+      var fu = nxGetTexture(u.frontImage);   // synchronous round-trip to Java
+      if (fu)
+         new THREE.TextureLoader().load(fu, function(t) { frontTex = t; applyTextures(); });
+   }
+   if (((u.side === "REAR") || (u.side === "FILL")) && u.rearImage)
+   {
+      var ru = nxGetTexture(u.rearImage);
+      if (ru)
+         new THREE.TextureLoader().load(ru, function(t) { rearTex = t; applyTextures(); });
+   }
+
+   // Floating severity marker on the right rail for abnormal devices
+   if (!u.passive && (u.status >= STATUS_WARNING) && (u.status <= STATUS_CRITICAL))
+      addStatusMarker(u, data);
+}
+
+var STATUS_WARNING = 1;
+var STATUS_CRITICAL = 4;
+
+// Color-coded warning triangle (billboard) on the right rail, aligned to the
+// device row, so abnormal devices are visible at a glance without selection.
+function addStatusMarker(u, data)
+{
+   var s = makeTriangleSprite(u.statusColor);
+   s.position.set(RACK_W / 2 + 0.05, unitCenterY(u, data), RACK_D / 2);
+   rackGroup.add(s);
+}
+
+// Warning-triangle marker based on the Lucide "triangle-alert" icon. The icon is
+// stroke-only; we fill the triangle interior per status ({FILL}) and outline it
+// with the theme foreground ({STROKE}) so it stands out on light or dark themes.
+// The exclamation reuses the outline color.
+var TRIANGLE_SVG =
+   '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" ' +
+   'fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+   '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" ' +
+   'fill="{FILL}" stroke="{STROKE}"/>' +
+   '<path d="M12 9v4" stroke="{STROKE}"/>' +
+   '<path d="M12 17h.01" stroke="{STROKE}"/>' +
+   '</svg>';
+
+function makeTriangleSprite(colorHex)
+{
+   var sprite = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true }));
+   var wh = U * 1.4;
+   sprite.scale.set(wh, wh, 1);
+
+   // Rasterize the colored SVG at high resolution for a smooth result
+   var svg = TRIANGLE_SVG.replace("{FILL}", colorHex).replace(/\{STROKE\}/g, themeFg);
+   var img = new Image();
+   img.onload = function() {
+      var size = 256;
+      var canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      canvas.getContext("2d").drawImage(img, 0, 0, size, size);
+      var tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearMipmapLinearFilter; // smooth when small/far
+      sprite.material.map = tex;
+      sprite.material.needsUpdate = true;
+   };
+   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+   return sprite;
+}
+
+// Apply the selection appearance to a device mesh: status-colored bright edges
+// and a dim status emissive glow when selected; dark edges and no glow otherwise.
+function applySelectionVisual(mesh)
+{
+   var ud = mesh.userData;
+   // Devices accent with their status color; passive elements have no status, so
+   // accent with the theme foreground (visible against the grey box).
+   var accent = ud.unit.passive ? new THREE.Color(themeFg) : new THREE.Color(ud.unit.statusColor);
+
+   ud.edges.material.color.copy(ud.selected ? accent : new THREE.Color(EDGE_COLOR));
+
+   var mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+   for (var i = 0; i < mats.length; i++)
+   {
+      if (mats[i].emissive)
+         mats[i].emissive.copy(ud.selected ? accent.clone().multiplyScalar(0.4) : new THREE.Color(0x000000));
+   }
+}
+
+// --- labels (billboarded text sprites drawn from a 2D canvas) ---------------
+
+// Build a text sprite. opts: fontSize, pad, bg (CSS color or null), fg,
+// statusColor (draws a colored bar on the left), worldHeight (sprite height in m).
+function makeLabelSprite(text, opts)
+{
+   opts = opts || {};
+   var fontSize = opts.fontSize || 44;
+   var pad = (opts.pad !== undefined) ? opts.pad : 10;
+   var statusColor = opts.statusColor || null;
+   var bg = (opts.bg !== undefined) ? opts.bg : "rgba(15,15,15,0.78)";
+   var fg = opts.fg || "#ffffff";
+   var barW = statusColor ? 12 : 0;
+
+   var canvas = document.createElement("canvas");
+   var ctx = canvas.getContext("2d");
+   var font = "bold " + fontSize + "px sans-serif";
+   ctx.font = font;
+   var textW = Math.ceil(ctx.measureText(text).width);
+   canvas.width = textW + pad * 2 + barW;
+   canvas.height = fontSize + pad * 2;
+
+   ctx.font = font; // 2D context state resets when the canvas is resized
+   ctx.textBaseline = "middle";
+   if (bg)
+   {
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+   }
+   if (statusColor)
+   {
+      ctx.fillStyle = statusColor;
+      ctx.fillRect(0, 0, barW, canvas.height);
+   }
+   ctx.fillStyle = fg;
+   ctx.fillText(text, barW + pad, canvas.height / 2);
+
+   var tex = new THREE.CanvasTexture(canvas);
+   tex.minFilter = THREE.LinearFilter;
+
+   var sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+   var worldH = opts.worldHeight || 0.05;
+   sprite.scale.set(worldH * (canvas.width / canvas.height), worldH, 1);
+   return sprite;
+}
+
+// Unit numbers down the left front rail, honoring top/bottom numbering
+function addUnitNumbers(data)
+{
+   for (var n = 1; n <= data.height; n++)
+   {
+      var s = makeLabelSprite(String(n), { fontSize: 40, pad: 4, bg: null, fg: themeFg, worldHeight: U * 0.62 });
+      s.position.set(-(RACK_W / 2 + 0.06), unitNumberY(n, data), RACK_D / 2);
+      rackGroup.add(s);
+   }
+}
+
+// Y of the centre of the physical slot labeled n
+function unitNumberY(n, data)
+{
+   var fromBottom = data.topBottomNumbering ? (data.height - n + 1) : n;
+   return (fromBottom - 1) * U + U / 2;
+}
+
+// Build a 6-face material array: front texture on the +Z face, rear texture on
+// the -Z face, the given face color on the remaining faces. Either texture may
+// be null. BoxGeometry face order: +X, -X, +Y, -Y, +Z(front), -Z(back).
+function boxMaterials(faceColor, frontTex, rearTex)
+{
+   var plain = new THREE.MeshLambertMaterial({ color: new THREE.Color(faceColor) });
+   var front = frontTex ? new THREE.MeshLambertMaterial({ map: frontTex }) : plain;
+   var rear  = rearTex  ? new THREE.MeshLambertMaterial({ map: rearTex })  : plain;
+   return [plain, plain, plain, plain, front, rear];
+}
+
+// Y of the centre of a unit, honoring top/bottom numbering
+function unitCenterY(u, data)
+{
+   var bottomUnit = data.topBottomNumbering ? (data.height - (u.position + u.height - 1) + 1)
+                                            : u.position;
+   var bottomEdge = (bottomUnit - 1) * U;
+   return bottomEdge + (u.height * U) / 2;
+}
+
+// Depth (metres) occupied by an element. Passive elements are mostly faceplates
+// or shallow assemblies, so they get fixed, type-specific depths rather than the
+// orientation-based device rule. Active devices: a FRONT- or REAR-only device
+// takes a fraction of the rack depth; FILL spans all of it.
+function unitDepth(u)
+{
+   if (u.passive)
+   {
+      switch (u.type)
+      {
+         case "FILLER_PANEL": return 0.015; // blanking plate - essentially no depth
+         case "PATCH_PANEL":  return 0.04;  // shallow
+         case "ORGANISER":    return 0.06;  // cable management fingers
+         case "PDU":          return 0.10;  // horizontal rack PDU body
+         default:             return 0.04;
+      }
+   }
+   return (u.side === "FILL") ? RACK_D : RACK_D * PARTIAL_DEPTH;
+}
+
+// Z of the centre of an element so it sits flush with the correct end of the
+// rack (+Z front, -Z rear); FILL is centred.
+function unitCenterZ(side, depth)
+{
+   if (side === "FRONT")
+      return RACK_D / 2 - depth / 2;
+   if (side === "REAR")
+      return -RACK_D / 2 + depth / 2;
+   return 0;
+}
+
+// --- interaction ------------------------------------------------------------
+function onClick(ev)
+{
+   var rect = renderer.domElement.getBoundingClientRect();
+   pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+   pointer.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+   raycaster.setFromCamera(pointer, camera);
+   var hits = raycaster.intersectObjects(pickable, false);
+   var hit = (hits.length > 0) ? hits[0].object : null;
+   nxOnSelect(hit ? hit.userData.objectId : -1, hit ? hit.userData.passive : false);
+   setSelection(hit);
+}
+
+// Update the current selection: restore the previously selected device, accent
+// the new one, and refresh the floating label.
+function setSelection(mesh)
+{
+   if ((selectedMesh !== null) && (selectedMesh !== mesh))
+   {
+      selectedMesh.userData.selected = false;
+      applySelectionVisual(selectedMesh);
+   }
+   selectedMesh = mesh;
+   if (mesh !== null)
+   {
+      mesh.userData.selected = true;
+      applySelectionVisual(mesh);
+   }
+   // Selection details are shown in the SWT side panel; the 3D view only accents
+   // the selected box (status-colored edge glow).
+}
+
+function frameCamera(heightU)
+{
+   var h = heightU * U;
+   camera.position.set(RACK_W * 1.5, h * 0.6, RACK_D + h * 0.9);
+   if (controls)
+   {
+      controls.target.set(0, h / 2, 0);
+      controls.update();
+   }
+   else
+   {
+      camera.lookAt(0, h / 2, 0);
+   }
+}
+
+// --- housekeeping -----------------------------------------------------------
+function animate()
+{
+   requestAnimationFrame(animate);
+   if (controls)
+      controls.update();
+   renderer.render(scene, camera);
+}
+
+function onResize() { resizeToWindow(); }
+
+function viewportSize()
+{
+   var w = window.innerWidth || document.documentElement.clientWidth || 0;
+   var h = window.innerHeight || document.documentElement.clientHeight || 0;
+   return { w: w, h: h };
+}
+
+function resizeToWindow()
+{
+   var s = viewportSize();
+   if ((s.w <= 0) || (s.h <= 0))
+   {
+      // Layout not settled yet (common right after setText) - retry a few times
+      if (sizeRetries++ < 20)
+         setTimeout(resizeToWindow, 100);
+      return;
+   }
+   // updateStyle left at default (true) so three.js sets explicit pixel sizes on
+   // the canvas - critical under WebKitGTK where % heights may not resolve.
+   renderer.setSize(s.w, s.h);
+   camera.aspect = s.w / s.h;
+   camera.updateProjectionMatrix();
+}
+
+function disposeGroup(group)
+{
+   group.traverse(function(o) {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material)
+      {
+         var mats = Array.isArray(o.material) ? o.material : [o.material];
+         for (var i = 0; i < mats.length; i++)
+         {
+            if (mats[i].map) mats[i].map.dispose();
+            mats[i].dispose();
+         }
+      }
+   });
+}
+
+// Script is at the end of <body>, so the DOM is ready and the inlined Three.js
+// (in <head>) is already defined - boot directly rather than waiting for the
+// "load" event, which is not reliably delivered for setText() documents.
+boot();
+</script>
+</body>
+</html>
