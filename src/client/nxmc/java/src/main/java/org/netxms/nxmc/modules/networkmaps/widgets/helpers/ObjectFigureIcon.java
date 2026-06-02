@@ -88,6 +88,17 @@ public class ObjectFigureIcon extends ObjectFigure
 		setSize(Math.max(Math.max(ls.width, imageWidth), imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2 + ls.height);
 	}
 
+	/**
+	 * @see org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure#onRefresh()
+	 */
+	@Override
+	protected void onRefresh()
+	{
+		label.setText(object.getNameOnMap());
+		updateSize(labelProvider);
+		super.onRefresh();
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
 	 */

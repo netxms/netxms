@@ -465,6 +465,20 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       return (selection != null) ? selection.toList().contains(element) : false;
    }
 
+	/**
+	 * Re-resolve and apply the line color of an existing connection. Used for incremental refresh when a link's status object
+	 * changes, since {@link #selfStyleConnection} rebuilds labels and decorations and would duplicate them if called repeatedly.
+	 *
+	 * @param link map link
+	 * @param connection existing graph connection
+	 */
+	public void refreshConnectionColor(NetworkMapLink link, GraphConnection connection)
+	{
+		Color color = LinkStylingHelper.resolveLinkColor(link, session, dciValueProvider, colors, defaultLinkColor, defaultLinkColorSource);
+		if (color != null)
+			connection.setLineColor(color);
+	}
+
    /**
     * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java.lang.Object,
     *      org.eclipse.gef4.zest.core.widgets.GraphConnection)

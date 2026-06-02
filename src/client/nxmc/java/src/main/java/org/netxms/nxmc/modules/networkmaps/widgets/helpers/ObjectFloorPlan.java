@@ -194,6 +194,16 @@ public class ObjectFloorPlan extends ObjectFigure
       });
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure#onRefresh()
+    */
+   @Override
+   protected void onRefresh()
+   {
+      label.setText(object.getNameOnMap());
+      super.onRefresh();
+   }
+
    /* (non-Javadoc)
     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
     */

@@ -70,6 +70,18 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	}
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure#onRefresh()
+    */
+	@Override
+	protected void onRefresh()
+	{
+		label.setText(object.getNameOnMap());
+		label.setIcon(labelProvider.getSmallIcon(object));
+		updateSize();
+		super.onRefresh();
+	}
+
+   /**
     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
     */
 	@Override

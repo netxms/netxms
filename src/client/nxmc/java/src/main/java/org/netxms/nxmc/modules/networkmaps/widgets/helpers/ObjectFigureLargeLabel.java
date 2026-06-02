@@ -124,6 +124,19 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 	}
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure#onRefresh()
+    */
+	@Override
+	protected void onRefresh()
+	{
+		name.setText(object.getNameOnMap());
+		icon.setIcon(labelProvider.getImage(element));
+		Dimension ls = getPreferredSize(-1, -1);
+		setSize(ls.width, ls.height);
+		super.onRefresh();
+	}
+
+   /**
     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
     */
 	@Override

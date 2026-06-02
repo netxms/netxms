@@ -32,6 +32,7 @@ import org.eclipse.gef4.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.gef4.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.gef4.zest.core.widgets.Graph;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphItem;
 import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
@@ -104,6 +105,7 @@ import org.netxms.nxmc.modules.networkmaps.widgets.helpers.FigureChangeCallback;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapContentProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapLabelProvider;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -1951,15 +1953,31 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       if (mapPage == null) //For object maps - exist but not created till active
          return;
 
+      // In geographical mode object figures are not used; the geo viewer is refreshed on full content reload.
+      if (isGeographicalCanvas())
+         return;
+
 		NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
 		if (element != null)
-			viewer.refresh(element, true);
+		{
+			GraphItem item = viewer.findGraphItem(element);
+			if ((item instanceof GraphNode) && (((GraphNode)item).getFigure() instanceof ObjectFigure))
+				((ObjectFigure)((GraphNode)item).getFigure()).refresh(object); // update single figure in place instead of rebuilding the whole graph
+			else
+				viewer.refresh(element, true);
+		}
 
 		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
 		if (links != null)
 		{
 			for(NetworkMapLink l : links)
-				viewer.refresh(l);
+			{
+				GraphItem item = viewer.findGraphItem(l);
+				if (item instanceof GraphConnection)
+					labelProvider.refreshConnectionColor(l, (GraphConnection)item);
+				else
+					viewer.refresh(l);
+			}
 		}
 	}
 

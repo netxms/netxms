@@ -86,8 +86,31 @@ public abstract class ObjectFigure extends Figure
    }
 
 	/**
+	 * Refresh figure after the underlying object has changed. The server replaces the object instance on update, so the new
+	 * instance is passed in to replace the cached reference before the figure content is updated.
+	 *
+	 * @param updatedObject updated object instance, or null to refresh from the current cached object
+	 */
+	public void refresh(AbstractObject updatedObject)
+	{
+		if (updatedObject != null)
+			object = updatedObject;
+		onRefresh();
+	}
+
+	/**
+	 * Update figure content from current object state. Subclasses override to refresh derived content (labels, icons, size).
+	 * Base implementation only revalidates and repaints, which is sufficient for status color and frame changes.
+	 */
+	protected void onRefresh()
+	{
+		revalidate();
+		repaint();
+	}
+
+	/**
 	 * Check if associated map element is currently selected.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isElementSelected()
