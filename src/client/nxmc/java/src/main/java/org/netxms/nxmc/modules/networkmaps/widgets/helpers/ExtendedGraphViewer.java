@@ -1303,7 +1303,8 @@ public class ExtendedGraphViewer extends GraphViewer
       @Override
       public Dimension getPreferredSize(int wHint, int hHint)
       {
-         return new Dimension(icon.getImageData().width, icon.getImageData().height).expand(6, 6);
+         Rectangle iconBounds = icon.getBounds();
+         return new Dimension(iconBounds.width, iconBounds.height).expand(6, 6);
       }
 
       /**

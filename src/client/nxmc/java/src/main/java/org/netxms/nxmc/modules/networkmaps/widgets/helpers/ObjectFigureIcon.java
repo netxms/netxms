@@ -69,8 +69,9 @@ public class ObjectFigureIcon extends ObjectFigure
       
 		if (image != null)
 		{
-			imageWidth = image.getImageData().width;
-			imageHeight = image.getImageData().height;
+			org.eclipse.swt.graphics.Rectangle imageBounds = image.getBounds();
+			imageWidth = imageBounds.width;
+			imageHeight = imageBounds.height;
 		}
 		else
 		{
