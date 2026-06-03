@@ -2618,6 +2618,190 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/polling:
+    patch:
+      operationId: updateObjectPolling
+      summary: Update node polling configuration
+      description: |
+        Update the node's polling settings: poller node, required poll count for status
+        change, expected capabilities bitmask, and the per-protocol / per-poll-type disable
+        flags. Merge-patch semantics: any subset of fields can be sent; omitted fields are
+        left unchanged. Within the `flags` object only the named booleans that are present
+        are modified; the rest are preserved.
+
+        This property group applies to Node objects only; sending it to any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                pollerNode:
+                  type: integer
+                  description: ID of the node used for polling, or 0 to poll from the server. Must reference a node object.
+                requiredPollCount:
+                  type: integer
+                  description: Number of consecutive polls required before a status change is registered.
+                expectedCapabilities:
+                  type: integer
+                  description: Expected capabilities bitmask.
+                flags:
+                  type: object
+                  additionalProperties: false
+                  description: Poll-type and per-protocol disable flags. Only present keys are changed.
+                  properties:
+                    disableAgent:
+                      type: boolean
+                      description: Disable usage of NetXMS agent for all polls.
+                    disableSNMP:
+                      type: boolean
+                      description: Disable usage of SNMP for all polls.
+                    disableICMP:
+                      type: boolean
+                      description: Disable usage of ICMP pings for status polling.
+                    disableSSH:
+                      type: boolean
+                      description: Disable SSH usage for all polls.
+                    disableVNC:
+                      type: boolean
+                      description: Disable VNC detection.
+                    disableSMCLPProperties:
+                      type: boolean
+                      description: Disable reading of SM-CLP available properties metadata.
+                    disableEtherNetIP:
+                      type: boolean
+                      description: Disable usage of EtherNet/IP for all polls.
+                    disableModbus:
+                      type: boolean
+                      description: Disable usage of Modbus for all polls.
+                    disable8021xStatusPoll:
+                      type: boolean
+                      description: Disable 802.1x port state checking during status poll.
+                    disableRoutePoll:
+                      type: boolean
+                      description: Disable routing table polling.
+                    disableTopologyPoll:
+                      type: boolean
+                      description: Disable topology polling.
+                    disableDiscoveryPoll:
+                      type: boolean
+                      description: Disable network discovery polling.
+                    disablePerfCount:
+                      type: boolean
+                      description: Disable reading of Windows performance counters metadata.
+                    disableStatusPoll:
+                      type: boolean
+                      description: Disable status polling.
+                    disableConfigurationPoll:
+                      type: boolean
+                      description: Disable configuration polling.
+                    disableDataCollection:
+                      type: boolean
+                      description: Disable data collection.
+      responses:
+        '200':
+          description: Polling configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/auto-bind:
+    patch:
+      operationId: updateObjectAutoBind
+      summary: Update object auto-bind configuration
+      description: |
+        Update the auto-bind filters of an auto-bind-capable object (Container, Collector,
+        Circuit, Cluster, NetworkMap, Template, Dashboard, BusinessService and business
+        service prototype). Each object supports up to two filter slots; entries in the
+        `autoBindFilters` array are applied positionally to slots 0, 1, … Within each entry
+        omitted keys are left unchanged; a `null` or omitted `source` clears that slot's
+        filter script.
+
+        Filter scripts are compiled and validated by default; a compilation failure returns
+        400 with a `diagnostic` object. Pass `?validate=false` to store work-in-progress or
+        intentionally broken scripts (matches the NXCP "always store" behavior).
+
+        This property group applies only to auto-bind-capable object classes; sending it to
+        any other class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: validate
+          in: query
+          required: false
+          description: When false, skip compilation of filter scripts.
+          schema:
+            type: boolean
+            default: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                autoBindFilters:
+                  type: array
+                  description: Per-slot auto-bind filter configuration, applied positionally.
+                  maxItems: 2
+                  items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      autoBind:
+                        type: boolean
+                        description: Automatically bind matching objects.
+                      autoUnbind:
+                        type: boolean
+                        description: Automatically unbind objects that no longer match (only effective when autoBind is enabled).
+                      source:
+                        type: string
+                        nullable: true
+                        description: NXSL filter script source; null clears the slot.
+      responses:
+        '200':
+          description: Auto-bind configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, filter script compilation failure, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/custom-attributes:
     get:
       operationId: getObjectCustomAttributes

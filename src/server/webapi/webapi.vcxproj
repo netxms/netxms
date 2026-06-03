@@ -346,6 +346,7 @@
     <ClCompile Include="object_categories.cpp" />
     <ClCompile Include="object_collections.cpp" />
     <ClCompile Include="object_helpers.cpp" />
+    <ClCompile Include="object_node_config.cpp" />
     <ClCompile Include="object_properties.cpp" />
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="schedules.cpp" />

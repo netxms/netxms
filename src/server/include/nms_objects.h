@@ -2033,8 +2033,16 @@ public:
    void setAutoBindFilter(int filterNumber, const TCHAR *filter);
    void setAutoBindMode(int filterNumber, bool doBind, bool doUnbind);
 
+   uint32_t modifyFromJSON(json_t *config);
+
    void getAutoBindScriptDependencies(StringSet *dependencies) const;
 };
+
+/**
+ * Get AutoBindTarget interface for given object, or nullptr if object's class
+ * does not support auto-binding. Uses object class dispatch (no RTTI).
+ */
+AutoBindTarget NXCORE_EXPORTABLE *GetObjectAsAutoBindTarget(NetObj *object);
 
 /**
  * Deleage object class
@@ -4091,6 +4099,7 @@ protected:
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    virtual void onDataCollectionChange() override;
@@ -4787,6 +4796,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
 
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual bool isMaintenanceApplicable() const override { return true; }
@@ -5423,6 +5434,8 @@ public:
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
 
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
@@ -5459,6 +5472,8 @@ public:
 
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -5892,8 +5907,8 @@ protected:
    bool loadChecksFromDatabase(DB_HANDLE hdb);
 
 public:
-   BaseBusinessService(const TCHAR *name);
-   BaseBusinessService(const BaseBusinessService& prototype, const TCHAR *name);
+   BaseBusinessService(const wchar_t *name);
+   BaseBusinessService(const BaseBusinessService& prototype, const wchar_t *name);
    BaseBusinessService();
    virtual ~BaseBusinessService();
 
@@ -5903,6 +5918,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks() const;
    uint32_t getObjectStatusThreshhold() const { return m_objectStatusThreshhold; }

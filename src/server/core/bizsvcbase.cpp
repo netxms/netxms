@@ -36,7 +36,7 @@ BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this)
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService(const wchar_t *name) : super(name), AutoBindTarget(this)
 {
    m_pollingDisabled = false;
    m_objectStatusThreshhold = 0;
@@ -46,7 +46,7 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name), AutoB
 /**
  * Create business service from prototype
  */
-BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, const TCHAR *name) : super(name), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService(const BaseBusinessService& prototype, const wchar_t *name) : super(name), AutoBindTarget(this)
 {
    m_pollingDisabled = false;
    m_objectStatusThreshhold = prototype.m_objectStatusThreshhold;
@@ -283,6 +283,16 @@ bool BaseBusinessService::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM business_service_checks WHERE service_id=?"));
    return success;
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *BaseBusinessService::toJson(bool includeSensitiveData)
+{
+   json_t *root = super::toJson(includeSensitiveData);
+   AutoBindTarget::toJson(root);
+   return root;
 }
 
 /**

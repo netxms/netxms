@@ -325,6 +325,16 @@ void Container::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Serialize object to JSON
+ */
+json_t *Container::toJson(bool includeSensitiveData)
+{
+   json_t *root = super::toJson(includeSensitiveData);
+   AutoBindTarget::toJson(root);
+   return root;
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)

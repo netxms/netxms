@@ -108,6 +108,16 @@ void Circuit::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Serialize object to JSON
+ */
+json_t *Circuit::toJson(bool includeSensitiveData)
+{
+   json_t *root = super::toJson(includeSensitiveData);
+   AutoBindTarget::toJson(root);
+   return root;
+}
+
+/**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
 bool Circuit::showThresholdSummary() const

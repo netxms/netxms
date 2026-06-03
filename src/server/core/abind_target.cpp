@@ -118,6 +118,71 @@ void AutoBindTarget::modifyFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Modify auto-bind configuration from JSON document. The supplied document is
+ * the auto-bind property group, e.g. the value of the top-level "autoBind" key:
+ *
+ *    { "autoBindFilters": [ { "autoBind": bool, "autoUnbind": bool, "source": string|null }, ... ] }
+ *
+ * Entries are applied positionally to filter slots 0..MAX_AUTOBIND_TARGET_FILTERS-1.
+ * Within each entry omitted keys are left unchanged (merge-patch). A null or
+ * missing "source" clears the filter script for that slot.
+ */
+uint32_t AutoBindTarget::modifyFromJSON(json_t *config)
+{
+   if (!json_is_object(config))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *filters = json_object_get(config, "autoBindFilters");
+   if (filters == nullptr)
+      return RCC_SUCCESS;   // nothing to change
+   if (!json_is_array(filters))
+      return RCC_INVALID_ARGUMENT;
+
+   size_t count = json_array_size(filters);
+   if (count > MAX_AUTOBIND_TARGET_FILTERS)
+      count = MAX_AUTOBIND_TARGET_FILTERS;
+
+   for(size_t i = 0; i < count; i++)
+   {
+      json_t *entry = json_array_get(filters, i);
+      if (!json_is_object(entry))
+         return RCC_INVALID_ARGUMENT;
+
+      json_t *source = json_object_get(entry, "source");
+      if (source != nullptr)
+      {
+         if (json_is_null(source))
+         {
+            setAutoBindFilter(static_cast<int>(i), nullptr);
+         }
+         else if (json_is_string(source))
+         {
+            wchar_t *script = WideStringFromUTF8String(json_string_value(source));
+            setAutoBindFilter(static_cast<int>(i), script);
+            MemFree(script);
+         }
+         else
+         {
+            return RCC_INVALID_ARGUMENT;
+         }
+      }
+
+      json_t *bind = json_object_get(entry, "autoBind");
+      json_t *unbind = json_object_get(entry, "autoUnbind");
+      if ((bind != nullptr) || (unbind != nullptr))
+      {
+         if (((bind != nullptr) && !json_is_boolean(bind)) || ((unbind != nullptr) && !json_is_boolean(unbind)))
+            return RCC_INVALID_ARGUMENT;
+         bool doBind = (bind != nullptr) ? json_is_true(bind) : isAutoBindEnabled(static_cast<int>(i));
+         bool doUnbind = (unbind != nullptr) ? json_is_true(unbind) : isAutoUnbindEnabled(static_cast<int>(i));
+         setAutoBindMode(static_cast<int>(i), doBind, doUnbind);
+      }
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
  * Create NXCP message with object's data
  */
 void AutoBindTarget::fillMessage(NXCPMessage *msg) const
@@ -431,5 +496,38 @@ void AutoBindTarget::getAutoBindScriptDependencies(StringSet *dependencies) cons
    for (int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
    {
       AddScriptDependencies(dependencies, m_autoBindFilters[i]);
+   }
+}
+
+/**
+ * Get AutoBindTarget interface for given object, or nullptr if object's class
+ * does not support auto-binding. Uses object class dispatch (no RTTI).
+ */
+AutoBindTarget *GetObjectAsAutoBindTarget(NetObj *object)
+{
+   if (object == nullptr)
+      return nullptr;
+   switch(object->getObjectClass())
+   {
+      case OBJECT_BUSINESSSERVICE:
+         return static_cast<BusinessService*>(object);
+      case OBJECT_BUSINESSSERVICEPROTO:
+         return static_cast<BusinessServicePrototype*>(object);
+      case OBJECT_CIRCUIT:
+         return static_cast<Circuit*>(object);
+      case OBJECT_CLUSTER:
+         return static_cast<Cluster*>(object);
+      case OBJECT_COLLECTOR:
+         return static_cast<Collector*>(object);
+      case OBJECT_CONTAINER:
+         return static_cast<Container*>(object);
+      case OBJECT_DASHBOARD:
+         return static_cast<Dashboard*>(object);
+      case OBJECT_NETWORKMAP:
+         return static_cast<NetworkMap*>(object);
+      case OBJECT_TEMPLATE:
+         return static_cast<Template*>(object);
+      default:
+         return nullptr;
    }
 }

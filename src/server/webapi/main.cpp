@@ -119,9 +119,11 @@ int H_ObjectUnbindChild(Context *context);
 int H_ObjectCustomAttributes(Context *context);
 int H_ObjectCustomAttributeUpdate(Context *context);
 int H_ObjectCustomAttributeDelete(Context *context);
+int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
+int H_ObjectPollingUpdate(Context *context);
 int H_ObjectPropertiesUpdate(Context *context);
 int H_ObjectResponsibleUsers(Context *context);
 int H_ObjectResponsibleUserUpdate(Context *context);
@@ -489,6 +491,14 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/status-calculation")
       .PATCH(H_ObjectStatusCalculationUpdate)
+      .build();
+
+   RouteBuilder("v1/objects/:object-id/polling")
+      .PATCH(H_ObjectPollingUpdate)
+      .build();
+
+   RouteBuilder("v1/objects/:object-id/auto-bind")
+      .PATCH(H_ObjectAutoBindUpdate)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/current-values")
       .GET(H_DataCollectionCurrentValues)

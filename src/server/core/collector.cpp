@@ -124,6 +124,16 @@ bool Collector::showThresholdSummary() const
 }
 
 /**
+ * Serialize object to JSON
+ */
+json_t *Collector::toJson(bool includeSensitiveData)
+{
+   json_t *root = super::toJson(includeSensitiveData);
+   AutoBindTarget::toJson(root);
+   return root;
+}
+
+/**
  * Post-load hook
  */
 void Collector::postLoad()

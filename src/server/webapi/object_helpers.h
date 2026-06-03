@@ -37,4 +37,13 @@
  */
 shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode);
 
+/**
+ * Apply a JSON merge-patch document to the object, write an audit log entry, and
+ * emit the updated object as the response. If `groupKey` is non-null the request
+ * body is wrapped as `{ groupKey: <body> }` before dispatch so a sub-resource
+ * handler (e.g. PATCH /location) shares the same modify path as the top-level
+ * PATCH. Returns the HTTP status code to be sent to the client.
+ */
+int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const wchar_t *auditLabel);
+
 #endif

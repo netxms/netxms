@@ -102,6 +102,9 @@
     <ClCompile Include="object_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="object_node_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="object_properties.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

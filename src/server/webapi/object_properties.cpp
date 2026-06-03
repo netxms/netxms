@@ -27,55 +27,6 @@
 #include "object_helpers.h"
 
 /**
- * Apply a JSON merge-patch document to the object, write an audit log entry,
- * and emit the updated object as the response. If `groupKey` is non-null the
- * request body is wrapped as `{ groupKey: <body> }` before dispatch so a
- * sub-resource handler (e.g. PATCH /location) shares the same modify path as
- * the top-level PATCH.
- */
-static int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const wchar_t *auditLabel)
-{
-   json_t *request = context->getRequestDocument();
-   if ((request == nullptr) || !json_is_object(request))
-   {
-      context->setErrorResponse("Request body must be a JSON object");
-      return 400;
-   }
-
-   json_t *patch;
-   if (groupKey != nullptr)
-   {
-      patch = json_object();
-      json_object_set(patch, groupKey, request);
-   }
-   else
-   {
-      patch = json_incref(request);
-   }
-
-   json_t *oldSnapshot = object->toJson(false);
-   uint32_t rcc = object->modifyFromJSON(patch, context);
-   json_decref(patch);
-   if (rcc != RCC_SUCCESS)
-   {
-      json_decref(oldSnapshot);
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"ApplyJsonPatch: modifyFromJSON failed for object %s [%u] (group=%hs) with RCC %u",
-         object->getName(), object->getId(), (groupKey != nullptr) ? groupKey : "(top-level)", rcc);
-      context->setErrorResponse("Invalid property values in request");
-      return 400;
-   }
-
-   json_t *newSnapshot = object->toJson(false);
-   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
-      auditLabel, object->getName(), object->getId());
-   json_decref(oldSnapshot);
-
-   context->setResponseData(newSnapshot);
-   json_decref(newSnapshot);
-   return 200;
-}
-
-/**
  * Handler for PATCH /v1/objects/:object-id - common NetObj scalars.
  * Accepts a JSON merge-patch body. Returns the full updated object on success.
  */

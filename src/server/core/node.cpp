@@ -10316,6 +10316,105 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
 }
 
 /**
+ * Mapping of poll-type flag bits to JSON field names used by the "polling"
+ * property group (WebAPI). Shared by Node::modifyFromJSONInternal and toJson.
+ */
+static const struct
+{
+   const char *key;
+   uint32_t bit;
+} s_nodePollFlags[] =
+{
+   { "disableAgent",            NF_DISABLE_NXCP },
+   { "disableSNMP",             NF_DISABLE_SNMP },
+   { "disableICMP",             NF_DISABLE_ICMP },
+   { "disableSSH",              NF_DISABLE_SSH },
+   { "disableVNC",              NF_DISABLE_VNC },
+   { "disableSMCLPProperties",  NF_DISABLE_SMCLP_PROPERTIES },
+   { "disableEtherNetIP",       NF_DISABLE_ETHERNET_IP },
+   { "disableModbus",           NF_DISABLE_MODBUS_TCP },
+   { "disable8021xStatusPoll",  NF_DISABLE_8021X_STATUS_POLL },
+   { "disableRoutePoll",        NF_DISABLE_ROUTE_POLL },
+   { "disableTopologyPoll",     NF_DISABLE_TOPOLOGY_POLL },
+   { "disableDiscoveryPoll",    NF_DISABLE_DISCOVERY_POLL },
+   { "disablePerfCount",        NF_DISABLE_PERF_COUNT },
+   { "disableStatusPoll",       DCF_DISABLE_STATUS_POLL },
+   { "disableConfigurationPoll", DCF_DISABLE_CONF_POLL },
+   { "disableDataCollection",   DCF_DISABLE_DATA_COLLECT }
+};
+
+/**
+ * Modify node from JSON document (WebAPI path). Handles the "polling" property
+ * group; all other fields are delegated to the base class implementation.
+ * Runs under the property lock (see NetObj::modifyFromJSON).
+ */
+uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   json_t *polling = json_object_get(json, "polling");
+   if (polling != nullptr)
+   {
+      if (!json_is_object(polling))
+         return RCC_INVALID_ARGUMENT;
+
+      // Poller node ID (0 = use server); when set it must reference a node object
+      json_t *value = json_object_get(polling, "pollerNode");
+      if (value != nullptr)
+      {
+         if (!json_is_integer(value) && !json_is_null(value))
+            return RCC_INVALID_ARGUMENT;
+         uint32_t nodeId = static_cast<uint32_t>(json_integer_value(value));
+         if (nodeId != 0)
+         {
+            shared_ptr<NetObj> pollerObject = FindObjectById(nodeId);
+            if ((pollerObject == nullptr) || (pollerObject->getObjectClass() != OBJECT_NODE))
+               return RCC_INVALID_OBJECT_ID;
+         }
+         m_pollerNode = nodeId;
+      }
+
+      value = json_object_get(polling, "requiredPollCount");
+      if (value != nullptr)
+      {
+         if (!json_is_integer(value) && !json_is_null(value))
+            return RCC_INVALID_ARGUMENT;
+         m_requiredPollCount = static_cast<uint32_t>(json_integer_value(value));
+      }
+
+      value = json_object_get(polling, "expectedCapabilities");
+      if (value != nullptr)
+      {
+         if (!json_is_integer(value) && !json_is_null(value))
+            return RCC_INVALID_ARGUMENT;
+         m_expectedCapabilities = static_cast<uint64_t>(json_integer_value(value));
+      }
+
+      // Poll-type flags as named booleans; only flags present in the document are changed
+      json_t *flags = json_object_get(polling, "flags");
+      if (flags != nullptr)
+      {
+         if (!json_is_object(flags))
+            return RCC_INVALID_ARGUMENT;
+         uint32_t setFlags = 0, mask = 0;
+         for(const auto& f : s_nodePollFlags)
+         {
+            json_t *fv = json_object_get(flags, f.key);
+            if (fv == nullptr)
+               continue;
+            if (!json_is_boolean(fv))
+               return RCC_INVALID_ARGUMENT;
+            mask |= f.bit;
+            if (json_is_true(fv))
+               setFlags |= f.bit;
+         }
+         if (mask != 0)
+            updateFlags(setFlags, mask);
+      }
+   }
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
  * Thread pool callback executed when SNMP proxy changes
  */
 void Node::onSnmpProxyChange(uint32_t oldProxy)
@@ -14586,6 +14685,18 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "downSince", json_time_string(m_downSince));
    json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
    json_object_set_new(root, "pollerNodeId", json_integer(m_pollerNode));
+
+   // Polling property group (round-trippable with WebAPI PATCH /polling)
+   json_t *polling = json_object();
+   json_object_set_new(polling, "pollerNode", json_integer(m_pollerNode));
+   json_object_set_new(polling, "requiredPollCount", json_integer(m_requiredPollCount));
+   json_object_set_new(polling, "expectedCapabilities", json_integer(m_expectedCapabilities));
+   json_t *pollFlags = json_object();
+   for(const auto& f : s_nodePollFlags)
+      json_object_set_new(pollFlags, f.key, json_boolean((m_flags & f.bit) != 0));
+   json_object_set_new(polling, "flags", pollFlags);
+   json_object_set_new(root, "polling", polling);
+
    json_object_set_new(root, "agentProxyNodeId", json_integer(m_agentProxy));
    json_object_set_new(root, "snmpProxyNodeId", json_integer(m_snmpProxy));
    json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
