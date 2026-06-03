@@ -1639,17 +1639,33 @@ static bool H_UpgradeFromV8()
  */
 static bool IsTableEmpty(const wchar_t *tableName)
 {
+   // Probe for a single row instead of COUNT(*): on PostgreSQL (and others) COUNT(*)
+   // is a full table scan, which is prohibitively slow when checking thousands of
+   // potentially large idata_/tdata_ tables during upgrade.
+   const wchar_t *queryTemplate;
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         queryTemplate = L"SELECT TOP 1 1 FROM %s";
+         break;
+      case DB_SYNTAX_ORACLE:
+         queryTemplate = L"SELECT 1 FROM %s WHERE ROWNUM<=1";
+         break;
+      case DB_SYNTAX_DB2:
+         queryTemplate = L"SELECT 1 FROM %s FETCH FIRST 1 ROWS ONLY";
+         break;
+      default:   // MySQL, PostgreSQL, SQLite, TSDB
+         queryTemplate = L"SELECT 1 FROM %s LIMIT 1";
+         break;
+   }
+
    wchar_t query[256];
-   nx_swprintf(query, 256, L"SELECT COUNT(*) FROM %s", tableName);
+   nx_swprintf(query, 256, queryTemplate, tableName);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult == nullptr)
       return false;
 
-   bool isEmpty = false;
-   if (DBGetNumRows(hResult) > 0)
-   {
-      isEmpty = (DBGetFieldLong(hResult, 0, 0) == 0);
-   }
+   bool isEmpty = (DBGetNumRows(hResult) == 0);
    DBFreeResult(hResult);
    return isEmpty;
 }
