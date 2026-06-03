@@ -42,4 +42,14 @@
     <servlet-name>redirectServlet</servlet-name>
     <url-pattern></url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>healthServlet</servlet-name>
+    <servlet-class>org.netxms.nxmc.HealthServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>healthServlet</servlet-name>
+    <url-pattern>/health</url-pattern>
+  </servlet-mapping>
 </web-app>
