@@ -3,7 +3,7 @@
 NetXMS agent extension that pulls CPU / memory utilization, datastore usage and
 VM / host inventory from a VMware vCenter (or standalone ESXi) server.
 
-It speaks the [agent extension protocol](../../../doc/AGENT_EXTENSION_PROTOCOL.md)
+It speaks the [agent extension protocol](../../../../doc/AGENT_EXTENSION_PROTOCOL.md)
 in **spawn mode**: the NetXMS agent launches and supervises it.
 
 ## Requirements
@@ -41,7 +41,7 @@ Environment variables (set via the agent's `Environment =` keys):
 ```
 *extensions/vcenter
 Mode = spawn
-Command = /usr/bin/python3 /opt/netxms/extensions/vcenter_extension.py
+Command = /usr/bin/python3 /opt/netxms/share/netxms/extensions/vcenter/nxagent-vcenter.py
 Environment = VC_HOST=vc.example.com
 Environment = VC_USER=monitor@vsphere.local
 Environment = VC_PASSWORD=secret

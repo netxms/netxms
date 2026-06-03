@@ -5071,6 +5071,8 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
+	src/agent/extensions/Makefile
+	src/agent/extensions/vcenter/Makefile
 	src/agent/install/Makefile
 	src/agent/libnxagent/Makefile
 	src/agent/libnxappc/Makefile

@@ -21,18 +21,20 @@ Configure the agent (nxagentd.conf), e.g.:
 
     [extensions/vcenter]
     Mode = spawn
-    Command = /usr/bin/python3 /opt/netxms/extensions/vcenter_extension.py
+    Command = /usr/bin/python3 /opt/netxms/share/netxms/extensions/vcenter/nxagent-vcenter.py
     Environment = VC_HOST=vc.example.com
     Environment = VC_USER=monitor@vsphere.local
     Environment = VC_PASSWORD=secret
     Environment = VC_POLL_INTERVAL=60
     DebugTag = extension.vcenter
 
-See ../../../doc/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
+See ../../../../doc/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
 """
 
+import hmac
 import json
 import os
+import select
 import socket
 import ssl
 import sys
@@ -48,13 +50,32 @@ except ImportError:
 
 PROTOCOL_VERSION = 1
 
+# Cap on a single un-terminated input line (1 MiB). A well-behaved agent sends
+# short newline-delimited JSON; anything larger is garbage or a memory-exhaustion
+# attempt and the connection is dropped.
+MAX_BUFFER = 1024 * 1024
+
+
+def _env_int(name, default):
+    """Read an integer environment variable, falling back to `default` (with a
+    warning) if it is unset or not a valid integer."""
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        sys.stderr.write("invalid integer for %s=%r; using default %d\n" % (name, raw, default))
+        return default
+
+
 # --- configuration (from agent-injected environment) ----------------------
 
 VC_HOST = os.environ.get("VC_HOST", "")
 VC_USER = os.environ.get("VC_USER", "")
 VC_PASSWORD = os.environ.get("VC_PASSWORD") or os.environ.get("VC_PASS", "")
-VC_PORT = int(os.environ.get("VC_PORT", "443"))
-VC_POLL_INTERVAL = int(os.environ.get("VC_POLL_INTERVAL", "60"))
+VC_PORT = _env_int("VC_PORT", 443)
+VC_POLL_INTERVAL = _env_int("VC_POLL_INTERVAL", 60)
 VC_VERIFY_TLS = os.environ.get("VC_VERIFY_TLS", "no").lower() in ("1", "yes", "true")
 
 
@@ -90,14 +111,20 @@ def _send(obj):
     data = (json.dumps(obj, separators=(",", ":")) + "\n").encode("utf-8")
     with _conn_lock:
         if _conn is not None:
-            _conn.sendall(data)
+            try:
+                _conn.sendall(data)
+            except OSError:
+                # The agent is gone; the recv loop will observe the disconnect
+                # and shut down. Drop this write silently rather than letting a
+                # background-thread log/notify crash the poller.
+                pass
 
 
 def respond(req_id, result):
     _send({"jsonrpc": "2.0", "id": req_id, "result": result})
 
 
-def error(req_id, code, message):
+def send_error(req_id, code, message):
     _send({"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}})
 
 
@@ -420,17 +447,29 @@ def _table(columns, rows):
 
 # --- dispatch -------------------------------------------------------------
 
-def dispatch(msg, token):
+def dispatch(msg, token, session):
     method = msg.get("method")
     req_id = msg.get("id")
     params = msg.get("params") or {}
 
     if method == "hello":
-        if params.get("token") != token:
-            error(req_id, -32001, "Unauthorized")
+        # Constant-time compare so the loopback token can't be guessed by timing.
+        if not hmac.compare_digest(str(params.get("token", "")), token):
+            send_error(req_id, -32001, "Unauthorized")
             return False
+        session["authenticated"] = True
         respond(req_id, {"protocol": PROTOCOL_VERSION, "extension": "vcenter-python/1.0"})
-    elif method == "list_capabilities":
+        return True
+
+    if not session["authenticated"]:
+        # Every method other than `hello` requires a prior successful handshake.
+        # The token is the only thing guarding the loopback port, so a client
+        # that skips `hello` is rejected and the connection is dropped.
+        if req_id is not None:
+            send_error(req_id, -32001, "Unauthorized")
+        return False
+
+    if method == "list_capabilities":
         respond(req_id, CAPABILITIES)
     elif method == "get_metric":
         try:
@@ -441,23 +480,23 @@ def dispatch(msg, token):
                 # protocol requires `value` to be a JSON string, so reporting a
                 # transient error here is correct - emitting {"value": null}
                 # would make the agent fail the request with an internal error.
-                error(req_id, -32011, "Metric value not available")
+                send_error(req_id, -32011, "Metric value not available")
             else:
                 respond(req_id, {"value": value})
         except NoInstance:
-            error(req_id, -32010, "No such instance")
+            send_error(req_id, -32010, "No such instance")
         except KeyError:
-            error(req_id, -32602, "Unknown metric")
+            send_error(req_id, -32602, "Unknown metric")
     elif method == "get_list":
         try:
             respond(req_id, {"values": handle_get_list(params["name"])})
         except KeyError:
-            error(req_id, -32602, "Unknown list")
+            send_error(req_id, -32602, "Unknown list")
     elif method == "get_table":
         try:
             respond(req_id, handle_get_table(params["name"]))
         except KeyError:
-            error(req_id, -32602, "Unknown table")
+            send_error(req_id, -32602, "Unknown table")
     elif method == "ping":
         respond(req_id, {})
     elif method == "shutdown":
@@ -465,11 +504,48 @@ def dispatch(msg, token):
         _stop.set()
     else:
         if req_id is not None:
-            error(req_id, -32601, "Unknown method: %s" % method)
+            send_error(req_id, -32601, "Unknown method: %s" % method)
     return True
 
 
 # --- main -----------------------------------------------------------------
+
+def _make_listeners(port):
+    """Listen on the loopback interface for IPv4 (127.0.0.1) and, when available,
+    IPv6 (::1), so the agent can connect over either. Binding the two loopback
+    addresses explicitly keeps the listener off all external interfaces (unlike a
+    wildcard dual-stack bind). IPv4 loopback must succeed; IPv6 is best-effort."""
+    listeners = []
+    for family, addr in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
+        try:
+            s = socket.socket(family, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if family == socket.AF_INET6:
+                # Keep the two listeners independent so binding ::1 after
+                # 127.0.0.1 doesn't collide on dual-stack systems.
+                try:
+                    s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+                except (AttributeError, OSError):
+                    pass
+            s.bind((addr, port))
+            s.listen(1)
+            listeners.append(s)
+        except OSError as e:
+            if family == socket.AF_INET:
+                raise
+            sys.stderr.write("IPv6 loopback listener unavailable: %s\n" % e)
+    return listeners
+
+
+def _accept_one(listeners):
+    """Block until a client connects to one of the loopback listeners, accept it,
+    and close all listeners (only a single connection is served)."""
+    ready, _, _ = select.select(listeners, [], [])
+    conn, _ = ready[0].accept()
+    for s in listeners:
+        s.close()
+    return conn
+
 
 def main():
     port = os.environ.get("NXAGENT_EXTENSION_PORT")
@@ -482,12 +558,7 @@ def main():
         sys.stderr.write("VC_HOST and VC_USER must be set in the extension environment\n")
         return 1
 
-    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(("127.0.0.1", int(port)))
-    srv.listen(1)
-
-    conn, _ = srv.accept()
+    conn = _accept_one(_make_listeners(int(port)))
     conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
     global _conn
@@ -496,6 +567,7 @@ def main():
     threading.Thread(target=poll_loop, daemon=True).start()
     log("info", "vcenter extension connected (polling %s every %ds)" % (VC_HOST, VC_POLL_INTERVAL))
 
+    session = {"authenticated": False}
     buf = b""
     try:
         while not _stop.is_set():
@@ -512,8 +584,11 @@ def main():
                     msg = json.loads(line.decode("utf-8"))
                 except ValueError:
                     continue
-                if not dispatch(msg, token):
+                if not dispatch(msg, token, session):
                     return 0
+            if len(buf) > MAX_BUFFER:
+                sys.stderr.write("incoming line exceeded %d bytes without a terminator; closing\n" % MAX_BUFFER)
+                break
     finally:
         _stop.set()
         try:
