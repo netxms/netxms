@@ -501,11 +501,11 @@ static StringList CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileT
    TCHAR fname[MAX_PATH];
    ExpandFileName(fileTemplate, fname, MAX_PATH, true);
 
-   _TDIR *dir = _topendir(basePath);
+   DIRHANDLE *dir = OpenDir(basePath);
    if (dir != nullptr)
    {
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != nullptr)
+      DIRENTRY *d;
+      while((d = ReadDir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
             continue;
@@ -535,7 +535,7 @@ static StringList CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileT
 #endif
          }
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
 
    return matchingFiles;
@@ -794,11 +794,11 @@ static void AddLogwatchPolicyFiles()
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
 
-   _TDIR *dir = _topendir(policyFolder);
+   DIRHANDLE *dir = OpenDir(policyFolder);
    if (dir != nullptr)
    {
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != nullptr)
+      DIRENTRY *d;
+      while((d = ReadDir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
          {
@@ -833,7 +833,7 @@ static void AddLogwatchPolicyFiles()
             }
          }
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
 }
 

@@ -89,12 +89,12 @@ uint32_t H_FileInfo(json_t *params, json_t **result, AbstractCommSession *sessio
  */
 static void ListDirectory(const TCHAR *basePath, const TCHAR *pattern, bool recursive, int maxEntries, json_t *entries, int *count)
 {
-   _TDIR *dir = _topendir(basePath);
+   DIRHANDLE *dir = OpenDir(basePath);
    if (dir == nullptr)
       return;
 
-   struct _tdirent *entry;
-   while ((entry = _treaddir(dir)) != nullptr && *count < maxEntries)
+   DIRENTRY *entry;
+   while ((entry = ReadDir(dir)) != nullptr && *count < maxEntries)
    {
       if (!_tcscmp(entry->d_name, _T(".")) || !_tcscmp(entry->d_name, _T("..")))
          continue;
@@ -128,7 +128,7 @@ static void ListDirectory(const TCHAR *basePath, const TCHAR *pattern, bool recu
       }
    }
 
-   _tclosedir(dir);
+   CloseDir(dir);
 }
 
 /**

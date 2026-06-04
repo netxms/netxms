@@ -91,14 +91,14 @@ static void ExecuteHousekeeperScripts()
 
    int count = 0;
    nxlog_debug_tag(DEBUG_TAG,  1, _T("Running housekeeper scripts from %s"), path);
-   DIRW *dir = wopendir(path);
+   DIRHANDLEW *dir = OpenDirW(path);
    if (dir != nullptr)
    {
       wcscat(path, FS_PATH_SEPARATOR);
       size_t insPos = wcslen(path);
 
-      struct _tdirent *f;
-      while((f = wreaddir(dir)) != nullptr)
+      DIRENTRYW *f;
+      while((f = ReadDirW(dir)) != nullptr)
       {
          if (MatchStringW(L"*.nxsl", f->d_name, false))
          {
@@ -152,7 +152,7 @@ static void ExecuteHousekeeperScripts()
          if (!ThrottleHousekeeper())
             break;
       }
-      wclosedir(dir);
+      CloseDirW(dir);
    }
    nxlog_debug_tag(DEBUG_TAG,  3, L"%d housekeeper scripts processed", count);
 }

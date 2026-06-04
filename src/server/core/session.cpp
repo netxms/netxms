@@ -13986,33 +13986,33 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
 
    if ((m_systemAccessRights & SYSTEM_ACCESS_READ_SERVER_FILES) || soundFiles)
    {
-      TCHAR path[MAX_PATH];
-      _tcslcpy(path, g_netxmsdDataDir, MAX_PATH);
-      _tcslcat(path, mibFiles ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
-      _TDIR *dir = _topendir(path);
+      wchar_t path[MAX_PATH];
+      wcslcpy(path, g_netxmsdDataDir, MAX_PATH);
+      wcslcat(path, mibFiles ? DDIR_MIBS : DDIR_FILES, MAX_PATH);
+      DIRHANDLEW *dir = OpenDirW(path);
       if (dir != nullptr)
       {
-         _tcscat(path, FS_PATH_SEPARATOR);
+         wcscat(path, FS_PATH_SEPARATOR);
          int pos = (int)_tcslen(path);
 
-         struct _tdirent *d;
+         DIRENTRYW *d;
          NX_STAT_STRUCT st;
          uint32_t count = 0, fieldId = VID_INSTANCE_LIST_BASE;
-         while((d = _treaddir(dir)) != nullptr)
+         while((d = ReadDirW(dir)) != nullptr)
          {
-            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            if (!wcscmp(d->d_name, L".") || !wcscmp(d->d_name, L".."))
                continue;
 
             if (length != 0)
             {
                bool correctType = false;
-               TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
+               wchar_t *extension = wcsrchr(d->d_name, L'.');
                if (extension != nullptr)
                {
                   extension++;
                   for(int j = 0; j < extensionList.size(); j++)
                   {
-                     if (!_tcscmp(extension, extensionList.get(j)))
+                     if (!wcscmp(extension, extensionList.get(j)))
                      {
                         correctType = true;
                         break;
@@ -14024,7 +14024,7 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
                   continue;
                }
             }
-            _tcslcpy(&path[pos], d->d_name, MAX_PATH - pos);
+            wcslcpy(&path[pos], d->d_name, MAX_PATH - pos);
             if (CALL_STAT(path, &st) == 0)
             {
                if (S_ISREG(st.st_mode))
@@ -14037,7 +14037,7 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
                }
             }
          }
-         _tclosedir(dir);
+         CloseDirW(dir);
          response.setField(VID_INSTANCE_COUNT, count);
          response.setField(VID_RCC, RCC_SUCCESS);
       }

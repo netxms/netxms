@@ -1496,20 +1496,20 @@ uint32_t ImportConfigFromContent(const char* content, uint32_t flags, StringBuff
  */
 void ImportLocalConfiguration(bool overwrite)
 {
-   TCHAR path[MAX_PATH];
+   wchar_t path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
-   _tcscat(path, SDIR_TEMPLATES);
+   wcscat(path, SDIR_TEMPLATES);
 
    int count = 0;
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Import configuration files from %s"), path);
-   _TDIR *dir = _topendir(path);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Import configuration files from %s", path);
+   DIRHANDLEW *dir = OpenDirW(path);
    if (dir != nullptr)
    {
       _tcscat(path, FS_PATH_SEPARATOR);
       int insPos = (int)_tcslen(path);
 
-      struct _tdirent *f;
-      while((f = _treaddir(dir)) != nullptr)
+      DIRENTRYW *f;
+      while((f = ReadDirW(dir)) != nullptr)
       {
          if (MatchString(_T("*.xml"), f->d_name, FALSE) || MatchString(_T("*.json"), f->d_name, FALSE))
          {
@@ -1551,7 +1551,7 @@ void ImportLocalConfiguration(bool overwrite)
             }
          }
       }
-      _tclosedir(dir);
+      CloseDirW(dir);
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d configuration files processed"), count);
 }

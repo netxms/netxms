@@ -154,7 +154,7 @@ static void Help()
 /**
  * Check if given file entry is a directory
  */
-static bool IsDirectory(struct _tdirent *d, const TCHAR *filePath)
+static bool IsDirectory(DIRENTRY *d, const TCHAR *filePath)
 {
 #if HAVE_DIRENT_D_TYPE
    return d->d_type == DT_DIR;
@@ -171,13 +171,13 @@ static bool IsDirectory(struct _tdirent *d, const TCHAR *filePath)
  */
 static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive)
 {
-   _TDIR *dir = _topendir(path);
+   DIRHANDLE *dir = OpenDir(path);
    if (dir == nullptr)
       return;
 
    while(true)
    {
-      struct _tdirent *file = _treaddir(dir);
+      DIRENTRY *file = ReadDir(dir);
       if (file == nullptr)
          break;
 
@@ -201,7 +201,7 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
          }
       }
    }
-   _tclosedir(dir);
+   CloseDir(dir);
 }
 
 /**

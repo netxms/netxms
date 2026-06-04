@@ -1035,27 +1035,27 @@ void NXCORE_EXPORTABLE ExtractScriptEntryPoint(wchar_t *name, char *entryPoint)
  */
 void ExecuteStartupScripts()
 {
-   TCHAR path[MAX_PATH];
+   wchar_t path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
-   _tcscat(path, SDIR_SCRIPTS);
+   wcscat(path, SDIR_SCRIPTS);
 
    int count = 0;
-   nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Running startup scripts from %s"), path);
-   _TDIR *dir = _topendir(path);
+   nxlog_debug_tag(DEBUG_TAG_BASE,  1, L"Running startup scripts from %s", path);
+   DIRHANDLEW *dir = OpenDirW(path);
    if (dir != nullptr)
    {
-      _tcscat(path, FS_PATH_SEPARATOR);
+      wcscat(path, FS_PATH_SEPARATOR);
       int insPos = (int)_tcslen(path);
 
-      struct _tdirent *f;
-      while((f = _treaddir(dir)) != nullptr)
+      DIRENTRYW *f;
+      while((f = ReadDirW(dir)) != nullptr)
       {
-         if (MatchString(_T("*.nxsl"), f->d_name, false))
+         if (MatchStringW(L"*.nxsl", f->d_name, false))
          {
             count++;
-            _tcscpy(&path[insPos], f->d_name);
+            wcscpy(&path[insPos], f->d_name);
 
-            TCHAR *source = NXSLLoadFile(path);
+            wchar_t *source = NXSLLoadFile(path);
             if (source != nullptr)
             {
                NXSL_CompilationDiagnostic diag;
@@ -1084,7 +1084,7 @@ void ExecuteStartupScripts()
             }
          }
       }
-      _tclosedir(dir);
+      CloseDirW(dir);
    }
-   nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("%d startup scripts processed"), count);
+   nxlog_debug_tag(DEBUG_TAG_BASE,  1, L"%d startup scripts processed", count);
 }

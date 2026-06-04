@@ -1996,12 +1996,12 @@ static int ResetIdentity()
    _tremove(agentIdFile);
 
    ConfigureAgentDirectory(g_certificateDirectory, SUBDIR_CERTIFICATES, _T("Certificate"));
-   _TDIR *dir = _topendir(g_certificateDirectory);
+   DIRHANDLE *dir = OpenDir(g_certificateDirectory);
    if (dir != nullptr)
    {
       TCHAR path[MAX_PATH];
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != nullptr)
+      DIRENTRY *d;
+      while((d = ReadDir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
             continue;
@@ -2017,7 +2017,7 @@ static int ResetIdentity()
             exitCode = 7;
          }
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
    else
    {

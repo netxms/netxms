@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -25,7 +25,7 @@
 /**
  * opendir() wrapper
  */
-DIRW *wopendir(const WCHAR *name)
+DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *name)
 {
    char mbname[MAX_PATH];
 #if HAVE_WCSTOMBS
@@ -35,9 +35,9 @@ DIRW *wopendir(const WCHAR *name)
 #endif
    mbname[MAX_PATH - 1] = 0;
    DIR *dir = opendir(mbname);
-   if (dir == NULL)
-      return NULL;
-   DIRW *d = (DIRW *)MemAlloc(sizeof(DIRW));
+   if (dir == nullptr)
+      return nullptr;
+   DIRHANDLEW *d = MemAllocStruct<DIRHANDLEW>();
    d->dir = dir;
    return d;
 }
@@ -45,11 +45,11 @@ DIRW *wopendir(const WCHAR *name)
 /**
  * readdir() wrapper
  */
-struct dirent_w *wreaddir(DIRW *dirp)
+DIRENTRYW LIBNETXMS_EXPORTABLE *ReadDirW(DIRHANDLEW *dirp)
 {
    struct dirent *d = readdir(dirp->dir);
-   if (d == NULL)
-      return NULL;
+   if (d == nullptr)
+      return nullptr;
 #if HAVE_MBSTOWCS
    mbstowcs(dirp->dirstr.d_name, d->d_name, 257);
 #else
@@ -66,7 +66,7 @@ struct dirent_w *wreaddir(DIRW *dirp)
 /*
  * closedir() wrapper
  */
-int wclosedir(DIRW *dirp)
+int LIBNETXMS_EXPORTABLE CloseDirW(DIRHANDLEW *dirp)
 {
    closedir(dirp->dir);
    MemFree(dirp);

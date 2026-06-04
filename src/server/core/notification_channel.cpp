@@ -1939,14 +1939,14 @@ void LoadNotificationChannelDrivers()
 #ifdef _WIN32
    SetDllDirectory(path);
 #endif
-   DIRW *dir = wopendir(path);
+   DIRHANDLEW *dir = OpenDirW(path);
    if (dir != nullptr)
    {
       wcscat(path, FS_PATH_SEPARATOR);
       size_t insPos = wcslen(path);
 
-      dirent_w *f;
-      while((f = wreaddir(dir)) != nullptr)
+      DIRENTRYW *f;
+      while((f = ReadDirW(dir)) != nullptr)
       {
          if (MatchStringW(L"*.ncd", f->d_name, false))
          {
@@ -1954,7 +1954,7 @@ void LoadNotificationChannelDrivers()
             LoadDriver(path);
          }
       }
-      wclosedir(dir);
+      CloseDirW(dir);
    }
 #ifdef _WIN32
    SetDllDirectory(nullptr);
@@ -1964,7 +1964,7 @@ void LoadNotificationChannelDrivers()
    NCDriverDescriptor *nxslDriver = new NCDriverDescriptor();
    nxslDriver->instanceFactory = nullptr;  // Special handling - no external factory
    nxslDriver->confTemplate = &s_nxslConfigTemplate;
-   _tcscpy(nxslDriver->name, _T("NXSL"));
+   wcscpy(nxslDriver->name, L"NXSL");
    s_driverList.set(nxslDriver->name, nxslDriver);
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Built-in NXSL notification channel driver registered"));
 
