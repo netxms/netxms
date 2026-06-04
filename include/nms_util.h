@@ -6221,13 +6221,6 @@ int LIBNETXMS_EXPORTABLE CloseDirW(DIRHANDLEW *dirp);
 #define CloseDir CloseDirA
 #endif
 
-#if defined(_WIN32) || !(HAVE_SCANDIR)
-int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
-              int (*select)(const struct dirent *),
-              int (*compar)(const struct dirent **, const struct dirent **));
-int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
-#endif
-
 char LIBNETXMS_EXPORTABLE *IntegerToString(int32_t value, char *str, int base = 10);
 WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(int32_t value, WCHAR *str, int base = 10);
 char LIBNETXMS_EXPORTABLE *IntegerToString(uint32_t value, char *str, int base = 10);

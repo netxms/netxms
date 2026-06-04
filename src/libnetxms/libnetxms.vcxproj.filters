@@ -231,9 +231,6 @@
     <ClCompile Include="memmem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scandir.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="strlcat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
