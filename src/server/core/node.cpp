@@ -14655,7 +14655,6 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "subType", json_string_t(m_subType));
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
-   json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));
    json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));

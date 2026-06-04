@@ -247,21 +247,6 @@ typedef int bool;
 #define HAVE_VSCWPRINTF         1
 #endif
 
-#if _MSC_VER >= 1800
-#define HAVE_STRTOLL            1
-#define HAVE_STRTOULL           1
-#define HAVE_WCSTOLL            1
-#define HAVE_WCSTOULL           1
-#endif
-
-#define HAVE_TOUPPER            1
-#define HAVE_TOWUPPER           1
-#define HAVE_TOLOWER            1
-#define HAVE_TOWLOWER           1
-
-#define HAVE_SNPRINTF           1
-#define HAVE_VSNPRINTF          1
-
 #define HAVE_GETADDRINFO        1
 #define HAVE_INET_PTON          1
 
@@ -269,8 +254,6 @@ typedef int bool;
 
 #define HAVE_ALLOCA             1
 
-#define HAVE_WCSLEN             1
-#define HAVE_WCSNCPY            1
 #define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
 

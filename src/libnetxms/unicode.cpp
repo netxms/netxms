@@ -100,22 +100,6 @@ size_t LIBNETXMS_EXPORTABLE ucs4_strlen(const UCS4CHAR *s)
 
 #endif
 
-#if !HAVE_WCSLEN
-
-/**
- * Calculate length of wide character string
- */
-size_t LIBNETXMS_EXPORTABLE wcslen(const WCHAR *s)
-{
-   size_t len = 0;
-   const WCHAR *curr = s;
-   while(*curr++)
-      len++;
-   return len;
-}
-
-#endif
-
 #ifndef UNICODE_UCS2
 
 /**
@@ -167,22 +151,6 @@ UCS4CHAR LIBNETXMS_EXPORTABLE *ucs4_strncpy(UCS4CHAR *dest, const UCS4CHAR *src,
    if (len > n)
       len = n;
    memcpy(dest, src, len * sizeof(UCS4CHAR));
-   return dest;
-}
-
-#endif
-
-#if !HAVE_WCSNCPY
-
-/**
- * Copy UCS-2 character string with length limitation
- */
-WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n)
-{
-   size_t len = wcslen(src) + 1;
-   if (len > n)
-      len = n;
-   memcpy(dest, src, len * sizeof(WCHAR));
    return dest;
 }
 

@@ -137,35 +137,6 @@ static inline float bswap_float(float val)
 void LIBNETXMS_EXPORTABLE bswap_array_16(uint16_t *v, int len);
 void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 
-/*** toupper/tolower ***/
-#if !HAVE_TOLOWER
-static inline char tolower(char c)
-{
-   return ((c >= 'A') && (c <= 'Z')) ? c + ('a' - 'A') : c;
-}
-#endif
-
-#if !HAVE_TOWLOWER
-static inline WCHAR towlower(WCHAR c)
-{
-   return ((c >= L'A') && (c <= L'Z')) ? c + (L'a' - L'A') : c;
-}
-#endif
-
-#if !HAVE_TOUPPER
-static inline char toupper(char c)
-{
-   return ((c >= 'a') && (c <= 'z')) ? c - ('a' - 'A') : c;
-}
-#endif
-
-#if !HAVE_TOWUPPER
-static inline WCHAR towupper(WCHAR c)
-{
-   return ((c >= L'a') && (c <= L'z')) ? c - (L'a' - L'A') : c;
-}
-#endif
-
 /*** Serial communications ***/
 #ifdef _WIN32
 
@@ -243,20 +214,6 @@ static inline WCHAR towupper(WCHAR c)
 #define NXLOG_ROTATION_DISABLED  0
 #define NXLOG_ROTATION_DAILY     1
 #define NXLOG_ROTATION_BY_SIZE   2
-
-/**
- * Custom wcslen()
- */
-#if !HAVE_WCSLEN
-size_t LIBNETXMS_EXPORTABLE wcslen(const WCHAR *s);
-#endif
-
-/**
- * Custom wcsncpy()
- */
-#if !HAVE_WCSNCPY
-WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n);
-#endif
 
 // Some AIX versions have broken wcsdup() so we use internal implementation
 #if !HAVE_WCSDUP || defined(_AIX)
@@ -6130,20 +6087,6 @@ wchar_t LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, wchar_t *strerrbuf, size_t 
 #endif
 
 #endif	/* UNICODE && !_WIN32*/
-
-#if !HAVE_STRTOLL
-INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
-#endif
-#if !HAVE_STRTOULL
-UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
-#endif
-
-#if !HAVE_WCSTOLL
-INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
-#endif
-#if !HAVE_WCSTOULL
-UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
-#endif
 
 #if !HAVE_STRLWR && !defined(_WIN32)
 char LIBNETXMS_EXPORTABLE *strlwr(char *str);

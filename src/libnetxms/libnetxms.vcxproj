@@ -475,8 +475,6 @@
     <ClCompile Include="strmapbase.cpp" />
     <ClCompile Include="strptime.cpp" />
     <ClCompile Include="strset.cpp" />
-    <ClCompile Include="strtoll.cpp" />
-    <ClCompile Include="strtoull.cpp" />
     <ClCompile Include="subproc.cpp" />
     <ClCompile Include="table.cpp" />
     <ClCompile Include="tasks.cpp" />
@@ -492,8 +490,6 @@
     <ClCompile Include="wcscasestr.cpp" />
     <ClCompile Include="wcslcat.cpp" />
     <ClCompile Include="wcslcpy.cpp" />
-    <ClCompile Include="wcstoll.cpp" />
-    <ClCompile Include="wcstoull.cpp" />
     <ClCompile Include="windll.cpp" />
     <ClCompile Include="xml.cpp" />
     <ClCompile Include="ztools.cpp" />

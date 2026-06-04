@@ -240,12 +240,6 @@
     <ClCompile Include="strptime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="strtoll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="strtoull.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="timegm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -253,12 +247,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wcslcpy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wcstoll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wcstoull.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="windll.cpp">

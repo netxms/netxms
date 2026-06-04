@@ -2970,9 +2970,9 @@ AC_LANG_POP([C++])
 # Checks for functions
 #--------------------------------------------------------------------
 
-AC_CHECK_FUNCS([gettimeofday memmem strlwr strtoll strtoull])
-AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r toupper])
-AC_CHECK_FUNCS([tolower daemon uname poll])
+AC_CHECK_FUNCS([gettimeofday memmem strlwr])
+AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r])
+AC_CHECK_FUNCS([daemon uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([strptime timegm])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
@@ -3057,7 +3057,6 @@ AC_CHECK_FUNCS([cfsetospeed cfsetispeed])
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
 AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
-AC_CHECK_FUNCS([snprintf vsnprintf])
 
 AC_MSG_CHECKING(whether snprintf returns required buffer size)
 AC_RUN_IFELSE(
@@ -3474,7 +3473,7 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 #endif
 ])
-AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
+AC_CHECK_FUNCS([wcsdup])
 AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcslcpy wcslcat])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])

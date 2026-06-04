@@ -794,14 +794,7 @@ void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
    for (; *p != 0; p++)
    {
       // TODO: check/set locale
-#if HAVE_TOWUPPER
       *p = towupper(*p);
-#else
-      if (*p < 256)
-      {
-         *p = (WCHAR)toupper(*p);
-      }
-#endif
    }
 }
 

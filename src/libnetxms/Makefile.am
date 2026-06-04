@@ -11,9 +11,9 @@ libnetxms_la_SOURCES = \
 	pa.cpp procexec.cpp pugixml.cpp qsort.cpp queue.cpp rbuffer.cpp serial.cpp \
 	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp squeue.cpp strcasestr.cpp \
 	streamcomp.cpp string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
-	strmapbase.cpp strptime.cpp strset.cpp strtoll.cpp strtoull.cpp \
+	strmapbase.cpp strptime.cpp strset.cpp \
 	subproc.cpp table.cpp tasks.cpp tfw.cpp threads.cpp timegm.cpp tls_conn.cpp \
-	tools.cpp tp.cpp unicode.cpp uuid.cpp vault.cpp wcstoll.cpp wcstoull.cpp xml.cpp \
+	tools.cpp tp.cpp unicode.cpp uuid.cpp vault.cpp xml.cpp \
 	wcscasecmp.cpp wcscasestr.cpp wcslcat.cpp wcslcpy.cpp wcsncasecmp.cpp ztools.cpp
 
 libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS -I@top_srcdir@/build
