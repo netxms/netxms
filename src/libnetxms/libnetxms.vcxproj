@@ -459,7 +459,6 @@
     <ClCompile Include="pugixml.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="rbuffer.cpp" />
-    <ClCompile Include="scandir.cpp" />
     <ClCompile Include="serial.cpp" />
     <ClCompile Include="sha1.cpp" />
     <ClCompile Include="sha2.cpp" />

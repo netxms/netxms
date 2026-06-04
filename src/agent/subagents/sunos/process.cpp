@@ -135,96 +135,82 @@ static int ProcFilter(const struct dirent *d)
  */
 static int ProcRead(t_ProcEnt **pEnt, bool extended, char *procNameFilter, char *cmdLineFilter, char *userNameFilter, int state)
 {
-   int procFound = -1;
    if (pEnt != nullptr)
       *pEnt = nullptr;
 
-   struct dirent **procList;
-   int procCount = scandir("/proc", &procList, ProcFilter, alphasort);
-   if (procCount >= 0)
-   {
-      procFound = 0;
+   DIRHANDLEA *dir = OpenDirA("/proc");
+   if (dir == nullptr)
+      return -1;
 
-      if (procCount > 0 && pEnt != nullptr)
+   int procFound = 0;
+   int procAllocated = 0;
+   struct dirent *entry;
+   while ((entry = ReadDirA(dir)) != nullptr)
+   {
+      // Process only PID directories (entries with numeric names)
+      if (!ProcFilter(entry))
+         continue;
+
+      psinfo_t psi;
+      if (!ReadProcInfo<psinfo_t>("psinfo", entry->d_name, &psi))
+         continue;
+
+      if (extended)
       {
-         *pEnt = MemAllocArray<t_ProcEnt>(procCount + 1);
-         if (*pEnt == nullptr)
+         // Match process name
+         if ((procNameFilter != nullptr) && (*procNameFilter != 0))
          {
-            procFound = -1;
-            // cleanup
-            while (procCount--)
+            if (!RegexpMatchA(psi.pr_fname, procNameFilter, true))
+               continue;
+         }
+         // Match cmd line
+         if ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0))
+         {
+            if (!RegexpMatchA(psi.pr_psargs, cmdLineFilter, true))
+               continue;
+         }
+         // Match user name
+         if ((userNameFilter != nullptr) && (*userNameFilter != 0))
+         {
+            char userName[MAX_USER_NAME_LEN];
+            if (!ReadProcUser(psi.pr_uid, userName) || !RegexpMatchA(userName, userNameFilter, true))
             {
-               free(procList[procCount]);
+               continue;
             }
          }
       }
-
-      while (procCount--)
+      else
       {
-         psinfo_t psi;
-         if (ReadProcInfo<psinfo_t>("psinfo", procList[procCount]->d_name, &psi))
+         // Match process name
+         if ((procNameFilter != nullptr) && (*procNameFilter != 0))
          {
-            bool nameMatch = true, cmdLineMatch = true, userMatch = true, stateMatch = true;
-
-            if (extended)
-            {
-               // Match process name
-               if ((procNameFilter != nullptr) && (*procNameFilter != 0))
-               {
-                  if (!RegexpMatchA(psi.pr_fname, procNameFilter, true))
-                     continue;
-               }
-               // Match cmd line
-               if ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0))
-               {
-                  if (!RegexpMatchA(psi.pr_psargs, cmdLineFilter, true))
-                     continue;
-               }
-               // Match user name
-               if ((userNameFilter != nullptr) && (*userNameFilter != 0))
-               {
-                  char userName[MAX_USER_NAME_LEN];
-                  if (!ReadProcUser(psi.pr_uid, userName) || !RegexpMatchA(userName, userNameFilter, true))
-                  {
-                        continue;
-                  }
-               }
-            }
-            else
-            {
-               // Match process name
-               if ((procNameFilter != nullptr) && (*procNameFilter != 0))
-               {
-                  if (strcmp(psi.pr_fname, procNameFilter))
-                     continue;
-               }
-            }
-
-            // Match state
-            if (state != 0)
-            {
-               if (psi.pr_lwp.pr_state != state)
-                  continue;
-            }
-
-            if (pEnt != nullptr)
-            {
-               (*pEnt)[procFound].pid = strtoul(procList[procCount]->d_name, nullptr, 10);
-               strncpy((*pEnt)[procFound].name, psi.pr_fname, sizeof((*pEnt)[procFound].name));
-               (*pEnt)[procFound].name[sizeof((*pEnt)[procFound].name) - 1] = 0;
-            }
-            procFound++;
+            if (strcmp(psi.pr_fname, procNameFilter))
+               continue;
          }
-         free(procList[procCount]);
       }
-      free(procList);
-   }
 
-   if ((procFound < 0) && (pEnt != nullptr))
-   {
-      MemFree(*pEnt);
-      *pEnt = nullptr;
+      // Match state
+      if (state != 0)
+      {
+         if (psi.pr_lwp.pr_state != state)
+            continue;
+      }
+
+      if (pEnt != nullptr)
+      {
+         if (procFound == procAllocated)
+         {
+            procAllocated += 64;
+            *pEnt = MemReallocArray(*pEnt, procAllocated);
+         }
+         (*pEnt)[procFound].pid = strtoul(entry->d_name, nullptr, 10);
+         strncpy((*pEnt)[procFound].name, psi.pr_fname, sizeof((*pEnt)[procFound].name));
+         (*pEnt)[procFound].name[sizeof((*pEnt)[procFound].name) - 1] = 0;
+      }
+      procFound++;
    }
+   CloseDirA(dir);
+
    return procFound;
 }
 
