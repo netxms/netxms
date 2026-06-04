@@ -4399,6 +4399,115 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/rack-layout:
+    get:
+      operationId: getRackLayout
+      summary: Get rack layout
+      description: >-
+        Retrieve the complete layout of a rack in a single call: rack metadata,
+        passive elements, and all placed child objects (nodes and chassis) with
+        their placement geometry. Placed objects are filtered by the requesting
+        user's read access and only those with a valid rack position (>= 1) are
+        returned.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Rack object ID
+      responses:
+        '200':
+          description: Rack layout retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rackId:
+                    type: integer
+                    description: Rack object ID
+                  name:
+                    type: string
+                    description: Rack name
+                  height:
+                    type: integer
+                    description: Rack height in units
+                  topBottomNumbering:
+                    type: boolean
+                    description: True if rack units are numbered from top to bottom
+                  passiveElements:
+                    type: array
+                    description: Passive rack elements (patch panels, PDUs, organisers, fillers)
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        type:
+                          type: integer
+                          description: Element type (0=patch panel, 1=filler panel, 2=organiser, 3=PDU)
+                        position:
+                          type: integer
+                        height:
+                          type: integer
+                        orientation:
+                          type: integer
+                          description: Orientation (0=fill, 1=front, 2=rear)
+                        portCount:
+                          type: integer
+                          description: Number of ports (patch panels only)
+                        imageFront:
+                          type: string
+                          format: uuid
+                        imageRear:
+                          type: string
+                          format: uuid
+                  objects:
+                    type: array
+                    description: Placed child objects (nodes and chassis) with rack placement
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Object ID
+                        objectClass:
+                          type: integer
+                          description: Object class code
+                        name:
+                          type: string
+                          description: Object name
+                        status:
+                          type: integer
+                          description: Object status
+                        rackPosition:
+                          type: integer
+                        rackHeight:
+                          type: integer
+                        rackOrientation:
+                          type: integer
+                          description: Orientation (0=fill, 1=front, 2=rear)
+                        rackImageFront:
+                          type: string
+                          format: uuid
+                        rackImageRear:
+                          type: string
+                          format: uuid
+        '400':
+          description: Object ID is invalid or object is not a rack
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/sub-tree:
     get:
       operationId: getObjectSubTree

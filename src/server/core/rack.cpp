@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -244,6 +244,55 @@ json_t *Rack::toJson(bool includeSensitiveData)
 }
 
 /**
+ * Build compact rack layout: rack metadata, passive elements, and placed child
+ * objects (nodes/chassis) with their placement geometry. Child objects are
+ * filtered by the requesting user's read access and by valid rack position.
+ */
+json_t *Rack::getRackLayout(uint32_t userId)
+{
+   json_t *root = json_object();
+
+   lockProperties();
+   json_object_set_new(root, "rackId", json_integer(m_id));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "height", json_integer(m_height));
+   json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
+   json_t *passiveElements = json_array();
+   for(int i = 0; i < m_passiveElements.size(); i++)
+      json_array_append_new(passiveElements, m_passiveElements.get(i)->toJson());
+   json_object_set_new(root, "passiveElements", passiveElements);
+   unlockProperties();
+
+   json_t *objects = json_array();
+   readLockChildList();
+   const SharedObjectArray<NetObj>& children = getChildList();
+   for(int i = 0; i < children.size(); i++)
+   {
+      NetObj *child = children.get(i);
+      if (!child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      json_t *object = json_object();
+      if (child->getRackPlacement(object) >= 1)
+      {
+         json_object_set_new(object, "id", json_integer(child->getId()));
+         json_object_set_new(object, "objectClass", json_integer(child->getObjectClass()));
+         json_object_set_new(object, "name", json_string_t(child->getName()));
+         json_object_set_new(object, "status", json_integer(child->getStatus()));
+         json_array_append_new(objects, object);
+      }
+      else
+      {
+         json_decref(object);
+      }
+   }
+   unlockChildList();
+   json_object_set_new(root, "objects", objects);
+
+   return root;
+}
+
+/**
  * Get description for passive element
  */
 String Rack::getRackPasiveElementDescription(uint32_t id)
@@ -325,7 +374,7 @@ json_t *RackPassiveElement::toJson() const
    if (!m_imageFront.isNull())
       json_object_set_new(root, "imageFront", json_string_t(m_imageFront.toString()));
    if (!m_imageRear.isNull())
-      json_object_set_new(root, "imageFront", json_string_t(m_imageRear.toString()));
+      json_object_set_new(root, "imageRear", json_string_t(m_imageRear.toString()));
    return root;
 }
 

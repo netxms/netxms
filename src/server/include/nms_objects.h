@@ -1749,6 +1749,8 @@ public:
 
    virtual json_t *toJson(bool includeSensitiveData = false);
 
+   virtual int getRackPlacement(json_t *element) const { return 0; }
+
    static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
    static void unlinkObjects(NetObj *parent, NetObj *child);
 
@@ -3403,6 +3405,7 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual int getRackPlacement(json_t *element) const override;
 
    uint32_t getControllerId() const { return m_controllerId; }
    uint32_t getRackId() const { return m_rackId; }
@@ -4219,6 +4222,7 @@ public:
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual int getRackPlacement(json_t *element) const override;
 
    virtual uint16_t getModbusTcpPort() const override { return m_modbusTcpPort; }
    virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }
@@ -4908,6 +4912,8 @@ public:
    virtual bool showThresholdSummary() const override;
 
    String getRackPasiveElementDescription(uint32_t id);
+
+   json_t *getRackLayout(uint32_t userId);
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
 };

@@ -48,6 +48,9 @@
     <ClCompile Include="objtools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="racks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="find.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -141,6 +141,7 @@ int H_ObjectExecuteScript(Context *context);
 int H_ObjectExpandText(Context *context);
 int H_ObjectQuery(Context *context);
 int H_ObjectRemoteControl(Context *context);
+int H_RackLayout(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
@@ -472,6 +473,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)
       .PATCH(H_ObjectPropertiesUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/rack-layout")
+      .GET(H_RackLayout)
       .build();
    RouteBuilder("v1/objects/:object-id/children")
       .GET(H_ObjectChildren)

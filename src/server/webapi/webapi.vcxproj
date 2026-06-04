@@ -350,6 +350,7 @@
     <ClCompile Include="object_node_config.cpp" />
     <ClCompile Include="object_properties.cpp" />
     <ClCompile Include="objtools.cpp" />
+    <ClCompile Include="racks.cpp" />
     <ClCompile Include="schedules.cpp" />
     <ClCompile Include="scripts.cpp" />
     <ClCompile Include="snmp_mib.cpp" />

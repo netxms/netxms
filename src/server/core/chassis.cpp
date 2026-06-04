@@ -428,11 +428,28 @@ json_t *Chassis::toJson(bool includeSensitiveData)
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
-   json_object_set_new(root, "rackOrientation", json_integer(m_rackPosition));
+   json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));
    json_object_set_new(root, "rackId", json_integer(m_rackId));
    json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
    json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
    unlockProperties();
 
    return root;
+}
+
+/**
+ * Fill rack placement information into provided JSON object.
+ * Returns rack position (>= 1 if placed in a rack), 0 otherwise.
+ */
+int Chassis::getRackPlacement(json_t *element) const
+{
+   lockProperties();
+   int position = m_rackPosition;
+   json_object_set_new(element, "rackPosition", json_integer(m_rackPosition));
+   json_object_set_new(element, "rackHeight", json_integer(m_rackHeight));
+   json_object_set_new(element, "rackOrientation", json_integer(m_rackOrientation));
+   json_object_set_new(element, "rackImageFront", m_rackImageFront.toJson());
+   json_object_set_new(element, "rackImageRear", m_rackImageRear.toJson());
+   unlockProperties();
+   return position;
 }
