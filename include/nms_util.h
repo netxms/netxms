@@ -5714,7 +5714,7 @@ struct NX_CFG_TEMPLATE
 };
 
 //
-// Structures for opendir() / readdir() / closedir()
+// Structures for OpenDir() / ReadDir() / CloseDir()
 //
 
 #ifdef _WIN32
@@ -5723,66 +5723,63 @@ struct NX_CFG_TEMPLATE
 #define DT_REG       1
 #define DT_DIR       2
 
-typedef struct dirent
+struct DIRENTRYA
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
    unsigned char   d_type; /* file type */
    int             d_namlen;       /* Name length */
    char            d_name[MAX_PATH];    /* file name */
-} _DIRECT;
+};
 
-typedef struct _dir_struc
+struct DIRHANDLEA
 {
    HANDLE handle;
-   struct dirent dirstr; /* Directory structure to return */
-} DIR;
+   DIRENTRYA dirstr; /* Directory structure to return */
+};
 
-#ifdef UNICODE
-
-typedef struct dirent_w
+struct DIRENTRYW
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
    unsigned char   d_type; /* file type */
    int             d_namlen;       /* Name length */
-   WCHAR           d_name[MAX_PATH];    /* file name */
-} _DIRECTW;
+   wchar_t         d_name[MAX_PATH];    /* file name */
+};
 
-typedef struct _dir_struc_w
+struct DIRHANDLEW
 {
    HANDLE handle;
-   struct dirent_w dirstr; /* Directory structure to return */
-} DIRW;
-
-#define _TDIR DIRW
-#define _TDIRECT _DIRECTW
-#define _tdirent dirent_w
-
-#else
-
-#define _TDIR DIR
-#define _TDIRECT _DIRECT
-#define _tdirent dirent
-
-#endif
+   DIRENTRYW dirstr; /* Directory structure to return */
+};
 
 #else	/* not _WIN32 */
 
-typedef struct dirent_w
-{
-   long            d_ino;  /* inode number */
-#if HAVE_DIRENT_D_TYPE
-   unsigned char   d_type; /* file type */
-#endif
-   WCHAR           d_name[257];    /* file name */
-} _DIRECTW;
+typedef DIR DIRHANDLEA;
+typedef struct dirent DIRENTRYA;
 
-typedef struct _dir_struc_w
+struct DIRENTRYW
 {
-   DIR *dir;               /* Original non-unicode structure */
-   struct dirent_w dirstr; /* Directory structure to return */
-} DIRW;
+   long          d_ino;  /* inode number */
+#if HAVE_DIRENT_D_TYPE
+   unsigned char d_type; /* file type */
+#endif
+   wchar_t       d_name[257];    /* file name */
+};
+
+struct DIRHANDLEW
+{
+   DIR *dir;         /* Original non-unicode structure */
+   DIRENTRYW dirstr; /* Directory structure to return */
+};
 
 #endif   /* _WIN32 */
+
+#ifdef UNICODE
+#define DIRHANDLE DIRHANDLEW
+#define DIRENTRY DIRENTRYW
+#else
+#define DIRHANDLE DIRHANDLEA
+#define DIRENTRY DIRENTRYA
+#endif
 
 //
 // Functions
@@ -6209,30 +6206,42 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
 #endif
 
 #ifdef _WIN32
-#ifdef UNICODE
-DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path);
-struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p);
-int LIBNETXMS_EXPORTABLE wclosedir(DIRW *p);
 
-#define _topendir wopendir
-#define _treaddir wreaddir
-#define _tclosedir wclosedir
-#else   /* not UNICODE */
-#define _topendir opendir
-#define _treaddir readdir
-#define _tclosedir closedir
-#endif
-
-DIR LIBNETXMS_EXPORTABLE *opendir(const char *path);
-struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p);
-int LIBNETXMS_EXPORTABLE closedir(DIR *p);
+DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path);
+DIRENTRYA LIBNETXMS_EXPORTABLE *ReadDirA(DIRHANDLEA *p);
+int LIBNETXMS_EXPORTABLE CloseDirA(DIRHANDLEA *p);
 
 #else	/* not _WIN32 */
 
-DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
-struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
-int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
+static inline DIRHANDLEA *OpenDirA(const char *filename)
+{
+   return opendir(filename);
+}
 
+static inline DIRENTRYA *ReadDirA(DIRHANDLEA *dirp)
+{
+   return readdir(dirp);
+}
+
+static inline int CloseDirA(DIRHANDLEA *dirp)
+{
+   return closedir(dirp);
+}
+
+#endif
+
+DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *filename);
+DIRENTRYW LIBNETXMS_EXPORTABLE *ReadDirW(DIRHANDLEW *dirp);
+int LIBNETXMS_EXPORTABLE CloseDirW(DIRHANDLEW *dirp);
+
+#ifdef UNICODE
+#define OpenDir OpenDirW
+#define ReadDir ReadDirW
+#define CloseDir CloseDirW
+#else   /* not UNICODE */
+#define OpenDir OpenDirA
+#define ReadDir ReadDirA
+#define CloseDir CloseDirA
 #endif
 
 #if defined(_WIN32) || !(HAVE_SCANDIR)
@@ -6580,8 +6589,8 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
 #define ExtractNamedOptionValueAsGUID ExtractNamedOptionValueAsGUIDA
 #endif
 
-int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *dir, bool (*filter)(const struct dirent *) = nullptr);
-int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter)(const struct dirent_w *) = nullptr);
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *dir, bool (*filter)(const DIRENTRYA*) = nullptr);
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter)(const DIRENTRYW*) = nullptr);
 #ifdef UNICODE
 #define CountFilesInDirectory CountFilesInDirectoryW
 #else

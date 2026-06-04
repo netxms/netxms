@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,23 +28,23 @@
 /**
  * Open directory
  */
-DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
+DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *path)
 {
    if (*path == 0)
-      return NULL;  // empty file name
+      return nullptr;  // empty file name
 
    // check to see if filename is a directory
-   WCHAR pattern[MAX_PATH];
+   wchar_t pattern[MAX_PATH];
    wcsncpy_s(pattern, MAX_PATH, path, _TRUNCATE);
    size_t len = wcslen(pattern);
-   WCHAR tail = pattern[len - 1];
+   wchar_t tail = pattern[len - 1];
    if ((tail == L'/') || (tail == L'\\'))
    {
       pattern[len - 1] = 0;
       len--;
    }
    if (pattern[0] == 0)
-      return NULL;
+      return nullptr;
    if (pattern[len - 1] == L':')
    {
       pattern[len] = L'\\';
@@ -52,7 +52,7 @@ DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
    }
    struct _stati64 sbuf;
    if ((_wstati64(pattern, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
-      return NULL;
+      return nullptr;
 
    // create search pattern
    if (pattern[len] != L'\\')
@@ -63,11 +63,14 @@ DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
    WIN32_FIND_DATAW fd;
    HANDLE handle = FindFirstFileW(pattern, &fd);
    if (handle == INVALID_HANDLE_VALUE)
-      return NULL;
+      return nullptr;
 
-   DIRW *p = (DIRW *)MemAlloc(sizeof(DIRW));
-   if (p == NULL)
-      return NULL;
+   DIRHANDLEW *p = MemAllocStruct<DIRHANDLEW>();
+   if (p == nullptr)
+   {
+      FindClose(handle);
+      return nullptr;
+   }
 
    p->handle = handle;
    p->dirstr.d_ino = 0;
@@ -80,10 +83,10 @@ DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
 /**
  * Read next entry in directory
  */
-struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p)
+DIRENTRYW LIBNETXMS_EXPORTABLE *ReadDirW(DIRHANDLEW *p)
 {
-   if (p == NULL)
-      return NULL;
+   if (p == nullptr)
+      return nullptr;
 
    // First call to readdir(), return entry found by FindFirstFile
    if (p->dirstr.d_ino == 0)
@@ -94,7 +97,7 @@ struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p)
 
    WIN32_FIND_DATAW fd;
    if (!FindNextFileW(p->handle, &fd))
-      return NULL;
+      return nullptr;
 
    p->dirstr.d_ino++;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
@@ -106,9 +109,9 @@ struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p)
 /**
  * Close directory handle
  */
-int LIBNETXMS_EXPORTABLE wclosedir(DIRW *p)
+int LIBNETXMS_EXPORTABLE CloseDirW(DIRHANDLEW *p)
 {
-   if (p == NULL)
+   if (p == nullptr)
       return -1;
    FindClose(p->handle);
    MemFree(p);

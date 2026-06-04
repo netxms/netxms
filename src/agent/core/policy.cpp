@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -565,12 +565,12 @@ void RemoveOrphanPolicyFiles()
       if (directories[i][0] == 0)
          continue;
 
-      _TDIR *dir = _topendir(directories[i]);
+      DIRHANDLE *dir = OpenDir(directories[i]);
       if (dir == nullptr)
          continue;
 
-      struct _tdirent *d;
-      while ((d = _treaddir(dir)) != nullptr)
+      DIRENTRY *d;
+      while ((d = ReadDir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
             continue;
@@ -601,7 +601,7 @@ void RemoveOrphanPolicyFiles()
             DBFreeResult(hResult);
          }
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
    DBFreeStatement(hStmt);
 }

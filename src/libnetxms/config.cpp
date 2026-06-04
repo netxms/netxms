@@ -1835,19 +1835,17 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const
  */
 bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
-   _TDIR *dir;
-   struct _tdirent *file;
    TCHAR fileName[MAX_PATH];
    bool success;
 
-   dir = _topendir(path);
+   DIRHANDLE *dir = OpenDir(path);
    if (dir != nullptr)
    {
       success = true;
       bool trailingSeparator = (path[_tcslen(path) - 1] == FS_PATH_SEPARATOR_CHAR);
       while(true)
       {
-         file = _treaddir(dir);
+         DIRENTRY *file = ReadDir(dir);
          if (file == nullptr)
             break;
 
@@ -1868,7 +1866,7 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
             success = false;
          }
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
    else
    {

@@ -1002,14 +1002,14 @@ bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path)
       return false;  // Path is too long
    epath[rootPathLen++] = FS_PATH_SEPARATOR_CHAR;
 
-   _TDIR *dir = _topendir(path);
+   DIRHANDLE *dir = OpenDir(path);
    if (dir == nullptr)
       return false;
 
    bool success = true;
    while(success)
    {
-      struct _tdirent *e = _treaddir(dir);
+      DIRENTRY *e = ReadDir(dir);
       if (e == nullptr)
          break;
 
@@ -1044,7 +1044,7 @@ bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path)
       }
    }
 
-   _tclosedir(dir);
+   CloseDir(dir);
 
    if (success)
    {
@@ -4563,15 +4563,15 @@ bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destinati
  * @param filter File name filter. Can be 'nullptr' for no filtering.
  * @return Returns -1 if file reading fails. Otherwise returns file count.
  */
-int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *path, bool (*filter)(const struct dirent *))
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *path, bool (*filter)(const DIRENTRYA*))
 {
-   DIR *dir = opendir(path);
+   DIRHANDLEA *dir = OpenDirA(path);
    if (dir == nullptr)
       return -1;
 
    int i = 0;
-   struct dirent *d;
-   while ((d = readdir(dir)) != nullptr)
+   DIRENTRYA *d;
+   while ((d = ReadDirA(dir)) != nullptr)
    {
       if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
          continue;
@@ -4580,7 +4580,7 @@ int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *path, bool (*filter)
          i++;
       }
    }
-   closedir(dir);
+   CloseDirA(dir);
    return i;
 }
 
@@ -4591,15 +4591,15 @@ int LIBNETXMS_EXPORTABLE CountFilesInDirectoryA(const char *path, bool (*filter)
  * @param filter File name filter. Can be 'nullptr' for no filtering.
  * @return Returns -1 if file reading fails. Otherwise returns file count.
  */
-int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter)(const struct dirent_w *))
+int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const wchar_t *path, bool (*filter)(const DIRENTRYW*))
 {
-   DIRW *dir = wopendir(path);
+   DIRHANDLEW *dir = OpenDirW(path);
    if (dir == nullptr)
       return -1;
 
    int i = 0;
-   struct dirent_w *d;
-   while ((d = wreaddir(dir)) != nullptr)
+   DIRENTRYW *d;
+   while ((d = ReadDirW(dir)) != nullptr)
    {
       if (!wcscmp(d->d_name, L".") || !wcscmp(d->d_name, L".."))
          continue;
@@ -4608,7 +4608,7 @@ int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter
          i++;
       }
    }
-   wclosedir(dir);
+   CloseDirW(dir);
    return i;
 }
 
@@ -4638,12 +4638,12 @@ bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR 
       return false;
 #endif
 
-   _TDIR *dir = _topendir(oldName);
+   DIRHANDLE *dir = OpenDir(oldName);
    if (dir == nullptr)
       return false;
 
-   struct _tdirent *d;
-   while ((d = _treaddir(dir)) != nullptr)
+   DIRENTRY *d;
+   while ((d = ReadDir(dir)) != nullptr)
    {
       if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
          continue;
@@ -4661,7 +4661,7 @@ bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR 
       CopyFileOrDirectory(nextOldaName, nextNewName);
    }
 
-   _tclosedir(dir);
+   CloseDir(dir);
    return true;
 }
 
@@ -4689,11 +4689,11 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 #else
       _tmkdir(newName, st.st_mode);
 #endif
-      _TDIR *dir = _topendir(oldName);
+      DIRHANDLE *dir = OpenDir(oldName);
       if (dir != nullptr)
       {
-         struct _tdirent *d;
-         while((d = _treaddir(dir)) != nullptr)
+         DIRENTRY *d;
+         while((d = ReadDir(dir)) != nullptr)
          {
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
                continue;
@@ -4710,7 +4710,7 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 
             MoveFileOrDirectory(nextOldaName, nextNewName);
          }
-         _tclosedir(dir);
+         CloseDir(dir);
       }
       _trmdir(oldName);
    }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -171,7 +171,7 @@ static void ProcessDirectory(TCHAR *path)
    if (rootPathLen >= MAX_PATH - 2)
       return; // Path is too long
 
-   _TDIR *dir = _topendir(path);
+   DIRHANDLE *dir = OpenDir(path);
    if (dir == nullptr)
       return;
 
@@ -179,7 +179,7 @@ static void ProcessDirectory(TCHAR *path)
 
    while (true)
    {
-      struct _tdirent *e = _treaddir(dir);
+      DIRENTRY *e = ReadDir(dir);
       if (e == nullptr)
          break;
 
@@ -190,7 +190,7 @@ static void ProcessDirectory(TCHAR *path)
       CheckFilesFromDirTree(path);
    }
 
-   _tclosedir(dir);
+   CloseDir(dir);
 }
 
 /**

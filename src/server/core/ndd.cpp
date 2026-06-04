@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,42 +108,42 @@ void LoadNetworkDeviceDrivers()
 {
 	memset(s_drivers, 0, sizeof(NetworkDeviceDriver *) * MAX_DEVICE_DRIVERS);
 
-	TCHAR path[MAX_PATH];
-	_tcscpy(path, g_netxmsdLibDir);
-	_tcscat(path, LDIR_NDD);
+	wchar_t path[MAX_PATH];
+	wcscpy(path, g_netxmsdLibDir);
+	wcscat(path, LDIR_NDD);
 
-	TCHAR buffer[MAX_CONFIG_VALUE_LENGTH];
-	ConfigReadStr(_T("NetworkDeviceDrivers.Blacklist"), buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
+	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
+	ConfigReadStr(L"NetworkDeviceDrivers.Blacklist", buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
    StringList blacklist;
-	blacklist.splitAndAdd(buffer, _T(","));
+	blacklist.splitAndAdd(buffer, L",");
 
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading network device drivers from %s"), path);
+	nxlog_debug_tag(DEBUG_TAG, 1, L"Loading network device drivers from %s", path);
 #ifdef _WIN32
 	SetDllDirectory(path);
 #endif
-	_TDIR *dir = _topendir(path);
+	DIRHANDLEW *dir = OpenDirW(path);
 	if (dir != nullptr)
 	{
-		_tcscat(path, FS_PATH_SEPARATOR);
+		wcscat(path, FS_PATH_SEPARATOR);
 		int insPos = (int)_tcslen(path);
 
-		struct _tdirent *f;
-		while((f = _treaddir(dir)) != NULL)
+		DIRENTRYW *f;
+		while((f = ReadDirW(dir)) != nullptr)
 		{
-			if (MatchString(_T("*.ndd"), f->d_name, false))
+			if (MatchStringW(L"*.ndd", f->d_name, false))
 			{
-				_tcscpy(&path[insPos], f->d_name);
+				wcscpy(&path[insPos], f->d_name);
 				LoadDriver(path, blacklist);
 				if (s_numDrivers == MAX_DEVICE_DRIVERS)
 					break;	// Too many drivers already loaded
 			}
 		}
-		_tclosedir(dir);
+		CloseDirW(dir);
 	}
 #ifdef _WIN32
 	SetDllDirectory(nullptr);
 #endif
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("%d network device drivers loaded"), s_numDrivers);
+	nxlog_debug_tag(DEBUG_TAG, 1, L"%d network device drivers loaded", s_numDrivers);
 }
 
 /**

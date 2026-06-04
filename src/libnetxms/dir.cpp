@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,10 +28,10 @@
 /**
  * Open directory
  */
-DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
+DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path)
 {
    if (*path == 0)
-      return NULL;  // empty file name
+      return nullptr;  // empty file name
 
    // check to see if filename is a directory
    char pattern[MAX_PATH];
@@ -44,7 +44,7 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
       len--;
    }
    if (pattern[0] == 0)
-      return NULL;
+      return nullptr;
    if (pattern[len - 1] == ':')
    {
       pattern[len] = '\\';
@@ -52,7 +52,7 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
    }
    struct _stati64 sbuf;
    if ((_stati64(pattern, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
-      return NULL;
+      return nullptr;
 
    // create search pattern
    pattern[len] = '\\';
@@ -62,11 +62,14 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
    WIN32_FIND_DATAA fd;
    HANDLE handle = FindFirstFileA(pattern, &fd);
    if (handle == INVALID_HANDLE_VALUE)
-      return NULL;
+      return nullptr;
 
-   DIR *p = (DIR *)MemAlloc(sizeof(DIR));
-   if (p == NULL)
-      return NULL;
+   DIRHANDLEA *p = MemAllocStruct<DIRHANDLEA>();
+   if (p == nullptr)
+   {
+      FindClose(handle);
+      return nullptr;
+   }
 
    p->handle = handle;
    p->dirstr.d_ino = 0;
@@ -79,10 +82,10 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
 /**
  * Read next entry in directory
  */
-struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p)
+DIRENTRYA LIBNETXMS_EXPORTABLE *ReadDirA(DIRHANDLEA *p)
 {
-   if (p == NULL)
-      return NULL;
+   if (p == nullptr)
+      return nullptr;
 
    // First call to readdir(), return entry found by FindFirstFile
    if (p->dirstr.d_ino == 0)
@@ -93,7 +96,7 @@ struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p)
 
    WIN32_FIND_DATAA fd;
    if (!FindNextFileA(p->handle, &fd))
-      return NULL;
+      return nullptr;
 
    p->dirstr.d_ino++;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
@@ -105,9 +108,9 @@ struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p)
 /**
  * Close directory handle
  */
-int LIBNETXMS_EXPORTABLE closedir(DIR *p)
+int LIBNETXMS_EXPORTABLE CloseDirA(DIRHANDLEA *p)
 {
-   if (p == NULL)
+   if (p == nullptr)
       return -1;
    FindClose(p->handle);
    MemFree(p);

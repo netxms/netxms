@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -195,13 +195,7 @@
 #define _trmdir   _wrmdir
 #define _tcserror _wcserror
 #define _tcserror_r wcserror_r
-#define _topendir wopendir
-#define _treaddir wreaddir
-#define _tclosedir wclosedir
 #define _ERR_error_tstring ERR_error_string_W
-
-#define _TDIR     DIRW
-#define _tdirent  dirent_w
 
 #else
 
@@ -277,13 +271,7 @@
 #define _trmdir   rmdir
 #define _tcserror strerror
 #define _tcserror_r strerror_r
-#define _topendir opendir
-#define _treaddir readdir
-#define _tclosedir closedir
 #define _ERR_error_tstring ERR_error_string
-
-#define _TDIR     DIR
-#define _tdirent  dirent
 
 #endif
 

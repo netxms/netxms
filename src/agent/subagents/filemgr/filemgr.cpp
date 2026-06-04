@@ -734,13 +734,13 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
       return;
    }
 
-   _TDIR *dir = _topendir(folder);
+   DIRHANDLE *dir = OpenDir(folder);
    if (dir != NULL)
    {
       response->setField(VID_RCC, ERR_SUCCESS);
 
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != NULL)
+      DIRENTRY *d;
+      while((d = ReadDir(dir)) != NULL)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
             continue;
@@ -766,7 +766,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
-      _tclosedir(dir);
+      CloseDir(dir);
 
       if (allowMultipart)
       {
@@ -800,11 +800,11 @@ static bool Delete(const TCHAR *name)
 
    // get element list and for each element run Delete
    bool result = true;
-   _TDIR *dir = _topendir(name);
+   DIRHANDLE *dir = OpenDir(name);
    if (dir != nullptr)
    {
-      struct _tdirent *d;
-      while((d = _treaddir(dir)) != nullptr)
+      DIRENTRY *d;
+      while((d = ReadDir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
             continue;
@@ -815,7 +815,7 @@ static bool Delete(const TCHAR *name)
          _tcslcat(newName, d->d_name, MAX_PATH);
          result = result && Delete(newName);
       }
-      _tclosedir(dir);
+      CloseDir(dir);
    }
    return _trmdir(name) == 0;
 }
@@ -825,12 +825,12 @@ static bool Delete(const TCHAR *name)
  */
 static void GetFolderInfo(const TCHAR *folder, uint64_t *fileCount, uint64_t *folderSize)
 {
-   _TDIR *dir = _topendir(folder);
+   DIRHANDLE *dir = OpenDir(folder);
    if (dir == nullptr)
       return;
 
-   struct _tdirent *d;
-   while((d = _treaddir(dir)) != nullptr)
+   DIRENTRY *d;
+   while((d = ReadDir(dir)) != nullptr)
    {
       if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
          continue;
@@ -854,7 +854,7 @@ static void GetFolderInfo(const TCHAR *folder, uint64_t *fileCount, uint64_t *fo
          }
       }
    }
-   _tclosedir(dir);
+   CloseDir(dir);
 }
 
 /**

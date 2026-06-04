@@ -196,7 +196,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool isRecursive, 
 
    // this is a dir
 #ifdef _WIN32
-   DIRW *dir = wopendir(path);
+   DIRHANDLEW *dir = OpenDirW(path);
 #else
    DIR *dir = opendir(path);
 #endif
@@ -205,7 +205,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool isRecursive, 
       while(true)
       {
 #ifdef _WIN32
-         struct dirent_w *pFile = wreaddir(dir);
+         DIRENTRYW *pFile = ReadDirW(dir);
 #else
          struct dirent *pFile = readdir(dir);
 #endif
@@ -263,7 +263,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool isRecursive, 
          }
       }
 #ifdef _WIN32
-      wclosedir(dir);
+      CloseDirW(dir);
 #else
       closedir(dir);
 #endif
