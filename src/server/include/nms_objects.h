@@ -1750,6 +1750,7 @@ public:
    virtual json_t *toJson(bool includeSensitiveData = false);
 
    virtual int getRackPlacement(json_t *element) const { return 0; }
+   virtual json_t *getChassisPlacement() const { return nullptr; }
 
    static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
    static void unlinkObjects(NetObj *parent, NetObj *child);
@@ -3407,6 +3408,8 @@ public:
    virtual json_t *toJson(bool includeSensitiveData = false) override;
    virtual int getRackPlacement(json_t *element) const override;
 
+   json_t *getChassisLayout(uint32_t userId);
+
    uint32_t getControllerId() const { return m_controllerId; }
    uint32_t getRackId() const { return m_rackId; }
    int16_t getRackHeight() const { return m_rackHeight; }
@@ -4078,7 +4081,7 @@ protected:
    IcmpStatCollectionMode m_icmpStatCollectionMode;
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
-   TCHAR *m_chassisPlacementConf;
+   char *m_chassisPlacementConf;   // Chassis placement configuration (opaque UTF-8 XML, stored and forwarded without processing)
    uint16_t m_eipPort;  // EtherNet/IP port
    InetAddress m_eipAddress;  // EtherNet/IP address (if different from primary)
    uint16_t m_cipDeviceType;
@@ -4223,6 +4226,7 @@ public:
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
    virtual int getRackPlacement(json_t *element) const override;
+   virtual json_t *getChassisPlacement() const override;
 
    virtual uint16_t getModbusTcpPort() const override { return m_modbusTcpPort; }
    virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }

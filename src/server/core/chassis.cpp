@@ -453,3 +453,46 @@ int Chassis::getRackPlacement(json_t *element) const
    unlockProperties();
    return position;
 }
+
+/**
+ * Build compact chassis layout: chassis metadata and placed component objects
+ * (nodes) with their placement geometry. Components are filtered by the
+ * requesting user's read access and only those carrying a placement are returned.
+ */
+json_t *Chassis::getChassisLayout(uint32_t userId)
+{
+   json_t *root = json_object();
+
+   lockProperties();
+   json_object_set_new(root, "chassisId", json_integer(m_id));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "controllerId", json_integer(m_controllerId));
+   json_object_set_new(root, "status", json_integer(m_status));
+   unlockProperties();
+
+   json_t *objects = json_array();
+   readLockChildList();
+   const SharedObjectArray<NetObj>& children = getChildList();
+   for(int i = 0; i < children.size(); i++)
+   {
+      NetObj *child = children.get(i);
+      if (!child->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      json_t *placement = child->getChassisPlacement();
+      if (placement == nullptr)
+         continue;
+
+      json_t *element = json_object();
+      json_object_set_new(element, "id", json_integer(child->getId()));
+      json_object_set_new(element, "objectClass", json_integer(child->getObjectClass()));
+      json_object_set_new(element, "name", json_string_t(child->getName()));
+      json_object_set_new(element, "status", json_integer(child->getStatus()));
+      json_object_set_new(element, "placement", placement);
+      json_array_append_new(objects, element);
+   }
+   unlockChildList();
+   json_object_set_new(root, "objects", objects);
+
+   return root;
+}

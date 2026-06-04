@@ -584,7 +584,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
          break;
    }
-   m_chassisPlacementConf = DBGetField(hResult, 0, 57, nullptr, 0);
+   m_chassisPlacementConf = DBGetFieldUTF8(hResult, 0, 57, nullptr, 0);
 
    m_vendor = DBGetFieldAsSharedString(hResult, 0, 58);
    m_productCode = DBGetFieldAsSharedString(hResult, 0, 59);
@@ -1211,7 +1211,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
          DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
          DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
-         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
+         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_chassisPlacementConf, DB_BIND_STATIC);
          DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
          DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
          DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
@@ -9803,7 +9803,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
    msg->setField(VID_RACK_ORIENTATION, static_cast<int16_t>(m_rackOrientation));
    msg->setField(VID_ICMP_COLLECTION_MODE, static_cast<int16_t>(m_icmpStatCollectionMode));
-   msg->setField(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
+   msg->setFieldFromUtf8String(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr))
    {
       IcmpStatCollector *collector = m_icmpStatCollectors->get(L"PRI");
@@ -10215,7 +10215,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    if (msg.isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = msg.getFieldAsInt16(VID_RACK_HEIGHT);
    if (msg.isFieldExist(VID_CHASSIS_PLACEMENT))
-      msg.getFieldAsString(VID_CHASSIS_PLACEMENT, &m_chassisPlacementConf);
+   {
+      MemFree(m_chassisPlacementConf);
+      m_chassisPlacementConf = msg.getFieldAsUtf8String(VID_CHASSIS_PLACEMENT);
+   }
 
    if (msg.isFieldExist(VID_SSH_PROXY))
       m_sshProxy = msg.getFieldAsUInt32(VID_SSH_PROXY);
@@ -14641,6 +14644,7 @@ static FlagNameMapping s_stateMapping[] =
 json_t *Node::toJson(bool includeSensitiveData)
 {
    json_t *root = super::toJson(includeSensitiveData);
+
    lockProperties();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryHostName));
@@ -14722,7 +14726,6 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
    json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));
    json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
-   json_object_set_new(root, "chassisPlacementConfig", json_string_t(m_chassisPlacementConf));
    json_object_set_new(root, "eipPort", json_integer(m_eipPort));
    json_object_set_new(root, "eipAddress", m_eipAddress.isValidUnicast() ? m_eipAddress.toJson() : json_null());
    json_object_set_new(root, "eipProxy", json_integer(m_eipProxy));
@@ -14739,6 +14742,10 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    unlockProperties();
+
+   json_t *decodedChassisPlacement = getChassisPlacement();
+   if (decodedChassisPlacement != nullptr)
+      json_object_set_new(root, "chassisPlacementConfig", decodedChassisPlacement);
 
    m_topologyMutex.lock();
    shared_ptr<VlanList> vlans = m_vlans;
@@ -14774,6 +14781,39 @@ int Node::getRackPlacement(json_t *element) const
    json_object_set_new(element, "rackImageRear", m_rackImageRear.toJson());
    unlockProperties();
    return position;
+}
+
+/**
+ * Parse chassis placement configuration into JSON object.
+ * Returns nullptr if this node is not placed in a chassis (no placement configuration).
+ */
+json_t *Node::getChassisPlacement() const
+{
+   lockProperties();
+   if ((m_chassisPlacementConf == nullptr) || (*m_chassisPlacementConf == 0))
+   {
+      unlockProperties();
+      return nullptr;
+   }
+
+   Config config;
+   bool parsed = config.loadXmlConfigFromMemory(m_chassisPlacementConf, strlen(m_chassisPlacementConf), nullptr, "placement", false);
+   unlockProperties();
+   if (!parsed)
+      return nullptr;
+
+   json_t *placement = json_object();
+   json_object_set_new(placement, "image", config.getValueAsUUID(L"/image").toJson());
+   json_object_set_new(placement, "height", json_integer(config.getValueAsInt(L"/height", 0)));
+   json_object_set_new(placement, "heightUnits", json_integer(config.getValueAsInt(L"/heightUnits", 0)));
+   json_object_set_new(placement, "width", json_integer(config.getValueAsInt(L"/width", 0)));
+   json_object_set_new(placement, "widthUnits", json_integer(config.getValueAsInt(L"/widthUnits", 0)));
+   json_object_set_new(placement, "positionHeight", json_integer(config.getValueAsInt(L"/positionHeight", 0)));
+   json_object_set_new(placement, "positionHeightUnits", json_integer(config.getValueAsInt(L"/positionHeightUnits", 0)));
+   json_object_set_new(placement, "positionWidth", json_integer(config.getValueAsInt(L"/positionWidth", 0)));
+   json_object_set_new(placement, "positionWidthUnits", json_integer(config.getValueAsInt(L"/positionWidthUnits", 0)));
+   json_object_set_new(placement, "orientation", json_integer(config.getValueAsInt(L"/oritentaiton", 0)));
+   return placement;
 }
 
 /**
