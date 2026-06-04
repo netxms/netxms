@@ -66,6 +66,8 @@ uint32_t ModifyActionFromMessage(const NXCPMessage& msg);
 uint32_t NXCORE_EXPORTABLE ModifyActionFromJson(uint32_t actionId, json_t *json, json_t **oldValue, json_t **newValue);
 void NXCORE_EXPORTABLE UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool NXCORE_EXPORTABLE CheckChannelIsUsedInAction(TCHAR *name);
+void NXCORE_EXPORTABLE UpdateForwarderNameInActions(std::pair<TCHAR*, TCHAR*> *names);
+bool NXCORE_EXPORTABLE CheckForwarderIsUsedInAction(const TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);
 json_t *CreateActionExportRecord(uint32_t id);
 bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context);

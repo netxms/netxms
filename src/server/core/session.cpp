@@ -1912,6 +1912,24 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_NOTIFICATION_DRIVERS:
          getNotificationDrivers(*request);
          break;
+      case CMD_GET_EVENT_FORWARDERS:
+         getEventForwarders(*request);
+         break;
+      case CMD_ADD_EVENT_FORWARDER:
+         addEventForwarder(*request);
+         break;
+      case CMD_UPDATE_EVENT_FORWARDER:
+         updateEventForwarder(*request);
+         break;
+      case CMD_DELETE_EVENT_FORWARDER:
+         removeEventForwarder(*request);
+         break;
+      case CMD_RENAME_EVENT_FORWARDER:
+         renameEventForwarder(*request);
+         break;
+      case CMD_GET_EVENT_FORWARDER_DRIVERS:
+         getEventForwarderDrivers(*request);
+         break;
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(*request);
          break;
@@ -17010,6 +17028,225 @@ void ClientSession::getNotificationDrivers(const NXCPMessage& request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading notification driver list"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get event forwarders
+ */
+void ClientSession::getEventForwarders(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetEventForwarders(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading event forwarder list"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Add event forwarder
+ */
+void ClientSession::addEventForwarder(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (name[0] != 0)
+      {
+         wchar_t driverName[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         if (driverName[0] != 0)
+         {
+            if (!IsEventForwarderExists(name))
+            {
+               wchar_t description[MAX_NC_DESCRIPTION];
+               request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+               json_t *configuration = request.getFieldAsJson(VID_XML_CONFIG);
+               CreateEventForwarder(name, description, driverName, configuration);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               NotifyClientSessions(NX_NOTIFY_EVENT_FORWARDER_CHANGED, 0);
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new event forwarder %s"), name);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new event forwarder creation"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Update event forwarder
+ */
+void ClientSession::updateEventForwarder(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (name[0] != 0)
+      {
+         wchar_t driverName[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         if (driverName[0] != 0)
+         {
+            if (IsEventForwarderExists(name))
+            {
+               wchar_t description[MAX_NC_DESCRIPTION];
+               request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+               json_t *configuration = request.getFieldAsJson(VID_XML_CONFIG);
+               UpdateEventForwarder(name, description, driverName, configuration);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               NotifyClientSessions(NX_NOTIFY_EVENT_FORWARDER_CHANGED, 0);
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of event forwarder %s"), name);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event forwarder update"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Remove event forwarder
+ */
+void ClientSession::removeEventForwarder(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (!CheckForwarderIsUsedInAction(name))
+      {
+         if (DeleteEventForwarder(name))
+         {
+            NotifyClientSessions(NX_NOTIFY_EVENT_FORWARDER_CHANGED, 0);
+            response.setField(VID_RCC, RCC_SUCCESS);
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event forwarder %s deleted"), name);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_CHANNEL_IN_USE);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event forwarder deletion"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Rename event forwarder
+ */
+void ClientSession::renameEventForwarder(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t *name = request.getFieldAsString(VID_NAME);
+      if ((name != nullptr) && (name[0] != 0))
+      {
+         if (IsEventForwarderExists(name))
+         {
+            wchar_t *newName = request.getFieldAsString(VID_NEW_NAME);
+            if (!IsEventForwarderExists(newName))
+            {
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event forwarder %s renamed to %s"), name, newName);
+               RenameEventForwarder(name, newName); // releases name and newName
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               MemFree(name);
+               MemFree(newName);
+               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+            }
+         }
+         else
+         {
+            MemFree(name);
+            response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
+      }
+      else
+      {
+         MemFree(name);
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event forwarder rename"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get list of available event forwarder drivers
+ */
+void ClientSession::getEventForwarderDrivers(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetEventForwarderDrivers(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading event forwarder driver list"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);

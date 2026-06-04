@@ -539,6 +539,12 @@ public class NXCPCodes
    public static final int CMD_SETUP_AGENT_UPGRADE = 0x0209;
    public static final int CMD_SCAN_NETWORK_RANGE = 0x020A;
    public static final int CMD_RANGE_SCAN_RESULT = 0x020B;
+   public static final int CMD_GET_EVENT_FORWARDERS = 0x020C;
+   public static final int CMD_ADD_EVENT_FORWARDER = 0x020D;
+   public static final int CMD_UPDATE_EVENT_FORWARDER = 0x020E;
+   public static final int CMD_DELETE_EVENT_FORWARDER = 0x020F;
+   public static final int CMD_RENAME_EVENT_FORWARDER = 0x0210;
+   public static final int CMD_GET_EVENT_FORWARDER_DRIVERS = 0x0211;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

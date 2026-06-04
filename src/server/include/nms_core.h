@@ -267,6 +267,7 @@ enum CertificateOperation
  */
 #include "nms_events.h"
 #include "nms_actions.h"
+#include <efdrv.h>
 #include "nms_alarm.h"
 
 /**
@@ -942,6 +943,12 @@ private:
    void removeNotificationChannel(const NXCPMessage& request);
    void renameNotificationChannel(const NXCPMessage& request);
    void clearNotificationChannelQueue(const NXCPMessage& request);
+   void getEventForwarders(const NXCPMessage& request);
+   void addEventForwarder(const NXCPMessage& request);
+   void updateEventForwarder(const NXCPMessage& request);
+   void removeEventForwarder(const NXCPMessage& request);
+   void renameEventForwarder(const NXCPMessage& request);
+   void getEventForwarderDrivers(const NXCPMessage& request);
    void getNotificationDrivers(const NXCPMessage& request);
    void startActiveDiscovery(const NXCPMessage& request);
    void scanNetworkRange(const NXCPMessage& request);
@@ -1537,6 +1544,21 @@ void NXCORE_EXPORTABLE CreateNotificationChannel(const wchar_t *name, const wcha
 void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
 void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName);
 bool NXCORE_EXPORTABLE DeleteNotificationChannel(const wchar_t *name);
+
+void LoadEventForwarders();
+void ShutdownEventForwarders();
+void NXCORE_EXPORTABLE RegisterEventForwarderDriver(const wchar_t *name, EventForwarderDriverFactory factory);
+void NXCORE_EXPORTABLE ForwardEventToForwarder(const wchar_t *name, const Event& event, const shared_ptr<NetObj>& source);
+void NXCORE_EXPORTABLE GetEventForwarders(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetEventForwarders(bool basicInfoOnly, bool includeSensitiveData = false);
+json_t NXCORE_EXPORTABLE *GetEventForwarderByName(const wchar_t *name, bool includeSensitiveData = false);
+json_t NXCORE_EXPORTABLE *GetEventForwarderDriversAsJson();
+void NXCORE_EXPORTABLE GetEventForwarderDrivers(NXCPMessage *msg);
+bool NXCORE_EXPORTABLE IsEventForwarderExists(const wchar_t *name);
+void NXCORE_EXPORTABLE CreateEventForwarder(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, json_t *configuration);
+void NXCORE_EXPORTABLE UpdateEventForwarder(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, json_t *configuration);
+void NXCORE_EXPORTABLE RenameEventForwarder(wchar_t *name, wchar_t *newName);
+bool NXCORE_EXPORTABLE DeleteEventForwarder(const wchar_t *name);
 
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 

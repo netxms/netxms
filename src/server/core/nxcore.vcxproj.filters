@@ -189,6 +189,9 @@
     <ClCompile Include="epp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="event_forwarder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

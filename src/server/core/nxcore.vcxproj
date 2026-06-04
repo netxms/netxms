@@ -497,6 +497,7 @@
     <ClCompile Include="eip.cpp" />
     <ClCompile Include="entirenet.cpp" />
     <ClCompile Include="epp.cpp" />
+    <ClCompile Include="event_forwarder.cpp" />
     <ClCompile Include="events.cpp" />
     <ClCompile Include="evproc.cpp" />
     <ClCompile Include="export.cpp" />

@@ -18,6 +18,7 @@ serverinclude_HEADERS = \
 	cloud-connector.h \
 	dci_table_creation.h \
 	device-backup.h \
+	efdrv.h \
 	entity_mib.h \
 	hdlink.h \
 	local_admin.h \

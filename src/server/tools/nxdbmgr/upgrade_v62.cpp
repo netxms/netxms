@@ -25,6 +25,87 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.20 to 62.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE event_forwarders ("
+      L"  name varchar(63) not null,"
+      L"  driver_name varchar(63) not null,"
+      L"  description varchar(255) null,"
+      L"  configuration $SQL:TEXT null,"
+      L"  PRIMARY KEY(name))"));
+
+   // Migrate existing hardcoded FORWARD_EVENT actions into "isc" event forwarder instances.
+   // The old implementation stored the target server address in actions.rcpt_addr; create one
+   // isc forwarder per distinct address and reference it from the action via channel_name.
+   DB_RESULT hResult = SQLSelect(L"SELECT DISTINCT rcpt_addr FROM actions WHERE action_type=4 AND rcpt_addr IS NOT NULL AND rcpt_addr<>''");
+   if (hResult != nullptr)
+   {
+      bool success = true;
+
+      DB_STATEMENT hInsert = DBPrepare(g_dbHandle, L"INSERT INTO event_forwarders (name,driver_name,description,configuration) VALUES (?,'isc',?,?)");
+      DB_STATEMENT hUpdate = DBPrepare(g_dbHandle, L"UPDATE actions SET channel_name=?,rcpt_addr=NULL WHERE action_type=4 AND rcpt_addr=?");
+      if ((hInsert != nullptr) && (hUpdate != nullptr))
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; (i < count) && success; i++)
+         {
+            wchar_t address[256];
+            DBGetField(hResult, i, 0, address, 256);
+
+            wchar_t name[64];
+            _sntprintf(name, 64, L"isc-%s", address);
+            name[63] = 0;
+
+            json_t *config = json_object();
+            json_object_set_new(config, "hostname", json_string_t(address));
+            char *configText = json_dumps(config, JSON_COMPACT);
+            json_decref(config);
+
+            DBBind(hInsert, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+            DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, L"Migrated event forwarding target", DB_BIND_STATIC);
+            DBBind(hInsert, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, configText, DB_BIND_DYNAMIC);
+            if (!SQLExecute(hInsert) && !g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+
+            DBBind(hUpdate, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+            DBBind(hUpdate, 2, DB_SQLTYPE_VARCHAR, address, DB_BIND_STATIC);
+            if (!SQLExecute(hUpdate) && !g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+         }
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (hInsert != nullptr)
+         DBFreeStatement(hInsert);
+      if (hUpdate != nullptr)
+         DBFreeStatement(hUpdate);
+      DBFreeResult(hResult);
+
+      if (!success && !g_ignoreErrors)
+         return false;
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 62.19 to 62.20
  */
 static bool H_UpgradeFromV19()
@@ -772,6 +853,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 62, 21, H_UpgradeFromV20 },
    { 19, 62, 20, H_UpgradeFromV19 },
    { 18, 62, 19, H_UpgradeFromV18 },
    { 17, 62, 18, H_UpgradeFromV17 },

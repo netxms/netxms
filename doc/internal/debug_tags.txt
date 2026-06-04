@@ -67,6 +67,7 @@ docker		Docker cloud connector
 
 event.*		Event related messages
 event.corr	Event correlation
+event.forwarder	Event forwarding framework (server side)
 event.policy	Event processing policy
 event.proc	Event processor
 ext.provider	Agent external provider

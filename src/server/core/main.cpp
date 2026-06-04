@@ -1518,6 +1518,7 @@ retry_db_lock:
    // Initialize notification channels
    LoadNotificationChannelDrivers();
    LoadNotificationChannels();
+   LoadEventForwarders();
 
    // Initialize helpdesk link
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef, AddAlarmSystemComment);
@@ -1793,6 +1794,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownEventSubsystem();
    ShutdownIncidentManager();
    ShutdownNotificationChannels();
+   ShutdownEventForwarders();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Event processing stopped"));
 
    DisableAgentConnections();

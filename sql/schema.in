@@ -2997,6 +2997,18 @@ CREATE TABLE nc_persistent_storage
 ) TABLE_TYPE;
 
 /**
+ * Event forwarder configurations
+ */
+CREATE TABLE event_forwarders
+(
+   name varchar(63) not null,
+   driver_name varchar(63) not null,
+   description varchar(255) null,
+   configuration SQL_TEXT null,
+   PRIMARY KEY(name)
+) TABLE_TYPE;
+
+/**
  * 2FA methods configurations
  */
 CREATE TABLE two_factor_auth_methods

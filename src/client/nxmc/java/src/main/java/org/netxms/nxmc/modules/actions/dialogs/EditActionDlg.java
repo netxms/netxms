@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.EventForwarder;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NotificationChannel;
 import org.netxms.client.ServerAction;
@@ -69,6 +70,7 @@ public class EditActionDlg extends Dialog
 	private Button typeForward;
 	private Button markDisabled;
 	private List<NotificationChannel> notificationChannels = null;
+	private List<EventForwarder> eventForwarders = null;
 
 	/**
 	 * Selection listener for action type radio buttons
@@ -158,7 +160,7 @@ public class EditActionDlg extends Dialog
 		typeNotification.addSelectionListener(new TypeButtonSelectionListener());
       
 		typeForward = new Button(typeGroup, SWT.RADIO);
-      typeForward.setText(i18n.tr("Forward event to other NetXMS server"));
+      typeForward.setText(i18n.tr("Forward event"));
       typeForward.setSelection(action.getType() == ServerActionType.FORWARD_EVENT);
 		typeForward.addSelectionListener(new TypeButtonSelectionListener());
 		/* type selection radio buttons - end */
@@ -185,8 +187,11 @@ public class EditActionDlg extends Dialog
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            recipient.setEnabled(notificationChannels.get(channelName.getSelectionIndex()).getConfigurationTemplate().needRecipient);
-            subject.setEnabled(notificationChannels.get(channelName.getSelectionIndex()).getConfigurationTemplate().needSubject);
+            if (typeNotification.getSelection() && (notificationChannels != null) && (channelName.getSelectionIndex() >= 0))
+            {
+               recipient.setEnabled(notificationChannels.get(channelName.getSelectionIndex()).getConfigurationTemplate().needRecipient);
+               subject.setEnabled(notificationChannels.get(channelName.getSelectionIndex()).getConfigurationTemplate().needSubject);
+            }
          }
       });
 
@@ -218,25 +223,21 @@ public class EditActionDlg extends Dialog
       data.setLayoutData(gd);
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Get list of notification channels"), null) {
+      new Job(i18n.tr("Get list of notification channels and event forwarders"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             notificationChannels = session.getNotificationChannels();
             notificationChannels.sort((NotificationChannel c1, NotificationChannel c2) -> c1.getName().compareTo(c2.getName()));
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  onTypeChange();
-               }
-            });
+            eventForwarders = session.getEventForwarders();
+            eventForwarders.sort((EventForwarder f1, EventForwarder f2) -> f1.getName().compareTo(f2.getName()));
+            runInUIThread(() -> onTypeChange());
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get list of notification channels");
+            return i18n.tr("Cannot get list of notification channels and event forwarders");
          }
       }.start();
 		
@@ -256,8 +257,6 @@ public class EditActionDlg extends Dialog
          case AGENT_COMMAND:
          case SSH_COMMAND:
             return i18n.tr("Remote host");
-         case FORWARD_EVENT:
-            return i18n.tr("Remote NetXMS server");
          case NXSL_SCRIPT:
             return i18n.tr("Script name");
          default:
@@ -310,8 +309,10 @@ public class EditActionDlg extends Dialog
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
 
-      if (typeNotification.getSelection())
+      if (typeNotification.getSelection() && (notificationChannels != null) && (channelName.getSelectionIndex() >= 0))
          action.setChannelName(notificationChannels.get(channelName.getSelectionIndex()).getName());
+      else if (typeForward.getSelection() && (eventForwarders != null) && (channelName.getSelectionIndex() >= 0))
+         action.setChannelName(eventForwarders.get(channelName.getSelectionIndex()).getName());
 		else
 		   action.setChannelName("");
 
@@ -342,6 +343,24 @@ public class EditActionDlg extends Dialog
 
       recipient.setEnabled(needRecipient);
       subject.setEnabled(needSubject);
+	}
+
+	/**
+	 * Update list of available event forwarders
+	 */
+	private void updateForwarderList()
+	{
+	   channelName.removeAll();
+	   if (eventForwarders == null)
+	      return;
+
+	   for(int i = 0; i < eventForwarders.size(); i++)
+	   {
+	      EventForwarder forwarder = eventForwarders.get(i);
+	      channelName.add(forwarder.getName());
+	      if (forwarder.getName().equals(action.getChannelName()))
+	         channelName.select(i);
+	   }
 	}
 
 	/**
@@ -382,16 +401,24 @@ public class EditActionDlg extends Dialog
 				subject.setEnabled(false);
 				data.setEnabled(true);
 				break;
-         case FORWARD_EVENT:
          case NXSL_SCRIPT:
             channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(false);
 				break;
-         case NOTIFICATION:
+         case FORWARD_EVENT:
+            channelName.setLabel(i18n.tr("Event forwarder"));
             channelName.setEnabled(true);
-            updateChannelList();            
+            updateForwarderList();
+            recipient.setEnabled(false);
+            subject.setEnabled(false);
+            data.setEnabled(false);
+            break;
+         case NOTIFICATION:
+            channelName.setLabel(i18n.tr("Channel name"));
+            channelName.setEnabled(true);
+            updateChannelList();
             data.setEnabled(true);
             break;
 		}

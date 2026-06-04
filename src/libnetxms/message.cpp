@@ -1405,9 +1405,9 @@ void NXCPMessage::setFieldFromMBString(uint32_t fieldId, const char *value)
 /**
  * set string field to a JSON object
  */
-void NXCPMessage::setField(uint32_t fieldId, json_t *json)
+void NXCPMessage::setField(uint32_t fieldId, json_t *json, bool formatted)
 {
-   char *s = json_dumps(json, 0);
+   char *s = json_dumps(json, formatted ? JSON_INDENT(3) : 0);
    setFieldFromUtf8String(fieldId, s);
    MemFree(s);
 }

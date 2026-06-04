@@ -14996,6 +14996,103 @@ public class NXCSession
    }
 
    /**
+    * Get configured event forwarders.
+    *
+    * @return list of configured event forwarders
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<EventForwarder> getEventForwarders() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EVENT_FORWARDERS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_COUNT);
+      List<EventForwarder> forwarders = new ArrayList<EventForwarder>(count);
+      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, base += 20)
+         forwarders.add(new EventForwarder(response, base));
+      return forwarders;
+   }
+
+   /**
+    * Create event forwarder.
+    *
+    * @param ef new event forwarder
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void createEventForwarder(EventForwarder ef) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_EVENT_FORWARDER);
+      ef.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Update event forwarder.
+    *
+    * @param ef event forwarder to update
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateEventForwarder(EventForwarder ef) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_EVENT_FORWARDER);
+      ef.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete event forwarder.
+    *
+    * @param name name of event forwarder to be deleted
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteEventForwarder(String name) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_EVENT_FORWARDER);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Rename event forwarder.
+    *
+    * @param oldName old event forwarder name
+    * @param newName new event forwarder name
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void renameEventForwarder(String oldName, String newName) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_EVENT_FORWARDER);
+      msg.setField(NXCPCodes.VID_NAME, oldName);
+      msg.setField(NXCPCodes.VID_NEW_NAME, newName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of available event forwarder drivers.
+    *
+    * @return list of available event forwarder drivers
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> getEventForwarderDrivers() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EVENT_FORWARDER_DRIVERS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_DRIVER_COUNT);
+   }
+
+   /**
     * Start active discovery for provided list manually
     *
     * @param ranges IP address ranges to scan

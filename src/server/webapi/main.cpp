@@ -190,6 +190,13 @@ int H_EventTemplateDetails(Context *context);
 int H_EventTemplateCreate(Context *context);
 int H_EventTemplateUpdate(Context *context);
 int H_EventTemplateDelete(Context *context);
+int H_EventForwarders(Context *context);
+int H_EventForwarderDetails(Context *context);
+int H_EventForwarderCreate(Context *context);
+int H_EventForwarderUpdate(Context *context);
+int H_EventForwarderDelete(Context *context);
+int H_EventForwarderRename(Context *context);
+int H_EventForwarderDrivers(Context *context);
 int H_SummaryTables(Context *context);
 int H_SummaryTableDetails(Context *context);
 int H_SummaryTableCreate(Context *context);
@@ -396,6 +403,21 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/notification-drivers")
       .GET(H_NotificationDrivers)
+      .build();
+   RouteBuilder("v1/event-forwarders")
+      .GET(H_EventForwarders)
+      .POST(H_EventForwarderCreate)
+      .build();
+   RouteBuilder("v1/event-forwarders/:forwarder-name")
+      .GET(H_EventForwarderDetails)
+      .PUT(H_EventForwarderUpdate)
+      .DELETE(H_EventForwarderDelete)
+      .build();
+   RouteBuilder("v1/event-forwarders/:forwarder-name/rename")
+      .POST(H_EventForwarderRename)
+      .build();
+   RouteBuilder("v1/event-forwarder-drivers")
+      .GET(H_EventForwarderDrivers)
       .build();
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)

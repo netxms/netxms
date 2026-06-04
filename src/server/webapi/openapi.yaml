@@ -52,6 +52,8 @@ tags:
     description: User group management
   - name: Notification Channels
     description: Notification channel and driver management
+  - name: Event Forwarders
+    description: Event forwarder and driver management
   - name: SNMP MIB
     description: Browse the server's compiled SNMP MIB tree
   - name: SSH Keys
@@ -5194,6 +5196,225 @@ paths:
         - BearerAuth: []
       tags:
         - Notification Channels
+  /v1/event-forwarders:
+    get:
+      operationId: listEventForwarders
+      summary: List event forwarders
+      description: Retrieve a list of all event forwarders configured on the server.
+      responses:
+        '200':
+          description: Event forwarders retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventForwarder'
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+    post:
+      operationId: createEventForwarder
+      summary: Create an event forwarder
+      description: Create a new event forwarder with the specified driver and configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - driverName
+              properties:
+                name:
+                  type: string
+                  description: Unique event forwarder name
+                description:
+                  type: string
+                  description: Event forwarder description
+                driverName:
+                  type: string
+                  description: Event forwarder driver name
+                configuration:
+                  type: object
+                  additionalProperties: true
+                  description: Driver-specific configuration object
+      responses:
+        '201':
+          description: Event forwarder created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventForwarder'
+        '400':
+          description: Invalid or missing required fields
+        '403':
+          description: Access denied
+        '409':
+          description: Event forwarder with this name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+  /v1/event-forwarders/{forwarder-name}:
+    get:
+      operationId: getEventForwarder
+      summary: Get event forwarder details
+      description: Retrieve details of a specific event forwarder.
+      parameters:
+        - name: forwarder-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Event forwarder name
+      responses:
+        '200':
+          description: Event forwarder details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventForwarder'
+        '403':
+          description: Access denied
+        '404':
+          description: Event forwarder not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+    put:
+      operationId: updateEventForwarder
+      summary: Update an event forwarder
+      description: Update an existing event forwarder. Only provided fields are updated.
+      parameters:
+        - name: forwarder-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Event forwarder name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Event forwarder description
+                driverName:
+                  type: string
+                  description: Event forwarder driver name
+                configuration:
+                  type: object
+                  additionalProperties: true
+                  description: Driver-specific configuration object
+      responses:
+        '200':
+          description: Event forwarder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventForwarder'
+        '400':
+          description: Invalid request
+        '403':
+          description: Access denied
+        '404':
+          description: Event forwarder not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+    delete:
+      operationId: deleteEventForwarder
+      summary: Delete an event forwarder
+      description: Delete an event forwarder. Fails if the forwarder is used in server actions.
+      parameters:
+        - name: forwarder-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Event forwarder name
+      responses:
+        '204':
+          description: Event forwarder deleted successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Event forwarder not found
+        '409':
+          description: Event forwarder is used in server actions
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+  /v1/event-forwarders/{forwarder-name}/rename:
+    post:
+      operationId: renameEventForwarder
+      summary: Rename an event forwarder
+      description: Rename an existing event forwarder. Also updates references in server actions.
+      parameters:
+        - name: forwarder-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Current event forwarder name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newName
+              properties:
+                newName:
+                  type: string
+                  description: New event forwarder name
+      responses:
+        '200':
+          description: Event forwarder renamed successfully
+        '400':
+          description: Invalid or missing new name
+        '403':
+          description: Access denied
+        '404':
+          description: Event forwarder not found
+        '409':
+          description: Event forwarder with the new name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
+  /v1/event-forwarder-drivers:
+    get:
+      operationId: listEventForwarderDrivers
+      summary: List event forwarder drivers
+      description: Retrieve a list of all registered event forwarder driver names.
+      responses:
+        '200':
+          description: Event forwarder drivers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Forwarders
   /v1/snmp-mib:
     get:
       operationId: getMibRoot
@@ -7583,6 +7804,49 @@ components:
         queueSize:
           type: integer
           description: Current message queue size
+    EventForwarder:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Event forwarder name
+        description:
+          type: string
+          description: Event forwarder description
+        driverName:
+          type: string
+          description: Event forwarder driver name
+        configuration:
+          type: object
+          additionalProperties: true
+          description: Driver-specific configuration object
+        driverInitialized:
+          type: boolean
+          description: Whether the driver was initialized successfully
+        errorMessage:
+          type: string
+          description: Last error message
+        sendStatus:
+          type: integer
+          description: Last delivery status code
+        healthCheckStatus:
+          type: boolean
+          description: Health check status
+        lastMessageTime:
+          type: string
+          description: Timestamp of last forwarded event
+        messageCount:
+          type: integer
+          description: Total events forwarded
+        failureCount:
+          type: integer
+          description: Total delivery failures
+        droppedCount:
+          type: integer
+          description: Total events dropped
+        queueSize:
+          type: integer
+          description: Current event queue size
     AlarmCategory:
       type: object
       properties:

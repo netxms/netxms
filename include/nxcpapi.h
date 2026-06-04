@@ -133,7 +133,7 @@ public:
    void setField(uint32_t fieldId, Timestamp value) { setField(fieldId, value.asMilliseconds()); }
    void setField(uint32_t fieldId, const StringList &data);
    void setField(uint32_t fieldId, const StringSet &data);
-   void setField(uint32_t fieldId, json_t *json);
+   void setField(uint32_t fieldId, json_t *json, bool formatted = false);
 
 #ifdef UNICODE
    void setFieldFromMBString(uint32_t fieldId, const char *value);

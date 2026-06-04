@@ -601,6 +601,7 @@ enum SessionState
 #define NX_NOTIFY_AM_ATTRIBUTE_UPDATED        63
 #define NX_NOTIFY_AM_ATTRIBUTE_DELETED        64
 #define NX_NOTIFY_MIB_UPDATED                 65
+#define NX_NOTIFY_EVENT_FORWARDER_CHANGED     66
 
 /**
  * Request completion codes

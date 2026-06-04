@@ -566,7 +566,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_POLICY_FILE"),
       _T("CMD_SETUP_AGENT_UPGRADE"),
       _T("CMD_SCAN_NETWORK_RANGE"),
-      _T("CMD_RANGE_SCAN_RESULT")
+      _T("CMD_RANGE_SCAN_RESULT"),
+      _T("CMD_GET_EVENT_FORWARDERS"),
+      _T("CMD_ADD_EVENT_FORWARDER"),
+      _T("CMD_UPDATE_EVENT_FORWARDER"),
+      _T("CMD_DELETE_EVENT_FORWARDER"),
+      _T("CMD_RENAME_EVENT_FORWARDER"),
+      _T("CMD_GET_EVENT_FORWARDER_DRIVERS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -582,7 +588,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_RANGE_SCAN_RESULT))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_EVENT_FORWARDER_DRIVERS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

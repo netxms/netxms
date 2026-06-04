@@ -36,6 +36,9 @@
     <ClCompile Include="epp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="event_forwarders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

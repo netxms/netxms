@@ -483,73 +483,6 @@ static void RunCommand(ServerActionExecutionContext *context)
 }
 
 /**
- * Forward event to other server
- */
-static void ForwardEvent(ServerActionExecutionContext *context)
-{
-   InetAddress addr = InetAddress::resolveHostName(context->recipient);
-	if (!addr.isValidUnicast())
-	{
-		nxlog_debug_tag(DEBUG_TAG, 2, _T("ForwardEvent: host name %s is invalid or cannot be resolved"), context->recipient.cstr());
-		context->success = false;
-		delete context;
-		return;
-	}
-
-	ISC *isc = new ISC(addr);
-	uint32_t rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
-	if (rcc == ISC_ERR_SUCCESS)
-	{
-		NXCPMessage msg(CMD_FORWARD_EVENT, 1);
-
-		const Event *event = context->eventObject;
-		shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
-		if (object != nullptr)
-		{
-         if (object->getObjectClass() == OBJECT_NODE)
-         {
-			   msg.setField(VID_IP_ADDRESS, static_cast<Node*>(object.get())->getIpAddress());
-         }
-			msg.setField(VID_EVENT_CODE, event->getCode());
-			msg.setField(VID_EVENT_NAME, event->getName());
-         msg.setField(VID_TAGS, event->getTagsAsList());
-			msg.setField(VID_NUM_ARGS, (WORD)event->getParametersCount());
-			for(int i = 0; i < event->getParametersCount(); i++)
-				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
-
-			const StringList *list = event->getParameterNames();
-			if (!list->isEmpty())
-			{
-	         for(int i = 0; i < list->size(); i++)
-	            msg.setField(VID_EVENT_ARG_NAMES_BASE + i, list->get(i));
-			}
-
-			if (isc->sendMessage(&msg))
-			{
-				rcc = isc->waitForRCC(1, 10000);
-			}
-			else
-			{
-				rcc = ISC_ERR_CONNECTION_BROKEN;
-			}
-		}
-		else
-		{
-			rcc = ISC_ERR_INTERNAL_ERROR;
-		}
-		isc->disconnect();
-	}
-	delete isc;
-
-	if (rcc != ISC_ERR_SUCCESS)
-	{
-		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to forward event to server %s (%s)"), context->recipient.cstr(), ISCErrorCodeToText(rcc));
-		context->success = false;
-	}
-	delete context;
-}
-
-/**
  * Execute NXSL script
  */
 static bool ExecuteActionScript(const wchar_t *script, const Event *event)
@@ -682,17 +615,16 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
          }
          break;
       case ServerActionType::FORWARD_EVENT:
-         if (!context->recipient.isEmpty())
+         if (action->channelName[0] != 0)
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), context->recipient.cstr());
-            context->eventObject = new Event(event);
-            ThreadPoolExecute(g_mainThreadPool, ForwardEvent, context);
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event using forwarder \"%s\""), action->channelName);
+            ForwardEventToForwarder(action->channelName, event, FindObjectById(event.getSourceId()));
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty destination - event will not be forwarded"));
-            delete context;
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty forwarder name - event will not be forwarded"));
          }
+         delete context;
          break;
       case ServerActionType::NXSL_SCRIPT:
          if (!context->recipient.isEmpty())
@@ -921,6 +853,32 @@ void NXCORE_EXPORTABLE UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *nam
 }
 
 /**
+ * Rename event forwarder referenced in event-forwarding actions
+ * first - old name
+ * second - new name
+ */
+static EnumerationCallbackResult RenameForwarder(const uint32_t& id, const shared_ptr<Action>& action, std::pair<TCHAR*, TCHAR*> *names)
+{
+   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME) && (action->type == ServerActionType::FORWARD_EVENT))
+   {
+      _tcslcpy(action->channelName, names->second, MAX_OBJECT_NAME);
+      s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
+      EnumerateClientSessions(SendActionDBUpdate, action.get());
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Update event forwarder name in all actions
+ * first - old name
+ * second - new name
+ */
+void NXCORE_EXPORTABLE UpdateForwarderNameInActions(std::pair<TCHAR*, TCHAR*> *names)
+{
+   s_actions.forEach(RenameForwarder, names);
+}
+
+/**
  * Check if notification channel with given name is used in actions
  */
 static bool CheckChannelUsage(const uint32_t& id, const Action& action, TCHAR *name)
@@ -934,6 +892,22 @@ static bool CheckChannelUsage(const uint32_t& id, const Action& action, TCHAR *n
 bool NXCORE_EXPORTABLE CheckChannelIsUsedInAction(TCHAR *name)
 {
    return s_actions.findElement(CheckChannelUsage, name) != nullptr;
+}
+
+/**
+ * Check if event forwarder with given name is used in actions
+ */
+static bool CheckForwarderUsage(const uint32_t& id, const Action& action, TCHAR *name)
+{
+   return (action.type == ServerActionType::FORWARD_EVENT) && (_tcsncmp(action.channelName, name, MAX_OBJECT_NAME) == 0);
+}
+
+/**
+ * Check if event forwarder with given name is used in actions
+ */
+bool NXCORE_EXPORTABLE CheckForwarderIsUsedInAction(const TCHAR *name)
+{
+   return s_actions.findElement(CheckForwarderUsage, const_cast<TCHAR*>(name)) != nullptr;
 }
 
 /**

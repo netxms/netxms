@@ -334,6 +334,7 @@
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="epp.cpp" />
+    <ClCompile Include="event_forwarders.cpp" />
     <ClCompile Include="events.cpp" />
     <ClCompile Include="find.cpp" />
     <ClCompile Include="geoareas.cpp" />
