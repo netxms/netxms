@@ -2970,24 +2970,17 @@ AC_LANG_POP([C++])
 # Checks for functions
 #--------------------------------------------------------------------
 
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MEMCMP
-AC_FUNC_SELECT_ARGTYPES
-AC_FUNC_STRFTIME
-AC_FUNC_STRTOD
-AC_FUNC_VPRINTF
-
-AC_CHECK_FUNCS([gettimeofday memmem strcspn strrchr strlwr strtok_r strtoll strtoull])
+AC_CHECK_FUNCS([gettimeofday memmem strlwr strtoll strtoull])
 AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r toupper])
-AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap uname poll])
+AC_CHECK_FUNCS([tolower daemon uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([strptime timegm rand_r])
+AC_CHECK_FUNCS([strptime timegm])
 AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
-AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
-AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
+AC_CHECK_FUNCS([getpwnam getpwuid_r getgrnam getgrgid_r])
+AC_CHECK_FUNCS([getpeereid sched_yield getpid])
 AC_CHECK_FUNCS([setenv unsetenv])
 
-AC_CHECK_DECLS([nanosleep, daemon, toupper, tolower, explicit_bzero, memset_s],,,[
+AC_CHECK_DECLS([nanosleep, daemon, explicit_bzero, memset_s],,,[
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
@@ -3059,7 +3052,7 @@ AC_MSG_RESULT(no)
 ])
 
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
-AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
+AC_CHECK_FUNCS([cfsetospeed cfsetispeed])
 
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
@@ -3128,14 +3121,6 @@ AC_CHECK_DECLS([IP_MTU_DISCOVER, IP_DONTFRAG],,,[
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-])
-AC_CHECK_DECLS([RTLD_NOW, RTLD_GLOBAL],,,[
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_DLFCN_H
-#include <dlfcn.h>
 #endif
 ])
 AC_CHECK_DECLS([va_copy, __va_copy],,,[
@@ -3490,12 +3475,12 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #endif
 ])
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
-AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcstok wcslcpy wcslcat])
+AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcslcpy wcslcat])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])
-AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
+AC_CHECK_FUNCS([swprintf])
 
-AC_CHECK_DECLS([putws, towupper, towlower],,,[
+AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
