@@ -40,7 +40,7 @@ void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size)
 #include <signal.h>
 #include <sys/wait.h>
 
-#if HAVE_SYS_UTSNAME_H
+#ifndef _WIN32
 #include <sys/utsname.h>
 #endif
 

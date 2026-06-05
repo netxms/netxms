@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
+#include <nxserial.h>
 
 #ifdef _WIN32
 

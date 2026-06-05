@@ -23,15 +23,9 @@
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif
 #include <string.h>
 #include <errno.h>
 

@@ -53,6 +53,7 @@ include_HEADERS = \
 	nxpython.h \
 	nxqueue.h \
 	nxsde.h \
+	nxserial.h \
 	nxsl_classes.h \
 	nxsl.h \
 	nxsnmp.h \

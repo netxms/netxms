@@ -50,7 +50,7 @@
 # include <sys/types.h>
 #endif
 
-#if HAVE_DLFCN_H
+#ifndef _WIN32
 #include <dlfcn.h>
 #endif
 

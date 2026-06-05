@@ -30,9 +30,7 @@
 
 #else
 
-#if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
-#endif
 
 #endif   /* _WIN32 */
 
@@ -63,7 +61,7 @@ void InitLocalNetInfo()
       imp_HrLanConnectionNameFromGuidOrPath =
          (UINT32 (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
    }
-#elif HAVE_SYS_UTSNAME_H
+#else
    struct utsname un;
    if (uname(&un) != -1)
    {

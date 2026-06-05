@@ -20,12 +20,11 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
 
-#if HAVE_SYS_UTSNAME_H
+#ifndef _WIN32
 #include <sys/utsname.h>
 #endif
-
-#include <nxstat.h>
 
 #define FILEMON_DEBUG_TAG  _T("filemon")
 

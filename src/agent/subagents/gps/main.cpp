@@ -24,6 +24,7 @@
 #include <geolocation.h>
 #include <netxms-version.h>
 #include <math.h>
+#include <nxserial.h>
 #include "nmea.h"
 
 #define DEBUG_TAG _T("gps")

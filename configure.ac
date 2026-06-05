@@ -2208,29 +2208,23 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h sched.h sys/ptrace.h])
-AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
-AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
-AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h ctype.h])
-AC_CHECK_HEADERS([byteswap.h sys/select.h dlfcn.h locale.h])
-AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
-AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h sys/syscall.h])
+AC_CHECK_HEADERS([sys/types.h sys/stat.h stdarg.h fcntl.h sys/ptrace.h])
+AC_CHECK_HEADERS([sys/int_types.h])
+AC_CHECK_HEADERS([net/nh.h])
+AC_CHECK_HEADERS([fcntl.h dirent.h sys/sockio.h])
+AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h ctype.h])
+AC_CHECK_HEADERS([byteswap.h locale.h])
+AC_CHECK_HEADERS([sys/sysctl.h sys/param.h])
+AC_CHECK_HEADERS([malloc.h stdbool.h utime.h endian.h sys/syscall.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
 #endif
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
+#include <sys/time.h>
+#include <sys/socket.h>
 ]])
 AC_CHECK_HEADERS([netinet/tcp.h],,,[[
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
+#include <netinet/in.h>
 ]])
 
 
@@ -2326,24 +2320,16 @@ AC_CHECK_DECLS([DT_DIR, DT_REG, DT_UNKNOWN],,,[
 
 if test "x$DISABLE_IPV6" != "xyes"; then
 	AC_CHECK_DECL(AF_INET6,,,[
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
 	])
 	if test "x$ac_cv_have_decl_AF_INET6" = "xyes"; then
 		AC_CHECK_TYPE(struct sockaddr_in6, [
 			AC_DEFINE(WITH_IPV6, 1, Define to have IPv6 support)
 			IPV6_SUPPORT="yes"
 		],,[
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
 		])
 	fi
 fi
@@ -2871,9 +2857,7 @@ AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, off64_t, socklen_t, uuid_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
 ])
 AC_CHECK_TYPES([struct stat64],,,[
 #if HAVE_SYS_STAT_H
@@ -2983,12 +2967,8 @@ AC_CHECK_DECLS([daemon, explicit_bzero, memset_s],,,[
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#if HAVE_TIME_H
 #include <time.h>
-#endif
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -3033,12 +3013,8 @@ fi
 # Check if struct tm has tm_gmtoff member
 AC_MSG_CHECKING(for struct tm.tm_gmtoff)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_TIME_H
 #include <time.h>
-#endif
-#if HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
 ]],[[
    struct tm t;
    return t.tm_gmtoff;
@@ -3106,25 +3082,17 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64, htonll, ntohll],,,[
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
 #if HAVE_NET_NH_H
 #include <net/nh.h>
 #endif
 ])
 AC_CHECK_DECLS([IP_MTU_DISCOVER, IP_DONTFRAG],,,[
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
 ])
 AC_CHECK_DECLS([va_copy, __va_copy],,,[
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #if HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -3266,9 +3234,7 @@ AC_COMPILE_IFELSE([
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
 	],
 	[
 		unsigned int err;
@@ -3310,9 +3276,7 @@ if test "x$PLATFORM" = "xLinux"; then
 	AC_MSG_CHECKING(for gettid syscall)
 	AC_LANG_PUSH([C++])
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #if HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
@@ -3385,9 +3349,7 @@ if test "x$PLATFORM" = "xFreeBSD"; then
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
 #include <net/route.h>
 	])
 fi
@@ -3491,15 +3453,9 @@ if test "x$ac_cv_func_wcsftime" = "xyes"; then
 	AC_RUN_IFELSE(
 	  [AC_LANG_PROGRAM([
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif

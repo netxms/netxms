@@ -25,9 +25,7 @@
 #ifdef _WIN32
 #include <io.h>
 #else
-#ifdef HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
-#endif
 #endif
 
 /**
@@ -45,7 +43,6 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 	GetWindowsVersionString(osVersion, 256);
    _sntprintf(pszBuffer, nMaxSize, _T("%s %s"), computerName, osVersion);
 #else
-# ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;
 	if (uname(&uName) >= 0)
 	{
@@ -59,10 +56,6 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
       _tcslcpy(pszBuffer, _tcserror(errno), nMaxSize);
 #endif
 	}
-# else
-   _tprintf(_T("GetSysInfoStr: code not implemented\n"));
-   _tcscpy(pszBuffer, _T("UNIX"));
-# endif // HAVE_SYS_UTSNAME_H
 
 #endif
 }

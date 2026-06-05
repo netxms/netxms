@@ -40,7 +40,7 @@
 #define JSON_EMBED 0
 #endif
 
-#if HAVE_POLL_H
+#ifndef _WIN32
 #include <poll.h>
 #endif
 
@@ -136,23 +136,6 @@ static inline float bswap_float(float val)
 
 void LIBNETXMS_EXPORTABLE bswap_array_16(uint16_t *v, int len);
 void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
-
-/*** Serial communications ***/
-#ifdef _WIN32
-
-#define FLOW_NONE       0
-#define FLOW_SOFTWARE   1
-#define FLOW_HARDWARE   2
-
-#else    /* _WIN32 */
-
-#ifdef HAVE_TERMIOS_H
-# include <termios.h>
-#else
-# error termios.h not found
-#endif
-
-#endif   /* _WIN32 */
 
 /**
  * Return codes for IcmpPing()
@@ -581,73 +564,6 @@ public:
       v += milliseconds;
       return *this;
    }
-};
-
-/**
- * Class for serial communications
- */
-#ifndef _WIN32
-enum
-{
-	NOPARITY,
-	ODDPARITY,
-	EVENPARITY,
-	ONESTOPBIT,
-	TWOSTOPBITS
-};
-
-enum
-{
-	FLOW_NONE,
-	FLOW_HARDWARE,
-	FLOW_SOFTWARE
-};
-
-#ifndef INVALID_HANDLE_VALUE
-#define INVALID_HANDLE_VALUE (-1)
-#endif
-#endif   /* _WIN32 */
-
-class LIBNETXMS_EXPORTABLE Serial
-{
-private:
-	TCHAR *m_device;
-	uint32_t m_timeout;
-	int m_speed;
-	int m_dataBits;
-	int m_stopBits;
-	int m_parity;
-	int m_flowControl;
-   uint32_t m_writeDelay;
-	size_t m_writeBlockSize;
-
-#ifndef _WIN32
-	int m_handle;
-	struct termios m_originalSettings;
-#else
-	HANDLE m_handle;
-#endif
-
-   bool writeBlock(const void *data, size_t size);
-
-public:
-	Serial();
-	~Serial();
-
-	bool open(const TCHAR *device);
-	void close();
-
-	void setTimeout(uint32_t timeout);
-   bool set(int speed, int dataBits = 8, int parity = NOPARITY, int stopBits = ONESTOPBIT, int flowControl = FLOW_NONE);
-   void setWriteBlockSize(size_t bs) { m_writeBlockSize = bs; }
-   void setWriteDelay(uint32_t delay) { m_writeDelay = delay; }
-
-	ssize_t read(void *buffer, size_t size); /* waits up to timeout and do single read */
-	ssize_t readAll(void *buffer, size_t size); /* read until timeout or out of space */
-	ssize_t readToMark(char *buffer, size_t size, const char **marks, char **occurence);
-	bool write(const void *buffer, size_t size);
-	void flush();
-	bool restart();
 };
 
 /**

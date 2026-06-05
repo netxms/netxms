@@ -1,10 +1,13 @@
 #ifndef _WIN32
 #include <config.h>
-/* gettimeofday() and getpid() are guaranteed on all supported non-Windows
+/* These functions and headers are guaranteed on all supported non-Windows
    platforms, so they are not probed by configure (on Windows the seed code
-   uses time()/GetCurrentProcessId() instead). */
+   uses time()/GetCurrentProcessId()/CryptoAPI instead). */
 #define HAVE_GETTIMEOFDAY 1
 #define HAVE_GETPID 1
+#define HAVE_SYS_TIME_H 1
+#define HAVE_SCHED_H 1
+#define HAVE_UNISTD_H 1
 #endif
 
 /* Define to 1 if you have the `close' function. */

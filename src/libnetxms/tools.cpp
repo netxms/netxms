@@ -40,19 +40,11 @@
 #include <Softpub.h>
 #else
 #include <pwd.h>
-#endif
-
-#if !defined(_WIN32)
 #include <sys/time.h>
 #include <signal.h>
-#endif
-
-#if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
-#endif
-
-#if HAVE_POLL_H
 #include <poll.h>
+#include <termios.h>
 #endif
 
 #if HAVE_MALLOC_H && !WITH_JEMALLOC

@@ -15,7 +15,7 @@ $$LIC$$
 */
 #include "libipfix.h"
 
-#if HAVE_SYS_TIME_H
+#ifndef _WIN32
 #include <sys/time.h>
 #endif
 

@@ -25,7 +25,7 @@
 #include <nxstat.h>
 #include "debug_tag_tree.h"
 
-#if HAVE_SYSLOG_H
+#ifndef _WIN32
 #include <syslog.h>
 #endif
 

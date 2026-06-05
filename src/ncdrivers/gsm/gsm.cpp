@@ -22,6 +22,7 @@
 **/
 
 #include "gsm.h"
+#include <nxserial.h>
 
 bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer);
 

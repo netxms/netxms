@@ -24,7 +24,7 @@
 #include <nxproc.h>
 #include <signal.h>
 
-#if HAVE_SYS_WAIT_H
+#ifndef _WIN32
 #include <sys/wait.h>
 #endif
 

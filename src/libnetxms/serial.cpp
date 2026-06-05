@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxserial.h>
 
 #ifndef CRTSCTS
 # ifdef CNEW_RTSCTS

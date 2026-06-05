@@ -496,9 +496,11 @@ using std::wcsncasecmp;
 
 #define EXECUTABLE_FILE_SUFFIX
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
+#ifndef INVALID_HANDLE_VALUE
+#define INVALID_HANDLE_VALUE (-1)
 #endif
+
+#include <unistd.h>
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
@@ -528,17 +530,9 @@ using std::wcsncasecmp;
 #include <sys/stat.h>
 #endif
 
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-
-#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif
-
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
 
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -548,13 +542,8 @@ using std::wcsncasecmp;
 #include <net/nh.h>
 #endif
 
-#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif
-
-#if HAVE_NETDB_H
 #include <netdb.h>
-#endif
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>

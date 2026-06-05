@@ -32,14 +32,13 @@
 #else
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/utsname.h>
+#include <grp.h>
+#include <pwd.h>
 #endif
 
 #if HAVE_LOCALE_H
 #include <locale.h>
-#endif
-
-#if HAVE_SYS_UTSNAME_H
-#include <sys/utsname.h>
 #endif
 
 #if HAVE_SYS_SYSCTL_H && HAVE_SYSCTLBYNAME
@@ -48,14 +47,6 @@
 
 #ifdef _WITH_ENCRYPTION
 #include <openssl/ssl.h>
-#endif
-
-#if HAVE_GRP_H
-#include <grp.h>
-#endif
-
-#if HAVE_PWD_H
-#include <pwd.h>
 #endif
 
 NETXMS_EXECUTABLE_HEADER(nxagentd)
@@ -923,7 +914,7 @@ static void LoadPlatformSubagent()
 #ifdef _WIN32
    LoadSubAgent(_T("WINNT.NSM"));
 #else
-#if HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
+#if !defined(_WIN32) && !defined(_STATIC_AGENT)
    struct utsname un;
    TCHAR szName[MAX_PATH];
    int i;

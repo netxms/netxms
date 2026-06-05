@@ -21,7 +21,7 @@
 
 #include "libnxjava.h"
 
-#if HAVE_SYS_UTSNAME_H
+#ifndef _WIN32
 #include <sys/utsname.h>
 #endif
 
