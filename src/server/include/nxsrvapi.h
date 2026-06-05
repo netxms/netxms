@@ -1191,6 +1191,7 @@ private:
    uint16_t m_proxyPort;
    char m_proxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
+	StreamCompressor *m_fileDecompressor;
 	TCHAR m_currentFileName[MAX_PATH];
 	uint32_t m_downloadRequestId;
 	time_t m_downloadActivityTimestamp;

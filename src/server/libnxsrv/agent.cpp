@@ -524,6 +524,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_proxySecret[0] = 0;
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
+   m_fileDecompressor = nullptr;
    m_deleteFileOnDownloadFailure = true;
    m_fileDownloadSucceeded = false;
 	m_fileUploadInProgress = false;
@@ -559,6 +560,8 @@ AgentConnection::~AgentConnection()
    {
       onFileDownload(false);
    }
+
+   delete m_fileDecompressor;
 
    if (m_channel != nullptr)
       m_channel->shutdown();
@@ -2879,6 +2882,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
 
       _tcslcpy(m_currentFileName, fileName, MAX_PATH);
       m_condFileDownload.reset();
+      delete_and_null(m_fileDecompressor);
       m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
       if (m_hCurrFile == -1)
       {
@@ -2938,7 +2942,26 @@ void AgentConnection::processFileData(NXCPMessage *msg)
    {
       if (m_hCurrFile != -1)
       {
-         if (_write(m_hCurrFile, msg->getBinaryData(), static_cast<int>(msg->getBinaryDataSize())) == static_cast<int>(msg->getBinaryDataSize()))
+         const BYTE *data = msg->getBinaryData();
+         size_t size = msg->getBinaryDataSize();
+
+         // Compressed stream blocks are prepended with 4 byte header
+         // (byte 0 - compression method, byte 1 - always 0, bytes 2-3 - uncompressed block size).
+         // Empty end-of-file block carries no header and is written as is.
+         bool decompressFailed = false;
+         if (msg->isCompressedStream() && (size > 4))
+         {
+            if (m_fileDecompressor == nullptr)
+               m_fileDecompressor = StreamCompressor::create(static_cast<NXCPStreamCompressionMethod>(data[0]), false, FILE_BUFFER_SIZE);
+            const BYTE *uncompressedData;
+            size = m_fileDecompressor->decompress(data + 4, size - 4, &uncompressedData);
+            if (size > 0)
+               data = uncompressedData;
+            else
+               decompressFailed = true;
+         }
+
+         if (!decompressFailed && (_write(m_hCurrFile, data, static_cast<int>(size)) == static_cast<int>(size)))
          {
             if (msg->isEndOfFile())
             {
@@ -2950,6 +2973,14 @@ void AgentConnection::processFileData(NXCPMessage *msg)
             {
                m_downloadProgressCallback(_tell(m_hCurrFile));
             }
+         }
+         else
+         {
+            debugPrintf(4, _T("AgentConnection::processFileData: %s for file \"%s\""),
+               decompressFailed ? _T("stream decompression failed") : _T("file write error"), m_currentFileName);
+            _close(m_hCurrFile);
+            m_hCurrFile = -1;
+            onFileDownload(false);
          }
       }
       else
@@ -2989,6 +3020,7 @@ void AgentConnection::onFileDownload(bool success)
 {
    if (!success && m_deleteFileOnDownloadFailure)
 		_tremove(m_currentFileName);
+   delete_and_null(m_fileDecompressor);
 	m_fileDownloadSucceeded = success;
 	m_condFileDownload.set();
 }
