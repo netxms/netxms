@@ -79,6 +79,7 @@
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #if HAVE_WIDEC_H
 #include <widec.h>
@@ -270,7 +271,6 @@ typedef int bool;
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
-#include <stdlib.h>
 #include <malloc.h>
 
 #include <stdarg.h>
@@ -279,7 +279,6 @@ typedef int bool;
 #endif
 #define HAVE_DECL_VA_COPY       1
 
-#include <sys/stat.h>
 #include <sys/utime.h>
 #include <process.h>
 #include <io.h>
@@ -384,7 +383,6 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #define HAVE_LIBEXPAT  1
-#define HAVE_LOCALE_H  1
 
 #define strtok_r strtok_s
 
@@ -502,32 +500,17 @@ using std::wcsncasecmp;
 
 #include <unistd.h>
 
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 
-#if HAVE_INTTYPES_H
 #include <inttypes.h>
-#endif
-
-#if HAVE_STDINT_H
 #include <stdint.h>
-#endif
 
-#if HAVE_UTIME_H
 #include <utime.h>
-#endif
 
 #if HAVE_SYS_INT_TYPES_H
 #include <sys/int_types.h>
-#endif
-
-#if HAVE_SYS_STAT_H
-#include <sys/stat.h>
 #endif
 
 #include <sys/socket.h>
@@ -545,10 +528,7 @@ using std::wcsncasecmp;
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#if HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
-
 #include <dirent.h>
 
 #if _USE_GNU_PTH
@@ -565,89 +545,13 @@ using std::wcsncasecmp;
 #undef HAVE_GETHOSTBYNAME2_R
 #endif
 
-#include <sys/socket.h>
 #include <sys/un.h>
 
-#if !HAVE_INT64_T || !HAVE_UINT64_T
-
-#if !HAVE_INT64_T
-#if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
-typedef long long int64_t;
-#elif SIZEOF_LONG == 8
-typedef long int64_t;
-#else
-#error Target system does not have signed 64bit integer type
-#endif
-#endif
-
-#if !HAVE_UINT64_T
-#if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
-typedef unsigned long long uint64_t;
-#elif SIZEOF_LONG == 8
-typedef unsigned long uint64_t;
-#else
-#error Target system does not have unsigned 64bit integer type
-#endif
-#endif
-
-#endif
-
 #if (SIZEOF_LONG == 4)
-#if (SIZEOF_INT == 4)
-#if !HAVE_INT32_T
-typedef int int32_t;
-#endif
-#if !HAVE_UINT32_T
-typedef unsigned int uint32_t;
-#endif
-#else
-#if !HAVE_INT32_T
-typedef long int32_t;
-#endif
-#if !HAVE_UINT32_T
-typedef unsigned long uint32_t;
-#endif
-#endif
 #undef __64BIT__
 #else
-#if !HAVE_INT32_T
-typedef int int32_t;
-#endif
-#if !HAVE_UINT32_T
-typedef unsigned int uint32_t;
-#endif
 #ifndef __64BIT__
 #define __64BIT__
-#endif
-#endif
-
-#if !HAVE_INT16_T
-typedef short int16_t;
-#endif
-#if !HAVE_UINT16_T
-typedef unsigned short uint16_t;
-#endif
-
-#if !HAVE_INT8_T
-typedef char int8_t;
-#endif
-#if !HAVE_UINT8_T
-typedef unsigned char uint8_t;
-#endif
-
-#if !HAVE_INTPTR_T
-#if SIZEOF_VOIDP == 8
-typedef int64_t intptr_t;
-#else
-typedef int32_t intptr_t;
-#endif
-#endif
-
-#if !HAVE_UINTPTR_T
-#if SIZEOF_VOIDP == 8
-typedef uint64_t uintptr_t;
-#else
-typedef uint32_t uintptr_t;
 #endif
 #endif
 
@@ -767,7 +671,6 @@ static inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer,
 static inline int _isatty(int fd) { return ::isatty(fd); }
 static inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
 static inline off_t _tell(int fd) { return ::lseek(fd, 0, SEEK_CUR); }
-static inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
 static inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 static inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
 static inline int _pclose(FILE *stream) { return ::pclose(stream); }
@@ -785,7 +688,6 @@ static inline ssize_t _write(int fd, const void *buf, size_t count) { return ::w
 #define _isatty(f)         isatty(f)
 #define _lseek(f, o, w)    lseek((f), (o) ,(w))
 #define _tell(f)           lseek((f), 0, SEEK_CUR)
-#define _mkdir(p, m)       mkdir((p), (m))
 #define _open              open
 #define _pclose(f)         pclose(f)
 #define _putenv(s)         putenv(s)

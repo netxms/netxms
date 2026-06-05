@@ -23,6 +23,7 @@
 #include "libnetxms.h"
 #include "unicode_cc.h"
 #include <nxcrypto.h>
+#include <sys/stat.h>
 
 /**
  * Default codepage

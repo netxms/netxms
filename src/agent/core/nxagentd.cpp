@@ -25,6 +25,7 @@
 #include <nxstat.h>
 #include <netxms_getopt.h>
 #include <netxms-version.h>
+#include <locale.h>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -35,10 +36,6 @@
 #include <sys/utsname.h>
 #include <grp.h>
 #include <pwd.h>
-#endif
-
-#if HAVE_LOCALE_H
-#include <locale.h>
 #endif
 
 #if HAVE_SYS_SYSCTL_H && HAVE_SYSCTLBYNAME

@@ -8,6 +8,7 @@
 #define HAVE_SYS_TIME_H 1
 #define HAVE_SCHED_H 1
 #define HAVE_UNISTD_H 1
+#define HAVE_FCNTL_H 1
 #endif
 
 /* Define to 1 if you have the `close' function. */

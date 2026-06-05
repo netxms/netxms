@@ -19,6 +19,7 @@
 **/
 
 #include <linux_subagent.h>
+#include <sys/stat.h>
 
 #define SAMPLES_PER_MINUTE		60
 

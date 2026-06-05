@@ -1989,10 +1989,7 @@ fi
 # Check for additional system libraries
 #--------------------------------------------------------------------
 
-AC_CHECK_LIB(xnet, accept)
-AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(kstat, kstat_open)
 
 
 #--------------------------------------------------------------------
@@ -2208,14 +2205,9 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/types.h sys/stat.h stdarg.h fcntl.h sys/ptrace.h])
-AC_CHECK_HEADERS([sys/int_types.h])
-AC_CHECK_HEADERS([net/nh.h])
-AC_CHECK_HEADERS([fcntl.h dirent.h sys/sockio.h])
-AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h ctype.h])
-AC_CHECK_HEADERS([byteswap.h locale.h])
-AC_CHECK_HEADERS([sys/sysctl.h sys/param.h])
-AC_CHECK_HEADERS([malloc.h stdbool.h utime.h endian.h sys/syscall.h])
+AC_CHECK_HEADERS([sys/types.h sys/stat.h stdarg.h sys/ptrace.h sys/int_types.h])
+AC_CHECK_HEADERS([net/nh.h sys/sockio.h byteswap.h sys/sysctl.h sys/param.h])
+AC_CHECK_HEADERS([malloc.h stdbool.h endian.h sys/syscall.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -2293,9 +2285,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#if HAVE_DIRENT_H
 #include <dirent.h>
-#endif
 ]],[[
 	struct dirent d;
 	return d.d_type;
@@ -2308,9 +2298,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 	AC_DEFINE(HAVE_DIRENT_D_TYPE,0,Define to 1 if struct dirent has member d_type)
 ])
 AC_CHECK_DECLS([DT_DIR, DT_REG, DT_UNKNOWN],,,[
-#if HAVE_DIRENT_H
 #include <dirent.h>
-#endif
 ])
 
 
@@ -2834,23 +2822,13 @@ fi
 # Checks for data types
 #--------------------------------------------------------------------
 
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(void*)
 
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, int32_t, uint32_t, int16_t, uint16_t, int8_t, uint8_t, intptr_t, uintptr_t, bool],,,[
+AC_CHECK_TYPES([bool],,,[
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
-#endif
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
 #endif
 ])
 AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, off64_t, socklen_t, uuid_t],,,[
@@ -3318,6 +3296,9 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xSunOS"; then
+	dnl libxnet/libsocket provide X/Open-conformant socket functions; Solaris-only
+	AC_CHECK_LIB(xnet, accept)
+	AC_CHECK_LIB(socket, if_nameindex)
 	AC_CHECK_HEADERS([zone.h])
 	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_inc_64_nv atomic_dec_32_nv atomic_dec_64_nv atomic_swap_ptr getzoneid],,,[
 #include <sys/atomic.h>
@@ -3330,8 +3311,8 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([sys/event.h])
-AC_CHECK_LIB(kvm, kvm_open)
-AC_CHECK_FUNCS([kvm_openfiles kvm_getswapinfo kqueue])
+AC_CHECK_LIB(kvm, kvm_getswapinfo, [AC_DEFINE([HAVE_KVM_GETSWAPINFO], [1], [Define to 1 if libkvm has kvm_getswapinfo])], [], [])
+AC_CHECK_FUNCS([kqueue])
 AC_CHECK_TYPES([struct kinfo_proc2],,,[
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>

@@ -23,6 +23,10 @@
 #ifndef _nxstat_h_
 #define _nxstat_h_
 
+#if defined(_WIN32) || HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
 #ifndef S_ISDIR
 #define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
 #endif

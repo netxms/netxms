@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxproc.h>
 #include <pwd.h>
+#include <sys/stat.h>
 
 #ifdef __sun
 #include <ucred.h>

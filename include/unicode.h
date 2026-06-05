@@ -84,9 +84,7 @@
 #include <wchar.h>
 #endif
 
-#if HAVE_STRING_H
 #include <string.h>
-#endif
 
 #if HAVE_WCHAR_T
 

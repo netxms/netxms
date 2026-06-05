@@ -26,6 +26,7 @@
 
 #include "libnetxms.h"
 #include <stdarg.h>
+#include <locale.h>
 #include <nms_threads.h>
 #include <netxms-regex.h>
 #include <nxstat.h>
@@ -49,10 +50,6 @@
 
 #if HAVE_MALLOC_H && !WITH_JEMALLOC
 #include <malloc.h>
-#endif
-
-#if HAVE_LOCALE_H
-#include <locale.h>
 #endif
 
 #ifdef _WIN32

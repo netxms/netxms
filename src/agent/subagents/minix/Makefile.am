@@ -14,7 +14,7 @@ pkglib_LTLIBRARIES = minix.la
 minix_la_SOURCES = disk.cpp minix.cpp net.cpp proc.cpp proc2.cpp system.cpp
 minix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 minix_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
-minix_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
+minix_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lkvm
 
 EXTRA_DIST = disk.h net.h system.h
 
