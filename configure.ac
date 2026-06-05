@@ -2205,13 +2205,11 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/types.h sys/stat.h stdarg.h sys/ptrace.h sys/int_types.h])
+AC_CHECK_HEADERS([sys/ptrace.h sys/int_types.h])
 AC_CHECK_HEADERS([net/nh.h sys/sockio.h byteswap.h sys/sysctl.h sys/param.h])
 AC_CHECK_HEADERS([malloc.h stdbool.h endian.h sys/syscall.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 ]])
@@ -2253,9 +2251,7 @@ AC_CHECK_HEADERS([alloca.h])
 AC_MSG_CHECKING(for alloca)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 #if HAVE_MALLOC_H
 #include <malloc.h>
 #endif
@@ -2282,9 +2278,7 @@ AC_LANG_POP([C++])
 
 AC_MSG_CHECKING(for d_type in struct dirent)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 #include <dirent.h>
 ]],[[
 	struct dirent d;
@@ -2831,24 +2825,18 @@ AC_CHECK_TYPES([bool],,,[
 #include <stdbool.h>
 #endif
 ])
-AC_CHECK_TYPES([mode_t, size_t, ssize_t, off_t, off64_t, socklen_t, uuid_t],,,[
-#if HAVE_SYS_TYPES_H
+AC_CHECK_TYPES([mode_t, off64_t, socklen_t, uuid_t],,,[
 #include <sys/types.h>
-#endif
 #include <sys/socket.h>
 ])
 AC_CHECK_TYPES([struct stat64],,,[
-#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
 ])
 
 AC_MSG_CHECKING(if ssize_t differs from int32_t in overloads)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 
 static inline int func(int32_t v)
 {
@@ -2875,9 +2863,7 @@ AC_LANG_POP([C++])
 AC_MSG_CHECKING(if int8_t differs from char in overloads)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 
 static inline int func(char v)
 {
@@ -2905,12 +2891,8 @@ AC_MSG_CHECKING(whether va_list is a pointer)
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdio.h>
-#if HAVE_STDARG_H
 #include <stdarg.h>
-#endif
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 int __test(va_list v)
 {
 	return (v != NULL) ? 1 : 0;
@@ -2932,27 +2914,17 @@ AC_LANG_POP([C++])
 # Checks for functions
 #--------------------------------------------------------------------
 
-AC_CHECK_FUNCS([memmem strlwr])
-AC_CHECK_FUNCS([strlcpy strlcat strcasestr strerror_r])
-AC_CHECK_FUNCS([daemon poll])
-AC_CHECK_FUNCS([gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([strptime timegm])
-AC_CHECK_FUNCS([malloc_info malloc_trim utime tzset])
-AC_CHECK_FUNCS([getpwuid_r getgrgid_r])
-AC_CHECK_FUNCS([getpeereid sched_yield])
+AC_CHECK_FUNCS([memmem strlwr strlcpy strlcat strcasestr strerror_r])
+AC_CHECK_FUNCS([daemon poll gmtime_r localtime_r stat64 fstat64 lstat64])
+AC_CHECK_FUNCS([strptime timegm malloc_info malloc_trim])
+AC_CHECK_FUNCS([getpwuid_r getgrgid_r getpeereid sched_yield])
 
 AC_CHECK_DECLS([daemon, explicit_bzero, memset_s],,,[
-#if HAVE_CTYPE_H
 #include <ctype.h>
-#endif
 #include <time.h>
 #include <unistd.h>
-#if HAVE_STRING_H
 #include <string.h>
-#endif
-#if HAVE_ERRNO_H
 #include <errno.h>
-#endif
 ])
 
 
@@ -2966,12 +2938,8 @@ if test "$ac_cv_func_strerror_r" = "yes"; then
 	AC_MSG_CHECKING(if strerror_r is POSIX compliant)
 	AC_LANG_PUSH([C++])
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_STRING_H
 #include <string.h>
-#endif
-#if HAVE_ERRNO_H
 #include <errno.h>
-#endif
 	]],[[
 		int e;
 		char buffer[256];
@@ -3054,9 +3022,7 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64, htonll, ntohll],,,[
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
@@ -3071,12 +3037,8 @@ AC_CHECK_DECLS([IP_MTU_DISCOVER, IP_DONTFRAG],,,[
 ])
 AC_CHECK_DECLS([va_copy, __va_copy],,,[
 #include <unistd.h>
-#if HAVE_STDARG_H
 #include <stdarg.h>
-#endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
 ])
 
 
@@ -3209,9 +3171,7 @@ AC_MSG_CHECKING([if getsockopt uses socklen_t])
 AC_LANG_PUSH([C++])
 AC_COMPILE_IFELSE([
 	AC_LANG_PROGRAM([
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 #include <sys/socket.h>
 	],
 	[
@@ -3307,31 +3267,29 @@ fi
 
 
 #--------------------------------------------------------------------
-# *BSD specific checks
-#--------------------------------------------------------------------
-
-AC_CHECK_HEADERS([sys/event.h])
-AC_CHECK_LIB(kvm, kvm_getswapinfo, [AC_DEFINE([HAVE_KVM_GETSWAPINFO], [1], [Define to 1 if libkvm has kvm_getswapinfo])], [], [])
-AC_CHECK_FUNCS([kqueue])
-AC_CHECK_TYPES([struct kinfo_proc2],,,[
-#if HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
-#endif
-])
-
-
-#--------------------------------------------------------------------
 # FreeBSD specific checks
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xFreeBSD"; then
 	AC_CHECK_HEADERS([net/iso88025.h])
 	AC_CHECK_DECLS([RTF_WASCLONED],[],[],[
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 #include <sys/socket.h>
 #include <net/route.h>
+	])
+	AC_CHECK_LIB(kvm, kvm_getswapinfo, [AC_DEFINE([HAVE_KVM_GETSWAPINFO], [1], [Define to 1 if libkvm has kvm_getswapinfo])], [], [])
+fi
+
+
+#--------------------------------------------------------------------
+# NetBSD specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xNetBSD"; then
+	AC_CHECK_TYPES([struct kinfo_proc2],,,[
+#if HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
 	])
 fi
 
@@ -3393,6 +3351,11 @@ fi
 
 if test "x$PLATFORM" = "xMinix"; then
 	AC_CHECK_HEADERS([minix/minlib.h])
+	AC_CHECK_TYPES([struct kinfo_proc2],,,[
+#if HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+	])
 fi
 
 
@@ -3404,16 +3367,9 @@ if test "x$BUILD_UNICODE" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -DUNICODE"
 fi
 
-AC_CHECK_HEADERS([wchar.h wctype.h iconv.h widec.h])
-AC_CHECK_TYPES([wchar_t, wint_t],,,[
-#if HAVE_WCHAR_H
-#include <wchar.h>
-#endif
-])
+AC_CHECK_HEADERS([iconv.h widec.h])
 AC_CHECK_SIZEOF(wchar_t,,[
-#if HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 ])
 AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcslcpy wcslcat])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
@@ -3421,12 +3377,8 @@ AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])
 AC_CHECK_FUNCS([swprintf])
 
 AC_CHECK_DECLS([putws],,,[
-#if HAVE_WCHAR_H
 #include <wchar.h>
-#endif
-#if HAVE_WCTYPE_H
 #include <wctype.h>
-#endif
 ])
 
 if test "x$ac_cv_func_wcsftime" = "xyes"; then
@@ -3437,9 +3389,7 @@ if test "x$ac_cv_func_wcsftime" = "xyes"; then
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
-#if HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 	     ], [[
 		wchar_t buffer[64];
 		struct tm *ltm;
@@ -3753,18 +3703,12 @@ if test "x$ac_found_iconv" = "xyes"; then
 	AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const, [Define as const if the declaration of iconv() needs const.])
 fi
 
-if test "x$ac_cv_type_wchar_t" = "xyes"; then
-	if test $ac_cv_sizeof_wchar_t -eq 2; then
-		AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
-	fi
+if test $ac_cv_sizeof_wchar_t -eq 2; then
+	AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
+fi
 
-	if test $ac_cv_sizeof_wchar_t -eq 4; then
-		AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
-	fi
-else
-	if test "x$BUILD_UNICODE" = "xyes"; then
-		AC_MSG_ERROR(wchar_t is required for UNICODE build)
-	fi
+if test $ac_cv_sizeof_wchar_t -eq 4; then
+	AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
 fi
 
 

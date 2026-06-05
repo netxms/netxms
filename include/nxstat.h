@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,9 +23,7 @@
 #ifndef _nxstat_h_
 #define _nxstat_h_
 
-#if defined(_WIN32) || HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
 
 #ifndef S_ISDIR
 #define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)

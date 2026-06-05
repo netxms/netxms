@@ -1,7 +1,7 @@
 /** 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -24,14 +24,7 @@
 #include "libnetxms.h"
 
 #ifndef _WIN32
-#ifdef _HPUX
-// dlfcn.h on HP-UX defines it's own UINT64 which conflicts with our definition
-#define UINT64 __UINT64
 #include <dlfcn.h>
-#undef UINT64
-#else /* _HPUX */
-#include <dlfcn.h>
-#endif /* _HPUX */
 #ifndef RTLD_LOCAL
 #define RTLD_LOCAL	0
 #endif

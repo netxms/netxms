@@ -22,10 +22,6 @@
 
 #if !(HAVE_WCSNCASECMP)
 
-#if !HAVE_WINT_T && !defined(_WIN32)
-typedef int wint_t;
-#endif
-
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n)
 {
    if (s1 == s2)

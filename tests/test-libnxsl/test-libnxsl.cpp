@@ -145,9 +145,7 @@ int main(int argc, char *argv[])
    _tzset();
 #else
    SetEnvironmentVariable(_T("TZ"), _T("EET-02EEST-03,M3.5.0,M10.5.0"));
-#if HAVE_TZSET
    tzset();
-#endif
 #endif
 
    if (argc > 1)

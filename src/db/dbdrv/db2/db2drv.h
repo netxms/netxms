@@ -41,11 +41,7 @@
 
 #ifndef _WIN32
 
-#if HAVE_WCHAR_H
 #define NETXMS_WCHAR		wchar_t
-#else		/* HAVE_WCHAR_T */
-#define NETXMS_WCHAR		WCHAR
-#endif	/* HAVE_WCHAR_T */
 #undef WCHAR
 
 #else		/* _WIN32 */

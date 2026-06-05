@@ -45,8 +45,6 @@
 
 #ifndef _WIN32
 
-#if HAVE_WCHAR_T
-
 #define NETXMS_WCHAR		wchar_t
 
 #ifdef UNICODE
@@ -54,13 +52,6 @@
 #else
 #define NETXMS_TCHAR		char
 #endif
-
-#else		/* HAVE_WCHAR_T */
-
-#define NETXMS_WCHAR		WCHAR
-#define NETXMS_TCHAR		TCHAR
-
-#endif	/* HAVE_WCHAR_T */
 
 #undef TCHAR
 #undef WCHAR

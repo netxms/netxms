@@ -44,26 +44,6 @@
 #include <nms_common.h>
 #include <iosfwd>
 
-#ifndef _WIN32
-
-#if HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-
-#ifndef _WIN32
-#include <dlfcn.h>
-#endif
-
-
-#define WSAGetLastError() (errno)
-
-#endif   /* _WIN32 */
-
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-
 #include <openssl/ssl.h>
 
 /**

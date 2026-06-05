@@ -80,13 +80,9 @@
 
 #else    /* not _WIN32 */
 
-#if HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 
 #include <string.h>
-
-#if HAVE_WCHAR_T
 
 #define WCHAR     wchar_t
 #if UNICODE_UCS2
@@ -95,17 +91,6 @@
 #else
 #define UCS2CHAR  unsigned short
 #define UCS4CHAR  wchar_t
-#endif
-
-#else	/* wchar_t not presented */
-
-#define WCHAR     unsigned short
-#define UCS2CHAR  unsigned short
-#define UCS4CHAR  unsigned int
-#undef UNICODE_UCS2
-#undef UNICODE_UCS4
-#define UNICODE_UCS2 1
-
 #endif
 
 // On some old systems, ctype.h defines _T macro, so we include it

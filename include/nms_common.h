@@ -69,9 +69,7 @@
 #include <jemalloc/jemalloc.h>
 #endif
 
-#ifdef HAVE_STDARG_H
 #include <stdarg.h>
-#endif
 
 #include <unicode.h>
 
@@ -251,8 +249,6 @@ typedef int bool;
 #define HAVE_GETADDRINFO        1
 #define HAVE_INET_PTON          1
 
-#define HAVE_STDARG_H           1
-
 #define HAVE_ALLOCA             1
 
 #define HAVE_WUTIME             1
@@ -273,7 +269,6 @@ typedef int bool;
 #include <ws2tcpip.h>
 #include <malloc.h>
 
-#include <stdarg.h>
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
 #endif
@@ -465,13 +460,8 @@ static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 #include <alloca.h>
 #endif
 
-#if HAVE_WCHAR_H
 #include <wchar.h>
-#endif
-
-#if HAVE_WCTYPE_H
 #include <wctype.h>
-#endif
 
 // Fix for wcs* functions visibility in Solaris 11
 #if defined(__sun) && (__cplusplus >= 199711L) && (__SUNPRO_CC < 0x5150)
@@ -499,14 +489,9 @@ using std::wcsncasecmp;
 #endif
 
 #include <unistd.h>
-
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-
 #include <inttypes.h>
 #include <stdint.h>
-
 #include <utime.h>
 
 #if HAVE_SYS_INT_TYPES_H
