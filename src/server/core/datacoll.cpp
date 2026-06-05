@@ -742,12 +742,35 @@ static void MigrateV5Data(DataCollectionTarget *target)
             else
             {
                int64_t batchStart = maxTs - 86400;
-               nx_swprintf(query, 1024,
-                  L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                  L" SELECT item_id,%s,MAX(idata_value),MAX(raw_value)"
-                  L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
-                  L" GROUP BY item_id,idata_timestamp",
-                  id, V5TimestampToMs(false), id, batchStart);
+               switch(g_dbSyntax)
+               {
+                  case DB_SYNTAX_MYSQL:
+                     nx_swprintf(query, 1024,
+                        L"INSERT IGNORE INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+                        L" SELECT item_id,%s,idata_value,raw_value"
+                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT,
+                        id, V5TimestampToMs(false), id, batchStart);
+                     break;
+                  case DB_SYNTAX_PGSQL:
+                  case DB_SYNTAX_SQLITE:
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+                        L" SELECT item_id,%s,idata_value,raw_value"
+                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
+                        L" ON CONFLICT DO NOTHING",
+                        id, V5TimestampToMs(false), id, batchStart);
+                     break;
+                  default:
+                     nx_swprintf(query, 1024,
+                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
+                        L" SELECT item_id,idata_timestamp,idata_value,raw_value FROM ("
+                        L"    SELECT item_id,%s AS idata_timestamp,idata_value,raw_value,"
+                        L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY idata_timestamp) AS rn"
+                        L"    FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
+                        L" ) sub WHERE rn=1",
+                        id, V5TimestampToMs(false), V5TimestampToMs(false), id, batchStart);
+                     break;
+               }
                if (DBQuery(hdb, query))
                {
                   nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT, id, batchStart);
@@ -856,8 +879,8 @@ static void V5DataMigrationManager()
    int workers = ConfigReadInt(L"DBConnectionPool.MaxSize", 30) / 3;
    if (workers < 2)
       workers = 2;
-   else if (workers > 16)
-      workers = 16;
+   else if (workers > 8)
+      workers = 8;
    ThreadPool *migrationPool = ThreadPoolCreate(L"V5MIGRATE", workers, workers);
 
    while(!SleepAndCheckForShutdown(5))
