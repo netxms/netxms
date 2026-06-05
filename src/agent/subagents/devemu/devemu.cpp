@@ -240,7 +240,7 @@ static bool LoadConfiguration(bool initial)
          NETXMS_SUBAGENT_PARAM *param = new NETXMS_SUBAGENT_PARAM();
          _tcscpy(param->name, name);
          param->handler = H_Value;
-         param->arg = _tcsdup(name);
+         param->arg = MemCopyString(name);
          param->dataType = TextToDataType(typeStr == nullptr ? _T("STRING") : typeStr);
          _tcscpy(param->description, description == nullptr ? _T("") : description);
 

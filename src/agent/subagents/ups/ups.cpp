@@ -59,7 +59,7 @@ void UPSInterface::setName(const char *pszName)
       TCHAR szBuffer[MAX_DB_STRING];
 
       _sntprintf(szBuffer, MAX_DB_STRING, _T("%s-%s"), getType(), m_device);
-      m_name = _tcsdup(szBuffer);
+      m_name = MemCopyString(szBuffer);
    }
    else
    {
@@ -87,7 +87,7 @@ void UPSInterface::setName(const WCHAR *pszName)
    else
    {
 	   MemFree(m_name);
-      m_name = _tcsdup(pszName);
+      m_name = MemCopyString(pszName);
    }
 }
 

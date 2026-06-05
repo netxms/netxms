@@ -7245,7 +7245,7 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
       if ((*value == nullptr) || _tcscmp(*value, buffer))
       {
          MemFree(*value);
-         *value = _tcsdup(buffer);
+         *value = MemCopyString(buffer);
          hasChanges = true;
          sendPollerMsg(_T("   System %s changed to %s\r\n"), propName, *value);
       }

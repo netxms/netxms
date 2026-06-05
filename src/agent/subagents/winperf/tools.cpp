@@ -81,7 +81,7 @@ void CreateCounterIndex(TCHAR *englishCounters, TCHAR *localCounters)
       COUNTER_INDEX ci;
 		ci.index = _tcstoul(curr, NULL, 10);
 		curr += _tcslen(curr) + 1;
-		ci.englishName = _tcsdup(curr);
+		ci.englishName = MemCopyString(curr);
 		curr += _tcslen(curr) + 1;
       ci.localName = NULL;
       m_counterIndexes.add(&ci);
@@ -98,7 +98,7 @@ void CreateCounterIndex(TCHAR *englishCounters, TCHAR *localCounters)
          COUNTER_INDEX *ci = m_counterIndexes.get(i);
          if (ci->index == index)
          {
-            ci->localName = _tcsdup(curr);
+            ci->localName = MemCopyString(curr);
             translations++;
             break;
          }

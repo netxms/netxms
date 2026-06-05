@@ -30,7 +30,7 @@ struct HandlerData
    PythonPlugin *plugin;
    TCHAR *id;
 
-   HandlerData(PythonPlugin *_plugin, const TCHAR *_id) { plugin = _plugin; id = _tcsdup(_id); }
+   HandlerData(PythonPlugin *_plugin, const TCHAR *_id) { plugin = _plugin; id = MemCopyString(_id); }
 };
 
 /**

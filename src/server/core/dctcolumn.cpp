@@ -77,7 +77,7 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
 {
    _tcslcpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
    m_flags = (UINT16)e->getSubEntryValueAsUInt(_T("flags"));
-   m_displayName = _tcsdup(e->getSubEntryValue(_T("displayName"), 0, _T("")));
+   m_displayName = MemCopyString(e->getSubEntryValue(_T("displayName"), 0, _T("")));
 
    const TCHAR *oid = e->getSubEntryValue(_T("snmpOid"));
    if ((oid != nullptr) && (*oid != 0))
@@ -101,7 +101,7 @@ DCTableColumn::DCTableColumn(json_t *json)
    m_flags = static_cast<UINT16>(json_object_get_int32(json, "flags"));
    
    String displayName = json_object_get_string(json, "displayName", _T(""));
-   m_displayName = _tcsdup(displayName);
+   m_displayName = MemCopyString(displayName);
 
    String oidStr = json_object_get_string(json, "snmpOid", _T(""));
    if (!oidStr.isEmpty())

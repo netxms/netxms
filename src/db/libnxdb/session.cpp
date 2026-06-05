@@ -1331,7 +1331,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		result->m_driver = hConn->m_driver;
 		result->m_connection = hConn;
 		result->m_statement = stmt;
-		result->m_query = _tcsdup(query);
+		result->m_query = MemCopyString(query);
 	}
 	else
 	{

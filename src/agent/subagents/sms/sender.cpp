@@ -102,14 +102,14 @@ bool InitSender(const TCHAR *pszInitArgs)
 	if (pszInitArgs == NULL || *pszInitArgs == 0)
 	{
 #ifdef _WIN32
-		portName = _tcsdup(_T("COM1:"));
+		portName = MemCopyString(_T("COM1:"));
 #else
-		portName = _tcsdup(_T("/dev/ttyS0"));
+		portName = MemCopyString(_T("/dev/ttyS0"));
 #endif
 	}
 	else
 	{
-		portName = _tcsdup(pszInitArgs);
+		portName = MemCopyString(pszInitArgs);
 	}
 	
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("SMS Sender: initializing GSM modem at %s"), pszInitArgs);

@@ -35,7 +35,7 @@ public:
 
    ApplicationAgent(const TCHAR *name)
    {
-      m_name = _tcsdup(name);
+      m_name = MemCopyString(name);
       m_handle = INVALID_PIPE_HANDLE;
    }
 

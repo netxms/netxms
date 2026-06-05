@@ -3473,7 +3473,6 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 #endif
 ])
-AC_CHECK_FUNCS([wcsdup])
 AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcslcpy wcslcat])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])

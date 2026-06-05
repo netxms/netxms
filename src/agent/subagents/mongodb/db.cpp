@@ -78,7 +78,7 @@ static LONG H_GetParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
    {
       if(!_tcsicmp(g_instances->get(i)->getConnectionName(), id))
       {
-         TCHAR *paramName = _tcsdup(param+8);
+         TCHAR *paramName = MemCopyString(param+8);
          TCHAR *tmp = _tcschr(paramName, _T('('));
          *tmp = 0;
          AgentWriteDebugLog(5, _T("MONGODB: Searching for parameter: %s "), paramName);

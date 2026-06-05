@@ -1607,7 +1607,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
          if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_SET)
          {
-            m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
+            m_pstorageSetActions.setPreallocated(MemCopyString(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
          if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_DELETE)
          {
@@ -1633,7 +1633,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
          if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_SET)
          {
-            m_customAttributeSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
+            m_customAttributeSetActions.setPreallocated(MemCopyString(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
          if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_DELETE)
          {

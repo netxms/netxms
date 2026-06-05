@@ -159,7 +159,6 @@
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
 #define _tcstod   wcstod
-#define _tcsdup   wcsdup
 #define _tcsupr   wcsupr
 #define _tcslwr   wcslwr
 #define _tcsspn   wcsspn
@@ -239,7 +238,6 @@
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
 #define _tcstod   strtod
-#define _tcsdup   strdup
 #define _tcsupr   strupr
 #define _tcslwr   strlwr
 #define _tcsspn   strspn

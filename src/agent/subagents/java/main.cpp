@@ -172,7 +172,7 @@ static void AddContributionItems()
       s_subagentInfo.actions = (NETXMS_SUBAGENT_ACTION *)calloc(s_subagentInfo.numActions, sizeof(NETXMS_SUBAGENT_ACTION));
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numActions; j++)
       {
-         s_subagentInfo.actions[j].arg = _tcsdup(actions->get(i++));
+         s_subagentInfo.actions[j].arg = MemCopyString(actions->get(i++));
          _tcslcpy(s_subagentInfo.actions[j].name, actions->get(i++), MAX_PARAM_NAME);
          _tcslcpy(s_subagentInfo.actions[j].description, actions->get(i++), MAX_DB_STRING);
          s_subagentInfo.actions[j].handler = ActionHandler;
@@ -188,7 +188,7 @@ static void AddContributionItems()
       s_subagentInfo.parameters = (NETXMS_SUBAGENT_PARAM *)calloc(s_subagentInfo.numParameters, sizeof(NETXMS_SUBAGENT_PARAM));
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numParameters; j++)
       {
-         s_subagentInfo.parameters[j].arg = _tcsdup(parameters->get(i++));
+         s_subagentInfo.parameters[j].arg = MemCopyString(parameters->get(i++));
          _tcslcpy(s_subagentInfo.parameters[j].name, parameters->get(i++), MAX_PARAM_NAME);
          _tcslcpy(s_subagentInfo.parameters[j].description, parameters->get(i++), MAX_DB_STRING);
          s_subagentInfo.parameters[j].dataType = (int)_tcstol(parameters->get(i++), NULL, 10);
@@ -205,7 +205,7 @@ static void AddContributionItems()
       s_subagentInfo.lists = (NETXMS_SUBAGENT_LIST *)calloc(s_subagentInfo.numLists, sizeof(NETXMS_SUBAGENT_LIST));
       for(int i = 0, j = 0; j < (int)s_subagentInfo.numLists; j++)
       {
-         s_subagentInfo.lists[j].arg = _tcsdup(lists->get(i++));
+         s_subagentInfo.lists[j].arg = MemCopyString(lists->get(i++));
          _tcslcpy(s_subagentInfo.lists[j].name, lists->get(i++), MAX_PARAM_NAME);
          _tcslcpy(s_subagentInfo.lists[j].description, lists->get(i++), MAX_DB_STRING);
          s_subagentInfo.lists[j].handler = ListHandler;
@@ -237,7 +237,7 @@ static void AddContributionItems()
       s_subagentInfo.tables = (NETXMS_SUBAGENT_TABLE *)calloc(s_subagentInfo.numTables, sizeof(NETXMS_SUBAGENT_TABLE));
       for(int i = 1, j = 0; j < (int)s_subagentInfo.numTables; j++)
       {
-         s_subagentInfo.tables[j].arg = _tcsdup(tables->get(i++));
+         s_subagentInfo.tables[j].arg = MemCopyString(tables->get(i++));
          _tcslcpy(s_subagentInfo.tables[j].name, tables->get(i++), MAX_PARAM_NAME);
          _tcslcpy(s_subagentInfo.tables[j].description, tables->get(i++), MAX_DB_STRING);
          s_subagentInfo.tables[j].handler = TableHandler;

@@ -254,7 +254,6 @@ typedef int bool;
 
 #define HAVE_ALLOCA             1
 
-#define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
 
 #define HAVE_STD_ATOMIC         1
@@ -479,9 +478,6 @@ static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 
 // Fix for wcs* functions visibility in Solaris 11
 #if defined(__sun) && (__cplusplus >= 199711L) && (__SUNPRO_CC < 0x5150)
-#if HAVE_WCSDUP
-using std::wcsdup;
-#endif
 #if HAVE_WCSCASECMP
 using std::wcscasecmp;
 #endif

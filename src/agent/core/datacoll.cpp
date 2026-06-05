@@ -423,7 +423,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_id = item->m_id;
    m_type = item->m_type;
    m_origin = item->m_origin;
-   m_name = _tcsdup(item->m_name);
+   m_name = MemCopyString(item->m_name);
    m_pollingInterval = item->m_pollingInterval;
    m_lastPollTime = item->m_lastPollTime;
    m_snmpTargetGuid = item->m_snmpTargetGuid;

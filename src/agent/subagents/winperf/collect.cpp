@@ -300,7 +300,7 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
 	}
 	else
 	{
-		pCnt->pszName = _tcsdup(pszName);
+		pCnt->pszName = MemCopyString(pszName);
 	}
    pCnt->wType = (iDataType == COUNTER_TYPE_AUTO) ? iType : iDataType;
    pCnt->wNumSamples = iNumSamples;

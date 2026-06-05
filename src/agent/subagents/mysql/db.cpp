@@ -584,7 +584,7 @@ static StringMap *ReadStatementCounts(DB_HANDLE hdb)
       {
          if (_tcscmp(eventName, statementMapping[j].eventName) == 0)
          {
-            data->setPreallocated(_tcsdup(statementMapping[j].comName), DBGetField(hResult, i, 1, nullptr, 0));
+            data->setPreallocated(MemCopyString(statementMapping[j].comName), DBGetField(hResult, i, 1, nullptr, 0));
             break;
          }
       }
@@ -716,7 +716,7 @@ bool DatabaseInstance::poll()
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               data->setPreallocated(_tcsdup(s_globalData[i].tag), DBGetField(hResult, 0, 0, NULL, 0));
+               data->setPreallocated(MemCopyString(s_globalData[i].tag), DBGetField(hResult, 0, 0, NULL, 0));
             }
             else
             {

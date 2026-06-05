@@ -99,7 +99,7 @@ struct LDAP_Object
 #define ldap_strcat _tcscat
 #define ldap_strlen _tcslen
 #define ldap_timeval l_timeval
-#define ldap_strdup _tcsdup
+#define ldap_strdup MemCopyString
 #define ldap_snprintf _sntprintf
 #define LdapConfigRead ConfigReadStr
 #define _TLDAP(x) _T(x)
@@ -115,7 +115,7 @@ struct LDAP_Object
 #define ldap_strcat strcat
 #define ldap_strlen strlen
 #define ldap_timeval timeval
-#define ldap_strdup strdup
+#define ldap_strdup MemCopyStringA
 #define ldap_snprintf snprintf
 #define LdapConfigRead ConfigReadStrUTF8
 #define _TLDAP(x) x

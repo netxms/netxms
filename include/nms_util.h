@@ -215,11 +215,6 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 #define NXLOG_ROTATION_DAILY     1
 #define NXLOG_ROTATION_BY_SIZE   2
 
-// Some AIX versions have broken wcsdup() so we use internal implementation
-#if !HAVE_WCSDUP || defined(_AIX)
-#define wcsdup MemCopyStringW
-#endif
-
 /******* UNICODE related conversion and helper functions *******/
 
 // Basic string functions

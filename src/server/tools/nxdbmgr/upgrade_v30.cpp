@@ -338,7 +338,7 @@ static bool H_UpgradeFromV101()
       }
 
       if (oldConfiguration == NULL)
-         oldConfiguration = _tcsdup(_T(""));
+         oldConfiguration = MemCopyString(_T(""));
 
       PrepareDriverNameAndConfig(driver, oldConfiguration, newDriverName, newConfiguration);
 
@@ -549,7 +549,7 @@ static bool H_UpgradeFromV91()
       }
 
       if (oldConfiguration == NULL)
-         oldConfiguration = _tcsdup(_T(""));
+         oldConfiguration = MemCopyString(_T(""));
 
       PrepareDriverNameAndConfig(driver, oldConfiguration, newDriverName, newConfiguration);
 
