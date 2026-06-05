@@ -260,7 +260,7 @@ public class EditActionDlg extends Dialog
          case NXSL_SCRIPT:
             return i18n.tr("Script name");
          default:
-            return i18n.tr("Recipient's address");
+            return i18n.tr("Recipient");
 		}
 	}
 
@@ -411,7 +411,7 @@ public class EditActionDlg extends Dialog
             channelName.setLabel(i18n.tr("Event forwarder"));
             channelName.setEnabled(true);
             updateForwarderList();
-            recipient.setEnabled(false);
+            recipient.setEnabled(true);
             subject.setEnabled(false);
             data.setEnabled(false);
             break;

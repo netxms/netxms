@@ -618,7 +618,7 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
          if (action->channelName[0] != 0)
          {
             nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event using forwarder \"%s\""), action->channelName);
-            ForwardEventToForwarder(action->channelName, event, FindObjectById(event.getSourceId()));
+            ForwardEventToForwarder(action->channelName, event, context->recipient, FindObjectById(event.getSourceId()));
          }
          else
          {

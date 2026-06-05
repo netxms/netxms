@@ -42,10 +42,11 @@ class ForwardedEvent
 {
 private:
    Event *m_event;
+   String m_recipient;
    shared_ptr<NetObj> m_source;
 
 public:
-   ForwardedEvent(const Event& event, const shared_ptr<NetObj>& source) : m_source(source)
+   ForwardedEvent(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source) : m_recipient(recipient), m_source(source)
    {
       m_event = new Event(event);
    }
@@ -55,6 +56,7 @@ public:
    }
 
    const Event& getEvent() const { return *m_event; }
+   const TCHAR *getRecipient() const { return m_recipient.cstr(); }
    const shared_ptr<NetObj>& getSource() const { return m_source; }
 };
 
@@ -118,7 +120,7 @@ public:
             const wchar_t *driverName, json_t *configuration, const wchar_t *errorMessage);
    ~EventForwarder();
 
-   void enqueue(const Event& event, const shared_ptr<NetObj>& source);
+   void enqueue(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source);
 
    const wchar_t *getName() const { return m_name; }
    const wchar_t *getDescription() const { return m_description; }
@@ -215,7 +217,7 @@ void EventForwarder::workerThread()
       for(int attempt = 0; attempt <= EF_MAX_RETRY; attempt++)
       {
          m_driverLock.lock();
-         success = (m_driver != nullptr) ? m_driver->forward(fe->getEvent(), fe->getSource()) : false;
+         success = (m_driver != nullptr) ? m_driver->forward(fe->getEvent(), fe->getRecipient(), fe->getSource()) : false;
          m_driverLock.unlock();
 
          if (success)
@@ -259,7 +261,7 @@ void EventForwarder::workerThread()
 /**
  * Enqueue event for forwarding
  */
-void EventForwarder::enqueue(const Event& event, const shared_ptr<NetObj>& source)
+void EventForwarder::enqueue(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source)
 {
    uint32_t maxQueueSize = ConfigReadULong(L"EventForwarders.MaxQueueSize", 1000);
    if ((maxQueueSize > 0) && (m_queue.size() >= maxQueueSize))
@@ -281,7 +283,7 @@ void EventForwarder::enqueue(const Event& event, const shared_ptr<NetObj>& sourc
       nxlog_debug_tag(DEBUG_TAG, 4, L"Event forwarder \"%s\" queue size is below threshold", m_name);
    }
 
-   m_queue.put(new ForwardedEvent(event, source));
+   m_queue.put(new ForwardedEvent(event, recipient, source));
 }
 
 /**
@@ -436,13 +438,14 @@ public:
       wcslcpy(m_hostname, hostname, MAX_DNS_NAME);
    }
 
-   virtual bool forward(const Event& event, const shared_ptr<NetObj>& source) override;
+   virtual bool forward(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source) override;
 };
 
 /**
- * Forward event over ISC
+ * Forward event over ISC. The recipient is not used by this driver - events are always
+ * forwarded to the server configured in the driver's "hostname" setting.
  */
-bool IscEventForwarderDriver::forward(const Event& event, const shared_ptr<NetObj>& source)
+bool IscEventForwarderDriver::forward(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source)
 {
    InetAddress addr = InetAddress::resolveHostName(m_hostname);
    if (!addr.isValidUnicast())
@@ -753,14 +756,14 @@ void NXCORE_EXPORTABLE GetEventForwarderDrivers(NXCPMessage *msg)
 /**
  * Forward event using named forwarder instance
  */
-void NXCORE_EXPORTABLE ForwardEventToForwarder(const wchar_t *name, const Event& event, const shared_ptr<NetObj>& source)
+void NXCORE_EXPORTABLE ForwardEventToForwarder(const wchar_t *name, const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source)
 {
    s_forwarderListLock.lock();
    shared_ptr<EventForwarder> ef = s_forwarderList.getShared(name);
    s_forwarderListLock.unlock();
    if (ef != nullptr)
    {
-      ef->enqueue(event, source);
+      ef->enqueue(event, recipient, source);
    }
    else
    {

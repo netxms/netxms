@@ -46,8 +46,12 @@ public:
    /**
     * Forward single event to the target. Returns true on success, false on failure
     * (failure triggers the forwarder's retry/drop handling).
+    *
+    * The recipient is the action's macro-expanded recipient address (may be empty). Its
+    * meaning is driver-specific - a driver may use it for additional routing within the
+    * target system, or ignore it entirely.
     */
-   virtual bool forward(const Event& event, const shared_ptr<NetObj>& source) = 0;
+   virtual bool forward(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source) = 0;
 
    /**
     * Optional health check. Returns true if the driver is operational.

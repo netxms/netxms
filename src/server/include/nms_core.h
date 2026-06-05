@@ -1548,7 +1548,7 @@ bool NXCORE_EXPORTABLE DeleteNotificationChannel(const wchar_t *name);
 void LoadEventForwarders();
 void ShutdownEventForwarders();
 void NXCORE_EXPORTABLE RegisterEventForwarderDriver(const wchar_t *name, EventForwarderDriverFactory factory);
-void NXCORE_EXPORTABLE ForwardEventToForwarder(const wchar_t *name, const Event& event, const shared_ptr<NetObj>& source);
+void NXCORE_EXPORTABLE ForwardEventToForwarder(const wchar_t *name, const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source);
 void NXCORE_EXPORTABLE GetEventForwarders(NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetEventForwarders(bool basicInfoOnly, bool includeSensitiveData = false);
 json_t NXCORE_EXPORTABLE *GetEventForwarderByName(const wchar_t *name, bool includeSensitiveData = false);
