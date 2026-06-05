@@ -1,5 +1,10 @@
 #ifndef _WIN32
 #include <config.h>
+/* gettimeofday() and getpid() are guaranteed on all supported non-Windows
+   platforms, so they are not probed by configure (on Windows the seed code
+   uses time()/GetCurrentProcessId() instead). */
+#define HAVE_GETTIMEOFDAY 1
+#define HAVE_GETPID 1
 #endif
 
 /* Define to 1 if you have the `close' function. */

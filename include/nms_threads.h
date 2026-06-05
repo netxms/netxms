@@ -371,14 +371,10 @@ static inline void ThreadSleepMs(uint32_t milliseconds)
    int rc;
    do
    {
-#if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
       struct timespec interval, remainder;
       interval.tv_sec = milliseconds / 1000;
       interval.tv_nsec = (milliseconds % 1000) * 1000000; // milli -> nano
       rc = nanosleep(&interval, &remainder);
-#else
-      rc = usleep(milliseconds * 1000);   // Convert to microseconds
-#endif
    } while((rc != 0) && (errno == EINTR));
 }
 

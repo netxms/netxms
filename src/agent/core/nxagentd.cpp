@@ -1964,7 +1964,6 @@ static int GetUserId(const char *name)
    if (*eptr == 0)
       return id;
 
-#if HAVE_GETPWNAM
    struct passwd *p = getpwnam(name);
    if (p == NULL)
    {
@@ -1972,10 +1971,6 @@ static int GetUserId(const char *name)
       return 0;
    }
    return p->pw_uid;
-#else
-   _tprintf(_T("Invalid user ID \"%hs\"\n"), name);
-   return 0;
-#endif
 }
 
 /**
@@ -1988,7 +1983,6 @@ static int GetGroupId(const char *name)
    if (*eptr == 0)
       return id;
 
-#if HAVE_GETGRNAM
    struct group *g = getgrnam(name);
    if (g == NULL)
    {
@@ -1996,10 +1990,6 @@ static int GetGroupId(const char *name)
       return 0;
    }
    return g->gr_gid;
-#else
-   _tprintf(_T("Invalid group ID \"%hs\"\n"), name);
-   return 0;
-#endif
 }
 
 #endif

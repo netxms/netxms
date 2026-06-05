@@ -2970,17 +2970,16 @@ AC_LANG_POP([C++])
 # Checks for functions
 #--------------------------------------------------------------------
 
-AC_CHECK_FUNCS([gettimeofday memmem strlwr])
-AC_CHECK_FUNCS([strlcpy strlcat strcasestr setlocale strerror_r])
-AC_CHECK_FUNCS([daemon uname poll])
-AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
+AC_CHECK_FUNCS([memmem strlwr])
+AC_CHECK_FUNCS([strlcpy strlcat strcasestr strerror_r])
+AC_CHECK_FUNCS([daemon poll])
+AC_CHECK_FUNCS([usleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([strptime timegm])
-AC_CHECK_FUNCS([isatty malloc_info malloc_trim utime tzset])
-AC_CHECK_FUNCS([getpwnam getpwuid_r getgrnam getgrgid_r])
-AC_CHECK_FUNCS([getpeereid sched_yield getpid])
-AC_CHECK_FUNCS([setenv unsetenv])
+AC_CHECK_FUNCS([malloc_info malloc_trim utime tzset])
+AC_CHECK_FUNCS([getpwuid_r getgrgid_r])
+AC_CHECK_FUNCS([getpeereid sched_yield])
 
-AC_CHECK_DECLS([nanosleep, daemon, explicit_bzero, memset_s],,,[
+AC_CHECK_DECLS([daemon, explicit_bzero, memset_s],,,[
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif

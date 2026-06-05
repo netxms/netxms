@@ -385,7 +385,6 @@ typedef unsigned __int64 uint64_t;
 
 #define HAVE_LIBEXPAT  1
 #define HAVE_LOCALE_H  1
-#define HAVE_SETLOCALE 1
 
 #define strtok_r strtok_s
 

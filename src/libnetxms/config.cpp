@@ -26,7 +26,7 @@
 #include <expat.h>
 #include <nxstat.h>
 
-#if !HAVE_ISATTY
+#ifdef _WIN32
 #define _isatty(x) (true)
 #endif
 

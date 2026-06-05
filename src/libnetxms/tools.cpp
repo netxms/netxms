@@ -172,9 +172,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientA
    // documentation, but I've seen the cases when agent formats
    // floating point numbers by sprintf inserting comma in place
    // of a dot, as set by system's regional settings.
-#if HAVE_SETLOCALE
    setlocale(LC_NUMERIC, "C");
-#endif
 
    // Set default code page according to system settings and update LC_CTYPE
 #ifndef _WIN32
@@ -185,7 +183,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientA
       locale = getenv("LANG");
    if (locale != nullptr)
    {
-#if defined(UNICODE) && HAVE_SETLOCALE
+#ifdef UNICODE
       setlocale(LC_CTYPE, locale);
 #endif
 
@@ -4871,8 +4869,6 @@ TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port,
  */
 static BOOL UnsetEnvironmentVariable(const TCHAR *var)
 {
-#if HAVE_UNSETENV
-
 #ifdef UNICODE
    char *mbenv = MBStringFromWideStringSysLocale(var);
    BOOL result = (unsetenv(mbenv) == 0);
@@ -4881,21 +4877,6 @@ static BOOL UnsetEnvironmentVariable(const TCHAR *var)
 #else
    return unsetenv(var) == 0;
 #endif
-
-#else //HAVE_UNSETENV
-
-   size_t len = _tcslen(var) + 1;
-   TCHAR *env = MemAllocString(len);
-   _sntprintf(env, len, _T("%s"), var);
-#ifdef UNICODE
-   char *mbenv = MBStringFromWideStringSysLocale(env);
-   MemFree(env);
-   return putenv(mbenv) == 0;
-#else
-   return putenv(env) == 0;
-#endif
-
-#endif //HAVE_UNSETENV
 }
 
 /**
@@ -4905,8 +4886,6 @@ BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *
 {
    if (value == nullptr)
       return UnsetEnvironmentVariable(var);
-
-#if HAVE_SETENV
 
 #ifdef UNICODE
    char *mbenv = MBStringFromWideStringSysLocale(var);
@@ -4918,21 +4897,6 @@ BOOL LIBNETXMS_EXPORTABLE SetEnvironmentVariable(const TCHAR *var, const TCHAR *
 #else
    return setenv(var, value, 1) == 0;
 #endif
-
-#else //HAVE_SETENV
-
-   size_t len = _tcslen(var) + _tcslen(value) + 2;
-   TCHAR *env = MemAllocString(len);
-   _sntprintf(env, len, _T("%s=%s"), var, value);
-#ifdef UNICODE
-   char *mbenv = MBStringFromWideStringSysLocale(env);
-   MemFree(env);
-   return putenv(mbenv) == 0;
-#else
-   return putenv(env) == 0;
-#endif
-
-#endif //HAVE_SETENV
 }
 
 /**

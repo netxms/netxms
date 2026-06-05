@@ -508,7 +508,7 @@ bool GetPlatformName(TCHAR *value)
    GetSystemInfo(&sysInfo);
    BuildWindowsPlatformName(value, sysInfo.wProcessorArchitecture);
 
-#elif HAVE_UNAME
+#else
 
    struct utsname info;
    if (uname(&info) != -1)
@@ -525,11 +525,6 @@ bool GetPlatformName(TCHAR *value)
       nxlog_debug_tag(_T("sysinfo"), 4, _T("uname() failed: %s"), _tcserror(errno));
       success = false;
    }
-
-#else
-
-   // Finally, we don't know a way to detect platform
-   _tcscpy(value, _T("unknown"));
 
 #endif
 
