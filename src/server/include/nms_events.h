@@ -43,6 +43,16 @@ enum class EventOrigin
 };
 
 /**
+ * Symbolic name for event origin
+ */
+static inline const char *EventOriginName(EventOrigin origin)
+{
+   static const char *names[] = { "SYSTEM", "AGENT", "CLIENT", "SYSLOG", "SNMP", "NXSL", "REMOTE_SERVER", "WINDOWS_EVENT", "OPENTELEMETRY" };
+   int index = static_cast<int>(origin);
+   return ((index >= 0) && (index < static_cast<int>(sizeof(names) / sizeof(names[0])))) ? names[index] : "UNKNOWN";
+}
+
+/**
  * Max downtime tag length (including terminating character)
  */
 #define MAX_DOWNTIME_TAG_LENGTH  16

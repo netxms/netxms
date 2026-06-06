@@ -99,24 +99,6 @@ static const TCHAR *s_eventSeverityNames[] =
 };
 
 /**
- * Event origin names
- */
-static const TCHAR *GetEventOriginName(int origin)
-{
-   switch(origin)
-   {
-      case 0: return _T("SYSTEM");
-      case 1: return _T("AGENT");
-      case 2: return _T("SNMP");
-      case 3: return _T("SYSLOG");
-      case 4: return _T("WINDOWS_EVENT");
-      case 5: return _T("SCRIPT");
-      case 6: return _T("REMOTE_SERVER");
-      default: return _T("UNKNOWN");
-   }
-}
-
-/**
  * Get syslog severity name
  */
 static inline const TCHAR *GetSyslogSeverityName(int severity)
@@ -1711,8 +1693,8 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
             json_object_set_new(event, "tags", tagsArray);
          }
 
-         int origin = DBGetFieldLong(hResult, i, 8);
-         json_object_set_new(event, "origin", json_string_t(GetEventOriginName(origin)));
+         EventOrigin origin = static_cast<EventOrigin>(DBGetFieldInt32(hResult, i, 8));
+         json_object_set_new(event, "origin", json_string(EventOriginName(origin)));
 
          json_array_append_new(events, event);
       }

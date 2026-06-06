@@ -127,4 +127,9 @@ int H_OtlpMetrics(Context *context);
  */
 int H_OtlpLogs(Context *context);
 
+/**
+ * Register OTLP event forwarder driver with the core event forwarding framework
+ */
+void RegisterOtlpEventForwarder();
+
 #endif
