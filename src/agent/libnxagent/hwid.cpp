@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -196,32 +196,6 @@ static bool GetUniqueMachineId(char *buffer)
    }
 #endif
    return false;
-}
-
-#elif defined(_HPUX)
-
-/**
- * Get hardware serial number - HP-UX
- */
-bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
-{
-   return confstr(_CS_MACHINE_MODEL, buffer, size) > 0;
-}
-
-/**
- * Get hardware product - HP-UX
- */
-static bool GetHardwareProduct(char *buffer)
-{
-   return confstr(_CS_MACHINE_SERIAL, buffer, INTERNAL_BUFFER_SIZE) > 0;
-}
-
-/**
- * Get unique machine ID - HP-UX
- */
-static bool GetUniqueMachineId(char *buffer)
-{
-   return confstr(_CS_PARTITION_IDENT, buffer, INTERNAL_BUFFER_SIZE) > 0;
 }
 
 #elif defined(__APPLE__)
