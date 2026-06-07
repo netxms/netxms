@@ -1248,13 +1248,14 @@ static void ScanAddressRangeSNMP(const InetAddress& from, const InetAddress& to,
 /**
  * Scan address range via SNMP proxy
  */
-static void ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port, SNMP_Version snmpVersion, const TCHAR *community,
+static uint32_t ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port, SNMP_Version snmpVersion, const TCHAR *community,
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("SNMP.ScanAddressRange(%s,%s,%u,%d,\"%s\")"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port, snmpVersion, CHECK_NULL_EX(community));
    StringList *list;
-   if (conn->getList(request, &list) == ERR_SUCCESS)
+   uint32_t rcc = conn->getList(request, &list);
+   if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < list->size(); i++)
       {
@@ -1262,6 +1263,7 @@ static void ScanAddressRangeSNMPProxy(AgentConnection *conn, uint32_t from, uint
       }
       delete list;
    }
+   return rcc;
 }
 
 /**
@@ -1281,13 +1283,14 @@ static void ScanAddressRangeTCP(const InetAddress& from, const InetAddress& to, 
 /**
  * Scan address range via TCP proxy
  */
-static void ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port,
+static uint32_t ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint32_t to, uint16_t port,
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[1024], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 1024, _T("TCP.ScanAddressRange(%s,%s,%u)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), port);
    StringList *list;
-   if (conn->getList(request, &list) == ERR_SUCCESS)
+   uint32_t rcc = conn->getList(request, &list);
+   if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < list->size(); i++)
       {
@@ -1295,18 +1298,20 @@ static void ScanAddressRangeTCPProxy(AgentConnection *conn, uint32_t from, uint3
       }
       delete list;
    }
+   return rcc;
 }
 
 /**
  * Scan address range via ICMP proxy
  */
-static void ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, uint32_t to,
+static uint32_t ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, uint32_t to,
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[256], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
    _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
    StringList *list;
-   if (conn->getList(request, &list) == ERR_SUCCESS)
+   uint32_t rcc = conn->getList(request, &list);
+   if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < list->size(); i++)
       {
@@ -1314,6 +1319,7 @@ static void ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, uint
       }
       delete list;
    }
+   return rcc;
 }
 
 /**
@@ -1915,10 +1921,26 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
                }
                else
                {
+                  // Zone has a configured proxy but it is unreachable - abort instead of
+                  // silently falling back to a server-side scan that cannot reach the zone.
                   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: cannot connect to zone %d proxy node [%u]",
                         context.zoneUIN, proxyId);
-                  proxy.reset();
+                  if (context.errorReporter)
+                     context.errorReporter(RCC_ZONE_PROXY_NOT_AVAILABLE);
+                  if (reportedHosts != nullptr)
+                     *reportedHosts = 0;
+                  return;
                }
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: zone %d proxy node [%u] not found",
+                     context.zoneUIN, proxyId);
+               if (context.errorReporter)
+                  context.errorReporter(RCC_ZONE_PROXY_NOT_AVAILABLE);
+               if (reportedHosts != nullptr)
+                  *reportedHosts = 0;
+               return;
             }
          }
       }
@@ -1930,6 +1952,16 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
       uint32_t to = context.endAddress.getAddressV4();
       uint32_t blockSize = ConfigReadULong(L"NetworkDiscovery.ActiveDiscovery.BlockSize", 1024);
 
+      // Track the first protocol-scan command rejected by the proxy agent (e.g. when
+      // EnableTCPProxy is not set in its configuration), so the caller can be warned
+      // that protocol detection results are incomplete.
+      uint32_t proxyScanError = ERR_SUCCESS;
+      auto recordProxyScanResult = [&proxyScanError](uint32_t rcc)
+      {
+         if ((rcc != ERR_SUCCESS) && (proxyScanError == ERR_SUCCESS))
+            proxyScanError = rcc;
+      };
+
       while((from <= to) && !shouldCancel())
       {
          uint32_t blockEnd = std::min(to, from + blockSize - 1);
@@ -1940,16 +1972,30 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
          if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
          {
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
-            ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
-                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx);
+            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
+         }
+
+         if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
+         {
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT, 0 };
+            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, MODBUS_TCP_DEFAULT_PORT,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
+         }
+
+         if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && !shouldCancel())
+         {
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT, 0 };
+            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, ETHERNET_IP_DEFAULT_PORT,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
          for(int i = 0; (i < context.tcpPorts.size()) && !shouldCancel(); i++)
          {
             uint16_t port = context.tcpPorts.get(i);
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
-            ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
-                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx);
+            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
+                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
          if ((context.flags & NSCAN_PROBE_SNMP) && !shouldCancel())
@@ -1965,19 +2011,26 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
                {
                   const wchar_t *community = communities->get(j);
                   InteractiveScanPortContext pctxV1{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_1 };
-                  ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_1, community,
-                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV1);
+                  recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_1, community,
+                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV1));
                   InteractiveScanPortContext pctxV2{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_2C };
-                  ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_2C, community,
-                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV2);
+                  recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_2C, community,
+                        InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV2));
                }
                InteractiveScanPortContext pctxV3{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_3 };
-               ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_3, nullptr,
-                     InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV3);
+               recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_3, nullptr,
+                     InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV3));
             }
          }
 
          from += blockSize;
+      }
+
+      if ((proxyScanError != ERR_SUCCESS) && context.warningReporter && !shouldCancel())
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: proxy node %s [%u] scan command failed (%s)",
+               proxy->getName(), proxy->getId(), AgentErrorCodeToText(proxyScanError));
+         context.warningReporter(AgentErrorToRCC(proxyScanError));
       }
    }
    else
@@ -1988,6 +2041,18 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
       {
          InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
          TCPScanAddressRange(context.startAddress, context.endAddress, AGENT_LISTEN_PORT, InteractiveScanPortCallback, &pctx);
+      }
+
+      if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
+      {
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT, 0 };
+         TCPScanAddressRange(context.startAddress, context.endAddress, MODBUS_TCP_DEFAULT_PORT, InteractiveScanPortCallback, &pctx);
+      }
+
+      if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && !shouldCancel())
+      {
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT, 0 };
+         TCPScanAddressRange(context.startAddress, context.endAddress, ETHERNET_IP_DEFAULT_PORT, InteractiveScanPortCallback, &pctx);
       }
 
       for(int i = 0; (i < context.tcpPorts.size()) && !shouldCancel(); i++)

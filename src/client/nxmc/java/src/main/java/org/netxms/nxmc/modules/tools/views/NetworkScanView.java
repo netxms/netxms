@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -48,6 +49,7 @@ import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NetworkScanListener;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.NetworkScanResult;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.SnmpVersion;
@@ -55,6 +57,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
@@ -73,14 +76,16 @@ public class NetworkScanView extends View
 {
    private final I18n i18n = LocalizationHelper.getI18n(NetworkScanView.class);
 
-   private static final String[] COLUMN_NAMES = { "IP Address", "RTT (ms)", "Agent", "SNMP", "Open TCP ports", "Add status" };
-   private static final int[] COLUMN_WIDTHS = { 130, 80, 60, 80, 200, 200 };
+   private static final String[] COLUMN_NAMES = { "IP Address", "RTT (ms)", "Agent", "SNMP", "Modbus", "EtherNet/IP", "Open TCP ports", "Node creation status" };
+   private static final int[] COLUMN_WIDTHS = { 130, 80, 60, 80, 60, 80, 200, 200 };
    private static final int COLUMN_IP = 0;
    private static final int COLUMN_RTT = 1;
    private static final int COLUMN_AGENT = 2;
    private static final int COLUMN_SNMP = 3;
-   private static final int COLUMN_PORTS = 4;
-   private static final int COLUMN_ADD_STATUS = 5;
+   private static final int COLUMN_MODBUS = 4;
+   private static final int COLUMN_ETHERNET_IP = 5;
+   private static final int COLUMN_PORTS = 6;
+   private static final int COLUMN_ADD_STATUS = 7;
 
    private LabeledText startAddressEditor;
    private LabeledText endAddressEditor;
@@ -88,12 +93,15 @@ public class NetworkScanView extends View
    private ZoneSelector zoneSelector;
    private Button probeAgentButton;
    private Button probeSnmpButton;
+   private Button probeModbusButton;
+   private Button probeEtherNetIpButton;
    private Button scanButton;
    private SortableTableViewer viewer;
    private Label statusLabel;
 
    private boolean zoningEnabled;
    private volatile boolean scanInProgress;
+   private int scanZoneUIN;
 
    private final Map<String, ScanRow> rowIndex = new LinkedHashMap<>();
    private final List<ScanRow> rows = new ArrayList<>();
@@ -177,7 +185,7 @@ public class NetworkScanView extends View
       scanButton.addListener(SWT.Selection, e -> doScan());
 
       Composite probeBar = new Composite(searchBar, SWT.NONE);
-      GridLayout probeLayout = new GridLayout(2, false);
+      GridLayout probeLayout = new GridLayout(4, false);
       probeLayout.marginHeight = 0;
       probeLayout.marginWidth = 0;
       probeBar.setLayout(probeLayout);
@@ -192,6 +200,14 @@ public class NetworkScanView extends View
       probeSnmpButton = new Button(probeBar, SWT.CHECK);
       probeSnmpButton.setText(i18n.tr("Probe SNMP"));
       probeSnmpButton.setSelection(true);
+
+      probeModbusButton = new Button(probeBar, SWT.CHECK);
+      probeModbusButton.setText(i18n.tr("Probe Modbus/TCP"));
+      probeModbusButton.setSelection(false);
+
+      probeEtherNetIpButton = new Button(probeBar, SWT.CHECK);
+      probeEtherNetIpButton.setText(i18n.tr("Probe EtherNet/IP"));
+      probeEtherNetIpButton.setSelection(false);
 
       new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
@@ -355,6 +371,7 @@ public class NetworkScanView extends View
       }
 
       final int zoneUIN = (zoningEnabled && (zoneSelector != null)) ? zoneSelector.getZoneUIN() : 0;
+      scanZoneUIN = zoneUIN;
       final int[] tcpPorts = parseTcpPorts();
 
       int flags = 0;
@@ -362,6 +379,10 @@ public class NetworkScanView extends View
          flags |= NetworkScanResult.PROBE_AGENT;
       if (probeSnmpButton.getSelection())
          flags |= NetworkScanResult.PROBE_SNMP;
+      if (probeModbusButton.getSelection())
+         flags |= NetworkScanResult.PROBE_MODBUS;
+      if (probeEtherNetIpButton.getSelection())
+         flags |= NetworkScanResult.PROBE_ETHERNET_IP;
       final int scanFlags = flags;
 
       clearResults();
@@ -379,6 +400,13 @@ public class NetworkScanView extends View
                public void resultReceived(final NetworkScanResult result)
                {
                   runInUIThread(() -> handleResult(result));
+               }
+
+               @Override
+               public void scanCompletedWithWarning(final int rcc)
+               {
+                  final String message = RCC.getText(rcc, Locale.getDefault().getLanguage(), null);
+                  runInUIThread(() -> addMessage(MessageArea.WARNING, message));
                }
             };
             final int reported = session.scanNetworkRange(range, tcpPorts, scanFlags, listener);
@@ -470,7 +498,7 @@ public class NetworkScanView extends View
          return;
       final long parentId = selectedParents.get(0).getObjectId();
 
-      final int zoneUIN = (zoningEnabled && (zoneSelector != null)) ? zoneSelector.getZoneUIN() : 0;
+      final int zoneUIN = scanZoneUIN;
       final List<ScanRow> targets = new ArrayList<>();
       for(Iterator<?> it = selection.iterator(); it.hasNext(); )
          targets.add((ScanRow)it.next());
@@ -581,6 +609,10 @@ public class NetworkScanView extends View
                   return "";
                SnmpVersion v = r.getSnmpVersion();
                return (v != null) ? v.name() : "";
+            case COLUMN_MODBUS:
+               return r.isModbusDetected() ? i18n.tr("Yes") : "";
+            case COLUMN_ETHERNET_IP:
+               return r.isEtherNetIpDetected() ? i18n.tr("Yes") : "";
             case COLUMN_PORTS:
                int[] ports = r.getOpenTcpPorts();
                if ((ports == null) || (ports.length == 0))

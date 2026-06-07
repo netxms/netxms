@@ -796,6 +796,7 @@ enum SessionState
 #define RCC_2FA_SETUP_MANDATORY           ((uint32_t)187)
 #define RCC_TEMPLATE_EXCLUSION_CONFLICT   ((uint32_t)188)
 #define RCC_RADIUS_ACCESS_CHALLENGE       ((uint32_t)189)
+#define RCC_ZONE_PROXY_NOT_AVAILABLE      ((uint32_t)190)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -1363,6 +1364,8 @@ enum class MapInitialViewMode
 #define NSCAN_PROBE_SNMP           0x0002
 #define NSCAN_REPORT_UNREACHABLE   0x0004
 #define NSCAN_RESOLVE_HOSTNAMES    0x0008
+#define NSCAN_PROBE_MODBUS         0x0010
+#define NSCAN_PROBE_ETHERNET_IP    0x0020
 
 /**
  * Network range scan per-host result flags
@@ -1371,6 +1374,8 @@ enum class MapInitialViewMode
 #define NSCAN_HAS_AGENT            0x0002
 #define NSCAN_HAS_SNMP             0x0004
 #define NSCAN_HAS_TCP_PORT_OPEN    0x0008
+#define NSCAN_HAS_MODBUS           0x0010
+#define NSCAN_HAS_ETHERNET_IP      0x0020
 
 /**
  * Agent data cache modes

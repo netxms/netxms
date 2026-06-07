@@ -185,6 +185,8 @@ public:
    IntegerArray<uint16_t> tcpPorts;
    std::function<void(const InetAddress&, const InteractiveScanRecord&)> emitter;
    std::function<bool()> cancelCheck;
+   std::function<void(uint32_t)> errorReporter;
+   std::function<void(uint32_t)> warningReporter;
 
    InteractiveScanContext() : tcpPorts(0, 4)
    {

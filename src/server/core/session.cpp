@@ -17396,6 +17396,12 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
    };
    context.cancelCheck = [this]() { return isTerminated(); };
 
+   uint32_t scanErrorRcc = RCC_SUCCESS;
+   context.errorReporter = [&scanErrorRcc](uint32_t rcc) { scanErrorRcc = rcc; };
+
+   uint32_t scanWarningRcc = RCC_SUCCESS;
+   context.warningReporter = [&scanWarningRcc](uint32_t rcc) { scanWarningRcc = rcc; };
+
    writeAuditLog(AUDIT_NETWORK, true, 0,
          L"Network range scan started: %s - %s (zone=%d, %llu addresses, flags=0x%04x, %d TCP ports)",
          start.toString().cstr(), end.toString().cstr(), context.zoneUIN,
@@ -17409,9 +17415,18 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
    terminator.setEndOfSequence();
    sendMessage(terminator);
 
-   response.setField(VID_RCC, RCC_SUCCESS);
-   response.setField(VID_NUM_RECORDS, reportedHosts);
-   response.setField(VID_NUM_ELEMENTS, rangeSize);
+   if (scanErrorRcc != RCC_SUCCESS)
+   {
+      response.setField(VID_RCC, scanErrorRcc);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_NUM_RECORDS, reportedHosts);
+      response.setField(VID_NUM_ELEMENTS, rangeSize);
+      if (scanWarningRcc != RCC_SUCCESS)
+         response.setField(VID_WARNING_RCC, scanWarningRcc);
+   }
    sendMessage(response);
 
    debugPrintf(4, L"Network range scan finished: %u hosts reported across %u addresses%s", reportedHosts, rangeSize, isTerminated() ? L" (session terminating)" : L"");

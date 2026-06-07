@@ -15197,6 +15197,12 @@ public class NXCSession
             throw new NXCException(RCC.TIMEOUT);
          // Final confirmation will be sent by server only after final progress message
          NXCPMessage response = waitForRCC(msg.getMessageId());
+         if (listener != null)
+         {
+            int warningRcc = response.getFieldAsInt32(NXCPCodes.VID_WARNING_RCC);
+            if (warningRcc != RCC.SUCCESS)
+               listener.scanCompletedWithWarning(warningRcc);
+         }
          return response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
       }
       catch(Exception e)

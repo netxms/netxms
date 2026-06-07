@@ -35,12 +35,16 @@ public class NetworkScanResult
    public static final int PROBE_SNMP = 0x0002;
    public static final int REPORT_UNREACHABLE = 0x0004;
    public static final int RESOLVE_HOSTNAMES = 0x0008;
+   public static final int PROBE_MODBUS = 0x0010;
+   public static final int PROBE_ETHERNET_IP = 0x0020;
 
    // Per-host result flags (carried in VID_FLAGS)
    private static final int HOST_REACHABLE = 0x0001;
    private static final int HAS_AGENT = 0x0002;
    private static final int HAS_SNMP = 0x0004;
    private static final int HAS_TCP_PORT_OPEN = 0x0008;
+   private static final int HAS_MODBUS = 0x0010;
+   private static final int HAS_ETHERNET_IP = 0x0020;
 
    private final InetAddress address;
    private final int flags;
@@ -133,6 +137,22 @@ public class NetworkScanResult
    public boolean isSnmpDetected()
    {
       return (flags & HAS_SNMP) != 0;
+   }
+
+   /**
+    * @return true if a Modbus/TCP endpoint was detected on the host
+    */
+   public boolean isModbusDetected()
+   {
+      return (flags & HAS_MODBUS) != 0;
+   }
+
+   /**
+    * @return true if an EtherNet/IP endpoint was detected on the host
+    */
+   public boolean isEtherNetIpDetected()
+   {
+      return (flags & HAS_ETHERNET_IP) != 0;
    }
 
    /**

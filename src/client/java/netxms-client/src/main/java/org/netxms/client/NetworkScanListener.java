@@ -32,4 +32,15 @@ public interface NetworkScanListener
     * @param result the host record snapshot
     */
    void resultReceived(NetworkScanResult result);
+
+   /**
+    * Called once when the scan completes with a non-fatal warning (e.g. the zone
+    * proxy rejected some scan requests, so detection results may be incomplete).
+    * Not called when the scan completes without warnings.
+    *
+    * @param rcc request completion code describing the warning (see {@link org.netxms.client.constants.RCC})
+    */
+   default void scanCompletedWithWarning(int rcc)
+   {
+   }
 }

@@ -1734,6 +1734,7 @@ typedef struct
 #define VID_TRANSFER_ID             ((uint32_t)989)
 #define VID_MAP_CANVAS_TYPE         ((uint32_t)990)
 #define VID_MAP_INITIAL_VIEW_MODE   ((uint32_t)991)
+#define VID_WARNING_RCC             ((uint32_t)992)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
