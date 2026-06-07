@@ -25,6 +25,33 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.22 to 62.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_PENDING_DATABASE_UPGRADE, _T("SYS_PENDING_DATABASE_UPGRADE"),
+      EVENT_SEVERITY_WARNING, EF_LOG, _T("52a088b7-487f-413e-af37-5610f6a80f25"),
+      _T("Pending background database upgrade detected"),
+      _T("Generated on server startup when one or more background (online) database upgrade procedures are still pending.\r\n")
+      _T("Run \"nxdbmgr background-upgrade\" to complete the upgrade.")));
+
+   int ruleId = NextFreeEPPruleID();
+   TCHAR query[2048];
+   _sntprintf(query, 2048,
+      _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth) ")
+      _T("VALUES (%d,'ed8fe63b-70d1-49ef-a622-31e567fa101b',7944,'Generate alarm when background database upgrade is pending',")
+      _T("'%%m',1,'PENDING_DB_UPGRADE','',0,%d,0,0)"),
+      ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 2048, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_PENDING_DATABASE_UPGRADE);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 62.21 to 62.22
  */
 static bool H_UpgradeFromV21()
@@ -865,6 +892,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 62, 23, H_UpgradeFromV22 },
    { 21, 62, 22, H_UpgradeFromV21 },
    { 20, 62, 21, H_UpgradeFromV20 },
    { 19, 62, 20, H_UpgradeFromV19 },

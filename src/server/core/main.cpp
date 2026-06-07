@@ -1687,6 +1687,17 @@ retry_db_lock:
    g_flags |= AF_SERVER_INITIALIZED;
    s_initCompletedCondition.set();
    PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode);
+
+   // Warn if background (online) database upgrades are still pending
+   wchar_t pendingUpgrades[MAX_DB_STRING];
+   MetaDataReadStr(L"PendingOnlineUpgrades", pendingUpgrades, MAX_DB_STRING, L"");
+   Trim(pendingUpgrades);
+   if (pendingUpgrades[0] != 0)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, L"Background database upgrade(s) pending - run \"nxdbmgr background-upgrade\" to complete");
+      PostSystemEvent(EVENT_PENDING_DATABASE_UPGRADE, g_dwMgmtNode);
+   }
+
    RegenerateMaintenanceModeEvents();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
    return true;

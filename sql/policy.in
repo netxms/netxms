@@ -228,6 +228,10 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (53,'2620ee65-0ef5-4d28-9f45-14c19b34ff31',7944,'Generate alarm when SNMP trap is rejected due to credential mismatch',
         '%m',1,'SNMP_TRAP_AUTH_FAILURE_%i','',0,EVENT_ALARM_TIMEOUT,0,0);
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth)
+    VALUES (54,'ed8fe63b-70d1-49ef-a622-31e567fa101b',7944,'Generate alarm when background database upgrade is pending',
+        '%m',1,'PENDING_DB_UPGRADE','',0,EVENT_ALARM_TIMEOUT,0,0);
+
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);
@@ -295,4 +299,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (51,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (51,EVENT_NODE_UNREACHABLE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (52,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (53,EVENT_SNMP_TRAP_AUTH_FAILURE);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (54,EVENT_PENDING_DATABASE_UPGRADE);
 

@@ -2109,6 +2109,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) snmpVersion - SNMP version of the rejected trap ("1", "2c", or "3")' CONCAT CRLF CONCAT
 		'   5) trapOid - SNMP trap OID (may be empty if not available, e.g. on v3 authentication failure)'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_PENDING_DATABASE_UPGRADE, 'SYS_PENDING_DATABASE_UPGRADE', '52a088b7-487f-413e-af37-5610f6a80f25',
+		EVENT_SEVERITY_WARNING, 1,
+		'Pending background database upgrade detected',
+		'Generated on server startup when one or more background (online) database upgrade procedures are still pending.' CONCAT CRLF CONCAT
+		'Run "nxdbmgr background-upgrade" to complete the upgrade.'
+	);
 
 /*
 ** SNMP traps
