@@ -312,8 +312,6 @@
 #define ODF_HAS_TDATA_V5_TABLE             0x0020
 #define ODF_HAS_IDATA_1H_TABLE             0x0040
 #define ODF_HAS_IDATA_1D_TABLE             0x0080
-#define ODF_IDATA_V5_INDEXED               0x0100
-#define ODF_TDATA_V5_INDEXED               0x0200
 
 /**
  * Node runtime (dynamic) flags
