@@ -118,9 +118,46 @@ void InvalidateInstanceCache(uint32_t nodeId);
 void ShutdownCounterState();
 
 /**
+ * OTLP metric type as observed on the wire
+ */
+enum class OTLPMetricType
+{
+   GAUGE = 0,
+   SUM = 1,
+   HISTOGRAM = 2
+};
+
+/**
+ * Initialize per-node metric catalog (starts retention housekeeper)
+ */
+void InitMetricCatalog();
+
+/**
+ * Shutdown per-node metric catalog
+ */
+void ShutdownMetricCatalog();
+
+/**
+ * Record an observation of a metric (name, type, and attribute keys) for a node.
+ * Called from the ingest path; refreshes "last seen" timestamps. Attribute values
+ * are never stored - only the set of attribute key names.
+ */
+void RecordMetricObservation(uint32_t nodeId, const char *metricName, OTLPMetricType type, const std::map<std::string, std::string>& attributes);
+
+/**
  * Handler for OTLP metrics endpoint
  */
 int H_OtlpMetrics(Context *context);
+
+/**
+ * WebAPI handler for GET /v1/objects/{id}/otlp-metrics
+ */
+int H_ObjectOtlpMetrics(Context *context);
+
+/**
+ * Client session command handler for CMD_GET_OTLP_METRICS
+ */
+int H_OtlpClientCommand(uint32_t command, NXCPMessage *request, ClientSession *session);
 
 /**
  * Handler for OTLP logs endpoint

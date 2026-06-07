@@ -10572,6 +10572,35 @@ public class NXCSession
    }
 
    /**
+    * Get list of OTLP metrics observed by the server for given node. The server maintains an
+    * in-memory catalog of metric names, types, and attribute keys seen on the OTLP ingest
+    * stream; this is used to populate the OTLP metric selector when configuring a DCI.
+    *
+    * @param nodeId Node ID
+    * @return list of observed OTLP metrics (may be empty)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<OTLPMetric> getOTLPMetrics(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OTLP_METRICS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<OTLPMetric> list = new ArrayList<OTLPMetric>(count);
+      long baseId = NXCPCodes.VID_OTLP_METRIC_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         OTLPMetric metric = new OTLPMetric(response, baseId);
+         list.add(metric);
+         baseId += metric.getFieldCount();
+      }
+      return list;
+   }
+
+   /**
     * Get list of lists (enumerations) supported by agent running on given node.
     *
     * @param nodeId Node ID

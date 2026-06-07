@@ -128,10 +128,12 @@ void ShutdownCounterState()
 /**
  * Process a single NumberDataPoint for a gauge or non-monotonic sum
  */
-static void ProcessDirectValue(const shared_ptr<Node>& node, const char *metricName, const opentelemetry::proto::metrics::v1::NumberDataPoint& dp)
+static void ProcessDirectValue(const shared_ptr<Node>& node, const char *metricName, OTLPMetricType type, const opentelemetry::proto::metrics::v1::NumberDataPoint& dp)
 {
    std::map<std::string, std::string> attributes;
    ExtractDataPointAttributes(dp, attributes);
+
+   RecordMetricObservation(node->getId(), metricName, type, attributes);
 
    if (nxlog_get_debug_level_tag(DEBUG_TAG_OTLP) >= 8)
    {
@@ -152,6 +154,8 @@ static void ProcessMonotonicValue(const shared_ptr<Node>& node, const char *metr
 {
    std::map<std::string, std::string> attributes;
    ExtractDataPointAttributes(dp, attributes);
+
+   RecordMetricObservation(node->getId(), metricName, OTLPMetricType::SUM, attributes);
 
    shared_ptr<DCObject> dco = FindOTLPDci(node, metricName, attributes);
    if (dco == nullptr)
@@ -217,6 +221,12 @@ static void ProcessHistogramDataPoint(const shared_ptr<Node>& node, const char *
 {
    std::map<std::string, std::string> baseAttributes;
    ExtractDataPointAttributes(dp, baseAttributes);
+
+   // Catalog the source metric. The bucket decomposition adds a synthetic
+   // "otel.bucket" attribute downstream, so advertise it as a key here too.
+   std::map<std::string, std::string> catalogAttributes(baseAttributes);
+   catalogAttributes["otel.bucket"] = "";
+   RecordMetricObservation(node->getId(), metricName, OTLPMetricType::HISTOGRAM, catalogAttributes);
 
    uint64_t timeNano = dp.time_unix_nano();
 
@@ -294,7 +304,7 @@ static void ProcessMetricsForNode(const shared_ptr<Node>& node, const openteleme
          case opentelemetry::proto::metrics::v1::Metric::kGauge:
             for (int d = 0; d < metric.gauge().data_points_size(); d++)
             {
-               ProcessDirectValue(node, metricName, metric.gauge().data_points(d));
+               ProcessDirectValue(node, metricName, OTLPMetricType::GAUGE, metric.gauge().data_points(d));
             }
             break;
 
@@ -310,7 +320,7 @@ static void ProcessMetricsForNode(const shared_ptr<Node>& node, const openteleme
             {
                for (int d = 0; d < metric.sum().data_points_size(); d++)
                {
-                  ProcessDirectValue(node, metricName, metric.sum().data_points(d));
+                  ProcessDirectValue(node, metricName, OTLPMetricType::SUM, metric.sum().data_points(d));
                }
             }
             break;

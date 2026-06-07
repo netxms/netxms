@@ -545,6 +545,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_EVENT_FORWARDER = 0x020F;
    public static final int CMD_RENAME_EVENT_FORWARDER = 0x0210;
    public static final int CMD_GET_EVENT_FORWARDER_DRIVERS = 0x0211;
+   public static final int CMD_GET_OTLP_METRICS = 0x0212;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1680,4 +1681,5 @@ public class NXCPCodes
    public static final long VID_INCIDENT_LIST_BASE = 0x60000000L;
    public static final long VID_ACTIVITY_LIST_BASE = 0x61000000L;
    public static final long VID_COMMENT_LIST_BASE = 0x62000000L;
+   public static final long VID_OTLP_METRIC_LIST_BASE = 0x64000000L;
 }

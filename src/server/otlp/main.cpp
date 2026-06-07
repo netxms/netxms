@@ -35,6 +35,7 @@ static bool InitModule(Config *config)
 {
    InitMatchingEngine();
    InitInstanceDiscovery();
+   InitMetricCatalog();
 
    RouteBuilder("otlp-backend/v1/metrics")
       .POST(H_OtlpMetrics)
@@ -44,6 +45,10 @@ static bool InitModule(Config *config)
    RouteBuilder("otlp-backend/v1/logs")
       .POST(H_OtlpLogs)
       .acceptProtobuf()
+      .build();
+
+   RouteBuilder("v1/objects/:object-id/otlp-metrics")
+      .GET(H_ObjectOtlpMetrics)
       .build();
 
    RegisterOtlpEventForwarder();
@@ -59,6 +64,7 @@ static void ShutdownModule()
 {
    ShutdownCounterState();
    ShutdownInstanceDiscovery();
+   ShutdownMetricCatalog();
    ShutdownMatchingEngine();
    nxlog_debug_tag(DEBUG_TAG_OTLP, 1, L"OTLP receiver module shut down");
 }
@@ -72,6 +78,7 @@ extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
    wcscpy(module->name, L"OTLP");
    module->pfInitialize = InitModule;
    module->pfShutdown = ShutdownModule;
+   module->pfClientCommandHandler = H_OtlpClientCommand;
    return true;
 }
 

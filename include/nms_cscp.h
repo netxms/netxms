@@ -727,6 +727,7 @@ typedef struct
 #define CMD_DELETE_EVENT_FORWARDER        0x020F
 #define CMD_RENAME_EVENT_FORWARDER        0x0210
 #define CMD_GET_EVENT_FORWARDER_DRIVERS   0x0211
+#define CMD_GET_OTLP_METRICS              0x0212
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -2020,5 +2021,6 @@ typedef struct
 #define VID_INCIDENT_LIST_BASE      ((uint32_t)0x60000000)
 #define VID_COMMENT_LIST_BASE       ((uint32_t)0x62000000)
 #define VID_ACTIVITY_LIST_BASE      ((uint32_t)0x61000000)
+#define VID_OTLP_METRIC_LIST_BASE   ((uint32_t)0x64000000)
 
 #endif   /* _nms_cscp_h_ */

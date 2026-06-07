@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.21 to 62.22
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(CreateConfigParam(L"OTLP.MetricCatalogRetention", L"86400",
+      L"Retention time in seconds for observed OTLP metric names used by the metric selector. Metrics not seen within this window are dropped from the catalog.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 62.20 to 62.21
  */
 static bool H_UpgradeFromV20()
@@ -853,6 +865,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 62, 22, H_UpgradeFromV21 },
    { 20, 62, 21, H_UpgradeFromV20 },
    { 19, 62, 20, H_UpgradeFromV19 },
    { 18, 62, 19, H_UpgradeFromV18 },

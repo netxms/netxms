@@ -63,6 +63,7 @@ import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSmclpDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
@@ -518,6 +519,7 @@ public class General extends AbstractDCIPropertyPage
 		      (dataOrigin == DataOrigin.WEB_SERVICE) || 
             (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
 		      (dataOrigin == DataOrigin.SCRIPT) ||
+            (dataOrigin == DataOrigin.OTLP) ||
 		      (dataOrigin == DataOrigin.SMCLP));
 	}
 
@@ -789,6 +791,10 @@ public class General extends AbstractDCIPropertyPage
                      dlg = new SelectSmclpDlg(getShell(), sourceNode.getObjectId());
                   else
                      dlg = new SelectSmclpDlg(getShell(), dco.getNodeId());
+               break;
+            case OTLP:
+               if (!isTable)
+                  dlg = new SelectOtlpMetricDlg(getShell(), (sourceNode.getObjectId() != 0) ? sourceNode.getObjectId() : dco.getNodeId());
                break;
             default:
                dlg = null;

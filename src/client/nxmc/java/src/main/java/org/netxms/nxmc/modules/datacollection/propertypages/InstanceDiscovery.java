@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.Arrays;
+import java.util.List;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -31,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.OTLPMetric;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.snmp.SnmpObjectId;
@@ -40,6 +42,8 @@ import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentListDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpAttributeKeysDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
@@ -334,6 +338,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
          case DataCollectionObject.IDM_INTERNAL_TABLE:
          case DataCollectionObject.IDM_SCRIPT:
          case DataCollectionObject.IDM_WEB_SERVICE:
+         case DataCollectionObject.IDM_OTLP:
             return true;
          default:
             return false;
@@ -410,6 +415,44 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
             SelectWebServiceDlg dlg = new SelectWebServiceDlg(getShell(), false);
             if (dlg.open() == Window.OK)
                discoveryData.setText(dlg.getParameterDescription());
+            break;
+         }
+         case DataCollectionObject.IDM_OTLP:
+         {
+            SelectOtlpMetricDlg dlg = new SelectOtlpMetricDlg(getShell(), nodeId);
+            if (dlg.open() != Window.OK)
+               break;
+
+            OTLPMetric metric = dlg.getSelectedMetric();
+            discoveryData.setText(metric.getName());
+
+            List<String> attributeKeys = metric.getAttributeKeys();
+            if (!attributeKeys.isEmpty())
+            {
+               // Let the user pick which attribute keys form the instance key, pre-checking
+               // any that are already configured in the "Instance key attributes" field.
+               String current = instanceNameColumn.getText().trim();
+               List<String> currentKeys = current.isEmpty() ? null : Arrays.asList(current.split("\\s*,\\s*"));
+               SelectOtlpAttributeKeysDlg keysDlg = new SelectOtlpAttributeKeysDlg(getShell(), metric.getName(), attributeKeys, currentKeys);
+               if (keysDlg.open() == Window.OK)
+               {
+                  String selectedKeys = keysDlg.getSelectedKeysAsString();
+                  instanceNameColumn.setText(selectedKeys);
+
+                  // Offer a default name format built from the chosen keys if none is set yet.
+                  if (instanceNameFormat.getText().trim().isEmpty() && !selectedKeys.isEmpty())
+                  {
+                     StringBuilder format = new StringBuilder();
+                     for(String key : selectedKeys.split(","))
+                     {
+                        if (format.length() > 0)
+                           format.append(':');
+                        format.append("%{").append(key).append('}');
+                     }
+                     instanceNameFormat.setText(format.toString());
+                  }
+               }
+            }
             break;
          }
       }
