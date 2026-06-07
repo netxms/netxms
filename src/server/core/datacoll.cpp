@@ -709,6 +709,101 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 #define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
 
 /**
+ * Target number of rows to copy per v5 migration chunk. Chunking is done on item_id boundaries
+ * (using the item_id-leading index that v5 per-object tables always carry), so a chunk always
+ * contains complete DCIs and may slightly exceed this value when a single DCI holds more rows than
+ * the limit.
+ */
+#define V5_MIGRATION_CHUNK_SIZE   50000
+
+/**
+ * Migrate one v5 data table (idata or tdata) of given data collection target into the corresponding
+ * v6 table, then drop the v5 table. Rows are copied (never deleted) in chunks bounded by item_id
+ * ranges, advancing a cursor over item_id. Each chunk is a single auto-committed INSERT, which bounds
+ * transaction/WAL size while avoiding the I/O of deleting rows from a table that is dropped at the end.
+ * The copy is idempotent (rows already present in the target are skipped), so a migration interrupted
+ * by a server restart is simply restarted from the beginning on next start. Because every chunk
+ * boundary is an item_id, each (item_id, timestamp) key is fully contained in a single chunk, so
+ * within-chunk deduplication of the source is sufficient.
+ * Returns true if the table was fully migrated and dropped, false on error or shutdown.
+ */
+static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool tdata)
+{
+   uint32_t id = target->getId();
+   const wchar_t *prefix = tdata ? L"tdata" : L"idata";
+   const wchar_t *valueColumns = tdata ? L"tdata_value" : L"idata_value,raw_value";
+   const wchar_t *tsConv = V5TimestampToMs(tdata);
+   wchar_t query[2048];
+
+   uint32_t lastItem = 0;
+   while(!IsShutdownInProgress())
+   {
+      // Find the item_id at the chunk boundary: the V5_MIGRATION_CHUNK_SIZE-th not-yet-processed row
+      // in item_id order. The item_id>lastItem predicate lets the item_id index seek straight to the
+      // cursor position, so the probe stays O(chunk size) regardless of table size. If fewer rows
+      // remain, there is no boundary and the rest of the table is the final chunk.
+      if ((g_dbSyntax == DB_SYNTAX_MYSQL) || (g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_SQLITE))
+         nx_swprintf(query, 2048, L"SELECT item_id FROM %s_v5_%u WHERE item_id>%u ORDER BY item_id LIMIT 1 OFFSET %d",
+            prefix, id, lastItem, V5_MIGRATION_CHUNK_SIZE - 1);
+      else
+         nx_swprintf(query, 2048, L"SELECT item_id FROM %s_v5_%u WHERE item_id>%u ORDER BY item_id OFFSET %d ROWS FETCH NEXT 1 ROWS ONLY",
+            prefix, id, lastItem, V5_MIGRATION_CHUNK_SIZE - 1);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult == nullptr)
+         return false;
+      bool hasBoundary = (DBGetNumRows(hResult) > 0);
+      uint32_t boundaryItem = hasBoundary ? DBGetFieldULong(hResult, 0, 0) : 0;
+      DBFreeResult(hResult);
+
+      wchar_t rangeClause[96];
+      if (hasBoundary)
+         nx_swprintf(rangeClause, 96, L" WHERE item_id>%u AND item_id<=%u", lastItem, boundaryItem);
+      else
+         nx_swprintf(rangeClause, 96, L" WHERE item_id>%u", lastItem);
+
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MYSQL:
+            nx_swprintf(query, 2048,
+               L"INSERT IGNORE INTO %s_%u (item_id,%s_timestamp,%s) SELECT item_id,%s,%s FROM %s_v5_%u%s",
+               prefix, id, prefix, valueColumns, tsConv, valueColumns, prefix, id, rangeClause);
+            break;
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+            nx_swprintf(query, 2048,
+               L"INSERT INTO %s_%u (item_id,%s_timestamp,%s) SELECT item_id,%s,%s FROM %s_v5_%u%s ON CONFLICT DO NOTHING",
+               prefix, id, prefix, valueColumns, tsConv, valueColumns, prefix, id, rangeClause);
+            break;
+         default:
+            // Databases without an upsert/ignore clause: deduplicate the source within the chunk with
+            // ROW_NUMBER and skip rows already present in the target (restart-safe) with NOT EXISTS.
+            nx_swprintf(query, 2048,
+               L"INSERT INTO %s_%u (item_id,%s_timestamp,%s) SELECT item_id,%s_timestamp,%s FROM ("
+               L"SELECT item_id,%s AS %s_timestamp,%s,"
+               L"ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY %s_timestamp) AS rn"
+               L" FROM %s_v5_%u%s) sub WHERE rn=1 AND NOT EXISTS ("
+               L"SELECT 1 FROM %s_%u d WHERE d.item_id=sub.item_id AND d.%s_timestamp=sub.%s_timestamp)",
+               prefix, id, prefix, valueColumns, prefix, valueColumns,
+               tsConv, prefix, valueColumns, tsConv, prefix, prefix, id, rangeClause,
+               prefix, id, prefix, prefix);
+            break;
+      }
+
+      if (!DBQuery(hdb, query))
+         return false;
+
+      if (!hasBoundary)
+      {
+         // Whole table consumed in this final chunk
+         target->deleteV5DataTable(hdb, tdata, L"migration complete");
+         return true;
+      }
+      lastItem = boundaryItem;
+   }
+   return false;
+}
+
+/**
  * Migrate V5 data for given data collection target
  */
 static void MigrateV5Data(DataCollectionTarget *target)
@@ -718,138 +813,11 @@ static void MigrateV5Data(DataCollectionTarget *target)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   uint32_t id = target->getId();
-   wchar_t query[1024];
-
    if (target->hasV5IdataTable())
-   {
-      target->ensureV5Index(hdb, false);
-      if (DBBegin(hdb))
-      {
-         bool success = false;
-         nx_swprintf(query, 1024, L"SELECT max(idata_timestamp) FROM idata_v5_%u", id);
-         DB_RESULT hResult = DBSelect(hdb, query);
-         if (hResult != nullptr)
-         {
-            int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-            DBFreeResult(hResult);
+      MigrateV5DataTable(target, hdb, false);
 
-            if (maxTs == 0)
-            {
-               target->deleteV5DataTable(hdb, false, L"migration complete");
-               success = true;
-            }
-            else
-            {
-               int64_t batchStart = maxTs - 86400;
-               switch(g_dbSyntax)
-               {
-                  case DB_SYNTAX_MYSQL:
-                     nx_swprintf(query, 1024,
-                        L"INSERT IGNORE INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                        L" SELECT item_id,%s,idata_value,raw_value"
-                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT,
-                        id, V5TimestampToMs(false), id, batchStart);
-                     break;
-                  case DB_SYNTAX_PGSQL:
-                  case DB_SYNTAX_SQLITE:
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                        L" SELECT item_id,%s,idata_value,raw_value"
-                        L" FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
-                        L" ON CONFLICT DO NOTHING",
-                        id, V5TimestampToMs(false), id, batchStart);
-                     break;
-                  default:
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value)"
-                        L" SELECT item_id,idata_timestamp,idata_value,raw_value FROM ("
-                        L"    SELECT item_id,%s AS idata_timestamp,idata_value,raw_value,"
-                        L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY idata_timestamp) AS rn"
-                        L"    FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT
-                        L" ) sub WHERE rn=1",
-                        id, V5TimestampToMs(false), V5TimestampToMs(false), id, batchStart);
-                     break;
-               }
-               if (DBQuery(hdb, query))
-               {
-                  nx_swprintf(query, 1024, L"DELETE FROM idata_v5_%u WHERE idata_timestamp>" INT64_FMT, id, batchStart);
-                  success = DBQuery(hdb, query);
-               }
-            }
-         }
-
-         if (success)
-            DBCommit(hdb);
-         else
-            DBRollback(hdb);
-      }
-   }
-
-   if (target->hasV5TdataTable())
-   {
-      target->ensureV5Index(hdb, true);
-      if (DBBegin(hdb))
-      {
-         bool success = false;
-         nx_swprintf(query, 1024, L"SELECT max(tdata_timestamp) FROM tdata_v5_%u", id);
-         DB_RESULT hResult = DBSelect(hdb, query);
-         if (hResult != nullptr)
-         {
-            int64_t maxTs = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-            DBFreeResult(hResult);
-
-            if (maxTs == 0)
-            {
-               target->deleteV5DataTable(hdb, true, L"migration complete");
-               success = true;
-            }
-            else
-            {
-               int64_t batchStart = maxTs - 86400;
-               switch(g_dbSyntax)
-               {
-                  case DB_SYNTAX_MYSQL:
-                     nx_swprintf(query, 1024,
-                        L"INSERT IGNORE INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                        L" SELECT item_id,%s,tdata_value"
-                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT,
-                        id, V5TimestampToMs(true), id, batchStart);
-                     break;
-                  case DB_SYNTAX_PGSQL:
-                  case DB_SYNTAX_SQLITE:
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                        L" SELECT item_id,%s,tdata_value"
-                        L" FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
-                        L" ON CONFLICT DO NOTHING",
-                        id, V5TimestampToMs(true), id, batchStart);
-                     break;
-                  default:
-                     nx_swprintf(query, 1024,
-                        L"INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value)"
-                        L" SELECT item_id,tdata_timestamp,tdata_value FROM ("
-                        L"    SELECT item_id,%s AS tdata_timestamp,tdata_value,"
-                        L"    ROW_NUMBER() OVER (PARTITION BY item_id,%s ORDER BY tdata_timestamp) AS rn"
-                        L"    FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT
-                        L" ) sub WHERE rn=1",
-                        id, V5TimestampToMs(true), V5TimestampToMs(true), id, batchStart);
-                     break;
-               }
-               if (DBQuery(hdb, query))
-               {
-                  nx_swprintf(query, 1024, L"DELETE FROM tdata_v5_%u WHERE tdata_timestamp>" INT64_FMT, id, batchStart);
-                  success = DBQuery(hdb, query);
-               }
-            }
-         }
-
-         if (success)
-            DBCommit(hdb);
-         else
-            DBRollback(hdb);
-      }
-   }
+   if (!IsShutdownInProgress() && target->hasV5TdataTable())
+      MigrateV5DataTable(target, hdb, true);
 
    DBConnectionPoolReleaseConnection(hdb);
 }
@@ -861,9 +829,10 @@ static THREAD s_v5DataMigrationThread = INVALID_THREAD_HANDLE;
 
 /**
  * Background thread for managing migration of v5 data.
- * Each cycle processes one 1-day batch (newest first) for every eligible object, then sleeps.
- * Eligible objects within a cycle are processed in parallel across several pooled connections.
- * When a v5 table is fully emptied, it is dropped and the corresponding flag is cleared.
+ * Each eligible object is submitted to a pool of worker connections that fully drains its v5 data
+ * tables (copying rows in item_id-bounded chunks) and drops them when done. Objects are processed in
+ * parallel; a sweep that finds no remaining v5 tables ends the migration. An object whose migration
+ * failed (e.g. transient DB error) keeps its v5 flag and is retried on the next sweep.
  */
 static void V5DataMigrationManager()
 {

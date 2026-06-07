@@ -3002,7 +3002,6 @@ public:
    bool hasV5IdataTable() const { return (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE) != 0; }
    bool hasV5TdataTable() const { return (m_runtimeFlags & ODF_HAS_TDATA_V5_TABLE) != 0; }
    void deleteV5DataTable(DB_HANDLE hdb, bool tdata, const wchar_t *reason);
-   void ensureV5Index(DB_HANDLE hdb, bool tdata);
    void queueItemsForPolling();
    bool processNewDCValue(const shared_ptr<DCObject>& dco, Timestamp timestamp, const wchar_t *itemValue, const shared_ptr<Table>& tableValue, bool allowPastDataPoints);
    void scheduleItemDataCleanup(uint32_t dciId);
