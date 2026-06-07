@@ -10347,9 +10347,417 @@ static const struct
 };
 
 /**
- * Modify node from JSON document (WebAPI path). Handles the "polling" property
- * group; all other fields are delegated to the base class implementation.
- * Runs under the property lock (see NetObj::modifyFromJSON).
+ * Symbolic names for SNMP versions used by the "snmp" property group (WebAPI).
+ */
+static const char *SnmpVersionToName(SNMP_Version version)
+{
+   switch(version)
+   {
+      case SNMP_VERSION_1:
+         return "1";
+      case SNMP_VERSION_2C:
+         return "2c";
+      case SNMP_VERSION_3:
+         return "3";
+      default:
+         return "default";
+   }
+}
+
+/**
+ * Parse SNMP version from symbolic name. Returns false on unknown name.
+ */
+static bool SnmpVersionFromName(const char *name, SNMP_Version *version)
+{
+   if (!strcmp(name, "1"))
+      *version = SNMP_VERSION_1;
+   else if (!strcmp(name, "2c"))
+      *version = SNMP_VERSION_2C;
+   else if (!strcmp(name, "3"))
+      *version = SNMP_VERSION_3;
+   else if (!strcmp(name, "default"))
+      *version = SNMP_VERSION_DEFAULT;
+   else
+      return false;
+   return true;
+}
+
+/**
+ * Symbolic names for SNMP v3 authentication methods (index = enum value).
+ */
+static const char *s_snmpAuthMethodNames[] = { "NONE", "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" };
+
+/**
+ * Symbolic names for SNMP v3 encryption methods (index = enum value).
+ */
+static const char *s_snmpPrivMethodNames[] = { "NONE", "DES", "AES-128", "AES-192", "AES-256" };
+
+static const char *SnmpAuthMethodToName(SNMP_AuthMethod method)
+{
+   return ((method >= SNMP_AUTH_NONE) && (method <= SNMP_AUTH_SHA512)) ? s_snmpAuthMethodNames[method] : "NONE";
+}
+
+static bool SnmpAuthMethodFromName(const char *name, SNMP_AuthMethod *method)
+{
+   for(size_t i = 0; i < sizeof(s_snmpAuthMethodNames) / sizeof(char*); i++)
+      if (!stricmp(name, s_snmpAuthMethodNames[i]))
+      {
+         *method = static_cast<SNMP_AuthMethod>(i);
+         return true;
+      }
+   return false;
+}
+
+static const char *SnmpPrivMethodToName(SNMP_EncryptionMethod method)
+{
+   return ((method >= SNMP_ENCRYPT_NONE) && (method <= SNMP_ENCRYPT_AES_256)) ? s_snmpPrivMethodNames[method] : "NONE";
+}
+
+static bool SnmpPrivMethodFromName(const char *name, SNMP_EncryptionMethod *method)
+{
+   for(size_t i = 0; i < sizeof(s_snmpPrivMethodNames) / sizeof(char*); i++)
+      if (!stricmp(name, s_snmpPrivMethodNames[i]))
+      {
+         *method = static_cast<SNMP_EncryptionMethod>(i);
+         return true;
+      }
+   return false;
+}
+
+/**
+ * Symbolic names for agent DCI cache mode and protocol compression mode.
+ */
+static const char *AgentCacheModeToName(int16_t mode)
+{
+   switch(mode)
+   {
+      case AGENT_CACHE_ON:
+         return "on";
+      case AGENT_CACHE_OFF:
+         return "off";
+      default:
+         return "default";
+   }
+}
+
+static bool AgentCacheModeFromName(const char *name, int16_t *mode)
+{
+   if (!stricmp(name, "default"))
+      *mode = AGENT_CACHE_DEFAULT;
+   else if (!stricmp(name, "on"))
+      *mode = AGENT_CACHE_ON;
+   else if (!stricmp(name, "off"))
+      *mode = AGENT_CACHE_OFF;
+   else
+      return false;
+   return true;
+}
+
+static const char *AgentCompressionModeToName(int16_t mode)
+{
+   switch(mode)
+   {
+      case NODE_AGENT_COMPRESSION_ENABLED:
+         return "enabled";
+      case NODE_AGENT_COMPRESSION_DISABLED:
+         return "disabled";
+      default:
+         return "default";
+   }
+}
+
+static bool AgentCompressionModeFromName(const char *name, int16_t *mode)
+{
+   if (!stricmp(name, "default"))
+      *mode = NODE_AGENT_COMPRESSION_DEFAULT;
+   else if (!stricmp(name, "enabled"))
+      *mode = NODE_AGENT_COMPRESSION_ENABLED;
+   else if (!stricmp(name, "disabled"))
+      *mode = NODE_AGENT_COMPRESSION_DISABLED;
+   else
+      return false;
+   return true;
+}
+
+/**
+ * Apply SNMP credential fields (authName, authMethod, privMethod, authPassword,
+ * privPassword) from a JSON object onto a security context in merge-patch fashion.
+ * The context's security model must already be set, as it selects whether authName
+ * is stored as the community string (v1/v2c) or the USM user name (v3). Sets
+ * *changed to true if any field was applied. Returns an RCC_* code.
+ */
+static uint32_t ApplySnmpCredentialFields(json_t *json, SNMP_SecurityContext *security, bool *changed)
+{
+   json_t *value = json_object_get(json, "authName");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      const char *authName = json_is_string(value) ? json_string_value(value) : "";
+      if (security->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+         security->setUserName(authName);
+      else
+         security->setCommunity(authName);
+      *changed = true;
+   }
+
+   value = json_object_get(json, "authMethod");
+   if (value != nullptr)
+   {
+      SNMP_AuthMethod method;
+      if (!json_is_string(value) || !SnmpAuthMethodFromName(json_string_value(value), &method))
+         return RCC_INVALID_ARGUMENT;
+      security->setAuthMethod(method);
+      *changed = true;
+   }
+
+   value = json_object_get(json, "privMethod");
+   if (value != nullptr)
+   {
+      SNMP_EncryptionMethod method;
+      if (!json_is_string(value) || !SnmpPrivMethodFromName(json_string_value(value), &method))
+         return RCC_INVALID_ARGUMENT;
+      security->setPrivMethod(method);
+      *changed = true;
+   }
+
+   value = json_object_get(json, "authPassword");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      security->setAuthPassword(json_is_string(value) ? json_string_value(value) : "");
+      *changed = true;
+   }
+
+   value = json_object_get(json, "privPassword");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      security->setPrivPassword(json_is_string(value) ? json_string_value(value) : "");
+      *changed = true;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Apply the "snmp" property group from a JSON document (WebAPI path). Mirrors the
+ * SNMP-related fields of Node::modifyFromMessageInternal. Runs under the property
+ * lock. Returns an RCC_* code.
+ */
+uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
+{
+   if (!json_is_object(snmp))
+      return RCC_INVALID_ARGUMENT;
+
+   bool credentialsChanged = false;
+
+   // Version must be applied first: it selects the security model (community vs USM)
+   // and therefore where the "authName" field below is stored.
+   json_t *value = json_object_get(snmp, "version");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      SNMP_Version version;
+      if (!SnmpVersionFromName(json_string_value(value), &version))
+         return RCC_INVALID_ARGUMENT;
+      SNMP_Version minVersion = SNMP_VersionFromInt(
+         getCustomAttributeAsUInt32(L"SysConfig:SNMP.MinVersion", static_cast<uint32_t>(g_snmpMinVersion)));
+      if (version < minVersion)
+         version = minVersion;
+      m_snmpVersion = version;
+      m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+      credentialsChanged = true;
+   }
+
+   value = json_object_get(snmp, "port");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_snmpPort = static_cast<uint16_t>(json_integer_value(value));
+   }
+
+   uint32_t rcc = ApplySnmpCredentialFields(snmp, m_snmpSecurity, &credentialsChanged);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   value = json_object_get(snmp, "contextName");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      m_snmpSecurity->setContextName(json_is_string(value) ? json_string_value(value) : "");
+   }
+
+   if (credentialsChanged && (m_snmpVersion == SNMP_VERSION_3))
+      m_snmpSecurity->recalculateKeys();
+
+   value = json_object_get(snmp, "codepage");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      strlcpy(m_snmpCodepage, json_is_string(value) ? json_string_value(value) : "", sizeof(m_snmpCodepage));
+   }
+
+   value = json_object_get(snmp, "proxy");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      uint32_t oldProxy = m_snmpProxy;
+      m_snmpProxy = static_cast<uint32_t>(json_integer_value(value));
+      if (oldProxy != m_snmpProxy)
+         ThreadPoolExecute(g_mainThreadPool, this, &Node::onSnmpProxyChange, oldProxy);
+   }
+
+   value = json_object_get(snmp, "settingsLocked");
+   if (value != nullptr)
+   {
+      if (!json_is_boolean(value))
+         return RCC_INVALID_ARGUMENT;
+      updateFlags(json_is_true(value) ? NF_SNMP_SETTINGS_LOCKED : 0, NF_SNMP_SETTINGS_LOCKED);
+   }
+
+   // Separate SNMP trap credentials. JSON null reverts to using the polling
+   // credentials; a JSON object is merge-patched onto the trap credentials,
+   // creating them if they did not exist yet.
+   json_t *trap = json_object_get(snmp, "trap");
+   if (trap != nullptr)
+   {
+      if (json_is_null(trap))
+      {
+         delete_and_null(m_snmpTrapSecurity);
+      }
+      else if (json_is_object(trap))
+      {
+         bool newTrapSecurity = (m_snmpTrapSecurity == nullptr);
+         if (newTrapSecurity)
+         {
+            m_snmpTrapSecurity = new SNMP_SecurityContext();
+            m_snmpTrapVersion = SNMP_VERSION_2C;
+         }
+
+         // Version selects the security model (and therefore the meaning of authName)
+         value = json_object_get(trap, "version");
+         if (value != nullptr)
+         {
+            SNMP_Version trapVersion;
+            if (!json_is_string(value) || !SnmpVersionFromName(json_string_value(value), &trapVersion))
+               return RCC_INVALID_ARGUMENT;
+            m_snmpTrapVersion = trapVersion;
+         }
+         if ((value != nullptr) || newTrapSecurity)
+            m_snmpTrapSecurity->setSecurityModel((m_snmpTrapVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+
+         bool trapCredentialsChanged = false;
+         rcc = ApplySnmpCredentialFields(trap, m_snmpTrapSecurity, &trapCredentialsChanged);
+         if (rcc != RCC_SUCCESS)
+            return rcc;
+
+         if (m_snmpTrapVersion == SNMP_VERSION_3)
+            m_snmpTrapSecurity->recalculateKeys();
+      }
+      else
+      {
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   // Reset SYS_SNMP_TRAP_AUTH_FAILURE rate-limit timer whenever SNMP credentials change,
+   // so the next mismatched trap after a credentials update fires an event immediately.
+   if (credentialsChanged || (trap != nullptr))
+      m_lastSnmpTrapAuthFailureEventTime = 0;
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Apply the "agent" property group from a JSON document (WebAPI path). Mirrors the
+ * agent-related fields of Node::modifyFromMessageInternal. Runs under the property
+ * lock. Returns an RCC_* code.
+ */
+uint32_t Node::modifyJsonAgentConfig(json_t *agent)
+{
+   if (!json_is_object(agent))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *value = json_object_get(agent, "port");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_agentPort = static_cast<uint16_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(agent, "proxy");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      m_agentProxy = static_cast<uint32_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(agent, "sharedSecret");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      utf8_to_wchar(json_is_string(value) ? json_string_value(value) : "", -1, m_agentSecret, MAX_SECRET_LENGTH);
+      m_agentSecret[MAX_SECRET_LENGTH - 1] = 0;
+   }
+
+   value = json_object_get(agent, "cacheMode");
+   if (value != nullptr)
+   {
+      int16_t mode;
+      if (!json_is_string(value) || !AgentCacheModeFromName(json_string_value(value), &mode))
+         return RCC_INVALID_ARGUMENT;
+      m_agentCacheMode = mode;
+   }
+
+   value = json_object_get(agent, "compressionMode");
+   if (value != nullptr)
+   {
+      int16_t mode;
+      if (!json_is_string(value) || !AgentCompressionModeFromName(json_string_value(value), &mode))
+         return RCC_INVALID_ARGUMENT;
+      m_agentCompressionMode = mode;
+   }
+
+   uint32_t setFlags = 0, mask = 0;
+   value = json_object_get(agent, "forceEncryption");
+   if (value != nullptr)
+   {
+      if (!json_is_boolean(value))
+         return RCC_INVALID_ARGUMENT;
+      mask |= NF_FORCE_ENCRYPTION;
+      if (json_is_true(value))
+         setFlags |= NF_FORCE_ENCRYPTION;
+   }
+   value = json_object_get(agent, "tunnelOnly");
+   if (value != nullptr)
+   {
+      if (!json_is_boolean(value))
+         return RCC_INVALID_ARGUMENT;
+      mask |= NF_AGENT_OVER_TUNNEL_ONLY;
+      if (json_is_true(value))
+         setFlags |= NF_AGENT_OVER_TUNNEL_ONLY;
+   }
+   if (mask != 0)
+      updateFlags(setFlags, mask);
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify node from JSON document (WebAPI path). Handles the "polling", "snmp" and
+ * "agent" property groups; all other fields are delegated to the base class
+ * implementation. Runs under the property lock (see NetObj::modifyFromJSON).
  */
 uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
 {
@@ -10412,6 +10820,22 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          if (mask != 0)
             updateFlags(setFlags, mask);
       }
+   }
+
+   json_t *snmp = json_object_get(json, "snmp");
+   if (snmp != nullptr)
+   {
+      uint32_t rcc = modifyJsonSnmpConfig(snmp);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
+
+   json_t *agent = json_object_get(json, "agent");
+   if (agent != nullptr)
+   {
+      uint32_t rcc = modifyJsonAgentConfig(agent);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
    }
 
    return super::modifyFromJSONInternal(json, session);
@@ -14639,6 +15063,97 @@ static FlagNameMapping s_stateMapping[] =
 };
 
 /**
+ * Serialize the node polling property group as a JSON object. This is the shape
+ * returned by GET /v1/objects/:id/polling, accepted by PATCH /v1/objects/:id/polling,
+ * and embedded as the "polling" key by toJson(). Locks object properties internally.
+ */
+json_t *Node::pollingConfigToJson()
+{
+   json_t *polling = json_object();
+   lockProperties();
+   json_object_set_new(polling, "pollerNode", json_integer(m_pollerNode));
+   json_object_set_new(polling, "requiredPollCount", json_integer(m_requiredPollCount));
+   json_object_set_new(polling, "expectedCapabilities", json_integer(m_expectedCapabilities));
+   json_t *pollFlags = json_object();
+   for(const auto& f : s_nodePollFlags)
+      json_object_set_new(pollFlags, f.key, json_boolean((m_flags & f.bit) != 0));
+   json_object_set_new(polling, "flags", pollFlags);
+   unlockProperties();
+   return polling;
+}
+
+/**
+ * Serialize the node SNMP communication property group as a JSON object. This is the
+ * shape returned by GET /v1/objects/:id/snmp, accepted by PATCH /v1/objects/:id/snmp,
+ * and embedded as the "snmp" key by toJson(). Credential passwords are included only
+ * when includeSensitiveData is set. Locks object properties internally.
+ */
+json_t *Node::snmpConfigToJson(bool includeSensitiveData)
+{
+   json_t *snmp = json_object();
+   lockProperties();
+   json_object_set_new(snmp, "version", json_string(SnmpVersionToName(m_snmpVersion)));
+   json_object_set_new(snmp, "port", json_integer(m_snmpPort));
+   json_object_set_new(snmp, "proxy", json_integer(m_snmpProxy));
+   json_object_set_new(snmp, "codepage", json_string_a(m_snmpCodepage));
+   json_object_set_new(snmp, "settingsLocked", json_boolean((m_flags & NF_SNMP_SETTINGS_LOCKED) != 0));
+   if (m_snmpSecurity != nullptr)
+   {
+      json_object_set_new(snmp, "authName", json_string_a(m_snmpSecurity->getAuthName()));
+      json_object_set_new(snmp, "authMethod", json_string(SnmpAuthMethodToName(m_snmpSecurity->getAuthMethod())));
+      json_object_set_new(snmp, "privMethod", json_string(SnmpPrivMethodToName(m_snmpSecurity->getPrivMethod())));
+      json_object_set_new(snmp, "contextName", json_string_a(CHECK_NULL_EX_A(m_snmpSecurity->getContextName())));
+      if (includeSensitiveData)
+      {
+         json_object_set_new(snmp, "authPassword", json_string_a(m_snmpSecurity->getAuthPassword()));
+         json_object_set_new(snmp, "privPassword", json_string_a(m_snmpSecurity->getPrivPassword()));
+      }
+   }
+   if (m_snmpTrapSecurity != nullptr)
+   {
+      json_t *trap = json_object();
+      json_object_set_new(trap, "version", json_string(SnmpVersionToName(m_snmpTrapVersion)));
+      json_object_set_new(trap, "authName", json_string_a(m_snmpTrapSecurity->getAuthName()));
+      json_object_set_new(trap, "authMethod", json_string(SnmpAuthMethodToName(m_snmpTrapSecurity->getAuthMethod())));
+      json_object_set_new(trap, "privMethod", json_string(SnmpPrivMethodToName(m_snmpTrapSecurity->getPrivMethod())));
+      if (includeSensitiveData)
+      {
+         json_object_set_new(trap, "authPassword", json_string_a(m_snmpTrapSecurity->getAuthPassword()));
+         json_object_set_new(trap, "privPassword", json_string_a(m_snmpTrapSecurity->getPrivPassword()));
+      }
+      json_object_set_new(snmp, "trap", trap);
+   }
+   else
+   {
+      json_object_set_new(snmp, "trap", json_null());
+   }
+   unlockProperties();
+   return snmp;
+}
+
+/**
+ * Serialize the node agent communication property group as a JSON object. This is the
+ * shape returned by GET /v1/objects/:id/agent, accepted by PATCH /v1/objects/:id/agent,
+ * and embedded as the "agent" key by toJson(). The shared secret is included only when
+ * includeSensitiveData is set. Locks object properties internally.
+ */
+json_t *Node::agentConfigToJson(bool includeSensitiveData)
+{
+   json_t *agent = json_object();
+   lockProperties();
+   json_object_set_new(agent, "port", json_integer(m_agentPort));
+   json_object_set_new(agent, "proxy", json_integer(m_agentProxy));
+   json_object_set_new(agent, "cacheMode", json_string(AgentCacheModeToName(m_agentCacheMode)));
+   json_object_set_new(agent, "compressionMode", json_string(AgentCompressionModeToName(m_agentCompressionMode)));
+   json_object_set_new(agent, "forceEncryption", json_boolean((m_flags & NF_FORCE_ENCRYPTION) != 0));
+   json_object_set_new(agent, "tunnelOnly", json_boolean((m_flags & NF_AGENT_OVER_TUNNEL_ONLY) != 0));
+   if (includeSensitiveData)
+      json_object_set_new(agent, "sharedSecret", json_string_t(m_agentSecret));
+   unlockProperties();
+   return agent;
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Node::toJson(bool includeSensitiveData)
@@ -14660,21 +15175,8 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
    json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
-   json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
-   json_object_set_new(root, "agentPort", json_integer(m_agentPort));
-   json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));
-   json_object_set_new(root, "agentCompressionMode", json_integer(m_agentCompressionMode));
-   if (includeSensitiveData)
-      json_object_set_new(root, "agentSecret", json_string_t(m_agentSecret));
-   json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
-   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "useIfXTable", json_integer(m_nUseIfXTable));
-   if (includeSensitiveData)
-      json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != nullptr) ? m_snmpSecurity->toJson(true) : json_object());
-   json_object_set_new(root, "snmpTrapVersion", json_integer(m_snmpTrapVersion));
-   if (includeSensitiveData)
-      json_object_set_new(root, "snmpTrapSecurity", (m_snmpTrapSecurity != nullptr) ? m_snmpTrapSecurity->toJson(true) : json_object());
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));
    json_object_set_new(root, "agentPlatformName", json_string_t(m_agentPlatformName));
@@ -14687,21 +15189,7 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "driverName", json_string_t(m_driver->getName()));
    json_object_set_new(root, "downSince", json_time_string(m_downSince));
    json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
-   json_object_set_new(root, "pollerNodeId", json_integer(m_pollerNode));
 
-   // Polling property group (round-trippable with WebAPI PATCH /polling)
-   json_t *polling = json_object();
-   json_object_set_new(polling, "pollerNode", json_integer(m_pollerNode));
-   json_object_set_new(polling, "requiredPollCount", json_integer(m_requiredPollCount));
-   json_object_set_new(polling, "expectedCapabilities", json_integer(m_expectedCapabilities));
-   json_t *pollFlags = json_object();
-   for(const auto& f : s_nodePollFlags)
-      json_object_set_new(pollFlags, f.key, json_boolean((m_flags & f.bit) != 0));
-   json_object_set_new(polling, "flags", pollFlags);
-   json_object_set_new(root, "polling", polling);
-
-   json_object_set_new(root, "agentProxyNodeId", json_integer(m_agentProxy));
-   json_object_set_new(root, "snmpProxyNodeId", json_integer(m_snmpProxy));
    json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
    char baseBridgeAddrText[64];
@@ -14742,6 +15230,12 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    unlockProperties();
+
+   // Polling, SNMP and agent property groups (round-trippable with the matching
+   // GET / PATCH /v1/objects/:id/polling, /snmp and /agent sub-resources)
+   json_object_set_new(root, "polling", pollingConfigToJson());
+   json_object_set_new(root, "snmp", snmpConfigToJson(includeSensitiveData));
+   json_object_set_new(root, "agent", agentConfigToJson(includeSensitiveData));
 
    json_t *decodedChassisPlacement = getChassisPlacement();
    if (decodedChassisPlacement != nullptr)

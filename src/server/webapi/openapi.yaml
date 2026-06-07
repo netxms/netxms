@@ -2621,6 +2621,39 @@ paths:
       tags:
         - Objects
   /v1/objects/{object-id}/polling:
+    get:
+      operationId: getObjectPolling
+      summary: Get node polling configuration
+      description: |
+        Return the node's polling settings (the same shape accepted by the matching PATCH).
+
+        This property group applies to Node objects only; requesting it for any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Polling configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollingConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
     patch:
       operationId: updateObjectPolling
       summary: Update node polling configuration
@@ -2644,71 +2677,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: false
-              properties:
-                pollerNode:
-                  type: integer
-                  description: ID of the node used for polling, or 0 to poll from the server. Must reference a node object.
-                requiredPollCount:
-                  type: integer
-                  description: Number of consecutive polls required before a status change is registered.
-                expectedCapabilities:
-                  type: integer
-                  description: Expected capabilities bitmask.
-                flags:
-                  type: object
-                  additionalProperties: false
-                  description: Poll-type and per-protocol disable flags. Only present keys are changed.
-                  properties:
-                    disableAgent:
-                      type: boolean
-                      description: Disable usage of NetXMS agent for all polls.
-                    disableSNMP:
-                      type: boolean
-                      description: Disable usage of SNMP for all polls.
-                    disableICMP:
-                      type: boolean
-                      description: Disable usage of ICMP pings for status polling.
-                    disableSSH:
-                      type: boolean
-                      description: Disable SSH usage for all polls.
-                    disableVNC:
-                      type: boolean
-                      description: Disable VNC detection.
-                    disableSMCLPProperties:
-                      type: boolean
-                      description: Disable reading of SM-CLP available properties metadata.
-                    disableEtherNetIP:
-                      type: boolean
-                      description: Disable usage of EtherNet/IP for all polls.
-                    disableModbus:
-                      type: boolean
-                      description: Disable usage of Modbus for all polls.
-                    disable8021xStatusPoll:
-                      type: boolean
-                      description: Disable 802.1x port state checking during status poll.
-                    disableRoutePoll:
-                      type: boolean
-                      description: Disable routing table polling.
-                    disableTopologyPoll:
-                      type: boolean
-                      description: Disable topology polling.
-                    disableDiscoveryPoll:
-                      type: boolean
-                      description: Disable network discovery polling.
-                    disablePerfCount:
-                      type: boolean
-                      description: Disable reading of Windows performance counters metadata.
-                    disableStatusPoll:
-                      type: boolean
-                      description: Disable status polling.
-                    disableConfigurationPoll:
-                      type: boolean
-                      description: Disable configuration polling.
-                    disableDataCollection:
-                      type: boolean
-                      description: Disable data collection.
+              $ref: '#/components/schemas/PollingConfig'
       responses:
         '200':
           description: Polling configuration updated; full updated object returned.
@@ -2794,6 +2763,176 @@ paths:
                 $ref: '#/components/schemas/ObjectDetails'
         '400':
           description: Malformed request body, filter script compilation failure, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/snmp:
+    get:
+      operationId: getObjectSnmpConfig
+      summary: Get node SNMP communication configuration
+      description: |
+        Return the node's SNMP communication settings (the same shape accepted by the
+        matching PATCH). Credential passwords (`authPassword`, `privPassword`, and their
+        `trap` counterparts) are included only when the caller has modify or read-credentials
+        access to the object.
+
+        This property group applies to Node objects only; requesting it for any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: SNMP communication configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnmpConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectSnmpConfig
+      summary: Update node SNMP communication configuration
+      description: |
+        Update the node's SNMP communication settings: protocol version, UDP port, proxy
+        node, codepage, the "prevent automatic SNMP configuration changes" lock, the polling
+        credentials, and (optionally) separate SNMP trap reception credentials. Merge-patch
+        semantics: any subset of fields can be sent; omitted fields are left unchanged.
+
+        `authName` holds the community string for SNMP v1/v2c and the USM user name for SNMP
+        v3. When `version` is present it is applied first (so `authName` is stored in the
+        correct slot) and is clamped up to the server-wide minimum SNMP version. The v3
+        `authMethod`, `privMethod`, `authPassword` and `privPassword` fields are only
+        meaningful for SNMP v3.
+
+        The `trap` object configures separate credentials for received SNMP traps and is
+        itself merge-patched (creating the trap credentials if they did not exist yet);
+        sending `trap: null` reverts to using the polling credentials. `authPassword` and
+        `privPassword` are write-only and are never returned by GET unless sensitive data is
+        explicitly requested.
+
+        This property group applies to Node objects only; sending it to any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnmpConfig'
+      responses:
+        '200':
+          description: SNMP configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/agent:
+    get:
+      operationId: getObjectAgentConfig
+      summary: Get node agent communication configuration
+      description: |
+        Return the node's NetXMS agent communication settings (the same shape accepted by the
+        matching PATCH). The `sharedSecret` is included only when the caller has modify or
+        read-credentials access to the object.
+
+        This property group applies to Node objects only; requesting it for any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Agent communication configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectAgentConfig
+      summary: Update node agent communication configuration
+      description: |
+        Update the node's NetXMS agent communication settings: TCP port, proxy node, shared
+        secret, the force-encryption and agent-over-tunnel-only flags, the agent DCI cache
+        mode and the protocol compression mode. Merge-patch semantics: any subset of fields
+        can be sent; omitted fields are left unchanged. `sharedSecret` is write-only and is
+        never returned by GET unless sensitive data is explicitly requested.
+
+        This property group applies to Node objects only; sending it to any other object
+        class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentConfig'
+      responses:
+        '200':
+          description: Agent configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
         '401':
           description: Unauthorized
         '403':
@@ -9246,6 +9385,196 @@ components:
         sourceObject:
           type: integer
           description: ID of the object an inherited attribute originates from; 0 if defined directly on this object.
+    PollingConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Polling property group for a node. Returned by GET /v1/objects/{id}/polling and
+        embedded as `ObjectDetails.polling`; accepted by PATCH /v1/objects/{id}/polling with
+        merge-patch semantics (omitted fields are left unchanged). Within the `flags` object
+        only the named booleans that are present are modified; the rest are preserved.
+      properties:
+        pollerNode:
+          type: integer
+          description: ID of the node used for polling, or 0 to poll from the server. Must reference a node object.
+        requiredPollCount:
+          type: integer
+          description: Number of consecutive polls required before a status change is registered.
+        expectedCapabilities:
+          type: integer
+          description: Expected capabilities bitmask.
+        flags:
+          type: object
+          additionalProperties: false
+          description: Poll-type and per-protocol disable flags. Only present keys are changed.
+          properties:
+            disableAgent:
+              type: boolean
+              description: Disable usage of NetXMS agent for all polls.
+            disableSNMP:
+              type: boolean
+              description: Disable usage of SNMP for all polls.
+            disableICMP:
+              type: boolean
+              description: Disable usage of ICMP pings for status polling.
+            disableSSH:
+              type: boolean
+              description: Disable SSH usage for all polls.
+            disableVNC:
+              type: boolean
+              description: Disable VNC detection.
+            disableSMCLPProperties:
+              type: boolean
+              description: Disable reading of SM-CLP available properties metadata.
+            disableEtherNetIP:
+              type: boolean
+              description: Disable usage of EtherNet/IP for all polls.
+            disableModbus:
+              type: boolean
+              description: Disable usage of Modbus for all polls.
+            disable8021xStatusPoll:
+              type: boolean
+              description: Disable 802.1x port state checking during status poll.
+            disableRoutePoll:
+              type: boolean
+              description: Disable routing table polling.
+            disableTopologyPoll:
+              type: boolean
+              description: Disable topology polling.
+            disableDiscoveryPoll:
+              type: boolean
+              description: Disable network discovery polling.
+            disablePerfCount:
+              type: boolean
+              description: Disable reading of Windows performance counters metadata.
+            disableStatusPoll:
+              type: boolean
+              description: Disable status polling.
+            disableConfigurationPoll:
+              type: boolean
+              description: Disable configuration polling.
+            disableDataCollection:
+              type: boolean
+              description: Disable data collection.
+    SnmpConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        SNMP communication property group for a node. Returned by GET /v1/objects/{id}/snmp
+        and embedded as `ObjectDetails.snmp`; accepted by PATCH /v1/objects/{id}/snmp with
+        merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        version:
+          type: string
+          enum: ['1', '2c', '3', default]
+          description: SNMP protocol version used for polling. Clamped up to the server minimum SNMP version.
+        port:
+          type: integer
+          description: SNMP UDP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as SNMP proxy, or 0 for no proxy.
+        codepage:
+          type: string
+          nullable: true
+          description: Codepage used to decode SNMP string values (empty for server default).
+        settingsLocked:
+          type: boolean
+          description: Prevent automatic SNMP configuration changes by configuration polls.
+        authName:
+          type: string
+          nullable: true
+          description: Community string for SNMP v1/v2c, or USM user name for SNMP v3.
+        authMethod:
+          type: string
+          enum: [NONE, MD5, SHA1, SHA224, SHA256, SHA384, SHA512]
+          description: SNMP v3 authentication method.
+        authPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 authentication password (write-only).
+        privMethod:
+          type: string
+          enum: [NONE, DES, AES-128, AES-192, AES-256]
+          description: SNMP v3 privacy (encryption) method.
+        privPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 privacy password (write-only).
+        contextName:
+          type: string
+          nullable: true
+          description: SNMP v3 context name.
+        trap:
+          nullable: true
+          description: Separate credentials for received SNMP traps. An object fully replaces them; null reverts to using the polling credentials.
+          allOf:
+            - $ref: '#/components/schemas/SnmpTrapCredentials'
+    SnmpTrapCredentials:
+      type: object
+      additionalProperties: false
+      description: |
+        Separate SNMP trap reception credentials. Merge-patched onto the existing trap
+        credentials; omitted fields are left unchanged. When the trap credentials are being
+        created (none existed before) the version defaults to 2c.
+      properties:
+        version:
+          type: string
+          enum: ['1', '2c', '3']
+          description: SNMP version of the expected traps.
+        authName:
+          type: string
+          description: Trap community string (v1/v2c) or USM user name (v3).
+        authMethod:
+          type: string
+          enum: [NONE, MD5, SHA1, SHA224, SHA256, SHA384, SHA512]
+          description: SNMP v3 authentication method for traps.
+        authPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 trap authentication password (write-only).
+        privMethod:
+          type: string
+          enum: [NONE, DES, AES-128, AES-192, AES-256]
+          description: SNMP v3 privacy method for traps.
+        privPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 trap privacy password (write-only).
+    AgentConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        NetXMS agent communication property group for a node. Returned by GET
+        /v1/objects/{id}/agent and embedded as `ObjectDetails.agent`; accepted by PATCH
+        /v1/objects/{id}/agent with merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        port:
+          type: integer
+          description: Agent TCP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as agent proxy, or 0 for no proxy.
+        sharedSecret:
+          type: string
+          nullable: true
+          description: Agent shared secret (write-only).
+        forceEncryption:
+          type: boolean
+          description: Require encryption for agent communication.
+        tunnelOnly:
+          type: boolean
+          description: Accept agent connections only through an established agent tunnel.
+        cacheMode:
+          type: string
+          enum: [default, on, off]
+          description: Agent-side DCI value caching mode.
+        compressionMode:
+          type: string
+          enum: [default, enabled, disabled]
+          description: Agent communication protocol compression mode.
     ObjectDetails:
       type: object
       properties:

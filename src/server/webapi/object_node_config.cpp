@@ -21,11 +21,90 @@
 ** Handlers for class-specific configuration property groups:
 **   PATCH /v1/objects/:object-id/polling     (Node polling settings)
 **   PATCH /v1/objects/:object-id/auto-bind   (AutoBindTarget classes)
+**   PATCH /v1/objects/:object-id/snmp        (Node SNMP communication settings)
+**   PATCH /v1/objects/:object-id/agent       (Node agent communication settings)
 **
 **/
 
 #include "object_helpers.h"
 #include <nms_script.h>
+
+/**
+ * Load the node addressed by URL placeholder "object-id" for a configuration
+ * sub-resource, checking READ access. On failure returns nullptr and writes the HTTP
+ * status code (400 / 403 / 404) to *httpCode; a non-node object yields 400. On success
+ * *includeSensitiveData reflects whether the caller may see credentials.
+ */
+static shared_ptr<Node> LoadNodeForConfigRead(Context *context, const wchar_t *group, int *httpCode, bool *includeSensitiveData)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   shared_ptr<NetObj> object = (objectId != 0) ? FindObjectById(objectId) : shared_ptr<NetObj>();
+   if ((object == nullptr) || object->isUnpublished() || object->isDeleted())
+   {
+      *httpCode = 404;
+      return shared_ptr<Node>();
+   }
+
+   uint32_t userId = context->getUserId();
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   {
+      *httpCode = 403;
+      return shared_ptr<Node>();
+   }
+
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      wchar_t message[256];
+      nx_swprintf(message, 256, L"Property group %s does not apply to object class %s", group, object->getObjectClassName());
+      context->setErrorResponse(message);
+      *httpCode = 400;
+      return shared_ptr<Node>();
+   }
+
+   *includeSensitiveData = object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
+   return static_pointer_cast<Node>(object);
+}
+
+/**
+ * Validate that the object addressed by URL placeholder "object-id" is a node the
+ * caller may modify, for a configuration sub-resource PATCH. Returns the node on
+ * success; on failure returns nullptr and writes the HTTP status code.
+ */
+static shared_ptr<NetObj> LoadNodeForConfigModify(Context *context, const wchar_t *group, int *httpCode)
+{
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, httpCode);
+   if (object == nullptr)
+      return object;
+
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      wchar_t message[256];
+      nx_swprintf(message, 256, L"Property group %s does not apply to object class %s", group, object->getObjectClassName());
+      context->setErrorResponse(message);
+      *httpCode = 400;
+      return shared_ptr<NetObj>();
+   }
+   return object;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/polling.
+ * Returns the node polling property group (the same shape accepted by the matching
+ * PATCH). Class-blind URL: returns 400 if the target object's class is not a node.
+ */
+int H_ObjectPollingGet(Context *context)
+{
+   int httpCode = 0;
+   bool includeSensitiveData = false;
+   shared_ptr<Node> node = LoadNodeForConfigRead(context, L"polling", &httpCode, &includeSensitiveData);
+   if (node == nullptr)
+      return httpCode;
+
+   json_t *response = node->pollingConfigToJson();
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
 
 /**
  * Handler for PATCH /v1/objects/:object-id/polling.
@@ -36,19 +115,83 @@
 int H_ObjectPollingUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> object = LoadNodeForConfigModify(context, L"polling", &httpCode);
    if (object == nullptr)
       return httpCode;
 
-   if (object->getObjectClass() != OBJECT_NODE)
-   {
-      wchar_t message[256];
-      nx_swprintf(message, 256, L"Property group polling does not apply to object class %s", object->getObjectClassName());
-      context->setErrorResponse(message);
-      return 400;
-   }
-
    return ApplyJsonPatch(context, object.get(), "polling", L"Modified polling configuration of object %s [%u]");
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/snmp.
+ * Returns the node SNMP communication property group (the same shape accepted by the
+ * matching PATCH). Credential passwords are included only when the caller has modify
+ * or read-credentials access.
+ */
+int H_ObjectSNMPGet(Context *context)
+{
+   int httpCode = 0;
+   bool includeSensitiveData = false;
+   shared_ptr<Node> node = LoadNodeForConfigRead(context, L"snmp", &httpCode, &includeSensitiveData);
+   if (node == nullptr)
+      return httpCode;
+
+   json_t *response = node->snmpConfigToJson(includeSensitiveData);
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/objects/:object-id/snmp.
+ * Applies the node SNMP communication property group (version, port, credentials,
+ * context, codepage, proxy, settings lock, separate trap credentials). Class-blind
+ * URL: returns 400 if the target object's class is not a node.
+ */
+int H_ObjectSNMPUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadNodeForConfigModify(context, L"snmp", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   return ApplyJsonPatch(context, object.get(), "snmp", L"Modified SNMP configuration of object %s [%u]");
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/agent.
+ * Returns the node agent communication property group (the same shape accepted by the
+ * matching PATCH). The shared secret is included only when the caller has modify or
+ * read-credentials access.
+ */
+int H_ObjectAgentGet(Context *context)
+{
+   int httpCode = 0;
+   bool includeSensitiveData = false;
+   shared_ptr<Node> node = LoadNodeForConfigRead(context, L"agent", &httpCode, &includeSensitiveData);
+   if (node == nullptr)
+      return httpCode;
+
+   json_t *response = node->agentConfigToJson(includeSensitiveData);
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/objects/:object-id/agent.
+ * Applies the node agent communication property group (port, proxy, shared secret,
+ * encryption/tunnel flags, cache and compression modes). Class-blind URL: returns
+ * 400 if the target object's class is not a node.
+ */
+int H_ObjectAgentUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadNodeForConfigModify(context, L"agent", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   return ApplyJsonPatch(context, object.get(), "agent", L"Modified agent configuration of object %s [%u]");
 }
 
 /**

@@ -4105,6 +4105,8 @@ protected:
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+   uint32_t modifyJsonSnmpConfig(json_t *snmp);
+   uint32_t modifyJsonAgentConfig(json_t *agent);
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    virtual void onDataCollectionChange() override;
@@ -4224,6 +4226,9 @@ public:
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
+   json_t *pollingConfigToJson();
+   json_t *snmpConfigToJson(bool includeSensitiveData);
+   json_t *agentConfigToJson(bool includeSensitiveData);
    virtual int getRackPlacement(json_t *element) const override;
    virtual json_t *getChassisPlacement() const override;
 

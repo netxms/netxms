@@ -119,15 +119,20 @@ int H_ObjectUnbindChild(Context *context);
 int H_ObjectCustomAttributes(Context *context);
 int H_ObjectCustomAttributeUpdate(Context *context);
 int H_ObjectCustomAttributeDelete(Context *context);
+int H_ObjectAgentGet(Context *context);
+int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
+int H_ObjectPollingGet(Context *context);
 int H_ObjectPollingUpdate(Context *context);
 int H_ObjectPropertiesUpdate(Context *context);
 int H_ObjectResponsibleUsers(Context *context);
 int H_ObjectResponsibleUserUpdate(Context *context);
 int H_ObjectResponsibleUserDelete(Context *context);
+int H_ObjectSNMPGet(Context *context);
+int H_ObjectSNMPUpdate(Context *context);
 int H_ObjectStatusCalculationUpdate(Context *context);
 int H_ObjectTrustedObjects(Context *context);
 int H_ObjectUrls(Context *context);
@@ -524,11 +529,21 @@ static bool InitModule(Config *config)
       .build();
 
    RouteBuilder("v1/objects/:object-id/polling")
+      .GET(H_ObjectPollingGet)
       .PATCH(H_ObjectPollingUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/auto-bind")
       .PATCH(H_ObjectAutoBindUpdate)
+      .build();
+
+   RouteBuilder("v1/objects/:object-id/snmp")
+      .GET(H_ObjectSNMPGet)
+      .PATCH(H_ObjectSNMPUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/agent")
+      .GET(H_ObjectAgentGet)
+      .PATCH(H_ObjectAgentUpdate)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/current-values")
       .GET(H_DataCollectionCurrentValues)
