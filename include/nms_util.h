@@ -23,17 +23,17 @@
 #ifndef _nms_util_h_
 #define _nms_util_h_
 
-#if BUNDLED_LIBJANSSON
-#include <jansson/jansson.h>
-#else
-#include <jansson.h>
-#endif
-
 #include <nms_common.h>
 #include <nxatomic.h>
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#if BUNDLED_LIBJANSSON
+#include <jansson/jansson.h>
+#else
+#include <jansson.h>
+#endif
 
 #ifndef _WIN32
 #include <poll.h>

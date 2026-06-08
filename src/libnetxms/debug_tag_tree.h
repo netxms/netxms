@@ -25,8 +25,6 @@
 #ifndef _debug_tag_tree_h_
 #define _debug_tag_tree_h_
 
-#include <nms_util.h>
-
 /**
  * Node of debug tag tree
  */

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -20,6 +20,8 @@
 ** File: debug_tag_tree.cpp
 **
 **/
+
+#include "libnetxms.h"
 #include "debug_tag_tree.h"
 
 /**

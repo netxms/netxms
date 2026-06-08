@@ -35,7 +35,7 @@
  * compile-time configuration.
  */
 
-#include <nms_util.h>
+#include "libnetxms.h"
 #include <nxcrypto.h>
 
 /*

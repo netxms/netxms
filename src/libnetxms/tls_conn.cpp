@@ -20,8 +20,8 @@
 **
 **/
 
-#include <tls_conn.h>
 #include "libnetxms.h"
+#include <tls_conn.h>
 
 /**
  * Opens a TLS connection. (First function to be used upon object creation.)

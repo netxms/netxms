@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,7 +23,8 @@
 #ifndef _tls_conn_h_
 #define _tls_conn_h_
 
-#include "nms_util.h"
+#include <nms_common.h>
+#include <nms_util.h>
 #include <nxcrypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
