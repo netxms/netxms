@@ -10479,6 +10479,36 @@ static bool AgentCompressionModeFromName(const char *name, int16_t *mode)
    return true;
 }
 
+static const char *CertificateMappingMethodToName(CertificateMappingMethod method)
+{
+   switch(method)
+   {
+      case MAP_CERTIFICATE_BY_SUBJECT:
+         return "subject";
+      case MAP_CERTIFICATE_BY_PUBKEY:
+         return "publicKey";
+      case MAP_CERTIFICATE_BY_TEMPLATE_ID:
+         return "templateId";
+      default:
+         return "commonName";
+   }
+}
+
+static bool CertificateMappingMethodFromName(const char *name, CertificateMappingMethod *method)
+{
+   if (!stricmp(name, "subject"))
+      *method = MAP_CERTIFICATE_BY_SUBJECT;
+   else if (!stricmp(name, "publicKey"))
+      *method = MAP_CERTIFICATE_BY_PUBKEY;
+   else if (!stricmp(name, "commonName"))
+      *method = MAP_CERTIFICATE_BY_CN;
+   else if (!stricmp(name, "templateId"))
+      *method = MAP_CERTIFICATE_BY_TEMPLATE_ID;
+   else
+      return false;
+   return true;
+}
+
 /**
  * Apply SNMP credential fields (authName, authMethod, privMethod, authPassword,
  * privPassword) from a JSON object onto a security context in merge-patch fashion.
@@ -10703,6 +10733,32 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
       m_agentCompressionMode = mode;
    }
 
+   value = json_object_get(agent, "certificateMappingMethod");
+   if (value != nullptr)
+   {
+      CertificateMappingMethod method;
+      if (!json_is_string(value) || !CertificateMappingMethodFromName(json_string_value(value), &method))
+         return RCC_INVALID_ARGUMENT;
+      m_agentCertMappingMethod = method;
+   }
+
+   value = json_object_get(agent, "certificateMappingData");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      TCHAR *oldMappingData = m_agentCertMappingData;
+      m_agentCertMappingData = json_is_string(value) ? WideStringFromUTF8String(json_string_value(value)) : nullptr;
+      if (m_agentCertMappingData != nullptr)
+      {
+         Trim(m_agentCertMappingData);
+         if (*m_agentCertMappingData == 0)
+            MemFreeAndNull(m_agentCertMappingData);
+      }
+      UpdateAgentCertificateMappingIndex(self(), oldMappingData, m_agentCertMappingData);
+      MemFree(oldMappingData);
+   }
+
    uint32_t setFlags = 0, mask = 0;
    if (!json_object_update_flag(agent, "forceEncryption", NF_FORCE_ENCRYPTION, &setFlags, &mask))
       return RCC_INVALID_ARGUMENT;
@@ -10747,6 +10803,9 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          return RCC_INVALID_ARGUMENT;
 
       if (!json_object_update_integer(polling, "expectedCapabilities", &m_expectedCapabilities))
+         return RCC_INVALID_ARGUMENT;
+
+      if (!json_object_update_integer(polling, "useIfXTable", &m_nUseIfXTable))
          return RCC_INVALID_ARGUMENT;
 
       // Poll-type flags as named booleans; only flags present in the document are changed
@@ -15018,6 +15077,7 @@ json_t *Node::pollingConfigToJson()
    json_object_set_new(polling, "pollerNode", json_integer(m_pollerNode));
    json_object_set_new(polling, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(polling, "expectedCapabilities", json_integer(m_expectedCapabilities));
+   json_object_set_new(polling, "useIfXTable", json_integer(m_nUseIfXTable));
    json_t *pollFlags = json_object();
    for(const auto& f : s_nodePollFlags)
       json_object_set_new(pollFlags, f.key, json_boolean((m_flags & f.bit) != 0));
@@ -15091,6 +15151,8 @@ json_t *Node::agentConfigToJson(bool includeSensitiveData)
    json_object_set_new(agent, "compressionMode", json_string(AgentCompressionModeToName(m_agentCompressionMode)));
    json_object_set_new(agent, "forceEncryption", json_boolean((m_flags & NF_FORCE_ENCRYPTION) != 0));
    json_object_set_new(agent, "tunnelOnly", json_boolean((m_flags & NF_AGENT_OVER_TUNNEL_ONLY) != 0));
+   json_object_set_new(agent, "certificateMappingMethod", json_string(CertificateMappingMethodToName(m_agentCertMappingMethod)));
+   json_object_set_new(agent, "certificateMappingData", json_string_t(m_agentCertMappingData));
    if (includeSensitiveData)
       json_object_set_new(agent, "sharedSecret", json_string_t(m_agentSecret));
    unlockProperties();
@@ -15120,7 +15182,6 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
    json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
-   json_object_set_new(root, "useIfXTable", json_integer(m_nUseIfXTable));
    json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
    json_object_set_new(root, "platformName", json_string_t(m_platformName));
    json_object_set_new(root, "agentPlatformName", json_string_t(m_agentPlatformName));

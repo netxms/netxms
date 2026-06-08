@@ -9403,6 +9403,9 @@ components:
         expectedCapabilities:
           type: integer
           description: Expected capabilities bitmask.
+        useIfXTable:
+          type: integer
+          description: Whether to use SNMP ifXTable for interface polling (0 = server default, 1 = enabled, 2 = disabled).
         flags:
           type: object
           additionalProperties: false
@@ -9575,6 +9578,14 @@ components:
           type: string
           enum: [default, enabled, disabled]
           description: Agent communication protocol compression mode.
+        certificateMappingMethod:
+          type: string
+          enum: [subject, publicKey, commonName, templateId]
+          description: Method used to map the agent's certificate to this node for authentication.
+        certificateMappingData:
+          type: string
+          nullable: true
+          description: Certificate mapping data (interpretation depends on certificateMappingMethod).
     ObjectDetails:
       type: object
       properties:
