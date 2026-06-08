@@ -220,10 +220,12 @@ public class DataSeries
    {
       if (values.size() == 0)
          return 0;
-      double minValue = values.get(0).getValueAsDouble();
+      DciDataRow first = values.get(0);
+      double minValue = first.isAggregated() ? first.getMinValue() : first.getValueAsDouble();
       for(int i = 1; i < values.size(); i++)
       {
-         double curr = values.get(i).getValueAsDouble();
+         DciDataRow row = values.get(i);
+         double curr = row.isAggregated() ? row.getMinValue() : row.getValueAsDouble();
          if (curr < minValue)
             minValue = curr;
       }
@@ -239,10 +241,12 @@ public class DataSeries
    {
       if (values.size() == 0)
          return 0;
-      double maxValue = values.get(0).getValueAsDouble();
+      DciDataRow first = values.get(0);
+      double maxValue = first.isAggregated() ? first.getMaxValue() : first.getValueAsDouble();
       for(int i = 1; i < values.size(); i++)
       {
-         double curr = values.get(i).getValueAsDouble();
+         DciDataRow row = values.get(i);
+         double curr = row.isAggregated() ? row.getMaxValue() : row.getValueAsDouble();
          if (curr > maxValue)
             maxValue = curr;
       }

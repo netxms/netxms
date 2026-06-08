@@ -173,6 +173,14 @@ static void BuildAggregateUpsert(wchar_t *query, size_t size, const wchar_t *suf
 }
 
 /**
+ * Normalize IEEE negative zero to positive zero so aggregate buckets never store "-0" (issue #419).
+ */
+static inline double NormalizeZero(double v)
+{
+   return (v == 0.0) ? 0.0 : v;
+}
+
+/**
  * Bind and execute one UPSERT row.
  */
 static bool ExecuteAggregateUpsert(DB_STATEMENT hStmt, uint32_t dciId, int64_t bucketStart,
@@ -180,9 +188,9 @@ static bool ExecuteAggregateUpsert(DB_STATEMENT hStmt, uint32_t dciId, int64_t b
 {
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dciId);
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, bucketStart);
-   DBBind(hStmt, 3, DB_SQLTYPE_DOUBLE, minValue);
-   DBBind(hStmt, 4, DB_SQLTYPE_DOUBLE, maxValue);
-   DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, avgValue);
+   DBBind(hStmt, 3, DB_SQLTYPE_DOUBLE, NormalizeZero(minValue));
+   DBBind(hStmt, 4, DB_SQLTYPE_DOUBLE, NormalizeZero(maxValue));
+   DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, NormalizeZero(avgValue));
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, sampleCount);
    return DBExecute(hStmt);
 }

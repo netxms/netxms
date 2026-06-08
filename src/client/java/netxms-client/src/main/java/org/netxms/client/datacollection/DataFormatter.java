@@ -206,6 +206,20 @@ public class DataFormatter
             return mapped;
       }
 
+      // Normalize IEEE negative zero so it is not displayed as "-0" (can come from aggregated min/max buckets)
+      if ((dataType != DataType.STRING) && (dataType != DataType.NULL) && (value.charAt(0) == '-'))
+      {
+         try
+         {
+            if (Double.parseDouble(value) == 0.0)
+               value = value.substring(1);
+         }
+         catch(NumberFormatException e)
+         {
+            // not a plain number - leave as is
+         }
+      }
+
       String str = formatString;
       if (str == null || str.isEmpty())
       {
