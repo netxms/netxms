@@ -2191,12 +2191,8 @@ uint32_t NetObj::modifyFromJSONInternal(json_t *json, GenericClientSession *sess
    };
    for(const auto& field : uint32Fields)
    {
-      value = json_object_get(json, field.key);
-      if (value == nullptr)
-         continue;
-      if (!json_is_integer(value) && !json_is_null(value))
+      if (!json_object_update_integer(json, field.key, field.target))
          return RCC_INVALID_ARGUMENT;
-      *field.target = static_cast<uint32_t>(json_integer_value(value));
    }
 
    value = json_object_get(json, "mapImage");

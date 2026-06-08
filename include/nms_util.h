@@ -4729,6 +4729,96 @@ static inline bool json_object_get_boolean(json_t *object, const char *tag, bool
 }
 
 /**
+ * Update integer field from a JSON object property using strict validation, intended for
+ * modifyFromJSON() style handlers. When the property is present it must be an integer or
+ * JSON null (null is interpreted as 0); the field is left unchanged when the property is
+ * absent. Returns false only when the property is present with an incompatible type, which
+ * the caller typically maps to RCC_INVALID_ARGUMENT.
+ */
+template<typename T> static inline bool json_object_update_integer(json_t *object, const char *tag, T *field)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_integer(value) && !json_is_null(value))
+      return false;
+   *field = static_cast<T>(json_integer_value(value));
+   return true;
+}
+
+/**
+ * Update boolean field from a JSON object property using strict validation. When the property
+ * is present it must be a JSON boolean; the field is left unchanged when the property is absent.
+ * Returns false only when the property is present with an incompatible type.
+ */
+static inline bool json_object_update_boolean(json_t *object, const char *tag, bool *field)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_boolean(value))
+      return false;
+   *field = json_is_true(value);
+   return true;
+}
+
+/**
+ * Update object flag bit(s) from a boolean JSON object property using strict validation. When
+ * the property is present it must be a JSON boolean: the given bit(s) are added to *mask and
+ * set in *setFlags when the value is true. Both outputs are left unchanged when the property is
+ * absent, so this can be called repeatedly to collect a set of changes for a single
+ * updateFlags(setFlags, mask) call. Returns false only when the property is present with an
+ * incompatible type.
+ */
+static inline bool json_object_update_flag(json_t *object, const char *tag, uint32_t bit, uint32_t *setFlags, uint32_t *mask)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_boolean(value))
+      return false;
+   *mask |= bit;
+   if (json_is_true(value))
+      *setFlags |= bit;
+   return true;
+}
+
+/**
+ * Update a fixed-size wide character buffer from a JSON object property using strict validation.
+ * When the property is present it must be a JSON string or null (null and empty string both clear
+ * the buffer); the buffer is left unchanged when the property is absent. The value is converted
+ * from UTF-8 and the buffer is always null-terminated. `size` is the buffer capacity in characters.
+ * Returns false only when the property is present with an incompatible type.
+ */
+static inline bool json_object_update_string(json_t *object, const char *tag, wchar_t *buffer, size_t size)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_string(value) && !json_is_null(value))
+      return false;
+   utf8_to_wchar(json_is_string(value) ? json_string_value(value) : "", -1, buffer, size);
+   buffer[size - 1] = 0;
+   return true;
+}
+
+/**
+ * Update a fixed-size UTF-8 character buffer from a JSON object property using strict validation.
+ * Behaves like json_object_update_string but stores the raw UTF-8 string via strlcpy; `size` is the
+ * buffer capacity in bytes. Returns false only when the property is present with an incompatible type.
+ */
+static inline bool json_object_update_string_utf8(json_t *object, const char *tag, char *buffer, size_t size)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_string(value) && !json_is_null(value))
+      return false;
+   strlcpy(buffer, json_is_string(value) ? json_string_value(value) : "", size);
+   return true;
+}
+
+/**
  * Get UUID value from object
  */
 uuid LIBNETXMS_EXPORTABLE json_object_get_uuid(json_t *object, const char *tag);

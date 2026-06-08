@@ -23,6 +23,14 @@ For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...",
 
 - **Console commands:** when adding or substantially rewriting a branch in `ProcessConsoleCommand()` (`core/console.cpp`, already >1000 lines), extract the logic into a dedicated `static void HandleXxxCommand(ServerConsole*, const wchar_t *arg)` defined earlier in the file. The branch body should be a one- or two-line call.
 
+- **Object update from JSON (WebAPI `modifyFromJSON*` handlers):** when reading a scalar property into an object field, use the strict `json_object_update_*` helpers in `include/nms_util.h` instead of hand-writing the get/validate/cast block. Each returns `false` only when the property is present with an incompatible type — map that to `RCC_INVALID_ARGUMENT`; absent leaves the field unchanged:
+  - `json_object_update_integer(json, "tag", &field)` — any integer field type; null = 0.
+  - `json_object_update_boolean(json, "tag", &boolField)`.
+  - `json_object_update_flag(json, "tag", BIT, &setFlags, &mask)` — collect bits for one trailing `updateFlags(setFlags, mask)`.
+  - `json_object_update_string(json, "tag", wcharBuf, capacityChars)` / `json_object_update_string_utf8(json, "tag", charBuf, capacityBytes)` — fixed buffers; null/empty clear.
+
+  These are strict (fail on wrong type) — distinct from the lenient coercing `json_object_get_*` getters. Keep blocks manual when the field has side effects, needs object-ID validation, targets a setter or `String`/`SharedString` member, or uses null-means-clear semantics — the helpers don't cover those.
+
 ## Overview
 
 The NetXMS server (`netxmsd`) is the central management component that handles:

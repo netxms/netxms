@@ -10573,13 +10573,8 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
       credentialsChanged = true;
    }
 
-   value = json_object_get(snmp, "port");
-   if (value != nullptr)
-   {
-      if (!json_is_integer(value))
-         return RCC_INVALID_ARGUMENT;
-      m_snmpPort = static_cast<uint16_t>(json_integer_value(value));
-   }
+   if (!json_object_update_integer(snmp, "port", &m_snmpPort))
+      return RCC_INVALID_ARGUMENT;
 
    uint32_t rcc = ApplySnmpCredentialFields(snmp, m_snmpSecurity, &credentialsChanged);
    if (rcc != RCC_SUCCESS)
@@ -10596,13 +10591,8 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
    if (credentialsChanged && (m_snmpVersion == SNMP_VERSION_3))
       m_snmpSecurity->recalculateKeys();
 
-   value = json_object_get(snmp, "codepage");
-   if (value != nullptr)
-   {
-      if (!json_is_string(value) && !json_is_null(value))
-         return RCC_INVALID_ARGUMENT;
-      strlcpy(m_snmpCodepage, json_is_string(value) ? json_string_value(value) : "", sizeof(m_snmpCodepage));
-   }
+   if (!json_object_update_string_utf8(snmp, "codepage", m_snmpCodepage, sizeof(m_snmpCodepage)))
+      return RCC_INVALID_ARGUMENT;
 
    value = json_object_get(snmp, "proxy");
    if (value != nullptr)
@@ -10686,32 +10676,16 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
    if (!json_is_object(agent))
       return RCC_INVALID_ARGUMENT;
 
-   json_t *value = json_object_get(agent, "port");
-   if (value != nullptr)
-   {
-      if (!json_is_integer(value))
-         return RCC_INVALID_ARGUMENT;
-      m_agentPort = static_cast<uint16_t>(json_integer_value(value));
-   }
+   if (!json_object_update_integer(agent, "port", &m_agentPort))
+      return RCC_INVALID_ARGUMENT;
 
-   value = json_object_get(agent, "proxy");
-   if (value != nullptr)
-   {
-      if (!json_is_integer(value) && !json_is_null(value))
-         return RCC_INVALID_ARGUMENT;
-      m_agentProxy = static_cast<uint32_t>(json_integer_value(value));
-   }
+   if (!json_object_update_integer(agent, "proxy", &m_agentProxy))
+      return RCC_INVALID_ARGUMENT;
 
-   value = json_object_get(agent, "sharedSecret");
-   if (value != nullptr)
-   {
-      if (!json_is_string(value) && !json_is_null(value))
-         return RCC_INVALID_ARGUMENT;
-      utf8_to_wchar(json_is_string(value) ? json_string_value(value) : "", -1, m_agentSecret, MAX_SECRET_LENGTH);
-      m_agentSecret[MAX_SECRET_LENGTH - 1] = 0;
-   }
+   if (!json_object_update_string(agent, "sharedSecret", m_agentSecret, MAX_SECRET_LENGTH))
+      return RCC_INVALID_ARGUMENT;
 
-   value = json_object_get(agent, "cacheMode");
+   json_t *value = json_object_get(agent, "cacheMode");
    if (value != nullptr)
    {
       int16_t mode;
@@ -10730,24 +10704,10 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
    }
 
    uint32_t setFlags = 0, mask = 0;
-   value = json_object_get(agent, "forceEncryption");
-   if (value != nullptr)
-   {
-      if (!json_is_boolean(value))
-         return RCC_INVALID_ARGUMENT;
-      mask |= NF_FORCE_ENCRYPTION;
-      if (json_is_true(value))
-         setFlags |= NF_FORCE_ENCRYPTION;
-   }
-   value = json_object_get(agent, "tunnelOnly");
-   if (value != nullptr)
-   {
-      if (!json_is_boolean(value))
-         return RCC_INVALID_ARGUMENT;
-      mask |= NF_AGENT_OVER_TUNNEL_ONLY;
-      if (json_is_true(value))
-         setFlags |= NF_AGENT_OVER_TUNNEL_ONLY;
-   }
+   if (!json_object_update_flag(agent, "forceEncryption", NF_FORCE_ENCRYPTION, &setFlags, &mask))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_flag(agent, "tunnelOnly", NF_AGENT_OVER_TUNNEL_ONLY, &setFlags, &mask))
+      return RCC_INVALID_ARGUMENT;
    if (mask != 0)
       updateFlags(setFlags, mask);
 
@@ -10783,21 +10743,11 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          m_pollerNode = nodeId;
       }
 
-      value = json_object_get(polling, "requiredPollCount");
-      if (value != nullptr)
-      {
-         if (!json_is_integer(value) && !json_is_null(value))
-            return RCC_INVALID_ARGUMENT;
-         m_requiredPollCount = static_cast<uint32_t>(json_integer_value(value));
-      }
+      if (!json_object_update_integer(polling, "requiredPollCount", &m_requiredPollCount))
+         return RCC_INVALID_ARGUMENT;
 
-      value = json_object_get(polling, "expectedCapabilities");
-      if (value != nullptr)
-      {
-         if (!json_is_integer(value) && !json_is_null(value))
-            return RCC_INVALID_ARGUMENT;
-         m_expectedCapabilities = static_cast<uint64_t>(json_integer_value(value));
-      }
+      if (!json_object_update_integer(polling, "expectedCapabilities", &m_expectedCapabilities))
+         return RCC_INVALID_ARGUMENT;
 
       // Poll-type flags as named booleans; only flags present in the document are changed
       json_t *flags = json_object_get(polling, "flags");
@@ -10808,14 +10758,8 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          uint32_t setFlags = 0, mask = 0;
          for(const auto& f : s_nodePollFlags)
          {
-            json_t *fv = json_object_get(flags, f.key);
-            if (fv == nullptr)
-               continue;
-            if (!json_is_boolean(fv))
+            if (!json_object_update_flag(flags, f.key, f.bit, &setFlags, &mask))
                return RCC_INVALID_ARGUMENT;
-            mask |= f.bit;
-            if (json_is_true(fv))
-               setFlags |= f.bit;
          }
          if (mask != 0)
             updateFlags(setFlags, mask);
