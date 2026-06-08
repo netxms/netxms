@@ -41,14 +41,18 @@ static TCHAR *FormatQuery(const TCHAR *format, ...)
 }
 
 /**
- * Convert timestamp column from integer to timestamptz
+ * Convert timestamp column from integer to timestamptz. When milliseconds is true the source
+ * column holds epoch-milliseconds (e.g. otel_log.log_timestamp) instead of epoch-seconds.
  */
-static bool ConvertTimestampColumn(const TCHAR *table, const TCHAR *tscolumn)
+static bool ConvertTimestampColumn(const TCHAR *table, const TCHAR *tscolumn, bool milliseconds = false)
 {
    CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
    CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s RENAME COLUMN %s TO conv_%s"), table, tscolumn, tscolumn)));
    CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s ADD %s timestamptz"), table, tscolumn)));
-   CHK_EXEC_RB(SQLQuery(FormatQuery(_T("UPDATE %s SET %s = to_timestamp(conv_%s)"), table, tscolumn, tscolumn)));
+   if (milliseconds)
+      CHK_EXEC_RB(SQLQuery(FormatQuery(_T("UPDATE %s SET %s = to_timestamp(conv_%s / 1000.0)"), table, tscolumn, tscolumn)));
+   else
+      CHK_EXEC_RB(SQLQuery(FormatQuery(_T("UPDATE %s SET %s = to_timestamp(conv_%s)"), table, tscolumn, tscolumn)));
    CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s DROP COLUMN conv_%s"), table, tscolumn)));
    CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, tscolumn)));
    CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
@@ -56,13 +60,14 @@ static bool ConvertTimestampColumn(const TCHAR *table, const TCHAR *tscolumn)
 }
 
 /**
- * Convert table to hypertable
+ * Convert table to hypertable. When milliseconds is true the partitioning timestamp column
+ * (tscolumn) holds epoch-milliseconds instead of epoch-seconds.
  */
-static bool ConvertTable(const TCHAR *table, const TCHAR *tscolumn, const TCHAR *newPK, const TCHAR *extraTimeColumn = nullptr)
+static bool ConvertTable(const TCHAR *table, const TCHAR *tscolumn, const TCHAR *newPK, const TCHAR *extraTimeColumn = nullptr, bool milliseconds = false)
 {
    WriteToTerminalEx(_T("Converting table \x1b[1m%s\x1b[0m\n"), table);
    CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, table));
-   CHK_EXEC_NO_SP(ConvertTimestampColumn(table, tscolumn));
+   CHK_EXEC_NO_SP(ConvertTimestampColumn(table, tscolumn, milliseconds));
    if (extraTimeColumn != nullptr)
       CHK_EXEC_NO_SP(ConvertTimestampColumn(table, extraTimeColumn));
    CHK_EXEC_NO_SP(SQLQuery(FormatQuery(_T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, newPK)));
@@ -227,6 +232,7 @@ bool ConvertDatabase()
    CHK_EXEC_NO_SP(ConvertTable(_T("event_log"), _T("event_timestamp"), _T("event_id,event_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("maintenance_journal"), _T("creation_time"), _T("record_id,creation_time"), _T("modification_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("notification_log"), _T("notification_timestamp"), _T("id,notification_timestamp")));
+   CHK_EXEC_NO_SP(ConvertTable(_T("otel_log"), _T("log_timestamp"), _T("id,log_timestamp"), nullptr, true));   // log_timestamp holds epoch-milliseconds; origin/observed_timestamp stay bigint
    CHK_EXEC_NO_SP(ConvertTable(_T("package_deployment_log"), _T("execution_time"), _T("job_id,execution_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("server_action_execution_log"), _T("action_timestamp"), _T("id,action_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("snmp_trap_log"), _T("trap_timestamp"), _T("trap_id,trap_timestamp")));

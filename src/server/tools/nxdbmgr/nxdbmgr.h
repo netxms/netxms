@@ -93,6 +93,7 @@ bool CheckModuleSchemaVersions();
 
 bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name);
 bool IsTimestampColumn(const TCHAR *table, const char *name);
+bool IsMillisecondTimestampColumn(const TCHAR *table, const char *name);
 bool IsTimestampConversionNeeded(const TCHAR* table);
 
 bool LoadDataCollectionObjects();

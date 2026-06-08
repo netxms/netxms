@@ -109,6 +109,14 @@ static bool ExportTable(sqlite3 *db, const TCHAR *name)
                   selectQuery.appendUtf8String(cname);
                   selectQuery.append(_T(","));
                }
+               else if (IsMillisecondTimestampColumn(name, cname))
+               {
+                  selectQuery.append(_T("timestamptz_to_ms("));
+                  selectQuery.appendUtf8String(cname);
+                  selectQuery.append(_T(") AS "));
+                  selectQuery.appendUtf8String(cname);
+                  selectQuery.append(_T(","));
+               }
                else
                {
                   selectQuery.appendUtf8String(cname);

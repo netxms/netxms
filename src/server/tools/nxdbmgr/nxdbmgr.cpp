@@ -410,6 +410,7 @@ static void AddLogToList(const char *logname, StringList *tableList)
       tableList->add(_T("incident_activity_log"));
       tableList->add(_T("maintenance_journal"));
       tableList->add(_T("notification_log"));
+      tableList->add(_T("otel_log"));
       tableList->add(_T("package_deployment_log"));
       tableList->add(_T("server_action_execution_log"));
       tableList->add(_T("snmp_trap_log"));
@@ -446,6 +447,10 @@ static void AddLogToList(const char *logname, StringList *tableList)
    else if (!stricmp(logname, "notification"))
    {
       tableList->add(_T("notification_log"));
+   }
+   else if (!stricmp(logname, "otel") || !stricmp(logname, "opentelemetry"))
+   {
+      tableList->add(_T("otel_log"));
    }
    else if (!stricmp(logname, "snmptrap"))
    {
@@ -627,7 +632,8 @@ stop_search:
                      _T("   * Configuration variable name pattern can include character %% to match any number of characters\n")
                      _T("   * Valid log names for -L and -Z options:\n")
                      _T("        action, ai, alarm, asset, audit, certificate, deployment, downtime,\n")
-                     _T("        event, incident, maintenance, notification, snmptrap, syslog, winevent\n")
+                     _T("        event, incident, maintenance, notification, otel, snmptrap, syslog,\n")
+                     _T("        winevent\n")
                      _T("   * Use -Z all to exclude all logs\n")
                      _T("\n"), configFile);
             bStart = false;

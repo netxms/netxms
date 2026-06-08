@@ -198,6 +198,19 @@ static COLUMN_IDENTIFIER s_timestampColumns[] =
 };
 
 /**
+ * Columns holding epoch-millisecond timestamps. On TSDB these are stored as timestamptz and must
+ * be converted with ms_to_timestamptz() on write and timestamptz_to_ms() on read; on all other
+ * backends they remain bigint and are copied verbatim. Note that only otel_log.log_timestamp is
+ * a partitioning timestamp - origin_timestamp/observed_timestamp stay bigint on every backend and
+ * are therefore intentionally absent from this list.
+ */
+static COLUMN_IDENTIFIER s_millisecondTimestampColumns[] =
+{
+   { L"otel_log", "log_timestamp" },
+   { nullptr, nullptr },
+};
+
+/**
  * Check if fix is needed for column
  */
 static bool IsColumnInList(const COLUMN_IDENTIFIER *list, const TCHAR *table, const char *name)
@@ -227,6 +240,14 @@ bool IsTimestampColumn(const TCHAR *table, const char *name)
 }
 
 /**
+ * Check if column holds an epoch-millisecond timestamp (timestamptz on TSDB)
+ */
+bool IsMillisecondTimestampColumn(const TCHAR *table, const char *name)
+{
+   return IsColumnInList(s_millisecondTimestampColumns, table, name);
+}
+
+/**
  * Check if timestamp converting is needed for this table
  */
 bool IsTimestampConversionNeeded(const wchar_t *table)
@@ -234,6 +255,11 @@ bool IsTimestampConversionNeeded(const wchar_t *table)
    for(int n = 0; s_timestampColumns[n].table != nullptr; n++)
    {
       if (!wcsicmp(s_timestampColumns[n].table, table))
+         return true;
+   }
+   for(int n = 0; s_millisecondTimestampColumns[n].table != nullptr; n++)
+   {
+      if (!wcsicmp(s_millisecondTimestampColumns[n].table, table))
          return true;
    }
    return false;
@@ -373,6 +399,13 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
                columns.append(L")::int AS ");
                columns.appendUtf8String(columnName);
             }
+            else if (IsMillisecondTimestampColumn(table, columnName))
+            {
+               columns.append(L"timestamptz_to_ms(");
+               columns.appendUtf8String(columnName);
+               columns.append(L") AS ");
+               columns.appendUtf8String(columnName);
+            }
             else
             {
                columns.appendUtf8String(columnName);
@@ -406,6 +439,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
    // Pre-compute column metadata
    bool *integerFixNeeded = MemAllocArray<bool>(columnCount);
    bool *tsdbTimestamp = MemAllocArray<bool>(columnCount);
+   bool *tsdbMillisecondTimestamp = MemAllocArray<bool>(columnCount);
    bool *isTextColumn = MemAllocArray<bool>(columnCount);
    StringList columnNames;
 
@@ -421,6 +455,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
       DBGetColumnNameA(hResult, i, cname, 256);
       integerFixNeeded[i] = IsColumnIntegerFixNeeded(table, cname);
       tsdbTimestamp[i] = (g_dbSyntax == DB_SYNTAX_TSDB) && IsTimestampColumn(table, cname);
+      tsdbMillisecondTimestamp[i] = (g_dbSyntax == DB_SYNTAX_TSDB) && IsMillisecondTimestampColumn(table, cname);
 
       if (g_dbSyntax == DB_SYNTAX_ORACLE)
       {
@@ -592,8 +627,10 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
             {
                if (tsdbTimestamp[i])
                   query.append(_T("to_timestamp("));
+               else if (tsdbMillisecondTimestamp[i])
+                  query.append(_T("ms_to_timestamptz("));
                query.append(DBPrepareString(hDest, value));
-               if (tsdbTimestamp[i])
+               if (tsdbTimestamp[i] || tsdbMillisecondTimestamp[i])
                   query.append(_T(")"));
                MemFree(value);
             }
@@ -644,6 +681,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
 
    MemFree(integerFixNeeded);
    MemFree(tsdbTimestamp);
+   MemFree(tsdbMillisecondTimestamp);
    MemFree(isTextColumn);
    DBFreeResult(hResult);
 
