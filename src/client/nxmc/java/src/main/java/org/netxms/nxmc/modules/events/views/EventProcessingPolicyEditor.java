@@ -101,6 +101,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Image imageStop;
    private Image imageStartDowntime;
    private Image imageEndDowntime;
+   private Image imageLogEvent;
+   private Image imageNoLogEvent;
 
    private Action actionHorizontal;
    private Action actionVertical;
@@ -141,6 +143,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageTerminate = ResourceManager.getImage("icons/epp/terminate-alarm.png");
       imageStartDowntime = ResourceManager.getImage("icons/epp/start-downtime.png");
       imageEndDowntime = ResourceManager.getImage("icons/epp/end-downtime.png");
+      imageLogEvent = ResourceManager.getImage("icons/epp/log-event.png");
+      imageNoLogEvent = ResourceManager.getImage("icons/epp/no-log-event.png");
 
       objectLabelProvider = new BaseObjectLabelProvider();
       actionLabelProvider = new DecoratingActionLabelProvider();
@@ -572,6 +576,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageTerminate.dispose();
       imageStartDowntime.dispose();
       imageEndDowntime.dispose();
+      imageLogEvent.dispose();
+      imageNoLogEvent.dispose();
 
       objectLabelProvider.dispose();
       actionLabelProvider.dispose();
@@ -702,6 +708,22 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    public Image getImageEndDowntime()
    {
       return imageEndDowntime;
+   }
+
+   /**
+    * @return the imageLogEvent
+    */
+   public Image getImageLogEvent()
+   {
+      return imageLogEvent;
+   }
+
+   /**
+    * @return the imageNoLogEvent
+    */
+   public Image getImageNoLogEvent()
+   {
+      return imageNoLogEvent;
    }
 
    /**

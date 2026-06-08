@@ -999,12 +999,23 @@ public class RuleEditor extends Composite
       }
 
       /* flags */
+      if ((rule.getFlags() & EventProcessingPolicyRule.SET_LOG_FLAG) != 0)
+      {
+         final MouseListener listener = createMouseListener("Action");
+         addActionGroupLabel(clientArea, i18n.tr("Force event logging"), editor.getImageLogEvent(), listener);
+      }
+      else if ((rule.getFlags() & EventProcessingPolicyRule.CLEAR_LOG_FLAG) != 0)
+      {
+         final MouseListener listener = createMouseListener("Action");
+         addActionGroupLabel(clientArea, i18n.tr("Disable event logging"), editor.getImageNoLogEvent(), listener);
+      }
+
       if ((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0)
       {
          final MouseListener listener = createMouseListener("Action");
          addActionGroupLabel(clientArea, i18n.tr("Stop event processing"), editor.getImageStop(), listener);
       }
-      
+
       return clientArea;
    }
 

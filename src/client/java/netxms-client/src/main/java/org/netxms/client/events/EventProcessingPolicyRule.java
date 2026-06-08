@@ -54,6 +54,8 @@ public class EventProcessingPolicyRule
    public static final int CREATE_INCIDENT     = 0x080000;
    public static final int AI_ANALYZE_INCIDENT = 0x100000;
    public static final int AI_AUTO_ASSIGN      = 0x200000;
+   public static final int SET_LOG_FLAG        = 0x400000;
+   public static final int CLEAR_LOG_FLAG      = 0x800000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 

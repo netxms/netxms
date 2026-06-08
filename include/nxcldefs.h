@@ -1265,6 +1265,8 @@ enum AggregationFunction
 #define RF_CREATE_INCIDENT       0x080000
 #define RF_AI_ANALYZE_INCIDENT   0x100000
 #define RF_AI_AUTO_ASSIGN        0x200000
+#define RF_SET_LOG_FLAG          0x400000
+#define RF_CLEAR_LOG_FLAG        0x800000
 
 /**
  * Network map flags

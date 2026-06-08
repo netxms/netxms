@@ -1344,6 +1344,18 @@ bool EPRule::processEvent(Event *event) const
       ProcessEventWithAIAssistant(event, object, m_aiAgentInstructions);
    }
 
+   // Override event logging flag if requested
+   if (m_flags & RF_SET_LOG_FLAG)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Force set of EF_LOG flag for event " UINT64_FMT, event->getId());
+      event->setLogWriteFlag(true);
+   }
+   else if (m_flags & RF_CLEAR_LOG_FLAG)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Force clear of EF_LOG flag for event " UINT64_FMT, event->getId());
+      event->setLogWriteFlag(false);
+   }
+
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
 }
 
@@ -2124,6 +2136,8 @@ json_t *EPRule::toJson(bool assistantMode) const
       json_object_set_new(flags, "requestAIComment", json_boolean((m_flags & RF_REQUEST_AI_COMMENT) != 0));
       json_object_set_new(flags, "createIncident", json_boolean((m_flags & RF_CREATE_INCIDENT) != 0));
       json_object_set_new(flags, "aiAnalyzeIncident", json_boolean((m_flags & RF_AI_ANALYZE_INCIDENT) != 0));
+      json_object_set_new(flags, "setLogFlag", json_boolean((m_flags & RF_SET_LOG_FLAG) != 0));
+      json_object_set_new(flags, "clearLogFlag", json_boolean((m_flags & RF_CLEAR_LOG_FLAG) != 0));
       json_object_set_new(flags, "stopProcessing", json_boolean((m_flags & RF_STOP_PROCESSING) != 0));
       json_object_set_new(flags, "negatedEventMatch", json_boolean((m_flags & RF_NEGATED_EVENTS) != 0));
       json_object_set_new(flags, "negatedSourceMatch", json_boolean((m_flags & RF_NEGATED_SOURCE) != 0));
