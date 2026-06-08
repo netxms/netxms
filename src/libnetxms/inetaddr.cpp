@@ -807,6 +807,14 @@ String InetAddressList::toString(const TCHAR *separator) const
 }
 
 /**
+ * Serialize to JSON array
+ */
+json_t *InetAddressList::toJson() const
+{
+   return json_object_array(m_list);
+}
+
+/**
  * Resolve host name to address list
  */
 InetAddressList *InetAddressList::resolveHostName(const WCHAR *hostname)
