@@ -886,8 +886,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(legend);
       manager.add(new Separator());
       if (resolution != null)
+      {
          manager.add(resolution);
-      manager.add(actionMinMaxBand);
+         manager.add(actionMinMaxBand);
+      }
       manager.add(new Separator());
       manager.add(actionRefresh);
       manager.add(new Separator());
@@ -959,8 +961,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(legend);
       manager.add(new Separator());
       if (resolution != null)
+      {
          manager.add(resolution);
-      manager.add(actionMinMaxBand);
+         manager.add(actionMinMaxBand);
+      }
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
