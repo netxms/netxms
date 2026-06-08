@@ -554,23 +554,19 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 
       // Gap threshold: 4x the inter-sample interval. For aggregated tiers the spacing is the bucket size,
       // not the polling interval — using pollingInterval here makes every aggregated point look like a gap.
+      // Push and OTLP DCIs report polling interval 0, and store-changes-only DCIs have intentionally sparse
+      // data; gap detection is meaningless for them on any tier, so skip it whenever it is disabled for raw.
       double gapThreshold = 0;
-      DciTier tier = data.getTierServed();
-      if (tier == DciTier.HOURLY)
+      int pollingInterval = data.getPollingInterval();
+      if ((pollingInterval > 0) && !data.isStoreChangesOnly())
       {
-         gapThreshold = 4.0 * 3600.0 * 1000.0;
-      }
-      else if (tier == DciTier.DAILY)
-      {
-         gapThreshold = 4.0 * 86400.0 * 1000.0;
-      }
-      else
-      {
-         int pollingInterval = data.getPollingInterval();
-         if ((pollingInterval > 0) && !data.isStoreChangesOnly())
-         {
+         DciTier tier = data.getTierServed();
+         if (tier == DciTier.HOURLY)
+            gapThreshold = 4.0 * 3600.0 * 1000.0;
+         else if (tier == DciTier.DAILY)
+            gapThreshold = 4.0 * 86400.0 * 1000.0;
+         else
             gapThreshold = pollingInterval * 4.0 * 1000.0;
-         }
       }
       if (gapThreshold > 0)
          series.setLineGapThreshold(gapThreshold);
