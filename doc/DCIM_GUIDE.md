@@ -33,6 +33,7 @@ A DCIM deployment with NetXMS typically combines the following building blocks:
 | Industrial / metering protocols | Native MODBUS TCP/RTU support |
 | Geographic placement | World map / geolocation per object |
 | Logical topology | Automatic L2/L3 network maps |
+| Server-room floor plan | Network map in floor-plan mode: clickable racks + live metrics |
 | Availability / SLA | Business Services with composite checks |
 | Visualization | Dashboards (gauges, charts, rack diagrams, geo/status maps) |
 | Alerting | Events, thresholds, alarms, notification channels |
@@ -371,7 +372,34 @@ topology, internal topology, VLAN maps, and predefined/context maps. Combined wi
 physical-link data, this connects the logical network picture to the physical cabling
 plant.
 
----
+### 9.3 Floor plan view (2D server-room plan)
+
+A predefined network map can be switched into **floor plan display mode** — set the map
+object display mode to `FLOOR_PLAN`
+(`MapObjectDisplayMode.FLOOR_PLAN`; rendered by
+`src/client/nxmc/java/.../networkmaps/widgets/helpers/ObjectFloorPlan.java`). In this mode
+objects are drawn as positioned, resizable rectangles over the map canvas, so you can lay
+out a **2D plan of a server room** by placing **rack objects** on it at their real floor
+positions.
+
+Two things make this especially useful for DCIM:
+
+- **Clickable racks with drill-down.** Rack objects placed on the floor plan are live and
+  clickable — opening a rack drills straight down into its rack view (2D or, with the
+  upcoming feature, **3D**), so the floor plan becomes a navigable map of the room.
+  Each rack figure also reflects the object's current status color, giving an at-a-glance
+  health overview of the whole room.
+- **Vital metrics placed directly on the plan.** Besides racks, you can drop live data
+  onto the same map using map decoration elements:
+  `NetworkMapDCIContainer` (a box showing one or more DCI values),
+  `NetworkMapDCIImage` (a threshold-driven image/indicator),
+  and `NetworkMapTextBox`. This lets you show, for example, the **server-room temperature**
+  (or humidity, total power draw, UPS load, …) right on the floor plan next to the racks it
+  describes, with color/threshold reaction.
+
+The result is a single interactive room view that combines spatial layout, per-rack status
+and drill-down, and live environmental/power readings — exactly the "control-room" picture
+a data center operator expects.
 
 ## 10. Availability and SLA (Business Services)
 
@@ -443,8 +471,10 @@ offers programmatic access to racks, chassis, sensors, assets, and physical link
    objects.
 7. **Set geolocation** for each facility for the world map.
 8. **Define services and SLAs** with Business Services.
-9. **Create dashboards** combining rack diagrams (2D/3D), environmental and power gauges,
-   maps, and alarm lists.
+9. **Create dashboards and a floor plan.** Combine rack diagrams (2D/3D), environmental and
+   power gauges, maps, and alarm lists; build a **floor-plan network map** of each server
+   room with clickable racks (drill-down to rack view) and live metrics (room temperature,
+   humidity, power) placed directly on the plan.
 10. **Configure alerting** — thresholds, events, alarms, and notification channels for
     temperature, humidity, leak, power, and equipment-status conditions.
 
