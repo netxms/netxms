@@ -262,11 +262,27 @@ public class DataSeries
    {
       if (values.size() == 0)
          return 0;
-      double sum = values.get(0).getValueAsDouble();
-      for(int i = 1; i < values.size(); i++)
+
+      // For tiered aggregate data each bucket carries its own average and sample count. A simple mean of
+      // per-bucket averages would over-weight sparse buckets, so weight by sample count to reconstruct the
+      // true overall average (identical to what raw data would yield).
+      double weightedSum = 0;
+      long totalSamples = 0;
+      for(DciDataRow row : values)
       {
-         sum += values.get(i).getValueAsDouble();
+         if (row.isAggregated() && (row.getSampleCount() > 0) && !Double.isNaN(row.getAvgValue()))
+         {
+            weightedSum += row.getAvgValue() * row.getSampleCount();
+            totalSamples += row.getSampleCount();
+         }
       }
+      if (totalSamples > 0)
+         return weightedSum / totalSamples;
+
+      // No per-bucket sample counts available (raw data, on-the-fly bucketing, or min/max band) - use simple mean.
+      double sum = 0;
+      for(DciDataRow row : values)
+         sum += row.getValueAsDouble();
       return sum / values.size();
    }
 
