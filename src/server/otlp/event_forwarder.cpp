@@ -45,17 +45,6 @@
 namespace logs_v1 = opentelemetry::proto::logs::v1;
 
 /**
- * Convert wide character string to UTF-8 std::string
- */
-static inline std::string WideToUtf8(const wchar_t *ws)
-{
-   char *utf8 = UTF8StringFromWideString(ws);
-   std::string result(utf8);
-   MemFree(utf8);
-   return result;
-}
-
-/**
  * Map NetXMS event severity to OTLP severity number.
  * Inverse of the ingest-side band mapping (see logs.cpp:MapOtelSeverity).
  */
@@ -88,20 +77,6 @@ static const char *SeverityText(uint32_t severity)
 }
 
 /**
- * Single log record attribute - either a UTF-8 string or a 64-bit integer value
- */
-struct OtlpExportAttribute
-{
-   std::string key;
-   std::string stringValue;
-   int64_t intValue;
-   bool isInt;
-
-   OtlpExportAttribute(std::string&& k, std::string&& v) : key(std::move(k)), stringValue(std::move(v)), intValue(0), isInt(false) { }
-   OtlpExportAttribute(const char *k, int64_t v) : key(k), intValue(v), isInt(true) { }
-};
-
-/**
  * Buffered export record - a converted event awaiting delivery
  */
 struct OtlpExportRecord
@@ -118,16 +93,6 @@ struct OtlpExportRecord
    std::string body;
    std::vector<OtlpExportAttribute> attributes;
 };
-
-/**
- * Add a string attribute to a protobuf message that exposes add_attributes() (Resource, LogRecord)
- */
-template<typename T> static inline void AddStringAttribute(T *parent, const char *key, const std::string& value)
-{
-   auto kv = parent->add_attributes();
-   kv->set_key(key);
-   kv->mutable_value()->set_string_value(value);
-}
 
 /**
  * OTLP event forwarder driver

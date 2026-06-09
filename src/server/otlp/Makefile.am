@@ -8,7 +8,7 @@ generated/%.pb.cc generated/%.pb.h: %.proto
 	@PROTOC@ @PROTOC_FLAGS@ --cpp_out=generated --proto_path=$(srcdir) $<
 
 pkglib_LTLIBRARIES = otlp.la
-otlp_la_SOURCES = main.cpp receiver.cpp matching.cpp instance.cpp catalog.cpp logs.cpp event_forwarder.cpp
+otlp_la_SOURCES = main.cpp receiver.cpp matching.cpp instance.cpp catalog.cpp logs.cpp event_forwarder.cpp metric_export.cpp
 nodist_otlp_la_SOURCES = generated/common.pb.cc generated/resource.pb.cc generated/metrics.pb.cc generated/metrics_service.pb.cc \
                          generated/logs.pb.cc generated/logs_service.pb.cc
 otlp_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build \

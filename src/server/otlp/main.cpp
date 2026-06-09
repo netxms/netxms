@@ -52,6 +52,7 @@ static bool InitModule(Config *config)
       .build();
 
    RegisterOtlpEventForwarder();
+   RegisterOtlpMetricExporter(config);
 
    nxlog_debug_tag(DEBUG_TAG_OTLP, 1, L"OTLP receiver module initialized");
    return true;

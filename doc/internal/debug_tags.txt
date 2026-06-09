@@ -166,6 +166,7 @@ nxcp.streamcomp	NXCP stream compression
 otel.log	OpenTelemetry log processing (server side)
 otlp		OTLP receiver module
 otlp.export	OTLP event forwarder (events exported as OTLP logs)
+otlp.metrics	OTLP metric export (DCI values exported as OTLP metrics)
 
 oxidized	Oxidized integration module
 

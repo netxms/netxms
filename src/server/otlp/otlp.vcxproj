@@ -343,6 +343,7 @@
     <ClCompile Include="receiver.cpp" />
     <ClCompile Include="logs.cpp" />
     <ClCompile Include="event_forwarder.cpp" />
+    <ClCompile Include="metric_export.cpp" />
     <ClCompile Include="generated\common.pb.cc" />
     <ClCompile Include="generated\resource.pb.cc" />
     <ClCompile Include="generated\metrics.pb.cc" />
