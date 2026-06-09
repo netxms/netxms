@@ -1490,7 +1490,14 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 		wBuffer = const_cast<void*>(buffer);
 	}
 #endif
-	hStmt->m_driver->m_callTable.Bind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+	if ((cType == DB_CTYPE_UTF8_STRING) && (buffer == nullptr))
+	{
+	   hStmt->m_driver->m_callTable.Bind(hStmt->m_statement, pos, sqlType, cType,  const_cast<char*>(""), DB_BIND_STATIC);
+	}
+	else
+	{
+	   hStmt->m_driver->m_callTable.Bind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+	}
 #undef wBuffer
 #undef realAllocType
 }
