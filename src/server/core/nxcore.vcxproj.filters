@@ -246,6 +246,9 @@
     <ClCompile Include="lln.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="localization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="logfilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -654,6 +657,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_events.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\nms_localization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\nms_objects.h">

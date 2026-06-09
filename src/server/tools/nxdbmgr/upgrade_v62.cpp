@@ -25,6 +25,24 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.23 to 62.24
+ */
+static bool H_UpgradeFromV23()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE localized_strings ("
+      L"  entity_class varchar(32) not null,"
+      L"  entity_id integer not null,"
+      L"  field_tag varchar(32) not null,"
+      L"  language varchar(8) not null,"
+      L"  value $SQL:TEXT not null,"
+      L"  PRIMARY KEY(entity_class,entity_id,field_tag,language))"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_localized_strings_entity ON localized_strings(entity_class,entity_id)"));
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 62.22 to 62.23
  */
 static bool H_UpgradeFromV22()
@@ -892,6 +910,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 62, 24, H_UpgradeFromV23 },
    { 22, 62, 23, H_UpgradeFromV22 },
    { 21, 62, 22, H_UpgradeFromV21 },
    { 20, 62, 21, H_UpgradeFromV20 },

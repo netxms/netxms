@@ -9740,7 +9740,7 @@ void ClientSession::executeAction(const NXCPMessage& request)
 void ClientSession::getObjectTools(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   response.setField(VID_RCC, GetObjectToolsIntoMessage(&response, m_userId, checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS)));
+   response.setField(VID_RCC, GetObjectToolsIntoMessage(&response, m_userId, checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS), m_language));
    sendMessage(response);
 }
 

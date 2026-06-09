@@ -1544,8 +1544,10 @@ public class NXCPCodes
    public static final long VID_MAP_CANVAS_TYPE = 990;
    public static final long VID_MAP_INITIAL_VIEW_MODE = 991;
    public static final long VID_WARNING_RCC = 992;
+   public static final long VID_NUM_TRANSLATIONS = 993;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
+   public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;

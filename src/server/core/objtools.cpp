@@ -25,6 +25,7 @@
 #include <nxtools.h>
 #include <nms_users.h>
 #include <pugixml.h>
+#include "nms_localization.h"
 
 /**
  * Translate object class to applicable tool mask bit.
@@ -1418,6 +1419,15 @@ uint32_t NXCORE_EXPORTABLE DeleteObjectToolFromDB(uint32_t toolId)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
+   hStmt = DBPrepare(hdb, _T("DELETE FROM localized_strings WHERE entity_class=? AND entity_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
    DBCommit(hdb);
 	DBConnectionPoolReleaseConnection(hdb);
    NotifyClientSessions(NX_NOTIFY_OBJTOOL_DELETED, toolId);
@@ -1646,6 +1656,43 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
             return ReturnDBFailure(hdb, hStmt);
       }
       DBFreeStatement(hStmt);
+   }
+
+   // Translations (replace-all)
+   hStmt = DBPrepare(hdb, _T("DELETE FROM localized_strings WHERE entity_class=? AND entity_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   LocalizedStringSet translations;
+   translations.loadFromMessage(msg, VID_NUM_TRANSLATIONS, VID_TRANSLATION_LIST_BASE);
+   if (!translations.isEmpty())
+   {
+      hStmt = DBPrepare(hdb,
+         _T("INSERT INTO localized_strings (entity_class,entity_id,field_tag,language,value) VALUES (?,?,?,?,?)"),
+         translations.size() > 1);
+      if (hStmt == nullptr)
+         return ReturnDBFailure(hdb, hStmt);
+      bool ok = true;
+      translations.forEach([&](const wchar_t *fieldTag, const wchar_t *language, const wchar_t *value)
+      {
+         if (!ok)
+            return;
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, fieldTag, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, language, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+         if (!DBExecute(hStmt))
+            ok = false;
+      });
+      DBFreeStatement(hStmt);
+      if (!ok)
+         return ReturnDBFailure(hdb, nullptr);
    }
 
    DBCommit(hdb);
@@ -2059,6 +2106,39 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
       }
    }
 
+   // Translations (replace-all)
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM localized_strings WHERE entity_class='object_tool' AND entity_id=?")))
+      return ImportFailure(hdb, nullptr, context);
+
+   json_t *translations = json_object_get(config, "translations");
+   if (json_is_array(translations) && (json_array_size(translations) > 0))
+   {
+      hStmt = DBPrepare(hdb,
+         _T("INSERT INTO localized_strings (entity_class,entity_id,field_tag,language,value) VALUES (?,?,?,?,?)"));
+      if (hStmt == nullptr)
+         return ImportFailure(hdb, nullptr, context);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, toolId);
+      size_t tIndex;
+      json_t *t;
+      json_array_foreach(translations, tIndex, t)
+      {
+         if (!json_is_object(t))
+            continue;
+         String fieldTag = json_object_get_string(t, "field", _T(""));
+         String language = json_object_get_string(t, "language", _T(""));
+         String value = json_object_get_string(t, "value", _T(""));
+         if (fieldTag.isEmpty() || language.isEmpty())
+            continue;
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, fieldTag, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, language, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+         if (!DBExecute(hStmt))
+            return ImportFailure(hdb, hStmt, context);
+      }
+      DBFreeStatement(hStmt);
+   }
+
    // Update input fields
    if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?")))
       return ImportFailure(hdb, nullptr, context);
@@ -2271,6 +2351,22 @@ json_t *CreateObjectToolExportRecord(uint32_t id)
 
          json_object_set_new(tool, "columns", CreateObjectToolColumnExportRecords(hdb, id));
          json_object_set_new(tool, "inputFields", CreateObjectToolInputFieldExportRecords(hdb, id));
+
+         LocalizedStringSet translations;
+         LoadLocalizedStrings(LOCSTR_CLASS_OBJECT_TOOL, id, &translations);
+         if (!translations.isEmpty())
+         {
+            json_t *array = json_array();
+            translations.forEach([&](const wchar_t *fieldTag, const wchar_t *language, const wchar_t *value)
+            {
+               json_t *entry = json_object();
+               json_object_set_new(entry, "field", json_string_t(fieldTag));
+               json_object_set_new(entry, "language", json_string_t(language));
+               json_object_set_new(entry, "value", json_string_t(value));
+               json_array_append_new(array, entry);
+            });
+            json_object_set_new(tool, "translations", array);
+         }
       }
       DBFreeResult(hResult);
    }
@@ -2334,7 +2430,7 @@ static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, NXCPMessag
 /**
  * Get all object tools available for given user into NXCP message
  */
-uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess)
+uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess, const wchar_t *language)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
@@ -2352,6 +2448,12 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
       acl[i].userId = DBGetFieldULong(hResult, i, 1);
    }
    DBFreeResult(hResult);
+
+   // Bulk-load translations for all tools so we can resolve per-tool without a second
+   // query per row. Failure to load translations is non-fatal: clients get base strings.
+   HashMap<uint32_t, LocalizedStringSet> translations(Ownership::True);
+   if ((language != nullptr) && (*language != 0))
+      LoadLocalizedStringsForClass(LOCSTR_CLASS_OBJECT_TOOL, &translations);
 
    hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon,remote_port,remote_host,applicable_classes FROM object_tools"));
    if (hResult == nullptr)
@@ -2387,12 +2489,13 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
       if (hasAccess)
       {
          wchar_t buffer[MAX_DB_STRING];
+         const LocalizedStringSet *t = translations.get(toolId);
 
          msg->setField(fieldId, toolId);
 
-         // name
+         // name (localized)
          DBGetField(hResult, i, 1, buffer, MAX_DB_STRING);
-         msg->setField(fieldId + 1, buffer);
+         msg->setField(fieldId + 1, (t != nullptr) ? t->resolve(LOCSTR_TAG_NAME, language, buffer) : buffer);
 
          msg->setField(fieldId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
 
@@ -2403,25 +2506,25 @@ uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullA
 
          msg->setField(fieldId + 4, DBGetFieldULong(hResult, i, 4));
 
-         // description
+         // description (localized)
          DBGetField(hResult, i, 5, buffer, MAX_DB_STRING);
-         msg->setField(fieldId + 5, buffer);
+         msg->setField(fieldId + 5, (t != nullptr) ? t->resolve(LOCSTR_TAG_DESCRIPTION, language, buffer) : buffer);
 
          // filter
          DBGetField(hResult, i, 6, buffer, MAX_DB_STRING);
          msg->setField(fieldId + 6, buffer);
 
-         // confirmation text
+         // confirmation text (localized)
          DBGetField(hResult, i, 7, buffer, MAX_DB_STRING);
-         msg->setField(fieldId + 7, buffer);
+         msg->setField(fieldId + 7, (t != nullptr) ? t->resolve(LOCSTR_TAG_CONFIRMATION_TEXT, language, buffer) : buffer);
 
-         // command name
+         // command name (localized)
          DBGetField(hResult, i, 8, buffer, MAX_DB_STRING);
-         msg->setField(fieldId + 8, buffer);
+         msg->setField(fieldId + 8, (t != nullptr) ? t->resolve(LOCSTR_TAG_COMMAND_NAME, language, buffer) : buffer);
 
-         // command short name
+         // command short name (localized)
          DBGetField(hResult, i, 9, buffer, MAX_DB_STRING);
-         msg->setField(fieldId + 9, buffer);
+         msg->setField(fieldId + 9, (t != nullptr) ? t->resolve(LOCSTR_TAG_COMMAND_SHORT_NAME, language, buffer) : buffer);
 
          // icon (image library UUID reference)
          msg->setField(fieldId + 10, DBGetFieldGUID(hResult, i, 10));
@@ -2977,6 +3080,47 @@ static uint32_t SaveObjectToolFromJson(const json_t *config, uint32_t *toolId)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
+   // Replace translations
+   hStmt = DBPrepare(hdb, _T("DELETE FROM localized_strings WHERE entity_class=? AND entity_id=?"));
+   if (hStmt == nullptr)
+      return ReturnDBFailure(hdb, hStmt);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, *toolId);
+   if (!DBExecute(hStmt))
+      return ReturnDBFailure(hdb, hStmt);
+   DBFreeStatement(hStmt);
+
+   json_t *translations = json_object_get(const_cast<json_t*>(config), "translations");
+   if (json_is_array(translations) && (json_array_size(translations) > 0))
+   {
+      hStmt = DBPrepare(hdb,
+         _T("INSERT INTO localized_strings (entity_class,entity_id,field_tag,language,value) VALUES (?,?,?,?,?)"),
+         json_array_size(translations) > 1);
+      if (hStmt == nullptr)
+         return ReturnDBFailure(hdb, hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, LOCSTR_CLASS_OBJECT_TOOL, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, *toolId);
+
+      size_t tIndex;
+      json_t *t;
+      json_array_foreach(translations, tIndex, t)
+      {
+         if (!json_is_object(t))
+            continue;
+         String fieldTag = json_object_get_string(t, "field", _T(""));
+         String language = json_object_get_string(t, "language", _T(""));
+         String value = json_object_get_string(t, "value", _T(""));
+         if (fieldTag.isEmpty() || language.isEmpty())
+            continue;
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, fieldTag, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, language, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+         if (!DBExecute(hStmt))
+            return ReturnDBFailure(hdb, hStmt);
+      }
+      DBFreeStatement(hStmt);
+   }
+
    json_t *inputFields = json_object_get(const_cast<json_t*>(config), "inputFields");
    if (json_is_array(inputFields) && (json_array_size(inputFields) > 0))
    {
@@ -3314,6 +3458,25 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
 
       LoadInputFieldDefinitions(toolId, hdb, tool);
 
+      if (fullAccess)
+      {
+         LocalizedStringSet translations;
+         LoadLocalizedStrings(LOCSTR_CLASS_OBJECT_TOOL, toolId, &translations);
+         if (!translations.isEmpty())
+         {
+            json_t *array = json_array();
+            translations.forEach([&](const wchar_t *fieldTag, const wchar_t *language, const wchar_t *value)
+            {
+               json_t *entry = json_object();
+               json_object_set_new(entry, "field", json_string_t(fieldTag));
+               json_object_set_new(entry, "language", json_string_t(language));
+               json_object_set_new(entry, "value", json_string_t(value));
+               json_array_append_new(array, entry);
+            });
+            json_object_set_new(tool, "translations", array);
+         }
+      }
+
       // ACL and table columns are sensitive and only exposed to callers with MANAGE_TOOLS rights,
       // so that GET → edit → PUT round-trips work for admin clients without leaking the ACL or
       // SNMP/agent column configuration to ordinary tool-execution callers.
@@ -3487,6 +3650,12 @@ uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg)
 
    if (!LoadInputFieldDefinitions(toolId, hdb, msg, VID_NUM_FIELDS, VID_FIELD_LIST_BASE))
       goto cleanup;
+
+   {
+      LocalizedStringSet translations;
+      LoadLocalizedStrings(LOCSTR_CLASS_OBJECT_TOOL, toolId, &translations);
+      translations.fillMessage(msg, VID_NUM_TRANSLATIONS, VID_TRANSLATION_LIST_BASE);
+   }
 
    rcc = RCC_SUCCESS;
 

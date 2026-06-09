@@ -2103,6 +2103,21 @@ SELECT create_hypertable('package_deployment_log', 'execution_time', chunk_time_
 #endif
 
 /*
+** Localized strings for user-defined entities (object tools, event templates, etc.)
+*/
+CREATE TABLE localized_strings
+(
+  entity_class varchar(32) not null,
+  entity_id integer not null,
+  field_tag varchar(32) not null,
+  language varchar(8) not null,
+  value SQL_TEXT not null,
+  PRIMARY KEY(entity_class,entity_id,field_tag,language)
+) TABLE_TYPE;
+
+CREATE INDEX idx_localized_strings_entity ON localized_strings(entity_class,entity_id);
+
+/*
 ** Object tools
 */
 CREATE TABLE object_tools

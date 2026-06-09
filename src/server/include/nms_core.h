@@ -1061,6 +1061,7 @@ public:
    const wchar_t *getSessionName() const { return m_sessionName; }
    const wchar_t *getClientInfo() const { return m_clientInfo; }
    const wchar_t *getWebServerAddress() const { return m_webServerAddress; }
+   const wchar_t *getLanguage() const { return m_language; }
    uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
    bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) != 0; }
    bool isTerminated() const { return (m_flags & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
@@ -1608,7 +1609,7 @@ uint32_t NXCORE_EXPORTABLE UpdateObjectToolFromJson(uint32_t toolId, const json_
 json_t *CreateObjectToolExportRecord(uint32_t id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
 bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context);
-uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
+uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess, const wchar_t *language);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAccess, const char *typesFilter, uint32_t objectId = 0);
 json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId, bool fullAccess);

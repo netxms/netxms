@@ -1735,6 +1735,7 @@ typedef struct
 #define VID_MAP_CANVAS_TYPE         ((uint32_t)990)
 #define VID_MAP_INITIAL_VIEW_MODE   ((uint32_t)991)
 #define VID_WARNING_RCC             ((uint32_t)992)
+#define VID_NUM_TRANSLATIONS        ((uint32_t)993)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
@@ -1863,6 +1864,7 @@ typedef struct
 #define VID_COLUMN_INFO_BASE        ((uint32_t)0x10000000)
 #define VID_FIELD_LIST_BASE         ((uint32_t)0x70000000)
 #define VID_ORDER_FIELD_LIST_BASE   ((uint32_t)0x78000000)
+#define VID_TRANSLATION_LIST_BASE   ((uint32_t)0x68000000)
 
 // Base value for event log records
 #define VID_EVENTLOG_MSG_BASE       ((uint32_t)0x10000000)

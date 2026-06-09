@@ -22,7 +22,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp import_legacy.cpp incident.cpp inaddr_index.cpp \
 			index.cpp interface.cpp isc.cpp layer2.cpp ldap.cpp lln.cpp \
-			lldp.cpp logfilter.cpp loghandle.cpp logs.cpp macdb.cpp main.cpp \
+			lldp.cpp localization.cpp logfilter.cpp loghandle.cpp logs.cpp macdb.cpp main.cpp \
 			maint.cpp market.cpp mdconn.cpp mdsession.cpp mj.cpp mobile.cpp \
 			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netmap_content.cpp \
 			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
