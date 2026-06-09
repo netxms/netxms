@@ -99,6 +99,9 @@ public class ChartConfiguration
    protected boolean translucent = false;
 
    @Element(required = false)
+   protected boolean show95thPercentile = false;
+
+   @Element(required = false)
    protected boolean doughnutRendering = true;
 
    @Element(required = false)
@@ -242,6 +245,7 @@ public class ChartConfiguration
       transposed = src.transposed;
       invertedAxis = src.invertedAxis;
       translucent = src.translucent;
+      show95thPercentile = src.show95thPercentile;
       doughnutRendering = src.doughnutRendering;
       showTotal = src.showTotal;
       area = src.area;
@@ -546,6 +550,26 @@ public class ChartConfiguration
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+
+   /**
+    * Check if 95th percentile line/value should be shown (for burstable billing).
+    *
+    * @return true if 95th percentile should be shown
+    */
+   public boolean isShow95thPercentile()
+   {
+      return show95thPercentile;
+   }
+
+   /**
+    * Set whether 95th percentile line/value should be shown (for burstable billing).
+    *
+    * @param show95thPercentile true to show 95th percentile
+    */
+   public void setShow95thPercentile(boolean show95thPercentile)
+   {
+      this.show95thPercentile = show95thPercentile;
    }
 
    /**

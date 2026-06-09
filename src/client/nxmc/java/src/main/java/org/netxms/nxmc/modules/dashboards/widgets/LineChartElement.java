@@ -114,6 +114,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setLineWidth(config.getLineWidth());
       chartConfig.setArea(config.isArea());
       chartConfig.setTranslucent(config.isTranslucent());
+      chartConfig.setShow95thPercentile(config.isShow95thPercentile());
       chartConfig.setUseMultipliers(config.isUseMultipliers());
       chartConfig.setAutoScale(config.isAutoScale());
       chartConfig.setMinYScaleValue(config.getMinYScaleValue());

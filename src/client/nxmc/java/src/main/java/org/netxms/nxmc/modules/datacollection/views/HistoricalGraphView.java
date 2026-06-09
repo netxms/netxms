@@ -125,6 +125,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private Action actionStacked;
    private Action actionAreaChart;
    private Action actionTranslucent;
+   private Action actionShowPercentile;
    private Action actionShowLegend;
    private Action actionExtendedLegend;
    private Action actionLegendLeft;
@@ -202,6 +203,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          configuration.setStacked(templateConfig.isStacked());
          configuration.setTitle(templateConfig.getTitle());
          configuration.setTranslucent(templateConfig.isTranslucent());
+         configuration.setShow95thPercentile(templateConfig.isShow95thPercentile());
          configuration.setUseMultipliers(templateConfig.isUseMultipliers());
          configuration.setYAxisLabel(templateConfig.getYAxisLabel());
          configuration.setTimePeriod(templateConfig.getTimePeriod());
@@ -739,6 +741,17 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionAreaChart.setChecked(configuration.isArea());
       addKeyBinding("M1+M3+A", actionAreaChart);
 
+      actionShowPercentile = new Action(i18n.tr("Show 95th &percentile"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            configuration.setShow95thPercentile(actionShowPercentile.isChecked());
+            configureGraphFromSettings();
+         }
+      };
+      actionShowPercentile.setChecked(configuration.isShow95thPercentile());
+      addKeyBinding("M1+M3+P", actionShowPercentile);
+
       presetActions = createPresetActions(new PresetHandler() {
          @Override
          public void onPresetSelected(TimeUnit unit, int range)
@@ -827,6 +840,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionStacked.setChecked(configuration.isStacked());
       actionTranslucent.setChecked(configuration.isTranslucent());
       actionAreaChart.setChecked(configuration.isArea());
+      actionShowPercentile.setChecked(configuration.isShow95thPercentile());
 
       actionLegendLeft.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_LEFT);
       actionLegendRight.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
@@ -882,6 +896,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionTranslucent);
+      manager.add(actionShowPercentile);
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());
@@ -957,6 +972,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionTranslucent);
+      manager.add(actionShowPercentile);
       manager.add(actionAutoRefresh);
       manager.add(legend);
       manager.add(new Separator());

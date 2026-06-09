@@ -63,6 +63,7 @@ public class GeneralChart extends PreferencePage
 	private Button checkStacked;
 	private Button checkExtendedLegend;
    private Button checkTranslucent;
+   private Button checkShowPercentile;
    private Button checkAreaChart;
    private Button checkUseMultipliers;
    private LabeledSpinner lineWidth;
@@ -144,6 +145,10 @@ public class GeneralChart extends PreferencePage
       checkTranslucent= new Button(optionsGroup, SWT.CHECK);
       checkTranslucent.setText(i18n.tr("Translucent"));
       checkTranslucent.setSelection(config.isTranslucent());
+
+      checkShowPercentile = new Button(optionsGroup, SWT.CHECK);
+      checkShowPercentile.setText(i18n.tr("Show 95th percentile"));
+      checkShowPercentile.setSelection(config.isShow95thPercentile());
 
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(i18n.tr("Show &legend"));
@@ -333,6 +338,7 @@ public class GeneralChart extends PreferencePage
 		checkStacked.setSelection(false);
 		checkExtendedLegend.setSelection(false);
 		checkAreaChart.setSelection(false);
+		checkShowPercentile.setSelection(false);
 		checkUseMultipliers.setSelection(true);
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
@@ -365,6 +371,7 @@ public class GeneralChart extends PreferencePage
       config.setArea(checkAreaChart.getSelection());
       config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
+      config.setShow95thPercentile(checkShowPercentile.getSelection());
       config.setLineWidth(lineWidth.getSelection());
       config.setTimePeriod(timeSelector.getTimePeriod());
 		config.setUseMultipliers(checkUseMultipliers.getSelection());

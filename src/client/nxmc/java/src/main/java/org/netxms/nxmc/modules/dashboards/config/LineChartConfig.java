@@ -55,6 +55,9 @@ public class LineChartConfig extends AbstractChartConfig
    @Element(required = false)
    private boolean interactive = false;
 
+   @Element(required = false)
+   private boolean show95thPercentile = false;
+
    /**
     * Default constructor
     */
@@ -225,5 +228,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setInteractive(boolean interactive)
    {
       this.interactive = interactive;
+   }
+
+   /**
+    * @return true if 95th percentile line/value should be shown
+    */
+   public boolean isShow95thPercentile()
+   {
+      return show95thPercentile;
+   }
+
+   /**
+    * @param show95thPercentile true to show 95th percentile
+    */
+   public void setShow95thPercentile(boolean show95thPercentile)
+   {
+      this.show95thPercentile = show95thPercentile;
    }
 }

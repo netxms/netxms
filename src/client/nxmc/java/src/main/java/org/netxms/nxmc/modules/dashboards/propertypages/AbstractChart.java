@@ -72,6 +72,7 @@ public class AbstractChart extends DashboardElementPropertyPage
    private Button checkUseMultipliers;
    private Button checkStacked;
    private Button checkAreaChart;
+   private Button checkShowPercentile;
    private Button checkInteractive;
    private LabeledSpinner lineWidth;
    private YAxisRangeEditor yAxisRange;   
@@ -202,6 +203,13 @@ public class AbstractChart extends DashboardElementPropertyPage
          gd = new GridData();
          gd.horizontalSpan = layout.numColumns;
          checkAreaChart.setLayoutData(gd);
+
+         checkShowPercentile = new Button(optionsGroup, SWT.CHECK);
+         checkShowPercentile.setText(i18n.tr("Show 95th &percentile"));
+         checkShowPercentile.setSelection(((LineChartConfig)config).isShow95thPercentile());
+         gd = new GridData();
+         gd.horizontalSpan = layout.numColumns;
+         checkShowPercentile.setLayoutData(gd);
       }
       
       checkTranslucent = new Button(optionsGroup, SWT.CHECK);
@@ -443,6 +451,7 @@ public class AbstractChart extends DashboardElementPropertyPage
          ((LineChartConfig)config).setUseMultipliers(checkUseMultipliers.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());
          ((LineChartConfig)config).setArea(checkAreaChart.getSelection());
+         ((LineChartConfig)config).setShow95thPercentile(checkShowPercentile.getSelection());
          ((LineChartConfig)config).setInteractive(checkInteractive.getSelection());
          ((LineChartConfig)config).setLineWidth(lineWidth.getSelection());
 		}

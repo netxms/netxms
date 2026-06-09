@@ -279,6 +279,21 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 				return true;
 			}
 		});
+
+      // 95th percentile lines are drawn on top of the series so they stay visible over filled areas.
+      ((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
+         @Override
+         public void paintControl(PaintEvent e)
+         {
+            paintPercentile(e, yAxis);
+         }
+
+         @Override
+         public boolean drawBehindSeries()
+         {
+            return false;
+         }
+      });
 	}
 
 	/**
@@ -494,6 +509,41 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
                }
             }
          }
+      }
+   }
+
+   /**
+    * Paint 95th percentile lines (one per data source, for burstable billing). Mirrors the per-line
+    * threshold rendering. Skipped for stacked charts, where the individual lines do not represent the
+    * stacked total; the value is still shown in the extended legend in that case.
+    */
+   private void paintPercentile(PaintEvent e, IAxis axis)
+   {
+      if (!configuration.isShow95thPercentile() || configuration.isStacked())
+         return;
+
+      GC gc = e.gc;
+      Rectangle clientArea = ((Composite)getPlotArea().getControl()).getClientArea();
+
+      List<ChartDciConfig> items = chart.getItems();
+      List<DataSeries> dataSeries = chart.getDataSeries();
+      gc.setLineStyle(SWT.LINE_DASH);
+      gc.setLineWidth(2);
+      for(int i = 0; i < items.size() && i < dataSeries.size(); i++)
+      {
+         DataSeries data = dataSeries.get(i);
+         if (data.getValues().length == 0)
+            continue;
+
+         double value = data.getPercentile95();
+         if (items.get(i).invertValues)
+            value = -value;
+         int y = axis.getPixelCoordinate(value);
+
+         ISeries<?> series = getSeriesSet().getSeries(Integer.toString(i));
+         if (series instanceof ILineSeries)
+            gc.setForeground(((ILineSeries<?>)series).getLineColor());
+         gc.drawLine(0, y, clientArea.width, y);
       }
    }
 

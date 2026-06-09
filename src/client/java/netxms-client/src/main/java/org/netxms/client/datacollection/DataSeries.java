@@ -270,9 +270,49 @@ public class DataSeries
       return sum / values.size();
    }
 
+   /**
+    * Get given percentile of series values (linear interpolation between closest ranks). Used for
+    * 95th percentile / burstable billing overlays. Computed over processed values, matching the
+    * average calculation.
+    *
+    * @param percentile percentile to calculate (0-100)
+    * @return percentile value, or 0 if series is empty
+    */
+   public double getPercentile(double percentile)
+   {
+      int count = values.size();
+      if (count == 0)
+         return 0;
+      if (count == 1)
+         return values.get(0).getValueAsDouble();
+
+      double[] sorted = new double[count];
+      for(int i = 0; i < count; i++)
+         sorted[i] = values.get(i).getValueAsDouble();
+      java.util.Arrays.sort(sorted);
+
+      double rank = (percentile / 100.0) * (count - 1);
+      int lower = (int)Math.floor(rank);
+      int upper = (int)Math.ceil(rank);
+      if (lower == upper)
+         return sorted[lower];
+      double fraction = rank - lower;
+      return sorted[lower] + fraction * (sorted[upper] - sorted[lower]);
+   }
+
+   /**
+    * Get 95th percentile of series values (used for burstable billing overlay line and extended legend).
+    *
+    * @return 95th percentile value, or 0 if series is empty
+    */
+   public double getPercentile95()
+   {
+      return getPercentile(95.0);
+   }
+
 	/**
 	 * Add new value
-	 * 
+	 *
 	 * @param row DciDataRow
 	 */
 	public void addDataRow(DciDataRow row)

@@ -64,7 +64,7 @@ public class ChartLegend extends Composite
    private final Color defaultForeground = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
 
    private Chart chart;
-   private Label[] headerLabels = new Label[4];
+   private Label[] headerLabels = new Label[5];
    private List<Label[]> dataLabels = new ArrayList<>();
    private Font headerFont = null;
    private boolean vertical;
@@ -188,7 +188,7 @@ public class ChartLegend extends Composite
       if (configuration.isExtendedLegend() && (chart.getType() == ChartType.LINE))
       {
          GridLayout layout = new GridLayout();
-         layout.numColumns = 5;
+         layout.numColumns = 6;
          layout.marginWidth = 0;
          layout.marginHeight = 0;
          layout.verticalSpacing = 1;
@@ -224,13 +224,19 @@ public class ChartLegend extends Composite
          headerLabels[3].setBackground(getBackground());
          headerLabels[3].setForeground(getForeground());
 
+         headerLabels[4] = new Label(this, SWT.NONE);
+         headerLabels[4].setText("95%");
+         headerLabels[4].setFont(headerFont);
+         headerLabels[4].setBackground(getBackground());
+         headerLabels[4].setForeground(getForeground());
+
          List<ChartDciConfig> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
          {
             int color = metrics.get(i).getColorAsInt();
             new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
-            Label[] row = new Label[4];
-            for(int j = 0; j < 4; j++)
+            Label[] row = new Label[5];
+            for(int j = 0; j < 5; j++)
             {
                row[j] = new Label(this, SWT.NONE);
                row[j].setBackground(getBackground());
@@ -361,6 +367,7 @@ public class ChartLegend extends Composite
             labels[1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));
             labels[2].setText(formatter.format(Double.toString(s.getMaxValue()), timeFormatter));
             labels[3].setText(formatter.format(Double.toString(s.getAverageValue()), timeFormatter));
+            labels[4].setText(formatter.format(Double.toString(s.getPercentile95()), timeFormatter));
          }
          else if (labels.length > 1)
          {
