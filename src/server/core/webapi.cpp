@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxms-webapi.h>
 #include <netxms-version.h>
+#include <zlib.h>
 
 #define WS_GUID         "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 #define WS_GUID_LEN     36
@@ -308,6 +309,109 @@ static inline bool IsWebsocketUpgradeRequest(MHD_Connection *connection)
 }
 
 /**
+ * Decompress request body (gzip or zlib/deflate) in place. Uses automatic header
+ * detection so both "gzip" and "deflate" Content-Encoding values are handled.
+ * Decompressed output is capped at MAX_WEBAPI_REQUEST_SIZE to guard against
+ * decompression bombs. Returns true on success.
+ */
+static bool InflateRequestData(ByteStream& data)
+{
+   size_t inputSize;
+   const BYTE *input = data.buffer(&inputSize);
+   if (inputSize == 0)
+      return true;
+
+   z_stream stream;
+   memset(&stream, 0, sizeof(stream));
+   if (inflateInit2(&stream, 15 + 32) != Z_OK)   // 32 enables automatic gzip/zlib header detection
+      return false;
+
+   stream.next_in = const_cast<BYTE*>(input);
+   stream.avail_in = static_cast<uInt>(inputSize);
+
+   ByteStream output(inputSize * 4);
+   output.setAllocationStep(32768);
+
+   BYTE chunk[32768];
+   int rc;
+   do
+   {
+      stream.next_out = chunk;
+      stream.avail_out = sizeof(chunk);
+      rc = inflate(&stream, Z_NO_FLUSH);
+      if ((rc != Z_OK) && (rc != Z_STREAM_END) && (rc != Z_BUF_ERROR))
+      {
+         inflateEnd(&stream);
+         return false;
+      }
+
+      size_t produced = sizeof(chunk) - stream.avail_out;
+      if (produced > 0)
+      {
+         if (output.size() + produced > MAX_WEBAPI_REQUEST_SIZE)
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Decompressed request body exceeds maximum size limit (%u bytes)"), MAX_WEBAPI_REQUEST_SIZE);
+            inflateEnd(&stream);
+            return false;
+         }
+         output.write(chunk, produced);
+      }
+      else if (rc == Z_BUF_ERROR)
+      {
+         break;   // no progress possible (truncated input) - stop and fail below
+      }
+   } while (rc != Z_STREAM_END);
+
+   inflateEnd(&stream);
+
+   if (rc != Z_STREAM_END)
+      return false;   // incomplete or corrupt stream
+
+   data.clear();
+   size_t outputSize;
+   const BYTE *outputBuffer = output.buffer(&outputSize);
+   data.write(outputBuffer, outputSize);
+   return true;
+}
+
+/**
+ * Finalize request body once fully received: transparently decompress it if the
+ * client used a supported Content-Encoding, then null-terminate for text/JSON consumers.
+ */
+void Context::onUploadComplete()
+{
+   if (m_requestData.size() == 0)
+      return;
+
+   const char *encoding = getRequestHeader(MHD_HTTP_HEADER_CONTENT_ENCODING);
+   if ((encoding != nullptr) && (*encoding != 0) && stricmp(encoding, "identity"))
+   {
+      if (!stricmp(encoding, "gzip") || !stricmp(encoding, "x-gzip") || !stricmp(encoding, "deflate"))
+      {
+         size_t compressedSize = m_requestData.size();
+         if (!InflateRequestData(m_requestData))
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Cannot decompress Web API request body (Content-Encoding: %hs)"), encoding);
+            m_requestDecodingFailed = true;
+            return;
+         }
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request body decompressed (%u -> %u bytes, Content-Encoding: %hs)"),
+            static_cast<uint32_t>(compressedSize), static_cast<uint32_t>(m_requestData.size()), encoding);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Unsupported Content-Encoding \"%hs\" in Web API request"), encoding);
+         m_requestDecodingFailed = true;
+         return;
+      }
+   }
+
+   m_requestData.write('\0');
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request data received (%u bytes)"),
+      static_cast<uint32_t>(m_requestData.size() - 1));
+}
+
+/**
  * Connection handler
  */
 static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *uploadData, size_t *uploadDataSize, void **connectionContext)
@@ -349,6 +453,8 @@ static MHD_Result ConnectionHandler(void *serverContext, MHD_Connection *connect
    }
 
    context->onUploadComplete();
+   if (context->isRequestDecodingFailed())
+      return SendResponse(connection, 400, context->getContentType());  // Bad Request - unsupported/invalid Content-Encoding
 
    if (IsWebsocketUpgradeRequest(connection))
       return UpgradeToWebsocket(context, connection, url);

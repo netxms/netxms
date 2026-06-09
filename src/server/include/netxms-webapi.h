@@ -216,6 +216,7 @@ private:
    StringMap m_placeholderValues;
    StringMap *m_responseHeaders;
    MHD_UpgradeHandler m_upgradeHandler;
+   bool m_requestDecodingFailed;
 
 public:
    Context(MHD_Connection *connection, const char *path, Method method, RouteHandler handler, const UserAuthenticationToken& token, uint32_t userId,
@@ -235,6 +236,7 @@ public:
       m_responseHeaders = nullptr;
       GetClientAddress(connection).toString(m_workstation);
       m_upgradeHandler = upgradeHandler;
+      m_requestDecodingFailed = false;
    }
 
    virtual ~Context()
@@ -374,14 +376,11 @@ public:
       return true;
    }
 
-   void onUploadComplete()
+   void onUploadComplete();
+
+   bool isRequestDecodingFailed() const
    {
-      if (m_requestData.size() > 0)
-      {
-         m_requestData.write('\0');
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request data received (%u bytes)"),
-            static_cast<uint32_t>(m_requestData.size() - 1));
-      }
+      return m_requestDecodingFailed;
    }
 
    int invokeHandler()
