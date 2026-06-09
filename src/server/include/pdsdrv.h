@@ -62,4 +62,12 @@ public:
    virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value);
 };
 
+/**
+ * Register performance data storage driver provided by server module. Driver will be initialized
+ * with server configuration; on success ownership of driver instance passes to the core. On failure
+ * driver instance is deleted. Should be called during module initialization, before data collection
+ * is started.
+ */
+bool NXCORE_EXPORTABLE RegisterPerfDataStorageDriver(PerfDataStorageDriver *driver);
+
 #endif   /* _pdsdrv_h_ */

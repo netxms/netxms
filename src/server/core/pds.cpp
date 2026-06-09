@@ -39,10 +39,39 @@ extern Config g_serverConfig;
 wchar_t *g_pdsLoadList = nullptr;
 
 /**
- * List of loaded drivers
+ * List of active drivers (both loaded from shared libraries and registered by server modules)
  */
 static int s_numDrivers = 0;
 static PerfDataStorageDriver *s_drivers[MAX_PDS_DRIVERS];
+
+/**
+ * Register performance data storage driver provided by server module. Driver will be initialized
+ * with server configuration; on success ownership of driver instance passes to the core. On failure
+ * driver instance is deleted. Should be called during module initialization, before data collection
+ * is started.
+ */
+bool NXCORE_EXPORTABLE RegisterPerfDataStorageDriver(PerfDataStorageDriver *driver)
+{
+   if (s_numDrivers == MAX_PDS_DRIVERS)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot register performance data storage driver %s (driver limit reached)", driver->getName());
+      delete driver;
+      return false;
+   }
+
+   if (!driver->init(&g_serverConfig))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Initialization of performance data storage driver %s failed", driver->getName());
+      delete driver;
+      return false;
+   }
+
+   s_drivers[s_numDrivers] = driver;
+   s_numDrivers++;
+   g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Performance data storage driver %s registered", driver->getName());
+   return true;
+}
 
 /**
  * Driver base class constructor
@@ -225,12 +254,10 @@ static void LoadDriver(const wchar_t *file)
  */
 void LoadPerfDataStorageDrivers()
 {
-   memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
-
    nxlog_debug_tag(DEBUG_TAG, 1, L"Loading performance data storage drivers");
    for(wchar_t *curr = g_pdsLoadList, *next = nullptr; curr != nullptr; curr = next)
    {
-      next = _tcschr(curr, _T('\n'));
+      next = wcschr(curr, L'\n');
       if (next != nullptr)
       {
          *next = 0;
@@ -240,13 +267,16 @@ void LoadPerfDataStorageDrivers()
       if (*curr == 0)
          continue;
 
-      LoadDriver(curr);
       if (s_numDrivers == MAX_PDS_DRIVERS)
-         break;	// Too many drivers already loaded
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot load performance data storage driver \"%s\" (driver limit reached)", curr);
+         break;
+      }
+      LoadDriver(curr);
    }
    if (s_numDrivers > 0)
       g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;
-   nxlog_debug_tag(DEBUG_TAG, 1, L"%d performance data storage drivers loaded", s_numDrivers);
+   nxlog_debug_tag(DEBUG_TAG, 1, L"%d performance data storage drivers active", s_numDrivers);
 }
 
 /**
