@@ -28,7 +28,6 @@ import org.netxms.client.maps.configs.DCIImageConfiguration;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.xnap.commons.i18n.I18n;
 
@@ -85,13 +84,13 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
       {
          toolTip.setText(name);
       }
-      else if (value.isDataCollectionError())
+      else if (value.getErrorCount() > 0)
       {
          toolTip.setText(name + " = " + i18n.tr("<< ERROR >>"));
       }
       else
       {
-         toolTip.setText(name + " = " + DciValueFormatter.format(value, dciImageConfiguration.getDci().getFormatString(), DateFormatFactory.getTimeFormatter()));
+         toolTip.setText(name + " = " + value.getFormattedValue(dciImageConfiguration.getDci().getFormatString(), DateFormatFactory.getTimeFormatter()));
       }
    }
 
