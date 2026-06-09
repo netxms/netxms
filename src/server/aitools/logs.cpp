@@ -1537,20 +1537,25 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    int originValue = -1;
    if ((originFilter != nullptr) && (originFilter[0] != 0))
    {
+      // Map origin name to its canonical EventOrigin enum value (see nms_events.h)
       if (!stricmp(originFilter, "SYSTEM"))
-         originValue = 0;
+         originValue = static_cast<int>(EventOrigin::SYSTEM);
       else if (!stricmp(originFilter, "AGENT"))
-         originValue = 1;
-      else if (!stricmp(originFilter, "SNMP"))
-         originValue = 2;
+         originValue = static_cast<int>(EventOrigin::AGENT);
+      else if (!stricmp(originFilter, "CLIENT"))
+         originValue = static_cast<int>(EventOrigin::CLIENT);
       else if (!stricmp(originFilter, "SYSLOG"))
-         originValue = 3;
-      else if (!stricmp(originFilter, "WINDOWS_EVENT"))
-         originValue = 4;
-      else if (!stricmp(originFilter, "SCRIPT"))
-         originValue = 5;
+         originValue = static_cast<int>(EventOrigin::SYSLOG);
+      else if (!stricmp(originFilter, "SNMP"))
+         originValue = static_cast<int>(EventOrigin::SNMP);
+      else if (!stricmp(originFilter, "NXSL") || !stricmp(originFilter, "SCRIPT"))
+         originValue = static_cast<int>(EventOrigin::NXSL);
       else if (!stricmp(originFilter, "REMOTE_SERVER"))
-         originValue = 6;
+         originValue = static_cast<int>(EventOrigin::REMOTE_SERVER);
+      else if (!stricmp(originFilter, "WINDOWS_EVENT"))
+         originValue = static_cast<int>(EventOrigin::WINDOWS_EVENT);
+      else if (!stricmp(originFilter, "OPENTELEMETRY"))
+         originValue = static_cast<int>(EventOrigin::OPENTELEMETRY);
    }
 
    // Build query

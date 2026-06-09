@@ -942,7 +942,7 @@ static void CreateAssistantSkillList()
                { "time_to", "end time (default: now)" },
                { "event_code", "event code or name" },
                { "severity", "severity (0=Normal to 4=Critical) or array" },
-               { "origin", "event origin (SYSTEM, SNMP, SYSLOG, AGENT, SCRIPT)" },
+               { "origin", "event origin (SYSTEM, AGENT, CLIENT, SYSLOG, SNMP, NXSL, REMOTE_SERVER, WINDOWS_EVENT, OPENTELEMETRY)" },
                { "tags", "event tags filter" },
                { "text_pattern", "text search in message" },
                { "limit", "max results (default: 100)" }
