@@ -178,6 +178,7 @@ static void LoadDriver(const wchar_t *file)
    	SetDllDirectory(path);
       resetDllPath = true;
    }
+   wcslcpy(fullName, file, MAX_PATH);
 
    size_t len = wcslen(fullName);
    if ((len < 5) || (wcsicmp(&fullName[len - 5], L".pdsd") && wcsicmp(&fullName[len - 4], L".dll")))
