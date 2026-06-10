@@ -213,7 +213,7 @@ StringMap *Collector::getInstanceList(DCObject *dco)
    uint32_t sourceNodeId = getEffectiveSourceNode(dco);
    if (sourceNodeId != 0)
    {
-      sourceNode = static_pointer_cast<Node>(FindObjectById(dco->getSourceNode(), OBJECT_NODE));
+      sourceNode = static_pointer_cast<Node>(FindObjectById(sourceNodeId, OBJECT_NODE));
       if (sourceNode == nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, _T("Collector::getInstanceList(%s [%u]): source node [%u] not found"), dco->getName().cstr(), dco->getId(), sourceNodeId);
