@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.helpers.TreeSortingListener;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -56,6 +57,7 @@ public class SortableTreeViewer extends TreeViewer
 	private int clickedColumnId = -1;
    private String configPrefix;
 	private boolean autoResizeEnabled = true;
+   private RefreshTimer packTimer;
 
    /**
     * Constructor for delayed initialization
@@ -99,6 +101,9 @@ public class SortableTreeViewer extends TreeViewer
       super(new Tree(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
       getTree().setLinesVisible(true);
       getTree().setHeaderVisible(true);
+      // Packing measures every cell (native per-row measurement under GTK), so bursts of setInput/refresh
+      // calls must coalesce into a single pack
+      packTimer = new RefreshTimer(200, getTree(), () -> packColumns(false));
       sortingListener = new TreeSortingListener(this);
       if (names != null)
       {
@@ -145,7 +150,8 @@ public class SortableTreeViewer extends TreeViewer
    protected void inputChanged(Object input, Object oldInput)
    {
       super.inputChanged(input, oldInput);
-      packColumns(false);
+      if (autoResizeEnabled)
+         packTimer.execute();
    }
 
    /**
@@ -157,7 +163,8 @@ public class SortableTreeViewer extends TreeViewer
       super.internalRefresh(element, updateLabels);
       // refresh() in viewers using setInput() once and updating data via refresh() (e.g. AlarmList)
       // would otherwise leave columns at their initial (often empty-input) packed widths
-      packColumns(false);
+      if (autoResizeEnabled)
+         packTimer.execute();
    }
 
    /**

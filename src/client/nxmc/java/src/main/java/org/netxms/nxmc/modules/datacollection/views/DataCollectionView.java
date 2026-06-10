@@ -85,6 +85,7 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.DialogData;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -308,7 +309,9 @@ public class DataCollectionView extends BaseDataCollectionView
 
       viewer.addSelectionChangedListener(new DciSelectionChange());
 
-      final Display display = viewer.getControl().getDisplay();
+      // Coalesce per-DCI change notifications (template apply, instance discovery, etc. produce one
+      // notification per affected DCI) so a burst results in few refreshes instead of one per DCI
+      final RefreshTimer refreshTimer = new RefreshTimer(500, viewer.getControl(), () -> refresh());
       clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -321,13 +324,7 @@ public class DataCollectionView extends BaseDataCollectionView
                 (object != null) &&
                 (n.getSubCode() == object.getObjectId()))
             {
-               display.asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     refresh();
-                  }
-               });
+               refreshTimer.execute();
             }
          }
       };
