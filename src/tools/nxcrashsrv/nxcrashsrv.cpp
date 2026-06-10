@@ -28,6 +28,11 @@ static TCHAR s_logFile[MAX_PATH];
 static DWORD s_pid = 0;
 
 /**
+ * Non-zero when dump processing is in progress (set by DumpCallback, checked by ClientExitCallback)
+ */
+static volatile LONG s_dumpInProgress = 0;
+
+/**
  * Write log record
  */
 static void WriteLog(const TCHAR *format, ...)
@@ -360,6 +365,7 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
  */
 static void DumpCallback(void* context, const ClientInfo* clientInfo, const std::wstring* dumpFile)
 {
+   InterlockedExchange(&s_dumpInProgress, 1);
    WriteLog(_T("Received dump request from client"));
    WriteLog(_T("Original dump file: %s"), dumpFile->c_str());
 
@@ -388,6 +394,8 @@ static void DumpCallback(void* context, const ClientInfo* clientInfo, const std:
       _wremove(dumpFile->c_str());
       if (DeflateFile(fileName))
          _wremove(fileName);
+      else
+         WriteLog(_T("Cannot compress dump file %s (keeping uncompressed file)"), fileName);
    }
    else
    {
@@ -412,6 +420,14 @@ static void ClientConnectCallback(void* context, const ClientInfo* clientInfo)
 static void ClientExitCallback(void* context, const ClientInfo* clientInfo)
 {
    WriteLog(_T("Client process exited"));
+   // This callback and DumpCallback run concurrently on thread pool threads; the client process
+   // exits before dump processing is finished (it only waits for dump completion with a timeout),
+   // so exiting here would truncate the compressed dump file. Let DumpCallback exit the process.
+   if (InterlockedCompareExchange(&s_dumpInProgress, 0, 0) != 0)
+   {
+      WriteLog(_T("Dump processing in progress, exit deferred"));
+      return;
+   }
    ExitProcess(0);
 }
 

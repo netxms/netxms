@@ -81,6 +81,11 @@ bool DeflateFile(const wchar_t *inputFile)
    int rc = DeflateFileStream(in, out);
 
    fclose(in);
-   fclose(out);
+   if ((fclose(out) != 0) && (rc == Z_OK))
+      rc = Z_ERRNO;   // failure to flush buffered data on close (e.g. disk full)
+
+   if (rc != Z_OK)
+      _wremove(outputFile);   // do not leave incomplete output file behind
+
    return rc == Z_OK;
 }
