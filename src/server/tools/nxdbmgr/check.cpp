@@ -1381,14 +1381,14 @@ static void CheckDCISourceNodes()
 /**
  * Check if given data table exist
  */
-bool IsDataTableExist(const TCHAR *format, uint32_t id)
+bool IsDataTableExist(const wchar_t *format, uint32_t id)
 {
-   TCHAR table[256];
-   _sntprintf(table, 256, format, id);
+   wchar_t table[256];
+   nx_swprintf(table, 256, format, id);
    int rc = DBIsTableExist(g_dbHandle, table);
    if (rc == DBIsTableExist_Failure)
    {
-      _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
+      WriteToTerminalEx(L"WARNING: call to DBIsTableExist(\"%s\") failed\n", table);
    }
    return rc != DBIsTableExist_NotFound;
 }

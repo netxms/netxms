@@ -71,7 +71,7 @@ bool IsOnlineUpgradePending();
 void RunPendingOnlineUpgrades();
 
 IntegerArray<uint32_t> GetDataCollectionTargets();
-bool IsDataTableExist(const TCHAR *format, uint32_t id);
+bool IsDataTableExist(const wchar_t *format, uint32_t id);
 
 bool CreateIDataTable(uint32_t objectId);
 bool CreateTDataTable(uint32_t objectId);

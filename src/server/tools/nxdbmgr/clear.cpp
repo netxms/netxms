@@ -33,7 +33,8 @@ extern const wchar_t *g_tables[];
 static bool DeleteTableIfExist(const wchar_t *prefix, uint32_t id)
 {
    wchar_t query[256];
-   if (IsDataTableExist(prefix, id))
+   nx_swprintf(query, 256, L"%s%%u", prefix);
+   if (IsDataTableExist(query, id))
    {
       nx_swprintf(query, 256, L"DROP TABLE %s%u", prefix, id);
       CHK_EXEC(SQLQuery(query));
