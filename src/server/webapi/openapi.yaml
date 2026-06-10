@@ -4719,7 +4719,7 @@ paths:
     get:
       operationId: getObjectSubTree
       summary: Get object sub-tree
-      description: Retrieve a sub-tree of objects starting from the specified parent object.
+      description: Retrieve a recursively nested sub-tree of objects starting from the specified parent object. Each node carries its accessible children under a `children` property.
       parameters:
         - name: object-id
           in: path
@@ -4727,11 +4727,18 @@ paths:
           schema:
             type: integer
             description: Parent object ID
-        - name: filter
+        - name: class
           in: query
           schema:
             type: string
-            description: Optional filter string. If provided, only objects with name or alias containing given string will be returned.
+            description: Optional comma-separated list of object class names. If provided, only objects of the listed classes (and ancestors that lead to them) are returned. Unknown class names are ignored.
+        - name: maxDepth
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+            description: Maximum tree depth to traverse. Values above 100 are capped at 100.
       responses:
         '200':
           description: Object sub-tree retrieved successfully
@@ -4740,7 +4747,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ObjectSummary'
+                  $ref: '#/components/schemas/ObjectTreeNode'
         '401':
           description: Unauthorized
         '403':
@@ -9754,6 +9761,17 @@ components:
           description: Object last change timestamp
         status:
           $ref: '#/components/schemas/Status'
+    ObjectTreeNode:
+      description: Object summary with recursively nested child objects. The `children` property is present only when the object has at least one accessible child matching the request filter.
+      allOf:
+        - $ref: '#/components/schemas/ObjectSummary'
+        - type: object
+          properties:
+            children:
+              type: array
+              description: Nested child objects (recursive)
+              items:
+                $ref: '#/components/schemas/ObjectTreeNode'
     Status:
       type: integer
       enum:
