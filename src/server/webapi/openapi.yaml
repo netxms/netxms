@@ -364,6 +364,11 @@ paths:
                 incidentId:
                   type: integer
                   description: Optional incident ID to associate with the chat session
+                capabilities:
+                  type: array
+                  description: Optional list of client capabilities. Recognized values - "visualizations" (enables visualization output from the assistant).
+                  items:
+                    type: string
       responses:
         '201':
           description: Chat session created successfully
@@ -1120,15 +1125,22 @@ paths:
                       type: integer
                     severity:
                       type: integer
+                      description: "Current severity: 0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical"
                     state:
                       type: integer
+                      description: "Alarm state: 0=Outstanding, 1=Acknowledged, 2=Resolved, 3=Terminated"
                     source:
                       type: integer
+                      description: Source object ID
                     message:
                       type: string
                     lastChangeTime:
                       type: string
                       format: date-time
+                    sourceObject:
+                      allOf:
+                        - $ref: '#/components/schemas/ObjectSummary'
+                      description: Full source object summary. Present only when includeObjectDetails=true.
       security:
         - BearerAuth: []
       tags:
@@ -1146,6 +1158,10 @@ paths:
       responses:
         '200':
           description: Details of given alarm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alarm'
         '401':
           description: Unauthorized
         '403':
@@ -1979,6 +1995,10 @@ paths:
                   $ref: '#/components/schemas/GrafanaAlarm'
         '401':
           description: Unauthorized.
+        '403':
+          description: User does not have read access to the specified root object.
+        '404':
+          description: Specified root object does not exist.
       security:
         - BearerAuth: []
       tags:
@@ -2055,8 +2075,22 @@ paths:
                 items:
                   type: object
                   description: One row of summary table, fields depend on table definition (First column is always object name)
+        '400':
+          description: Invalid or missing rootObjectId / tableId.
         '401':
           description: Unauthorized.
+        '403':
+          description: Access denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
+        '500':
+          description: Query execution failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
       security:
         - BearerAuth: []
       tags:
@@ -3593,6 +3627,26 @@ paths:
           required: true
           schema:
             type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - command
+              properties:
+                command:
+                  type: string
+                  description: Command line to execute. Supports macro expansion; the command name is the first token, remaining tokens are passed as arguments.
+                alarmId:
+                  type: integer
+                  description: Optional alarm ID used as context for macro expansion. Requires read access to the alarm.
+                inputFields:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Optional map of input field values used for macro expansion.
       responses:
         '201':
           description: Command executed successfully
@@ -3643,12 +3697,11 @@ paths:
             schema:
               type: object
               required:
-                - objectId
                 - elementIndex
               properties:
                 objectId:
                   type: integer
-                  description: Context object ID for script execution
+                  description: Context object ID for script execution. If omitted or 0, the dashboard object itself is used as context.
                 elementIndex:
                   type: integer
                   description: Index of the dashboard element containing the script
@@ -3733,8 +3786,26 @@ paths:
       responses:
         '200':
           description: Script executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    description: Script result. When resultAsMap is true (or the script returns a hash map or array) this is a JSON object; otherwise the scalar result serialized as JSON.
         '400':
-          description: Invalid arguments
+          description: Invalid arguments or script compilation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  diagnostic:
+                    type: object
+                    description: NXSL compilation diagnostic, present on compilation failure
+                  reason:
+                    type: string
+                    description: Failure reason
         '401':
           description: Unauthorized
         '403':
@@ -4239,7 +4310,7 @@ paths:
                   type: string
                   description: Optional maintenance comments
       responses:
-        '200':
+        '204':
           description: Maintenance mode changed successfully
         '400':
           description: Invalid arguments
@@ -4274,7 +4345,7 @@ paths:
                   type: boolean
                   description: true - for manage object, false - for object unmanage
       responses:
-        '200':
+        '204':
           description: Object successfully managed/unmanaged
         '400':
           description: Invalid arguments
@@ -4808,6 +4879,8 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - query
               properties:
                 fields:
                   type: array
@@ -4815,13 +4888,10 @@ paths:
                   items:
                     type: string
                 inputFields:
-                  type: array
-                  description: List of user input fields (will be available in query script via global variable $INPUT).
-                  items:
-                    type: object
-                    additionalProperties:
-                      type: string
-                      description: Set of key-value pairs where key is input field name and value is actual value provided by user.
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Map of user input fields (available in query script via global variable $INPUT). Keys are input field names, values are user-provided values.
                 limit:
                   type: integer
                   description: Optional limit on number of retrieved objects. Limit is applied after ordering.
@@ -4834,6 +4904,12 @@ paths:
                   type: string
                   description: Object query script
                   example: type == NODE
+                rootObjectId:
+                  type: integer
+                  description: Optional root object ID to scope the query to a sub-tree. 0 (default) queries all objects.
+                readAllFields:
+                  type: boolean
+                  description: If true, all object fields are made available to the query script (default false).
       responses:
         '200':
           description: Query successfully executed.
@@ -6575,6 +6651,18 @@ paths:
             - Script execution failed
             - Table tool execution failed
             - SSH proxy not available
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error body for server-script execution failure (other failures return no body).
+                properties:
+                  reason:
+                    type: string
+                    description: Failure reason
+                  diagnostic:
+                    type: object
+                    description: NXSL diagnostic information, when available
         '504':
           description: Server command execution timed out.
       security:
@@ -7048,18 +7136,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  description: Summary table row data
+                $ref: '#/components/schemas/TableData'
         '400':
           description: Invalid request or invalid summary table ID
         '401':
           description: Unauthorized
         '403':
           description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
         '500':
           description: Query execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
       security:
         - BearerAuth: []
       tags:
@@ -7090,18 +7183,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  description: Query result row data
+                $ref: '#/components/schemas/TableData'
         '400':
           description: Invalid request or missing table definition
         '401':
           description: Unauthorized
         '403':
           description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
         '500':
           description: Query execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableQueryError'
       security:
         - BearerAuth: []
       tags:
@@ -7267,9 +7365,10 @@ paths:
       operationId: setUserPassword
       summary: Set user password
       description: |
-        Set or change a user's password. If `oldPassword` is provided, it is treated as a
-        self-change (user changing their own password). If `oldPassword` is omitted, it is
-        treated as an administrative password reset.
+        Set or change a user's password. The operation is treated as a self-change when the
+        target user-id is the currently authenticated user, and as an administrative reset
+        otherwise. When self-changing, supply `oldPassword` so the current password can be
+        verified; for an administrative reset `oldPassword` is not required.
 
         Users can change their own password without MANAGE_USERS access right.
         Administrative password reset requires MANAGE_USERS access right.
@@ -7747,6 +7846,7 @@ components:
           description: Optional description
         promptText:
           type: string
+          nullable: true
           description: The prompt text
     ChassisPlacement:
       type: object
@@ -8242,13 +8342,96 @@ components:
             type: integer
     Alarm:
       type: object
+      description: Full alarm representation
       properties:
         id:
           type: integer
+          description: Alarm ID
+        parentId:
+          type: integer
+          description: Parent alarm ID (0 if none)
+        rcaScriptName:
+          type: string
+          description: Root cause analysis script name
+        ackByUser:
+          type: integer
+          description: ID of the user who acknowledged the alarm
+        resolvedByUser:
+          type: integer
+          description: ID of the user who resolved the alarm
+        terminatedByUser:
+          type: integer
+          description: ID of the user who terminated the alarm
+        ruleGUID:
+          type: string
+          format: uuid
+          description: GUID of the event processing policy rule that generated the alarm
+        ruleDescription:
+          type: string
+          description: Description of the originating rule
+        eventCode:
+          type: integer
+          description: Source event code
+        eventName:
+          type: string
+          description: Source event name (present only when the event code resolves to a name)
+        eventId:
+          type: integer
+          description: Source event ID
+        eventTags:
+          type: string
+          description: Source event tags
+        source:
+          type: integer
+          description: Source object ID
+        dci:
+          type: integer
+          description: Related DCI ID (0 if none)
+        creationTime:
+          type: string
+          format: date-time
+          description: Alarm creation timestamp
+        lastChangeTime:
+          type: string
+          format: date-time
+          description: Last change timestamp
+        key:
+          type: string
+          description: Alarm key
         message:
           type: string
-        severity:
+          description: Alarm message
+        impact:
           type: string
+          description: Business impact
+        state:
+          type: integer
+          description: "Alarm state: 0=Outstanding, 1=Acknowledged, 2=Resolved, 3=Terminated"
+        isSticky:
+          type: boolean
+          description: Whether the alarm is sticky
+        severity:
+          type: integer
+          description: "Current severity: 0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical"
+        originalSeverity:
+          type: integer
+          description: Original severity at creation time
+        helpDeskState:
+          type: integer
+          description: Helpdesk integration state
+        repeatCount:
+          type: integer
+          description: Number of times the alarm was repeated
+        subordinateAlarms:
+          type: array
+          description: IDs of subordinate alarms
+          items:
+            type: integer
+        categories:
+          type: array
+          description: Alarm category IDs
+          items:
+            type: integer
     User:
       type: object
       description: User account
@@ -8296,6 +8479,9 @@ components:
         graceLogins:
           type: integer
           description: Remaining grace logins
+        twoFAGraceLogins:
+          type: integer
+          description: Remaining two-factor authentication grace logins
         authMethod:
           type: integer
           description: "Authentication method (0=Local, 1=RADIUS, 2=Certificate, 3=Certificate or Local, 4=Certificate or RADIUS, 5=LDAP)"
@@ -8926,6 +9112,73 @@ components:
           items:
             $ref: '#/components/schemas/SummaryTableColumn'
           description: Column definitions
+    TableData:
+      type: object
+      description: Tabular query result (serialized NetXMS Table).
+      properties:
+        extendedFormat:
+          type: boolean
+          description: Whether the table uses extended format (per-cell status and row metadata)
+        source:
+          type: integer
+          description: Data source identifier
+        title:
+          type: string
+          description: Table title
+        columns:
+          type: array
+          description: Column definitions
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              dataType:
+                type: integer
+              displayName:
+                type: string
+              instanceColumn:
+                type: boolean
+              unitName:
+                type: string
+              multiplier:
+                type: integer
+              useMultiplier:
+                type: integer
+        data:
+          type: array
+          description: Table rows
+          items:
+            type: object
+            properties:
+              objectId:
+                type: integer
+                description: Source object ID (present only in extended format when set)
+              baseRow:
+                type: integer
+                description: Base row index (present only when set)
+              values:
+                type: array
+                description: Cell values, one per column
+                items:
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: Cell status (present only when not the default)
+                    value:
+                      type: string
+                      description: Cell value
+    TableQueryError:
+      type: object
+      description: Error response for summary table query failures.
+      properties:
+        reason:
+          type: string
+          description: Human-readable failure reason
+        errorCode:
+          type: integer
+          description: NetXMS request completion code (RCC)
     ScriptSummary:
       type: object
       properties:
@@ -8974,6 +9227,9 @@ components:
         displayName:
           type: string
           description: Display name for the field
+        defaultValue:
+          type: string
+          description: Default value for the field
         flags:
           type: integer
           description: Field flags
@@ -9028,6 +9284,12 @@ components:
         commandShortName:
           type: string
           description: Short command name
+        remotePort:
+          type: integer
+          description: Remote port for TCP tunnel
+        remoteHost:
+          type: string
+          description: Remote host for TCP tunnel
         applicableClasses:
           type: integer
           description: |
@@ -9074,12 +9336,6 @@ components:
               type: string
               format: uuid
               description: UUID of the icon image in the image library; absent when no icon is set
-            remotePort:
-              type: integer
-              description: Remote port for TCP tunnel
-            remoteHost:
-              type: string
-              description: Remote host for TCP tunnel
             acl:
               type: array
               description: |
@@ -9094,6 +9350,14 @@ components:
                 SYSTEM_ACCESS_MANAGE_TOOLS rights and the tool type is snmp-table or agent-list.
               items:
                 $ref: '#/components/schemas/ObjectToolColumn'
+            translations:
+              type: array
+              description: |
+                Localized string overrides for tool name, description, and input field labels.
+                Only present when the caller has SYSTEM_ACCESS_MANAGE_TOOLS rights and at least
+                one translation exists.
+              items:
+                $ref: '#/components/schemas/ObjectToolTranslation'
     ObjectToolWrite:
       type: object
       description: |
@@ -9173,6 +9437,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ObjectToolInputField'
+        translations:
+          type: array
+          description: Localized string overrides for tool name, description, and input field labels. Replaces all existing translations on PUT.
+          items:
+            $ref: '#/components/schemas/ObjectToolTranslation'
+    ObjectToolTranslation:
+      type: object
+      description: Single localized string override for an object tool.
+      properties:
+        field:
+          type: string
+          description: Tag identifying which string is translated (e.g. tool name, description, or an input field label)
+        language:
+          type: string
+          description: Language code the translation applies to
+        value:
+          type: string
+          description: Translated string value
     ObjectToolTextResult:
       type: object
       required:
@@ -9930,6 +10212,18 @@ components:
         notificationChannelName:
           type: string
           description: Notification channel name
+        command:
+          type: string
+          description: Action payload for command-type actions (type 0, 1, or 7). Exactly one of command/message/scriptName/data is present, selected by the action type.
+        message:
+          type: string
+          description: Action payload for notification actions (type 3).
+        scriptName:
+          type: string
+          description: Action payload for script actions (type 5).
+        data:
+          type: string
+          description: Action payload for other action types (e.g. type 4, forward event).
     ServerActionCreate:
       type: object
       required:
