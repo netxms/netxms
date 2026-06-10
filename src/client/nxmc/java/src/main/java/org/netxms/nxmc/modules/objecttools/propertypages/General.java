@@ -109,6 +109,7 @@ public class General extends PropertyPage
 
       iconSelector = new ImageSelector(dialogArea, SWT.NONE);
       iconSelector.setLabel(i18n.tr("Icon"));
+      iconSelector.setEmptySelectionName(i18n.tr("<none>"));
       iconSelector.setImageGuid(objectTool.getIcon(), false);
       GridData iconGd = new GridData();
       iconGd.horizontalAlignment = SWT.FILL;

@@ -186,12 +186,33 @@ static uuid GetExistingObjectToolIcon(DB_HANDLE hdb, uint32_t toolId)
 }
 
 /**
+ * Copy object tool name with menu mnemonic markers removed ("&" stripped, "&&" collapsed to "&").
+ */
+static void RemoveToolNameMnemonics(const wchar_t *toolName, wchar_t *buffer, size_t size)
+{
+   size_t j = 0;
+   for(size_t i = 0; (toolName[i] != 0) && (j < size - 1); i++)
+   {
+      if (toolName[i] == L'&')
+      {
+         if (toolName[i + 1] != L'&')
+            continue;
+         i++;
+      }
+      buffer[j++] = toolName[i];
+   }
+   buffer[j] = 0;
+}
+
+/**
  * Pick image library name for an imported object tool icon. Image library has
  * UNIQUE(name, category) and name varchar(63); on conflict append the tool ID.
  */
 static void BuildObjectToolImageName(uint32_t toolId, const TCHAR *toolName, wchar_t *outName, size_t outSize, DB_HANDLE hdb)
 {
-   nx_swprintf(outName, outSize, L"Object tool: %.48ls", toolName);
+   wchar_t cleanName[256];
+   RemoveToolNameMnemonics(toolName, cleanName, 256);
+   nx_swprintf(outName, outSize, L"Object tool: %.48ls", cleanName);
    DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT 1 FROM images WHERE name=? AND category='Object Tools'");
    if (hStmt == nullptr)
       return;
@@ -202,7 +223,7 @@ static void BuildObjectToolImageName(uint32_t toolId, const TCHAR *toolName, wch
       DBFreeResult(hRes);
    DBFreeStatement(hStmt);
    if (conflict)
-      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", toolName, toolId);
+      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", cleanName, toolId);
 }
 
 /**
@@ -380,9 +401,11 @@ static uuid ImportObjectToolIcon(DB_HANDLE hdb, uint32_t toolId, const TCHAR *to
                return existingIconGuid;
             }
 
+            wchar_t cleanName[256];
+            RemoveToolNameMnemonics(toolName, cleanName, 256);
             wchar_t expectedPrimary[64], expectedSuffixed[64];
-            nx_swprintf(expectedPrimary, 64, L"Object tool: %.48ls", toolName);
-            nx_swprintf(expectedSuffixed, 64, L"Object tool: %.36ls-%u", toolName, toolId);
+            nx_swprintf(expectedPrimary, 64, L"Object tool: %.48ls", cleanName);
+            nx_swprintf(expectedSuffixed, 64, L"Object tool: %.36ls-%u", cleanName, toolId);
             bool nameAndCategoryMatch = !wcscmp(category, L"Object Tools") &&
                   (!wcscmp(imageName, expectedPrimary) || !wcscmp(imageName, expectedSuffixed));
 

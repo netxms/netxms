@@ -445,13 +445,34 @@ static const char *SniffImageMimeType(const BYTE *data, size_t size)
 }
 
 /**
+ * Copy object tool name with menu mnemonic markers removed ("&" stripped, "&&" collapsed to "&").
+ */
+static void RemoveToolNameMnemonics(const wchar_t *toolName, wchar_t *buffer, size_t size)
+{
+   size_t j = 0;
+   for(size_t i = 0; (toolName[i] != 0) && (j < size - 1); i++)
+   {
+      if (toolName[i] == L'&')
+      {
+         if (toolName[i + 1] != L'&')
+            continue;
+         i++;
+      }
+      buffer[j++] = toolName[i];
+   }
+   buffer[j] = 0;
+}
+
+/**
  * Build unique image library name for migrated object tool icon.
  * Image library has UNIQUE(name, category) with name varchar(63).
  * Returns true on success.
  */
 static bool BuildObjectToolImageName(uint32_t toolId, const wchar_t *toolName, wchar_t *outName, size_t outSize)
 {
-   nx_swprintf(outName, outSize, L"Object tool: %.48ls", toolName);
+   wchar_t cleanName[256];
+   RemoveToolNameMnemonics(toolName, cleanName, 256);
+   nx_swprintf(outName, outSize, L"Object tool: %.48ls", cleanName);
 
    DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"SELECT guid FROM images WHERE name=? AND category='Object Tools'");
    if (hStmt == nullptr)
@@ -464,7 +485,7 @@ static bool BuildObjectToolImageName(uint32_t toolId, const wchar_t *toolName, w
    DBFreeStatement(hStmt);
 
    if (conflict)
-      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", toolName, toolId);
+      nx_swprintf(outName, outSize, L"Object tool: %.36ls-%u", cleanName, toolId);
    return true;
 }
 

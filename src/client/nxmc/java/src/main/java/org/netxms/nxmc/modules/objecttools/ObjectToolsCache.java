@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objecttools;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
+import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
 import org.netxms.nxmc.services.ObjectToolHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +97,14 @@ public class ObjectToolsCache
             }
          }
       });
+
+      ImageProvider.getInstance().addUpdateListener(new ImageUpdateListener() {
+         @Override
+         public void imageUpdated(UUID guid)
+         {
+            onLibraryImageChange(guid);
+         }
+      });
 	}
 
 	/**
@@ -150,9 +160,9 @@ public class ObjectToolsCache
                try
                {
                   imageProvider.preloadImageFromServer(iconGuid);
-                  Image image = imageProvider.getImage(iconGuid);
+                  Image image = imageProvider.getObjectIcon(iconGuid);
                   if (image != null)
-                     icons.put(tool.getId(), ImageDescriptor.createFromImage(image));
+                     icons.put(tool.getId(), ImageDescriptor.createFromImageData(image.getImageData()));
                }
                catch(Exception e)
                {
@@ -184,9 +194,48 @@ public class ObjectToolsCache
 		}.start();
 	}
 
+   /**
+    * Handler for library image change. Updates cached icons for tools that use given image.
+    *
+    * @param guid library image GUID
+    */
+   private void onLibraryImageChange(UUID guid)
+   {
+      List<Long> affectedTools = new ArrayList<Long>();
+      synchronized(objectTools)
+      {
+         for(ObjectTool tool : objectTools.values())
+         {
+            if (guid.equals(tool.getIcon()))
+               affectedTools.add(tool.getId());
+         }
+      }
+      if (affectedTools.isEmpty())
+         return;
+
+      ImageProvider imageProvider = ImageProvider.getInstance();
+      ImageDescriptor icon = null;
+      if (imageProvider.getLibraryImageObject(guid) != null)
+      {
+         Image image = imageProvider.getObjectIcon(guid);
+         if (image != null)
+            icon = ImageDescriptor.createFromImageData(image.getImageData());
+      }
+      synchronized(icons)
+      {
+         for(Long toolId : affectedTools)
+         {
+            if (icon != null)
+               icons.put(toolId, icon);
+            else
+               icons.remove(toolId);
+         }
+      }
+   }
+
 	/**
 	 * Handler for object tool deletion
-	 * 
+	 *
 	 * @param toolId ID of deleted tool
 	 */
 	private void onObjectToolDelete(final long toolId)

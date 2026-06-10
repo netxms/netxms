@@ -43,6 +43,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 
    private UUID imageGuid = null;
    private Shell parentShell = null;
+   private String emptySelectionName = i18n.tr("<default>");
 
 	/**
 	 * @param parent
@@ -82,7 +83,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			}
 			else
 			{
-            setText(i18n.tr("<default>"));
+            setText(emptySelectionName);
 				setImage(null);
             imageGuid = null;
 			}
@@ -98,13 +99,26 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	@Override
 	protected void clearButtonHandler()
 	{
-      setText(i18n.tr("<default>"));
+      setText(emptySelectionName);
 		setImage(null);
       imageGuid = null;
 		getParent().layout();
       if (parentShell != null)
          parentShell.pack(true);
 	}
+
+   /**
+    * Set name to be displayed when no image is selected (default is "&lt;default&gt;"). Has immediate effect if no image is
+    * currently selected.
+    *
+    * @param name name to be displayed when no image is selected
+    */
+   public void setEmptySelectionName(String name)
+   {
+      emptySelectionName = name;
+      if ((imageGuid == null) || imageGuid.equals(NXCommon.EMPTY_GUID))
+         setText(emptySelectionName);
+   }
 
 	/**
 	 * @return the imageGuid
@@ -125,7 +139,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		this.imageGuid = imageGuid;
       if ((imageGuid == null) || imageGuid.equals(NXCommon.EMPTY_GUID))
 		{
-         setText(i18n.tr("<default>"));
+         setText(emptySelectionName);
 			setImage(null);
 		}
 		else
