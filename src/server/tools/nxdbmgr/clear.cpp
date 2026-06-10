@@ -28,26 +28,32 @@
 extern const wchar_t *g_tables[];
 
 /**
+ * Delete table if exist
+ */
+static bool DeleteTableIfExist(const wchar_t *prefix, uint32_t id)
+{
+   wchar_t query[256];
+   if (IsDataTableExist(prefix, id))
+   {
+      nx_swprintf(query, 256, L"DROP TABLE %s%u", prefix, id);
+      CHK_EXEC(SQLQuery(query));
+   }
+   return true;
+}
+
+/**
  * Delete idata_xx tables
  */
 static bool DeleteDataTables()
 {
-	wchar_t query[256];
-
 	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
    for(int i = 0; i < targets.size(); i++)
    {
       uint32_t id = targets.get(i);
-      if (IsDataTableExist(L"idata_%u", id))
-      {
-         nx_swprintf(query, 256, L"DROP TABLE idata_%u", id);
-         CHK_EXEC(SQLQuery(query));
-      }
-      if (IsDataTableExist(L"tdata_%u", id))
-      {
-         nx_swprintf(query, 256, L"DROP TABLE tdata_%u", id);
-         CHK_EXEC(SQLQuery(query));
-      }
+      CHK_EXEC(DeleteTableIfExist(L"idata_", id));
+      CHK_EXEC(DeleteTableIfExist(L"idata_1h_", id));
+      CHK_EXEC(DeleteTableIfExist(L"idata_1d_", id));
+      CHK_EXEC(DeleteTableIfExist(L"tdata_", id));
    }
 
 	return true;

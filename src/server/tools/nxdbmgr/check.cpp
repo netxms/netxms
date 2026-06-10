@@ -1451,8 +1451,13 @@ static void CheckDataTables()
          const wchar_t *table = tables->get(i);
          if (!wcsncmp(table, L"idata_", 6) || !wcsncmp(table, L"tdata_", 6))
          {
+            // Could be also idata_1h_NNN or idata_1d_NNN
+            const wchar_t *oid = &table[6];
+            if (!wcsncmp(oid, L"1h_", 3) || !wcsncmp(oid, L"1d_", 3))
+               oid = &table[9];
+
             wchar_t *eptr;
-            uint32_t objectId = wcstoul(&table[6], &eptr, 10);
+            uint32_t objectId = wcstoul(oid, &eptr, 10);
             if ((*eptr == 0) && !targets.contains(objectId))
             {
                g_dbCheckErrors++;
