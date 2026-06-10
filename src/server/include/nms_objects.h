@@ -2448,6 +2448,7 @@ protected:
    uint32_t m_mtu;
    uint64_t m_speed;
    uint64_t m_maxSpeed;
+   uint64_t m_lastKnownSpeed;        // Last known speed observed while interface was operationally up
    int32_t m_inboundUtilization;
    int32_t m_outboundUtilization;
    uint32_t m_bridgePortNumber;       // 802.1D port number
@@ -2546,6 +2547,7 @@ public:
    uint32_t getMTU() const { return m_mtu; }
    uint64_t getSpeed() const { return m_speed; }
    uint64_t getMaxSpeed() const { return m_maxSpeed; }
+   uint64_t getLastKnownSpeed() const { return m_lastKnownSpeed; }
    int32_t getInboundUtilization() const { return m_inboundUtilization; }
    int32_t getOutboundUtilization() const { return m_outboundUtilization; }
    uint32_t getBridgePortNumber() const { return m_bridgePortNumber; }

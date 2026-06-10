@@ -50,7 +50,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_INTERFACE_UP, 'SYS_IF_UP', '09ee209a-0e75-434f-b8c8-399d93305d7b',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Interface "%2" changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes up.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -58,13 +58,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_DOWN, 'SYS_IF_DOWN', 'd9a6d46d-97f8-48eb-a86a-2c0f6b150d0d',
 		EVENT_SEVERITY_MINOR, 1,
-		'Interface "%2" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes down.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -72,13 +74,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Last known interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Last known interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_UNKNOWN, 'SYS_IF_UNKNOWN', 'ecb47be1-f911-4c1f-9b00-d0d21694071d',
 		EVENT_SEVERITY_WARNING, 1,
-		'Interface "%2" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes to unknown state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -86,13 +90,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Last known interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Last known interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_DISABLED, 'SYS_IF_DISABLED', '2f3123a2-425f-47db-9c6b-9bc05a7fba2d',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Interface "%2" disabled (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" disabled (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface administratively disabled.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -100,13 +106,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Last known interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Last known interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_TESTING, 'SYS_IF_TESTING', 'eb500e5c-3560-4394-8f5f-80aa67036f13',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Interface "%2" is testing (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" is testing (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes to testing state.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -114,13 +122,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Last known interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Last known interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_UNEXPECTED_UP, 'SYS_IF_UNEXPECTED_UP', 'ff21a165-9253-4ecc-929a-ffd1e388d504',
 		EVENT_SEVERITY_MAJOR, 1,
-		'Interface "%2" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes up but it''s expected state set to DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -128,13 +138,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_EXPECTED_DOWN, 'SYS_IF_EXPECTED_DOWN', '911358f4-d2a1-4465-94d7-ce4bc5c38860',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Interface "%2" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',
 		'Generated when interface goes down and it''s expected state is DOWN.' CONCAT CRLF CONCAT
 		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -142,7 +154,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) interfaceName - Interface name' CONCAT CRLF CONCAT
 		'   3) interfaceIpAddress - Interface IP address' CONCAT CRLF CONCAT
 		'   4) interfaceNetMask - Interface netmask' CONCAT CRLF CONCAT
-		'   5) interfaceIndex - Interface index'
+		'   5) interfaceIndex - Interface index' CONCAT CRLF CONCAT
+		'   6) interfaceSpeed - Last known interface speed in bits per second' CONCAT CRLF CONCAT
+		'   7) interfaceSpeedText - Last known interface speed (human-readable)'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(

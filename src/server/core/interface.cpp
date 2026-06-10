@@ -74,6 +74,7 @@ Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMainte
    m_mtu = 0;
    m_speed = 0;
    m_maxSpeed = 0;
+   m_lastKnownSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -122,6 +123,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_mtu = 0;
    m_speed = 0;
    m_maxSpeed = 0;
+   m_lastKnownSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
 	m_bridgePortNumber = 0;
@@ -172,6 +174,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
    m_mtu = 0;
    m_speed = 0;
    m_maxSpeed = 0;
+   m_lastKnownSpeed = 0;
    m_inboundUtilization = -1;
    m_outboundUtilization = -1;
    m_ipAddressList.add(addrList);
@@ -231,7 +234,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		L"phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,"
 		L"admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,"
       L"ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,max_speed,iftable_suffix,"
-      L"state_before_maintenance FROM interfaces WHERE id=?");
+      L"state_before_maintenance,last_known_speed FROM interfaces WHERE id=?");
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -274,6 +277,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
       m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 28));
       m_peerLastUpdated = static_cast<time_t>(DBGetFieldInt64(hResult, 0, 29));
       m_maxSpeed = DBGetFieldUInt64(hResult, 0, 30);
+      m_lastKnownSpeed = DBGetFieldUInt64(hResult, 0, 33);
 
       wchar_t suffixText[128];
       DBGetField(hResult, 0, 31, suffixText, 128);
@@ -422,6 +426,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
          L"stp_port_state", L"if_name", L"peer_last_updated", L"max_speed", L"state_before_maintenance",
+         L"last_known_speed",
          nullptr
       };
 
@@ -485,8 +490,9 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
             return EnumerationCallbackResult::_CONTINUE;
          });
          DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
+         DBBind(hStmt, 34, DB_SQLTYPE_BIGINT, m_lastKnownSpeed);
 
-         DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -710,12 +716,16 @@ void Interface::generateEventsAfterMaintenace(uint32_t parentId)
          (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(state->adminState)))
       {
          const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+         // Report current speed when interface is up, last known speed otherwise (current speed is unavailable while down)
+         uint64_t eventSpeed = (m_lastKnownOperState == IF_OPER_STATE_UP) ? m_speed : m_lastKnownSpeed;
          EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parentId)
            .param(_T("interfaceObjectId"), m_id)
            .param(_T("interfaceName"), m_name)
            .param(_T("interfaceIpAddress"), addr)
            .param(_T("interfaceNetMask"), addr.getMaskBits())
            .param(_T("interfaceIndex"), m_index)
+           .param(_T("interfaceSpeed"), eventSpeed)
+           .param(_T("interfaceSpeedText"), FormatNumber(static_cast<double>(eventSpeed), false, 0, -3, _T("bps")))
            .post();
       }
    }
@@ -1005,6 +1015,8 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
           (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
       {
          const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+         // Report current speed when interface is up, last known speed otherwise (current speed is unavailable while down)
+         uint64_t eventSpeed = (operState == IF_OPER_STATE_UP) ? speed : m_lastKnownSpeed;
          readLockParentList();
          for(const std::shared_ptr<NetObj> parent : getParentList())
          {
@@ -1014,6 +1026,8 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
                .param(_T("interfaceIpAddress"), addr)
                .param(_T("interfaceNetMask"), addr.getMaskBits())
                .param(_T("interfaceIndex"), m_index)
+               .param(_T("interfaceSpeed"), eventSpeed)
+               .param(_T("interfaceSpeedText"), FormatNumber(static_cast<double>(eventSpeed), false, 0, -3, _T("bps")))
                .post(eventQueue);
          }
          unlockParentList();
@@ -1042,6 +1056,11 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    {
 	   m_speed = speed;
       setModified(MODIFY_INTERFACE_PROPERTIES);
+	}
+	if ((operState == IF_OPER_STATE_UP) && (speed != 0) && (m_lastKnownSpeed != speed))
+	{
+	   m_lastKnownSpeed = speed;
+	   setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
 	unlockProperties();
 
@@ -2166,6 +2185,7 @@ json_t *Interface::toJson(bool includeSensitiveData)
    json_object_set_new(root, "mtu", json_integer(m_mtu));
    json_object_set_new(root, "speed", json_integer(m_speed));
    json_object_set_new(root, "maxSpeed", json_integer(m_maxSpeed));
+   json_object_set_new(root, "lastKnownSpeed", json_integer(m_lastKnownSpeed));
    json_object_set_new(root, "inboundUtilization", json_integer(m_inboundUtilization));
    json_object_set_new(root, "outboundUtilization", json_integer(m_outboundUtilization));
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));

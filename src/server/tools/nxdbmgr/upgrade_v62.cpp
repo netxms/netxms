@@ -25,6 +25,121 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.24 to 62.25
+ */
+static bool H_UpgradeFromV24()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE interfaces ADD last_known_speed $SQL:INT64\n"
+      L"UPDATE interfaces SET last_known_speed=speed\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"interfaces", L"last_known_speed"));
+
+   // Add interface speed parameters to interface state change events
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes up.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Interface speed (human-readable)'"
+      L" WHERE event_code=4"));   // SYS_IF_UP
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes down.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
+      L" WHERE event_code=5"));   // SYS_IF_DOWN
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes to unknown state.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
+      L" WHERE event_code=45"));   // SYS_IF_UNKNOWN
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" disabled (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface administratively disabled.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
+      L" WHERE event_code=46"));   // SYS_IF_DISABLED
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" is testing (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes to testing state.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
+      L" WHERE event_code=47"));   // SYS_IF_TESTING
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes up but it''s expected state set to DOWN.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Interface speed (human-readable)'"
+      L" WHERE event_code=62"));   // SYS_IF_UNEXPECTED_UP
+
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
+      L"message='Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
+      L"description='Generated when interface goes down and it''s expected state is DOWN.\r\n"
+      L"Please note that source of event is node, not an interface itself.\r\n"
+      L"Parameters:\r\n"
+      L"   1) interfaceObjectId - Interface object ID\r\n"
+      L"   2) interfaceName - Interface name\r\n"
+      L"   3) interfaceIpAddress - Interface IP address\r\n"
+      L"   4) interfaceNetMask - Interface netmask\r\n"
+      L"   5) interfaceIndex - Interface index\r\n"
+      L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
+      L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
+      L" WHERE event_code=63"));   // SYS_IF_EXPECTED_DOWN
+
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 62.23 to 62.24
  */
 static bool H_UpgradeFromV23()
@@ -910,6 +1025,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 62, 25, H_UpgradeFromV24 },
    { 23, 62, 24, H_UpgradeFromV23 },
    { 22, 62, 23, H_UpgradeFromV22 },
    { 21, 62, 22, H_UpgradeFromV21 },
