@@ -6282,10 +6282,9 @@ public class NXCSession
          data.setDataType(dataType);
          short flags = inputStream.readShort();
 
-         boolean isAggregated = (flags & 0x02) != 0;   // On-the-fly avg/min/max bucketing
-         boolean isMinMaxBand = (flags & 0x04) != 0;   // Tier read with function=MINMAX
+         boolean isAggregated = (flags & 0x02) != 0;   // avg/min/max per row (on-the-fly bucketing or tier read with function=MINMAX)
          boolean hasSampleCount = (flags & 0x08) != 0; // Tier reads carry sample_count per row
-         if (isAggregated || isMinMaxBand)
+         if (isAggregated)
             data.setAggregated(true);
 
          for(int i = 0; i < rows; i++)
@@ -6297,12 +6296,6 @@ public class NXCSession
                double min = inputStream.readDouble();
                double max = inputStream.readDouble();
                row = new DciDataRow(new Date(timestamp), avg, min, max);
-            }
-            else if (isMinMaxBand)
-            {
-               double min = inputStream.readDouble();
-               double max = inputStream.readDouble();
-               row = new DciDataRow(new Date(timestamp), min, max);
             }
             else
             {

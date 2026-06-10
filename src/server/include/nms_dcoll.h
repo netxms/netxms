@@ -305,7 +305,7 @@ enum DciAggregationFunction
    DCI_HAGG_AVG    = 0,   // Average value
    DCI_HAGG_MIN    = 1,   // Minimum value
    DCI_HAGG_MAX    = 2,   // Maximum value
-   DCI_HAGG_MINMAX = 3    // Both min and max in a single response (band graphs)
+   DCI_HAGG_MINMAX = 3    // Avg, min, and max in a single response (band graphs)
 };
 
 #ifdef _WIN32

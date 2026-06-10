@@ -279,7 +279,7 @@ public class DataSeries
       if (totalSamples > 0)
          return weightedSum / totalSamples;
 
-      // No per-bucket sample counts available (raw data, on-the-fly bucketing, or min/max band) - use simple mean.
+      // No per-bucket sample counts available (raw data or on-the-fly bucketing) - use simple mean.
       double sum = 0;
       for(DciDataRow row : values)
          sum += row.getValueAsDouble();

@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 /**
  * DCI history aggregation function — selects which aggregate column(s) the server returns.
  *
- * MINMAX returns both min and max in a single response (single round trip), suitable for
- * band-graph rendering.
+ * MINMAX returns avg, min, and max in a single response (single round trip), suitable for
+ * band-graph rendering with the central line drawn from the true average.
  */
 public enum DciAggregationFunction
 {

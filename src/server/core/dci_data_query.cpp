@@ -240,8 +240,9 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
 
 /**
  * Build the SELECT column list for a tier read, given the requested aggregation function.
- * MINMAX returns two columns (min,max); single-function modes return one. sample_count is
- * always appended as the trailing column so the client can surface it in tooltips.
+ * MINMAX returns three columns (avg,min,max) so band charts can draw the central line from
+ * the true average; single-function modes return one. sample_count is always appended as
+ * the trailing column so the client can surface it in tooltips.
  */
 static const wchar_t* GetTierColumnList(DciAggregationFunction function)
 {
@@ -252,7 +253,7 @@ static const wchar_t* GetTierColumnList(DciAggregationFunction function)
       case DCI_HAGG_MAX:
          return L"max_value,sample_count";
       case DCI_HAGG_MINMAX:
-         return L"min_value,max_value,sample_count";
+         return L"avg_value,min_value,max_value,sample_count";
       case DCI_HAGG_AVG:
       default:
          return L"avg_value,sample_count";
@@ -266,8 +267,8 @@ static const wchar_t* GetTierColumnList(DciAggregationFunction function)
  * `condition` carries the same bucket_start range predicates the caller produces for the raw
  * path, with `bucket_start` substituted for `idata_timestamp` (TSDB wraps via ms_to_timestamptz).
  *
- * Returns rows: (bucket_start_ms, value) for AVG/MIN/MAX or (bucket_start_ms, min, max) for MINMAX,
- * ordered by bucket_start DESC, capped at maxRows.
+ * Returns rows: (bucket_start_ms, value) for AVG/MIN/MAX or (bucket_start_ms, avg, min, max) for
+ * MINMAX, ordered by bucket_start DESC, capped at maxRows. sample_count is the trailing column.
  */
 DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t nodeId, DciTier tier,
          DciAggregationFunction function, uint32_t maxRows, const wchar_t *condition)

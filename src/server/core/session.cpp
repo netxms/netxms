@@ -5386,15 +5386,16 @@ static void ProcessAggregatedDataSelectResults(DB_UNBUFFERED_RESULT hResult, Cli
  * Process results from a tier read against the hourly or daily aggregate table.
  *
  * For AVG/MIN/MAX the wire shape matches the raw single-value path: bucket_start_ms + double.
- * For MINMAX the row carries two doubles (min, max) and option bit 0x0004 signals that to clients.
- * Option bit 0x0008 indicates a trailing int32 sample_count is appended to every row
- * (always set by tier reads — the client uses it for hover tooltips).
+ * For MINMAX the row carries three doubles (avg, min, max) — the same shape as on-the-fly
+ * bucketing — signaled by option bit 0x0002. Option bit 0x0008 indicates a trailing int32
+ * sample_count is appended to every row (always set by tier reads — the client uses it for
+ * hover tooltips and sample-weighted averages).
  */
 static void ProcessTieredDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSession *session, uint32_t requestId,
          DciAggregationFunction function)
 {
    bool minmax = (function == DCI_HAGG_MINMAX);
-   uint16_t options = (minmax ? 0x0004 : 0x0000) | 0x0008;
+   uint16_t options = (minmax ? 0x0002 : 0x0000) | 0x0008;
 
    ByteStream data(32768);
    data.writeB(static_cast<int32_t>(0));   // Placeholder for number of rows
@@ -5406,12 +5407,13 @@ static void ProcessTieredDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientS
    {
       rows++;
       data.writeB(DBGetFieldInt64(hResult, 0));     // bucket_start (ms)
-      data.writeB(DBGetFieldDouble(hResult, 1));    // first value (avg/min/max, or min when minmax)
+      data.writeB(DBGetFieldDouble(hResult, 1));    // single value (avg/min/max), or avg when minmax
       int sampleCountColumn;
       if (minmax)
       {
-         data.writeB(DBGetFieldDouble(hResult, 2)); // max when minmax
-         sampleCountColumn = 3;
+         data.writeB(DBGetFieldDouble(hResult, 2)); // min
+         data.writeB(DBGetFieldDouble(hResult, 3)); // max
+         sampleCountColumn = 4;
       }
       else
       {

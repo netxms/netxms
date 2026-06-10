@@ -3814,7 +3814,7 @@ paths:
         When the resolved tier is hourly or daily, each row carries pre-computed avg/min/max
         and a `sampleCount` of raw samples that contributed to the bucket. The `function`
         query parameter selects which value column(s) the server returns from the aggregate
-        tables (`minmax` returns both min and max in a single response for band rendering).
+        tables (`minmax` returns avg, min, and max in a single response for band rendering).
       parameters:
         - name: object-id
           in: path
@@ -3875,8 +3875,8 @@ paths:
             enum: [avg, min, max, minmax]
             default: avg
             description: |
-              Aggregation function for hourly/daily tier reads. `minmax` returns both
-              `min` and `max` columns in a single response, suitable for band-graph
+              Aggregation function for hourly/daily tier reads. `minmax` returns `avg`,
+              `min`, and `max` columns in a single response, suitable for band-graph
               rendering. Ignored when `tierServed` is `raw`.
       responses:
         '200':
@@ -3926,8 +3926,8 @@ paths:
                         avg:
                           type: number
                           description: |
-                            Average value of the bucket. Present for `function=avg` tier
-                            reads and for on-the-fly raw bucketing.
+                            Average value of the bucket. Present for `function=avg` /
+                            `function=minmax` tier reads and for on-the-fly raw bucketing.
                         min:
                           type: number
                           description: |

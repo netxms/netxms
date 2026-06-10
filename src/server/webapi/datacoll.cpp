@@ -229,22 +229,23 @@ int H_DataCollectionHistory(Context *context)
          if (resolvedTier != DCI_TIER_RAW)
          {
             // Tier shape: bucket_start (ms), value(s), sample_count. Column index of sample_count
-            // depends on whether MINMAX returned one or two value columns — see GetTierColumnList.
+            // depends on whether MINMAX returned one or three value columns — see GetTierColumnList.
             json_object_set_new(response, "aggregated", json_true());
             const char *valueKey = "avg";
             if (aggFunction == DCI_HAGG_MIN)
                valueKey = "min";
             else if (aggFunction == DCI_HAGG_MAX)
                valueKey = "max";
-            int sampleCountColumn = (aggFunction == DCI_HAGG_MINMAX) ? 3 : 2;
+            int sampleCountColumn = (aggFunction == DCI_HAGG_MINMAX) ? 4 : 2;
             while(DBFetch(hResult))
             {
                json_t *dataPoint = json_object();
                json_object_set_new(dataPoint, "timestamp", DBGetFieldTimestamp(hResult, 0).asJson());
                if (aggFunction == DCI_HAGG_MINMAX)
                {
-                  json_object_set_new(dataPoint, "min", json_real(DBGetFieldDouble(hResult, 1)));
-                  json_object_set_new(dataPoint, "max", json_real(DBGetFieldDouble(hResult, 2)));
+                  json_object_set_new(dataPoint, "avg", json_real(DBGetFieldDouble(hResult, 1)));
+                  json_object_set_new(dataPoint, "min", json_real(DBGetFieldDouble(hResult, 2)));
+                  json_object_set_new(dataPoint, "max", json_real(DBGetFieldDouble(hResult, 3)));
                }
                else
                {

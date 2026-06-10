@@ -655,7 +655,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	      xSeries[i] = values[i].getTimestamp();
 	      double min = values[i].getMinValue();
 	      double max = values[i].getMaxValue();
-	      if (Double.isNaN(min) || Double.isNaN(max) || (min == 0 && max == 0))
+	      if (Double.isNaN(min) || Double.isNaN(max))
 	      {
 	         minSeries[i] = Double.NaN;
 	         maxSeries[i] = Double.NaN;
