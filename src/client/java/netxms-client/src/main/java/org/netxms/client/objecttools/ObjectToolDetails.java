@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -39,9 +41,18 @@ public class ObjectToolDetails extends ObjectTool
 {
    private static final Logger logger = LoggerFactory.getLogger(ObjectToolDetails.class);
 
+   /** Translatable field tags. Mirror the LOCSTR_TAG_* constants on the server. */
+   public static final String TRANSLATION_FIELD_NAME = "name";
+   public static final String TRANSLATION_FIELD_DESCRIPTION = "description";
+   public static final String TRANSLATION_FIELD_CONFIRMATION_TEXT = "confirmation_text";
+   public static final String TRANSLATION_FIELD_COMMAND_NAME = "command_name";
+   public static final String TRANSLATION_FIELD_COMMAND_SHORT_NAME = "command_short_name";
+
 	private boolean modified;
    private List<Integer> accessList;
 	private List<ObjectToolTableColumn> columns;
+   /** language -&gt; (fieldTag -&gt; value) */
+   private Map<String, Map<String, String>> translations;
 
 	/**
 	 * Create new tool object
@@ -71,6 +82,7 @@ public class ObjectToolDetails extends ObjectTool
       remoteHost = null;
       applicableClasses = APPLICABLE_NODE;
 		inputFields = new HashMap<String, InputField>();
+      translations = new TreeMap<String, Map<String, String>>();
 
 		createDisplayName();
 	}
@@ -130,8 +142,28 @@ public class ObjectToolDetails extends ObjectTool
          inputFields.put(f.getName(), f);
          fieldId += 10;
       }
-      
-      if ((type == TYPE_ACTION) || 
+
+      translations = new TreeMap<String, Map<String, String>>();
+      int translationCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_TRANSLATIONS);
+      long translationFieldId = NXCPCodes.VID_TRANSLATION_LIST_BASE;
+      for(int i = 0; i < translationCount; i++)
+      {
+         String fieldTag = msg.getFieldAsString(translationFieldId);
+         String language = msg.getFieldAsString(translationFieldId + 1);
+         String value = msg.getFieldAsString(translationFieldId + 2);
+         translationFieldId += 3;
+         if ((fieldTag == null) || fieldTag.isEmpty() || (language == null) || language.isEmpty())
+            continue;
+         Map<String, String> langMap = translations.get(language);
+         if (langMap == null)
+         {
+            langMap = new HashMap<String, String>();
+            translations.put(language, langMap);
+         }
+         langMap.put(fieldTag, (value != null) ? value : "");
+      }
+
+      if ((type == TYPE_ACTION) ||
           (type == TYPE_FILE_DOWNLOAD) || 
           (type == TYPE_LOCAL_COMMAND) || 
           (type == TYPE_SERVER_COMMAND) || 
@@ -186,6 +218,28 @@ public class ObjectToolDetails extends ObjectTool
          f.fillMessage(msg, fieldId);
          fieldId += 10;
       }
+
+      int translationCount = 0;
+      long translationFieldId = NXCPCodes.VID_TRANSLATION_LIST_BASE;
+      for(Map.Entry<String, Map<String, String>> langEntry : translations.entrySet())
+      {
+         String language = langEntry.getKey();
+         if ((language == null) || language.isEmpty())
+            continue;
+         for(Map.Entry<String, String> fieldEntry : langEntry.getValue().entrySet())
+         {
+            String fieldTag = fieldEntry.getKey();
+            String value = fieldEntry.getValue();
+            if ((fieldTag == null) || fieldTag.isEmpty() || (value == null) || value.isEmpty())
+               continue;
+            msg.setField(translationFieldId, fieldTag);
+            msg.setField(translationFieldId + 1, language);
+            msg.setField(translationFieldId + 2, value);
+            translationFieldId += 3;
+            translationCount++;
+         }
+      }
+      msg.setFieldInt32(NXCPCodes.VID_NUM_TRANSLATIONS, translationCount);
 	}
 
 	/**
@@ -409,6 +463,28 @@ public class ObjectToolDetails extends ObjectTool
    public void setApplicableClasses(int applicableClasses)
    {
       this.applicableClasses = applicableClasses;
+      modified = true;
+   }
+
+   /**
+    * Get the translations map (language code -&gt; field tag -&gt; localized value).
+    * Field tags match the TRANSLATION_FIELD_* constants. Returned map is mutable.
+    *
+    * @return translations map
+    */
+   public Map<String, Map<String, String>> getTranslations()
+   {
+      return translations;
+   }
+
+   /**
+    * Replace the translations map.
+    *
+    * @param translations new translations (language -&gt; field tag -&gt; value)
+    */
+   public void setTranslations(Map<String, Map<String, String>> translations)
+   {
+      this.translations = (translations != null) ? translations : new TreeMap<String, Map<String, String>>();
       modified = true;
    }
 }

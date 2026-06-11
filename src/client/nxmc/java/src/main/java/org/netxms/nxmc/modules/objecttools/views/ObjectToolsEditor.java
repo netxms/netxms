@@ -56,6 +56,7 @@ import org.netxms.nxmc.modules.objecttools.propertypages.Columns;
 import org.netxms.nxmc.modules.objecttools.propertypages.Filter;
 import org.netxms.nxmc.modules.objecttools.propertypages.General;
 import org.netxms.nxmc.modules.objecttools.propertypages.InputFields;
+import org.netxms.nxmc.modules.objecttools.propertypages.Translations;
 import org.netxms.nxmc.modules.objecttools.views.helpers.ObjectToolsComparator;
 import org.netxms.nxmc.modules.objecttools.views.helpers.ObjectToolsFilter;
 import org.netxms.nxmc.modules.objecttools.views.helpers.ObjectToolsLabelProvider;
@@ -559,7 +560,10 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
       pm.addToRoot(new PreferenceNode("filter", new Filter(objectTool)));
       pm.addToRoot(new PreferenceNode("input_fields", new InputFields(objectTool)));
       if (objectTool.getToolType() == ObjectTool.TYPE_AGENT_LIST || objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE)
+      {
          pm.addToRoot(new PreferenceNode("columns", new Columns(objectTool)));
+      }
+      pm.addToRoot(new PreferenceNode("translations", new Translations(objectTool)));
 
       PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
          @Override
