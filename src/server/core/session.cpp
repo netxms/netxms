@@ -17381,6 +17381,8 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
       NXCPMessage msg(CMD_RANGE_SCAN_RESULT, requestId);
       msg.setField(VID_IP_ADDRESS, addr);
       msg.setField(VID_FLAGS, record.protocolFlags);
+      if (record.nodeId != 0)
+         msg.setField(VID_NODE_ID, record.nodeId);
       if (record.rtt != 0)
          msg.setField(VID_RESPONSE_TIME, record.rtt);
       if (record.agentPort != 0)

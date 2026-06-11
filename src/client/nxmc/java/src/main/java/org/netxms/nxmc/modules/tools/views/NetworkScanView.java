@@ -76,8 +76,8 @@ public class NetworkScanView extends View
 {
    private final I18n i18n = LocalizationHelper.getI18n(NetworkScanView.class);
 
-   private static final String[] COLUMN_NAMES = { "IP Address", "RTT (ms)", "Agent", "SNMP", "Modbus", "EtherNet/IP", "Open TCP ports", "Node creation status" };
-   private static final int[] COLUMN_WIDTHS = { 130, 80, 60, 80, 60, 80, 200, 200 };
+   private static final String[] COLUMN_NAMES = { "IP Address", "RTT (ms)", "Agent", "SNMP", "Modbus", "EtherNet/IP", "Open TCP ports", "Node", "Node creation status" };
+   private static final int[] COLUMN_WIDTHS = { 130, 80, 60, 80, 60, 80, 200, 150, 200 };
    private static final int COLUMN_IP = 0;
    private static final int COLUMN_RTT = 1;
    private static final int COLUMN_AGENT = 2;
@@ -85,7 +85,8 @@ public class NetworkScanView extends View
    private static final int COLUMN_MODBUS = 4;
    private static final int COLUMN_ETHERNET_IP = 5;
    private static final int COLUMN_PORTS = 6;
-   private static final int COLUMN_ADD_STATUS = 7;
+   private static final int COLUMN_NODE = 7;
+   private static final int COLUMN_ADD_STATUS = 8;
 
    private LabeledText startAddressEditor;
    private LabeledText endAddressEditor;
@@ -490,6 +491,28 @@ public class NetworkScanView extends View
       if (selection.isEmpty())
          return;
 
+      final List<ScanRow> targets = new ArrayList<>();
+      final List<ScanRow> existing = new ArrayList<>();
+      for(Iterator<?> it = selection.iterator(); it.hasNext(); )
+      {
+         ScanRow row = (ScanRow)it.next();
+         if ((row.result.getNodeId() != 0) || (row.createdObjectId != 0))
+            existing.add(row);
+         else
+            targets.add(row);
+      }
+
+      if (targets.isEmpty())
+      {
+         for(ScanRow row : existing)
+         {
+            row.addStatus = AddStatus.ALREADY_EXISTS;
+            viewer.update(row, null);
+         }
+         addMessage(MessageArea.INFORMATION, i18n.tr("All selected addresses already have node objects"));
+         return;
+      }
+
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createContainerSelectionFilter());
       if (dlg.open() != Window.OK)
          return;
@@ -499,11 +522,12 @@ public class NetworkScanView extends View
       final long parentId = selectedParents.get(0).getObjectId();
 
       final int zoneUIN = scanZoneUIN;
-      final List<ScanRow> targets = new ArrayList<>();
-      for(Iterator<?> it = selection.iterator(); it.hasNext(); )
-         targets.add((ScanRow)it.next());
-
       final NXCSession session = Registry.getSession();
+      for(ScanRow row : existing)
+      {
+         row.addStatus = AddStatus.ALREADY_EXISTS;
+         viewer.update(row, null);
+      }
       for(ScanRow row : targets)
       {
          row.addStatus = AddStatus.PENDING;
@@ -577,7 +601,7 @@ public class NetworkScanView extends View
     */
    private enum AddStatus
    {
-      NONE, PENDING, CREATING, SUCCESS, FAILED
+      NONE, PENDING, CREATING, SUCCESS, FAILED, ALREADY_EXISTS
    }
 
    /**
@@ -627,6 +651,9 @@ public class NetworkScanView extends View
                   sb.append(sorted[i]);
                }
                return sb.toString();
+            case COLUMN_NODE:
+               long nodeId = (row.createdObjectId != 0) ? row.createdObjectId : r.getNodeId();
+               return (nodeId != 0) ? Registry.getSession().getObjectName(nodeId) : "";
             case COLUMN_ADD_STATUS:
                return formatAddStatus(row);
          }
@@ -647,6 +674,8 @@ public class NetworkScanView extends View
                return String.format(i18n.tr("created [%d]"), row.createdObjectId);
             case FAILED:
                return String.format(i18n.tr("failed: %s"), (row.errorMessage != null) ? row.errorMessage : i18n.tr("unknown error"));
+            case ALREADY_EXISTS:
+               return i18n.tr("node already exists");
          }
          return "";
       }

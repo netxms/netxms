@@ -155,6 +155,7 @@ struct InteractiveScanRecord
 {
    uint32_t protocolFlags;
    uint32_t rtt;
+   uint32_t nodeId;     // ID of existing node with this IP address, 0 if none
    uint16_t agentPort;
    int16_t snmpVersion;
    IntegerArray<uint16_t> openTcpPorts;
@@ -163,6 +164,7 @@ struct InteractiveScanRecord
    {
       protocolFlags = 0;
       rtt = 0;
+      nodeId = 0;
       agentPort = 0;
       snmpVersion = -1;
    }

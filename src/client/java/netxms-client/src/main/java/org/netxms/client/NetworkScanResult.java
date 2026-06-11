@@ -49,6 +49,7 @@ public class NetworkScanResult
    private final InetAddress address;
    private final int flags;
    private final long rtt;
+   private final long nodeId;
    private final int agentPort;
    private final SnmpVersion snmpVersion;
    private final int[] openTcpPorts;
@@ -63,6 +64,7 @@ public class NetworkScanResult
       address = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       rtt = msg.getFieldAsInt64(NXCPCodes.VID_RESPONSE_TIME);
+      nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
       agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
       if ((flags & HAS_SNMP) != 0)
          snmpVersion = SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION));
@@ -89,6 +91,14 @@ public class NetworkScanResult
    public long getRtt()
    {
       return rtt;
+   }
+
+   /**
+    * @return ID of existing node object with this IP address, or 0 if the address is not managed yet
+    */
+   public long getNodeId()
+   {
+      return nodeId;
    }
 
    /**

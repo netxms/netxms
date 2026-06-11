@@ -1859,6 +1859,9 @@ static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolF
    if (record == nullptr)
    {
       record = new InteractiveScanRecord();
+      shared_ptr<Node> node = FindNodeByIP(state->publicCtx->zoneUIN, addr);
+      if (node != nullptr)
+         record->nodeId = node->getId();
       state->records.set(key, record);
    }
 
@@ -1875,6 +1878,7 @@ static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolF
    InteractiveScanRecord snapshot;
    snapshot.protocolFlags = record->protocolFlags;
    snapshot.rtt = record->rtt;
+   snapshot.nodeId = record->nodeId;
    snapshot.agentPort = record->agentPort;
    snapshot.snmpVersion = record->snmpVersion;
    for(int i = 0; i < record->openTcpPorts.size(); i++)
