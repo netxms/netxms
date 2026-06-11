@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelection;
@@ -196,7 +197,18 @@ public class RackView extends ObjectView implements ISelectionProvider
          }
       };
       action3DView.setChecked(use3D);
-      action3DView.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-views/rack.gif"));
+      action3DView.setImageDescriptor(ResourceManager.getImageDescriptor("icons/rack/3d-view.png"));
+      addKeyBinding("M1+M3+D", action3DView);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(action3DView);
+      super.fillLocalMenu(manager);
    }
 
    /**
