@@ -103,24 +103,32 @@ const ObjectArray<MetricMapping>& GetMetricMappings()
  */
 static bool SubagentInit(Config *config)
 {
-   uint16_t port = static_cast<uint16_t>(config->getValueAsUInt(_T("/Prometheus/Port"), 9090));
-   if (port == 0)
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Port not configured"));
-      return false;
-   }
-
-   const TCHAR *endpoint = config->getValue(_T("/Prometheus/Endpoint"), _T("/api/v1/write"));
-   const TCHAR *listen = config->getValue(_T("/Prometheus/Address"), _T("127.0.0.1"));
-
    LoadMetricMappings(config);
+   LoadScrapeTargets(config);
 
-   if (!StartReceiver(listen, port, endpoint))
+   if (config->getValueAsBoolean(_T("/Prometheus/EnableReceiver"), true))
    {
-      return false;
+      uint16_t port = static_cast<uint16_t>(config->getValueAsUInt(_T("/Prometheus/Port"), 9090));
+      if (port == 0)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Port not configured"));
+         return false;
+      }
+
+      const TCHAR *endpoint = config->getValue(_T("/Prometheus/Endpoint"), _T("/api/v1/write"));
+      const TCHAR *listen = config->getValue(_T("/Prometheus/Address"), _T("127.0.0.1"));
+
+      if (!StartReceiver(listen, port, endpoint))
+      {
+         return false;
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Prometheus remote write receiver initialized at http://%s:%d%s"), listen, port, endpoint);
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Prometheus subagent initialized at http://%s:%d%s"), listen, port, endpoint);
+   StartScrapers();
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Prometheus subagent initialized"));
    return true;
 }
 
@@ -130,8 +138,38 @@ static bool SubagentInit(Config *config)
 static void SubagentShutdown()
 {
    StopReceiver();
+   StopScrapers();
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Prometheus subagent shutdown"));
 }
+
+/**
+ * Supported parameters
+ */
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
+{
+   { _T("Prometheus.Target.LastScrapeTime(*)"), H_TargetInfo, _T("T"), DCI_DT_UINT64, _T("Prometheus: timestamp of last scrape of target {instance}") },
+   { _T("Prometheus.Target.SampleCount(*)"), H_TargetInfo, _T("C"), DCI_DT_UINT, _T("Prometheus: number of samples in last scrape of target {instance}") },
+   { _T("Prometheus.Target.Status(*)"), H_TargetInfo, _T("S"), DCI_DT_INT, _T("Prometheus: status of last scrape of target {instance}") },
+   { _T("Prometheus.Value(*)"), H_TargetValue, nullptr, DCI_DT_FLOAT, _T("Prometheus: value of metric {instance}") }
+};
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST s_lists[] =
+{
+   { _T("Prometheus.LabelValues(*)"), H_LabelValues, nullptr },
+   { _T("Prometheus.Targets"), H_TargetList, nullptr }
+};
+
+/**
+ * Supported tables
+ */
+static NETXMS_SUBAGENT_TABLE s_tables[] =
+{
+   { _T("Prometheus.Series(*)"), H_SeriesTable, nullptr, _T("LABELS"), _T("Prometheus: time series of metric") },
+   { _T("Prometheus.Targets"), H_TargetsTable, nullptr, _T("NAME"), _T("Prometheus: configured scrape targets") }
+};
 
 /**
  * Subagent information
@@ -141,9 +179,9 @@ static NETXMS_SUBAGENT_INFO s_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("PROMETHEUS"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, nullptr, nullptr, nullptr,
-   0, nullptr, // parameters
-   0, nullptr, // lists
-   0, nullptr, // tables
+   sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
    0, nullptr, // actions
    0, nullptr  // push parameters
 };
