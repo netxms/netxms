@@ -124,6 +124,17 @@ public class ImageProvider
       return Registry.getSingleton(ImageProvider.class);
    }
 
+   /**
+    * Get singleton instance.
+    *
+    * @param display display to get instance for
+    * @return image provider instance
+    */
+   public static ImageProvider getInstance(Display display)
+   {
+      return Registry.getSingleton(ImageProvider.class, display);
+   }
+
    private final I18n i18n = LocalizationHelper.getI18n(ImageProvider.class);
    private final NXCSession session;
    private final Display display;

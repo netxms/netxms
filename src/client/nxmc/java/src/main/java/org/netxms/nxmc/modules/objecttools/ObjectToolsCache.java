@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,8 +49,9 @@ public class ObjectToolsCache
    
    private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
    private Map<Long, ImageDescriptor> icons = new HashMap<Long, ImageDescriptor>();
+   private Display display = null;
 	private NXCSession session = null;
-	
+
 	/**
 	 * Initialize object tools cache. Should be called when connection with
 	 * the server already established.
@@ -76,8 +77,9 @@ public class ObjectToolsCache
 	/**
 	 * @param session
 	 */
-	private ObjectToolsCache(NXCSession session)
+   private ObjectToolsCache(Display display, NXCSession session)
 	{
+      this.display = display;
 	   this.session = session;
 
 	   reload();
@@ -124,7 +126,7 @@ public class ObjectToolsCache
     */
    public static void attachSession(Display display, NXCSession session)
    {
-      ObjectToolsCache instance = new ObjectToolsCache(session);
+      ObjectToolsCache instance = new ObjectToolsCache(display, session);
       Registry.setSingleton(display, ObjectToolsCache.class, instance);
    }
 
@@ -150,10 +152,10 @@ public class ObjectToolsCache
          {
 			   icons.clear();
 
-            ImageProvider imageProvider = ImageProvider.getInstance();
+            ImageProvider imageProvider = ImageProvider.getInstance(display);
             for(ObjectTool tool : list)
             {
-               UUID iconGuid = tool.getIcon();
+               final UUID iconGuid = tool.getIcon();
                if ((iconGuid == null) || iconGuid.equals(NXCommon.EMPTY_GUID))
                   continue;
 
@@ -162,12 +164,11 @@ public class ObjectToolsCache
                   imageProvider.preloadImageFromServer(iconGuid);
                   Image image = imageProvider.getObjectIcon(iconGuid);
                   if (image != null)
-                     icons.put(tool.getId(), ImageDescriptor.createFromImageData(image.getImageData()));
+                     icons.put(tool.getId(), ImageDescriptor.createFromImageDataProvider((zoom) -> image.getImageData(zoom)));
                }
                catch(Exception e)
                {
-                  logger.error(String.format("Exception in ObjectToolsCache.reload(): toolId=%d, toolName=%s", tool.getId(),
-                        tool.getName()), e);
+                  logger.error(String.format("Exception in ObjectToolsCache.reload(): toolId=%d, toolName=%s", tool.getId(), tool.getName()), e);
                }
             }
          }
@@ -177,7 +178,7 @@ public class ObjectToolsCache
          logger.error("Exception in ObjectToolsCache.reload()", e);
 		}
 	}
-	
+
 	/**
 	 * Handler for object tool change
 	 * 
@@ -219,7 +220,7 @@ public class ObjectToolsCache
       {
          Image image = imageProvider.getObjectIcon(guid);
          if (image != null)
-            icon = ImageDescriptor.createFromImageData(image.getImageData());
+            icon = ImageDescriptor.createFromImageDataProvider((zoom) -> image.getImageData(zoom));
       }
       synchronized(icons)
       {

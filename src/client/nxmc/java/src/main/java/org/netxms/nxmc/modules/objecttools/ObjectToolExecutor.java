@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -310,13 +310,8 @@ public final class ObjectToolExecutor
                      if (!valid)
                      {
                         final String fieldName = fields[i].getDisplayName();
-                        getDisplay().syncExec(new Runnable() {
-                           @Override
-                           public void run()
-                           {
-                              MessageDialogHelper.openError(null, i18n.tr("Error"),
-                                    String.format(i18n.tr("Password entered in input field \"%s\" is not valid"), fieldName));
-                           }
+                        getDisplay().syncExec(() -> {
+                           MessageDialogHelper.openError(null, i18n.tr("Error"), String.format(i18n.tr("Password entered in input field \"%s\" is not valid"), fieldName));
                         });
                         return;
                      }
@@ -330,13 +325,7 @@ public final class ObjectToolExecutor
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) &&
                   ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0 || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
             {
-               getDisplay().syncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     executeOnMultipleNodes(allObjects, objects, tool, inputValues, maskedFields, viewPlacement);
-                  }
-               });
+               getDisplay().syncExec(() -> executeOnMultipleNodes(allObjects, objects, tool, inputValues, maskedFields, viewPlacement));
             }
             else
             {
@@ -345,23 +334,11 @@ public final class ObjectToolExecutor
                   if (tool.getToolType() == ObjectTool.TYPE_URL || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)))
                   {
                      final String data = expandedText.get(i++);
-                     getDisplay().syncExec(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           executeOnNode(n, tool, inputValues, maskedFields, data, viewPlacement);
-                        }
-                     });
+                     getDisplay().syncExec(() -> executeOnNode(n, tool, inputValues, maskedFields, data, viewPlacement));
                   }
                   else
                   {
-                     getDisplay().syncExec(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           executeOnNode(n, tool, inputValues, maskedFields, null, viewPlacement);
-                        }
-                     });
+                     getDisplay().syncExec(() -> executeOnNode(n, tool, inputValues, maskedFields, null, viewPlacement));
                   }
                }
             }

@@ -30,8 +30,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Control;
@@ -218,13 +216,7 @@ public final class ObjectMenuFactory
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       final ImageCache imageCache = new ImageCache();
-      toolsMenu.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            imageCache.dispose();
-         }
-      });
+      toolsMenu.addDisposeListener((e) -> imageCache.dispose());
 
       ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
       Arrays.sort(tools, new Comparator<ObjectTool>() {

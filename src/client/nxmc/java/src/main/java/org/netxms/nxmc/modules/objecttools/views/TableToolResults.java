@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.objecttools.views;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +77,7 @@ public class TableToolResults extends ObjectToolResultView
     */
    public TableToolResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
-      super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/table.gif"), false);
+      super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/table.png"), false);
       this.inputValues = inputValues;
       this.maskedFields = maskedFields;
 	}
@@ -249,13 +248,7 @@ public class TableToolResults extends ObjectToolResultView
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
       {
-         Arrays.sort(fields, new Comparator<InputField>() {
-            @Override
-            public int compare(InputField f1, InputField f2)
-            {
-               return f1.getSequence() - f2.getSequence();
-            }
-         });
+         Arrays.sort(fields, (f1, f2) -> (f1.getSequence() - f2.getSequence()));
          InputFieldEntryDialog dlg = new InputFieldEntryDialog(getWindow().getShell(), tool.getDisplayName(), fields, inputValues);
          if (dlg.open() != Window.OK)
             return false;  // askInputValues stays true so the next refresh re-prompts
@@ -289,14 +282,10 @@ public class TableToolResults extends ObjectToolResultView
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Table table = session.executeTableTool(tool.getId(), object.object.getObjectId(), inputValues, maskedFields);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-					   if (!table.getTitle().isEmpty())
-					      setName(object.object.getObjectName() + ": " + table.getTitle()); //$NON-NLS-1$
-					   updateViewer(table);
-					}
+            runInUIThread(() -> {
+               if (!table.getTitle().isEmpty())
+                  setName(object.object.getObjectName() + ": " + table.getTitle()); //$NON-NLS-1$
+               updateViewer(table);
 				});
 			}
 
