@@ -1,6 +1,6 @@
 /*
-** NetXMS Prometheus remote write receiver subagent
-** Copyright (C) 2025 Raden Solutions
+** NetXMS Prometheus subagent
+** Copyright (C) 2025-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ static const char *GetLabelValue(const prometheus::TimeSeries& ts, const char *n
    return nullptr;
 }
 
-static void AppendEscapedValue(StringBuffer& result, const TCHAR *value)
+void AppendEscapedValue(StringBuffer& result, const TCHAR *value)
 {
    bool needsQuoting = false;
    for (const TCHAR *p = value; *p != 0; p++)
@@ -61,7 +61,7 @@ static void AppendEscapedValue(StringBuffer& result, const TCHAR *value)
    result.append(_T('"'));
 }
 
-static String BuildMetricName(const MetricMapping& mapping, const prometheus::TimeSeries& ts)
+static String BuildMetricName(const MetricMapping& mapping, std::function<const char* (const char*)> getLabel)
 {
    StringBuffer result;
    result.append(mapping.netxmsName);
@@ -76,7 +76,7 @@ static String BuildMetricName(const MetricMapping& mapping, const prometheus::Ti
 #ifdef UNICODE
       char nameBuffer[256];
       WideCharToMultiByteSysLocale(mapping.nameArguments.get(i), nameBuffer, 256);
-      const char *value = GetLabelValue(ts, nameBuffer);
+      const char *value = getLabel(nameBuffer);
       if (value != nullptr)
       {
          WCHAR valueBuffer[1024];
@@ -84,7 +84,7 @@ static String BuildMetricName(const MetricMapping& mapping, const prometheus::Ti
          AppendEscapedValue(result, valueBuffer);
       }
 #else
-      const char *value = GetLabelValue(ts, mapping.nameArguments.get(i));
+      const char *value = getLabel(mapping.nameArguments.get(i));
       if (value != nullptr)
       {
          AppendEscapedValue(result, value);
@@ -97,7 +97,7 @@ static String BuildMetricName(const MetricMapping& mapping, const prometheus::Ti
    return result;
 }
 
-static String BuildValueFromLabels(const MetricMapping& mapping, const prometheus::TimeSeries& ts)
+static String BuildValueFromLabels(const MetricMapping& mapping, std::function<const char* (const char*)> getLabel)
 {
    StringBuffer result;
    bool first = true;
@@ -109,7 +109,7 @@ static String BuildValueFromLabels(const MetricMapping& mapping, const prometheu
 #ifdef UNICODE
       char nameBuffer[256];
       WideCharToMultiByteSysLocale(mapping.valueArguments.get(i), nameBuffer, 256);
-      const char *value = GetLabelValue(ts, nameBuffer);
+      const char *value = getLabel(nameBuffer);
       if (value != nullptr)
       {
          WCHAR valueBuffer[1024];
@@ -117,7 +117,7 @@ static String BuildValueFromLabels(const MetricMapping& mapping, const prometheu
          result.append(valueBuffer);
       }
 #else
-      const char *value = GetLabelValue(ts, mapping.valueArguments.get(i));
+      const char *value = getLabel(mapping.valueArguments.get(i));
       if (value != nullptr)
       {
          result.append(value);
@@ -129,10 +129,53 @@ static String BuildValueFromLabels(const MetricMapping& mapping, const prometheu
    return result;
 }
 
-static void ProcessWriteRequest(const prometheus::WriteRequest& request)
+/**
+ * Match single sample against configured metric mappings and push to server if mapping found
+ */
+void ProcessSample(const char *metricName, double value, std::function<const char* (const char*)> getLabel)
 {
    const ObjectArray<MetricMapping>& mappings = GetMetricMappings();
-   if (mappings.isEmpty())
+
+   const MetricMapping *matchedMapping = nullptr;
+   for(int j = 0; j < mappings.size(); j++)
+   {
+#ifdef UNICODE
+      char prometheusNameMB[256];
+      WideCharToMultiByteSysLocale(mappings.get(j)->prometheusName, prometheusNameMB, 256);
+      if (strcmp(metricName, prometheusNameMB) == 0)
+#else
+      if (strcmp(metricName, mappings.get(j)->prometheusName) == 0)
+#endif
+      {
+         matchedMapping = mappings.get(j);
+         break;
+      }
+   }
+
+   if (matchedMapping == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("No mapping found for metric: %hs"), metricName);
+      return;
+   }
+
+   String metricNameStr = BuildMetricName(*matchedMapping, getLabel);
+
+   if (matchedMapping->useMetricValue)
+   {
+      AgentPushParameterDataDouble(metricNameStr, value);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Pushed metric: %s = %.2f"), metricNameStr.cstr(), value);
+   }
+   else
+   {
+      String labelValue = BuildValueFromLabels(*matchedMapping, getLabel);
+      AgentPushParameterData(metricNameStr, labelValue);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Pushed metric: %s = %s"), metricNameStr.cstr(), labelValue.cstr());
+   }
+}
+
+static void ProcessWriteRequest(const prometheus::WriteRequest& request)
+{
+   if (GetMetricMappings().isEmpty())
    {
       return;
    }
@@ -147,48 +190,9 @@ static void ProcessWriteRequest(const prometheus::WriteRequest& request)
          continue;
       }
 
-      const MetricMapping *matchedMapping = nullptr;
-      for(int j = 0; j < mappings.size(); j++)
-      {
-#ifdef UNICODE
-         char prometheusNameMB[256];
-         WideCharToMultiByteSysLocale(mappings.get(j)->prometheusName, prometheusNameMB, 256);
-         if (strcmp(metricName, prometheusNameMB) == 0)
-#else
-         if (strcmp(metricName, mappings.get(j)->prometheusName) == 0)
-#endif
-         {
-            matchedMapping = mappings.get(j);
-            break;
-         }
-      }
-
-      if (matchedMapping == nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("No mapping found for metric: %hs"), metricName);
-         continue;
-      }
-
-      if (ts.samples_size() == 0)
-      {
-         continue;
-      }
-
       for (const auto& sample : ts.samples())
       {
-         String metricNameStr = BuildMetricName(*matchedMapping, ts);
-
-         if (matchedMapping->useMetricValue)
-         {
-            AgentPushParameterDataDouble(metricNameStr, sample.value());
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Pushed metric: %s = %.2f"), metricNameStr.cstr(), sample.value());
-         }
-         else
-         {
-            String value = BuildValueFromLabels(*matchedMapping, ts);
-            AgentPushParameterData(metricNameStr, value);
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Pushed metric: %s = %s"), metricNameStr.cstr(), value.cstr());
-         }
+         ProcessSample(metricName, sample.value(), [&ts] (const char *name) { return GetLabelValue(ts, name); });
       }
    }
 }

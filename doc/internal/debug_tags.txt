@@ -205,6 +205,8 @@ poll.topology	Topology poll
 
 portcheck	Portcheck subagent messages
 
+prometheus	Prometheus subagent
+
 proc.*		Process related trace
 proc.spexec	Sub-process executor
 procexec	Process executor
