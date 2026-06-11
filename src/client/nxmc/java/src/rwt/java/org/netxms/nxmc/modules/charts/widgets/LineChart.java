@@ -492,15 +492,23 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	public void refresh()
 	{
       List<ChartDciConfig> items = chart.getItems();
-      for(int i = 0; i < items.size(); i++)
-         updateSeries(i, items.get(i));
+      try
+      {
+         // While series are replaced one by one, each createSeries()/enableStack() call triggers
+         // a full stack data recomputation over all series; suspend chart updates so it runs
+         // only once on resume.
+         suspendUpdate(true);
+         for(int i = 0; i < items.size(); i++)
+            updateSeries(i, items.get(i));
 
-      List<DataSeries> dataSeries = chart.getDataSeries();
-      MeasurementUnit unit = dataSeries.isEmpty() ? null : dataSeries.get(0).getMeasurementUnit();
-      setUseBinaryMultipliers((unit != null) && unit.isBinary());
-
-	   updateLayout();
-	   updateStackAndRiserData();
+         List<DataSeries> dataSeries = chart.getDataSeries();
+         MeasurementUnit unit = dataSeries.isEmpty() ? null : dataSeries.get(0).getMeasurementUnit();
+         setUseBinaryMultipliers((unit != null) && unit.isBinary());
+      }
+      finally
+      {
+         suspendUpdate(false); // resume executes updateLayout() and updateStackAndRiserData()
+      }
       if (configuration.isAutoScale() && !zoomedToSelectionY)
 	      adjustYAxis(true);
 	   else
