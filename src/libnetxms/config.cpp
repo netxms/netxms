@@ -840,6 +840,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 {
    TCHAR name[MAX_PATH], *curr, *eptr;
    int i, pos, initialErrorCount = m_errorCount;
+   size_t bytes;
    ConfigEntry *entry;
 
    name[0] = _T('/');
@@ -933,6 +934,15 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 #else
                strlcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
+               break;
+            case CT_UTF8_STRING:
+               if ((cfgTemplate[i].overrideIndicator != nullptr) &&
+                   (*((char *)cfgTemplate[i].overrideIndicator) != 0))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
+               bytes = tchar_to_utf8(value, -1, (char *)cfgTemplate[i].buffer, (size_t)cfgTemplate[i].bufferSize - 1);
+               ((char *)cfgTemplate[i].buffer)[bytes] = 0;
                break;
             case CT_STRING_CONCAT:
                if (*static_cast<TCHAR**>(cfgTemplate[i].buffer) != nullptr)

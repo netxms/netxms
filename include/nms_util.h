@@ -160,6 +160,7 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 #define CT_STRING_LIST     12  /* Each value added to StringList object */
 #define CT_BOOLEAN         13  /* Data is pointer to bool variable which will be set to true or false */
 #define CT_DOUBLE          14  /* Data is pointer to double variable */
+#define CT_UTF8_STRING     15  /* Same as CT_MB_STRING but target is UTF-8 string */
 
 /**
  * Uninitialized value for override indicator
