@@ -51,8 +51,8 @@ SlackDriver::SlackDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("url"), CT_MB_STRING, 0, 0, sizeof(s_url), 0, s_url },	
-		{ _T("username"), CT_MB_STRING, 0, 0, sizeof(s_username), 0, s_username },	
+		{ _T("url"), CT_UTF8_STRING, 0, 0, sizeof(s_url), 0, s_url },	
+		{ _T("username"), CT_UTF8_STRING, 0, 0, sizeof(s_username), 0, s_username },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 	config->parseTemplate(_T("Slack"), configTemplate);

@@ -68,9 +68,9 @@ NexmoDriver::NexmoDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("apiKey"), CT_MB_STRING, 0, 0, sizeof(m_apiKey), 0, m_apiKey },	
-		{ _T("apiSecret"), CT_MB_STRING, 0, 0, sizeof(m_apiSecret), 0, m_apiSecret },	
-		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0,	m_from },	
+		{ _T("apiKey"), CT_UTF8_STRING, 0, 0, sizeof(m_apiKey), 0, m_apiKey },	
+		{ _T("apiSecret"), CT_UTF8_STRING, 0, 0, sizeof(m_apiSecret), 0, m_apiSecret },	
+		{ _T("from"), CT_UTF8_STRING, 0, 0, sizeof(m_from), 0,	m_from },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 

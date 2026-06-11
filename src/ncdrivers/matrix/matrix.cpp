@@ -549,15 +549,15 @@ MatrixDriver *MatrixDriver::createInstance(Config *config, NCDriverStorageManage
 
    NX_CFG_TEMPLATE configTemplate[] =
    {
-      { _T("AccessToken"), CT_MB_STRING, 0, 0, sizeof(accessToken), 0, accessToken, nullptr },
+      { _T("AccessToken"), CT_UTF8_STRING, 0, 0, sizeof(accessToken), 0, accessToken, nullptr },
       { _T("AliasCacheTTL"), CT_LONG, 0, 0, 0, 0, &aliasCacheTTL, nullptr },
       { _T("HtmlFormatting"), CT_BOOLEAN, 0, 0, 0, 0, &htmlFormatting, nullptr },
-      { _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
+      { _T("Proxy"), CT_UTF8_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
       { _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, nullptr },
-      { _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
-      { _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
-      { _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
-      { _T("ServerURL"), CT_MB_STRING, 0, 0, sizeof(serverUrl), 0, serverUrl, nullptr },
+      { _T("ProxyType"), CT_UTF8_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
+      { _T("ProxyUser"), CT_UTF8_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
+      { _T("ProxyPassword"), CT_UTF8_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
+      { _T("ServerURL"), CT_UTF8_STRING, 0, 0, sizeof(serverUrl), 0, serverUrl, nullptr },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
    };
 

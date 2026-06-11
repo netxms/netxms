@@ -94,18 +94,18 @@ SmtpDriver *SmtpDriver::createInstance(Config *config, NCDriverStorageManager *s
 
    NX_CFG_TEMPLATE configTemplate[] = {
       { _T("AuthMethod"), CT_STRING, 0, 0, 9, 0, authMethodBuff },
-      { _T("ClientId"), CT_MB_STRING, 0, 0, sizeof(driver->m_clientId), 0, driver->m_clientId },
-      { _T("ClientSecret"), CT_MB_STRING, 0, 0, sizeof(driver->m_clientSecret), 0, driver->m_clientSecret },
-      { _T("FromAddr"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromAddr), 0, driver->m_fromAddr },
-      { _T("FromName"), CT_MB_STRING, 0, 0, sizeof(driver->m_fromName), 0, driver->m_fromName },
+      { _T("ClientId"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_clientId), 0, driver->m_clientId },
+      { _T("ClientSecret"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_clientSecret), 0, driver->m_clientSecret },
+      { _T("FromAddr"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_fromAddr), 0, driver->m_fromAddr },
+      { _T("FromName"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_fromName), 0, driver->m_fromName },
       { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_isHtml },
-      { _T("Login"), CT_MB_STRING, 0, 0, sizeof(driver->m_login), 0, driver->m_login },
-      { _T("Password"), CT_MB_STRING, 0, 0, sizeof(driver->m_password), 0, driver->m_password },
+      { _T("Login"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_login), 0, driver->m_login },
+      { _T("Password"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_password), 0, driver->m_password },
       { _T("Port"), CT_WORD, 0, 0, 0, 0, &driver->m_port },
-      { _T("Scope"), CT_MB_STRING, 0, 0, sizeof(driver->m_scope), 0, driver->m_scope },
-      { _T("Server"), CT_MB_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
+      { _T("Scope"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_scope), 0, driver->m_scope },
+      { _T("Server"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },
-      { _T("TokenEndpoint"), CT_MB_STRING, 0, 0, sizeof(driver->m_tokenEndpoint), 0, driver->m_tokenEndpoint },
+      { _T("TokenEndpoint"), CT_UTF8_STRING, 0, 0, sizeof(driver->m_tokenEndpoint), 0, driver->m_tokenEndpoint },
       { _T("VerifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_verifyPeer },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };

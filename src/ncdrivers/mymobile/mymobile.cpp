@@ -66,8 +66,8 @@ MyMobileDriver::MyMobileDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("Username"), CT_MB_STRING, 0, 0, sizeof(m_username), 0, m_username },
-		{ _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
+		{ _T("Username"), CT_UTF8_STRING, 0, 0, sizeof(m_username), 0, m_username },
+		{ _T("Password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 

@@ -586,17 +586,17 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    char parseMode[32] = "";
    NX_CFG_TEMPLATE configTemplate[] =
 	{
-		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, nullptr },
+		{ _T("AuthToken"), CT_UTF8_STRING, 0, 0, sizeof(authToken), 0, authToken, nullptr },
 		{ _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V4, 0, &options, nullptr },
 		{ _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V6, 0, &options, nullptr },
       { _T("LongPolling"), CT_BOOLEAN_FLAG_32, 0, 0, LONG_POLLING, 0, &options, nullptr },
-      { _T("ParseMode"), CT_MB_STRING, 0, 0, sizeof(parseMode), 0, parseMode, nullptr },
+      { _T("ParseMode"), CT_UTF8_STRING, 0, 0, sizeof(parseMode), 0, parseMode, nullptr },
       { _T("PollingInterval"), CT_LONG, 0, 0, 0, 0, &pollingInterval, nullptr },
-		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
+		{ _T("Proxy"), CT_UTF8_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
 		{ _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, nullptr },
-		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
-		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
-		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
+		{ _T("ProxyType"), CT_UTF8_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
+		{ _T("ProxyUser"), CT_UTF8_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
+		{ _T("ProxyPassword"), CT_UTF8_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
       { _T("UseLocalResolver"), CT_BOOLEAN_FLAG_32, 0, 0, USE_LOCAL_RESOLVER, 0, &options, nullptr },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 	};

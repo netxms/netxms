@@ -91,10 +91,10 @@ MattermostDriver *MattermostDriver::createInstance(Config *config)
    char token[64] = "";
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-      { _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(token), 0, token },
+      { _T("AuthToken"), CT_UTF8_STRING, 0, 0, sizeof(token), 0, token },
 		{ _T("Color"), CT_STRING, 0, 0, sizeof(colorDefinition) / sizeof(TCHAR), 0, colorDefinition },
       { _T("Footer"), CT_STRING, 0, 0, sizeof(footer) / sizeof(TCHAR), 0, footer },
-      { _T("ServerURL"), CT_MB_STRING, 0, 0, sizeof(url), 0, url },
+      { _T("ServerURL"), CT_UTF8_STRING, 0, 0, sizeof(url), 0, url },
       { _T("UseAttachments"), CT_BOOLEAN_FLAG_32, 0, 0, MM_USE_ATTACHMENTS, 0, &flags },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};

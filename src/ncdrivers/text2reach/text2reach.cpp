@@ -74,8 +74,8 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
    int flags = 1; //default values m_unicode = true, m_blacklist = false
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("apikey"), CT_MB_STRING, 0, 0, sizeof(m_apikey), 0, m_apikey },	
-		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0, m_from },	
+		{ _T("apikey"), CT_UTF8_STRING, 0, 0, sizeof(m_apikey), 0, m_apikey },	
+		{ _T("from"), CT_UTF8_STRING, 0, 0, sizeof(m_from), 0, m_from },	
 		{ _T("unicode"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
 		{ _T("blacklist"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
 		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },

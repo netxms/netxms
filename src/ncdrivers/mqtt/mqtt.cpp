@@ -58,37 +58,26 @@ public:
 };
 
 /**
- * Get string value frm config
- */
-static void GetStringConfigValue(Config *config, const TCHAR *path, char *buffer, size_t bufferSize, const char *defaultValue)
-{
-   const TCHAR *v = config->getValue(path, nullptr, 0);
-   if (v != nullptr)
-   {
-#ifdef UNICODE
-      size_t l = wchar_to_utf8(v, -1, buffer, bufferSize - 1);
-      buffer[l] = 0;
-#else
-      strlcpy(buffer, v, bufferSize);
-#endif
-   }
-   else
-   {
-      strlcpy(buffer, defaultValue, bufferSize);
-   }
-}
-
-/**
  * Create driver instance
  */
 MQTTDriver::MQTTDriver(Config *config) : NCDriver()
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
-   GetStringConfigValue(config, _T("/MQTT/Hostname"), m_hostname, sizeof(m_hostname), "127.0.0.1");
-   m_port = config->getValueAsUInt(_T("/MQTT/Port"), 1883);
-   GetStringConfigValue(config, _T("/MQTT/Login"), m_login, sizeof(m_login), "");
-   GetStringConfigValue(config, _T("/MQTT/Password"), m_password, sizeof(m_password), "");
+   strcpy(m_hostname, "127.0.0.1");
+   m_port = 1883;
+   m_login[0] = 0;
+   m_password[0] = 0;
+
+   NX_CFG_TEMPLATE configTemplate[] =
+   {
+      { _T("Hostname"), CT_UTF8_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },
+      { _T("Login"), CT_UTF8_STRING, 0, 0, sizeof(m_login), 0, m_login },
+      { _T("Password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },
+      { _T("Port"), CT_WORD, 0, 0, 0, 0, &m_port },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
+   };
+   config->parseTemplate(_T("MQTT"), configTemplate);
    DecryptPasswordA(m_login, m_password, m_password, sizeof(m_password));
 
    _uuid_generate(m_guid);

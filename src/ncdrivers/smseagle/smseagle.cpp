@@ -68,11 +68,11 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
    uint16_t port = 0;
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-      { _T("BaseURL"), CT_MB_STRING, 0, 0, sizeof(m_baseURL), 0, m_baseURL },
-		{ _T("Host"), CT_MB_STRING, 0, 0, sizeof(hostname), 0, hostname },
+      { _T("BaseURL"), CT_UTF8_STRING, 0, 0, sizeof(m_baseURL), 0, m_baseURL },
+		{ _T("Host"), CT_UTF8_STRING, 0, 0, sizeof(hostname), 0, hostname },
       { _T("HTTPS"), CT_BOOLEAN_FLAG_32, 0, 0, OPTION_USE_HTTPS, 0, &m_flags },   // For compatibility
-		{ _T("Login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },
-		{ _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
+		{ _T("Login"), CT_UTF8_STRING, 0, 0, sizeof(m_login), 0, m_login },
+		{ _T("Password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },
       { _T("Port"), CT_WORD, 0, 0, 0, 0, &port },
       { _T("UseEncryption"), CT_BOOLEAN_FLAG_32, 0, 0, OPTION_USE_HTTPS, 0, &m_flags },
       { _T("VerifyCertificate"), CT_BOOLEAN_FLAG_32, 0, 0, OPTION_VERIFY_CERTIFICATE, 0, &m_flags },

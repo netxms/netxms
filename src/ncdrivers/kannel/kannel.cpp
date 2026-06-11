@@ -57,9 +57,9 @@ KannelDriver::KannelDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
    {
-      { _T("Host"), CT_MB_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },
-      { _T("Login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },
-      { _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
+      { _T("Host"), CT_UTF8_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },
+      { _T("Login"), CT_UTF8_STRING, 0, 0, sizeof(m_login), 0, m_login },
+      { _T("Password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },
       { _T("Port"), CT_LONG, 0, 0, 0, 0,	&m_port },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };

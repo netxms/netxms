@@ -76,10 +76,10 @@ AnySMSDriver::AnySMSDriver(Config *config)
 #endif
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
-		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-		{ _T("sender"), CT_MB_STRING, 0, 0, sizeof(m_sender), 0,	m_sender },	
-		{ _T("gateway"), CT_MB_STRING, 0, 0, sizeof(m_gateway), 0,	m_gateway },
+		{ _T("login"), CT_UTF8_STRING, 0, 0, sizeof(m_login), 0, m_login },	
+		{ _T("password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },	
+		{ _T("sender"), CT_UTF8_STRING, 0, 0, sizeof(m_sender), 0,	m_sender },	
+		{ _T("gateway"), CT_UTF8_STRING, 0, 0, sizeof(m_gateway), 0,	m_gateway },
 		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};

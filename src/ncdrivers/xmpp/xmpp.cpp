@@ -159,21 +159,25 @@ XmppDriver* XmppDriver::createInstance(Config* config)
 {
    XmppDriver* driver = new XmppDriver();
 
-#ifdef UNICODE
-   wchar_to_utf8(config->getValue(_T("/XMPP/Login"), _T("netxms@localhost")), -1, driver->m_login, MAX_LOGIN);
-   wchar_to_utf8(config->getValue(_T("/XMPP/Password"), _T("netxms")), -1, driver->m_password, MAX_PASSWORD);
-   wchar_to_utf8(config->getValue(_T("/XMPP/Server"), _T("")), -1, driver->m_server, MAX_SERVER_NAME);
-#else
-   mb_to_utf8(config->getValue(_T("/XMPP/Login"), _T("netxms@localhost")), -1, driver->m_login, MAX_LOGIN);
-   mb_to_utf8(config->getValue(_T("/XMPP/Password"), _T("netxms")), -1, driver->m_password, MAX_PASSWORD);
-   mb_to_utf8(config->getValue(_T("/XMPP/Server"), _T("")), -1, driver->m_server, MAX_SERVER_NAME);
-#endif
+   strcpy(driver->m_login, "netxms@localhost");
+   strcpy(driver->m_password, "netxms");
+   driver->m_server[0] = 0;
+
+   NX_CFG_TEMPLATE configTemplate[] =
+   {
+      { _T("Login"), CT_UTF8_STRING, 0, 0, MAX_LOGIN, 0, driver->m_login },
+      { _T("Password"), CT_UTF8_STRING, 0, 0, MAX_PASSWORD, 0, driver->m_password },
+      { _T("Server"), CT_UTF8_STRING, 0, 0, MAX_SERVER_NAME, 0, driver->m_server },
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
+   };
+   config->parseTemplate(_T("XMPP"), configTemplate);
 
    if (strchr(driver->m_login, '@') == nullptr)
    {
       if (strlen(driver->m_server) + strlen(driver->m_login) + 1 >= MAX_LOGIN)
       {
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Failed to create XMPP notification driver: login name too long"));
+         delete driver;
          return nullptr;
       }
       strlcat(driver->m_login, "@", MAX_LOGIN - strlen(driver->m_login));

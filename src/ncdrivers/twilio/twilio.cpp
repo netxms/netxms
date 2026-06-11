@@ -64,13 +64,14 @@ public:
  */
 TwilioDriver *TwilioDriver::createInstance(Config *config)
 {
-   TCHAR sid[128] = _T(""), token[128] = _T(""), callerId[128] = _T(""), voice[128] = _T("");
+   char sid[128] = "", token[128] = "", callerId[128] = "";
+   TCHAR voice[128] = _T("");
    uint32_t flags = 0;
    NX_CFG_TEMPLATE configTemplate[] =
    {
-      { _T("CallerId"), CT_STRING, 0, 0, 128, 0, callerId },
-      { _T("SID"), CT_STRING, 0, 0, 128, 0, sid },
-      { _T("Token"), CT_STRING, 0, 0, 128, 0, token },
+      { _T("CallerId"), CT_UTF8_STRING, 0, 0, sizeof(callerId), 0, callerId },
+      { _T("SID"), CT_UTF8_STRING, 0, 0, sizeof(sid), 0, sid },
+      { _T("Token"), CT_UTF8_STRING, 0, 0, sizeof(token), 0, token },
       { _T("Voice"), CT_STRING, 0, 0, 128, 0, voice },
       { _T("UseTTS"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
       { _T("verifyPeer"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
@@ -90,9 +91,9 @@ TwilioDriver *TwilioDriver::createInstance(Config *config)
    }
 
    TwilioDriver *driver = new TwilioDriver();
-   tchar_to_utf8(callerId, -1, driver->m_callerId, 127);
-   tchar_to_utf8(sid, -1, driver->m_sid, 127);
-   tchar_to_utf8(token, -1, driver->m_token, 127);
+   strcpy(driver->m_callerId, callerId);
+   strcpy(driver->m_sid, sid);
+   strcpy(driver->m_token, token);
    _tcslcpy(driver->m_voice, voice, 128);
    driver->m_useTTS = (flags & 1) ? true : false;
    driver->m_verifyPeer = (flags & 2) ? true : false;

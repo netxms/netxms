@@ -70,9 +70,9 @@ WebSMSDriver::WebSMSDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
-		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-		{ _T("fromPhone"), CT_MB_STRING, 0, 0, sizeof(m_fromPhone), 0, m_fromPhone },	
+		{ _T("login"), CT_UTF8_STRING, 0, 0, sizeof(m_login), 0, m_login },	
+		{ _T("password"), CT_UTF8_STRING, 0, 0, sizeof(m_password), 0, m_password },	
+		{ _T("fromPhone"), CT_UTF8_STRING, 0, 0, sizeof(m_fromPhone), 0, m_fromPhone },	
 		{ _T("verifyPeer"), CT_BOOLEAN, 0, 0, 1, 0, &m_verifyPeer },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
