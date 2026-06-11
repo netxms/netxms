@@ -1323,6 +1323,20 @@ static uint32_t ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, 
 }
 
 /**
+ * Calculate agent connection command timeout for proxy range scan commands.
+ * Scan commands execute synchronously on the agent, and TCP scan probes
+ * addresses in sub-blocks of 32 with up to 2 seconds wait for each (see
+ * TCPScanAddressRange in libnxagent), so a single command covering a large
+ * block can run for more than a minute. Fixed margin covers ICMP and SNMP
+ * scan commands (which are bounded by per-address pacing plus response
+ * timeout) and NXCP round-trip overhead.
+ */
+static uint32_t ProxyScanCommandTimeout(uint32_t blockSize)
+{
+   return (blockSize + 31) / 32 * 2000 + 5000;
+}
+
+/**
  * Check given address range with ICMP ping for new nodes
  */
 void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context)
@@ -1407,7 +1421,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
          return;
       }
-      conn->setCommandTimeout(10000);
+      conn->setCommandTimeout(ProxyScanCommandTimeout(std::min(blockSize, to - from + 1)));
 
       TCHAR ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN], rangeText[128];
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
@@ -1915,11 +1929,7 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
             if (proxy != nullptr)
             {
                proxyConn = proxy->createAgentConnection();
-               if (proxyConn != nullptr)
-               {
-                  proxyConn->setCommandTimeout(10000);
-               }
-               else
+               if (proxyConn == nullptr)
                {
                   // Zone has a configured proxy but it is unreachable - abort instead of
                   // silently falling back to a server-side scan that cannot reach the zone.
@@ -1951,6 +1961,7 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
       uint32_t from = context.startAddress.getAddressV4();
       uint32_t to = context.endAddress.getAddressV4();
       uint32_t blockSize = ConfigReadULong(L"NetworkDiscovery.ActiveDiscovery.BlockSize", 1024);
+      proxyConn->setCommandTimeout(ProxyScanCommandTimeout(std::min(blockSize, to - from + 1)));
 
       // Track the first protocol-scan command rejected by the proxy agent (e.g. when
       // EnableTCPProxy is not set in its configuration), so the caller can be warned
