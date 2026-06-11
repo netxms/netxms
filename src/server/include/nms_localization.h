@@ -58,7 +58,7 @@
  */
 class NXCORE_EXPORTABLE LocalizedStringSet
 {
-   friend bool SaveLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, const LocalizedStringSet& strings);
+   friend bool NXCORE_EXPORTABLE SaveLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, const LocalizedStringSet& strings);
 
 private:
    StringMap m_strings;

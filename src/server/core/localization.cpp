@@ -137,7 +137,7 @@ void LocalizedStringSet::loadFromMessage(const NXCPMessage& msg, uint32_t countF
 /**
  * Load all translations belonging to one entity instance
  */
-bool LoadLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, LocalizedStringSet *out)
+bool NXCORE_EXPORTABLE LoadLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, LocalizedStringSet *out)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -175,7 +175,7 @@ bool LoadLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, Localiz
  * Used by an entity-class owner at startup so it can attach a LocalizedStringSet
  * to each in-memory record in a single query.
  */
-bool LoadLocalizedStringsForClass(const wchar_t *entityClass, HashMap<uint32_t, LocalizedStringSet> *out)
+bool NXCORE_EXPORTABLE LoadLocalizedStringsForClass(const wchar_t *entityClass, HashMap<uint32_t, LocalizedStringSet> *out)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -218,7 +218,7 @@ bool LoadLocalizedStringsForClass(const wchar_t *entityClass, HashMap<uint32_t, 
 /**
  * Replace all translations for an entity instance: delete-all then insert
  */
-bool SaveLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, const LocalizedStringSet& strings)
+bool NXCORE_EXPORTABLE SaveLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, const LocalizedStringSet& strings)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -276,7 +276,7 @@ bool SaveLocalizedStrings(const wchar_t *entityClass, uint32_t entityId, const L
  * Remove all translations for one entity instance. Entity-class owners must call
  * this from their delete paths -- the table has no FK to the owner.
  */
-bool DeleteLocalizedStrings(const wchar_t *entityClass, uint32_t entityId)
+bool NXCORE_EXPORTABLE DeleteLocalizedStrings(const wchar_t *entityClass, uint32_t entityId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
