@@ -30,12 +30,12 @@ bool MigrateDataToSingleTable_TSDB(DB_HANDLE hdbSource, DB_HANDLE hDest, uint32_
 /**
  * Format query into static buffer
  */
-static TCHAR *FormatQuery(const TCHAR *format, ...)
+static wchar_t *FormatQuery(const wchar_t *format, ...)
 {
-   static TCHAR query[4096];
+   static wchar_t query[4096];
    va_list args;
    va_start(args, format);
-   _vsntprintf(query, 4096, format, args);
+   nx_vswprintf(query, 4096, format, args);
    va_end(args);
    return query;
 }
@@ -44,17 +44,17 @@ static TCHAR *FormatQuery(const TCHAR *format, ...)
  * Convert timestamp column from integer to timestamptz. When milliseconds is true the source
  * column holds epoch-milliseconds (e.g. otel_log.log_timestamp) instead of epoch-seconds.
  */
-static bool ConvertTimestampColumn(const TCHAR *table, const TCHAR *tscolumn, bool milliseconds = false)
+static bool ConvertTimestampColumn(const wchar_t *table, const wchar_t *tscolumn, bool milliseconds = false)
 {
    CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
-   CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s RENAME COLUMN %s TO conv_%s"), table, tscolumn, tscolumn)));
-   CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s ADD %s timestamptz"), table, tscolumn)));
+   CHK_EXEC_RB(SQLQuery(FormatQuery(L"ALTER TABLE %s RENAME COLUMN %s TO conv_%s", table, tscolumn, tscolumn)));
+   CHK_EXEC_RB(SQLQuery(FormatQuery(L"ALTER TABLE %s ADD %s timestamptz", table, tscolumn)));
    if (milliseconds)
-      CHK_EXEC_RB(SQLQuery(FormatQuery(_T("UPDATE %s SET %s = to_timestamp(conv_%s / 1000.0)"), table, tscolumn, tscolumn)));
+      CHK_EXEC_RB(SQLQuery(FormatQuery(L"UPDATE %s SET %s = to_timestamp(conv_%s / 1000.0)", table, tscolumn, tscolumn)));
    else
-      CHK_EXEC_RB(SQLQuery(FormatQuery(_T("UPDATE %s SET %s = to_timestamp(conv_%s)"), table, tscolumn, tscolumn)));
-   CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s DROP COLUMN conv_%s"), table, tscolumn)));
-   CHK_EXEC_RB(SQLQuery(FormatQuery(_T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, tscolumn)));
+      CHK_EXEC_RB(SQLQuery(FormatQuery(L"UPDATE %s SET %s = to_timestamp(conv_%s)", table, tscolumn, tscolumn)));
+   CHK_EXEC_RB(SQLQuery(FormatQuery(L"ALTER TABLE %s DROP COLUMN conv_%s", table, tscolumn)));
+   CHK_EXEC_RB(SQLQuery(FormatQuery(L"ALTER TABLE %s ALTER COLUMN %s SET NOT NULL", table, tscolumn)));
    CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
    return true;
 }
@@ -213,15 +213,15 @@ bool ConvertDatabase()
 
    if (g_dbSyntax != DB_SYNTAX_PGSQL)
    {
-      _tprintf(_T("Only PostgreSQL database can be converted to TimescaleDB database\n"));
+      WriteToTerminal(L"Only PostgreSQL database can be converted to TimescaleDB database\n");
       return false;
    }
 
-   WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
-   if (!GetYesNo(_T("This operation will convert current database schema for use with TimescaleDB extension. This operation is irreversible.\nAre you sure?")))
+   WriteToTerminal(L"\n\n\x1b[1mWARNING!!!\x1b[0m\n");
+   if (!GetYesNo(L"This operation will convert current database schema for use with TimescaleDB extension. This operation is irreversible.\nAre you sure?"))
       return false;
 
-   CHK_EXEC_NO_SP(SQLQuery(_T("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE")));
+   CHK_EXEC_NO_SP(SQLQuery(L"CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE"));
 
    // Fail fast on TimescaleDB < 2.10 so we don't leave a half-converted database without aggregates.
    if (!ValidateTimescaleDBVersion() && !g_ignoreErrors)
@@ -229,10 +229,11 @@ bool ConvertDatabase()
 
    CHK_EXEC_NO_SP(ConvertTable(_T("asset_change_log"), _T("operation_timestamp"), _T("record_id,operation_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("certificate_action_log"), _T("operation_timestamp"), _T("record_id,operation_timestamp")));
+   CHK_EXEC_NO_SP(ConvertTable(_T("connection_history"), _T("event_timestamp"), _T("record_id,event_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("event_log"), _T("event_timestamp"), _T("event_id,event_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("maintenance_journal"), _T("creation_time"), _T("record_id,creation_time"), _T("modification_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("notification_log"), _T("notification_timestamp"), _T("id,notification_timestamp")));
-   CHK_EXEC_NO_SP(ConvertTable(_T("otel_log"), _T("log_timestamp"), _T("id,log_timestamp"), nullptr, true));   // log_timestamp holds epoch-milliseconds; origin/observed_timestamp stay bigint
+   CHK_EXEC_NO_SP(ConvertTable(_T("otel_log"), _T("log_timestamp"), _T("id,log_timestamp"), nullptr, true));
    CHK_EXEC_NO_SP(ConvertTable(_T("package_deployment_log"), _T("execution_time"), _T("job_id,execution_time"), _T("completion_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("server_action_execution_log"), _T("action_timestamp"), _T("id,action_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("snmp_trap_log"), _T("trap_timestamp"), _T("trap_id,trap_timestamp")));
@@ -286,7 +287,7 @@ bool ConvertDatabase()
    }
    else
    {
-      WriteToTerminal(_T("Skipping data tables migration. Data tables can be migrated while server is running by executing command \x1b[1mnxdbmgr background-convert\x1b[0m\n"));
+      WriteToTerminal(L"Skipping data tables migration. Data tables can be migrated while server is running by executing command \x1b[1mnxdbmgr background-convert\x1b[0m\n");
    }
 
    CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE idata")));
