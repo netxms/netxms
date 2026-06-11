@@ -39,6 +39,8 @@ json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "status", json_integer(object.getStatus()));
    InetAddress a = object.getPrimaryIpAddress();
    json_object_set_new(jsonObject, "ipAddress", a.isValid() ? a.toJson() : json_null());
+   json_object_set_new(jsonObject, "isInMaintenanceMode", json_boolean(object.isInMaintenanceMode()));
+   json_object_set_new(jsonObject, "isMaintenanceApplicable", json_boolean(object.isMaintenanceApplicable()));
    return jsonObject;
 }
 

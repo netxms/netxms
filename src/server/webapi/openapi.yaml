@@ -10034,6 +10034,12 @@ components:
           description: Object ID
         ipAddress:
           $ref: '#/components/schemas/InetAddress'
+        isInMaintenanceMode:
+          type: boolean
+          description: true if object is in maintenance mode
+        isMaintenanceApplicable:
+          type: boolean
+          description: true if object can be placed into maintenance mode
         name:
           type: string
           description: Object name
