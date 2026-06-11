@@ -86,6 +86,21 @@ static bool ClearTables()
          continue;   // tables named idata_sc_* and tdata_sc_* exist only in TSDB schema
 	   CHK_EXEC(ClearTable(g_tables[i], nullptr));
 	}
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      // Continuous aggregates are not listed in g_tables, and truncating base hypertables does not empty them
+      static const wchar_t *storageClasses[] = { L"default", L"7", L"30", L"90", L"180", L"other" };
+      for(size_t i = 0; i < sizeof(storageClasses) / sizeof(storageClasses[0]); i++)
+      {
+         wchar_t query[256];
+         nx_swprintf(query, 256, L"TRUNCATE TABLE idata_1h_sc_%ls", storageClasses[i]);
+         CHK_EXEC(SQLQuery(query));
+         nx_swprintf(query, 256, L"TRUNCATE TABLE idata_1d_sc_%ls", storageClasses[i]);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+
 	return EnumerateModuleTables(ClearTable, nullptr);
 }
 
