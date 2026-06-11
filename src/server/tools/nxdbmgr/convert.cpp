@@ -233,7 +233,7 @@ bool ConvertDatabase()
    CHK_EXEC_NO_SP(ConvertTable(_T("maintenance_journal"), _T("creation_time"), _T("record_id,creation_time"), _T("modification_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("notification_log"), _T("notification_timestamp"), _T("id,notification_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("otel_log"), _T("log_timestamp"), _T("id,log_timestamp"), nullptr, true));   // log_timestamp holds epoch-milliseconds; origin/observed_timestamp stay bigint
-   CHK_EXEC_NO_SP(ConvertTable(_T("package_deployment_log"), _T("execution_time"), _T("job_id,execution_time")));
+   CHK_EXEC_NO_SP(ConvertTable(_T("package_deployment_log"), _T("execution_time"), _T("job_id,execution_time"), _T("completion_time")));
    CHK_EXEC_NO_SP(ConvertTable(_T("server_action_execution_log"), _T("action_timestamp"), _T("id,action_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("snmp_trap_log"), _T("trap_timestamp"), _T("trap_id,trap_timestamp")));
    CHK_EXEC_NO_SP(ConvertTable(_T("syslog"), _T("msg_timestamp"), _T("msg_id,msg_timestamp")));
