@@ -69,6 +69,15 @@ struct PING_TARGET
 	time_t lastDataRead;
 };
 
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout);
+/**
+ * Address range scan result for single responding address
+ */
+struct ScanResult
+{
+   InetAddress address;
+   uint32_t rtt;
+};
+
+StructArray<ScanResult> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout);
 
 #endif

@@ -444,15 +444,17 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
 
 /**
  * Handler for scanning address range
- * Arguments: start address, end address, timeout
+ * Arguments: start address, end address, timeout, include RTT in output
  */
 static LONG H_ScanRange(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    char startAddr[128], endAddr[128];
    TCHAR timeoutText[64];
+   bool includeRTT;
    if (!AgentGetParameterArgA(param, 1, startAddr, 128) ||
        !AgentGetParameterArgA(param, 2, endAddr, 128) ||
-       !AgentGetParameterArg(param, 3, timeoutText, 64))
+       !AgentGetParameterArg(param, 3, timeoutText, 64) ||
+       !AgentGetMetricArgAsBoolean(param, 4, &includeRTT, false))
    {
       return SYSINFO_RC_UNSUPPORTED;
    }
@@ -465,13 +467,25 @@ static LONG H_ScanRange(const TCHAR *param, const TCHAR *arg, StringList *value,
       return SYSINFO_RC_UNSUPPORTED;
    }
 
-   StructArray<InetAddress> *results = ScanAddressRange(start, end, timeout);
+   StructArray<ScanResult> *results = ScanAddressRange(start, end, timeout);
    if (results == nullptr)
       return SYSINFO_RC_ERROR;
 
    TCHAR buffer[128];
    for(int i = 0; i < results->size(); i++)
-      value->add(results->get(i)->toString(buffer));
+   {
+      ScanResult *r = results->get(i);
+      if (includeRTT)
+      {
+         TCHAR addrText[64];
+         _sntprintf(buffer, 128, _T("%s %u"), r->address.toString(addrText), r->rtt);
+         value->add(buffer);
+      }
+      else
+      {
+         value->add(r->address.toString(buffer));
+      }
+   }
    delete results;
    return SYSINFO_RC_SUCCESS;
 }

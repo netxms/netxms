@@ -1308,14 +1308,28 @@ static uint32_t ScanAddressRangeICMPProxy(AgentConnection *conn, uint32_t from, 
       void (*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), int32_t zoneUIN, const Node *proxy, ServerConsole *console, void *context)
 {
    TCHAR request[256], ipAddr1[MAX_IP_ADDR_TEXT_LEN], ipAddr2[MAX_IP_ADDR_TEXT_LEN];
-   _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+   _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s,,true)"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
    StringList *list;
    uint32_t rcc = conn->getList(request, &list);
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < list->size(); i++)
       {
-         callback(InetAddress::parse(list->get(i)), zoneUIN, proxy, 0, _T("ICMP"), console, context);
+         // Agents starting with 6.2 return "address rtt" when RTT output is requested,
+         // older agents ignore the request and return just the address
+         const TCHAR *line = list->get(i);
+         uint32_t rtt = 0;
+         TCHAR addrText[64];
+         const TCHAR *separator = _tcschr(line, _T(' '));
+         if (separator != nullptr)
+         {
+            size_t len = std::min(static_cast<size_t>(separator - line), static_cast<size_t>(63));
+            memcpy(addrText, line, len * sizeof(TCHAR));
+            addrText[len] = 0;
+            rtt = _tcstoul(separator + 1, nullptr, 10);
+            line = addrText;
+         }
+         callback(InetAddress::parse(line), zoneUIN, proxy, rtt, _T("ICMP"), console, context);
       }
       delete list;
    }

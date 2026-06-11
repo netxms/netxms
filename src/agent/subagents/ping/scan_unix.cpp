@@ -43,52 +43,58 @@ struct ECHOREPLY
 };
 
 /**
- * Add responding address to result set
+ * Scan status for each address
  */
-static void AddResult(StructArray<InetAddress> *results, const InetAddress& addr)
+struct ScanStatus
 {
-   for(int i = 0; i < results->size(); i++)
-      if (results->get(i)->equals(addr))
-         return;  // already added
-   results->add(&addr);
+   int64_t startTime;
+   bool success;
+   uint32_t rtt;
+};
 
-   TCHAR text[64];
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("ScanAddressRange: got response from %s"), addr.toString(text));
+/**
+ * Process ICMP response
+ */
+static void ProcessResponse(SOCKET s, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status)
+{
+   socklen_t addrLen = sizeof(struct sockaddr_in);
+   struct sockaddr_in saSrc;
+   ECHOREPLY reply;
+   if (recvfrom(s, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
+   {
+      if (reply.m_icmpHdr.m_cType == 0)
+      {
+         uint32_t addr = ntohl(saSrc.sin_addr.s_addr);
+         if ((addr >= baseAddr) && (addr <= lastAddr) && !status[addr - baseAddr].success)
+         {
+            status[addr - baseAddr].success = true;
+            // Clamp to 1 so that sub-millisecond responses are distinguishable from "no RTT data"
+            status[addr - baseAddr].rtt = std::max(static_cast<uint32_t>(GetCurrentTimeMs() - status[addr - baseAddr].startTime), static_cast<uint32_t>(1));
+
+            TCHAR text[64];
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("ScanAddressRange: got response from %s (rtt=%u)"), InetAddress(addr).toString(text), status[addr - baseAddr].rtt);
+         }
+      }
+   }
 }
 
 /**
  * Check for responses
  */
-static void CheckForResponses(const InetAddress& start, const InetAddress& end, StructArray<InetAddress> *results, SOCKET s, uint32_t timeout)
+static void CheckForResponses(uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status, SOCKET s, uint32_t timeout)
 {
    SocketPoller sp;
-   for(UINT32 timeLeft = timeout; timeLeft > 0;)
+   for(uint32_t timeLeft = timeout; timeLeft > 0;)
    {
       sp.reset();
       sp.add(s);
 
-      UINT64 startTime = GetCurrentTimeMs();
+      uint64_t startTime = GetCurrentTimeMs();
       if (sp.poll(timeLeft) > 0)
       {
-         UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+         uint32_t elapsedTime = (uint32_t)(GetCurrentTimeMs() - startTime);
          timeLeft -= std::min(elapsedTime, timeLeft);
-
-         // Receive reply
-         socklen_t addrLen = sizeof(struct sockaddr_in);
-         struct sockaddr_in saSrc;
-         ECHOREPLY reply;
-         if (recvfrom(s, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
-         {
-            // Check response
-            if (reply.m_icmpHdr.m_cType == 0)
-            {
-               InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)&saSrc);
-               if (addr.inRange(start, end))
-               {
-                  AddResult(results, addr);
-               }
-            }
-         }
+         ProcessResponse(s, baseAddr, lastAddr, status);
       }
       else     // select() or poll() ended on timeout
       {
@@ -100,7 +106,7 @@ static void CheckForResponses(const InetAddress& start, const InetAddress& end, 
 /**
  * Scan IP address range and return list of responding addresses
  */
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
+StructArray<ScanResult> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
 {
    if ((start.getFamily() != AF_INET) || (end.getFamily() != AF_INET) ||
        (start.getAddressV4() > end.getAddressV4()))
@@ -119,8 +125,6 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
    TCHAR text1[64], text2[64];
    nxlog_debug_tag(DEBUG_TAG, 5, _T("ScanAddressRange: scanning %s - %s"), start.toString(text1), end.toString(text2));
 
-   StructArray<InetAddress> *results = new StructArray<InetAddress>();
-
    // Fill in request structure
    ECHOREQUEST request;
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
@@ -134,7 +138,11 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
    saDest.sin_family = AF_INET;
    saDest.sin_port = 0;
 
-   for(uint32_t a = start.getAddressV4(); a <= end.getAddressV4(); a++)
+   uint32_t baseAddr = start.getAddressV4();
+   uint32_t lastAddr = end.getAddressV4();
+   ScanStatus *status = MemAllocArray<ScanStatus>(lastAddr - baseAddr + 1);
+
+   for(uint32_t a = baseAddr; a <= lastAddr; a++)
    {
       saDest.sin_addr.s_addr = htonl(a);
 
@@ -142,12 +150,26 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
       request.m_icmpHdr.m_wChecksum = 0;
       request.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&request, sizeof(ECHOREQUEST));
 
+      status[a - baseAddr].startTime = GetCurrentTimeMs();
       sendto(s, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
 
-      CheckForResponses(start, end, results, s, 20);
+      CheckForResponses(baseAddr, lastAddr, status, s, 20);
    }
 
-   CheckForResponses(start, end, results, s, timeout);
+   CheckForResponses(baseAddr, lastAddr, status, s, timeout);
    closesocket(s);
+
+   StructArray<ScanResult> *results = new StructArray<ScanResult>();
+   for(uint32_t a = baseAddr; a <= lastAddr; a++)
+   {
+      if (status[a - baseAddr].success)
+      {
+         ScanResult r;
+         r.address = InetAddress(a);
+         r.rtt = status[a - baseAddr].rtt;
+         results->add(&r);
+      }
+   }
+   MemFree(status);
    return results;
 }

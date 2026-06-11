@@ -32,10 +32,10 @@ struct EchoRequest
    InetAddress addr;
    void *replyBuffer;
    DWORD replyBufferSize;
-   StructArray<InetAddress> *results;
+   StructArray<ScanResult> *results;
    volatile int *pendingRequests;
 
-   EchoRequest(const InetAddress& a, StructArray<InetAddress> *r, volatile int *prq)
+   EchoRequest(const InetAddress& a, StructArray<ScanResult> *r, volatile int *prq)
    {
       addr = a;
       replyBufferSize = 80 + sizeof(ICMP_ECHO_REPLY);
@@ -61,9 +61,14 @@ static int WINAPI EchoCallback(void *context)
 #endif
       if (er->Status == IP_SUCCESS)
       {
+         ScanResult r;
+         r.address = request->addr;
+         // Clamp to 1 so that sub-millisecond responses are distinguishable from "no RTT data"
+         r.rtt = std::max(static_cast<uint32_t>(er->RoundTripTime), static_cast<uint32_t>(1));
+         request->results->add(&r);
+
          TCHAR text[64];
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ScanAddressRange: got response from %s"), request->addr.toString(text));
-         request->results->add(&request->addr);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ScanAddressRange: got response from %s (rtt=%u)"), request->addr.toString(text), r.rtt);
       }
    }
    (*request->pendingRequests)--;
@@ -74,7 +79,7 @@ static int WINAPI EchoCallback(void *context)
 /**
   * Scan IP address range and return list of responding addresses
   */
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
+StructArray<ScanResult> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
 {
    static char payload[64] = "NetXMS Scan Ping";
 
@@ -96,7 +101,7 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
    TCHAR text1[64], text2[64];
    nxlog_debug_tag(DEBUG_TAG, 5, _T("ScanAddressRange: scanning %s - %s"), start.toString(text1), end.toString(text2));
 
-   StructArray<InetAddress> *results = new StructArray<InetAddress>();
+   StructArray<ScanResult> *results = new StructArray<ScanResult>();
 
    volatile int pendingRequests = 0;
    for(UINT32 a = start.getAddressV4(); a <= end.getAddressV4(); a++)
