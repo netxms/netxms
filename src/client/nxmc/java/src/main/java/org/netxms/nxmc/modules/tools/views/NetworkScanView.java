@@ -31,6 +31,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -54,6 +55,7 @@ import org.netxms.client.NetworkScanResult;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -110,6 +112,8 @@ public class NetworkScanView extends View
    private Action actionStartScan;
    private Action actionClearResults;
    private Action actionAddAsNodes;
+   private Action actionExportToCSV;
+   private Action actionExportAllToCSV;
 
    private InetAddress initialStart;
    private InetAddress initialEnd;
@@ -240,6 +244,25 @@ public class NetworkScanView extends View
          zoneSelector.setZoneUIN(initialZoneUIN);
 
       createActions();
+      createContextMenu();
+   }
+
+   /**
+    * Create context menu for results table.
+    */
+   private void createContextMenu()
+   {
+      MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener(m -> {
+         m.add(actionAddAsNodes);
+         m.add(new Separator());
+         m.add(actionExportToCSV);
+         m.add(actionExportAllToCSV);
+         m.add(new Separator());
+         m.add(actionClearResults);
+      });
+      viewer.getControl().setMenu(manager.createContextMenu(viewer.getControl()));
    }
 
    /**
@@ -272,6 +295,9 @@ public class NetworkScanView extends View
          }
       };
       actionAddAsNodes.setEnabled(false);
+
+      actionExportToCSV = new ExportToCsvAction(this, viewer, true);
+      actionExportAllToCSV = new ExportToCsvAction(this, viewer, false);
    }
 
    /**
@@ -281,7 +307,8 @@ public class NetworkScanView extends View
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionStartScan);
-      manager.add(actionAddAsNodes);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCSV);
       manager.add(new Separator());
       manager.add(actionClearResults);
    }
@@ -293,7 +320,8 @@ public class NetworkScanView extends View
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionStartScan);
-      manager.add(actionAddAsNodes);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCSV);
       manager.add(new Separator());
       manager.add(actionClearResults);
    }
