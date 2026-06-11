@@ -854,29 +854,64 @@ static void AttachTSDBPolicies(DB_HANDLE hdb)
 }
 
 /**
+ * Execute single backfill refresh statement with retries. Returns false if the
+ * statement still fails after all attempts or shutdown was initiated while
+ * waiting between attempts.
+ */
+static bool ExecuteBackfillRefresh(DB_HANDLE hdb, const wchar_t *query)
+{
+   for(int attempt = 1; ; attempt++)
+   {
+      if (DBQuery(hdb, query))
+         return true;
+      if (attempt == 3)
+         return false;
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Continuous aggregate refresh failed (attempt %d of 3), retry in 60 seconds", attempt);
+      if (SleepAndCheckForShutdown(60))
+         return false;
+   }
+}
+
+/**
  * One-shot backfill that materializes all existing raw history into the
- * continuous aggregates. Runs in a worker thread because on large installs
- * it can take hours; the user-visible side effect is elevated DB load.
+ * continuous aggregates, then attaches refresh and retention policies. Policies
+ * are attached only after a fully successful backfill: a policy job starts
+ * refreshing right after creation and would collide with the full-window
+ * refreshes here, and the absence of the refresh policy is what makes
+ * ReconcileTSDBAggregation re-run an interrupted backfill at next startup.
+ *
+ * Runs in a worker thread because on large installs it can take hours; the
+ * user-visible side effect is elevated DB load.
  */
 static void BackfillTSDBAggregates()
 {
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Backfilling TSDB continuous aggregates");
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = true;
    wchar_t query[256];
-   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   for(size_t i = 0; success && !IsShutdownInProgress() && (i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0])); i++)
    {
       const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
       nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1h_sc_%ls', NULL, now())", cls);
-      DBQuery(hdb, query);
+      success = ExecuteBackfillRefresh(hdb, query);
    }
-   for(size_t i = 0; i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0]); i++)
+   for(size_t i = 0; success && !IsShutdownInProgress() && (i < sizeof(s_tsdbStorageClasses) / sizeof(s_tsdbStorageClasses[0])); i++)
    {
       const wchar_t *cls = DCObject::getStorageClassName(s_tsdbStorageClasses[i]);
       nx_swprintf(query, 256, L"CALL refresh_continuous_aggregate('idata_1d_sc_%ls', NULL, now())", cls);
-      DBQuery(hdb, query);
+      success = ExecuteBackfillRefresh(hdb, query);
+   }
+   if (success && !IsShutdownInProgress())
+   {
+      AttachTSDBPolicies(hdb);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"TSDB continuous aggregate backfill complete, refresh and retention policies attached");
+   }
+   else
+   {
+      nxlog_write_tag(IsShutdownInProgress() ? NXLOG_INFO : NXLOG_ERROR, DEBUG_TAG,
+         L"TSDB continuous aggregate backfill interrupted; refresh policies not attached, backfill will restart at next server startup");
    }
    DBConnectionPoolReleaseConnection(hdb);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"TSDB continuous aggregate backfill complete");
 }
 
 /**
@@ -993,7 +1028,9 @@ void ReconcileNonTSDBAggregation()
  *
  * Detects the enable transition by checking whether a refresh policy is
  * already attached on idata_1h_sc_default; if not and BackfillOnEnable is
- * true, queues a one-shot backfill in a worker thread.
+ * true, queues a one-shot backfill in a worker thread. In that case policy
+ * attachment is deferred to the backfill worker so the policy jobs cannot
+ * refresh concurrently with the backfill.
  */
 void ReconcileTSDBAggregation()
 {
@@ -1018,10 +1055,11 @@ void ReconcileTSDBAggregation()
 
    if (enabled)
    {
-      AttachTSDBPolicies(hdb);
       bool firstEnable = !policyAttached;
       if (firstEnable && ConfigReadBoolean(L"DataCollection.Aggregation.BackfillOnEnable", true))
-         ThreadPoolExecute(g_mainThreadPool, BackfillTSDBAggregates);
+         ThreadPoolExecute(g_mainThreadPool, BackfillTSDBAggregates);   // Attaches policies after successful backfill
+      else
+         AttachTSDBPolicies(hdb);
       nxlog_debug_tag(DEBUG_TAG, 1, L"TSDB aggregation enabled%s", firstEnable ? L" (initial activation)" : L"");
    }
    else if (policyAttached)
