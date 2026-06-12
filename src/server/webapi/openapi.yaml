@@ -4289,7 +4289,16 @@ paths:
   /v1/objects/{object-id}/set-maintenance:
     post:
       operationId: setObjectMaintenance
-      summary: Make object enter or leave maintenance mode
+      summary: Make object enter or leave maintenance mode, immediately or on schedule
+      description: |
+        Without time fields, immediately changes object maintenance state according to the "maintenance" field.
+        If "startTime" and/or "endTime" is provided, maintenance is scheduled instead by creating one-time
+        scheduled tasks (visible in scheduled task list and cancellable via the scheduled tasks API):
+          * startTime + endTime - schedule maintenance window (enter at startTime, leave at endTime);
+          * startTime only - schedule maintenance entry, leave manually;
+          * endTime only - schedule maintenance exit; combined with "maintenance": true the object
+            enters maintenance immediately and leaves at endTime.
+        Scheduling requires the "schedule object maintenance" system access right.
       parameters:
         - name: object-id
           in: path
@@ -4305,19 +4314,29 @@ paths:
               properties:
                 maintenance:
                   type: boolean
-                  description: true - if object should enter maintenance mode, false - if leave
+                  description: true - if object should enter maintenance mode, false - if leave (ignored if startTime is provided)
                 comments:
                   type: string
-                  description: Optional maintenance comments
+                  description: Optional maintenance comments (also set on created scheduled tasks)
+                startTime:
+                  oneOf:
+                    - type: integer
+                    - type: string
+                  description: Scheduled maintenance start time - UNIX timestamp, ISO 8601 string, or relative time ("+30m", "now")
+                endTime:
+                  oneOf:
+                    - type: integer
+                    - type: string
+                  description: Scheduled maintenance end time - UNIX timestamp, ISO 8601 string, or relative time ("+2h")
       responses:
         '204':
-          description: Maintenance mode changed successfully
+          description: Maintenance mode changed or scheduled successfully
         '400':
           description: Invalid arguments
         '401':
           description: Unauthorized
         '403':
-          description: User does not have control access to given object
+          description: User does not have control access to given object or scheduling rights
         '404':
           description: Object with given ID does not exist
       security:

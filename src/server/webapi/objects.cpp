@@ -21,6 +21,7 @@
 **/
 
 #include "webapi.h"
+#include <nxcore_schedule.h>
 #include <unordered_set>
 
 /**
@@ -882,6 +883,80 @@ int H_ObjectSetMaintenance(Context *context)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectSetMaintenance: empty request"));
       return 400;
+   }
+
+   json_t *startTimeField = json_object_get(request, "startTime");
+   json_t *endTimeField = json_object_get(request, "endTime");
+   if ((startTimeField != nullptr) || (endTimeField != nullptr))
+   {
+      time_t startTime = 0;
+      if (startTimeField != nullptr)
+      {
+         if (json_is_integer(startTimeField))
+            startTime = static_cast<time_t>(json_integer_value(startTimeField));
+         else if (json_is_string(startTimeField))
+            startTime = ParseTimestamp(json_string_value(startTimeField));
+         if (startTime == 0)
+         {
+            context->setErrorResponse("Invalid startTime format");
+            return 400;
+         }
+      }
+
+      time_t endTime = 0;
+      if (endTimeField != nullptr)
+      {
+         if (json_is_integer(endTimeField))
+            endTime = static_cast<time_t>(json_integer_value(endTimeField));
+         else if (json_is_string(endTimeField))
+            endTime = ParseTimestamp(json_string_value(endTimeField));
+         if (endTime == 0)
+         {
+            context->setErrorResponse("Invalid endTime format");
+            return 400;
+         }
+      }
+
+      if ((startTime != 0) && (endTime != 0) && (endTime <= startTime))
+      {
+         context->setErrorResponse("endTime must be after startTime");
+         return 400;
+      }
+
+      wchar_t comments[256] = L"";
+      json_t *jsonComments = json_object_get(request, "comments");
+      if (json_is_string(jsonComments))
+      {
+         size_t chars = utf8_to_wchar(json_string_value(jsonComments), -1, comments, 255);
+         comments[chars] = 0;
+      }
+
+      uint32_t rcc = RCC_SUCCESS;
+      if (startTime != 0)
+         rcc = AddOneTimeScheduledTask(L"Maintenance.Enter", startTime, L"", nullptr, context->getUserId(), objectId, context->getSystemAccessRights(), comments);
+      if ((rcc == RCC_SUCCESS) && (endTime != 0))
+         rcc = AddOneTimeScheduledTask(L"Maintenance.Leave", endTime, L"", nullptr, context->getUserId(), objectId, context->getSystemAccessRights(), comments);
+
+      if (rcc == RCC_ACCESS_DENIED)
+         return 403;
+      if (rcc != RCC_SUCCESS)
+      {
+         context->setErrorResponse("Database failure");
+         return 500;
+      }
+
+      if ((startTime == 0) && json_object_get_boolean(request, "maintenance", false))
+      {
+         object->enterMaintenanceMode(context->getUserId(), comments);
+         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Object %s entered maintenance state", object->getName());
+      }
+
+      wchar_t timeText[64];
+      if (startTime != 0)
+         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Maintenance entry for object %s scheduled at %s", object->getName(), FormatTimestamp(startTime, timeText));
+      if (endTime != 0)
+         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Maintenance exit for object %s scheduled at %s", object->getName(), FormatTimestamp(endTime, timeText));
+      return 204;
    }
 
    bool maintenance = json_object_get_boolean(request, "maintenance", false);

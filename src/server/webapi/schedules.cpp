@@ -124,24 +124,34 @@ int H_ScheduledTaskCreate(Context *context)
    }
 
    wchar_t taskHandlerId[256];
-   utf8_to_wchar(json_string_value(jsonHandlerId), -1, taskHandlerId, 256);
+   size_t chars = utf8_to_wchar(json_string_value(jsonHandlerId), -1, taskHandlerId, 255);
+   taskHandlerId[chars] = 0;
 
    wchar_t parameters[4096] = L"";
    json_t *jsonParams = json_object_get(request, "parameters");
    if (json_is_string(jsonParams))
-      utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4096);
+   {
+      chars = utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4095);
+      parameters[chars] = 0;
+   }
 
    uint32_t objectId = json_object_get_uint32(request, "objectId", 0);
 
    wchar_t comments[256] = L"";
    json_t *jsonComments = json_object_get(request, "comments");
    if (json_is_string(jsonComments))
-      utf8_to_wchar(json_string_value(jsonComments), -1, comments, 256);
+   {
+      chars = utf8_to_wchar(json_string_value(jsonComments), -1, comments, 255);
+      comments[chars] = 0;
+   }
 
    wchar_t taskKey[256] = L"";
    json_t *jsonTaskKey = json_object_get(request, "taskKey");
    if (json_is_string(jsonTaskKey))
-      utf8_to_wchar(json_string_value(jsonTaskKey), -1, taskKey, 256);
+   {
+      chars = utf8_to_wchar(json_string_value(jsonTaskKey), -1, taskKey, 255);
+      taskKey[chars] = 0;
+   }
 
    uint32_t rcc;
    json_t *jsonSchedule = json_object_get(request, "schedule");
@@ -150,7 +160,8 @@ int H_ScheduledTaskCreate(Context *context)
    if (json_is_string(jsonSchedule))
    {
       TCHAR schedule[256];
-      utf8_to_wchar(json_string_value(jsonSchedule), -1, schedule, 256);
+      chars = utf8_to_wchar(json_string_value(jsonSchedule), -1, schedule, 255);
+      schedule[chars] = 0;
       rcc = AddRecurrentScheduledTask(taskHandlerId, schedule, parameters, nullptr,
                context->getUserId(), objectId, context->getSystemAccessRights(),
                comments, taskKey[0] != 0 ? taskKey : nullptr, false);
@@ -208,19 +219,26 @@ int H_ScheduledTaskUpdate(Context *context)
    }
 
    TCHAR taskHandlerId[256];
-   utf8_to_wchar(json_string_value(jsonHandlerId), -1, taskHandlerId, 256);
+   size_t chars = utf8_to_wchar(json_string_value(jsonHandlerId), -1, taskHandlerId, 255);
+   taskHandlerId[chars] = 0;
 
    TCHAR parameters[4096] = L"";
    json_t *jsonParams = json_object_get(request, "parameters");
    if (json_is_string(jsonParams))
-      utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4096);
+   {
+      chars = utf8_to_wchar(json_string_value(jsonParams), -1, parameters, 4095);
+      parameters[chars] = 0;
+   }
 
    uint32_t objectId = json_object_get_uint32(request, "objectId", 0);
 
    TCHAR comments[256] = L"";
    json_t *jsonComments = json_object_get(request, "comments");
    if (json_is_string(jsonComments))
-      utf8_to_wchar(json_string_value(jsonComments), -1, comments, 256);
+   {
+      chars = utf8_to_wchar(json_string_value(jsonComments), -1, comments, 255);
+      comments[chars] = 0;
+   }
 
    bool disabled = json_is_true(json_object_get(request, "disabled"));
 
@@ -231,7 +249,8 @@ int H_ScheduledTaskUpdate(Context *context)
    if (json_is_string(jsonSchedule))
    {
       TCHAR schedule[256];
-      utf8_to_wchar(json_string_value(jsonSchedule), -1, schedule, 256);
+      chars = utf8_to_wchar(json_string_value(jsonSchedule), -1, schedule, 255);
+      schedule[chars] = 0;
       rcc = UpdateRecurrentScheduledTask(taskId, taskHandlerId, schedule, parameters, nullptr,
                comments, context->getUserId(), objectId, context->getSystemAccessRights(), disabled);
    }
