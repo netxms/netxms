@@ -61,7 +61,7 @@ void AppendEscapedValue(StringBuffer& result, const TCHAR *value)
    result.append(_T('"'));
 }
 
-static String BuildMetricName(const MetricMapping& mapping, std::function<const char* (const char*)> getLabel)
+static String BuildMetricName(const MetricMapping& mapping, const std::function<const char* (const char*)>& getLabel)
 {
    StringBuffer result;
    result.append(mapping.netxmsName);
@@ -97,7 +97,7 @@ static String BuildMetricName(const MetricMapping& mapping, std::function<const 
    return result;
 }
 
-static String BuildValueFromLabels(const MetricMapping& mapping, std::function<const char* (const char*)> getLabel)
+static String BuildValueFromLabels(const MetricMapping& mapping, const std::function<const char* (const char*)>& getLabel)
 {
    StringBuffer result;
    bool first = true;
@@ -132,7 +132,7 @@ static String BuildValueFromLabels(const MetricMapping& mapping, std::function<c
 /**
  * Match single sample against configured metric mappings and push to server if mapping found
  */
-void ProcessSample(const char *metricName, double value, std::function<const char* (const char*)> getLabel)
+void ProcessSample(const char *metricName, double value, const std::function<const char* (const char*)>& getLabel)
 {
    const ObjectArray<MetricMapping>& mappings = GetMetricMappings();
 
@@ -140,9 +140,7 @@ void ProcessSample(const char *metricName, double value, std::function<const cha
    for(int j = 0; j < mappings.size(); j++)
    {
 #ifdef UNICODE
-      char prometheusNameMB[256];
-      WideCharToMultiByteSysLocale(mappings.get(j)->prometheusName, prometheusNameMB, 256);
-      if (strcmp(metricName, prometheusNameMB) == 0)
+      if (strcmp(metricName, mappings.get(j)->prometheusNameMB) == 0)
 #else
       if (strcmp(metricName, mappings.get(j)->prometheusName) == 0)
 #endif

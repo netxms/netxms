@@ -160,6 +160,11 @@ static MetricSample *ParseSampleLine(const char *line, const char *end)
    while((p < end) && (*p != ' ') && (*p != '\t') && (tokenLen < sizeof(token) - 1))
       token[tokenLen++] = *p++;
    token[tokenLen] = 0;
+   if ((p < end) && (*p != ' ') && (*p != '\t'))
+   {
+      delete sample;   // value token too long to be valid, reject instead of parsing truncated prefix
+      return nullptr;
+   }
 
    char *eptr;
    double value = strtod(token, &eptr);

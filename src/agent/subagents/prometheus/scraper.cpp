@@ -23,9 +23,36 @@
 #include <nxlibcurl.h>
 
 /**
+ * Maximum allowed size of response from scraped endpoint
+ */
+#define MAX_RESPONSE_SIZE  (64 * 1024 * 1024)
+
+/**
  * Configured scrape targets (created during initialization, read-only afterwards)
  */
 static ObjectArray<ScrapeTarget> s_targets(8, 8, Ownership::True);
+
+/**
+ * Convert TCHAR string to UTF-8 with guaranteed null termination (conversion may
+ * stop before the source terminator when a multi-byte character does not fit)
+ */
+static void ConvertToUtf8(const TCHAR *src, char *dst, size_t size)
+{
+   size_t bytes = tchar_to_utf8(src, -1, dst, size - 1);
+   dst[bytes] = 0;
+}
+
+/**
+ * cURL write callback with response size limit (returning less than given size aborts the transfer)
+ */
+static size_t CurlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data)
+{
+   size_t bytes = size * nmemb;
+   if (data->size() + bytes > MAX_RESPONSE_SIZE)
+      return 0;
+   data->write(ptr, bytes);
+   return bytes;
+}
 
 /**
  * Create scrape target
@@ -70,7 +97,7 @@ ScrapeTarget *ScrapeTarget::createFromConfig(const ConfigEntry& config)
    }
 
    ScrapeTarget *target = new ScrapeTarget(config.getName());
-   tchar_to_utf8(url, -1, target->m_url, sizeof(target->m_url));
+   ConvertToUtf8(url, target->m_url, sizeof(target->m_url));
 
    uint32_t interval = config.getSubEntryValueAsUInt(_T("ScrapeInterval"), 0, 60);
    if (interval < 1)
@@ -85,10 +112,10 @@ ScrapeTarget *ScrapeTarget::createFromConfig(const ConfigEntry& config)
    const TCHAR *login = config.getSubEntryValue(_T("Login"));
    if ((login != nullptr) && (*login != 0))
    {
-      tchar_to_utf8(login, -1, target->m_login, sizeof(target->m_login));
+      ConvertToUtf8(login, target->m_login, sizeof(target->m_login));
       TCHAR password[256];
       DecryptPassword(login, config.getSubEntryValue(_T("Password"), 0, _T("")), password, 256);
-      tchar_to_utf8(password, -1, target->m_password, sizeof(target->m_password));
+      ConvertToUtf8(password, target->m_password, sizeof(target->m_password));
    }
 
    const TCHAR *token = config.getSubEntryValue(_T("BearerToken"));
@@ -99,7 +126,7 @@ ScrapeTarget *ScrapeTarget::createFromConfig(const ConfigEntry& config)
    target->m_verifyHost = config.getSubEntryValueAsBoolean(_T("VerifyHost"), 0, true);
    const TCHAR *caCertificate = config.getSubEntryValue(_T("CACertificate"));
    if (caCertificate != nullptr)
-      tchar_to_utf8(caCertificate, -1, target->m_caCertificate, sizeof(target->m_caCertificate));
+      ConvertToUtf8(caCertificate, target->m_caCertificate, sizeof(target->m_caCertificate));
 
    return target;
 }
@@ -176,11 +203,19 @@ bool ScrapeTarget::scrape()
    struct curl_slist *headers = curl_slist_append(nullptr, "Accept: application/openmetrics-text; version=1.0.0; q=0.5, text/plain; version=0.0.4");
    if (m_bearerToken != nullptr)
    {
+#ifdef CURLAUTH_BEARER
+      curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, m_bearerToken);
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
+#else
+      // Token passed as custom header is not stripped by cURL on cross-host redirects,
+      // so disable redirect following to prevent token from leaking to another host
       char *authHeader = MemAllocStringA(strlen(m_bearerToken) + 32);
       strcpy(authHeader, "Authorization: Bearer ");
       strcat(authHeader, m_bearerToken);
       headers = curl_slist_append(headers, authHeader);
       MemFree(authHeader);
+      curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, static_cast<long>(0));
+#endif
    }
    else if (m_login[0] != 0)
    {
@@ -192,7 +227,7 @@ bool ScrapeTarget::scrape()
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
    bool success = false;
@@ -229,6 +264,10 @@ bool ScrapeTarget::scrape()
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("%s: HTTP response code %03ld"), m_name, httpCode);
          }
+      }
+      else if (rc == CURLE_WRITE_ERROR)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("%s: response size exceeds limit of %d MB"), m_name, MAX_RESPONSE_SIZE / 1048576);
       }
       else
       {
@@ -359,7 +398,12 @@ LONG ScrapeTarget::fillSeriesTable(const char *metric, Table *table) const
       for(int j = 0; j < labels.size(); j++)
       {
          TCHAR columnName[MAX_COLUMN_NAME];
-         utf8_to_tchar(labels.get(j)->name, -1, columnName, MAX_COLUMN_NAME);
+         size_t chars = utf8_to_tchar(labels.get(j)->name, -1, columnName, MAX_COLUMN_NAME - 1);
+         columnName[chars] = 0;
+         // Skip labels colliding with fixed columns (column lookup is case-insensitive);
+         // their values are still visible as part of canonical labelset in LABELS column
+         if (!_tcsicmp(columnName, _T("LABELS")) || !_tcsicmp(columnName, _T("VALUE")))
+            continue;
          if (table->getColumnIndex(columnName) == -1)
             table->addColumn(columnName, DCI_DT_STRING, columnName);
       }
@@ -379,7 +423,10 @@ LONG ScrapeTarget::fillSeriesTable(const char *metric, Table *table) const
       for(int j = 0; j < labels.size(); j++)
       {
          TCHAR columnName[MAX_COLUMN_NAME];
-         utf8_to_tchar(labels.get(j)->name, -1, columnName, MAX_COLUMN_NAME);
+         size_t chars = utf8_to_tchar(labels.get(j)->name, -1, columnName, MAX_COLUMN_NAME - 1);
+         columnName[chars] = 0;
+         if (!_tcsicmp(columnName, _T("LABELS")) || !_tcsicmp(columnName, _T("VALUE")))
+            continue;
          table->setPreallocated(table->getColumnIndex(columnName), TStringFromUTF8String(labels.get(j)->value));
       }
    }
