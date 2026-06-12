@@ -917,7 +917,7 @@ bool WaitForProcess(const TCHAR *name);
 
 String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param);
 
-uint32_t UpgradeAgent(const TCHAR *pkgFile);
+uint32_t UpgradeAgent(const TCHAR *pkgFile, bool allowDowngrade);
 
 bool IsVNCServerRunning(const InetAddress& addr, uint16_t port);
 
@@ -979,6 +979,7 @@ void RemoveEventSource();
 bool ExecuteInAllSessions(const TCHAR *command);
 
 BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo);
+uint32_t ValidateUpgradePackage(const TCHAR *pkgFile, bool allowDowngrade);
 
 #endif
 

@@ -795,6 +795,8 @@ enum SessionState
 #define RCC_TEMPLATE_EXCLUSION_CONFLICT   ((uint32_t)188)
 #define RCC_RADIUS_ACCESS_CHALLENGE       ((uint32_t)189)
 #define RCC_ZONE_PROXY_NOT_AVAILABLE      ((uint32_t)190)
+#define RCC_UNTRUSTED_PACKAGE             ((uint32_t)191)
+#define RCC_DOWNGRADE_NOT_ALLOWED         ((uint32_t)192)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

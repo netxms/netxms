@@ -1273,7 +1273,7 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
 
       MemFreeAndNull(m_pendingUpgradeFile);
       m_pendingUpgradeRequestId = 0;
-      return UpgradeAgent(fullPath);
+      return UpgradeAgent(fullPath, m_masterServer);
    }
 
    if (!m_masterServer)
@@ -1291,7 +1291,7 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
 
    TCHAR fullPath[MAX_PATH];
    BuildFullPath(packageName, fullPath);
-   return UpgradeAgent(fullPath);
+   return UpgradeAgent(fullPath, true);   // Master server access already verified for this flow
 }
 
 /**

@@ -21,10 +21,21 @@
 **/
 
 #include "nxagentd.h"
+#include <netxms-version.h>
 #include <wincrypt.h>
 #include <wintrust.h>
 
 #define ENCODING (X509_ASN_ENCODING | PKCS_7_ASN_ENCODING)
+
+/**
+ * Product name expected in VERSIONINFO resource of agent upgrade package
+ */
+#define UPGRADE_PACKAGE_PRODUCT_NAME   _T("NetXMS Agent")
+
+/**
+ * Default trusted publisher (subject CN of NetXMS release signing certificate)
+ */
+#define DEFAULT_TRUSTED_PUBLISHER      _T("Raden Solutions, SIA")
 
 /**
  * Get PE certificate information
@@ -167,4 +178,183 @@ cleanup:
     if (hStore) CertCloseStore(hStore, 0);
     if (hMsg) CryptMsgClose(hMsg);
     return result;
+}
+
+/**
+ * Check if file signature verification is disabled via registry (same switch as checked by VerifyFileSignature)
+ */
+static bool IsFileSignatureVerificationDisabled()
+{
+   bool disabled = false;
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD value = 0;
+      DWORD size = sizeof(DWORD);
+      if (RegQueryValueEx(hKey, _T("DisableFileSignatureVerification"), nullptr, nullptr, reinterpret_cast<BYTE*>(&value), &size) == ERROR_SUCCESS)
+         disabled = (value != 0);
+      RegCloseKey(hKey);
+   }
+   return disabled;
+}
+
+/**
+ * Get semicolon-separated list of trusted package publishers. Configuration parameter
+ * takes precedence over registry value; built-in default is used when neither is set.
+ */
+static String GetTrustedPackagePublishers()
+{
+   shared_ptr<Config> config = g_config;
+   const TCHAR *value = config->getValue(_T("/CORE/TrustedPackagePublishers"));
+   if (value != nullptr)
+      return String(value);
+
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      TCHAR buffer[8192];
+      DWORD size = sizeof(buffer) - sizeof(TCHAR);
+      DWORD type;
+      if ((RegQueryValueEx(hKey, _T("TrustedPackagePublishers"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS) && (type == REG_SZ))
+      {
+         buffer[size / sizeof(TCHAR)] = 0;
+         RegCloseKey(hKey);
+         return String(buffer);
+      }
+      RegCloseKey(hKey);
+   }
+
+   return String(DEFAULT_TRUSTED_PUBLISHER);
+}
+
+/**
+ * Check if given signer subject name is in the trusted publisher list
+ */
+static bool IsTrustedPublisher(const TCHAR *subjectName)
+{
+   bool trusted = false;
+   GetTrustedPackagePublishers().split(_T(";"), true,
+      [subjectName, &trusted] (const String& publisher)
+      {
+         if (!publisher.isEmpty() && !_tcsicmp(publisher.cstr(), subjectName))
+            trusted = true;
+      });
+   return trusted;
+}
+
+/**
+ * Validate agent upgrade package: signature validity, signer identity, product identity,
+ * and version gate (older packages are rejected unless downgrade is allowed).
+ */
+uint32_t ValidateUpgradePackage(const TCHAR *pkgFile, bool allowDowngrade)
+{
+   if (IsFileSignatureVerificationDisabled())
+   {
+      nxlog_debug_tag(_T("upgrade"), 4, _T("ValidateUpgradePackage(%s): file signature verification is disabled, package validation skipped"), pkgFile);
+      return ERR_SUCCESS;
+   }
+
+   if (!VerifyFileSignature(pkgFile))
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot verify signature of installer package \"%s\""), pkgFile);
+      return ERR_BAD_SIGNATURE;
+   }
+
+   PE_CERT_INFO certInfo;
+   if (!GetPeCertificateInfo(pkgFile, &certInfo) || (certInfo.subjectName == nullptr))
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot extract signer certificate from installer package \"%s\""), pkgFile);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   if (!IsTrustedPublisher(certInfo.subjectName))
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: installer package \"%s\" is signed by \"%s\" which is not in the trusted publisher list"),
+         pkgFile, certInfo.subjectName);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   DWORD unused;
+   DWORD viSize = GetFileVersionInfoSize(pkgFile, &unused);
+   if (viSize == 0)
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: installer package \"%s\" does not have version information"), pkgFile);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   BYTE *versionInfo = static_cast<BYTE*>(MemAlloc(viSize));
+   if (!GetFileVersionInfo(pkgFile, 0, viSize, versionInfo))
+   {
+      MemFree(versionInfo);
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot read version information from installer package \"%s\""), pkgFile);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   // Check product name (accept match in any language block)
+   struct LANGANDCODEPAGE
+   {
+      WORD language;
+      WORD codePage;
+   } *translations;
+   UINT translationsSize;
+   bool productNameMatch = false;
+   TCHAR actualProductName[256] = _T("");
+   if (VerQueryValue(versionInfo, _T("\\VarFileInfo\\Translation"), reinterpret_cast<void**>(&translations), &translationsSize))
+   {
+      for(UINT i = 0; i < translationsSize / sizeof(LANGANDCODEPAGE); i++)
+      {
+         TCHAR subBlock[64];
+         _sntprintf(subBlock, 64, _T("\\StringFileInfo\\%04x%04x\\ProductName"), translations[i].language, translations[i].codePage);
+         TCHAR *productName;
+         UINT productNameSize;
+         if (VerQueryValue(versionInfo, subBlock, reinterpret_cast<void**>(&productName), &productNameSize) && (productNameSize > 0))
+         {
+            TCHAR name[256];
+            _tcslcpy(name, productName, 256);
+            Trim(name);  // Inno Setup pads VERSIONINFO strings with trailing spaces
+            if (!_tcsicmp(name, UPGRADE_PACKAGE_PRODUCT_NAME))
+            {
+               productNameMatch = true;
+               break;
+            }
+            if (actualProductName[0] == 0)
+               _tcslcpy(actualProductName, name, 256);
+         }
+      }
+   }
+   if (!productNameMatch)
+   {
+      MemFree(versionInfo);
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: installer package \"%s\" has unexpected product name \"%s\""), pkgFile, actualProductName);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   // Version gate: reject packages older than the running agent unless downgrade is allowed
+   VS_FIXEDFILEINFO *fixedInfo;
+   UINT fixedInfoSize;
+   if (!VerQueryValue(versionInfo, _T("\\"), reinterpret_cast<void**>(&fixedInfo), &fixedInfoSize) || (fixedInfoSize < sizeof(VS_FIXEDFILEINFO)))
+   {
+      MemFree(versionInfo);
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot read fixed version information from installer package \"%s\""), pkgFile);
+      return ERR_UNTRUSTED_PACKAGE;
+   }
+
+   DWORD packageVersionMS = fixedInfo->dwFileVersionMS;
+   DWORD packageVersionLS = fixedInfo->dwFileVersionLS;
+   MemFree(versionInfo);
+
+   uint64_t packageVersion = (static_cast<uint64_t>(packageVersionMS) << 32) | packageVersionLS;
+   uint64_t agentVersion = (static_cast<uint64_t>((NETXMS_VERSION_MAJOR << 16) | NETXMS_VERSION_MINOR) << 32) |
+         ((static_cast<uint32_t>(NETXMS_VERSION_RELEASE) << 16) | NETXMS_VERSION_BUILD);
+   if ((packageVersion < agentVersion) && !allowDowngrade)
+   {
+      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: installer package \"%s\" version %u.%u.%u.%u is older than running agent version %d.%d.%d.%d and downgrade is not allowed for requesting server"),
+         pkgFile, packageVersionMS >> 16, packageVersionMS & 0xFFFF, packageVersionLS >> 16, packageVersionLS & 0xFFFF,
+         NETXMS_VERSION_MAJOR, NETXMS_VERSION_MINOR, NETXMS_VERSION_RELEASE, NETXMS_VERSION_BUILD);
+      return ERR_DOWNGRADE_NOT_ALLOWED;
+   }
+
+   nxlog_debug_tag(_T("upgrade"), 4, _T("ValidateUpgradePackage(%s): package accepted (signer \"%s\", version %u.%u.%u.%u)"),
+      pkgFile, certInfo.subjectName, packageVersionMS >> 16, packageVersionMS & 0xFFFF, packageVersionLS >> 16, packageVersionLS & 0xFFFF);
+   return ERR_SUCCESS;
 }

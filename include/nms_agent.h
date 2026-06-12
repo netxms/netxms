@@ -138,6 +138,8 @@
 #define ERR_TCP_PROXY_DISABLED         ((uint32_t)936)
 #define ERR_SSH_CHANNEL_OPEN_FAILED    ((uint32_t)937)
 #define ERR_BAD_SIGNATURE              ((uint32_t)938)
+#define ERR_UNTRUSTED_PACKAGE          ((uint32_t)939)
+#define ERR_DOWNGRADE_NOT_ALLOWED      ((uint32_t)940)
 
 /**
  * Bulk data reconciliation DCI processing status codes

@@ -47,15 +47,13 @@ bool IsVNCServerRunning(const InetAddress& addr, uint16_t port)
 /**
  * Upgrade agent from given package file
  */
-uint32_t UpgradeAgent(const TCHAR *pkgFile)
+uint32_t UpgradeAgent(const TCHAR *pkgFile, bool allowDowngrade)
 {
    TCHAR cmdLine[1024];
 #if defined(_WIN32)
-   if (!VerifyFileSignature(pkgFile))
-   {
-      nxlog_write(NXLOG_WARNING, _T("Agent upgrade rejected: cannot verify signature of installer package \"%s\""), pkgFile);
-      return ERR_BAD_SIGNATURE;
-   }
+   uint32_t rcc = ValidateUpgradePackage(pkgFile, allowDowngrade);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
    _sntprintf(cmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pkgFile);
 #else
    _tchmod(pkgFile, 0700);   // Set execute permissions on package file

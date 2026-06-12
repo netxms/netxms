@@ -89,6 +89,8 @@ static struct
    { ERR_SYSCALL_FAILED, _T("System API call failed") },
    { ERR_TCP_PROXY_DISABLED, _T("TCP proxy function is disabled") },
    { ERR_BAD_SIGNATURE, _T("File signature verification failed") },
+   { ERR_UNTRUSTED_PACKAGE, _T("Package is not trusted") },
+   { ERR_DOWNGRADE_NOT_ALLOWED, _T("Package downgrade is not allowed") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -142,6 +144,10 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_REMOTE_CONNECT_FAILED;
       case ERR_TCP_PROXY_DISABLED:
          return RCC_TCP_PROXY_DISABLED;
+      case ERR_UNTRUSTED_PACKAGE:
+         return RCC_UNTRUSTED_PACKAGE;
+      case ERR_DOWNGRADE_NOT_ALLOWED:
+         return RCC_DOWNGRADE_NOT_ALLOWED;
    }
    return RCC_AGENT_ERROR;
 }

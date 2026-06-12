@@ -223,6 +223,8 @@ public final class RCC
    public static final int TEMPLATE_EXCLUSION_CONFLICT = 188;
    public static final int RADIUS_ACCESS_CHALLENGE = 189;
    public static final int ZONE_PROXY_NOT_AVAILABLE = 190;
+   public static final int UNTRUSTED_PACKAGE = 191;
+   public static final int DOWNGRADE_NOT_ALLOWED = 192;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

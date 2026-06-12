@@ -501,6 +501,12 @@ static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionE
          case ERR_BAD_SIGNATURE:
             *errorMessage = L"Installer signature verification failed";
             break;
+         case ERR_UNTRUSTED_PACKAGE:
+            *errorMessage = L"Installer package rejected as untrusted";
+            break;
+         case ERR_DOWNGRADE_NOT_ALLOWED:
+            *errorMessage = L"Agent downgrade not allowed";
+            break;
          case ERR_CONNECTION_BROKEN:
             *errorMessage = L"Agent disconnected";
             break;

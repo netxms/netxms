@@ -269,6 +269,8 @@ tunnel		Tunnel (in agent log)
 
 tuxedo		Tuxedo subagent messages
 
+upgrade		Agent upgrade package validation (in agent log)
+
 ups		UPS subagent messages
 useragent	User support application (server side)
 userdb		User database (server side)

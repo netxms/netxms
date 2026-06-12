@@ -125,6 +125,21 @@
 # EnableCertificateRevocationChecks = no
 
 #
+# TrustedPackagePublishers
+#
+# Semicolon-separated list of code signing certificate subject names accepted
+# as publishers of agent upgrade packages (Windows only). When set, it replaces
+# the built-in default ("Raden Solutions, SIA"), so custom-build users can pin
+# upgrades exclusively to their own signing identity.
+#
+# Can also be set via registry value:
+# HKLM\Software\NetXMS\TrustedPackagePublishers (REG_SZ, same format)
+# Agent configuration takes precedence over registry.
+#
+# Example:
+# TrustedPackagePublishers = Raden Solutions, SIA; Example Corp.
+
+#
 # MaxSessions
 #
 # Maximum number of simultaneous communication sessions. Possible value can
