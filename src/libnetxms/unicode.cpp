@@ -1210,7 +1210,7 @@ static wchar_t *ReplaceFormatSpecs(const wchar_t *oldFormat, wchar_t *localBuffe
    memcpy(fmt, oldFormat, len * sizeof(wchar_t));
 
    int state = 0;
-   bool hmod;
+   bool hmod, lmod;
    for(wchar_t *p = fmt; *p != 0; p++)
    {
       switch (state)
@@ -1220,6 +1220,7 @@ static wchar_t *ReplaceFormatSpecs(const wchar_t *oldFormat, wchar_t *localBuffe
             {
                state = 1;
                hmod = false;
+               lmod = false;
             }
             break;
          case 1:	// Format start
@@ -1230,7 +1231,7 @@ static wchar_t *ReplaceFormatSpecs(const wchar_t *oldFormat, wchar_t *localBuffe
                   {
                      memmove(p - 1, p, wcslen(p - 1) * sizeof(TCHAR));
                   }
-                  else
+                  else if (!lmod)   // %ls already has correct meaning, and combining "l" with "S" is undefined (musl libc rejects it)
                   {
                      *p = L'S';
                   }
@@ -1245,7 +1246,7 @@ static wchar_t *ReplaceFormatSpecs(const wchar_t *oldFormat, wchar_t *localBuffe
                   {
                      memmove(p - 1, p, wcslen(p - 1) * sizeof(TCHAR));
                   }
-                  else
+                  else if (!lmod)   // same as for %ls
                   {
                      *p = L'C';
                   }
@@ -1271,11 +1272,13 @@ static wchar_t *ReplaceFormatSpecs(const wchar_t *oldFormat, wchar_t *localBuffe
                case L'7':
                case L'8':
                case L'9':
-               case L'l':
                case L'L':
                case L'F':
                case L'N':
                case L'w':
+                  break;
+               case L'l':	// check for %ls / %lc
+                  lmod = true;
                   break;
                case L'h':	// check for %hs
                   hmod = true;
