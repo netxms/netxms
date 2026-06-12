@@ -55,17 +55,21 @@ struct ScanStatus
 /**
  * Process ICMP response
  */
-static void ProcessResponse(SOCKET s, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status)
+static void ProcessResponse(SOCKET s, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status, uint16_t requestId)
 {
    socklen_t addrLen = sizeof(struct sockaddr_in);
    struct sockaddr_in saSrc;
    ECHOREPLY reply;
    if (recvfrom(s, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
    {
-      if (reply.m_icmpHdr.m_cType == 0)
+      // Raw ICMP sockets receive a copy of every incoming echo reply on the host, so we must
+      // accept only replies to our own requests (matched by echo ID) to avoid cross-talk with
+      // other concurrent scans or pollers.
+      if ((reply.m_icmpHdr.m_cType == 0) && (reply.m_icmpHdr.m_wId == requestId))
       {
          uint32_t addr = ntohl(saSrc.sin_addr.s_addr);
-         if ((addr >= baseAddr) && (addr <= lastAddr) && !status[addr - baseAddr].success)
+         // startTime == 0 means we have not sent a request to this address yet in this scan
+         if ((addr >= baseAddr) && (addr <= lastAddr) && !status[addr - baseAddr].success && (status[addr - baseAddr].startTime != 0))
          {
             status[addr - baseAddr].success = true;
             // Clamp to 1 so that sub-millisecond responses are distinguishable from "no RTT data"
@@ -81,7 +85,7 @@ static void ProcessResponse(SOCKET s, uint32_t baseAddr, uint32_t lastAddr, Scan
 /**
  * Check for responses
  */
-static void CheckForResponses(uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status, SOCKET s, uint32_t timeout)
+static void CheckForResponses(uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status, SOCKET s, uint32_t timeout, uint16_t requestId)
 {
    SocketPoller sp;
    for(uint32_t timeLeft = timeout; timeLeft > 0;)
@@ -94,7 +98,7 @@ static void CheckForResponses(uint32_t baseAddr, uint32_t lastAddr, ScanStatus *
       {
          uint32_t elapsedTime = (uint32_t)(GetCurrentTimeMs() - startTime);
          timeLeft -= std::min(elapsedTime, timeLeft);
-         ProcessResponse(s, baseAddr, lastAddr, status);
+         ProcessResponse(s, baseAddr, lastAddr, status, requestId);
       }
       else     // select() or poll() ended on timeout
       {
@@ -133,6 +137,8 @@ StructArray<ScanResult> *ScanAddressRange(const InetAddress& start, const InetAd
    request.m_icmpHdr.m_wSeq = 0;
    memcpy(request.m_data, "NetXMS Scan Ping", 16);
 
+   uint16_t requestId = request.m_icmpHdr.m_wId;
+
    struct sockaddr_in saDest;
    memset(&saDest, 0, sizeof(sockaddr_in));
    saDest.sin_family = AF_INET;
@@ -153,10 +159,10 @@ StructArray<ScanResult> *ScanAddressRange(const InetAddress& start, const InetAd
       status[a - baseAddr].startTime = GetCurrentTimeMs();
       sendto(s, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
 
-      CheckForResponses(baseAddr, lastAddr, status, s, 20);
+      CheckForResponses(baseAddr, lastAddr, status, s, 20, requestId);
    }
 
-   CheckForResponses(baseAddr, lastAddr, status, s, timeout);
+   CheckForResponses(baseAddr, lastAddr, status, s, timeout, requestId);
    closesocket(s);
 
    StructArray<ScanResult> *results = new StructArray<ScanResult>();

@@ -144,7 +144,7 @@ struct ScanStatus
 /**
  * Process ICMP response
  */
-static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status)
+static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, ScanStatus *status, uint16_t requestId)
 {
    ECHOREPLY reply;
    struct sockaddr_in saSrc;
@@ -152,9 +152,15 @@ static void ProcessResponse(SOCKET sock, uint32_t baseAddr, uint32_t lastAddr, S
    if (recvfrom(sock, reinterpret_cast<char*>(&reply), sizeof(ECHOREPLY), 0, reinterpret_cast<struct sockaddr*>(&saSrc), &addrLen) > 0)
    {
       uint32_t addr = ntohl(reply.m_ipHdr.m_iaSrc.s_addr);
+      // Raw ICMP sockets receive a copy of every incoming echo reply on the host, so we must
+      // accept only replies to our own requests (matched by echo ID) to avoid cross-talk with
+      // other concurrent scans or pollers. startTime == 0 means we have not sent a request to
+      // this address yet in this scan.
       if ((addr >= baseAddr) && (addr <= lastAddr) &&
           (reply.m_icmpHdr.m_cType == 0) &&
-          !status[addr - baseAddr].success)
+          (reply.m_icmpHdr.m_wId == requestId) &&
+          !status[addr - baseAddr].success &&
+          (status[addr - baseAddr].startTime != 0))
       {
          status[addr - baseAddr].success = true;
          status[addr - baseAddr].rtt = static_cast<uint32_t>(GetCurrentTimeMs() - status[addr - baseAddr].startTime);
@@ -177,6 +183,7 @@ void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (
    request.m_icmpHdr.m_cCode = 0;
    request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
    request.m_icmpHdr.m_wSeq = 0;
+   uint16_t requestId = request.m_icmpHdr.m_wId;
 
    struct sockaddr_in saDest;
    memset(&saDest, 0, sizeof(sockaddr_in));
@@ -200,7 +207,7 @@ void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (
       sp.add(sock);
       if (sp.poll(10) > 0)
       {
-         ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
+         ProcessResponse(sock, baseAddr, to.getAddressV4(), status, requestId);
       }
    }
 
@@ -213,7 +220,7 @@ void ScanAddressRangeICMP(const InetAddress& from, const InetAddress& to, void (
       if (sp.poll(g_icmpPingTimeout - elapsedTime) <= 0)
          break;
 
-      ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
+      ProcessResponse(sock, baseAddr, to.getAddressV4(), status, requestId);
       elapsedTime += static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
    }
 
