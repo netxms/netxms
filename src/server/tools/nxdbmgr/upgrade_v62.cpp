@@ -496,7 +496,10 @@ static bool H_UpgradeFromV14()
 {
    CHK_EXEC(SQLQuery(L"ALTER TABLE object_tools ADD icon_guid varchar(36)"));
 
-   DB_RESULT hResult = SQLSelect(L"SELECT tool_id,tool_name,icon FROM object_tools WHERE icon IS NOT NULL AND icon<>''");
+   // Oracle cannot compare CLOB with <>, but empty strings are stored as NULL there anyway
+   DB_RESULT hResult = SQLSelect((g_dbSyntax == DB_SYNTAX_ORACLE) ?
+      L"SELECT tool_id,tool_name,icon FROM object_tools WHERE icon IS NOT NULL" :
+      L"SELECT tool_id,tool_name,icon FROM object_tools WHERE icon IS NOT NULL AND icon<>''");
    if (hResult != nullptr)
    {
       bool success = true;
