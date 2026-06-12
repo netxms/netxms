@@ -1872,7 +1872,10 @@ static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolF
       record->agentPort = port;
    if (protocolFlag == NSCAN_HAS_SNMP)
       record->snmpVersion = snmpVersion;
-   if ((protocolFlag == NSCAN_HAS_TCP_PORT_OPEN) && (port != 0) && !record->openTcpPorts.contains(port))
+   // Every TCP-based probe hit (agent, Modbus, EtherNet/IP, explicit port) means the
+   // port is open, so record it in the open port list regardless of which probe found it.
+   // SNMP (UDP) and ICMP do not contribute ports.
+   if ((protocolFlag != NSCAN_HOST_REACHABLE) && (protocolFlag != NSCAN_HAS_SNMP) && (port != 0) && !record->openTcpPorts.contains(port))
       record->openTcpPorts.add(port);
 
    InteractiveScanRecord snapshot;
@@ -2011,9 +2014,14 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
 
          if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
          {
-            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
-            recordProxyScanResult(NSCAN_HAS_AGENT, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
-                  InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
+            IntegerArray<uint16_t> agentPorts = GetWellKnownPorts(L"agent", context.zoneUIN);
+            for(int i = 0; (i < agentPorts.size()) && !shouldCancel(); i++)
+            {
+               uint16_t port = agentPorts.get(i);
+               InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, port, 0 };
+               recordProxyScanResult(NSCAN_HAS_AGENT, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
+                     InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
+            }
          }
 
          if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
@@ -2040,10 +2048,10 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
 
          if ((context.flags & NSCAN_PROBE_SNMP) && !shouldCancel())
          {
-            IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", 0);
+            IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", context.zoneUIN);
             if (snmpPorts.isEmpty())
                snmpPorts.add(161);
-            unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
+            unique_ptr<StringList> communities = SnmpGetKnownCommunities(context.zoneUIN);
             for(int i = 0; (i < snmpPorts.size()) && !shouldCancel(); i++)
             {
                uint16_t port = snmpPorts.get(i);
@@ -2083,8 +2091,13 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
 
       if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
       {
-         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
-         TCPScanAddressRange(context.startAddress, context.endAddress, AGENT_LISTEN_PORT, InteractiveScanPortCallback, &pctx);
+         IntegerArray<uint16_t> agentPorts = GetWellKnownPorts(L"agent", context.zoneUIN);
+         for(int i = 0; (i < agentPorts.size()) && !shouldCancel(); i++)
+         {
+            uint16_t port = agentPorts.get(i);
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, port, 0 };
+            TCPScanAddressRange(context.startAddress, context.endAddress, port, InteractiveScanPortCallback, &pctx);
+         }
       }
 
       if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
@@ -2108,10 +2121,10 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
 
       if ((context.flags & NSCAN_PROBE_SNMP) && !shouldCancel())
       {
-         IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", 0);
+         IntegerArray<uint16_t> snmpPorts = GetWellKnownPorts(L"snmp", context.zoneUIN);
          if (snmpPorts.isEmpty())
             snmpPorts.add(161);
-         unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
+         unique_ptr<StringList> communities = SnmpGetKnownCommunities(context.zoneUIN);
          for(int i = 0; (i < snmpPorts.size()) && !shouldCancel(); i++)
          {
             uint16_t port = snmpPorts.get(i);
