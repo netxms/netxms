@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxlpapi.h>
+#include <nxstat.h>
 #include <zlib.h>
 
 #define DEBUG_TAG _T("agent.policy")

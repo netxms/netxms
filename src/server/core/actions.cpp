@@ -155,6 +155,8 @@ static inline const char *ServerActionDataFieldName(ServerActionType type)
          return "message";
       case ServerActionType::NXSL_SCRIPT:
          return "scriptName";
+      case ServerActionType::FORWARD_EVENT:
+         return "data";
    }
    return "data";
 }
