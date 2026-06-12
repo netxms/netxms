@@ -600,16 +600,15 @@ public class NetworkScanView extends View
                });
                try
                {
-                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE,
-                        row.result.getAddress().getHostAddress(), parentId);
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, row.result.getAddress().getHostAddress(), parentId);
                   cd.setPrimaryName(row.result.getAddress().getHostAddress());
                   cd.setZoneUIN(zoneUIN);
                   if (row.result.getAgentPort() != 0)
                      cd.setAgentPort(row.result.getAgentPort());
-                  final long createdId = session.createObject(cd);
+                  final AbstractObject createdNode = session.createObjectSync(cd);
                   runInUIThread(() -> {
                      row.addStatus = AddStatus.SUCCESS;
-                     row.createdObjectId = createdId;
+                     row.createdObjectId = createdNode.getObjectId();
                      viewer.update(row, null);
                   });
                }
