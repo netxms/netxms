@@ -17403,8 +17403,12 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
    uint32_t scanErrorRcc = RCC_SUCCESS;
    context.errorReporter = [&scanErrorRcc](uint32_t rcc) { scanErrorRcc = rcc; };
 
-   uint32_t scanWarningRcc = RCC_SUCCESS;
-   context.warningReporter = [&scanWarningRcc](uint32_t rcc) { scanWarningRcc = rcc; };
+   IntegerArray<uint32_t> scanWarnings;  // (probe flag, RCC) pairs
+   context.warningReporter = [&scanWarnings](uint32_t probe, uint32_t rcc)
+   {
+      scanWarnings.add(probe);
+      scanWarnings.add(rcc);
+   };
 
    writeAuditLog(AUDIT_NETWORK, true, 0,
          L"Network range scan started: %s - %s (zone=%d, %llu addresses, flags=0x%04x, %d TCP ports)",
@@ -17428,8 +17432,13 @@ void ClientSession::scanNetworkRange(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_SUCCESS);
       response.setField(VID_NUM_RECORDS, reportedHosts);
       response.setField(VID_NUM_ELEMENTS, rangeSize);
-      if (scanWarningRcc != RCC_SUCCESS)
-         response.setField(VID_WARNING_RCC, scanWarningRcc);
+      response.setField(VID_NUM_WARNINGS, static_cast<uint32_t>(scanWarnings.size() / 2));
+      uint32_t warningFieldId = VID_WARNING_LIST_BASE;
+      for(int i = 0; i < scanWarnings.size(); i += 2)
+      {
+         response.setField(warningFieldId++, scanWarnings.get(i));      // probe flag
+         response.setField(warningFieldId++, scanWarnings.get(i + 1));  // RCC
+      }
    }
    sendMessage(response);
 

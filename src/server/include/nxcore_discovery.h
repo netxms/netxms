@@ -175,7 +175,10 @@ struct InteractiveScanRecord
  * is invoked (potentially from multiple worker threads) each time a probe hit
  * updates the per-host record; the snapshot passed in reflects the latest
  * accumulated state for that address. cancelCheck (if set) is polled between
- * protocol phases to allow early termination.
+ * protocol phases to allow early termination. warningReporter (if set) is
+ * called once per failed probe type with the probe identified by its result
+ * flag (NSCAN_HOST_REACHABLE for ICMP, NSCAN_HAS_* for the rest) and the
+ * failure reason as RCC.
  */
 class NXCORE_EXPORTABLE InteractiveScanContext
 {
@@ -188,7 +191,7 @@ public:
    std::function<void(const InetAddress&, const InteractiveScanRecord&)> emitter;
    std::function<bool()> cancelCheck;
    std::function<void(uint32_t)> errorReporter;
-   std::function<void(uint32_t)> warningReporter;
+   std::function<void(uint32_t, uint32_t)> warningReporter;
 
    InteractiveScanContext() : tcpPorts(0, 4)
    {

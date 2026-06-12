@@ -432,9 +432,10 @@ public class NetworkScanView extends View
                }
 
                @Override
-               public void scanCompletedWithWarning(final int rcc)
+               public void probeWarning(final int probe, final int rcc)
                {
-                  final String message = RCC.getText(rcc, Locale.getDefault().getLanguage(), null);
+                  final String message = String.format(i18n.tr("%s probe failed: %s"), getProbeName(probe),
+                        RCC.getText(rcc, Locale.getDefault().getLanguage(), null));
                   runInUIThread(() -> addMessage(MessageArea.WARNING, message));
                }
             };
@@ -460,6 +461,29 @@ public class NetworkScanView extends View
             return i18n.tr("Network range scan failed");
          }
       }.start();
+   }
+
+   /**
+    * Get display name for probe identified by its result flag.
+    */
+   private String getProbeName(int probe)
+   {
+      switch(probe)
+      {
+         case NetworkScanResult.HOST_REACHABLE:
+            return i18n.tr("ICMP");
+         case NetworkScanResult.HAS_AGENT:
+            return i18n.tr("NetXMS agent");
+         case NetworkScanResult.HAS_SNMP:
+            return i18n.tr("SNMP");
+         case NetworkScanResult.HAS_TCP_PORT_OPEN:
+            return i18n.tr("TCP port");
+         case NetworkScanResult.HAS_MODBUS:
+            return i18n.tr("Modbus/TCP");
+         case NetworkScanResult.HAS_ETHERNET_IP:
+            return i18n.tr("EtherNet/IP");
+      }
+      return i18n.tr("Unknown");
    }
 
    /**

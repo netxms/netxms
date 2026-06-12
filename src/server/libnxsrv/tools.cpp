@@ -134,6 +134,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_FOLDER_ALREADY_EXISTS:
          return RCC_FOLDER_ALREADY_EXISTS;
       case ERR_UNKNOWN_METRIC:
+      case ERR_UNSUPPORTED_METRIC:
          return RCC_UNKNOWN_METRIC;
       case ERR_FILE_APPEND_POSSIBLE:
          return RCC_FILE_APPEND_POSSIBLE;

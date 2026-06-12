@@ -104,10 +104,15 @@ static void RangeScanCallback(const InetAddress& addr, uint32_t rtt, void *conte
  */
 LONG H_TCPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   if (!session->isMasterServer() || !(g_dwFlags & AF_ENABLE_TCP_PROXY))
+   if (!session->isMasterServer())
    {
-      session->debugPrintf(5, _T("Request for address range scan via TCP rejected"));
-      return SYSINFO_RC_UNSUPPORTED;
+      session->debugPrintf(5, _T("Request for address range scan via TCP rejected (not master server)"));
+      return SYSINFO_RC_ACCESS_DENIED;
+   }
+   if (!(g_dwFlags & AF_ENABLE_TCP_PROXY))
+   {
+      session->debugPrintf(5, _T("Request for address range scan via TCP rejected (TCP proxy is disabled)"));
+      return SYSINFO_RC_TCP_PROXY_DISABLED;
    }
 
    char startAddr[128], endAddr[128];

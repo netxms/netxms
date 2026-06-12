@@ -83,7 +83,7 @@ LONG H_SNMPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *valu
    if (!session->isMasterServer() || !(g_dwFlags & AF_ENABLE_SNMP_PROXY))
    {
       session->debugPrintf(5, _T("Request for address range scan via SNMP rejected"));
-      return SYSINFO_RC_UNSUPPORTED;
+      return SYSINFO_RC_ACCESS_DENIED;
    }
 
    char startAddr[128], endAddr[128], community[256];

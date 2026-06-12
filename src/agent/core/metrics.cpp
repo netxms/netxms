@@ -1202,6 +1202,10 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
                errorCode = ERR_ACCESS_DENIED;
                InterlockedIncrement(&s_failedRequests);
                break;
+            case SYSINFO_RC_TCP_PROXY_DISABLED:
+               errorCode = ERR_TCP_PROXY_DISABLED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
             case SYSINFO_RC_ERROR:
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
@@ -1336,6 +1340,10 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
                errorCode = ERR_ACCESS_DENIED;
                InterlockedIncrement(&s_failedRequests);
                break;
+            case SYSINFO_RC_TCP_PROXY_DISABLED:
+               errorCode = ERR_TCP_PROXY_DISABLED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
             case SYSINFO_RC_ERROR:
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
@@ -1462,6 +1470,10 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
                break;
             case SYSINFO_RC_ACCESS_DENIED:
                errorCode = ERR_ACCESS_DENIED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
+            case SYSINFO_RC_TCP_PROXY_DISABLED:
+               errorCode = ERR_TCP_PROXY_DISABLED;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_ERROR:

@@ -160,6 +160,7 @@
 #define SYSINFO_RC_NO_SUCH_INSTANCE    3
 #define SYSINFO_RC_UNKNOWN             4
 #define SYSINFO_RC_ACCESS_DENIED       5
+#define SYSINFO_RC_TCP_PROXY_DISABLED  6
 
 /**
  * WinPerf features

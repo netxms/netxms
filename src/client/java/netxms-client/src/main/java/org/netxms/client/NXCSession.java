@@ -15192,9 +15192,14 @@ public class NXCSession
          NXCPMessage response = waitForRCC(msg.getMessageId());
          if (listener != null)
          {
-            int warningRcc = response.getFieldAsInt32(NXCPCodes.VID_WARNING_RCC);
-            if (warningRcc != RCC.SUCCESS)
-               listener.scanCompletedWithWarning(warningRcc);
+            int warningCount = response.getFieldAsInt32(NXCPCodes.VID_NUM_WARNINGS);
+            long fieldId = NXCPCodes.VID_WARNING_LIST_BASE;
+            for(int i = 0; i < warningCount; i++)
+            {
+               int probe = response.getFieldAsInt32(fieldId++);
+               int rcc = response.getFieldAsInt32(fieldId++);
+               listener.probeWarning(probe, rcc);
+            }
          }
          return response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
       }

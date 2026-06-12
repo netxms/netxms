@@ -38,13 +38,14 @@ public class NetworkScanResult
    public static final int PROBE_MODBUS = 0x0010;
    public static final int PROBE_ETHERNET_IP = 0x0020;
 
-   // Per-host result flags (carried in VID_FLAGS)
-   private static final int HOST_REACHABLE = 0x0001;
-   private static final int HAS_AGENT = 0x0002;
-   private static final int HAS_SNMP = 0x0004;
-   private static final int HAS_TCP_PORT_OPEN = 0x0008;
-   private static final int HAS_MODBUS = 0x0010;
-   private static final int HAS_ETHERNET_IP = 0x0020;
+   // Per-host result flags (carried in VID_FLAGS); also used as probe identifiers
+   // in NetworkScanListener.probeWarning (HOST_REACHABLE identifies the ICMP probe)
+   public static final int HOST_REACHABLE = 0x0001;
+   public static final int HAS_AGENT = 0x0002;
+   public static final int HAS_SNMP = 0x0004;
+   public static final int HAS_TCP_PORT_OPEN = 0x0008;
+   public static final int HAS_MODBUS = 0x0010;
+   public static final int HAS_ETHERNET_IP = 0x0020;
 
    private final InetAddress address;
    private final int flags;

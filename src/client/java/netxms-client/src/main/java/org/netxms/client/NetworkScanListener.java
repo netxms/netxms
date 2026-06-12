@@ -34,13 +34,15 @@ public interface NetworkScanListener
    void resultReceived(NetworkScanResult result);
 
    /**
-    * Called once when the scan completes with a non-fatal warning (e.g. the zone
-    * proxy rejected some scan requests, so detection results may be incomplete).
-    * Not called when the scan completes without warnings.
+    * Called after scan completion, once for each probe type that produced a non-fatal
+    * warning (e.g. the zone proxy rejected the scan requests for that probe, so its
+    * detection results may be incomplete). Not called when the scan completes without
+    * warnings.
     *
+    * @param probe probe identified by its result flag (HOST_REACHABLE for ICMP, HAS_* for the rest, see {@link NetworkScanResult})
     * @param rcc request completion code describing the warning (see {@link org.netxms.client.constants.RCC})
     */
-   default void scanCompletedWithWarning(int rcc)
+   default void probeWarning(int probe, int rcc)
    {
    }
 }

@@ -1981,41 +1981,52 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
       uint32_t blockSize = ConfigReadULong(L"NetworkDiscovery.ActiveDiscovery.BlockSize", 1024);
       proxyConn->setCommandTimeout(ProxyScanCommandTimeout(std::min(blockSize, to - from + 1)));
 
-      // Track the first protocol-scan command rejected by the proxy agent (e.g. when
+      // Track the first error per probe type reported by the proxy agent (e.g. when
       // EnableTCPProxy is not set in its configuration), so the caller can be warned
-      // that protocol detection results are incomplete.
-      uint32_t proxyScanError = ERR_SUCCESS;
-      auto recordProxyScanResult = [&proxyScanError](uint32_t rcc)
+      // which probes produced incomplete results and why.
+      struct ProbeError
       {
-         if ((rcc != ERR_SUCCESS) && (proxyScanError == ERR_SUCCESS))
-            proxyScanError = rcc;
+         uint32_t probe;   // probe identified by its NSCAN_* result flag
+         uint32_t error;   // agent error code
+      };
+      ProbeError proxyScanErrors[8];
+      int proxyScanErrorCount = 0;
+      auto recordProxyScanResult = [&proxyScanErrors, &proxyScanErrorCount](uint32_t probe, uint32_t error)
+      {
+         if (error == ERR_SUCCESS)
+            return;
+         for(int i = 0; i < proxyScanErrorCount; i++)
+            if (proxyScanErrors[i].probe == probe)
+               return;
+         if (proxyScanErrorCount < static_cast<int>(sizeof(proxyScanErrors) / sizeof(ProbeError)))
+            proxyScanErrors[proxyScanErrorCount++] = { probe, error };
       };
 
       while((from <= to) && !shouldCancel())
       {
          uint32_t blockEnd = std::min(to, from + blockSize - 1);
 
-         ScanAddressRangeICMPProxy(proxyConn.get(), from, blockEnd, InteractiveScanIcmpCallback,
-               context.zoneUIN, proxy.get(), nullptr, &state);
+         recordProxyScanResult(NSCAN_HOST_REACHABLE, ScanAddressRangeICMPProxy(proxyConn.get(), from, blockEnd, InteractiveScanIcmpCallback,
+               context.zoneUIN, proxy.get(), nullptr, &state));
 
          if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
          {
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, AGENT_LISTEN_PORT, 0 };
-            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
+            recordProxyScanResult(NSCAN_HAS_AGENT, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, AGENT_LISTEN_PORT,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
          if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
          {
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT, 0 };
-            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, MODBUS_TCP_DEFAULT_PORT,
+            recordProxyScanResult(NSCAN_HAS_MODBUS, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, MODBUS_TCP_DEFAULT_PORT,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
          if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && !shouldCancel())
          {
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT, 0 };
-            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, ETHERNET_IP_DEFAULT_PORT,
+            recordProxyScanResult(NSCAN_HAS_ETHERNET_IP, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, ETHERNET_IP_DEFAULT_PORT,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
@@ -2023,7 +2034,7 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
          {
             uint16_t port = context.tcpPorts.get(i);
             InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
-            recordProxyScanResult(ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
+            recordProxyScanResult(NSCAN_HAS_TCP_PORT_OPEN, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
@@ -2040,14 +2051,14 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
                {
                   const wchar_t *community = communities->get(j);
                   InteractiveScanPortContext pctxV1{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_1 };
-                  recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_1, community,
+                  recordProxyScanResult(NSCAN_HAS_SNMP, ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_1, community,
                         InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV1));
                   InteractiveScanPortContext pctxV2{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_2C };
-                  recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_2C, community,
+                  recordProxyScanResult(NSCAN_HAS_SNMP, ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_2C, community,
                         InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV2));
                }
                InteractiveScanPortContext pctxV3{ &state, NSCAN_HAS_SNMP, port, SNMP_VERSION_3 };
-               recordProxyScanResult(ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_3, nullptr,
+               recordProxyScanResult(NSCAN_HAS_SNMP, ScanAddressRangeSNMPProxy(proxyConn.get(), from, blockEnd, port, SNMP_VERSION_3, nullptr,
                      InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctxV3));
             }
          }
@@ -2055,11 +2066,15 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
          from += blockSize;
       }
 
-      if ((proxyScanError != ERR_SUCCESS) && context.warningReporter && !shouldCancel())
+      if (!shouldCancel())
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: proxy node %s [%u] scan command failed (%s)",
-               proxy->getName(), proxy->getId(), AgentErrorCodeToText(proxyScanError));
-         context.warningReporter(AgentErrorToRCC(proxyScanError));
+         for(int i = 0; i < proxyScanErrorCount; i++)
+         {
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"ScanNetworkRangeInteractive: probe 0x%02X scan command on proxy node %s [%u] failed (%s)",
+                  proxyScanErrors[i].probe, proxy->getName(), proxy->getId(), AgentErrorCodeToText(proxyScanErrors[i].error));
+            if (context.warningReporter)
+               context.warningReporter(proxyScanErrors[i].probe, AgentErrorToRCC(proxyScanErrors[i].error));
+         }
       }
    }
    else
