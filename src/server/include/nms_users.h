@@ -28,9 +28,7 @@
 
 #if WITH_LDAP
 
-#if !defined(__hpux)
 #define LDAP_DEPRECATED 1
-#endif
 
 #if defined(_WIN32)
 

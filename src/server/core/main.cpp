@@ -1913,7 +1913,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
-#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+#if !defined(__sun) && !defined(_AIX)
 	sigaddset(&signals, SIGPIPE);
 #endif
 

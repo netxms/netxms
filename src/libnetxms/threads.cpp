@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -59,7 +59,7 @@ void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
    sigaddset(&signals, SIGHUP);
    sigaddset(&signals, SIGUSR1);
    sigaddset(&signals, SIGUSR2);
-#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+#if !defined(__sun) && !defined(_AIX)
    sigaddset(&signals, SIGPIPE);
 #endif
    if (processWide)
@@ -68,11 +68,7 @@ void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
    }
    else
    {
-#ifdef _USE_GNU_PTH
-      pth_sigmask(SIG_BLOCK, &signals, nullptr);
-#else
       pthread_sigmask(SIG_BLOCK, &signals, nullptr);
-#endif
    }
 }
 

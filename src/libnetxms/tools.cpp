@@ -195,7 +195,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool, bool isClientA
    imp_SetThreadDescription = reinterpret_cast<HRESULT (WINAPI *)(HANDLE, PCWSTR)>(GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription"));
 #endif
 
-#if defined(__sun) || defined(_AIX) || defined(__hpux)
+#if defined(__sun) || defined(_AIX)
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
    signal(SIGQUIT, SIG_IGN);
@@ -3586,15 +3586,10 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
  */
 size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t)
 {
-#if HAVE_ALLOCA
    char *mbuf = (char *)alloca(bufsize);
    size_t flen = wcslen(format) + 1;
    char *mfmt = (char *)alloca(flen);
    WideCharToMultiByteSysLocale(format, mfmt, flen);
-#else
-   char *mbuf = (char *)MemAlloc(bufsize);
-   char *mfmt = MBStringFromWideString(format);
-#endif
    size_t rc = strftime(mbuf, bufsize, mfmt, t);
    if (rc > 0)
    {
@@ -3605,10 +3600,6 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
    {
       buffer[0] = 0;
    }
-#if !HAVE_ALLOCA
-   MemFree(mbuf);
-   MemFree(mfmt);
-#endif
    return rc;
 }
 

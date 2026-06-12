@@ -49,9 +49,6 @@ private:
 #if defined(_WIN32)
    CRITICAL_SECTION m_lock;
    CONDITION_VARIABLE m_wakeupCondition;
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_t m_lock;
-   pth_cond_t m_wakeupCondition;
 #else
    pthread_mutex_t m_lock;
    pthread_cond_t m_wakeupCondition;
@@ -69,9 +66,6 @@ private:
 #if defined(_WIN32)
    void lock() { EnterCriticalSection(&m_lock); }
    void unlock() { LeaveCriticalSection(&m_lock); }
-#elif defined(_USE_GNU_PTH)
-   void lock() { pth_mutex_acquire(&m_lock, FALSE, nullptr); }
-   void unlock() { pth_mutex_release(&m_lock); }
 #else
    void lock() { pthread_mutex_lock(&m_lock); }
    void unlock() { pthread_mutex_unlock(&m_lock); }
@@ -202,9 +196,6 @@ private:
 #if defined(_WIN32)
    CRITICAL_SECTION m_lock;
    CONDITION_VARIABLE m_wakeupCondition;
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_t m_lock;
-   pth_cond_t m_wakeupCondition;
 #else
    pthread_mutex_t m_lock;
    pthread_cond_t m_wakeupCondition;
@@ -220,9 +211,6 @@ private:
 #if defined(_WIN32)
    void lock() { EnterCriticalSection(&m_lock); }
    void unlock() { LeaveCriticalSection(&m_lock); }
-#elif defined(_USE_GNU_PTH)
-   void lock() { pth_mutex_acquire(&m_lock, FALSE, nullptr); }
-   void unlock() { pth_mutex_release(&m_lock); }
 #else
    void lock() { pthread_mutex_lock(&m_lock); }
    void unlock() { pthread_mutex_unlock(&m_lock); }

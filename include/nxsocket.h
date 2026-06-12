@@ -114,7 +114,7 @@ typedef int SOCKET;
 #define INVALID_SOCKET     (-1)
 #define SELECT_NFDS(x)     (x)
 
-#if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
+#if !(HAVE_SOCKLEN_T)
 typedef unsigned int socklen_t;
 #endif
 

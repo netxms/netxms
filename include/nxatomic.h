@@ -267,7 +267,7 @@ static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
    VolatileCounter64 temp = 1;
    __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp + 1;
-#elif HAVE_ATOMIC_BUILTINS && !defined(__minix)
+#elif HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, 1);
@@ -299,7 +299,7 @@ static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
    VolatileCounter64 temp = a;
    __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
    return temp + a;
-#elif HAVE_ATOMIC_BUILTINS && !defined(__minix)
+#elif HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, a, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, a);

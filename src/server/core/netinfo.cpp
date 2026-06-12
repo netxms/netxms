@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,8 +67,6 @@ void InitLocalNetInfo()
    {
       // Convert system name to lowercase
       strlwr(un.sysname);
-      if (!strcmp(un.sysname, "hp-ux"))
-         strcpy(un.sysname, "hpux");
 
       TCHAR libdir[MAX_PATH];
       GetNetXMSDirectory(nxDirLib, libdir);

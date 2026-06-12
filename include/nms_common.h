@@ -139,8 +139,8 @@
 /**
  * Compatibility defines for C sources
  */
-#if !defined(__cplusplus) && !defined(CORTEX) && !HAVE_BOOL
-typedef int bool;
+#ifndef __cplusplus
+#include <stdbool.h>
 #endif
 
 /**
@@ -226,8 +226,6 @@ typedef int bool;
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
 
-#define FREE_IS_NULL_SAFE       1
-
 #define FS_PATH_SEPARATOR           _T("\\")
 #define FS_PATH_SEPARATOR_A         "\\"
 #define FS_PATH_SEPARATOR_W         L"\\"
@@ -248,8 +246,6 @@ typedef int bool;
 
 #define HAVE_GETADDRINFO        1
 #define HAVE_INET_PTON          1
-
-#define HAVE_ALLOCA             1
 
 #define HAVE_WUTIME             1
 
@@ -446,16 +442,6 @@ static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 #define HAVE_THREAD_LOCAL_STORAGE 0
 #endif
 
-/* Minix defines BYTE in const.h - include it early and undef */
-#ifdef __minix
-#include <minix/const.h>
-#undef BYTE
-#endif
-
-#if HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
 #if HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
@@ -494,10 +480,6 @@ using std::wcsncasecmp;
 #include <stdint.h>
 #include <utime.h>
 
-#if HAVE_SYS_INT_TYPES_H
-#include <sys/int_types.h>
-#endif
-
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
@@ -516,18 +498,10 @@ using std::wcsncasecmp;
 #include <fcntl.h>
 #include <dirent.h>
 
-#if _USE_GNU_PTH
-#include <pth.h>
-#else
 #include <pthread.h>
-#endif
 
 #ifdef __IBMCPP__
 #include <builtins.h>
-#endif
-
-#ifdef __minix
-#undef HAVE_GETHOSTBYNAME2_R
 #endif
 
 #include <sys/un.h>
@@ -878,13 +852,8 @@ template <typename T> static inline T *MemRealloc(T *p, size_t size) { auto np =
 template <typename T> static inline T *MemReallocArray(T *p, size_t count) { return MemRealloc(p, count * sizeof(T)); }
 template <typename T> static inline T *MemReallocNoFree(T *p, size_t size) { return (T*)realloc(p, size); }
 template <typename T> static inline T *MemReallocArrayNoFree(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
-#if FREE_IS_NULL_SAFE
 static inline void MemFree(void *p) { free(p); }
 template <typename T> static inline void MemFreeAndNull(T* &p) { free(p); p = nullptr; }
-#else
-static inline void MemFree(void *p) { if (p != nullptr) free(p); }
-template <typename T> static inline void MemFreeAndNull(T* &p) { if (p != nullptr) { free(p); p = nullptr; } }
-#endif
 
 #else /* __cplusplus */
 
@@ -895,13 +864,8 @@ template <typename T> static inline void MemFreeAndNull(T* &p) { if (p != nullpt
 #define MemAllocArray(count, size) calloc(count, size)
 #define MemAllocArrayNoInit(count, size) MemAlloc((count) * (size))
 #define MemRealloc(p, size) realloc(p, size)
-#if FREE_IS_NULL_SAFE
 #define MemFree(p) free(p);
 #define MemFreeAndNull(p) do { free(p); p = nullptr; } while(0)
-#else
-#define MemFree(p) do { if ((p) != NULL) free(p); } while(0)
-#define MemFreeAndNull(p) do { if ((p) != nullptr) { free(p); p = nullptr; } } while(0)
-#endif
 
 #endif /* __cplusplus */
 
@@ -932,13 +896,8 @@ template<typename T> static inline T *MemCopyArray(const T *data, size_t count)
 
 #endif
 
-#if HAVE_ALLOCA
 #define MemAllocLocal(size) ((void*)alloca(size))
 #define MemFreeLocal(p)
-#else
-#define MemAllocLocal(size) MemAlloc(size)
-#define MemFreeLocal(p) MemFree(p)
-#endif   /* HAVE_ALLOCA */
 
 /******* C string copy functions *******/
 

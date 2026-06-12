@@ -22,7 +22,6 @@ templates_DATA = \
 	eaton_ups.xml \
 	generic_unix.xml \
 	hp_ilo.xml \
-	hpux.xml \
 	intel_baseboard.xml \
 	interface_traffic.xml \
 	lenovo_xcc.xml \

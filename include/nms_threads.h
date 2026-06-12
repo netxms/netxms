@@ -154,133 +154,7 @@ static inline THREAD_ID ThreadId(THREAD thread)
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
 }
 
-#elif defined(_USE_GNU_PTH)
-
-/****************************************************************************/
-/* GNU Pth                                                                  */
-/****************************************************************************/
-
-//
-// Related datatypes and constants
-//
-
-typedef pth_t THREAD;
-
-#define INVALID_THREAD_HANDLE       (NULL)
-
-#ifndef INFINITE
-#define INFINITE 0xFFFFFFFF
-#endif
-
-typedef void *THREAD_RESULT;
-
-#define THREAD_OK       ((void *)0)
-#define THREAD_CALL
-
-extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
-
-
-//
-// Inline functions
-//
-
-static inline void InitThreadLibrary()
-{
-   if (!pth_init())
-   {
-      perror("pth_init() failed");
-      exit(200);
-   }
-}
-
-static inline void ThreadSleep(int nSeconds)
-{
-   pth_sleep(nSeconds);
-}
-
-static inline void ThreadSleepMs(uint32_t milliseconds)
-{
-	pth_usleep(milliseconds * 1000);
-}
-
-static inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
-{
-	THREAD id;
-
-	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
-   {
-      pth_attr_set(pth_attr_of(id), PTH_ATTR_JOINABLE, 0);
-		return true;
-	} 
-   else 
-   {
-		return false;
-	}
-}
-
-static inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
-{
-	THREAD id;
-
-	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
-   {
-		return id;
-	} 
-   else 
-   {
-		return INVALID_THREAD_HANDLE;
-	}
-}
-
-/**
- * Set thread name
- */
-static inline void ThreadSetName(THREAD thread, const char *name)
-{
-}
-
-/**
- * Set name for current thread
- */
-static inline void ThreadSetName(const char *name)
-{
-   ThreadSetName(INVALID_THREAD_HANDLE, name);
-}
-
-/**
- * Exit thread
- */
-static inline void ThreadExit(void)
-{
-   pth_exit(nullptr);
-}
-
-static inline bool ThreadJoin(THREAD hThread)
-{
-   if (hThread == INVALID_THREAD_HANDLE)
-      return false;
-   return pth_join(hThread, NULL) != -1;
-}
-
-static inline void ThreadDetach(THREAD hThread)
-{
-   if (hThread == INVALID_THREAD_HANDLE)
-      return;
-   pth_attr_t a = pth_attr_of(hThread);
-   pth_attr_set(a, PTH_ATTR_JOINABLE, FALSE);
-}
-
-static inline uint32_t GetCurrentProcessId()
-{
-   return getpid();
-}
-
-static inline uint32_t GetCurrentThreadId()
-{
-   return (uint32_t)pth_self();
-}
-
-#else    /* not _WIN32 && not _USE_GNU_PTH */
+#else    /* not _WIN32 */
 
 /****************************************************************************/
 /* pthreads                                                                 */
@@ -1665,8 +1539,6 @@ class LIBNETXMS_EXPORTABLE Mutex
 private:
 #if defined(_WIN32)
    win_mutex_t m_mutex;
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_t m_mutex;
 #else
    pthread_mutex_t m_mutex;
 #endif
@@ -1676,8 +1548,6 @@ public:
    {
 #if defined(_WIN32)
       InitializeMutex(&m_mutex, 4000); // Under Windows we always use mutex with spin
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_init(&m_mutex);  // In libpth, recursive locking is explicitly supported, and no separate "fast" mutexes
 #else
       if (type == MutexType::FAST)
       {
@@ -1714,8 +1584,6 @@ public:
    {
 #if defined(_WIN32)
       DestroyMutex(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      // No cleanup for mutex
 #else
       pthread_mutex_destroy(&m_mutex);
 #endif
@@ -1728,8 +1596,6 @@ public:
    {
 #if defined(_WIN32)
       LockMutex((win_mutex_t*)&m_mutex, INFINITE);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire((pth_mutex_t*)&m_mutex, FALSE, nullptr);
 #else
       pthread_mutex_lock((pthread_mutex_t*)&m_mutex);
 #endif
@@ -1742,8 +1608,6 @@ public:
    {
 #if defined(_WIN32)
       return TryLockMutex((win_mutex_t*)&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      return pth_mutex_acquire((pth_mutex_t*)&m_mutex, TRUE, nullptr) != 0;
 #else
       return pthread_mutex_trylock((pthread_mutex_t*)&m_mutex) == 0;
 #endif
@@ -1765,13 +1629,6 @@ public:
 
 #if defined(_WIN32)
       return LockMutex((win_mutex_t*)&m_mutex, timeout);
-#elif defined(_USE_GNU_PTH)
-      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-      int retcode = pth_mutex_acquire((pth_mutex_t*)&m_mutex, FALSE, ev);
-      if ((retcode > 0) && (pth_event_status(ev) == PTH_STATUS_OCCURRED))
-         retcode = 0;
-      pth_event_free(ev, PTH_FREE_ALL);
-      return retcode > 0;
 #else
 #if HAVE_PTHREAD_MUTEX_TIMEDLOCK
    struct timeval now;
@@ -1816,8 +1673,6 @@ public:
    {
 #if defined(_WIN32)
       UnlockMutex((win_mutex_t*)&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_release((pth_mutex_t*)&m_mutex);
 #else
       pthread_mutex_unlock((pthread_mutex_t*)&m_mutex);
 #endif
@@ -1858,9 +1713,6 @@ private:
 #if defined(_WIN32)
    CRITICAL_SECTION m_mutex;
    CONDITION_VARIABLE m_condition;
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_t m_mutex;
-   pth_cond_t m_condition;
 #else
    pthread_mutex_t m_mutex;
    pthread_cond_t m_condition;
@@ -1874,9 +1726,6 @@ public:
 #if defined(_WIN32)
       InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
       InitializeConditionVariable(&m_condition);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_init(&m_mutex);
-      pth_cond_init(&m_condition);
 #else
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
       pthread_mutexattr_t a;
@@ -1897,8 +1746,6 @@ public:
    {
 #if defined(_WIN32)
       DeleteCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      // No cleanup for mutex or condition
 #else
       pthread_cond_destroy(&m_condition);
       pthread_mutex_destroy(&m_mutex);
@@ -1918,11 +1765,6 @@ public:
       else
          WakeConditionVariable(&m_condition);
       LeaveCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
-      m_isSet = true;
-      pth_cond_notify(&m_condition, m_broadcast);
-      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_lock(&m_mutex);
       m_isSet = true;
@@ -1948,11 +1790,6 @@ public:
          WakeConditionVariable(&m_condition);
       m_isSet = false;
       LeaveCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
-      pth_cond_notify(&m_condition, m_broadcast);
-      m_isSet = false;
-      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_lock(&m_mutex);
       if (m_broadcast)
@@ -1973,10 +1810,6 @@ public:
       EnterCriticalSection(&m_mutex);
       m_isSet = false;
       LeaveCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
-      m_isSet = false;
-      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_lock(&m_mutex);
       m_isSet = false;
@@ -2026,35 +1859,6 @@ public:
       }
 
       LeaveCriticalSection(&m_mutex);
-#elif defined(_USE_GNU_PTH)
-      pth_mutex_acquire(&m_mutex, FALSE, nullptr);
-      if (m_isSet)
-      {
-         success = true;
-         if (!m_broadcast)
-            m_isSet = false;
-      }
-      else
-      {
-         if (timeout != INFINITE)
-         {
-            pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-            int retcode = pth_cond_await(&m_condition, &m_mutex, ev);
-            if (retcode > 0)
-               success = (pth_event_status(ev) != PTH_STATUS_OCCURRED);
-            else
-               success = false;
-            pth_event_free(ev, PTH_FREE_ALL);
-         }
-         else
-         {
-            success = (pth_cond_await(&m_condition, &m_mutex, nullptr) > 0);
-         }
-
-         if (success && !m_broadcast)
-            m_isSet = false;
-      }
-      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_lock(&m_mutex);
       if (m_isSet)
@@ -2120,8 +1924,6 @@ class LIBNETXMS_EXPORTABLE RWLock
 private:
 #if HAVE_PTHREAD_RWLOCK
    pthread_rwlock_t m_rwlock;
-#elif defined(_USE_GNU_PTH)
-   pth_rwlock_t m_rwlock;
 #elif defined(_WIN32)
    win_rwlock_t m_rwlock;
 #else
@@ -2133,8 +1935,6 @@ public:
    {
 #if HAVE_PTHREAD_RWLOCK
       pthread_rwlock_init(&m_rwlock, nullptr);
-#elif defined(_USE_GNU_PTH)
-      pth_rwlock_init(&m_rwlock);
 #else
       InitializeRWLock(&m_rwlock);
 #endif
@@ -2144,8 +1944,6 @@ public:
    {
 #if HAVE_PTHREAD_RWLOCK
       pthread_rwlock_destroy(&m_rwlock);
-#elif defined(_USE_GNU_PTH)
-      // No cleanup for rwlock
 #else
       DestroyRWLock(&m_rwlock);
 #endif
@@ -2158,8 +1956,6 @@ public:
    {
 #if HAVE_PTHREAD_RWLOCK
       pthread_rwlock_rdlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
-#elif defined(_USE_GNU_PTH)
-      pth_rwlock_acquire(const_cast<pth_rwlock_t*>(&m_rwlock), PTH_RWLOCK_RD, FALSE, nullptr);
 #elif defined(_WIN32)
       ReadLockRWLock(const_cast<win_rwlock_t*>(&m_rwlock));
 #else
@@ -2174,8 +1970,6 @@ public:
    {
 #if HAVE_PTHREAD_RWLOCK
       pthread_rwlock_wrlock(&m_rwlock);
-#elif defined(_USE_GNU_PTH)
-      pth_rwlock_acquire(&m_rwlock, PTH_RWLOCK_RW, FALSE, nullptr);
 #else
       WriteLockRWLock(&m_rwlock);
 #endif
@@ -2188,8 +1982,6 @@ public:
    {
 #if HAVE_PTHREAD_RWLOCK
       pthread_rwlock_unlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
-#elif defined(_USE_GNU_PTH)
-      pth_rwlock_release(const_cast<pth_rwlock_t*>(&m_rwlock));
 #elif defined(_WIN32)
       UnlockRWLock(const_cast<win_rwlock_t*>(&m_rwlock));
 #else

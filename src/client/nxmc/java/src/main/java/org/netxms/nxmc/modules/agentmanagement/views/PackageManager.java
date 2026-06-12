@@ -287,11 +287,6 @@ public class PackageManager extends ConfigurationView
                            os = os + " " + matcher.group(2).substring(4);
                         platform = "AIX-powerpc";
                      }
-                     else if (matcher.group(2).equals("-hpux"))
-                     {
-                        os = "HP-UX";
-                        platform = "HP-UX" + matcher.group(3);
-                     }
                      else if (matcher.group(2).equals("-linux"))
                      {
                         os = "Linux";

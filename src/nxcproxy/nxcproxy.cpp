@@ -1,6 +1,6 @@
 /* 
 ** NetXMS client proxy
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
 
    InitNetXMSProcess(false);
 
-#if defined(__sun) || defined(_AIX) || defined(__hpux)
+#if defined(__sun) || defined(_AIX)
    signal(SIGPIPE, SIG_IGN);
    signal(SIGHUP, SIG_IGN);
    signal(SIGINT, SIG_IGN);

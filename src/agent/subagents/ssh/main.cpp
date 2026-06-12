@@ -33,7 +33,7 @@ uint32_t g_sshSessionIdleTimeout = 300;
 char g_sshConfigFile[MAX_PATH] = "";
 bool g_sshChannelReadBugWorkaround = false;
 
-#if defined(_WIN32) || _USE_GNU_PTH
+#ifdef _WIN32
 
 /**
  * Mutex creation callback
@@ -108,7 +108,7 @@ static bool SubagentInit(Config *config)
    if (!config->parseTemplate(_T("SSH"), s_cfgTemplate))
       return false;
 
-#if !defined(_WIN32) && !_USE_GNU_PTH
+#ifndef _WIN32
    ssh_threads_set_callbacks(ssh_threads_get_noop());
 #else
    ssh_threads_set_callbacks(&s_threadCallbacks);

@@ -869,7 +869,7 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
-#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+#if !defined(__sun) && !defined(_AIX)
 	sigaddset(&signals, SIGPIPE);
 #endif
 
@@ -921,8 +921,6 @@ static void LoadPlatformSubagent()
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
          un.sysname[i] = tolower(un.sysname[i]);
-      if (!strcmp(un.sysname, "hp-ux"))
-         strcpy(un.sysname, "hpux");
       _sntprintf(szName, MAX_PATH, _T("%hs.nsm"), un.sysname);
       LoadSubAgent(szName);
    }

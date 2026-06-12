@@ -64,7 +64,6 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 | `darwin/` | macOS | System metrics |
 | `netbsd/` | NetBSD | System metrics |
 | `openbsd/` | OpenBSD | System metrics |
-| `minix/` | MINIX | System metrics |
 
 ### Technology Subagents
 

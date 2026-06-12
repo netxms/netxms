@@ -48,9 +48,6 @@ SQueueBase::SQueueBase(size_t elementSize, size_t blockSize)
 #if defined(_WIN32)
    InitializeCriticalSectionAndSpinCount(&m_lock, 4000);
    InitializeConditionVariable(&m_wakeupCondition);
-#elif defined(_USE_GNU_PTH)
-   pth_mutex_init(&m_lock);
-   pth_cond_init(&m_wakeupCondition);
 #else
 
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
@@ -87,8 +84,6 @@ SQueueBase::~SQueueBase()
 
 #if defined(_WIN32)
    DeleteCriticalSection(&m_lock);
-#elif defined(_USE_GNU_PTH)
-   // No cleanup for mutex or condition
 #else
    pthread_mutex_destroy(&m_lock);
    pthread_cond_destroy(&m_wakeupCondition);
@@ -123,8 +118,6 @@ void SQueueBase::put(const void *element)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
-#elif defined(_USE_GNU_PTH)
-      pth_cond_notify(&m_wakeupCondition, false);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -160,8 +153,6 @@ void SQueueBase::insert(const void *element)
    {
 #if defined(_WIN32)
       WakeConditionVariable(&m_wakeupCondition);
-#elif defined(_USE_GNU_PTH)
-      pth_cond_notify(&m_wakeupCondition, false);
 #else
       pthread_cond_signal(&m_wakeupCondition);
 #endif
@@ -199,14 +190,6 @@ bool SQueueBase::getOrBlock(void *buffer, uint32_t timeout)
    {
 #if defined(_WIN32)
       if (!SleepConditionVariableCS(&m_wakeupCondition, &m_lock, timeout))
-         break;
-#elif defined(_USE_GNU_PTH)
-      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
-      int rc = pth_cond_await(&m_wakeupCondition, &m_lock, ev);
-      if ((rc > 0) && (pth_event_status(ev) == PTH_STATUS_OCCURRED))
-         rc = 0;   // Timeout
-      pth_event_free(ev, PTH_FREE_ALL);
-      if (rc == 0)
          break;
 #else
       int rc;

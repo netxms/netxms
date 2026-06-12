@@ -143,7 +143,6 @@ ENABLE_RTTI="no"
 STATIC_BUILD="no"
 ALL_STATIC="no"
 DBDRIVER_SELECTED="no"
-USE_PTH="no"
 BUILD_SERVER="no"
 BUILD_AGENT="no"
 BUILD_CLIENT="no"
@@ -234,7 +233,6 @@ HAVE_XEXT="no"
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
 DIST_BUILD="no"
-FORCE_NULL_SAFE_FREE="no"
 JEMALLOC_REQUIRED="no"
 MARIADB_MYSQL_CONFLICT="no"
 FORCE_INTERNAL_RWLOCK="no"
@@ -1099,7 +1097,7 @@ AC_ARG_WITH(dist,
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
+	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
 	AGENT_DIRS="libnxappc libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
@@ -1123,14 +1121,6 @@ AC_ARG_ENABLE(systemd,
 [
 	if test "x$enableval" = "xno"; then
 		SYSTEMD_SUPPORT="no"
-	fi
-])
-
-AC_ARG_ENABLE(null-free-check,
-[AS_HELP_STRING(--disable-null-free-check,[disable NULL checking in free() calls (only use for cross-compiling)])],
-[
-	if test "x$enableval" = "xno"; then
-		FORCE_NULL_SAFE_FREE="yes"
 	fi
 ])
 
@@ -1286,11 +1276,6 @@ if test $? = 0; then
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
 			STATIC_SUBAGENT_LIST="darwin $STATIC_SUBAGENT_LIST"
 			;;
-		Minix)
-			SUBAGENT_DIRS="$SUBAGENT_DIRS minix"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/minix/minix.la"
-			STATIC_SUBAGENT_LIST="minix $STATIC_SUBAGENT_LIST"
-			;;
 		*)
 			# unknown
 			;;
@@ -1326,9 +1311,6 @@ if test $? = 0; then
 			;;
 		Darwin)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS darwin"
-			;;
-		Minix)
-			SUBAGENT_DIRS="$SUBAGENT_DIRS minix"
 			;;
 		*)
 			# unknown
@@ -1493,16 +1475,8 @@ if test "x$PLATFORM" = "xSunOS"; then
 	AC_CHECK_PROG([CC], [cc], [cc])
 	AC_CHECK_PROG([CCC], [CC], [CC])
 fi
-if test "x$PLATFORM" = "xMinix"; then
-	AC_CHECK_PROG([CC], [clang], [clang])
-	AC_CHECK_PROG([CCC], [clang++], [clang++])
-fi
 if test "x$PLATFORM" = "xLinux" -a "x$ALLOW_CLANG" = "xyes"; then
-	AC_CHECK_PROG([CC], [clang-8], [clang-8])
-	AC_CHECK_PROG([CC], [clang-7], [clang-7])
 	AC_CHECK_PROG([CC], [clang], [clang])
-	AC_CHECK_PROG([CCC], [clang++-8], [clang++-8])
-	AC_CHECK_PROG([CCC], [clang++-7], [clang++-7])
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
 AC_PROG_CC
@@ -1574,11 +1548,6 @@ case "$PLATFORM" in
    Darwin)
       CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2 -D__STDC_WANT_LIB_EXT1__=1"
       ;;
-   Minix)
-      CPPFLAGS="$CPPFLAGS -I/usr/pkg/include"
-      LDFLAGS="$LDFLAGS -L/usr/pkg/lib"
-      USE_PTH="yes"
-      ;;
    *)
       ;;
 esac
@@ -1593,8 +1562,6 @@ esac
 #  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
 #--------------------------------------------------------------------
 
-AC_C_CONST
-AC_PROG_GCC_TRADITIONAL
 AC_C_BIGENDIAN
 
 AC_MSG_CHECKING(whether C compiler supports "unused" attribute)
@@ -2020,117 +1987,95 @@ AC_CHECK_FUNCS([gethostbyaddr_r gethostbyname_r gethostbyname2_r getaddrinfo get
 
 
 #--------------------------------------------------------------------
-# Check for threads library - either POSIX or GNU
+# Check for POSIX threads library
 #--------------------------------------------------------------------
 
-if test "x$USE_PTH" = "xyes"; then
-	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
-	CPPFLAGS="$CPPFLAGS -D_USE_GNU_PTH"
-	LIBS="$LIBS -lpth"
-else
-	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
+AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
-	PTHREAD_LIBS="error"
-	AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
-	AC_EGREP_CPP(yes,
-		[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
-			yes
-		#endif
-		], [
+PTHREAD_LIBS="error"
+AC_CHECK_LIB(pthread, pthread_attr_init,
+	PTHREAD_LIBS="-lpthread")
+if test "x$PTHREAD_LIBS" = "xerror"; then
+	AC_CHECK_LIB(pthreads, pthread_attr_init,
+		PTHREAD_LIBS="-lpthreads")
+fi
+if test "x$PTHREAD_LIBS" = "xerror"; then
+	AC_CHECK_FUNC(pthread_attr_init,
+		PTHREAD_LIBS="")
+fi
+
+if test "x$PTHREAD_LIBS" = "xerror"; then
+	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+fi
+LIBS="$LIBS $PTHREAD_LIBS"
+
+# Extensions to posix threads
+AC_CHECK_HEADERS([pthread_np.h],,,[
+#include <pthread.h>
+])
+AC_CHECK_FUNCS([pthread_mutex_timedlock pthread_cond_reltimedwait_np])
+AC_CHECK_FUNCS([pthread_setname_np pthread_threadid_np pthread_getthreadid_np pthread_getlwpid_np])
+
+# Check if pthread_setname_np accepts two arguments
+if test "$ac_cv_func_pthread_setname_np" = "yes"; then
+	AC_LANG_PUSH([C++])
+	AC_MSG_CHECKING(if pthread_setname_np accepts two arguments)
+	AC_COMPILE_IFELSE([
+		AC_LANG_PROGRAM([
+#include <pthread.h>
+#if HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+				],
+				[ pthread_setname_np(pthread_self(), "test"); ])],
+		[
 			AC_MSG_RESULT(yes)
-			PTHREAD_LIBS="-pthread"
-			if test "x$CXX" = "xc++"; then
-				# Quash clang's "-pthread unused during compilation" warnings
-				PTHREAD_LDFLAGS="-Wc,-Qunused-arguments"
-			fi
+			AC_DEFINE(PTHREAD_SETNAME_NP_2ARGS, 1, Define to 1 if ptread_setname_np accepts two arguments)
 		],
-		AC_MSG_RESULT(no))
-	if test "x$PTHREAD_LIBS" = "xerror"; then
-		AC_CHECK_LIB(pthread, pthread_attr_init,
-			PTHREAD_LIBS="-lpthread")
-	fi
-	if test "x$PTHREAD_LIBS" = "xerror"; then
-		AC_CHECK_LIB(pthreads, pthread_attr_init,
-			PTHREAD_LIBS="-lpthreads")
-	fi
-	if test "x$PTHREAD_LIBS" = "xerror"; then
-		AC_CHECK_FUNC(pthread_attr_init,
-			PTHREAD_LIBS="")
-	fi
+		[
+			AC_MSG_RESULT(no)
+		]
+	)
+	AC_LANG_POP([C++])
+fi
 
-	if test "x$PTHREAD_LIBS" = "xerror"; then
-		AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
-	fi
-	LIBS="$LIBS $PTHREAD_LIBS"
-
-	# Extensions to posix threads
-	AC_CHECK_HEADERS([pthread_np.h],,,[
-#include <pthread.h>
-	])
-	AC_CHECK_FUNCS([pthread_mutex_timedlock pthread_cond_reltimedwait_np])
-	AC_CHECK_FUNCS([pthread_setname_np pthread_threadid_np pthread_getthreadid_np pthread_getlwpid_np])
-
-	# Check if pthread_setname_np accepts two arguments
-	if test "$ac_cv_func_pthread_setname_np" = "yes"; then
-		AC_LANG_PUSH([C++])
-		AC_MSG_CHECKING(if pthread_setname_np accepts two arguments)
-		AC_COMPILE_IFELSE([
-			AC_LANG_PROGRAM([
+# Check for recursive mutexes
+AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
+AC_CHECK_DECLS([pthread_mutexattr_settype, PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, PTHREAD_MUTEX_ADAPTIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
 #include <pthread.h>
 #if HAVE_PTHREAD_NP_H
 #include <pthread_np.h>
 #endif
-					],
-					[ pthread_setname_np(pthread_self(), "test"); ])],
-			[
-				AC_MSG_RESULT(yes)
-				AC_DEFINE(PTHREAD_SETNAME_NP_2ARGS, 1, Define to 1 if ptread_setname_np accepts two arguments)
-			],
-			[
-				AC_MSG_RESULT(no)
-			]
-		)
-		AC_LANG_POP([C++])
-	fi
+])
 
-	# Check for recursive mutexes
-	AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
-	AC_CHECK_DECLS([pthread_mutexattr_settype, PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, PTHREAD_MUTEX_ADAPTIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
+# Check for read/write locks
+if test "x$FORCE_INTERNAL_RWLOCK" != "xyes"; then
+	# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
+	# additional defines
+	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
+	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
+		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
+			[AC_COMPILE_IFELSE([
+				AC_LANG_PROGRAM([
+#include <sys/types.h>
 #include <pthread.h>
-#if HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-	])
-
-	# Check for read/write locks
-	if test "x$FORCE_INTERNAL_RWLOCK" != "xyes"; then
-		# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
-		# additional defines
-		AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
-		if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
-			AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-				[AC_COMPILE_IFELSE([
+				],
+				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
+			ac_cv_struct_pthread_rw=yes, [
+				AC_COMPILE_IFELSE([
 					AC_LANG_PROGRAM([
+#define _XOPEN_SOURCE 500
 #include <sys/types.h>
 #include <pthread.h>
 					],
 					[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-				ac_cv_struct_pthread_rw=yes, [
-					AC_COMPILE_IFELSE([
-						AC_LANG_PROGRAM([
-#define _XOPEN_SOURCE 500
-#include <sys/types.h>
-#include <pthread.h>
-						],
-						[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-					ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
-					if test "$ac_cv_struct_pthread_rw" = "yes"; then
-						CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
-					fi
-					])])
-			if test "$ac_cv_struct_pthread_rw" = "yes"; then
-				AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
-			fi
+				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
+				if test "$ac_cv_struct_pthread_rw" = "yes"; then
+					CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+				fi
+				])])
+		if test "$ac_cv_struct_pthread_rw" = "yes"; then
+			AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
 		fi
 	fi
 fi
@@ -2205,9 +2150,9 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/ptrace.h sys/int_types.h])
+AC_CHECK_HEADERS([sys/ptrace.h])
 AC_CHECK_HEADERS([net/nh.h sys/sockio.h byteswap.h sys/sysctl.h sys/param.h])
-AC_CHECK_HEADERS([malloc.h stdbool.h endian.h sys/syscall.h])
+AC_CHECK_HEADERS([malloc.h endian.h sys/syscall.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
 #include <sys/types.h>
 #include <sys/time.h>
@@ -2248,28 +2193,6 @@ AC_LANG_POP([C++])
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([alloca.h])
-AC_MSG_CHECKING(for alloca)
-AC_LANG_PUSH([C++])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-]],[[
-	char *p = (char *)alloca(256);
-	return (p != NULL) ? 0 : 1;
-]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_ALLOCA,1,Define to 1 if alloca function is available)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(HAVE_ALLOCA,0,Define to 1 if alloca function is available)
-])
-AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------
@@ -2820,11 +2743,6 @@ AC_CHECK_SIZEOF(long)
 
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([bool],,,[
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-])
 AC_CHECK_TYPES([mode_t, off64_t, socklen_t, uuid_t],,,[
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -2995,28 +2913,6 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
-if test "x$FORCE_NULL_SAFE_FREE" = "xyes"; then
-	AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
-else
-	AC_MSG_CHECKING(whether free correctly handles NULL pointer)
-	AC_RUN_IFELSE(
-		[AC_LANG_PROGRAM([
-#include <stdlib.h>
-			], [
-				free(NULL);
-				return 0;
-			])
-		],
-		[
-			AC_MSG_RESULT(yes)
-			AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
-		],
-		[ AC_MSG_RESULT(no) ],
-		[ AC_MSG_RESULT(no) ]
-	)
-fi
-
-
 #--------------------------------------------------------------------
 # Checks for macros and definitions
 #--------------------------------------------------------------------
@@ -3154,7 +3050,6 @@ if test "x$FORCE_INTERNAL_GETOPT" = "xyes"; then
 	AC_DEFINE([USE_BUNDLED_GETOPT], [1], [Define to 1 if bundled getopt must be used])
 else
 	AC_CHECK_HEADERS([getopt.h])
-	AC_CHECK_LIB(gnugetopt, getopt_long)
 	AC_CHECK_DECLS([getopt_long],,,[
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -3342,20 +3237,6 @@ if test "x$PLATFORM" = "xOpenBSD"; then
                 AC_MSG_RESULT(no)
                 AC_DEFINE(KINFO_PROC_HAS_KP_PROC,0,Define to 1 if struct kinfo_proc has member kp_proc)
         ])
-fi
-
-
-#--------------------------------------------------------------------
-# Minix specific checks
-#--------------------------------------------------------------------
-
-if test "x$PLATFORM" = "xMinix"; then
-	AC_CHECK_HEADERS([minix/minlib.h])
-	AC_CHECK_TYPES([struct kinfo_proc2],,,[
-#if HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
-#endif
-	])
 fi
 
 
@@ -4168,7 +4049,7 @@ fi
 # ZeroMQ
 #--------------------------------------------------------------------
 
-if test "x$DISABLE_ZERMQ" != "xyes"; then
+if test "x$DISABLE_ZEROMQ" != "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
@@ -4679,7 +4560,7 @@ else
 	LDFLAGS_SUFFIX="$LDFLAGS_SUFFIX -R $RUNTIME_PREFIX/lib"
 fi
 
-LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $PTHREAD_LDFLAGS $LDFLAGS_SUFFIX"
+LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 if test "x$HAVE_PCRE2" = "xyes"; then
 	LIBS="$LIBS $PCRE2_LIBS"
 else
@@ -4965,7 +4846,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lldpd/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
-	src/agent/subagents/minix/Makefile
 	src/agent/subagents/mqtt/Makefile
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
