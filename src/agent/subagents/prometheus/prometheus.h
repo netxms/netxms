@@ -32,6 +32,9 @@
 struct MetricMapping
 {
    TCHAR prometheusName[256];
+#ifdef UNICODE
+   char prometheusNameMB[256];   // multibyte version for matching against incoming metric names
+#endif
    TCHAR netxmsName[256];
    StringList nameArguments;
    StringList valueArguments;
@@ -40,6 +43,9 @@ struct MetricMapping
    MetricMapping()
    {
       prometheusName[0] = 0;
+#ifdef UNICODE
+      prometheusNameMB[0] = 0;
+#endif
       netxmsName[0] = 0;
       useMetricValue = true;
    }
@@ -182,7 +188,7 @@ public:
 
 bool HandleWriteRequest(const char *data, size_t size);
 const ObjectArray<MetricMapping>& GetMetricMappings();
-void ProcessSample(const char *metricName, double value, std::function<const char* (const char*)> getLabel);
+void ProcessSample(const char *metricName, double value, const std::function<const char* (const char*)>& getLabel);
 void AppendEscapedValue(StringBuffer& result, const TCHAR *value);
 
 ObjectArray<MetricSample> *ParsePrometheusText(const char *data);
