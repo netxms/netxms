@@ -420,7 +420,7 @@ public class NetworkScanView extends View
 
       final InetAddressListElement range = new InetAddressListElement(start, end, zoneUIN, 0, "");
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Scanning network range"), this) {
+      Job job = new Job(i18n.tr("Scanning network range"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -460,7 +460,9 @@ public class NetworkScanView extends View
          {
             return i18n.tr("Network range scan failed");
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**

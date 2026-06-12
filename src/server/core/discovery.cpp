@@ -1921,6 +1921,186 @@ static void InteractiveScanProxyPortCallback(const InetAddress& addr, int32_t zo
    RecordInteractiveScanHit(addr, pctx->protocolFlag, rtt, pctx->port, pctx->snmpVersion, pctx->state);
 }
 
+// EtherNet/IP identity probe via proxy agent (defined in eip.cpp, no public header).
+CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status);
+
+/**
+ * Phase 2 protocol verification: confirm a NetXMS agent on the given address/port
+ * by attempting a connection (directly or through the zone proxy). An authentication
+ * challenge counts as confirmation - it proves an agent is listening.
+ */
+static bool VerifyAgentProtocol(const InetAddress& addr, uint16_t port, const shared_ptr<Node>& proxy)
+{
+   auto conn = make_shared<AgentConnectionEx>(0, addr, port, nullptr);
+   if (proxy != nullptr)
+   {
+      shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(proxy->getId());
+      if (tunnel != nullptr)
+         conn->setProxy(tunnel, proxy->getAgentSecret());
+      else
+         conn->setProxy(proxy->getIpAddress(), proxy->getAgentPort(), proxy->getAgentSecret());
+   }
+   conn->setCommandTimeout(g_agentCommandTimeout);
+
+   uint32_t rcc;
+   bool connected = conn->connect(g_serverKey, &rcc);
+   bool agentPresent = connected || (rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED);
+   if (connected)
+      conn->disconnect();
+   return agentPresent;
+}
+
+/**
+ * Phase 2 protocol verification: confirm Modbus TCP on the given address/port via a
+ * connection check (directly or through the zone proxy's Modbus proxy function).
+ */
+static bool VerifyModbusProtocol(const InetAddress& addr, uint16_t port, const shared_ptr<AgentConnectionEx>& proxyConn)
+{
+#if WITH_MODBUS
+   ModbusTransport *transport = (proxyConn != nullptr) ?
+         static_cast<ModbusTransport*>(new ModbusProxyTransport(proxyConn, addr, port, 255)) :
+         static_cast<ModbusTransport*>(new ModbusDirectTransport(addr, port, 255));
+   bool supported = (transport->checkConnection() == MODBUS_STATUS_SUCCESS);
+   delete transport;
+   return supported;
+#else
+   return false;
+#endif
+}
+
+/**
+ * Phase 2 protocol verification: confirm EtherNet/IP on the given address/port via a
+ * ListIdentity request (directly or through the zone proxy's EtherNet/IP proxy function).
+ */
+static bool VerifyEtherNetIPProtocol(const InetAddress& addr, uint16_t port, const shared_ptr<AgentConnectionEx>& proxyConn)
+{
+   EIP_Status status;
+   CIP_Identity *identity = (proxyConn != nullptr) ?
+         EIP_ListIdentityViaProxy(proxyConn, addr, port, &status) :
+         EIP_ListIdentity(addr, port, 5000, &status);
+   if (identity != nullptr)
+   {
+      MemFree(identity);
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Single phase 2 verification task: probe one protocol on one host, and on success
+ * record the confirmed protocol (which streams an updated snapshot to the client).
+ */
+struct InteractiveProtocolVerifyTask
+{
+   InteractiveScanState *state;
+   const InteractiveScanContext *context;
+   shared_ptr<Node> proxy;
+   shared_ptr<AgentConnectionEx> proxyConn;
+   InetAddress address;
+   uint32_t probe;     // NSCAN_HAS_AGENT / NSCAN_HAS_MODBUS / NSCAN_HAS_ETHERNET_IP
+   uint16_t port;
+   VolatileCounter *remaining;
+   Condition *completion;
+};
+
+/**
+ * Thread pool worker for one protocol verification task.
+ */
+static void InteractiveProtocolVerifyWorker(InteractiveProtocolVerifyTask *task)
+{
+   bool cancelled = task->context->cancelCheck && task->context->cancelCheck();
+   if (!cancelled)
+   {
+      bool confirmed = false;
+      switch(task->probe)
+      {
+         case NSCAN_HAS_AGENT:
+            confirmed = VerifyAgentProtocol(task->address, task->port, task->proxy);
+            break;
+         case NSCAN_HAS_MODBUS:
+            confirmed = VerifyModbusProtocol(task->address, task->port, task->proxyConn);
+            break;
+         case NSCAN_HAS_ETHERNET_IP:
+            confirmed = VerifyEtherNetIPProtocol(task->address, task->port, task->proxyConn);
+            break;
+      }
+      if (confirmed)
+         RecordInteractiveScanHit(task->address, task->probe, 0, task->port, 0, task->state);
+   }
+
+   if (InterlockedDecrement(task->remaining) == 0)
+      task->completion->set();
+   delete task;
+}
+
+/**
+ * Phase 2 of an interactive scan: for every host where a candidate TCP port was found
+ * open in phase 1, run a real protocol handshake (agent / Modbus / EtherNet/IP) and mark
+ * the protocol as supported only on success. Probes run in parallel on the discovery
+ * thread pool; this function blocks until all of them complete.
+ */
+static void VerifyInteractiveScanProtocols(InteractiveScanState& state, const InteractiveScanContext& context,
+      const shared_ptr<Node>& proxy, const shared_ptr<AgentConnectionEx>& proxyConn)
+{
+   if (!(context.flags & (NSCAN_PROBE_AGENT | NSCAN_PROBE_MODBUS | NSCAN_PROBE_ETHERNET_IP)))
+      return;
+
+   IntegerArray<uint16_t> agentPorts = GetWellKnownPorts(L"agent", context.zoneUIN);
+
+   // Build the task list from hosts with relevant open ports (snapshot under lock).
+   ObjectArray<InteractiveProtocolVerifyTask> tasks(64, 64, Ownership::False);
+   VolatileCounter remaining = 0;
+   Condition completion(true);
+
+   state.resultLock.lock();
+   state.records.forEach([&](const uint32_t& key, InteractiveScanRecord *record) -> EnumerationCallbackResult
+   {
+      InetAddress addr = InetAddress(key);
+
+      auto addTask = [&](uint32_t probe, uint16_t port)
+      {
+         auto task = new InteractiveProtocolVerifyTask();
+         task->state = &state;
+         task->context = &context;
+         task->proxy = proxy;
+         task->proxyConn = proxyConn;
+         task->address = addr;
+         task->probe = probe;
+         task->port = port;
+         task->remaining = &remaining;
+         task->completion = &completion;
+         tasks.add(task);
+         InterlockedIncrement(&remaining);
+      };
+
+      if (context.flags & NSCAN_PROBE_AGENT)
+      {
+         for(int i = 0; i < agentPorts.size(); i++)
+            if (record->openTcpPorts.contains(agentPorts.get(i)))
+            {
+               addTask(NSCAN_HAS_AGENT, agentPorts.get(i));
+               break;   // confirm on the first open agent port only
+            }
+      }
+      if ((context.flags & NSCAN_PROBE_MODBUS) && record->openTcpPorts.contains(MODBUS_TCP_DEFAULT_PORT))
+         addTask(NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT);
+      if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && record->openTcpPorts.contains(ETHERNET_IP_DEFAULT_PORT))
+         addTask(NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT);
+      return _CONTINUE;
+   });
+   state.resultLock.unlock();
+
+   if (tasks.isEmpty())
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, L"ScanNetworkRangeInteractive: phase 2 verifying %d protocol endpoint(s)", tasks.size());
+   for(int i = 0; i < tasks.size(); i++)
+      ThreadPoolExecute(g_discoveryThreadPool, InteractiveProtocolVerifyWorker, tasks.get(i));
+
+   // Wait unconditionally - workers hold pointers into our stack frame.
+   completion.wait(INFINITE);
+}
+
 /**
  * Run an interactive network range scan, driving the parallel
  * ScanAddressRangeICMP / TCPScanAddressRange / SnmpScanAddressRange primitives
@@ -2012,13 +2192,17 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
          recordProxyScanResult(NSCAN_HOST_REACHABLE, ScanAddressRangeICMPProxy(proxyConn.get(), from, blockEnd, InteractiveScanIcmpCallback,
                context.zoneUIN, proxy.get(), nullptr, &state));
 
+         // Phase 1 records only that the port is open (NSCAN_HAS_TCP_PORT_OPEN); the protocol
+         // is confirmed later by a real handshake in VerifyInteractiveScanProtocols. The probe
+         // flag passed to recordProxyScanResult still attributes any scan command failure to the
+         // originating probe for accurate per-probe warnings.
          if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
          {
             IntegerArray<uint16_t> agentPorts = GetWellKnownPorts(L"agent", context.zoneUIN);
             for(int i = 0; (i < agentPorts.size()) && !shouldCancel(); i++)
             {
                uint16_t port = agentPorts.get(i);
-               InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, port, 0 };
+               InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
                recordProxyScanResult(NSCAN_HAS_AGENT, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, port,
                      InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
             }
@@ -2026,14 +2210,14 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
 
          if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
          {
-            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT, 0 };
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, MODBUS_TCP_DEFAULT_PORT, 0 };
             recordProxyScanResult(NSCAN_HAS_MODBUS, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, MODBUS_TCP_DEFAULT_PORT,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
 
          if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && !shouldCancel())
          {
-            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT, 0 };
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, ETHERNET_IP_DEFAULT_PORT, 0 };
             recordProxyScanResult(NSCAN_HAS_ETHERNET_IP, ScanAddressRangeTCPProxy(proxyConn.get(), from, blockEnd, ETHERNET_IP_DEFAULT_PORT,
                   InteractiveScanProxyPortCallback, context.zoneUIN, proxy.get(), nullptr, &pctx));
          }
@@ -2089,26 +2273,28 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
    {
       ScanAddressRangeICMP(context.startAddress, context.endAddress, InteractiveScanIcmpCallback, nullptr, &state);
 
+      // Phase 1 records only that the port is open; protocol confirmation happens in
+      // VerifyInteractiveScanProtocols via a real handshake.
       if ((context.flags & NSCAN_PROBE_AGENT) && !shouldCancel())
       {
          IntegerArray<uint16_t> agentPorts = GetWellKnownPorts(L"agent", context.zoneUIN);
          for(int i = 0; (i < agentPorts.size()) && !shouldCancel(); i++)
          {
             uint16_t port = agentPorts.get(i);
-            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_AGENT, port, 0 };
+            InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, port, 0 };
             TCPScanAddressRange(context.startAddress, context.endAddress, port, InteractiveScanPortCallback, &pctx);
          }
       }
 
       if ((context.flags & NSCAN_PROBE_MODBUS) && !shouldCancel())
       {
-         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_MODBUS, MODBUS_TCP_DEFAULT_PORT, 0 };
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, MODBUS_TCP_DEFAULT_PORT, 0 };
          TCPScanAddressRange(context.startAddress, context.endAddress, MODBUS_TCP_DEFAULT_PORT, InteractiveScanPortCallback, &pctx);
       }
 
       if ((context.flags & NSCAN_PROBE_ETHERNET_IP) && !shouldCancel())
       {
-         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_ETHERNET_IP, ETHERNET_IP_DEFAULT_PORT, 0 };
+         InteractiveScanPortContext pctx{ &state, NSCAN_HAS_TCP_PORT_OPEN, ETHERNET_IP_DEFAULT_PORT, 0 };
          TCPScanAddressRange(context.startAddress, context.endAddress, ETHERNET_IP_DEFAULT_PORT, InteractiveScanPortCallback, &pctx);
       }
 
@@ -2142,6 +2328,10 @@ void ScanNetworkRangeInteractive(const InteractiveScanContext& context, uint32_t
          }
       }
    }
+
+   // Phase 2: verify agent / Modbus / EtherNet/IP protocols on hosts with matching open ports
+   if (!shouldCancel())
+      VerifyInteractiveScanProtocols(state, context, proxy, proxyConn);
 
    if (reportedHosts != nullptr)
       *reportedHosts = static_cast<uint32_t>(state.records.size());
