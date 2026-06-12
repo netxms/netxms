@@ -263,7 +263,8 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, const DCTa
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result, table.getSnmpContext());
+               *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result, table.getSnmpContext(),
+                  (table.getFlags() & DCF_ADD_INSTANCE_OID_COLUMN) != 0);
             }
 			   else
             {

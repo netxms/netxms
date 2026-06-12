@@ -206,10 +206,23 @@ uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, c
 }
 
 /**
+ * Set value of synthetic instance column (always at index 0) in last added table row to instance part of row OID
+ */
+static void SetInstanceOidCell(Table *table, const SNMP_ObjectId *rowOid, size_t baseOidLen, uint32_t index)
+{
+   TCHAR buffer[MAX_OID_LEN * 5];
+   if (rowOid != nullptr)
+      SnmpConvertOIDToText(rowOid->length() - baseOidLen, rowOid->value() + baseOidLen, buffer, MAX_OID_LEN * 5);
+   else
+      IntegerToString(index, buffer);
+   table->set(0, buffer);
+}
+
+/**
  * Read one row for SNMP table
  */
 static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen,
-         uint32_t index, const ObjectArray<SNMPTableColumnDefinition> &columns, Table *table)
+         uint32_t index, const ObjectArray<SNMPTableColumnDefinition> &columns, bool addInstanceOidColumn, Table *table)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    for(int i = 0; i < columns.size(); i++)
@@ -242,6 +255,9 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
           (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          table->addRow();
+         if (addInstanceOidColumn)
+            SetInstanceOidCell(table, rowOid, baseOidLen, index);
+         int columnOffset = addInstanceOidColumn ? 1 : 0;
          for(int i = 0; i < response->getNumVariables(); i++)
          {
             SNMP_Variable *v = response->getVariable(i);
@@ -253,13 +269,13 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
                   size_t size = v->getValueLength();
                   TCHAR *buffer = MemAllocString(size * 2 + 1);
                   BinToStr(v->getValue(), size, buffer);
-                  table->setPreallocated(i, buffer);
+                  table->setPreallocated(i + columnOffset, buffer);
                }
                else
                {
                   bool convert = false;
                   TCHAR buffer[1024];
-                  table->set(i, v->getValueAsPrintableString(buffer, 1024, &convert));
+                  table->set(i + columnOffset, v->getValueAsPrintableString(buffer, 1024, &convert));
                }
             }
          }
@@ -273,7 +289,7 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
  * Get table from SNMP node
  */
 uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
-         const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value)
+         const ObjectArray<SNMPTableColumnDefinition> &columns, bool addInstanceOidColumn, Table *value)
 {
    s_snmpTargetsLock.lock();
    shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
@@ -297,6 +313,8 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
       }, &oidList);
    if (rcc == SNMP_ERR_SUCCESS)
    {
+      if (addInstanceOidColumn)
+         value->addColumn(_T("INSTANCE"), DCI_DT_STRING, _T("Instance"), true);
       for(int i = 0; i < columns.size(); i++)
       {
          const SNMPTableColumnDefinition *c = columns.get(i);
@@ -307,7 +325,7 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
       size_t baseOidLen = SnmpGetOIDLength(oid);
       for(int i = 0; i < oidList.size(); i++)
       {
-         rcc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, value);
+         rcc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, addInstanceOidColumn, value);
          if (rcc != SNMP_ERR_SUCCESS)
             break;
       }

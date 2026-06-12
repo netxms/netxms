@@ -8286,13 +8286,29 @@ static size_t BuildSNMPTableCellOID(const DCTableColumn *c, const SNMP_ObjectId 
 }
 
 /**
+ * Set value of synthetic instance column (always at index 0) in last added table row to instance part of row OID
+ */
+static void SetInstanceOidCell(Table *table, const SNMP_ObjectId *rowOid, size_t baseOidLen, uint32_t index)
+{
+   wchar_t buffer[MAX_OID_LEN * 5];
+   if (rowOid != nullptr)
+      SnmpConvertOIDToText(rowOid->length() - baseOidLen, rowOid->value() + baseOidLen, buffer, MAX_OID_LEN * 5);
+   else
+      IntegerToString(index, buffer);
+   table->set(0, buffer);
+}
+
+/**
  * Read SNMP table row using individual GET requests (one per column).
  * Used as fallback when multi-varbind request returns tooBig error.
  */
 static uint32_t ReadSNMPTableRowOneByOne(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen,
-         uint32_t index, const ObjectArray<DCTableColumn> &columns, Table *table)
+         uint32_t index, const ObjectArray<DCTableColumn> &columns, Table *table, bool addInstanceOidColumn)
 {
    table->addRow();
+   if (addInstanceOidColumn)
+      SetInstanceOidCell(table, rowOid, baseOidLen, index);
+   int columnOffset = addInstanceOidColumn ? 1 : 0;
    for (int i = 0; i < columns.size(); i++)
    {
       const DCTableColumn *c = columns.get(i);
@@ -8311,7 +8327,7 @@ static uint32_t ReadSNMPTableRowOneByOne(SNMP_Transport *snmp, const SNMP_Object
       {
          if ((singleResponse->getErrorCode() == SNMP_PDU_ERR_SUCCESS) && (singleResponse->getNumVariables() > 0))
          {
-            SetTableCellFromSNMPVariable(table, i, singleResponse->getVariable(0), c);
+            SetTableCellFromSNMPVariable(table, i + columnOffset, singleResponse->getVariable(0), c);
          }
          delete singleResponse;
       }
@@ -8324,7 +8340,7 @@ static uint32_t ReadSNMPTableRowOneByOne(SNMP_Transport *snmp, const SNMP_Object
 }
 
 static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen,
-         uint32_t index, const ObjectArray<DCTableColumn> &columns, Table *table)
+         uint32_t index, const ObjectArray<DCTableColumn> &columns, Table *table, bool addInstanceOidColumn)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    for(int i = 0; i < columns.size(); i++)
@@ -8346,15 +8362,18 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
       {
          delete response;
          nxlog_debug_tag(_T("snmp.table"), 5, _T("SNMP tooBig response for table row, retrying with individual GET requests"));
-         return ReadSNMPTableRowOneByOne(snmp, rowOid, baseOidLen, index, columns, table);
+         return ReadSNMPTableRowOneByOne(snmp, rowOid, baseOidLen, index, columns, table, addInstanceOidColumn);
       }
       if (((int)response->getNumVariables() >= columns.size()) &&
           (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          table->addRow();
+         if (addInstanceOidColumn)
+            SetInstanceOidCell(table, rowOid, baseOidLen, index);
+         int columnOffset = addInstanceOidColumn ? 1 : 0;
          for(int i = 0; i < response->getNumVariables(); i++)
          {
-            SetTableCellFromSNMPVariable(table, i, response->getVariable(i), columns.get(i));
+            SetTableCellFromSNMPVariable(table, i + columnOffset, response->getVariable(i), columns.get(i));
          }
       }
       delete response;
@@ -8365,7 +8384,7 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context)
+DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context, bool addInstanceOidColumn)
 {
    char contextUtf8[256];
    SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
@@ -8382,6 +8401,8 @@ DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, 
    if (rc == SNMP_ERR_SUCCESS)
    {
       *table = make_shared<Table>();
+      if (addInstanceOidColumn)
+         (*table)->addColumn(L"INSTANCE", DCI_DT_STRING, L"Instance", true);
       for(int i = 0; i < columns.size(); i++)
       {
          const DCTableColumn *c = columns.get(i);
@@ -8392,7 +8413,7 @@ DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, 
       size_t baseOidLen = SnmpGetOIDLength(oid);
       for(int i = 0; i < oidList.size(); i++)
       {
-         rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, table->get());
+         rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, table->get(), addInstanceOidColumn);
          if (rc != SNMP_ERR_SUCCESS)
          {
             table->reset();

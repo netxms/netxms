@@ -28,6 +28,9 @@ import org.netxms.base.NXCPMessage;
  */
 public class DataCollectionTable extends DataCollectionObject
 {
+   // DCI flags
+   public static final int DCF_ADD_INSTANCE_OID_COLUMN = 0x200000;
+
    // Instance discovery methods
    public static final int IDM_NONE = 0;
    public static final int IDM_AGENT_LIST = 1;
@@ -35,7 +38,7 @@ public class DataCollectionTable extends DataCollectionObject
    public static final int IDM_SNMP_WALK_VALUES = 3;
    public static final int IDM_SNMP_WALK_OIDS = 4;
    public static final int IDM_SCRIPT = 5;
-   
+
 	private String instanceColumn;
 	private List<ColumnDefinition> columns;
 	private List<TableThreshold> thresholds;
@@ -171,6 +174,29 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		this.instanceColumn = instanceColumn;
 	}
+
+   /**
+    * Check if synthetic instance column containing instance part of SNMP OID should be added to collected table.
+    *
+    * @return true if instance OID column is enabled
+    */
+   public boolean isInstanceOidColumnEnabled()
+   {
+      return (flags & DCF_ADD_INSTANCE_OID_COLUMN) != 0;
+   }
+
+   /**
+    * Enable or disable synthetic instance column containing instance part of SNMP OID.
+    *
+    * @param enable true to enable instance OID column
+    */
+   public void setInstanceOidColumnEnabled(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_ADD_INSTANCE_OID_COLUMN;
+      else
+         flags &= ~DCF_ADD_INSTANCE_OID_COLUMN;
+   }
 
 	/**
 	 * @return the columns

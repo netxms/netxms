@@ -36,7 +36,7 @@ void UpdateSnmpTarget(shared_ptr<SNMPTarget> target);
 uint32_t GetSnmpValue(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
          TCHAR *value, int interpretRawValue);
 uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, const TCHAR *oid,
-         const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value);
+         const ObjectArray<SNMPTableColumnDefinition> &columns, bool addInstanceOidColumn, Table *value);
 
 void LoadProxyConfiguration();
 void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration& zone);
@@ -153,6 +153,7 @@ private:
 	Timestamp m_lastPollTime;
    uint32_t m_backupProxyId;
    ObjectArray<SNMPTableColumnDefinition> *m_tableColumns;
+   bool m_addInstanceOidColumn;
    StringList m_schedules;
    ScheduleType m_scheduleType;
    time_t m_tLastCheck;
@@ -177,6 +178,7 @@ public:
    Timestamp getLastPollTime() { return m_lastPollTime; }
    uint32_t getBackupProxyId() const { return m_backupProxyId; }
    const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
+   bool isInstanceOidColumnEnabled() const { return m_addInstanceOidColumn; }
 
    bool updateAndSave(const shared_ptr<DataCollectionItem>& item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements);
@@ -297,6 +299,7 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
       m_snmpVersion = SNMP_VersionFromInt(msg.getFieldAsInt16(extBaseId));
       if (m_type == DCO_TYPE_TABLE)
       {
+         m_addInstanceOidColumn = msg.getFieldAsBoolean(extBaseId + 2);
          int count = msg.getFieldAsInt32(extBaseId + 9);
          uint32_t fieldId = extBaseId + 10;
          m_tableColumns = new ObjectArray<SNMPTableColumnDefinition>(count, 16, Ownership::True);
@@ -309,12 +312,14 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
       else
       {
          m_tableColumns = nullptr;
+         m_addInstanceOidColumn = false;
       }
    }
    else
    {
       m_snmpVersion = SNMP_VERSION_DEFAULT;
       m_tableColumns = nullptr;
+      m_addInstanceOidColumn = false;
    }
    extBaseId += 1000;
 
@@ -337,7 +342,7 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg
 }
 
 /**
- * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type
+ * Data is selected in this order: server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type,add_instance_oid_column
  */
 DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
 {
@@ -354,6 +359,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_backupProxyId = DBGetFieldUInt32(hResult, row, 10);
    m_snmpVersion = SNMP_VersionFromInt(DBGetFieldLong(hResult, row, 11));
    m_scheduleType = static_cast<ScheduleType>(DBGetFieldInt32(hResult, row, 12));
+   m_addInstanceOidColumn = DBGetFieldInt32(hResult, row, 13) != 0;
    m_busy = false;
    m_disabled = false;
    m_tLastCheck = 0;
@@ -431,6 +437,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpVersion = item->m_snmpVersion;
    m_snmpRawValueType = item->m_snmpRawValueType;
    m_backupProxyId = item->m_backupProxyId;
+   m_addInstanceOidColumn = item->m_addInstanceOidColumn;
    if (item->m_tableColumns != nullptr)
    {
       m_tableColumns = new ObjectArray<SNMPTableColumnDefinition>(item->m_tableColumns->size(), 16, Ownership::True);
@@ -467,6 +474,7 @@ bool DataCollectionItem::updateAndSave(const shared_ptr<DataCollectionItem>& ite
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) ||
        (m_lastPollTime < item->m_lastPollTime) || (m_backupProxyId != item->m_backupProxyId) ||
+       (m_addInstanceOidColumn != item->m_addInstanceOidColumn) ||
        (item->m_tableColumns != nullptr) || (m_tableColumns != nullptr) ||
        (item->m_scheduleType != m_scheduleType) || (item->m_schedules.size() > 0) ||
        (m_schedules.size() > 0))   // Do not do actual compare for table columns
@@ -482,6 +490,7 @@ bool DataCollectionItem::updateAndSave(const shared_ptr<DataCollectionItem>& ite
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
       m_backupProxyId = item->m_backupProxyId;
+      m_addInstanceOidColumn = item->m_addInstanceOidColumn;
 
       delete m_tableColumns;
       if (item->m_tableColumns != nullptr)
@@ -524,8 +533,8 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
          statements->insertItem = DBPrepare(hdb,
                   _T("INSERT INTO dc_config (type,origin,name,polling_interval,")
                   _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,")
-                  _T("snmp_version,schedule_type,server_id,dci_id)")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                  _T("snmp_version,schedule_type,add_instance_oid_column,server_id,dci_id)")
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       hStmt = statements->insertItem;
    }
@@ -537,7 +546,7 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
                     _T("UPDATE dc_config SET type=?,origin=?,name=?,")
                     _T("polling_interval=?,last_poll=?,snmp_port=?,")
                     _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=?,")
-                    _T("snmp_version=?,schedule_type=? WHERE server_id=? AND dci_id=?"));
+                    _T("snmp_version=?,schedule_type=?,add_instance_oid_column=? WHERE server_id=? AND dci_id=?"));
       }
       hStmt = statements->updateItem;
    }
@@ -556,8 +565,9 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
    DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_backupProxyId);
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (int32_t)m_snmpVersion);
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (int32_t)m_scheduleType);
-	DBBind(hStmt, 12, DB_SQLTYPE_BIGINT, m_serverId);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_addInstanceOidColumn ? 1 : 0);
+	DBBind(hStmt, 13, DB_SQLTYPE_BIGINT, m_serverId);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
 
    if (!DBExecute(hStmt))
       return;
@@ -1272,7 +1282,7 @@ static DataElement *CollectDataFromSNMP(const DataCollectionItem& dci)
       if (columns != nullptr)
       {
          Table *value = new Table();
-         uint32_t status = GetSnmpTable(dci.getSnmpTargetGuid(), dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(), *columns, value);
+         uint32_t status = GetSnmpTable(dci.getSnmpTargetGuid(), dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(), *columns, dci.isInstanceOidColumnEnabled(), value);
          e = new DataElement(dci, value, status);
       }
       else
@@ -1573,7 +1583,7 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
 static void LoadState()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type FROM dc_config"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type,add_instance_oid_column FROM dc_config"));
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);

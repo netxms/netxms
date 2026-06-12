@@ -75,6 +75,8 @@ import org.netxms.nxmc.modules.datacollection.dialogs.EditColumnDialog;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
@@ -93,6 +95,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
 	private TableViewer columnList = null;
+   private Composite warningArea;
+   private Button checkInstanceOidColumn;
    private Button queryButton;
 	private Button addButton;
 	private Button modifyButton;
@@ -138,6 +142,41 @@ public class TableColumns extends AbstractDCIPropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+
+      warningArea = new Composite(dialogArea, SWT.BORDER);
+      warningArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+      GridLayout warningLayout = new GridLayout(2, false);
+      warningArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      warningArea.setLayout(warningLayout);
+
+      Label warningImage = new Label(warningArea, SWT.NONE);
+      warningImage.setBackground(warningArea.getBackground());
+      warningImage.setImage(ResourceManager.getImage("icons/warning.png"));
+      warningImage.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false));
+      warningImage.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            warningImage.getImage().dispose();
+         }
+      });
+
+      Label warningText = new Label(warningArea, SWT.WRAP);
+      warningText.setBackground(warningArea.getBackground());
+      warningText.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
+      warningText.setText(i18n.tr("No instance (key) column defined. Rows of collected tables cannot be matched between collections, and row history will not be available."));
+      warningText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      checkInstanceOidColumn = new Button(dialogArea, SWT.CHECK);
+      checkInstanceOidColumn.setText(i18n.tr("Add &instance part of SNMP OID as first table column"));
+      checkInstanceOidColumn.setSelection(dci.isInstanceOidColumnEnabled());
+      checkInstanceOidColumn.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            updateWarningVisibility();
+         }
+      });
 
       Composite columnListArea = new Composite(dialogArea, SWT.NONE);
       GridData gd = new GridData();
@@ -327,8 +366,33 @@ public class TableColumns extends AbstractDCIPropertyPage
 		});
 		editor.addListener(listener);
 
+      updateWarningVisibility();
+
       return dialogArea;
 	}
+
+   /**
+    * Update visibility of "no instance column" warning. Warning is shown if no column is marked as instance column and
+    * automatic instance OID column is not enabled.
+    */
+   private void updateWarningVisibility()
+   {
+      boolean hasInstanceColumn = checkInstanceOidColumn.getSelection();
+      if (!hasInstanceColumn)
+      {
+         for(ColumnDefinition c : columns)
+         {
+            if (c.isInstanceColumn())
+            {
+               hasInstanceColumn = true;
+               break;
+            }
+         }
+      }
+      warningArea.setVisible(!hasInstanceColumn);
+      ((GridData)warningArea.getLayoutData()).exclude = hasInstanceColumn;
+      warningArea.getParent().layout(true, true);
+   }
 
 	/**
 	 * Setup threshold list control
@@ -383,6 +447,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 				columns.remove(it.next());
 			}
          columnList.refresh();
+         updateWarningVisibility();
 		}
 	}
 
@@ -399,6 +464,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 			if (dlg.open() == Window.OK)
 			{
 				columnList.update(column, null);
+            updateWarningVisibility();
 			}
 		}
 	}
@@ -415,6 +481,7 @@ public class TableColumns extends AbstractDCIPropertyPage
          columns.add(column);
          columnList.refresh();
 	      columnList.setSelection(new StructuredSelection(column));
+         updateWarningVisibility();
 		}
 	}
 
@@ -482,6 +549,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 
 		dci.getColumns().clear();
 		dci.getColumns().addAll(columns);
+      dci.setInstanceOidColumnEnabled(checkInstanceOidColumn.getSelection());
 		editor.modify();
 		return true;
 	}
@@ -569,6 +637,7 @@ public class TableColumns extends AbstractDCIPropertyPage
                      columns.add(c);
 						}
                   columnList.refresh();
+                  updateWarningVisibility();
 					});
 				}
 				catch(Exception e)
@@ -659,6 +728,7 @@ public class TableColumns extends AbstractDCIPropertyPage
                      columns.add(c);
                   }
                   columnList.refresh();
+                  updateWarningVisibility();
                });
             }
             catch(Exception e)

@@ -4498,7 +4498,7 @@ public:
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
    DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context = nullptr);
-   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context = nullptr);
+   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context = nullptr, bool addInstanceOidColumn = false);
    DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context = nullptr);
    DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values, const TCHAR *context = nullptr);
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);

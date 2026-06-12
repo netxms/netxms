@@ -1103,18 +1103,22 @@ void DCTable::mergeValues(Table *dest, Table *src, int count) const
 void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
 {
    lock();
+   // Synthetic instance OID column, if enabled, occupies index 0 in collected table and is not part of configured column list.
+   // Check actual presence of that column because table can be collected by old agent that does not support it.
+   int baseIndex = ((m_flags & DCF_ADD_INSTANCE_OID_COLUMN) && (m_source == DS_SNMP_AGENT) &&
+                    (t->getNumColumns() > 0) && !_tcscmp(t->getColumnName(0), _T("INSTANCE"))) ? 1 : 0;
    for(int i = 0; i < m_columns->size(); i++)
    {
       DCTableColumn *col = m_columns->get(i);
       int index = t->getColumnIndex(col->getName());
       if (index == -1)
       {
-         t->insertColumn(i, col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
+         t->insertColumn(i + baseIndex, col->getName(), col->getDataType(), col->getDisplayName(), col->isInstanceColumn());
       }
-      else if (_tcscmp(t->getColumnName(i), col->getName()) != 0)
+      else if (_tcscmp(t->getColumnName(i + baseIndex), col->getName()) != 0)
       {
-         t->swapColumns(i, index);
-         TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
+         t->swapColumns(i + baseIndex, index);
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(i + baseIndex);
          if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());
@@ -1124,7 +1128,7 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
       }
       else
       {
-         TableColumnDefinition *cd = t->getColumnDefinitions().get(i);
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(i + baseIndex);
          if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());

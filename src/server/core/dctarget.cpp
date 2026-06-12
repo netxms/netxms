@@ -2386,6 +2386,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->msg->setField(info->extraInfoFieldId++, static_cast<int16_t>(dco->getSnmpVersion()));
       if (dco->getType() == DCO_TYPE_TABLE)
       {
+         info->msg->setField(info->extraInfoFieldId + 1, (dco->getFlags() & DCF_ADD_INSTANCE_OID_COLUMN) != 0);  // field at extra info base + 2
          info->extraInfoFieldId += 8;
          const ObjectArray<DCTableColumn> &columns = static_cast<const DCTable*>(dco)->getColumns();
          int count = std::min(columns.size(), 99);

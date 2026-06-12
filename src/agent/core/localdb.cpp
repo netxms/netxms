@@ -154,6 +154,7 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  snmp_raw_type integer not null,")
    _T("  backup_proxy_id integer null,")
    _T("  schedule_type integer not null,")
+   _T("  add_instance_oid_column integer not null,")
    _T("  PRIMARY KEY(server_id,dci_id))"),
 
    _T("CREATE TABLE dc_queue (")

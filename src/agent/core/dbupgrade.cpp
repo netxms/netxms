@@ -38,6 +38,17 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V19 to V20
+ */
+static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE dc_config ADD add_instance_oid_column integer")));
+   CHK_EXEC(Query(_T("UPDATE dc_config SET add_instance_oid_column=0")));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 20));
+   return TRUE;
+}
+
+/**
  * Upgrade from V18 to V19
  */
 static BOOL H_UpgradeFromV18(int currVersion, int newVersion)
@@ -579,6 +590,7 @@ static struct
    { 16, 17, H_UpgradeFromV16 },
    { 17, 18, H_UpgradeFromV17 },
    { 18, 19, H_UpgradeFromV18 },
+   { 19, 20, H_UpgradeFromV19 },
    { 0, 0, nullptr }
 };
 
