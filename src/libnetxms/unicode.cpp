@@ -373,11 +373,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *src)
       return nullptr;
    size_t len = strlen(src) + 1;
    WCHAR *out = MemAllocStringW(len);
-#if HAVE_MBSTOWCS
    mbstowcs(out, src, len);
-#else
-   mb_to_wchar(src, -1, out, len);
-#endif
    return out;
 #endif
 }
@@ -436,11 +432,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *src)
       return nullptr;
    size_t len = wcslen(src) * 3 + 1;  // add extra bytes in case of UTF-8 as target encoding
    char *out = MemAllocStringA(len);
-#if HAVE_WCSTOMBS
    wcstombs(out, src, len);
-#else
-   wchar_to_mb(src, -1, out, len);
-#endif
    return out;
 #endif
 }
@@ -1347,11 +1339,7 @@ int LIBNETXMS_EXPORTABLE nx_vwscanf(const wchar_t *format, va_list args)
 {
    wchar_t localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
    wchar_t *fmt = ReplaceFormatSpecs(format, localBuffer);
-#if HAVE_VWSCANF
    int rc = vwscanf(fmt, args);
-#else
-#error vwscanf not available on this platform
-#endif
    FreeFormatBuffer(fmt);
    return rc;
 }
@@ -1363,11 +1351,7 @@ int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const wchar_t *format, va_list ar
 {
    wchar_t localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
    wchar_t *fmt = ReplaceFormatSpecs(format, localBuffer);
-#if HAVE_VFWSCANF
    int rc = vfwscanf(fp, fmt, args);
-#else
-#error vfwscanf not available on this platform
-#endif
    FreeFormatBuffer(fmt);
    return rc;
 }
@@ -1379,11 +1363,7 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const wchar_t *str, const wchar_t *format, 
 {
    wchar_t localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
    wchar_t *fmt = ReplaceFormatSpecs(format, localBuffer);
-#if HAVE_VSWSCANF
    int rc = vswscanf(str, fmt, args);
-#else
-#error vswscanf not available on this platform
-#endif
    FreeFormatBuffer(fmt);
    return rc;
 }

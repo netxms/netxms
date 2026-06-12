@@ -66,7 +66,6 @@ include_HEADERS = \
 	nxvault.h \
 	pugiconfig.h \
 	pugixml.h \
-	rwlock.h \
 	socket_listener.h \
 	symbol_visibility.h \
 	tls_conn.h \

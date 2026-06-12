@@ -393,7 +393,7 @@ int main(int argc, char* argv[])
 {
    InitNetXMSProcess(false);
 
-#if HAVE_LIBEDIT && HAVE_FWIDE
+#if HAVE_LIBEDIT
    // Try to switch stdout to byte oriented mode
    fwide(stdout, -1);
 #endif

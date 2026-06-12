@@ -235,7 +235,6 @@ EXEC_LIBS=""
 DIST_BUILD="no"
 JEMALLOC_REQUIRED="no"
 MARIADB_MYSQL_CONFLICT="no"
-FORCE_INTERNAL_RWLOCK="no"
 LIBNXAGENT_LIBS=""
 LIBNXSRV_LIBS=""
 JAR_BUILD="yes"
@@ -429,12 +428,6 @@ AC_ARG_WITH(internal-getopt,
 [AS_HELP_STRING(--with-internal-getopt,force use of bundled getopt)],
 [
 	FORCE_INTERNAL_GETOPT="yes"
-])
-
-AC_ARG_WITH(internal-rwlock,
-[AS_HELP_STRING(--with-internal-rwlock,force use of bundled read/write lock implementation)],
-[
-	FORCE_INTERNAL_RWLOCK="yes"
 ])
 
 AC_ARG_WITH(all-static,
@@ -1488,25 +1481,6 @@ if test "x$CXX" = "xg++"; then
 		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
 	fi
 fi
-if test "x$CXX" = "xclang++"; then
-	AC_LANG_PUSH([C++])
-
-	AC_MSG_CHECKING(whether -lc++ is needed)
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(no) ],
-		[
-			OLDLIBS="$LIBS"
-			LIBS="$LIBS -lc++"
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ AC_MSG_RESULT(yes) ],
-				[
-					LIBS="$OLDLIBS"
-					AC_MSG_RESULT(no)
-				])
-		])
-
-	AC_LANG_POP([C++])
-fi
 AM_PROG_AS
 AC_PROG_INSTALL
 AC_PROG_LEX(noyywrap)
@@ -1563,16 +1537,6 @@ esac
 #--------------------------------------------------------------------
 
 AC_C_BIGENDIAN
-
-AC_MSG_CHECKING(whether C compiler supports "unused" attribute)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ static int __attribute__ ((unused)) z = 0; ]], [[ ]])],
-	[
-		AC_DEFINE(UNUSED_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports "unused" attribute)
-		AC_MSG_RESULT(yes)
-	],
-	[
-		AC_MSG_RESULT(no)
-])
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
@@ -1943,10 +1907,6 @@ if test -d /usr/local/include; then
 	fi
 fi
 
-if test -d /usr/kerberos/include; then
-	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-fi
-
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
@@ -1957,33 +1917,6 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_LIB(dl, dlopen)
-
-
-#--------------------------------------------------------------------
-# Checks for resolver functions
-#--------------------------------------------------------------------
-
-AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
-
-if test "x$ac_cv_lib_nsl_gethostbyname" != "xyes" && test "x$ac_cv_func_gethostbyname" != "xyes" ; then
-	AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(socket, gethostbyname)])
-fi
-
-if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
-	AC_MSG_CHECKING([if we can include libnsl + libsocket])
-	LIBS="-lnsl -lsocket $LIBS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[(void) gethostbyname]])],[my_ac_link_result=yes],[my_ac_link_result=no ])
-	if test "$my_ac_link_result" = "no" ; then
-		AC_MSG_RESULT([failure])
-		AC_MSG_ERROR([unable to use gethostbyname()])
-	else
-		AC_MSG_RESULT([success])
-	fi
-fi
-
-AC_CHECK_FUNCS([gethostbyaddr_r gethostbyname_r gethostbyname2_r getaddrinfo getnameinfo])
 
 
 #--------------------------------------------------------------------
@@ -2039,46 +1972,11 @@ if test "$ac_cv_func_pthread_setname_np" = "yes"; then
 	AC_LANG_POP([C++])
 fi
 
-# Check for recursive mutexes
-AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
-AC_CHECK_DECLS([pthread_mutexattr_settype, PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, PTHREAD_MUTEX_ADAPTIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
+# Check for adaptive mutexes (glibc extension)
+AC_CHECK_DECLS([PTHREAD_MUTEX_ADAPTIVE_NP],,,[
 #include <pthread.h>
-#if HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
 ])
 
-# Check for read/write locks
-if test "x$FORCE_INTERNAL_RWLOCK" != "xyes"; then
-	# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
-	# additional defines
-	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
-	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
-		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-			[AC_COMPILE_IFELSE([
-				AC_LANG_PROGRAM([
-#include <sys/types.h>
-#include <pthread.h>
-				],
-				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-			ac_cv_struct_pthread_rw=yes, [
-				AC_COMPILE_IFELSE([
-					AC_LANG_PROGRAM([
-#define _XOPEN_SOURCE 500
-#include <sys/types.h>
-#include <pthread.h>
-					],
-					[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;])],
-				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
-				if test "$ac_cv_struct_pthread_rw" = "yes"; then
-					CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
-				fi
-				])])
-		if test "$ac_cv_struct_pthread_rw" = "yes"; then
-			AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
-		fi
-	fi
-fi
 
 AC_LANG_PUSH([C++])
 
@@ -2846,11 +2744,6 @@ AC_CHECK_DECLS([daemon, explicit_bzero, memset_s],,,[
 ])
 
 
-# Do not use inet_pton on Solaris as it has binary compatibility problems
-if test "$PLATFORM" != "SunOS"; then
-	AC_CHECK_FUNCS([inet_pton])
-fi
-
 # Check if strerror_r is POSIX-compliant
 if test "$ac_cv_func_strerror_r" = "yes"; then
 	AC_MSG_CHECKING(if strerror_r is POSIX compliant)
@@ -2896,22 +2789,6 @@ AC_CHECK_FUNCS([cfsetospeed cfsetispeed])
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
 AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
-
-AC_MSG_CHECKING(whether snprintf returns required buffer size)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
-#include <stdio.h>
-#include <string.h>
-     ], [
-     return !(snprintf(NULL, 0, "test: %d", 1000) >= 10);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(SNPRINTF_RETURNS_REQUIRED_SIZE, 1, Define to 1 if snprintf returns required buffer size in case of truncation)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
 
 #--------------------------------------------------------------------
 # Checks for macros and definitions
@@ -3252,43 +3129,13 @@ AC_CHECK_HEADERS([iconv.h widec.h])
 AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 ])
-AC_CHECK_FUNCS([wcslwr fputws putws fwide vwscanf wcslcpy wcslcat])
-AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([mbstowcs mbsrtowcs wcsftime wcscasestr])
-AC_CHECK_FUNCS([swprintf])
+AC_CHECK_FUNCS([wcslwr putws wcslcpy wcslcat])
+AC_CHECK_FUNCS([wcscasecmp wcsncasecmp wcscasestr])
 
 AC_CHECK_DECLS([putws],,,[
 #include <wchar.h>
 #include <wctype.h>
 ])
-
-if test "x$ac_cv_func_wcsftime" = "xyes"; then
-	AC_MSG_CHECKING(whether wcsftime is working correctly)
-	AC_RUN_IFELSE(
-	  [AC_LANG_PROGRAM([
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/time.h>
-#include <wchar.h>
-	     ], [[
-		wchar_t buffer[64];
-		struct tm *ltm;
-		time_t t;
-
-		t = time(NULL);
-		ltm = localtime(&t);
-		wcsftime(buffer, 64, L"%Y", ltm);
-		return wcstol(buffer, NULL, 10) == ltm->tm_year + 1900 ? 0 : 1;
-	     ]])
-	  ],
-	  [ AC_MSG_RESULT(yes)
-	    AC_DEFINE(WORKING_WCSFTIME, 1, Define to 1 if wcsftime is working correctly)
-	  ],
-	  [ AC_MSG_RESULT(no) ],
-	  [ AC_MSG_RESULT(no) ]
-	)
-fi
 
 if test "x$DISABLE_ICONV" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

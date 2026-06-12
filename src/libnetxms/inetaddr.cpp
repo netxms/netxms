@@ -366,9 +366,8 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
          buffer, static_cast<DWORD>(buflen), nullptr, 0, NI_NAMEREQD) != 0)
       return nullptr;
 
-#elif HAVE_GETNAMEINFO
+#else
 
-   // Use getnameinfo - thread-safe and modern approach
    struct sockaddr_storage sa;
    socklen_t saLen;
    memset(&sa, 0, sizeof(sa));
@@ -408,52 +407,6 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    strlcpy(buffer, hostBuffer, buflen);
 #endif
 
-#else /* not _WIN32 && not HAVE_GETNAMEINFO */
-
-   struct hostent *hs = nullptr;
-#if HAVE_GETHOSTBYADDR_R
-   // Use gethostbyaddr_r - thread-safe reentrant version
-   struct hostent hostbuf;
-   char tempBuffer[1024];
-   int h_errnop;
-#endif
-
-   if (m_family == AF_INET)
-   {
-      uint32_t addr = htonl(m_addr.v4);
-#if HAVE_GETHOSTBYADDR_R
-      if (gethostbyaddr_r(reinterpret_cast<const char*>(&addr), 4, AF_INET,
-                         &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
-         hs = nullptr;
-#else
-      hs = gethostbyaddr((const char *)&addr, 4, AF_INET);
-#endif
-   }
-   else if (m_family == AF_INET6)
-   {
-#if HAVE_GETHOSTBYADDR_R
-      if (gethostbyaddr_r(reinterpret_cast<const char*>(m_addr.v6), 16, AF_INET6,
-                         &hostbuf, tempBuffer, sizeof(tempBuffer), &hs, &h_errnop) != 0)
-         hs = nullptr;
-#else
-      hs = gethostbyaddr((const char *)m_addr.v6, 16, AF_INET6);
-#endif
-   }
-
-   if (hs == nullptr)
-      return nullptr;
-
-   // Some versions of libc may return IP address instead of NULL if it cannot be resolved
-   if (equals(InetAddress::parse(hs->h_name)))
-      return nullptr;
-
-#ifdef UNICODE
-   mb_to_wchar(hs->h_name, -1, buffer, buflen);
-   buffer[buflen - 1] = 0;
-#else
-   strlcpy(buffer, hs->h_name, buflen);
-#endif
-
 #endif   /* _WIN32 */
 
    return buffer;
@@ -481,7 +434,6 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
       return addr;
 
    // Not a valid IP address, resolve hostname
-#if HAVE_GETADDRINFO
    struct addrinfo *ai, hints;
    memset(&hints, 0, sizeof(hints));
    hints.ai_family = af;
@@ -491,27 +443,6 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
       freeaddrinfo(ai);
       return addr;
    }
-#else
-#if HAVE_GETHOSTBYNAME2_R
-   struct hostent h, *hs = nullptr;
-   char buffer[1024];
-   int err;
-   gethostbyname2_r(hostname, (af != AF_UNSPEC) ? af : AF_INET, &h, buffer, 1024, &hs, &err);
-#else
-   struct hostent *hs = gethostbyname(hostname);
-#endif
-   if (hs != nullptr)
-   {
-      if ((hs->h_addrtype == AF_INET) && ((af == AF_UNSPEC) || (af == AF_INET)))
-      {
-         return InetAddress(ntohl(*((uint32_t*)hs->h_addr)));
-      }
-      else if ((hs->h_addrtype == AF_INET6) && ((af == AF_UNSPEC) || (af == AF_INET6)))
-      {
-         return InetAddress((BYTE *)hs->h_addr);
-      }
-   }
-#endif /* HAVE_GETADDRINFO */
    return InetAddress();
 }
 
@@ -839,7 +770,6 @@ InetAddressList *InetAddressList::resolveHostName(const char *hostname)
    }
 
    // Not a valid IP address, resolve hostname
-#if HAVE_GETADDRINFO
    struct addrinfo *ai;
    if (getaddrinfo(hostname, nullptr, nullptr, &ai) == 0)
    {
@@ -847,55 +777,5 @@ InetAddressList *InetAddressList::resolveHostName(const char *hostname)
          result->add(InetAddress::createFromSockaddr(p->ai_addr));
       freeaddrinfo(ai);
    }
-#elif HAVE_GETHOSTBYNAME2_R
-   struct hostent h, *hs = nullptr;
-   char buffer[4096];
-   int err;
-   gethostbyname2_r(hostname, AF_INET, &h, buffer, 4096, &hs, &err);
-   if (hs != NULL)
-   {
-      if (hs->h_addrtype == AF_INET)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
-      }
-      else if (hs->h_addrtype == AF_INET6)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
-      }
-   }
-
-   hs = NULL;
-   gethostbyname2_r(hostname, AF_INET6, &h, buffer, 4096, &hs, &err);
-   if (hs != nullptr)
-   {
-      if (hs->h_addrtype == AF_INET)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
-      }
-      else if (hs->h_addrtype == AF_INET6)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
-      }
-   }
-#else
-   struct hostent *hs = gethostbyname(hostname);
-   if (hs != nullptr)
-   {
-      if (hs->h_addrtype == AF_INET)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
-      }
-      else if (hs->h_addrtype == AF_INET6)
-      {
-         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
-            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
-      }
-   }
-#endif /* HAVE_GETADDRINFO */
    return result;
 }

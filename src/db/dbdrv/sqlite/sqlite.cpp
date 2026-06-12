@@ -718,13 +718,7 @@ static uint32_t Rollback(DBDRV_CONNECTION connection)
 static int IsTableExist(DBDRV_CONNECTION connection, const WCHAR *name)
 {
    WCHAR query[256];
-#if HAVE_SWPRINTF
    swprintf(query, 256, L"SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%ls')", name);
-#else
-   wcscpy(query, L"SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('");
-   wcscat(query, name);
-   wcscat(query, L"')");
-#endif
    uint32_t error;
    int rc = DBIsTableExist_Failure;
    SQLITE_RESULT *result = static_cast<SQLITE_RESULT*>(Select(connection, query, &error, nullptr));

@@ -3314,7 +3314,7 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 
 #endif
 
-#if defined(UNICODE) && (defined(_WIN32) || HAVE_FPUTWS)
+#ifdef UNICODE
 
 /**
  * Write part of wide character string to output stream
@@ -3368,7 +3368,7 @@ static void WriteRedirectedTerminalOutputW(const WCHAR *text)
 
 #endif
 
-#if !defined(UNICODE) || (!HAVE_FPUTWS && !defined(_WIN32)) || HAVE_FWIDE
+#if !defined(UNICODE) || !defined(_WIN32)
 
 /**
  * Write text with escape sequences to file
@@ -3489,10 +3489,8 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 	}
 #else
 #ifdef UNICODE
-#if HAVE_FPUTWS
    if (isatty(fileno(stdout)))
    {
-#if HAVE_FWIDE
       if (fwide(stdout, 0) < 0)
       {
          char *mbtext = MBStringFromWideStringSysLocale(text);
@@ -3500,12 +3498,10 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
          MemFree(mbtext);
       }
       else
-#endif
 	   fputws(text, stdout);
    }
    else
    {
-#if HAVE_FWIDE
       if (fwide(stdout, 0) < 0)
       {
          char *mbtext = MBStringFromWideStringSysLocale(text);
@@ -3513,17 +3509,8 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
          MemFree(mbtext);
       }
       else
-#endif
       WriteRedirectedTerminalOutputW(text);
    }
-#else
-	char *mbtext = MBStringFromWideStringSysLocale(text);
-   if (isatty(fileno(stdout)))
-      fputs(mbtext, stdout);
-   else
-      WriteRedirectedTerminalOutputA(mbtext);
-   MemFree(mbtext);
-#endif
 #else
    if (isatty(fileno(stdout)))
       fputs(text, stdout);
@@ -3575,32 +3562,6 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
       *p = towlower(*p);
    }
    return str;
-}
-
-#endif
-
-#if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
-
-/**
- * wide char version of strftime
- */
-size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t)
-{
-   char *mbuf = (char *)alloca(bufsize);
-   size_t flen = wcslen(format) + 1;
-   char *mfmt = (char *)alloca(flen);
-   WideCharToMultiByteSysLocale(format, mfmt, flen);
-   size_t rc = strftime(mbuf, bufsize, mfmt, t);
-   if (rc > 0)
-   {
-      MultiByteToWideCharSysLocale(mbuf, buffer, (int)bufsize);
-      buffer[bufsize - 1] = 0;
-   }
-   else
-   {
-      buffer[0] = 0;
-   }
-   return rc;
 }
 
 #endif
@@ -4304,7 +4265,6 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
       return nullptr;
    if (fqdn)
    {
-#if HAVE_GETADDRINFO
       struct addrinfo hints;
       memset(&hints, 0, sizeof hints);
       hints.ai_family = AF_UNSPEC; /*either IPV4 or IPV6*/
@@ -4344,16 +4304,6 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
       freeaddrinfo(info);
       if (!found)
          return nullptr;
-#else    /* HAVE_GETADDRINFO */
-      struct hostent *h = gethostbyname(hostname);
-      if (h == nullptr)
-         return nullptr;
-#ifdef UNICODE
-      MultiByteToWideCharSysLocale(h->h_name, buffer, size);
-#else
-      strncpy(buffer, h->h_name, size);
-#endif
-#endif   /* HAVE_GETADDRINFO */
    }
    else
    {

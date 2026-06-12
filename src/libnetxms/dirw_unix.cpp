@@ -28,11 +28,7 @@
 DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *name)
 {
    char mbname[MAX_PATH];
-#if HAVE_WCSTOMBS
    wcstombs(mbname, name, MAX_PATH);
-#else
-   wchar_to_mb(name, -1, mbname, MAX_PATH);
-#endif
    mbname[MAX_PATH - 1] = 0;
    DIR *dir = opendir(mbname);
    if (dir == nullptr)
@@ -50,11 +46,7 @@ DIRENTRYW LIBNETXMS_EXPORTABLE *ReadDirW(DIRHANDLEW *dirp)
    struct dirent *d = readdir(dirp->dir);
    if (d == nullptr)
       return nullptr;
-#if HAVE_MBSTOWCS
    mbstowcs(dirp->dirstr.d_name, d->d_name, 257);
-#else
-   mb_to_wchar(d->d_name, -1, dirp->dirstr.d_name, 257);
-#endif
    dirp->dirstr.d_name[256] = 0;
    dirp->dirstr.d_ino = d->d_ino;
 #if HAVE_DIRENT_D_TYPE

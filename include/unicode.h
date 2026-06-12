@@ -161,11 +161,7 @@
 #define _tchmod   _wchmod
 #define _trename  _wrename
 #define _tremove  _wremove
-#if HAVE_WCSFTIME && WORKING_WCSFTIME
 #define _tcsftime wcsftime
-#else
-#define _tcsftime nx_wcsftime
-#endif
 #define _istspace iswspace
 #define _istdigit iswdigit
 #define _istxdigit iswxdigit

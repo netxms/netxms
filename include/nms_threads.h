@@ -172,38 +172,6 @@ static inline THREAD_ID ThreadId(THREAD thread)
 #include <pthread_np.h>
 #endif
 
-#if (HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE___PTHREAD_MUTEXATTR_SETTYPE || HAVE_PTHREAD_MUTEXATTR_SETKIND_NP) && \
-    HAVE_DECL_PTHREAD_MUTEXATTR_SETTYPE && \
-    (HAVE_DECL_PTHREAD_MUTEX_RECURSIVE || \
-	  HAVE_DECL_PTHREAD_MUTEX_RECURSIVE_NP || \
-          HAVE_DECL_MUTEX_TYPE_COUNTING_FAST)
-
-#define HAVE_RECURSIVE_MUTEXES 1
-
-#if HAVE_DECL_PTHREAD_MUTEX_RECURSIVE
-#define MUTEX_RECURSIVE_FLAG PTHREAD_MUTEX_RECURSIVE
-#elif HAVE_DECL_PTHREAD_MUTEX_RECURSIVE_NP
-#define MUTEX_RECURSIVE_FLAG PTHREAD_MUTEX_RECURSIVE_NP
-#elif HAVE_DECL_MUTEX_TYPE_COUNTING_FAST
-#define MUTEX_RECURSIVE_FLAG MUTEX_TYPE_COUNTING_FAST
-#else
-#error Constant used to declare recursive mutex is not known 
-#endif
-
-#if HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE_DECL_PTHREAD_MUTEXATTR_SETTYPE
-#define MUTEXATTR_SETTYPE pthread_mutexattr_settype
-#elif HAVE___PTHREAD_MUTEXATTR_SETTYPE
-#define MUTEXATTR_SETTYPE __pthread_mutexattr_settype
-#else
-#define MUTEXATTR_SETTYPE pthread_mutexattr_setkind_np
-#endif
-
-#endif
-
-#if !HAVE_PTHREAD_RWLOCK
-#include "rwlock.h"
-#endif
-
 //
 // Related datatypes and constants
 //
@@ -1555,7 +1523,7 @@ public:
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
          pthread_mutexattr_t a;
          pthread_mutexattr_init(&a);
-         MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+         pthread_mutexattr_settype(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
          pthread_mutex_init(&m_mutex, &a);
          pthread_mutexattr_destroy(&a);
 #else
@@ -1564,15 +1532,11 @@ public:
       }
       else if (type == MutexType::RECURSIVE)
       {
-#ifdef HAVE_RECURSIVE_MUTEXES
          pthread_mutexattr_t a;
          pthread_mutexattr_init(&a);
-         MUTEXATTR_SETTYPE(&a, MUTEX_RECURSIVE_FLAG);
+         pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
          pthread_mutex_init(&m_mutex, &a);
          pthread_mutexattr_destroy(&a);
-#else
-#error FIXME: implement recursive mutexes
-#endif
       }
       else
       {
@@ -1730,7 +1694,7 @@ public:
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
       pthread_mutexattr_t a;
       pthread_mutexattr_init(&a);
-      MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+      pthread_mutexattr_settype(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
       pthread_mutex_init(&m_mutex, &a);
       pthread_mutexattr_destroy(&a);
 #else
@@ -1922,30 +1886,28 @@ class LIBNETXMS_EXPORTABLE RWLock
    RWLock& operator =(const RWLock& src) = delete;
 
 private:
-#if HAVE_PTHREAD_RWLOCK
-   pthread_rwlock_t m_rwlock;
-#elif defined(_WIN32)
+#ifdef _WIN32
    win_rwlock_t m_rwlock;
 #else
-   rwlock_t m_rwlock;
+   pthread_rwlock_t m_rwlock;
 #endif
 
 public:
    RWLock()
    {
-#if HAVE_PTHREAD_RWLOCK
-      pthread_rwlock_init(&m_rwlock, nullptr);
-#else
+#ifdef _WIN32
       InitializeRWLock(&m_rwlock);
+#else
+      pthread_rwlock_init(&m_rwlock, nullptr);
 #endif
    }
 
    ~RWLock()
    {
-#if HAVE_PTHREAD_RWLOCK
-      pthread_rwlock_destroy(&m_rwlock);
-#else
+#ifdef _WIN32
       DestroyRWLock(&m_rwlock);
+#else
+      pthread_rwlock_destroy(&m_rwlock);
 #endif
    }
 
@@ -1954,12 +1916,10 @@ public:
     */
    void readLock() const
    {
-#if HAVE_PTHREAD_RWLOCK
-      pthread_rwlock_rdlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
-#elif defined(_WIN32)
+#ifdef _WIN32
       ReadLockRWLock(const_cast<win_rwlock_t*>(&m_rwlock));
 #else
-      ReadLockRWLock(const_cast<rwlock_t*>(&m_rwlock));
+      pthread_rwlock_rdlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
 #endif
    }
 
@@ -1968,10 +1928,10 @@ public:
     */
    void writeLock()
    {
-#if HAVE_PTHREAD_RWLOCK
-      pthread_rwlock_wrlock(&m_rwlock);
-#else
+#ifdef _WIN32
       WriteLockRWLock(&m_rwlock);
+#else
+      pthread_rwlock_wrlock(&m_rwlock);
 #endif
    }
 
@@ -1980,12 +1940,10 @@ public:
     */
    void unlock() const
    {
-#if HAVE_PTHREAD_RWLOCK
-      pthread_rwlock_unlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
-#elif defined(_WIN32)
+#ifdef _WIN32
       UnlockRWLock(const_cast<win_rwlock_t*>(&m_rwlock));
 #else
-      UnlockRWLock(const_cast<rwlock_t*>(&m_rwlock));
+      pthread_rwlock_unlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
 #endif
    }
 };

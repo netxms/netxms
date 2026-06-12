@@ -276,7 +276,7 @@ PingRequestProcessor::PingRequestProcessor(int family)
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
    pthread_mutexattr_t a;
    pthread_mutexattr_init(&a);
-   MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+   pthread_mutexattr_settype(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
    pthread_mutex_init(&m_mutex, &a);
    pthread_mutexattr_destroy(&a);
 #else

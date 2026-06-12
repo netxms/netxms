@@ -244,9 +244,6 @@
 #define HAVE_VSCWPRINTF         1
 #endif
 
-#define HAVE_GETADDRINFO        1
-#define HAVE_INET_PTON          1
-
 #define HAVE_WUTIME             1
 
 #define HAVE_STD_ATOMIC         1
@@ -1091,7 +1088,7 @@ enum class Ownership : bool
 /**
  * "unused" attribute
  */
-#if UNUSED_ATTRIBUTE_SUPPORTED
+#if defined(__GNUC__) || defined(__clang__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #define __UNUSED__ __attribute__((unused))
 #else
 #define __UNUSED__

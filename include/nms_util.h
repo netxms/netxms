@@ -351,7 +351,9 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
  */
 static inline void WideCharToMultiByteSysLocale(const WCHAR *src, char *dst, size_t dstSize)
 {
-#if HAVE_WCSTOMBS
+#ifdef _WIN32
+   wchar_to_mb(src, -1, dst, dstSize);
+#else
    size_t bytes = wcstombs(dst, src, dstSize);
    if (bytes == (size_t)-1)
       *dst = 0;
@@ -359,8 +361,6 @@ static inline void WideCharToMultiByteSysLocale(const WCHAR *src, char *dst, siz
       dst[bytes] = 0;
    else
       dst[dstSize - 1] = 0;
-#else
-   wchar_to_mb(src, -1, dst, dstSize);
 #endif
 }
 
@@ -369,7 +369,9 @@ static inline void WideCharToMultiByteSysLocale(const WCHAR *src, char *dst, siz
  */
 static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, size_t dstSize)
 {
-#if HAVE_MBSTOWCS
+#ifdef _WIN32
+   mb_to_wchar(src, -1, dst, dstSize);
+#else
    size_t chars = mbstowcs(dst, src, dstSize);
    if (chars == (size_t)-1)
       *dst = 0;
@@ -377,8 +379,6 @@ static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, siz
       dst[chars] = 0;
    else
       dst[dstSize - 1] = 0;
-#else
-   mb_to_wchar(src, -1, dst, dstSize);
 #endif
 }
 
@@ -5657,12 +5657,6 @@ void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size
 #endif
 #endif
 
-#if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
-size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t);
-#undef wcsftime
-#define wcsftime nx_wcsftime
-#endif
-
 #ifdef _WIN32
 
 DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path);
@@ -5788,11 +5782,6 @@ char LIBNETXMS_EXPORTABLE *strptime(const char *buf, const char *fmt, struct tm 
 
 #if !HAVE_TIMEGM
 time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm);
-#endif
-
-#if !HAVE_INET_PTON
-int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
-#define inet_pton nx_inet_pton
 #endif
 
 int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);

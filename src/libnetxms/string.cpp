@@ -877,7 +877,7 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 
    vsnprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
-#elif SNPRINTF_RETURNS_REQUIRED_SIZE && HAVE_DECL_VA_COPY
+#else
    va_list argsCopy;
    va_copy(argsCopy, args);
 
@@ -886,12 +886,6 @@ void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_
 
    vsnprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
-#else
-   // No way to determine required buffer size, guess
-   size_t len = strlen(format) + NumChars(format, '%') * 1000 + 1;
-   buffer = MemAllocStringA(len);
-
-   vsnprintf(buffer, len, format, args);
 #endif
 
 #endif   /* UNICODE */
