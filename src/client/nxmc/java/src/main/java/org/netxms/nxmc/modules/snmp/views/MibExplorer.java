@@ -143,6 +143,15 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#isCloseable()
+    */
+   @Override
+   public boolean isCloseable()
+   {
+      return !toolView;
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#cloneView()
     */
    @Override
