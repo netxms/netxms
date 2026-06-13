@@ -316,6 +316,10 @@ static bool OxidizedInitializeModule(Config *config)
    if ((l > 0) && (g_oxidizedBaseURL[l - 1] == '/'))
       g_oxidizedBaseURL[l - 1] = 0;
 
+   // Decrypt password if it was encrypted with nxencpasswd (plain text passwords are passed through unchanged)
+   if (g_oxidizedLogin[0] != 0)
+      DecryptPasswordA(g_oxidizedLogin, g_oxidizedPassword, g_oxidizedPassword, sizeof(g_oxidizedPassword));
+
    nxlog_debug_tag(DEBUG_TAG, 5, L"Oxidized base URL set to \"%hs\"", g_oxidizedBaseURL);
    if (g_oxidizedLogin[0] != 0)
       nxlog_debug_tag(DEBUG_TAG, 5, L"Oxidized HTTP Basic Auth enabled (user: %hs)", g_oxidizedLogin);
