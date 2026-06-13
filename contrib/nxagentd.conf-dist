@@ -236,6 +236,30 @@
 # SubAgent = winperf.nsm
 
 #
+# MSSQL monitoring subagent (mssql.nsm)
+#
+# Reads SQL Server status from dynamic management views (database states,
+# backup age, log space, wait statistics, etc.). On Windows it uses the
+# bundled mssql.ddr driver; on other platforms configure Driver = odbc.ddr
+# and an ODBC data source for SQL Server (e.g. FreeTDS / Microsoft ODBC driver).
+#
+# Single server (simple form):
+# SubAgent = mssql.nsm
+# *MSSQL
+# Id = sql1
+# Server = 127.0.0.1\SQLEXPRESS
+# Login = netxms
+# Password = secret
+#
+# Multiple servers:
+# *mssql/servers/server#1
+# Id = sql1
+# Server = db1.example.com
+# Login = netxms
+# Password = secret
+# ConnectionTTL = 3600
+
+#
 # ExternalParameter
 #
 # Add parameter handled by external command. To add multiple parameters, you

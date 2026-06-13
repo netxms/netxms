@@ -4694,6 +4694,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
 	src/agent/subagents/mqtt/Makefile
+	src/agent/subagents/mssql/Makefile
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
