@@ -200,11 +200,7 @@ typedef volatile int64_t VolatileCounter64;
  */
 static inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter temp = 1;
-   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp + 1;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, 1);
@@ -216,11 +212,7 @@ static inline int32_t InterlockedIncrement(VolatileCounter *v)
  */
 static inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter temp = -1;
-   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp - 1;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
@@ -232,11 +224,7 @@ static inline int32_t InterlockedDecrement(VolatileCounter *v)
  */
 static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter temp = a;
-   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp + a;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, a, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, a);
@@ -248,9 +236,7 @@ static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
  */
 static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   __asm__ __volatile__("xchgl %2, %1" : "=a" (comparand), "+m" (*target) : "0" (exchange));
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    int32_t expected = comparand;
    return __atomic_compare_exchange_n(target, &expected, exchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? comparand : expected;
 #else
@@ -263,11 +249,7 @@ static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_
  */
 static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter64 temp = 1;
-   __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp + 1;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, 1);
@@ -279,11 +261,7 @@ static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
  */
 static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter64 temp = -1;
-   __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp - 1;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
@@ -295,11 +273,7 @@ static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
  */
 static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   VolatileCounter64 temp = a;
-   __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
-   return temp + a;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_add_fetch(v, a, __ATOMIC_SEQ_CST);
 #else
    return __sync_add_and_fetch(v, a);
@@ -311,15 +285,7 @@ static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
  */
 static inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   void *oldval;
-#ifdef __64BIT__
-   __asm__ __volatile__("xchgq %q2, %1" : "=a" (oldval), "+m" (*target) : "0" (value));
-#else
-   __asm__ __volatile__("xchgl %2, %1" : "=a" (oldval), "+m" (*target) : "0" (value));
-#endif
-   return oldval;
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    return __atomic_exchange_n(target, value, __ATOMIC_SEQ_CST);
 #else
    __sync_synchronize();
@@ -332,13 +298,7 @@ static inline void *InterlockedExchangePointer(void* volatile *target, void *val
  */
 static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   int32_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c | bits), c) != c)
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    __atomic_or_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
    __sync_or_and_fetch(target, bits);
@@ -350,13 +310,7 @@ static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
  */
 static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   int32_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c & bits), c) != c)
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    __atomic_and_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
    __sync_and_and_fetch(target, bits);
@@ -368,13 +322,7 @@ static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
  */
 static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   int64_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c | bits), c) != c)
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    __atomic_or_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
    __sync_or_and_fetch(target, bits);
@@ -386,13 +334,7 @@ static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
  */
 static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
 {
-#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
-   int64_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange(target, (int64_t)((uint64_t)c & bits), c) != c)
-#elif HAVE_ATOMIC_BUILTINS
+#if HAVE_ATOMIC_BUILTINS
    __atomic_and_fetch(target, bits, __ATOMIC_SEQ_CST);
 #else
    __sync_and_and_fetch(target, bits);

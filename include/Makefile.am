@@ -31,7 +31,6 @@ include_HEADERS = \
 	nms_cscp.h \
 	nms_threads.h \
 	nms_util.h \
-	nx_shared_ptr.h \
 	nxatomic.h \
 	nxcall.h \
 	nxcc.h \

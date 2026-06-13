@@ -237,12 +237,10 @@
 
 #define WEXITSTATUS(x)          (x)
 
-#if _MSC_VER >= 1310
 #define HAVE_SCPRINTF           1
 #define HAVE_VSCPRINTF          1
 #define HAVE_SCWPRINTF          1
 #define HAVE_VSCWPRINTF         1
-#endif
 
 #define HAVE_WUTIME             1
 
@@ -350,13 +348,8 @@ typedef unsigned __int64 uint64_t;
 #define UINT64_FMTW		L"%I64u"
 #define UINT64_FMT_ARGS(m)	_T("%") m _T("I64u")
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
-#if defined(__64BIT__) || (_MSC_VER > 1300)
 #define TIME_T_FMT      _T("%I64u")
 #define TIME_T_FCAST(x) ((UINT64)(x))
-#else
-#define TIME_T_FMT      _T("%u")
-#define TIME_T_FCAST(x) ((UINT32)(x))
-#endif
 
 #ifndef __clang__
 
@@ -686,7 +679,7 @@ typedef struct hostent HOSTENT;
 /**
  * Macros for marking deprecated functions
  */
-#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#if defined(__GNUC__) || defined(__clang__)
 #define NETXMS_DEPRECATED(note) __attribute__((deprecated(note)))
 #else
 #define NETXMS_DEPRECATED(note)
@@ -804,13 +797,6 @@ static inline const WCHAR *CHECK_NULL_EX_W(const WCHAR *x) { return (x == nullpt
 
 #ifdef __cplusplus
 
-#if !defined(__clang__) && defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
-
-// GCC implementation before 4.8 does not work with RTTI disabled, use bundled one
-#include "nx_shared_ptr.h"
-
-#else
-
 #include <memory>
 using std::shared_ptr;
 using std::weak_ptr;
@@ -818,8 +804,6 @@ using std::make_shared;
 using std::static_pointer_cast;
 using std::enable_shared_from_this;
 using std::unique_ptr;
-
-#endif
 
 #if HAVE_STD_MAKE_UNIQUE
 using std::make_unique;
