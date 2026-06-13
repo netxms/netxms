@@ -2786,9 +2786,9 @@ AC_MSG_RESULT(no)
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([cfsetospeed cfsetispeed])
 
-# asprintf, scprintf, etc.
+# vasprintf, vscprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
-AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
+AC_CHECK_FUNCS([vscprintf vscwprintf])
 
 #--------------------------------------------------------------------
 # Checks for macros and definitions
@@ -3125,7 +3125,7 @@ if test "x$BUILD_UNICODE" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -DUNICODE"
 fi
 
-AC_CHECK_HEADERS([iconv.h widec.h])
+AC_CHECK_HEADERS([iconv.h])
 AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 ])

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@
 #ifndef _nxcrypto_h_
 #define _nxcrypto_h_
 
-#if defined(_WITH_ENCRYPTION) && !defined(ORA_PROC)
+#if defined(_WITH_ENCRYPTION)
 
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>

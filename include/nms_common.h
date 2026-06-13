@@ -79,10 +79,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#if HAVE_WIDEC_H
-#include <widec.h>
-#endif /* HAVE_WIDEC */
-
 #include <symbol_visibility.h>
 
 /******* export attribute for libnetxms symbols *******/
@@ -144,14 +140,6 @@
 #endif
 
 /**
- * Oracle Pro*C compatibility
- */
-#ifdef ORA_PROC
-#undef BYTE
-#undef DWORD
-#endif
-
-/**
  * Java class path separator character
  */
 #ifdef _WIN32
@@ -181,9 +169,6 @@
 
 #define _Noreturn __declspec(noreturn)
 
-#define CAN_DELETE_COPY_CTOR             1
-#define HAVE_FINAL_SPECIFIER             1
-#define HAVE_OVERRIDE_SPECIFIER          1
 #define HAVE_THREAD_LOCAL_STORAGE        1
 #define HAVE_STD_MAKE_UNIQUE             1
 #define HAVE_DECL_CURL_URL               1
@@ -237,9 +222,7 @@
 
 #define WEXITSTATUS(x)          (x)
 
-#define HAVE_SCPRINTF           1
 #define HAVE_VSCPRINTF          1
-#define HAVE_SCWPRINTF          1
 #define HAVE_VSCWPRINTF         1
 
 #define HAVE_WUTIME             1
@@ -304,9 +287,7 @@
 #define vsnprintf    _vsnprintf
 #define snwprintf    _snwprintf
 #define vsnwprintf   _vsnwprintf
-#define scprintf     _scprintf
 #define vscprintf    _vscprintf
-#define scwprintf    _scwprintf
 #define vscwprintf   _vscwprintf
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
@@ -315,7 +296,7 @@
 #define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
 
-typedef UINT64 QWORD;   // for compatibility
+typedef uint64_t QWORD;   // for compatibility
 typedef int socklen_t;
 typedef long pid_t;
 
