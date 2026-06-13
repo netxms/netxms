@@ -116,6 +116,7 @@ logwatch.*	Messages from log monitoring library
 mobile		Mobile devices
 modbus		Modbus cominication messages
 modules		Server modules
+mssql		MSSQL monitoring subagent messages
 mysql		MySQL monitoring subagent messages
 
 nc.*		Notification channels

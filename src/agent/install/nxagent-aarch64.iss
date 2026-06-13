@@ -33,6 +33,7 @@ Source: "..\..\..\ARM64\release\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignor
 Source: "..\..\..\ARM64\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\Release\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\release\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

@@ -70,6 +70,7 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 | Directory | Technology | Description |
 |-----------|------------|-------------|
 | `mysql/` | MySQL | Database monitoring |
+| `mssql/` | Microsoft SQL Server | Database monitoring via DMV queries |
 | `pgsql/` | PostgreSQL | Database monitoring |
 | `oracle/` | Oracle | Database monitoring |
 | `db2/` | DB2 | Database monitoring |
