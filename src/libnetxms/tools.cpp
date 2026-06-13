@@ -1194,6 +1194,62 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
 }
 
 /**
+ * Parse time duration string with optional unit suffix. Recognized suffixes (case-insensitive):
+ * s (seconds), m (minutes), h (hours), d (days), w (weeks). Without a suffix the value is
+ * interpreted as seconds. Leading and trailing whitespace is ignored. Returns defaultValue if
+ * the string is empty, does not start with a number, or uses an unrecognized suffix.
+ */
+uint64_t LIBNETXMS_EXPORTABLE ParseDuration(const TCHAR *str, uint64_t defaultValue)
+{
+   if (str == nullptr)
+      return defaultValue;
+
+   const TCHAR *p = str;
+   while ((*p == _T(' ')) || (*p == _T('\t')))
+      p++;
+   if (*p == 0)
+      return defaultValue;
+
+   TCHAR *eptr;
+   uint64_t value = _tcstoull(p, &eptr, 10);
+   if (eptr == p)
+      return defaultValue;   // no leading number
+
+   while ((*eptr == _T(' ')) || (*eptr == _T('\t')))
+      eptr++;
+
+   uint64_t multiplier;
+   switch(*eptr)
+   {
+      case 0:
+      case 's':
+      case 'S':
+         multiplier = 1;
+         break;
+      case 'm':
+      case 'M':
+         multiplier = 60;
+         break;
+      case 'h':
+      case 'H':
+         multiplier = 3600;
+         break;
+      case 'd':
+      case 'D':
+         multiplier = 86400;
+         break;
+      case 'w':
+      case 'W':
+         multiplier = 604800;
+         break;
+      default:
+         return defaultValue;   // unrecognized suffix
+   }
+
+   return value * multiplier;
+}
+
+/**
  * Get local system time zone. Returns pointer to buffer for convenience.
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName, bool forceFullOffset)

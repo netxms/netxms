@@ -929,11 +929,11 @@ public class RuleEditor extends Composite
                clabel.addMouseListener(listener);
                if (c.getTimerKey().isEmpty())
                {
-                  clabel.setText(String.format(i18n.tr("Delayed by %s seconds"), c.getTimerDelay()));
+                  clabel.setText(String.format(i18n.tr("Delayed by %s"), ActionExecutionConfiguration.formatTimerValue(c.getTimerDelay())));
                }
                else
                {
-                  clabel.setText(String.format(i18n.tr("Delayed by %s seconds with timer key set to \"%s\""), c.getTimerDelay(), c.getTimerKey()));
+                  clabel.setText(String.format(i18n.tr("Delayed by %s with timer key set to \"%s\""), ActionExecutionConfiguration.formatTimerValue(c.getTimerDelay()), c.getTimerKey()));
                }
             }
             if (!c.getBlockingTimerKey().isEmpty())
@@ -946,7 +946,7 @@ public class RuleEditor extends Composite
             {
                clabel = createCLabel(clientArea, 2, false);
                clabel.addMouseListener(listener);
-               clabel.setText(String.format(i18n.tr("Set snooze timer for %s seconds after execution with key %s"), c.getSnoozeTime(), c.getBlockingTimerKey()));
+               clabel.setText(String.format(i18n.tr("Set snooze timer for %s after execution with key %s"), ActionExecutionConfiguration.formatTimerValue(c.getSnoozeTime()), c.getBlockingTimerKey()));
             }
          }
       }

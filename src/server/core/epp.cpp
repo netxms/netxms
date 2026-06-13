@@ -1240,7 +1240,7 @@ bool EPRule::processEvent(Event *event) const
 
          if (execute)
          {
-            uint64_t timerDelay = _tcstoul(event->expandText(a->timerDelay, alarm).cstr(), nullptr, 10);
+            uint64_t timerDelay = ParseDuration(event->expandText(a->timerDelay, alarm).cstr(), 0);
             if (timerDelay == 0)
             {
                ExecuteAction(a->actionId, *event, alarm, m_guid, m_comments);
@@ -1257,7 +1257,7 @@ bool EPRule::processEvent(Event *event) const
                         comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
 
-            uint64_t snoozeTime = _tcstoul(event->expandText(a->snoozeTime, alarm).cstr(), nullptr, 10);
+            uint64_t snoozeTime = ParseDuration(event->expandText(a->snoozeTime, alarm).cstr(), 0);
             if ((snoozeTime != 0) && (a->blockingTimerKey != nullptr) && (a->blockingTimerKey[0] != 0))
             {
                wchar_t parameters[128], comments[256];

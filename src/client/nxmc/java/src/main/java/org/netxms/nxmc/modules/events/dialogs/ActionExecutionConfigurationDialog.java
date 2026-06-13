@@ -96,7 +96,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       checkActive.setSelection(configuration.isActive());
       
       timerDelay = new LabeledText(dialogArea, SWT.NONE);
-      timerDelay.setLabel(i18n.tr("Delay"));
+      timerDelay.setLabel(i18n.tr("Delay (e.g. 90, 5m, 2h)"));
       timerDelay.setText(configuration.getTimerDelay());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -113,7 +113,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       timerKey.setLayoutData(gd);
       
       snoozeTime = new LabeledText(dialogArea, SWT.NONE);
-      snoozeTime.setLabel(i18n.tr("Snooze time"));
+      snoozeTime.setLabel(i18n.tr("Snooze time (e.g. 90, 5m, 2h)"));
       snoozeTime.setText(configuration.getSnoozeTime());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

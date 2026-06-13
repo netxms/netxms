@@ -18,13 +18,17 @@
  */
 package org.netxms.client.events;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.netxms.base.NXCPMessage;
 
 /**
  * Action execution data
  */
 public class ActionExecutionConfiguration
-{   
+{
+   private static final Pattern TIMER_VALUE_PATTERN = Pattern.compile("(\\d+)\\s*([smhdwSMHDW]?)");
+
    private long actionId;
    private String timerDelay;
    private String snoozeTime;
@@ -215,5 +219,82 @@ public class ActionExecutionConfiguration
    public void setActive(boolean active)
    {
       this.active = active;
-   }   
+   }
+
+   /**
+    * Parse timer value (delay or snooze time) into seconds. The value may carry an optional unit suffix (case-insensitive):
+    * s (seconds), m (minutes), h (hours), d (days), w (weeks); without a suffix the value is interpreted as seconds.
+    *
+    * @param value timer value as stored
+    * @return time in seconds, or -1 if the value is empty or cannot be parsed as a plain duration (for example when it contains a macro)
+    */
+   public static long parseTimerValue(String value)
+   {
+      if (value == null)
+         return -1;
+      Matcher m = TIMER_VALUE_PATTERN.matcher(value.trim());
+      if (!m.matches())
+         return -1;
+
+      long n;
+      try
+      {
+         n = Long.parseLong(m.group(1));
+      }
+      catch(NumberFormatException e)
+      {
+         return -1;
+      }
+
+      String suffix = m.group(2);
+      if (suffix.isEmpty())
+         return n;
+      switch(Character.toLowerCase(suffix.charAt(0)))
+      {
+         case 's':
+            return n;
+         case 'm':
+            return n * 60L;
+         case 'h':
+            return n * 3600L;
+         case 'd':
+            return n * 86400L;
+         case 'w':
+            return n * 604800L;
+      }
+      return -1;
+   }
+
+   /**
+    * Format timer value (delay or snooze time) for display as a human-readable duration (for example "2h 30m"). If the value
+    * cannot be parsed as a plain duration (for example when it contains a macro) it is returned unchanged.
+    *
+    * @param value timer value as stored
+    * @return human-readable representation
+    */
+   public static String formatTimerValue(String value)
+   {
+      long seconds = parseTimerValue(value);
+      if (seconds < 0)
+         return (value != null) ? value : "";
+      if (seconds == 0)
+         return "0s";
+
+      final long[] units = { 604800L, 86400L, 3600L, 60L, 1L };
+      final String[] names = { "w", "d", "h", "m", "s" };
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < units.length; i++)
+      {
+         long u = seconds / units[i];
+         if (u > 0)
+         {
+            if (sb.length() > 0)
+               sb.append(' ');
+            sb.append(u);
+            sb.append(names[i]);
+            seconds -= u * units[i];
+         }
+      }
+      return sb.toString();
+   }
 }

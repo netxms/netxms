@@ -397,6 +397,14 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts);
 
 /**
+ * Parse time duration string with optional unit suffix. Recognized suffixes (case-insensitive):
+ * s (seconds), m (minutes), h (hours), d (days), w (weeks). Without a suffix the value is
+ * interpreted as seconds. Leading and trailing whitespace is ignored. Returns defaultValue if
+ * the string is empty, does not start with a number, or uses an unrecognized suffix.
+ */
+uint64_t LIBNETXMS_EXPORTABLE ParseDuration(const TCHAR *str, uint64_t defaultValue);
+
+/**
  * Get current time in milliseconds
  */
 static inline int64_t GetCurrentTimeMs()

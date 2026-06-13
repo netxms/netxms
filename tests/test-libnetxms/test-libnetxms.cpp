@@ -1483,6 +1483,42 @@ static void TestIntegerToString()
 }
 
 /**
+ * Test ParseDuration
+ */
+static void TestParseDuration()
+{
+   StartTest(_T("ParseDuration"));
+
+   // Bare values are interpreted as seconds
+   AssertEquals(ParseDuration(_T("0"), 99), static_cast<uint64_t>(0));
+   AssertEquals(ParseDuration(_T("120"), 99), static_cast<uint64_t>(120));
+   AssertEquals(ParseDuration(_T("4294967296"), 0), static_cast<uint64_t>(_ULL(4294967296)));
+
+   // Unit suffixes (case-insensitive)
+   AssertEquals(ParseDuration(_T("30s"), 99), static_cast<uint64_t>(30));
+   AssertEquals(ParseDuration(_T("5m"), 99), static_cast<uint64_t>(300));
+   AssertEquals(ParseDuration(_T("2h"), 99), static_cast<uint64_t>(7200));
+   AssertEquals(ParseDuration(_T("1d"), 99), static_cast<uint64_t>(86400));
+   AssertEquals(ParseDuration(_T("1w"), 99), static_cast<uint64_t>(604800));
+   AssertEquals(ParseDuration(_T("2H"), 99), static_cast<uint64_t>(7200));
+   AssertEquals(ParseDuration(_T("3D"), 99), static_cast<uint64_t>(259200));
+
+   // Whitespace is ignored, only the first suffix character matters
+   AssertEquals(ParseDuration(_T("  10  "), 99), static_cast<uint64_t>(10));
+   AssertEquals(ParseDuration(_T(" 2 h "), 99), static_cast<uint64_t>(7200));
+   AssertEquals(ParseDuration(_T("2 minutes"), 99), static_cast<uint64_t>(120));
+
+   // Invalid input returns the default value
+   AssertEquals(ParseDuration(nullptr, 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T(""), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("   "), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("abc"), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("10x"), 7), static_cast<uint64_t>(7));
+
+   EndTest();
+}
+
+/**
  * Keys for hash map
  */
 typedef char HASH_KEY[6];
@@ -3316,6 +3352,7 @@ int main(int argc, char *argv[])
    TestMacAddress();
    TestInetAddress();
    TestIntegerToString();
+   TestParseDuration();
    TestQueue();
    TestSharedObjectQueue();
    TestSQueue();

@@ -74,11 +74,11 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
          case 1:
             return c.isActive() ? i18n.tr("Active") : i18n.tr("Inactive");
          case 2:
-            return c.getTimerDelay();
+            return ActionExecutionConfiguration.formatTimerValue(c.getTimerDelay());
          case 3:
             return c.getTimerKey();
          case 4:
-            return c.getSnoozeTime();
+            return ActionExecutionConfiguration.formatTimerValue(c.getSnoozeTime());
          case 5:
             return c.getBlockingTimerKey();
       }
