@@ -19655,14 +19655,22 @@ void ClientSession::getInterfaceTrafficDcis(const NXCPMessage& request)
       if (iface->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
          shared_ptr<Node> node = static_cast<Interface&>(*iface).getParentNode();
-         if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || node->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ))
+         if (node != nullptr)
          {
-            GetInterfaceTrafficDcis(node, interfaceId, &response);
-            response.setField(VID_RCC, RCC_SUCCESS);
+            if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || node->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ))
+            {
+               GetInterfaceTrafficDcis(node, interfaceId, &response);
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            }
          }
          else
          {
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            debugPrintf(5, L"ClientSession::getInterfaceTrafficDcis: cannot find parent node for interface \"%s\" [%u]", iface->getName(), iface->getId());
+            response.setField(VID_RCC, RCC_INVALID_REQUEST);
          }
       }
       else
