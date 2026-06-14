@@ -112,6 +112,43 @@ bool FortiSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 }
 
 /**
+ * Get list of interfaces for given node
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param useIfXTable if true, usage of ifXTable is allowed
+ */
+InterfaceList *FortiSwitchDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+{
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   if (ifList == nullptr)
+      return nullptr;
+
+   // Physical ports are reported as ethernetCsmacd interfaces named "portN" (other ethernetCsmacd
+   // interfaces such as "internal" or "mgmt" are not front-panel ports and must be left untouched).
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if ((iface->type == IFTYPE_ETHERNET_CSMACD) && !_tcsncmp(iface->name, _T("port"), 4))
+      {
+         TCHAR *eptr;
+         uint32_t portNumber = _tcstoul(&iface->name[4], &eptr, 10);
+         if ((*eptr == 0) && (portNumber > 0))
+         {
+            iface->isPhysicalPort = true;
+            iface->location.module = 1;
+            iface->location.port = portNumber;
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("FortiSwitchDriver::getInterfaces(%s [%u]): interface %u (%s): parsed location %u.%u.%u"),
+               node->getName(), node->getId(), iface->index, iface->name, iface->location.module, iface->location.pic, iface->location.port);
+         }
+      }
+   }
+
+   return ifList;
+}
+
+/**
  * Returns true if FDB uses ifIndex instead of bridge port number for referencing interfaces.
  * FortiSwitch reports interface indexes in dot1qTpFdbPort / dot1dTpFdbPort instead of dot1dBasePort numbers.
  *
