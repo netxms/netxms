@@ -1042,10 +1042,10 @@ bool EPRule::matchTime(struct tm *localTime) const
 /**
  * Check if event match to the script
  */
-void EPRule::executeActionScript(Event *event) const
+bool EPRule::executeActionScript(Event *event, StringBuffer *errorText) const
 {
    if (m_actionScript == nullptr)
-      return;
+      return true;
 
    shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
    shared_ptr<DCObjectInfo> dciInfo;
@@ -1065,8 +1065,11 @@ void EPRule::executeActionScript(Event *event) const
       {
          ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for action script for event processing policy rule #%u"), m_id + 1);
+         if (errorText != nullptr)
+            errorText->append(L"Script load failed");
+         return false;
       }
-      return;
+      return true;
    }
 
    vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
@@ -1078,14 +1081,19 @@ void EPRule::executeActionScript(Event *event) const
       args.add(vm->createValue(event->getParameter(i)));
 
    // Run script
+   bool success = true;
    NXSL_VariableSystem *globals = nullptr;
    if (!vm->run(args, &globals))
    {
       ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute action script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+      if (errorText != nullptr)
+         errorText->append(vm->getErrorText());
+      success = false;
    }
    delete globals;
    vm.destroy();
+   return success;
 }
 
 /**
@@ -1210,10 +1218,16 @@ bool EPRule::processEvent(Event *event) const
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %u"), event->getId(), m_id + 1);
 
+   EventRuleExecution *rec = event->recordRuleExecution(this);   // nullptr if metadata recording is disabled
+
    // Generate alarm if requested
    uint32_t alarmId = 0;
    if (m_flags & RF_GENERATE_ALARM)
-      alarmId = generateAlarm(event);
+   {
+      alarmId = generateAlarm(event, rec);
+      if ((rec != nullptr) && (alarmId != 0))
+         rec->recordAlarm(alarmId);
+   }
 
    // Execute actions
    if (!m_actions.isEmpty())
@@ -1244,6 +1258,8 @@ bool EPRule::processEvent(Event *event) const
             if (timerDelay == 0)
             {
                ExecuteAction(a->actionId, *event, alarm, m_guid, m_comments);
+               if (rec != nullptr)
+                  rec->recordAction(a->actionId, false);
             }
             else
             {
@@ -1255,6 +1271,8 @@ bool EPRule::processEvent(Event *event) const
                AddOneTimeScheduledTask(L"Execute.Action", time(nullptr) + timerDelay, parameters,
                         new ActionExecutionTransientData(event, alarm, m_guid, m_comments), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
                         comments, key.isEmpty() ? nullptr : key.cstr(), true);
+               if (rec != nullptr)
+                  rec->recordAction(a->actionId, true);
             }
 
             uint64_t snoozeTime = ParseDuration(event->expandText(a->snoozeTime, alarm).cstr(), 0);
@@ -1291,16 +1309,36 @@ bool EPRule::processEvent(Event *event) const
       delete alarm;
    }
 
-   executeActionScript(event);
+   if (m_actionScript != nullptr)
+   {
+      StringBuffer errorText;
+      bool success = executeActionScript(event, &errorText);
+      if (rec != nullptr)
+         rec->recordActionScript(!success, success ? nullptr : errorText.cstr());
+   }
 
    // Update persistent storage if needed
    if (m_pstorageSetActions.size() > 0)
+   {
       m_pstorageSetActions.forEach(ExecutePstorageSetAction, event);
+      if (rec != nullptr)
+      {
+         for(KeyValuePair<const TCHAR> *entry : m_pstorageSetActions)
+         {
+            String key = event->expandText(entry->key);
+            rec->recordEffect("pstorage-set", key.cstr());
+         }
+      }
+   }
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
       String key = event->expandText(m_pstorageDeleteActions.get(i));
       if (!key.isEmpty())
+      {
          DeletePersistentStorageValue(key);
+         if (rec != nullptr)
+            rec->recordEffect("pstorage-delete", key.cstr());
+      }
    }
 
    if (object != nullptr)
@@ -1312,6 +1350,8 @@ bool EPRule::processEvent(Event *event) const
          {
             String value = event->expandText(attribute->value);
             object->setCustomAttribute(name, value, StateChange::IGNORE);
+            if (rec != nullptr)
+               rec->recordEffect("custom-attribute-set", name.cstr());
          }
 
       }
@@ -1321,6 +1361,8 @@ bool EPRule::processEvent(Event *event) const
          if (!name.isEmpty())
          {
             object->deleteCustomAttribute(name);
+            if (rec != nullptr)
+               rec->recordEffect("custom-attribute-delete", name.cstr());
          }
       }
    }
@@ -1331,17 +1373,23 @@ bool EPRule::processEvent(Event *event) const
       String tag(m_downtimeTag[0] != 0 ? m_downtimeTag : _T("default"));
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" start for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), StartDowntime, event->getSourceId(), tag);
+      if (rec != nullptr)
+         rec->recordEffect("downtime-start", tag.cstr());
    }
    else if (m_flags & RF_END_DOWNTIME)
    {
       String tag(m_downtimeTag[0] != 0 ? m_downtimeTag : _T("default"));
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" end for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), EndDowntime, event->getSourceId(), tag);
+      if (rec != nullptr)
+         rec->recordEffect("downtime-end", tag.cstr());
    }
 
    if ((m_aiAgentInstructions != nullptr) && (m_aiAgentInstructions[0] != 0))
    {
       ProcessEventWithAIAssistant(event, object, m_aiAgentInstructions);
+      if (rec != nullptr)
+         rec->recordEffect("ai-analysis", nullptr);
    }
 
    // Override event logging flag if requested
@@ -1349,11 +1397,15 @@ bool EPRule::processEvent(Event *event) const
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"Force set of EF_LOG flag for event " UINT64_FMT, event->getId());
       event->setLogWriteFlag(true);
+      if (rec != nullptr)
+         rec->recordEffect("log-flag", L"set");
    }
    else if (m_flags & RF_CLEAR_LOG_FLAG)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"Force clear of EF_LOG flag for event " UINT64_FMT, event->getId());
       event->setLogWriteFlag(false);
+      if (rec != nullptr)
+         rec->recordEffect("log-flag", L"clear");
    }
 
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
@@ -1362,7 +1414,7 @@ bool EPRule::processEvent(Event *event) const
 /**
  * Create incident from alarm (immediate or delayed)
  */
-void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
+void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleExecution *rec) const
 {
    if (m_incidentDelay == 0)
    {
@@ -1379,10 +1431,14 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
       uint32_t rcc = CreateIncident(event->getSourceId(), title.cstr(),
          description.isEmpty() ? nullptr : description.cstr(), alarmId, 0, &incidentId);
 
-      // Trigger AI analysis if enabled and incident was created successfully
-      if ((rcc == RCC_SUCCESS) && (incidentId != 0) && (m_flags & RF_AI_ANALYZE_INCIDENT))
+      if ((rcc == RCC_SUCCESS) && (incidentId != 0))
       {
-         SpawnIncidentAIAnalysis(incidentId, m_incidentAIAnalysisDepth, (m_flags & RF_AI_AUTO_ASSIGN) != 0, m_incidentAIPrompt);
+         if (rec != nullptr)
+            rec->recordIncident(incidentId);
+
+         // Trigger AI analysis if enabled and incident was created successfully
+         if (m_flags & RF_AI_ANALYZE_INCIDENT)
+            SpawnIncidentAIAnalysis(incidentId, m_incidentAIAnalysisDepth, (m_flags & RF_AI_AUTO_ASSIGN) != 0, m_incidentAIPrompt);
       }
    }
    else
@@ -1429,13 +1485,16 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId) const
          comments,
          nullptr,  // No key needed
          true);    // System task
+
+      if (rec != nullptr)
+         rec->recordEffect("incident-scheduled", nullptr);   // delayed incident creation; id not yet known
    }
 }
 
 /**
  * Generate alarm from event
  */
-uint32_t EPRule::generateAlarm(Event *event) const
+uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
 {
    uint32_t alarmId = 0;
    String key = event->expandText(m_alarmKey);
@@ -1444,7 +1503,11 @@ uint32_t EPRule::generateAlarm(Event *event) const
    if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
    {
       if (!key.isEmpty())
+      {
          ResolveAlarmByKey(key, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
+         if (rec != nullptr)
+            rec->recordEffect((m_alarmSeverity == SEVERITY_TERMINATE) ? "alarm-terminate" : "alarm-resolve", key);
+      }
    }
    else	// Generate new alarm
    {
@@ -1488,7 +1551,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
       // Create incident if RF_CREATE_INCIDENT flag is set and alarm was created
       if ((m_flags & RF_CREATE_INCIDENT) && (alarmId != 0))
       {
-         createIncidentFromAlarm(event, alarmId);
+         createIncidentFromAlarm(event, alarmId, rec);
       }
 	}
 

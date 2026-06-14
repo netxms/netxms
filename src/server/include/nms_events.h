@@ -133,11 +133,58 @@ struct EventProcessingThreadStats
 };
 
 class EventBuilder;
+class EPRule;
 
 #ifdef _WIN32
 class Event;
 template class NXCORE_TEMPLATE_EXPORTABLE std::function<void(Event*)>;
 #endif
+
+/**
+ * Single effect produced by an EPP rule while processing an event.
+ * Fields not relevant to a given effect type keep their defaults and are omitted from JSON.
+ */
+struct EventProcessingEffect
+{
+   const char *type;   // ASCII literal, used only for JSON serialization
+   uint32_t id;        // action / alarm / incident id; 0 = not applicable
+   bool scheduled;     // delayed (scheduled task) execution
+   bool failed;        // execution / script failure
+   wchar_t *info;      // expanded key/name, script error text, downtime tag, etc. (owned, nullable)
+
+   EventProcessingEffect(const char *t) : type(t), id(0), scheduled(false), failed(false), info(nullptr) {}
+   ~EventProcessingEffect() { MemFree(info); }
+
+   json_t *toJson() const;
+};
+
+/**
+ * Record of one EPP rule that matched an event, together with the effects it produced.
+ */
+struct EventRuleExecution
+{
+   uint32_t ruleNumber;   // 1-based rule position (rule id + 1)
+   uuid ruleGuid;
+   wchar_t *ruleComments; // owned
+   ObjectArray<EventProcessingEffect> effects;
+
+   EventRuleExecution(const EPRule *rule);
+   ~EventRuleExecution() { MemFree(ruleComments); }
+
+   json_t *toJson() const;
+
+   void recordAlarm(uint32_t alarmId) { auto e = new EventProcessingEffect("alarm"); e->id = alarmId; effects.add(e); }
+   void recordIncident(uint32_t incidentId) { auto e = new EventProcessingEffect("incident"); e->id = incidentId; effects.add(e); }
+   void recordAction(uint32_t actionId, bool scheduled)
+   {
+      auto e = new EventProcessingEffect("action");
+      e->id = actionId;
+      e->scheduled = scheduled;
+      effects.add(e);
+   }
+   void recordActionScript(bool failed, const wchar_t *errorText);
+   void recordEffect(const char *type, const wchar_t *info);
+};
 
 /**
  * Event
@@ -171,6 +218,8 @@ private:
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
 	std::function<void (Event*)> m_callback;
+	bool m_recordProcessingMetadata;
+	ObjectArray<EventRuleExecution> m_processingMetadata;
 
 	void initFromTemplate(const EventTemplate *eventTemplate);
    void setSource(uint32_t sourceId);
@@ -271,6 +320,8 @@ public:
 
    const wchar_t *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
    void setCustomMessage(const wchar_t *message) { MemFree(m_customMessage); m_customMessage = MemCopyString(message); }
+
+   EventRuleExecution *recordRuleExecution(const EPRule *rule);
 
    json_t *toJson();
    static Event *createFromJson(json_t *json);
@@ -688,9 +739,9 @@ private:
    bool matchScript(Event *event) const;
    bool matchTime(struct tm *localTime) const;
 
-   uint32_t generateAlarm(Event *event) const;
-   void createIncidentFromAlarm(Event *event, uint32_t alarmId) const;
-   void executeActionScript(Event *event) const;
+   uint32_t generateAlarm(Event *event, EventRuleExecution *rec) const;
+   void createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleExecution *rec) const;
+   bool executeActionScript(Event *event, StringBuffer *errorText) const;
 
    bool isFilterEmpty() const
    {

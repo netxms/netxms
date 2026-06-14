@@ -767,6 +767,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       OnDBWriterMaxQueueSizeChange();
    }
+   else if (!wcscmp(name, L"Events.ProcessingMetadata"))
+   {
+      UpdateServerFlag(AF_RECORD_EVENT_PROCESSING_METADATA, value);
+   }
    else if (!wcscmp(name, L"ICMP.CollectPollStatistics"))
    {
       UpdateServerFlag(AF_COLLECT_ICMP_STATISTICS, value);

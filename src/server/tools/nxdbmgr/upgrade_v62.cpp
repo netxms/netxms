@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.25 to 62.26
+ */
+static bool H_UpgradeFromV25()
+{
+   CHK_EXEC(CreateConfigParam(L"Events.ProcessingMetadata", L"0",
+      L"Enable/disable recording of event processing metadata (matched event processing policy rules and the effects they produced) into the event log.",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 62.24 to 62.25
  */
 static bool H_UpgradeFromV24()
@@ -1049,6 +1061,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 25, 62, 26, H_UpgradeFromV25 },
    { 24, 62, 25, H_UpgradeFromV24 },
    { 23, 62, 24, H_UpgradeFromV23 },
    { 22, 62, 23, H_UpgradeFromV22 },

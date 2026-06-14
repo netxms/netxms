@@ -289,7 +289,7 @@ bool EventTemplate::saveToDatabase() const
 /**
  * Default constructor for event
  */
-Event::Event()
+Event::Event() : m_processingMetadata(0, 16, Ownership::True)
 {
    m_id = 0;
 	m_name[0] = 0;
@@ -309,12 +309,13 @@ Event::Event()
    m_lastAlarmId = 0;
 	m_queueTime = 0;
 	m_queueBinding = nullptr;
+	m_recordProcessingMetadata = (g_flags & AF_RECORD_EVENT_PROCESSING_METADATA) != 0;
 }
 
 /**
  * Copy constructor for event
  */
-Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarmMessage(src.m_lastAlarmMessage)
+Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarmMessage(src.m_lastAlarmMessage), m_processingMetadata(0, 16, Ownership::True)
 {
    m_id = src.m_id;
    wcscpy(m_name, src.m_name);
@@ -337,6 +338,8 @@ Event::Event(const Event& src) : m_lastAlarmKey(src.m_lastAlarmKey), m_lastAlarm
    m_queueBinding = src.m_queueBinding;
    m_parameters.addAll(src.m_parameters);
    m_parameterNames.addAll(src.m_parameterNames);
+   m_recordProcessingMetadata = src.m_recordProcessingMetadata;
+   // Processing metadata is intentionally not copied - correlated event copies are processed independently
 }
 
 /**
@@ -712,7 +715,85 @@ json_t *Event::toJson()
    }
    json_object_set_new(root, "parameters", parameters);
 
+   if (m_recordProcessingMetadata)
+      json_object_set_new(root, "processingMetadata", json_object_array(m_processingMetadata));
+
    return root;
+}
+
+/**
+ * Record execution of EPP rule for this event. Returns nullptr if metadata recording is disabled.
+ */
+EventRuleExecution *Event::recordRuleExecution(const EPRule *rule)
+{
+   if (!m_recordProcessingMetadata)
+      return nullptr;
+   auto rec = new EventRuleExecution(rule);
+   m_processingMetadata.add(rec);
+   return rec;
+}
+
+/**
+ * Serialize event processing effect to JSON
+ */
+json_t *EventProcessingEffect::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "type", json_string(type));
+   if (id != 0)
+      json_object_set_new(root, "id", json_integer(id));
+   if (scheduled)
+      json_object_set_new(root, "scheduled", json_true());
+   if (failed)
+      json_object_set_new(root, "failed", json_true());
+   if (info != nullptr)
+      json_object_set_new(root, "info", json_string_t(info));
+   return root;
+}
+
+/**
+ * Event rule execution record constructor
+ */
+EventRuleExecution::EventRuleExecution(const EPRule *rule) : ruleGuid(rule->getGuid()), effects(0, 16, Ownership::True)
+{
+   ruleNumber = rule->getId() + 1;
+   ruleComments = MemCopyString(rule->getComments());
+}
+
+/**
+ * Serialize event rule execution record to JSON
+ */
+json_t *EventRuleExecution::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "rule", json_integer(ruleNumber));
+   json_object_set_new(root, "guid", ruleGuid.toJson());
+   json_object_set_new(root, "comments", json_string_t(ruleComments));
+   json_object_set_new(root, "effects", json_object_array(effects));
+   return root;
+}
+
+/**
+ * Record action script execution result
+ */
+void EventRuleExecution::recordActionScript(bool failed, const wchar_t *errorText)
+{
+   auto e = new EventProcessingEffect("action-script");
+   e->failed = failed;
+   if (errorText != nullptr)
+      e->info = MemCopyString(errorText);
+   effects.add(e);
+}
+
+/**
+ * Record generic effect with optional info string
+ */
+void EventRuleExecution::recordEffect(const char *type, const wchar_t *info)
+{
+   auto e = new EventProcessingEffect(type);
+   if (info != nullptr)
+      e->info = MemCopyString(info);
+   effects.add(e);
 }
 
 /**
