@@ -78,6 +78,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <symbol_visibility.h>
 
@@ -312,15 +313,6 @@ typedef __int32 ssize_t;
 
 typedef __int64 off64_t;
 
-typedef signed __int8 int8_t;
-typedef signed __int16 int16_t;
-typedef signed __int32 int32_t;
-typedef signed __int64 int64_t;
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-
 #define INT64_FMT			_T("%I64d")
 #define INT64_FMTA		"%I64d"
 #define INT64_FMTW		L"%I64d"
@@ -448,7 +440,6 @@ using std::wcsncasecmp;
 #include <unistd.h>
 #include <sys/types.h>
 #include <inttypes.h>
-#include <stdint.h>
 #include <utime.h>
 
 #include <sys/socket.h>
