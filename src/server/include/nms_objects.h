@@ -3918,6 +3918,22 @@ enum class TrapCredentialCheckResult
 };
 
 /**
+ * Runtime status of agent data reconciliation (offline data collection catch-up).
+ * Allocated lazily and only for nodes whose agent actually reports cached data, so that
+ * idle nodes (the vast majority) do not carry the overhead. Not persisted to database.
+ */
+struct ReconciliationStatus
+{
+   bool active;                     // true while agent still has cached data points to send
+   int64_t queueSize;               // data points still pending as last reported by agent
+   int64_t oldestDataTimestamp;     // timestamp (ms) of oldest cached data point
+   int64_t lastReport;              // time (ms) when status was last reported by agent
+   double rate;                     // smoothed drain rate in data points per second (0 if unknown)
+   int64_t rateAnchorQueueSize;     // queue size sampled for rate calculation
+   int64_t rateAnchorTime;          // time (ms) of rate calculation sample
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -4095,6 +4111,7 @@ protected:
    DeviceBackupJobStatus m_lastConfigBackupJobStatus;
    time_t m_lastConfigBackupJobTime;
    SharedString m_lastConfigBackupJobMessage;
+   ReconciliationStatus *m_reconciliation;   // Agent data reconciliation status; nullptr until agent first reports cached data. Not persisted.
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -4370,6 +4387,8 @@ public:
    uint16_t getVncPort() const { return m_vncPort; }
    uint32_t getVncProxy() const { return m_vncProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
+   void updateDataReconciliationStatus(int64_t queueSize, int64_t oldestDataTimestamp);
+   bool fillReconciliationStatusMessage(NXCPMessage *msg);
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }

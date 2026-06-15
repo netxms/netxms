@@ -1355,6 +1355,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DATA_COLLECTION_SUMMARY:
          getDataCollectionSummary(*request);
          break;
+      case CMD_GET_RECONCILIATION_STATUS:
+         getReconciliationStatus(*request);
+         break;
       case CMD_GET_DCI_VALUES:
          getLastValuesByDciId(*request);
          break;
@@ -6201,6 +6204,35 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
    }
 
    response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Get agent data reconciliation status for a node
+ */
+void ClientSession::getReconciliationStatus(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         if (!static_cast<Node&>(*object).fillReconciliationStatusMessage(&response))
+            response.setField(VID_RECONCILIATION_ACTIVE, false);   // node never reported reconciliation status
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
    sendMessage(response);
 }
 

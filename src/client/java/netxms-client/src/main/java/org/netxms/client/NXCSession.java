@@ -117,6 +117,7 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.InterfaceTrafficDcis;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.datacollection.ReconciliationStatus;
 import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -6008,6 +6009,23 @@ public class NXCSession
       }
 
       return list;
+   }
+
+   /**
+    * Get agent data reconciliation (offline data collection catch-up) status for a node. Reflects how much locally cached
+    * data is still pending delivery to the server, the delivery rate, and estimated completion time.
+    *
+    * @param nodeId ID of the node
+    * @return reconciliation status for the node
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ReconciliationStatus getReconciliationStatus(final long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_RECONCILIATION_STATUS);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      sendMessage(msg);
+      return new ReconciliationStatus(waitForRCC(msg.getMessageId()));
    }
 
    /**

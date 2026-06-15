@@ -975,6 +975,23 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
    }
 
    response->setField(VID_STATUS, status, count);
+
+   // Update reconciliation status if agent reported its remaining backlog (offline data collection catch-up). The agent
+   // sends the backlog size as it was before this block, so the number of data points still pending after this block is
+   // the reported value minus the elements accepted here (everything not asked to be retried, matching the agent's own
+   // local queue cleanup). This reaches zero on the final block so that the GUI can show reconciliation as completed.
+   if (request->isFieldExist(VID_RECONCILIATION_QUEUE_SIZE))
+   {
+      int accepted = 0;
+      for(int i = 0; i < count; i++)
+      {
+         if (status[i] != BULK_DATA_REC_RETRY)
+            accepted++;
+      }
+      int64_t remaining = request->getFieldAsInt64(VID_RECONCILIATION_QUEUE_SIZE) - accepted;
+      node->updateDataReconciliationStatus((remaining > 0) ? remaining : 0, request->getFieldAsInt64(VID_RECONCILIATION_OLDEST_DATA));
+   }
+
    return ERR_SUCCESS;
 }
 

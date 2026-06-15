@@ -227,6 +227,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
    m_lastConfigBackupJobTime = 0;
+   m_reconciliation = nullptr;
 }
 
 /**
@@ -370,6 +371,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_decommissionTime = 0;
    m_lastConfigBackupJobStatus = DeviceBackupJobStatus::UNKNOWN;
    m_lastConfigBackupJobTime = 0;
+   m_reconciliation = nullptr;
 }
 
 /**
@@ -403,6 +405,7 @@ Node::~Node()
    MemFree(m_agentCertMappingData);
    delete m_icmpStatCollectors;
    MemFree(m_chassisPlacementConf);
+   delete m_reconciliation;
 }
 
 /**
@@ -9869,6 +9872,8 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setFieldFromTime(VID_LAST_BACKUP_JOB_TIME, m_lastConfigBackupJobTime);
    msg->setField(VID_LAST_BACKUP_JOB_MESSAGE, m_lastConfigBackupJobMessage);
 
+   msg->setField(VID_RECONCILIATION_ACTIVE, (m_reconciliation != nullptr) && m_reconciliation->active);
+
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
@@ -15837,6 +15842,74 @@ void Node::updateConfigBackupStatus()
    if (changed)
       setModified(MODIFY_RUNTIME);
    unlockProperties();
+}
+
+/**
+ * Update agent data reconciliation status. Called when agent reports cached (offline) data along with the number
+ * of data points still pending and the timestamp of the oldest cached data point. Drain rate is calculated here
+ * from consecutive samples so that the client can show reconciliation speed and ETA.
+ */
+void Node::updateDataReconciliationStatus(int64_t queueSize, int64_t oldestDataTimestamp)
+{
+   int64_t now = GetCurrentTimeMs();
+
+   lockProperties();
+
+   if (m_reconciliation == nullptr)
+   {
+      m_reconciliation = new ReconciliationStatus();
+      m_reconciliation->active = false;
+      m_reconciliation->rate = 0;
+      m_reconciliation->rateAnchorQueueSize = queueSize;
+      m_reconciliation->rateAnchorTime = now;
+   }
+
+   // Recalculate drain rate against an anchor sample taken at least 5 seconds ago to smooth out noise
+   if (now - m_reconciliation->rateAnchorTime >= 5000)
+   {
+      int64_t drained = m_reconciliation->rateAnchorQueueSize - queueSize;
+      if (drained > 0)
+      {
+         double instantRate = static_cast<double>(drained) / (static_cast<double>(now - m_reconciliation->rateAnchorTime) / 1000.0);
+         m_reconciliation->rate = (m_reconciliation->rate > 0) ? (m_reconciliation->rate * 0.6 + instantRate * 0.4) : instantRate;
+      }
+      m_reconciliation->rateAnchorQueueSize = queueSize;
+      m_reconciliation->rateAnchorTime = now;
+   }
+
+   m_reconciliation->queueSize = queueSize;
+   m_reconciliation->oldestDataTimestamp = oldestDataTimestamp;
+   m_reconciliation->lastReport = now;
+
+   bool active = (queueSize > 0);
+   bool transition = (active != m_reconciliation->active);
+   m_reconciliation->active = active;
+
+   unlockProperties();
+
+   // Notify clients only when reconciliation starts or completes so that the overview section appears/disappears;
+   // live progress numbers are delivered on demand via CMD_GET_RECONCILIATION_STATUS.
+   if (transition)
+      setModified(MODIFY_RUNTIME);
+}
+
+/**
+ * Fill message with current agent data reconciliation status. Returns true if reconciliation status is available.
+ */
+bool Node::fillReconciliationStatusMessage(NXCPMessage *msg)
+{
+   lockProperties();
+   bool available = (m_reconciliation != nullptr);
+   if (available)
+   {
+      msg->setField(VID_RECONCILIATION_ACTIVE, m_reconciliation->active);
+      msg->setField(VID_RECONCILIATION_QUEUE_SIZE, static_cast<uint32_t>(m_reconciliation->queueSize));
+      msg->setField(VID_RECONCILIATION_OLDEST_DATA, m_reconciliation->oldestDataTimestamp);
+      msg->setField(VID_RECONCILIATION_RATE, m_reconciliation->rate);
+      msg->setField(VID_RECONCILIATION_LAST_REPORT, m_reconciliation->lastReport);
+   }
+   unlockProperties();
+   return available;
 }
 
 /**

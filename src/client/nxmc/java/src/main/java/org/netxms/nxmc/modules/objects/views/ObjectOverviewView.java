@@ -45,6 +45,7 @@ import org.netxms.nxmc.modules.objects.views.elements.Commands;
 import org.netxms.nxmc.modules.objects.views.elements.Comments;
 import org.netxms.nxmc.modules.objects.views.elements.Communications;
 import org.netxms.nxmc.modules.objects.views.elements.Connection;
+import org.netxms.nxmc.modules.objects.views.elements.DataReconciliation;
 import org.netxms.nxmc.modules.objects.views.elements.DeviceBackup;
 import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
 import org.netxms.nxmc.modules.objects.views.elements.InterfaceTrafficChart;
@@ -175,6 +176,8 @@ public class ObjectOverviewView extends ObjectView
       e = new DeviceBackup(rightColumn, e, this);
       elements.add(e);
       e = new PollStates(rightColumn, e, this);
+      elements.add(e);
+      e = new DataReconciliation(rightColumn, e, this);
       elements.add(e);
       e = new Connection(rightColumn, e, this);
       elements.add(e);

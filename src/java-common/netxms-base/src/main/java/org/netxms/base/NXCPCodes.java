@@ -546,6 +546,7 @@ public class NXCPCodes
    public static final int CMD_RENAME_EVENT_FORWARDER = 0x0210;
    public static final int CMD_GET_EVENT_FORWARDER_DRIVERS = 0x0211;
    public static final int CMD_GET_OTLP_METRICS = 0x0212;
+   public static final int CMD_GET_RECONCILIATION_STATUS = 0x0213;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1544,6 +1545,11 @@ public class NXCPCodes
    public static final long VID_MAP_CANVAS_TYPE = 990;
    public static final long VID_MAP_INITIAL_VIEW_MODE = 991;
    public static final long VID_NUM_TRANSLATIONS = 993;
+   public static final long VID_RECONCILIATION_QUEUE_SIZE = 994;
+   public static final long VID_RECONCILIATION_OLDEST_DATA = 995;
+   public static final long VID_RECONCILIATION_RATE = 996;
+   public static final long VID_RECONCILIATION_ACTIVE = 997;
+   public static final long VID_RECONCILIATION_LAST_REPORT = 998;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

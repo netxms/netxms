@@ -49,6 +49,7 @@ LONG H_WindowsCertStoreTable(const TCHAR *param, const TCHAR *arg, Table *value,
 LONG H_WindowsCertStoreList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 #endif
 LONG H_DataSenderQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DataReconciliation(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -507,6 +508,8 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&g_authenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationLoadStatus"), H_ComponentStatus, _T("C"), DCI_DT_UINT, DCIDESC_AGENT_CONFIG_LOAD_STATUS },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
+   { _T("Agent.DataReconciliation.PendingDataPoints"), H_DataReconciliation, _T("P"), DCI_DT_UINT, DCIDESC_AGENT_DATARECONCILIATION_PENDINGDATAPOINTS },
+   { _T("Agent.DataReconciliation.TimeSinceLastSync"), H_DataReconciliation, _T("S"), DCI_DT_INT64, DCIDESC_AGENT_DATARECONCILIATION_TIMESINCELASTSYNC },
    { _T("Agent.DataSenderQueueSize"), H_DataSenderQueueSize, nullptr, DCI_DT_UINT, DCIDESC_AGENT_DATASENDERQUEUESIZE },
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
    { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },

@@ -690,6 +690,7 @@ private:
    void recalculateDCIValues(const NXCPMessage& request);
    void changeDCIStatus(const NXCPMessage& request);
    void getDataCollectionSummary(const NXCPMessage& request);
+   void getReconciliationStatus(const NXCPMessage& request);
    void getLastValuesByDciId(const NXCPMessage& request);
    void getTooltipLastValues(const NXCPMessage& request);
    void getTableLastValue(const NXCPMessage& request);

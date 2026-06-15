@@ -573,7 +573,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_EVENT_FORWARDER"),
       _T("CMD_RENAME_EVENT_FORWARDER"),
       _T("CMD_GET_EVENT_FORWARDER_DRIVERS"),
-      _T("CMD_GET_OTLP_METRICS")
+      _T("CMD_GET_OTLP_METRICS"),
+      _T("CMD_GET_RECONCILIATION_STATUS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -589,7 +590,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_OTLP_METRICS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_RECONCILIATION_STATUS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

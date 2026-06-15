@@ -242,6 +242,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected DeviceBackupJobStatus lastConfigBackupJobStatus;
    protected Date lastConfigBackupJobTime;
    protected String lastConfigBackupJobMessage;
+   protected boolean dataReconciliationActive;
    protected Date decommissionTime;
 
 	/**
@@ -379,6 +380,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       long lastBackupTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_LAST_BACKUP_JOB_TIME);
       lastConfigBackupJobTime = (lastBackupTimeSeconds > 0) ? new Date(lastBackupTimeSeconds * 1000) : null;
       lastConfigBackupJobMessage = msg.getFieldAsString(NXCPCodes.VID_LAST_BACKUP_JOB_MESSAGE);
+      dataReconciliationActive = msg.getFieldAsBoolean(NXCPCodes.VID_RECONCILIATION_ACTIVE);
 
       long decommissionTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_DECOMMISSION_TIME);
       decommissionTime = (decommissionTimeSeconds > 0) ? new Date(decommissionTimeSeconds * 1000) : null;
@@ -1717,5 +1719,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public String getLastConfigBackupJobMessage()
    {
       return lastConfigBackupJobMessage;
+   }
+
+   /**
+    * Check if agent data reconciliation (offline data collection catch-up) is currently in progress for this node.
+    *
+    * @return true if node's agent currently has cached data points being reconciled with the server
+    */
+   public boolean isDataReconciliationActive()
+   {
+      return dataReconciliationActive;
    }
 }

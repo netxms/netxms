@@ -728,6 +728,7 @@ typedef struct
 #define CMD_RENAME_EVENT_FORWARDER        0x0210
 #define CMD_GET_EVENT_FORWARDER_DRIVERS   0x0211
 #define CMD_GET_OTLP_METRICS              0x0212
+#define CMD_GET_RECONCILIATION_STATUS     0x0213
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1735,6 +1736,11 @@ typedef struct
 #define VID_MAP_CANVAS_TYPE         ((uint32_t)990)
 #define VID_MAP_INITIAL_VIEW_MODE   ((uint32_t)991)
 #define VID_NUM_TRANSLATIONS        ((uint32_t)993)
+#define VID_RECONCILIATION_QUEUE_SIZE ((uint32_t)994)
+#define VID_RECONCILIATION_OLDEST_DATA ((uint32_t)995)
+#define VID_RECONCILIATION_RATE     ((uint32_t)996)
+#define VID_RECONCILIATION_ACTIVE   ((uint32_t)997)
+#define VID_RECONCILIATION_LAST_REPORT ((uint32_t)998)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

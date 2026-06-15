@@ -284,6 +284,8 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_AGENT_CONFIG_SERVER                  _T("Configuration server address set on agent startup")
 #define DCIDESC_AGENT_DATACOLLQUEUESIZE              _T("Agent data sender queue size (deprecated alias for Agent.DataSenderQueueSize)")
 #define DCIDESC_AGENT_DATASENDERQUEUESIZE            _T("Agent data sender queue size")
+#define DCIDESC_AGENT_DATARECONCILIATION_PENDINGDATAPOINTS _T("Number of data points pending reconciliation with server")
+#define DCIDESC_AGENT_DATARECONCILIATION_TIMESINCELASTSYNC _T("Time in seconds since last successful data reconciliation with server")
 #define DCIDESC_AGENT_FAILEDREQUESTS                 _T("Agent: failed requests to agent")
 #define DCIDESC_AGENT_FILEHANDLELIMIT                _T("Agent: maximum number of open file handles")
 #define DCIDESC_AGENT_EVENTS_GENERATED               _T("Agent: generated events")

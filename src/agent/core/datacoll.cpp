@@ -1088,6 +1088,14 @@ static void ReconciliationThread()
             msg.setField(VID_NUM_ELEMENTS, static_cast<int16_t>(bulkSendList.size()));
             msg.setField(VID_TIMEOUT, g_dcReconciliationTimeout);
 
+            // Report current reconciliation backlog to server (number of data points still pending for this server
+            // and timestamp of the oldest cached data point) so that it can show reconciliation progress in GUI
+            s_serverSyncStatusLock.lock();
+            ServerSyncStatus *backlog = s_serverSyncStatus.get(session->getServerId());
+            msg.setField(VID_RECONCILIATION_QUEUE_SIZE, (backlog != nullptr) ? static_cast<uint32_t>(backlog->queueSize) : static_cast<uint32_t>(bulkSendList.size()));
+            s_serverSyncStatusLock.unlock();
+            msg.setField(VID_RECONCILIATION_OLDEST_DATA, bulkSendList.get(0)->getTimestamp());
+
             uint32_t fieldId = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < bulkSendList.size(); i++)
             {
@@ -1829,6 +1837,41 @@ LONG H_DataSenderQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abs
    s_serverSyncStatusLock.unlock();
 
    ret_uint(value, count);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.DataReconciliation.* metrics
+ */
+LONG H_DataReconciliation(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (!s_dataCollectorStarted)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   uint32_t pendingDataPoints = 0;
+   int64_t lastSync = 0;
+   s_serverSyncStatusLock.lock();
+   Iterator<ServerSyncStatus> it = s_serverSyncStatus.begin();
+   while(it.hasNext())
+   {
+      ServerSyncStatus *s = it.next();
+      pendingDataPoints += static_cast<uint32_t>(s->queueSize);
+      if (s->lastSync > lastSync)
+         lastSync = s->lastSync;
+   }
+   s_serverSyncStatusLock.unlock();
+
+   switch(*arg)
+   {
+      case 'P':   // Agent.DataReconciliation.PendingDataPoints
+         ret_uint(value, pendingDataPoints);
+         break;
+      case 'S':   // Agent.DataReconciliation.TimeSinceLastSync (seconds)
+         ret_int64(value, (lastSync > 0) ? (GetCurrentTimeMs() - lastSync) / 1000 : 0);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
