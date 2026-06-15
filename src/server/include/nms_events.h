@@ -208,6 +208,13 @@ struct EventRuleExecution
       effects.add(e);
    }
 
+   void recordRootCause(uint32_t parentAlarmId)
+   {
+      auto e = new EventProcessingEffect("rca-parent-alarm");
+      e->id = parentAlarmId;
+      effects.add(e);
+   }
+
    void recordAction(uint32_t actionId, bool scheduled);
    void recordActionScript(bool failed, const wchar_t *errorText);
    void recordEffect(const char *type, const wchar_t *info);

@@ -1303,6 +1303,8 @@ bool EPRule::processEvent(Event *event) const
             if (DeleteScheduledTasksByKey(key) > 0)
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key.cstr());
+               if (rec != nullptr)
+                  rec->recordEffect("timer-cancel", std::move(key));
             }
          }
       }
@@ -1526,6 +1528,8 @@ uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
 	               parentAlarmId = static_cast<Alarm*>(result->getValueAsObject()->getData())->getAlarmId();
 	               nxlog_debug_tag(DEBUG_TAG, 5, _T("Root cause analysis script in rule %d has found parent alarm %u (%s)"),
 	                        m_id + 1, parentAlarmId, static_cast<Alarm*>(result->getValueAsObject()->getData())->getMessage());
+	               if (rec != nullptr)
+	                  rec->recordRootCause(parentAlarmId);
 	            }
 	         }
 	         else
