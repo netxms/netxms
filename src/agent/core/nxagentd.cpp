@@ -570,28 +570,6 @@ const TCHAR *GetAgentExecutableName()
 #ifdef _WIN32
 
 /**
- * Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
- */
-static HWND GetConsoleHWND()
-{
-   DWORD cpid = GetCurrentProcessId();
-	HWND hWnd = nullptr;
-   while(true)
-   {
-	   hWnd = FindWindowEx(nullptr, hWnd, _T("ConsoleWindowClass"), nullptr);
-      if (hWnd == nullptr)
-         break;
-
-   	DWORD wpid;
-      GetWindowThreadProcessId(hWnd, &wpid);
-	   if (cpid == wpid)
-         break;
-   }
-
-	return hWnd;
-}
-
-/**
  * Get proc address and write log file
  */
 static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
@@ -1821,9 +1799,7 @@ void Main()
 #if defined(_WIN32)
       if (g_dwFlags & AF_HIDE_WINDOW)
       {
-         HWND hWnd;
-
-         hWnd = GetConsoleHWND();
+         HWND hWnd = GetConsoleWindow();
          if (hWnd != NULL)
             ShowWindow(hWnd, SW_HIDE);
          s_shutdownCondition.wait(INFINITE);
