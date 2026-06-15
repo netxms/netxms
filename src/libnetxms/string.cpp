@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -62,7 +62,7 @@ String::String(const String& src)
 String::String(String&& src)
 {
    m_length = src.m_length;
-   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   if (src.isInternalBuffer())
    {
       m_buffer = m_internalBuffer;
       memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
@@ -72,6 +72,32 @@ String::String(String&& src)
       m_buffer = src.m_buffer;
       src.m_buffer = src.m_internalBuffer;
    }
+   src.m_buffer[0] = 0;
+   src.m_length = 0;
+}
+
+/**
+ * Move data from another string, releasing currently held buffer.
+ * Steals source heap buffer when present, otherwise copies internal buffer content.
+ */
+void String::moveFrom(String&& src)
+{
+   if (&src == this)
+      return;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = src.m_length;
+   if (src.isInternalBuffer())
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = src.m_buffer;
+      src.m_buffer = src.m_internalBuffer;
+   }
+   src.m_buffer[0] = 0;
    src.m_length = 0;
 }
 
@@ -1349,7 +1375,7 @@ void StringBuffer::clear(bool releaseBuffer)
 /**
  * Operator = for mutable string
  */
-MutableString& MutableString::operator =(const String &src)
+MutableString& MutableString::operator =(const String& src)
 {
    if (&src == this)
       return *this;
@@ -1371,7 +1397,7 @@ MutableString& MutableString::operator =(const String &src)
 /**
  * Operator = for mutable string
  */
-MutableString& MutableString::operator =(const MutableString &src)
+MutableString& MutableString::operator =(const MutableString& src)
 {
    if (&src == this)
       return *this;

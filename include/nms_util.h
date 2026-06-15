@@ -1302,6 +1302,8 @@ protected:
 
    bool isInternalBuffer() { return m_buffer == m_internalBuffer; }
 
+   void moveFrom(String&& src);
+
    bool fuzzyEqualsImpl(const String& s, double threshold, bool ignoreCase) const;
 
 public:
@@ -1407,11 +1409,22 @@ public:
    MutableString(const char *init, const char *codepage) : String(init, codepage) { }
    MutableString(const char *init, ssize_t length, const char *codepage) : String(init, length, codepage) { }
    MutableString(const String& src) : String(src) { }
+   MutableString(String&& src) : String(std::move(src)) { }
    MutableString(const MutableString& src) : String(src) { }
-   MutableString(MutableString&& src) : String(src) { }
+   MutableString(MutableString&& src) : String(std::move(src)) { }
 
-   MutableString& operator =(const String &src);
-   MutableString& operator =(const MutableString &src);
+   MutableString& operator =(const String& src);
+   MutableString& operator =(String&& src)
+   {
+      moveFrom(std::move(src));
+      return *this;
+   }
+   MutableString& operator =(const MutableString& src);
+   MutableString& operator =(MutableString&& src)
+   {
+      moveFrom(std::move(src));
+      return *this;
+   }
    MutableString& operator =(const TCHAR *src);
 };
 
