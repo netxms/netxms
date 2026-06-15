@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.NXCommon;
@@ -164,7 +165,7 @@ public class ObjectToolsCache
                   imageProvider.preloadImageFromServer(iconGuid);
                   Image image = imageProvider.getObjectIcon(iconGuid);
                   if (image != null)
-                     icons.put(tool.getId(), ImageDescriptor.createFromImageDataProvider((zoom) -> image.getImageData(zoom)));
+                     icons.put(tool.getId(), WidgetHelper.createImageDescriptor(image));
                }
                catch(Exception e)
                {
@@ -220,7 +221,7 @@ public class ObjectToolsCache
       {
          Image image = imageProvider.getObjectIcon(guid);
          if (image != null)
-            icon = ImageDescriptor.createFromImageDataProvider((zoom) -> image.getImageData(zoom));
+            icon = WidgetHelper.createImageDescriptor(image);
       }
       synchronized(icons)
       {

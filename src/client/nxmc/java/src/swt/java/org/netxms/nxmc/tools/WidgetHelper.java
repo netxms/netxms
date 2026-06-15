@@ -41,6 +41,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.window.Window;
@@ -1857,5 +1858,17 @@ public class WidgetHelper
    public static Color getSystemColor(int id)
    {
       return Display.getCurrent().getSystemColor(id);
+   }
+
+   /**
+    * Create image descriptor from given image. Abstracts API differences between SWT and RWT - SWT version uses
+    * zoom-aware image data provider to support high-DPI displays.
+    *
+    * @param image source image
+    * @return image descriptor for given image
+    */
+   public static ImageDescriptor createImageDescriptor(final Image image)
+   {
+      return ImageDescriptor.createFromImageDataProvider((zoom) -> image.getImageData(zoom));
    }
 }

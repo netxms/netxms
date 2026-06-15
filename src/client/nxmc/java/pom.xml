@@ -41,8 +41,8 @@
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <commonmark.version>0.24.0</commonmark.version>
       <lib.scope>compile</lib.scope>
-      <rwt.version>4.3.0</rwt.version>
-      <swt.version>3.130.0</swt.version>
+      <rwt.version>4.5.0</rwt.version>
+      <swt.version>3.132.0</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>
    <profiles>

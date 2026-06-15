@@ -43,6 +43,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.window.Window;
@@ -1948,5 +1949,17 @@ public class WidgetHelper
             return Display.getCurrent().getSystemColor(id);
       }
       return (value != null) ? CssColor.createColor((CssColor)value) : null;
+   }
+
+   /**
+    * Create image descriptor from given image. Abstracts API differences between SWT and RWT - RWT does not provide
+    * zoom-aware image data provider, so plain image data is used.
+    *
+    * @param image source image
+    * @return image descriptor for given image
+    */
+   public static ImageDescriptor createImageDescriptor(Image image)
+   {
+      return ImageDescriptor.createFromImageData(image.getImageData());
    }
 }
