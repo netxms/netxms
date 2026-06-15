@@ -80,7 +80,7 @@
 /**
  * NXCP data field structure
  */
-typedef struct
+struct NXCP_MESSAGE_FIELD
 {
    uint32_t fieldId;  // Field identifier
    uint8_t type;       // Data type
@@ -120,7 +120,7 @@ typedef struct
          BYTE padding[6];
       } inetaddr;
    } data;
-} NXCP_MESSAGE_FIELD;
+};
 
 #define df_int16        int16
 #define df_int32        data.int32
@@ -136,7 +136,7 @@ typedef struct
 /**
  * Message structure
  */
-typedef struct
+struct NXCP_MESSAGE
 {
    uint16_t code;      // Message (command) code
    uint16_t flags;     // Message flags
@@ -144,28 +144,28 @@ typedef struct
    uint32_t id;        // Unique message identifier
    uint32_t numFields; // Number of fields in message
    NXCP_MESSAGE_FIELD fields[1];    // Data fields - actual length depends on value in numFields
-} NXCP_MESSAGE;
+};
 
 /**
  * Encrypted payload header
  */
-typedef struct
+struct NXCP_ENCRYPTED_PAYLOAD_HEADER
 {
    uint32_t dwChecksum;
    uint32_t dwReserved; // Align to 8-byte boundary
-} NXCP_ENCRYPTED_PAYLOAD_HEADER;
+};
 
 /**
  * Encrypted message structure
  */
-typedef struct
+struct NXCP_ENCRYPTED_MESSAGE
 {
    uint16_t code;       // Should be CMD_ENCRYPTED_MESSAGE
    BYTE padding;    // Number of bytes added to the end of message
    BYTE reserved;
    uint32_t size;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
-} NXCP_ENCRYPTED_MESSAGE;
+};
 
 #pragma pack()
 

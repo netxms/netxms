@@ -106,13 +106,13 @@ Table::~Table()
 /**
  * State information for XML parser
  */
-typedef struct
+struct XML_PARSER_STATE
 {
    Table *table;
    int state;
    StringBuffer *buffer;
    int column;
-} XML_PARSER_STATE;
+};
 
 /**
  * Element start handler for XML parser

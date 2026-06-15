@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2025 Raden Solutions
+ ** Copyright (C) 2004-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -380,11 +380,11 @@ LONG H_NetIfInfoSpeed(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 /**
  * Netlink request
  */
-typedef struct
+struct NETLINK_REQ
 {
    nlmsghdr header;
    rtgenmsg message;
-} NETLINK_REQ;
+};
 
 /**
  * Send netlink message
