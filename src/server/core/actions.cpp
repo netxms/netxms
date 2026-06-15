@@ -1022,6 +1022,15 @@ uuid NXCORE_EXPORTABLE GetActionGUID(uint32_t id)
 }
 
 /**
+ * Get name of given action
+ */
+String NXCORE_EXPORTABLE GetActionName(uint32_t id)
+{
+   shared_ptr<Action> action = s_actions.getShared(id);
+   return (action != nullptr) ? String(action->name) : String();
+}
+
+/**
  * Action GUID comparator
  */
 static bool ActionGUIDComparator(const uint32_t& id, const Action& action, const uuid *data)

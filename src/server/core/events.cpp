@@ -746,7 +746,7 @@ json_t *EventProcessingEffect::toJson() const
       json_object_set_new(root, "scheduled", json_true());
    if (failed)
       json_object_set_new(root, "failed", json_true());
-   if (info != nullptr)
+   if (!info.isEmpty())
       json_object_set_new(root, "info", json_string_t(info));
    return root;
 }
@@ -774,6 +774,18 @@ json_t *EventRuleExecution::toJson() const
 }
 
 /**
+ * Record action execution
+ */
+void EventRuleExecution::recordAction(uint32_t actionId, bool scheduled)
+{
+   auto e = new EventProcessingEffect("action");
+   e->id = actionId;
+   e->scheduled = scheduled;
+   e->info = GetActionName(actionId);
+   effects.add(e);
+}
+
+/**
  * Record action script execution result
  */
 void EventRuleExecution::recordActionScript(bool failed, const wchar_t *errorText)
@@ -781,7 +793,7 @@ void EventRuleExecution::recordActionScript(bool failed, const wchar_t *errorTex
    auto e = new EventProcessingEffect("action-script");
    e->failed = failed;
    if (errorText != nullptr)
-      e->info = MemCopyString(errorText);
+      e->info = errorText;
    effects.add(e);
 }
 
@@ -792,7 +804,7 @@ void EventRuleExecution::recordEffect(const char *type, const wchar_t *info)
 {
    auto e = new EventProcessingEffect(type);
    if (info != nullptr)
-      e->info = MemCopyString(info);
+      e->info = info;
    effects.add(e);
 }
 

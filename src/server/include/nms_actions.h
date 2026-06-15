@@ -76,6 +76,7 @@ json_t NXCORE_EXPORTABLE *GetActions();
 json_t NXCORE_EXPORTABLE *GetActionById(uint32_t id);
 bool NXCORE_EXPORTABLE IsValidActionId(uint32_t id);
 uuid NXCORE_EXPORTABLE GetActionGUID(uint32_t id);
+String NXCORE_EXPORTABLE GetActionName(uint32_t id);
 uint32_t NXCORE_EXPORTABLE FindActionByGUID(const uuid& guid);
 
 #endif   /* _nms_actions_ */

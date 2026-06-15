@@ -150,10 +150,31 @@ struct EventProcessingEffect
    uint32_t id;        // action / alarm / incident id; 0 = not applicable
    bool scheduled;     // delayed (scheduled task) execution
    bool failed;        // execution / script failure
-   wchar_t *info;      // expanded key/name, script error text, downtime tag, etc. (owned, nullable)
+   MutableString info; // expanded key/name, script error text, downtime tag, etc.
 
-   EventProcessingEffect(const char *t) : type(t), id(0), scheduled(false), failed(false), info(nullptr) {}
-   ~EventProcessingEffect() { MemFree(info); }
+   EventProcessingEffect(const char *t)
+   {
+      type = t;
+      id = 0;
+      scheduled = false;
+      failed = false;
+   }
+
+   EventProcessingEffect(const char *t, const String& i) : info(i)
+   {
+      type = t;
+      id = 0;
+      scheduled = false;
+      failed = false;
+   }
+
+   EventProcessingEffect(const char *t, String&& i) : info(std::move(i))
+   {
+      type = t;
+      id = 0;
+      scheduled = false;
+      failed = false;
+   }
 
    json_t *toJson() const;
 };
@@ -173,17 +194,33 @@ struct EventRuleExecution
 
    json_t *toJson() const;
 
-   void recordAlarm(uint32_t alarmId) { auto e = new EventProcessingEffect("alarm"); e->id = alarmId; effects.add(e); }
-   void recordIncident(uint32_t incidentId) { auto e = new EventProcessingEffect("incident"); e->id = incidentId; effects.add(e); }
-   void recordAction(uint32_t actionId, bool scheduled)
+   void recordAlarm(uint32_t alarmId)
    {
-      auto e = new EventProcessingEffect("action");
-      e->id = actionId;
-      e->scheduled = scheduled;
+      auto e = new EventProcessingEffect("alarm");
+      e->id = alarmId;
       effects.add(e);
    }
+
+   void recordIncident(uint32_t incidentId)
+   {
+      auto e = new EventProcessingEffect("incident");
+      e->id = incidentId;
+      effects.add(e);
+   }
+
+   void recordAction(uint32_t actionId, bool scheduled);
    void recordActionScript(bool failed, const wchar_t *errorText);
    void recordEffect(const char *type, const wchar_t *info);
+
+   void recordEffect(const char *type, const String& info)
+   {
+      effects.add(new EventProcessingEffect(type, info));
+   }
+
+   void recordEffect(const char *type, String&& info)
+   {
+      effects.add(new EventProcessingEffect(type, std::move(info)));
+   }
 };
 
 /**

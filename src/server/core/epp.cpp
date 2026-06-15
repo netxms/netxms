@@ -1325,8 +1325,7 @@ bool EPRule::processEvent(Event *event) const
       {
          for(KeyValuePair<const TCHAR> *entry : m_pstorageSetActions)
          {
-            String key = event->expandText(entry->key);
-            rec->recordEffect("pstorage-set", key.cstr());
+            rec->recordEffect("pstorage-set", event->expandText(entry->key));
          }
       }
    }
@@ -1337,7 +1336,7 @@ bool EPRule::processEvent(Event *event) const
       {
          DeletePersistentStorageValue(key);
          if (rec != nullptr)
-            rec->recordEffect("pstorage-delete", key.cstr());
+            rec->recordEffect("pstorage-delete", std::move(key));
       }
    }
 
@@ -1351,9 +1350,8 @@ bool EPRule::processEvent(Event *event) const
             String value = event->expandText(attribute->value);
             object->setCustomAttribute(name, value, StateChange::IGNORE);
             if (rec != nullptr)
-               rec->recordEffect("custom-attribute-set", name.cstr());
+               rec->recordEffect("custom-attribute-set", std::move(name));
          }
-
       }
       for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
       {
@@ -1362,7 +1360,7 @@ bool EPRule::processEvent(Event *event) const
          {
             object->deleteCustomAttribute(name);
             if (rec != nullptr)
-               rec->recordEffect("custom-attribute-delete", name.cstr());
+               rec->recordEffect("custom-attribute-delete", std::move(name));
          }
       }
    }
@@ -1374,7 +1372,7 @@ bool EPRule::processEvent(Event *event) const
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" start for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), StartDowntime, event->getSourceId(), tag);
       if (rec != nullptr)
-         rec->recordEffect("downtime-start", tag.cstr());
+         rec->recordEffect("downtime-start", std::move(tag));
    }
    else if (m_flags & RF_END_DOWNTIME)
    {
@@ -1382,7 +1380,7 @@ bool EPRule::processEvent(Event *event) const
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Requesting downtime \"%s\" end for object %s [%u]"), tag.cstr(), (object != nullptr) ? object->getName() : _T("(null)"), event->getSourceId());
       ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DOWNTIME"), EndDowntime, event->getSourceId(), tag);
       if (rec != nullptr)
-         rec->recordEffect("downtime-end", tag.cstr());
+         rec->recordEffect("downtime-end", std::move(tag));
    }
 
    if ((m_aiAgentInstructions != nullptr) && (m_aiAgentInstructions[0] != 0))
