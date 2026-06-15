@@ -429,7 +429,7 @@ static bool MigrateTable(const wchar_t *table, DB_HANDLE hSource, DB_HANDLE hDes
                   DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_DYNAMIC);
                }
             }
-            DBNextBatchRow(hStmt);
+            DBAddBatchRow(hStmt);
 
             rows++;
             totalRows++;
