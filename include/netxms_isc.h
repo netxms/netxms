@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ public:
 /**
  * ISC service definition
  */
-typedef struct
+struct ISC_SERVICE
 {
 	uint32_t id;								// Service ID
 	const TCHAR *name;					// Name
@@ -95,6 +95,6 @@ typedef struct
 	bool (*setupSession)(ISCSession*, NXCPMessage*);  // Session setup handler
 	void (*closeSession)(ISCSession*);          // Session close handler
 	bool (*processMsg)(ISCSession*, NXCPMessage*, NXCPMessage*);
-} ISC_SERVICE;
+};
 
 #endif
