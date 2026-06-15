@@ -200,6 +200,7 @@ void NetObj::linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetO
    child->markAsModified(MODIFY_RELATIONS);
    parent->markAsModified(MODIFY_RELATIONS);
    child->clearInheritedAccessCache();
+   child->notifyClientsOnAccessChange();
    nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::linkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
 }
 
@@ -213,6 +214,7 @@ void NetObj::unlinkObjects(NetObj *parent, NetObj *child)
    child->markAsModified(MODIFY_RELATIONS);
    parent->markAsModified(MODIFY_RELATIONS);
    child->clearInheritedAccessCache();
+   child->notifyClientsOnAccessChange();
    nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::unlinkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
 }
 
@@ -2112,6 +2114,7 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientS
       m_inheritAccessRights = msg.getFieldAsBoolean(VID_INHERIT_RIGHTS);
       m_accessList.updateFromMessage(msg);
       clearInheritedAccessCache();
+      notifyClientsOnAccessChange();
    }
 
    return RCC_SUCCESS;
@@ -2401,8 +2404,9 @@ void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
 {
    if (m_accessList.addElement(userId, accessRights, false))
    {
-      setModified(MODIFY_ACCESS_LIST);
+      setModified(MODIFY_ACCESS_LIST, false);
       clearInheritedAccessCache();
+      notifyClientsOnAccessChange();
    }
 }
 
@@ -2413,8 +2417,9 @@ void NetObj::dropUserAccess(uint32_t userId)
 {
    if (m_accessList.deleteElement(userId))
    {
-      setModified(MODIFY_ACCESS_LIST);
+      setModified(MODIFY_ACCESS_LIST, false);
       clearInheritedAccessCache();
+      notifyClientsOnAccessChange();
    }
 }
 
@@ -2428,6 +2433,51 @@ void NetObj::clearInheritedAccessCache()
    for(int i = 0; i < getChildList().size(); i++)
       static_cast<NetObj*>(getChildList().get(i))->clearInheritedAccessCache();
    unlockChildList();
+}
+
+/**
+ * Collect this object and all its descendants into the provided list.
+ * Uses "processed" set to avoid visiting the same object twice (object tree
+ * is a DAG - an object may be reachable through more than one parent).
+ */
+void NetObj::collectAccessSubtree(SharedObjectArray<NetObj> *list, HashSet<uint32_t> *processed)
+{
+   if (processed->contains(m_id))
+      return;
+   processed->put(m_id);
+   list->add(self());
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+      static_cast<NetObj*>(getChildList().get(i))->collectAccessSubtree(list, processed);
+   unlockChildList();
+}
+
+/**
+ * Notify connected clients about effective access rights change on this object
+ * and all its descendants. Because ACLs are inherited down the object tree,
+ * a change on one object can change effective access for the whole subtree.
+ * Each affected object is re-pushed to every subscribed session; the session
+ * decides at send time whether to send the full object (access granted) or a
+ * removal notification (access revoked).
+ */
+void NetObj::notifyClientsOnAccessChange()
+{
+   if (g_modificationsLocked || m_isUnpublished)
+      return;
+
+   auto affected = make_shared<SharedObjectArray<NetObj>>(0, 64);
+   HashSet<uint32_t> processed;
+   collectAccessSubtree(affected.get(), &processed);
+
+   nxlog_debug_tag(_T("obj.notify"), 6, _T("Sending access change notification for %s [%u] and %d related object(s)"),
+            m_name, m_id, affected->size() - 1);
+
+   EnumerateClientSessions(
+      [affected] (ClientSession *session) -> void
+      {
+         for(int i = 0; i < affected->size(); i++)
+            session->onObjectChange(affected->getShared(i), true);
+      });
 }
 
 /**

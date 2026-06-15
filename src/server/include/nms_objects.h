@@ -1537,6 +1537,8 @@ protected:
 
    void getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, const TCHAR *tag) const;
 
+   void collectAccessSubtree(SharedObjectArray<NetObj> *list, HashSet<uint32_t> *processed);
+
 public:
    NetObj();
    NetObj(const NetObj& src) = delete;
@@ -1660,6 +1662,7 @@ public:
    void dropUserAccess(uint32_t userId);
    void clearInheritedAccessCache();
    void clearOwnInheritedAccessCache() { m_accessList.clearCache(); }
+   void notifyClientsOnAccessChange();
 
    void addChildNodesToList(SharedObjectArray<Node> *nodeList, uint32_t userId);
    void addChildDCTargetsToList(SharedObjectArray<DataCollectionTarget> *dctList, uint32_t userId);

@@ -3899,10 +3899,13 @@ void ClientSession::sendObjectUpdates()
    {
       response.deleteAllFields();
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
-      if ((object != nullptr) && !object->isDeleted())
+      // Zone objects are always visible (essential info sent even without read access).
+      // Any other object the session can no longer read (e.g. after an ACL change) is
+      // reported as removed so the client drops it from its cache.
+      if ((object != nullptr) && !object->isDeleted() &&
+          (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
       {
          // Zone objects might be scheduled for update without read access - in that case send essential info only
-         // Other objects will be queued only if read access is granted
          object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
          MaskNodeCredentials(&response, *object, m_userId);
       }
@@ -3967,10 +3970,14 @@ void ClientSession::sendObjectUpdates()
 /**
  * Handler for object changes
  */
-void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
+void ClientSession::onObjectChange(const shared_ptr<NetObj>& object, bool accessChange)
 {
+   // For access rights changes the object is queued unconditionally so that a session
+   // losing read access can be notified to remove the object from its cache. The actual
+   // full-object-vs-removal decision is made at send time in sendObjectUpdates().
    if (((m_flags & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
-       isSubscribedTo(NXC_CHANNEL_OBJECTS) && (object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
+       isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
+       (accessChange || object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
    {
       m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications.put(object->getId());

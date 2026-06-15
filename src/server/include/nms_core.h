@@ -1083,7 +1083,7 @@ public:
 
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(const SyslogMessage *sm);
-   void onObjectChange(const shared_ptr<NetObj>& object);
+   void onObjectChange(const shared_ptr<NetObj>& object, bool accessChange = false);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
