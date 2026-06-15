@@ -45,12 +45,13 @@ import org.xnap.commons.i18n.I18n;
 public class SummaryTableGeneral extends PropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(SummaryTableGeneral.class);
-   
+
 	private DciSummaryTable table;
 	private LabeledText menuPath;
 	private LabeledText title;
 	private LabeledText dciName;
 	private Button importButton;
+	private Button checkMultiInstance;
 
    /**
     * Constructor
@@ -61,22 +62,22 @@ public class SummaryTableGeneral extends PropertyPage
       super(LocalizationHelper.getI18n(SummaryTableGeneral.class).tr("General"));
       this.table = table;
    }
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{		
+	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       menuPath = new LabeledText(dialogArea, SWT.NONE);
       menuPath.setLabel(i18n.tr("Menu path"));
       menuPath.setText(table.getMenuPath());
@@ -86,9 +87,9 @@ public class SummaryTableGeneral extends PropertyPage
       title.setLabel(i18n.tr("Title"));
       title.setText(table.getTitle());
       title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1));
-      
+
       if (table.isTableSoure())
-      {         
+      {
          dciName = new LabeledText(dialogArea, SWT.NONE);
          dciName.setLabel("DCI name");
          dciName.getTextControl().setTextLimit(255);
@@ -101,7 +102,7 @@ public class SummaryTableGeneral extends PropertyPage
          gd.verticalAlignment = SWT.BOTTOM;
          gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
          importButton.setLayoutData(gd);
-         importButton.addSelectionListener(new SelectionAdapter() {            
+         importButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
@@ -109,10 +110,17 @@ public class SummaryTableGeneral extends PropertyPage
             }
          });
       }
+      else
+      {
+         checkMultiInstance = new Button(dialogArea, SWT.CHECK);
+         checkMultiInstance.setText(i18n.tr("Multiple instances (one row per instance)"));
+         checkMultiInstance.setSelection(table.isMultiInstance());
+         checkMultiInstance.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1));
+      }
 
       return dialogArea;
 	}
-	
+
 	private void selectDci()
 	{
 	   SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
@@ -127,7 +135,7 @@ public class SummaryTableGeneral extends PropertyPage
 
 	/**
 	 * Apply changes
-	 * 
+	 *
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	protected boolean applyChanges(final boolean isApply)
@@ -137,7 +145,15 @@ public class SummaryTableGeneral extends PropertyPage
 
 		table.setMenuPath(menuPath.getText());
 		table.setTitle(title.getText());
-		
+
+		if (checkMultiInstance != null)
+		{
+			int flags = table.getFlags() & ~DciSummaryTable.MULTI_INSTANCE;
+			if (checkMultiInstance.getSelection())
+				flags |= DciSummaryTable.MULTI_INSTANCE;
+			table.setFlags(flags);
+		}
+
 		final NXCSession session = Registry.getSession();
 		new Job(i18n.tr("Update DCI summary table configuration"), null) {
 			@Override
@@ -149,7 +165,7 @@ public class SummaryTableGeneral extends PropertyPage
 					table.setId(id);
 				}
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -174,7 +190,7 @@ public class SummaryTableGeneral extends PropertyPage
 				}
 			}
 		}.start();
-		
+
 		return true;
 	}
 }
