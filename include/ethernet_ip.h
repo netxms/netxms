@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -61,12 +61,12 @@ static inline uint32_t CIP_UInt32Swap(uint32_t value)
 #endif
 }
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * EIP encapsulation header
  */
-struct EIP_EncapsulationHeader
+PACKED_STRUCT EIP_EncapsulationHeader
 {
    uint16_t command;
    uint16_t length;
@@ -76,7 +76,7 @@ struct EIP_EncapsulationHeader
    uint32_t options;
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * EtherNet/IP encapsulation commands

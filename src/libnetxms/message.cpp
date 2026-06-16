@@ -359,7 +359,9 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
                entry->data.df_string.length = ntohl(entry->data.df_string.length);
+SUPPRESS_WARNING_PACKED_PUSH
                bswap_array_16(entry->data.df_string.value, entry->data.df_string.length / 2);
+SUPPRESS_WARNING_PACKED_POP
 #endif
                break;
             case NXCP_DT_BINARY:
@@ -1197,7 +1199,9 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
             case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
                {
+SUPPRESS_WARNING_PACKED_PUSH
                   bswap_array_16(field->df_string.value, field->df_string.length / 2);
+SUPPRESS_WARNING_PACKED_POP
                   field->df_string.length = htonl(field->df_string.length);
                }
 #endif
@@ -1613,7 +1617,9 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
          case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
             convertedField->df_string.length = ntohl(convertedField->df_string.length);
+SUPPRESS_WARNING_PACKED_PUSH
             bswap_array_16(convertedField->df_string.value, (int)convertedField->df_string.length / 2);
+SUPPRESS_WARNING_PACKED_POP
 #endif
             str = GetStringFromField((BYTE *)convertedField + 8);
             out.appendFormattedString(_T("  ** %06X: [%6d] STRING      \"%s\"\n"), (int)pos, (int)convertedField->fieldId, str);

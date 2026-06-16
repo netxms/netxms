@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,12 +23,12 @@
 #ifndef _nxnet_h_
 #define _nxnet_h_
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * IP Header -- RFC 791
  */
-struct IPHDR
+PACKED_STRUCT IPHDR
 {
    BYTE m_cVIHL;           // Version and IHL
    BYTE m_cTOS;            // Type Of Service
@@ -45,7 +45,7 @@ struct IPHDR
 /**
  * ICMP Header - RFC 792
  */
-struct ICMPHDR
+PACKED_STRUCT ICMPHDR
 {
    BYTE m_cType;            // Type
    BYTE m_cCode;            // Code
@@ -67,7 +67,7 @@ struct ICMPHDR
 /**
  * ICMP echo request structure
  */
-struct ICMP_ECHO_REQUEST
+PACKED_STRUCT ICMP_ECHO_REQUEST
 {
    ICMPHDR m_icmpHdr;
    BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
@@ -76,7 +76,7 @@ struct ICMP_ECHO_REQUEST
 /**
  * ICMP echo reply structure
  */
-struct ICMP_ECHO_REPLY
+PACKED_STRUCT ICMP_ECHO_REPLY
 {
    IPHDR m_ipHdr;
    ICMPHDR m_icmpHdr;
@@ -86,7 +86,7 @@ struct ICMP_ECHO_REPLY
 /**
  * Combined IPv6 + ICMPv6 header for checksum calculation
  */
-struct ICMP6_PACKET_HEADER
+PACKED_STRUCT ICMP6_PACKET_HEADER
 {
    // IPv6 header
    BYTE srcAddr[16];
@@ -109,7 +109,7 @@ struct ICMP6_PACKET_HEADER
 /**
  * ICMPv6 reply header
  */
-struct ICMP6_REPLY
+PACKED_STRUCT ICMP6_REPLY
 {
    // ICMPv6 header
    BYTE type;
@@ -124,7 +124,7 @@ struct ICMP6_REPLY
 /**
  * ICMPv6 error report structure
  */
-struct ICMP6_ERROR_REPORT
+PACKED_STRUCT ICMP6_ERROR_REPORT
 {
    // ICMPv6 header
    BYTE type;
@@ -138,6 +138,6 @@ struct ICMP6_ERROR_REPORT
    BYTE destAddr[16];
 };
 
-#pragma pack()
+__PACK_END__
 
 #endif   /* _nxnet_h_ */
