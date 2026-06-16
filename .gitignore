@@ -304,8 +304,6 @@ compile_commands.json
 /tests/test-libnxsl/test-libnxsl
 /tests/test-libnxsnmp/test-libnxsnmp
 /tools/inst.tar.gz
-/tools/fixprop
-/webui/eclipse
 /src/libnxjava/java/base/netxms-base/.classpath
 /src/libnxjava/java/base/netxms-base/.project
 /src/libnxjava/java/base/netxms-base/.settings/

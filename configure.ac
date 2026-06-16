@@ -4634,9 +4634,6 @@ AC_CONFIG_FILES([
 	build/Makefile
 	contrib/Makefile
 	contrib/backgrounds/Makefile
-	contrib/integration/Makefile
-	contrib/integration/HP_EVA/Makefile
-	contrib/integration/HP_P2000/Makefile
 	contrib/mibs/Makefile
 	contrib/music/Makefile
 	contrib/oui/Makefile
@@ -4644,7 +4641,6 @@ AC_CONFIG_FILES([
 	contrib/startup/systemd/Makefile
 	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
-	contrib/startup/hp-ux/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile

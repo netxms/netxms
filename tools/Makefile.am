@@ -15,7 +15,5 @@ EXTRA_DIST = \
 	create_table_list.pl \
 	mc.pl \
 	mc.rule flex_bison.rule \
-	patch_config.status.pl \
 	sharIt \
-	stub.sh \
-	update_xrc.pl
+	stub.sh
