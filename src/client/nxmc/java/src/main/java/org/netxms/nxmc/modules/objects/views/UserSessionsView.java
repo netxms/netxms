@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019-2023 Raden Solutions
+ * Copyright (C) 2019-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -43,6 +44,8 @@ import org.netxms.nxmc.modules.objects.views.helpers.UserSessionComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.UserSessionFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.UserSessionLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
@@ -71,6 +74,7 @@ public class UserSessionsView extends ObjectView
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
    private Action actionTakeScreenshot;
+   private Action actionLogoff;
 
    /**
     * Create "User Sessions" view
@@ -203,6 +207,7 @@ public class UserSessionsView extends ObjectView
          manager.add(actionExportAllToCsv);
          manager.add(new Separator());
          manager.add(actionTakeScreenshot);
+         manager.add(actionLogoff);
       }
    }
 
@@ -254,6 +259,14 @@ public class UserSessionsView extends ObjectView
          }
       };
       addKeyBinding("M1+T", actionTakeScreenshot);
+
+      actionLogoff = new Action(i18n.tr("&Log off"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            logoffSessions();
+         }
+      };
    }
 
    /**
@@ -270,6 +283,40 @@ public class UserSessionsView extends ObjectView
             openView(new ScreenshotView((AbstractNode)getObject(), s.getScreenshotSessionName(), s.getLoginName(), getObjectId()));
          }
       }
+   }
+
+   /**
+    * Log off selected user session(s)
+    */
+   private void logoffSessions()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Log Off"), i18n.tr("Selected user sessions will be logged off. Are you sure?")))
+         return;
+
+      final List<Integer> sessionIds = new ArrayList<Integer>(selection.size());
+      for(Object o : selection.toList())
+         sessionIds.add(((UserSession)o).getId());
+
+      final long nodeId = getObjectId();
+      new Job(i18n.tr("Logging off user session"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(Integer id : sessionIds)
+               session.executeAction(nodeId, "System.TerminateUserSession", new String[] { Integer.toString(id) });
+            runInUIThread(() -> refresh());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot log off user session");
+         }
+      }.start();
    }
 
    /**
