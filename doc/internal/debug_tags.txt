@@ -127,6 +127,7 @@ nc.*		Notification channels
 		Level 6: per-message throttle checks
 
 ncd.*		Notification channel drivers
+ncd.webhook	Generic webhook notification channel driver
 
 ndd.*           Network device drivers
 ndd.bdcom	BDCOM network device driver

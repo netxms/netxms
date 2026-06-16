@@ -1087,12 +1087,12 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
+	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
-	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
+	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
 	HDLINK_DIRS="jira redmine"
 	PDSDRV_DIRS="clickhouse influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
@@ -1447,7 +1447,7 @@ if test $? = 0; then
 		MODULES="$MODULES libnxmb client"
 	else
 		MODULES="$MODULES libnxmb client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
-		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
+		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
 		TOOLS="$TOOLS nxlptest"
 	fi
 fi
@@ -2339,7 +2339,7 @@ if test "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel matrix mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
+		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel matrix mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms webhook"
 		HDLINK_DIRS="$HDLINK_DIRS redmine"
 	else
 		AC_MSG_ERROR(libcurl is required)
@@ -4824,6 +4824,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/twilio/Makefile
 	src/ncdrivers/websms/Makefile
+	src/ncdrivers/webhook/Makefile
 	src/ncdrivers/xmpp/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
@@ -4933,6 +4934,7 @@ AC_CONFIG_FILES([
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile
+	tests/test-ncd-webhook/Makefile
 	tools/Makefile
 ])
 
