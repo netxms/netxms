@@ -96,7 +96,7 @@ __PACK_BEGIN__
 /**
  * Serialized script header
  */
-PACKED_STRUCT NXSL_FileHeader
+struct __PACKED__ NXSL_FileHeader
 {
    char magic[4];
    BYTE version;

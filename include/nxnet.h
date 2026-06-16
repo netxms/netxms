@@ -28,7 +28,7 @@ __PACK_BEGIN__
 /**
  * IP Header -- RFC 791
  */
-PACKED_STRUCT IPHDR
+struct __PACKED__ IPHDR
 {
    BYTE m_cVIHL;           // Version and IHL
    BYTE m_cTOS;            // Type Of Service
@@ -45,7 +45,7 @@ PACKED_STRUCT IPHDR
 /**
  * ICMP Header - RFC 792
  */
-PACKED_STRUCT ICMPHDR
+struct __PACKED__ ICMPHDR
 {
    BYTE m_cType;            // Type
    BYTE m_cCode;            // Code
@@ -67,7 +67,7 @@ PACKED_STRUCT ICMPHDR
 /**
  * ICMP echo request structure
  */
-PACKED_STRUCT ICMP_ECHO_REQUEST
+struct __PACKED__ ICMP_ECHO_REQUEST
 {
    ICMPHDR m_icmpHdr;
    BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
@@ -76,7 +76,7 @@ PACKED_STRUCT ICMP_ECHO_REQUEST
 /**
  * ICMP echo reply structure
  */
-PACKED_STRUCT ICMP_ECHO_REPLY
+struct __PACKED__ ICMP_ECHO_REPLY
 {
    IPHDR m_ipHdr;
    ICMPHDR m_icmpHdr;
@@ -86,7 +86,7 @@ PACKED_STRUCT ICMP_ECHO_REPLY
 /**
  * Combined IPv6 + ICMPv6 header for checksum calculation
  */
-PACKED_STRUCT ICMP6_PACKET_HEADER
+struct __PACKED__ ICMP6_PACKET_HEADER
 {
    // IPv6 header
    BYTE srcAddr[16];
@@ -109,7 +109,7 @@ PACKED_STRUCT ICMP6_PACKET_HEADER
 /**
  * ICMPv6 reply header
  */
-PACKED_STRUCT ICMP6_REPLY
+struct __PACKED__ ICMP6_REPLY
 {
    // ICMPv6 header
    BYTE type;
@@ -124,7 +124,7 @@ PACKED_STRUCT ICMP6_REPLY
 /**
  * ICMPv6 error report structure
  */
-PACKED_STRUCT ICMP6_ERROR_REPORT
+struct __PACKED__ ICMP6_ERROR_REPORT
 {
    // ICMPv6 header
    BYTE type;

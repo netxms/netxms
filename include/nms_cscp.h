@@ -80,7 +80,7 @@ __PACK_BEGIN__
 /**
  * NXCP data field structure
  */
-PACKED_STRUCT NXCP_MESSAGE_FIELD
+struct __PACKED__ NXCP_MESSAGE_FIELD
 {
    uint32_t fieldId;  // Field identifier
    uint8_t type;       // Data type
@@ -136,7 +136,7 @@ PACKED_STRUCT NXCP_MESSAGE_FIELD
 /**
  * Message structure
  */
-PACKED_STRUCT NXCP_MESSAGE
+struct __PACKED__ NXCP_MESSAGE
 {
    uint16_t code;      // Message (command) code
    uint16_t flags;     // Message flags
@@ -149,7 +149,7 @@ PACKED_STRUCT NXCP_MESSAGE
 /**
  * Encrypted payload header
  */
-PACKED_STRUCT NXCP_ENCRYPTED_PAYLOAD_HEADER
+struct __PACKED__ NXCP_ENCRYPTED_PAYLOAD_HEADER
 {
    uint32_t dwChecksum;
    uint32_t dwReserved; // Align to 8-byte boundary
@@ -158,7 +158,7 @@ PACKED_STRUCT NXCP_ENCRYPTED_PAYLOAD_HEADER
 /**
  * Encrypted message structure
  */
-PACKED_STRUCT NXCP_ENCRYPTED_MESSAGE
+struct __PACKED__ NXCP_ENCRYPTED_MESSAGE
 {
    uint16_t code;       // Should be CMD_ENCRYPTED_MESSAGE
    BYTE padding;    // Number of bytes added to the end of message
