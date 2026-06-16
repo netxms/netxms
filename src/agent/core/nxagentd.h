@@ -688,7 +688,7 @@ __PACK_BEGIN__
 /**
  * Data collection proxy message
  */
-PACKED_STRUCT ProxyMsg
+struct __PACKED__ ProxyMsg
 {
    BYTE challenge[PROXY_CHALLENGE_SIZE];
    uint64_t serverId;
