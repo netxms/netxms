@@ -327,7 +327,7 @@ AC_ARG_WITH(otel,
 ])
 
 AC_ARG_WITH(prometheus,
-[AS_HELP_STRING(--with-prometheus,build Prometheus remote write support for agent)],
+[AS_HELP_STRING(--with-prometheus,build Prometheus/OpenMetrics subagent)],
 [
 	COMPONENTS="$COMPONENTS prometheus"
 	REQUIRE_MICROHTTPD="yes"
