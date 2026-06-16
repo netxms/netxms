@@ -1293,6 +1293,46 @@ enum class Ownership : bool
 #endif
 
 /**
+ * Structure packing.
+ *
+ * Wrap a packed structure definition in __PACK_BEGIN__ / __PACK_END__
+ * and use PACKED_STRUCT in place of the "struct" keyword:
+ *
+ *    __PACK_BEGIN__
+ *    PACKED_STRUCT Foo { ... };
+ *    __PACK_END__
+ *
+ * On MSVC this expands to #pragma pack(push,1) / #pragma pack(pop), which MSVC
+ * honors correctly. On GCC, Clang and Oracle Developer Studio it emits no pragma
+ * at all and relies solely on the per-struct __attribute__((packed)). This is
+ * required because Oracle Studio 12.6 never lifts a "#pragma pack(1)" - it stays
+ * in effect for the rest of the translation unit and silently packs every
+ * structure defined after it (see issue #3328).
+ */
+#if defined(_MSC_VER)
+#define __PACK_BEGIN__ __pragma(pack(push,1))
+#define __PACK_END__   __pragma(pack(pop))
+#define PACKED_STRUCT struct
+#define __PACKED__
+#else
+#define __PACK_BEGIN__
+#define __PACK_END__
+#define PACKED_STRUCT struct __attribute__((packed))
+#define __PACKED__ __attribute__((packed))
+#endif
+
+/**
+ * Macros for suppress and resume compiler warning about potential unaligned access.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define SUPPRESS_WARNING_PACKED_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
+#define SUPPRESS_WARNING_PACKED_POP _Pragma("GCC diagnostic pop")
+#else
+#define SUPPRESS_WARNING_PACKED_PUSH
+#define SUPPRESS_WARNING_PACKED_POP
+#endif
+
+/**
  * Header tags
  */
 #define __NX_BINARY_VERSION_TAG static const char __UNUSED__ __netxms_tag_version[] = "$nxtag.version${" NETXMS_VERSION_STRING_A "}$";

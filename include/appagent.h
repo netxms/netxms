@@ -80,9 +80,9 @@
  * Communication message structure
  */
 
-#pragma pack(1)
+__PACK_BEGIN__
 
-typedef struct __apagent_msg
+typedef PACKED_STRUCT __apagent_msg
 {
 	char prefix[APPAGENT_MSG_START_INDICATOR_LEN];
 	WORD length;		// message length including prefix and length field
@@ -92,7 +92,7 @@ typedef struct __apagent_msg
 	BYTE payload[1];	// actual payload size determined by message length
 } APPAGENT_MSG;
 
-#pragma pack()
+__PACK_END__
 
 #ifdef __cplusplus
 extern "C" {

@@ -391,7 +391,9 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
           g_proxyList.contains(ServerObjectKey(zone->getServerId(), ntohl(request.proxyIdSelf))))
       {
          isValid = true;
-         std::swap(request.proxyIdDest, request.proxyIdSelf);
+         uint32_t tmp = request.proxyIdDest;   // cannot std::swap packed fields - access by value
+         request.proxyIdDest = request.proxyIdSelf;
+         request.proxyIdSelf = tmp;
          SignMessage(&request, sizeof(request) - sizeof(request.hmac), zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac);
       }
       g_proxyListLock.unlock();
