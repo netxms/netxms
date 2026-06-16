@@ -150,6 +150,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("Prometheus.LabelValue(*)"), H_TargetLabel, nullptr, DCI_DT_STRING, _T("Prometheus: value of label of metric {instance}") },
    { _T("Prometheus.Target.LastScrapeTime(*)"), H_TargetInfo, _T("T"), DCI_DT_UINT64, _T("Prometheus: timestamp of last scrape of target {instance}") },
    { _T("Prometheus.Target.SampleCount(*)"), H_TargetInfo, _T("C"), DCI_DT_UINT, _T("Prometheus: number of samples in last scrape of target {instance}") },
    { _T("Prometheus.Target.Status(*)"), H_TargetInfo, _T("S"), DCI_DT_INT, _T("Prometheus: status of last scrape of target {instance}") },

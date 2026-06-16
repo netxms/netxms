@@ -319,6 +319,39 @@ LONG ScrapeTarget::getValue(const char *metric, const ObjectArray<SampleLabel>& 
 }
 
 /**
+ * Get value of given label from first sample matching given metric name and label filters
+ */
+LONG ScrapeTarget::getLabelValue(const char *metric, const char *label, const ObjectArray<SampleLabel>& filters, TCHAR *value) const
+{
+   LockGuard lockGuard(m_lock);
+   if (m_samples == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   for(int i = 0; i < m_samples->size(); i++)
+   {
+      MetricSample *sample = m_samples->get(i);
+      if (strcmp(sample->getName(), metric) != 0)
+         continue;
+
+      bool match = true;
+      for(int j = 0; (j < filters.size()) && match; j++)
+      {
+         const char *v = sample->getLabelValue(filters.get(j)->name);
+         match = (v != nullptr) && (strcmp(v, filters.get(j)->value) == 0);
+      }
+      if (match)
+      {
+         const char *v = sample->getLabelValue(label);
+         if (v == nullptr)
+            return SYSINFO_RC_NO_SUCH_INSTANCE;
+         ret_utf8string(value, v);
+         return SYSINFO_RC_SUCCESS;
+      }
+   }
+   return SYSINFO_RC_NO_SUCH_INSTANCE;
+}
+
+/**
  * Get unique values of given label across all samples of given metric
  */
 LONG ScrapeTarget::getLabelValues(const char *metric, const char *label, StringList *output) const
@@ -525,6 +558,28 @@ LONG H_TargetInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 }
 
 /**
+ * Parse label filters (name=value pairs) from metric arguments starting at given index.
+ * Returns false on malformed argument.
+ */
+static bool ParseLabelFilters(const TCHAR *param, int startIndex, ObjectArray<SampleLabel>& filters)
+{
+   for(int i = startIndex; ; i++)
+   {
+      char buffer[1024];
+      if (!AgentGetParameterArgA(param, i, buffer, 1024))
+         return false;
+      if (buffer[0] == 0)
+         break;
+      char *separator = strchr(buffer, '=');
+      if (separator == nullptr)
+         return false;
+      *separator = 0;
+      filters.add(new SampleLabel(buffer, strlen(buffer), MemCopyStringA(separator + 1)));
+   }
+   return true;
+}
+
+/**
  * Handler for Prometheus.Value parameter
  */
 LONG H_TargetValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -542,21 +597,35 @@ LONG H_TargetValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    ObjectArray<SampleLabel> filters(0, 8, Ownership::True);
-   for(int i = 3; ; i++)
-   {
-      char buffer[1024];
-      if (!AgentGetParameterArgA(param, i, buffer, 1024))
-         return SYSINFO_RC_UNSUPPORTED;
-      if (buffer[0] == 0)
-         break;
-      char *separator = strchr(buffer, '=');
-      if (separator == nullptr)
-         return SYSINFO_RC_UNSUPPORTED;
-      *separator = 0;
-      filters.add(new SampleLabel(buffer, strlen(buffer), MemCopyStringA(separator + 1)));
-   }
+   if (!ParseLabelFilters(param, 3, filters))
+      return SYSINFO_RC_UNSUPPORTED;
 
    return target->getValue(metric, filters, value);
+}
+
+/**
+ * Handler for Prometheus.LabelValue parameter
+ */
+LONG H_TargetLabel(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR targetName[64];
+   if (!AgentGetParameterArg(param, 1, targetName, 64) || (targetName[0] == 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   char metric[256], label[256];
+   if (!AgentGetParameterArgA(param, 2, metric, 256) || (metric[0] == 0) ||
+       !AgentGetParameterArgA(param, 3, label, 256) || (label[0] == 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ScrapeTarget *target = FindTarget(targetName);
+   if (target == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   ObjectArray<SampleLabel> filters(0, 8, Ownership::True);
+   if (!ParseLabelFilters(param, 4, filters))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   return target->getLabelValue(metric, label, filters, value);
 }
 
 /**

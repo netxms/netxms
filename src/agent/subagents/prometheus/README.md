@@ -126,6 +126,7 @@ Scraped samples are kept in memory (last scrape per target) and can be queried d
 | Metric | Description |
 |--------|-------------|
 | `Prometheus.Value(target, metric, label=value...)` | Value of given metric; optional `label=value` arguments select a specific time series |
+| `Prometheus.LabelValue(target, metric, label, label=value...)` | Value of given label from first matching time series; optional `label=value` arguments select a specific time series. Useful for info-style metrics (e.g. `node_exporter_build_info`) whose data is carried in labels rather than the numeric value |
 | `Prometheus.Target.Status(target)` | 1 if last scrape of given target was successful, 0 otherwise |
 | `Prometheus.Target.LastScrapeTime(target)` | UNIX timestamp of last scrape attempt |
 | `Prometheus.Target.SampleCount(target)` | Number of samples collected by last successful scrape |

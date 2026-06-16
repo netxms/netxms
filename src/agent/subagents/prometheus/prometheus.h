@@ -182,6 +182,7 @@ public:
    }
 
    LONG getValue(const char *metric, const ObjectArray<SampleLabel>& filters, TCHAR *value) const;
+   LONG getLabelValue(const char *metric, const char *label, const ObjectArray<SampleLabel>& filters, TCHAR *value) const;
    LONG getLabelValues(const char *metric, const char *label, StringList *output) const;
    LONG fillSeriesTable(const char *metric, Table *table) const;
 };
@@ -204,6 +205,7 @@ void StopScrapers();
 
 LONG H_TargetInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_TargetValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_TargetLabel(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_TargetList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LabelValues(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_TargetsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
