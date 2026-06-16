@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -228,7 +228,11 @@ StringBuffer ColumnFilter::generateSql()
 			int32_t tzOffset = m_value.currentPeriod.tzOffset;
 			time_t localNow = time(nullptr) + tzOffset;
 			struct tm lt;
+#if HAVE_GMTIME_R
 			gmtime_r(&localNow, &lt);   // broken-down representation of "now" in client local time
+#else
+		   memcpy(&lt, gmtime(&localNow), sizeof(struct tm));
+#endif
 			lt.tm_hour = 0;
 			lt.tm_min = 0;
 			lt.tm_sec = 0;
