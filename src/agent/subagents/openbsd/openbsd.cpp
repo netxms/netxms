@@ -150,6 +150,14 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 };
 
 /**
+ * Subagent's tables
+ */
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+	{ _T("Net.Interfaces"), H_NetIfTable, NULL, _T("INDEX"), DCTDESC_NETWORK_INTERFACES },
+};
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO m_info =
@@ -162,7 +170,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_lists,
-	0, NULL,	// tables
+	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE), m_tables,	// tables
    0, NULL,	// actions
 	0, NULL	// push parameters
 };

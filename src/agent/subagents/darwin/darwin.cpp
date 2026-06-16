@@ -211,6 +211,7 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("Net.Interfaces"), H_NetIfTable, NULL, _T("INDEX"), DCTDESC_NETWORK_INTERFACES },
    { _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
 };
 

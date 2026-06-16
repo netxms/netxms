@@ -53,6 +53,7 @@ LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession
 LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfTable(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 #if HAVE_DECL_SIOCGIFDATA
 LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

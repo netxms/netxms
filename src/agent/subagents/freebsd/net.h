@@ -53,6 +53,7 @@ LONG H_NetIfOperStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSessio
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfNames(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfTable(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetInterface64bitSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

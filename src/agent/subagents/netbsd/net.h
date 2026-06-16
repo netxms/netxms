@@ -39,6 +39,7 @@ LONG H_NetIfAdmStatus(const char *, const char *, char *, AbstractCommSession *)
 LONG H_NetIfLink(const char *, const char *, char *, AbstractCommSession *);
 LONG H_NetArpCache(const char *, const char *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const char *, const char *, StringList *, AbstractCommSession *);
+LONG H_NetIfTable(const char *, const char *, Table *, AbstractCommSession *);
 LONG H_NetRoutingTable(const char *, const char *, StringList *, AbstractCommSession *);
 LONG H_NetIfInfoFromKVM(const char *, const char *, char *, AbstractCommSession *);
 LONG H_NetTCPConnections(const char *, const char *, char *, AbstractCommSession *);

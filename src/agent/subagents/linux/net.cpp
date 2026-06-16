@@ -481,8 +481,9 @@ struct LinuxInterfaceInfo
    char name[IFNAMSIZ];
    char alias[256];
    ObjectArray<InetAddress> addrList;
+   ObjectArray<InetAddress> peerList;   // point-to-point peer addresses, aligned by index with addrList (invalid address when none)
 
-   LinuxInterfaceInfo() : addrList(16, 16, Ownership::True)
+   LinuxInterfaceInfo() : addrList(16, 16, Ownership::True), peerList(16, 16, Ownership::True)
    {
       index = 0;
       type = IFTYPE_OTHER;
@@ -564,30 +565,50 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
       return;  // interface not found
    }
 
-   InetAddress *addr = nullptr;
+   // Address may be given as IFA_ADDRESS or IFA_LOCAL. For point-to-point
+   // interfaces IFA_LOCAL is the local address and IFA_ADDRESS is the remote
+   // (peer) address. For normal broadcast interfaces only IFA_ADDRESS is set
+   // and it represents the local address.
+   InetAddress *localAddr = nullptr;
+   InetAddress *ifaAddr = nullptr;
    int len = IFA_PAYLOAD(messageHeader);
    for(struct rtattr *attribute = IFA_RTA(addrMsg); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
    {
-      // Address may be given as IFA_ADDRESS or IFA_LOCAL
-      // We prefer IFA_LOCAL because it should be local address
-      // for point-to-point interfaces. For normal broadcast interfaces
-      // only IFA_ADDRESS may be set.
       if ((attribute->rta_type == IFA_LOCAL) || (attribute->rta_type == IFA_ADDRESS))
       {
-         delete addr;  // if it was created from IFA_ADDRESS
-         addr = (addrMsg->ifa_family == AF_INET) ?
+         InetAddress *a = (addrMsg->ifa_family == AF_INET) ?
                new InetAddress(ntohl(*static_cast<uint32_t*>(RTA_DATA(attribute)))) :
                new InetAddress(static_cast<BYTE*>(RTA_DATA(attribute)));
          if (attribute->rta_type == IFA_LOCAL)
-            break;
+         {
+            delete localAddr;
+            localAddr = a;
+         }
+         else
+         {
+            delete ifaAddr;
+            ifaAddr = a;
+         }
       }
    }
 
+   // Prefer IFA_LOCAL as the interface's own address
+   InetAddress *addr = (localAddr != nullptr) ? localAddr : ifaAddr;
    if (addr != nullptr)
    {
       addr->setMaskBits(addrMsg->ifa_prefixlen);
       iface->addrList.add(addr);
+
+      // When both IFA_LOCAL and IFA_ADDRESS are present and differ, IFA_ADDRESS
+      // is the point-to-point peer address; otherwise there is no peer.
+      iface->peerList.add(((localAddr != nullptr) && (ifaAddr != nullptr) && !localAddr->equals(*ifaAddr)) ?
+            new InetAddress(*ifaAddr) : new InetAddress());
    }
+
+   if ((localAddr != nullptr) && (localAddr != addr))
+      delete localAddr;
+   if ((ifaAddr != nullptr) && (ifaAddr != addr))
+      delete ifaAddr;
 }
 
 /**
@@ -790,6 +811,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
    value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
    value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+   value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
    value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
    value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max speed"));
 
@@ -807,22 +829,40 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
       value->set(5, BinToStr(iface->macAddr, 6, macAddr));
 
       StringBuffer sb;
+      StringBuffer peers;
+      bool havePeer = false;
       for(int j = 0; j < iface->addrList.size(); j++)
       {
          if (j > 0)
+         {
             sb.append(_T(", "));
+            peers.append(_T(", "));
+         }
          InetAddress *addr = iface->addrList.get(j);
          sb.append(addr->toString());
          sb.append(_T('/'));
          sb.append(addr->getMaskBits());
+
+         const InetAddress *peer = iface->peerList.get(j);
+         if ((peer != nullptr) && peer->isValid())
+         {
+            peers.append(peer->toString());
+            havePeer = true;
+         }
+         else
+         {
+            peers.append(_T('-'));
+         }
       }
       value->set(6, sb);
+      if (havePeer)
+         value->set(7, peers);
 
       uint64_t speed, maxSpeed;
       if (GetInterfaceSpeed(iface->name, &speed, &maxSpeed))
       {
-         value->set(7, speed);
-         value->set(8, maxSpeed);
+         value->set(8, speed);
+         value->set(9, maxSpeed);
       }
    }
 
