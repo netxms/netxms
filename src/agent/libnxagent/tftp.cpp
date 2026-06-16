@@ -45,12 +45,12 @@ enum Command
    TFTP_ERROR = 5
 };
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * Packet structure
  */
-struct Packet
+struct __PACKED__ Packet
 {
    uint16_t command;
    union
@@ -62,7 +62,7 @@ struct Packet
    char data[BLOCK_SIZE];
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Buffer class for memory stream implementation

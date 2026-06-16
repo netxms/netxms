@@ -648,19 +648,19 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
    return SYSINFO_RC_SUCCESS;
 }
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * BIOS table header
  */
-struct TableHeader
+struct __PACKED__ TableHeader
 {
    uint8_t type;
    uint8_t fixedLength;
    uint16_t handle;
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Get BIOS string by index
