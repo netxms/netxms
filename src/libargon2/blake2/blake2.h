@@ -32,8 +32,12 @@ enum blake2b_constant {
     BLAKE2B_PERSONALBYTES = 16
 };
 
+#ifndef __SUNPRO_CC
 #pragma pack(push, 1)
 typedef struct __blake2b_param {
+#else
+typedef struct __attribute__((packed)) __blake2b_param {
+#endif
     uint8_t digest_length;                   /* 1 */
     uint8_t key_length;                      /* 2 */
     uint8_t fanout;                          /* 3 */
@@ -46,7 +50,9 @@ typedef struct __blake2b_param {
     uint8_t salt[BLAKE2B_SALTBYTES];         /* 48 */
     uint8_t personal[BLAKE2B_PERSONALBYTES]; /* 64 */
 } blake2b_param;
+#ifndef __SUNPRO_CC
 #pragma pack(pop)
+#endif
 
 typedef struct __blake2b_state {
     uint64_t h[8];
