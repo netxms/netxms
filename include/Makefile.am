@@ -10,7 +10,6 @@
 
 include_HEADERS = \
 	appagent.h \
-	ata.h \
 	base32.h \
 	base64.h \
 	dbdrv.h \
