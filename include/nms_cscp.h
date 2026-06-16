@@ -63,7 +63,7 @@
 #define NXCP_SUPPORT_AES_128      0x10
 #define NXCP_SUPPORT_BLOWFISH_128 0x20
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * Message field flags
@@ -80,7 +80,7 @@
 /**
  * NXCP data field structure
  */
-struct NXCP_MESSAGE_FIELD
+PACKED_STRUCT NXCP_MESSAGE_FIELD
 {
    uint32_t fieldId;  // Field identifier
    uint8_t type;       // Data type
@@ -136,7 +136,7 @@ struct NXCP_MESSAGE_FIELD
 /**
  * Message structure
  */
-struct NXCP_MESSAGE
+PACKED_STRUCT NXCP_MESSAGE
 {
    uint16_t code;      // Message (command) code
    uint16_t flags;     // Message flags
@@ -149,7 +149,7 @@ struct NXCP_MESSAGE
 /**
  * Encrypted payload header
  */
-struct NXCP_ENCRYPTED_PAYLOAD_HEADER
+PACKED_STRUCT NXCP_ENCRYPTED_PAYLOAD_HEADER
 {
    uint32_t dwChecksum;
    uint32_t dwReserved; // Align to 8-byte boundary
@@ -158,7 +158,7 @@ struct NXCP_ENCRYPTED_PAYLOAD_HEADER
 /**
  * Encrypted message structure
  */
-struct NXCP_ENCRYPTED_MESSAGE
+PACKED_STRUCT NXCP_ENCRYPTED_MESSAGE
 {
    uint16_t code;       // Should be CMD_ENCRYPTED_MESSAGE
    BYTE padding;    // Number of bytes added to the end of message
@@ -167,7 +167,7 @@ struct NXCP_ENCRYPTED_MESSAGE
    BYTE data[1];     // Encrypted payload
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Data types
