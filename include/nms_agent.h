@@ -241,7 +241,7 @@ struct PolicyChangeNotification
  * Agent component token
  */
 __PACK_BEGIN__
-PACKED_STRUCT AgentComponentToken
+struct __PACKED__ AgentComponentToken
 {
    char component[16];
    uint64_t expirationTime;   // In network byte order
@@ -743,7 +743,7 @@ __PACK_BEGIN__
 /**
  * Hash map key for server objects (64 bit server ID + 32 bit object ID)
  */
-PACKED_STRUCT LIBNXAGENT_EXPORTABLE ServerObjectKey
+struct LIBNXAGENT_EXPORTABLE __PACKED__ ServerObjectKey
 {
    uint64_t serverId;
    uint32_t objectId;

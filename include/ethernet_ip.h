@@ -66,7 +66,7 @@ __PACK_BEGIN__
 /**
  * EIP encapsulation header
  */
-PACKED_STRUCT EIP_EncapsulationHeader
+struct __PACKED__ EIP_EncapsulationHeader
 {
    uint16_t command;
    uint16_t length;

@@ -1294,10 +1294,10 @@ enum class Ownership : bool
  * Structure packing.
  *
  * Wrap a packed structure definition in __PACK_BEGIN__ / __PACK_END__
- * and use PACKED_STRUCT in place of the "struct" keyword:
+ * and use __PACKED__ together with the "struct" keyword:
  *
  *    __PACK_BEGIN__
- *    PACKED_STRUCT Foo { ... };
+ *    struct __PACKED__ Foo { ... };
  *    __PACK_END__
  *
  * On MSVC this expands to #pragma pack(push,1) / #pragma pack(pop), which MSVC
@@ -1310,12 +1310,10 @@ enum class Ownership : bool
 #if defined(_MSC_VER)
 #define __PACK_BEGIN__ __pragma(pack(push,1))
 #define __PACK_END__   __pragma(pack(pop))
-#define PACKED_STRUCT struct
 #define __PACKED__
 #else
 #define __PACK_BEGIN__
 #define __PACK_END__
-#define PACKED_STRUCT struct __attribute__((packed))
 #define __PACKED__ __attribute__((packed))
 #endif
 
