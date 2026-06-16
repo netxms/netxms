@@ -49,6 +49,8 @@ typedef struct t_Addr
 {
 	struct in_addr ip;
 	int mask;
+	struct in_addr peer;   // point-to-point peer address (valid only when hasPeer is true)
+	bool hasPeer;
 } ADDR;
 
 typedef struct t_IfList
@@ -545,6 +547,133 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, Abs
 		perror("getifaddrs()");
 	}
 	return nRet;
+}
+
+/**
+ * Handler for Net.Interfaces table
+ */
+LONG H_NetIfTable(const char *param, const char *arg, Table *value, AbstractCommSession *session)
+{
+	struct ifaddrs *ifAddrList;
+	if (getifaddrs(&ifAddrList) != 0)
+	{
+		perror("getifaddrs()");
+		return SYSINFO_RC_ERROR;
+	}
+
+	char *name = NULL;
+	int ifCount = 0;
+	IFLIST *ifList = NULL;
+	LONG rc = SYSINFO_RC_SUCCESS;
+
+	for(struct ifaddrs *p = ifAddrList; p != NULL; p = p->ifa_next)
+	{
+		if (name != p->ifa_name)
+		{
+			ifCount++;
+			IFLIST *tmp = (IFLIST *)realloc(ifList, ifCount * sizeof(IFLIST));
+			if (tmp == NULL)
+			{
+				ifCount--;
+				rc = SYSINFO_RC_ERROR;
+				break;
+			}
+			ifList = tmp;
+			memset(&ifList[ifCount - 1], 0, sizeof(IFLIST));
+			ifList[ifCount - 1].name = p->ifa_name;
+			name = p->ifa_name;
+		}
+
+		IFLIST *iface = &ifList[ifCount - 1];
+		switch(p->ifa_addr->sa_family)
+		{
+			case AF_INET:
+				{
+					ADDR *tmp = (ADDR *)realloc(iface->addr, (iface->addrCount + 1) * sizeof(ADDR));
+					if (tmp == NULL)
+					{
+						rc = SYSINFO_RC_ERROR;
+						break;
+					}
+					iface->addr = tmp;
+					ADDR *a = &iface->addr[iface->addrCount];
+					memset(a, 0, sizeof(ADDR));
+					a->ip = ((struct sockaddr_in *)(p->ifa_addr))->sin_addr;
+					a->mask = BitsInMask(htonl(((struct sockaddr_in *)(p->ifa_netmask))->sin_addr.s_addr));
+					// For point-to-point interfaces ifa_dstaddr holds the remote (peer) address
+					if ((p->ifa_flags & IFF_POINTOPOINT) && (p->ifa_dstaddr != NULL) && (p->ifa_dstaddr->sa_family == AF_INET))
+					{
+						a->peer = ((struct sockaddr_in *)(p->ifa_dstaddr))->sin_addr;
+						a->hasPeer = true;
+					}
+					iface->addrCount++;
+				}
+				break;
+			case AF_LINK:
+				{
+					struct sockaddr_dl *sdl = (struct sockaddr_dl *)p->ifa_addr;
+					iface->mac = (struct ether_addr *)LLADDR(sdl);
+					iface->index = sdl->sdl_index;
+				}
+				break;
+		}
+		if (rc == SYSINFO_RC_ERROR)
+			break;
+	}
+
+	if (rc == SYSINFO_RC_SUCCESS)
+	{
+		value->addColumn("INDEX", DCI_DT_UINT, "Index", true);
+		value->addColumn("NAME", DCI_DT_STRING, "Name");
+		value->addColumn("ALIAS", DCI_DT_STRING, "Alias");
+		value->addColumn("TYPE", DCI_DT_UINT, "Type");
+		value->addColumn("MTU", DCI_DT_UINT, "MTU");
+		value->addColumn("MAC_ADDRESS", DCI_DT_STRING, "MAC address");
+		value->addColumn("IP_ADDRESSES", DCI_DT_STRING, "IP addresses");
+		value->addColumn("PEER_IP", DCI_DT_STRING, "Peer IP addresses");
+
+		char macAddr[32];
+		for(int i = 0; i < ifCount; i++)
+		{
+			value->addRow();
+			value->set(0, ifList[i].index);
+			value->set(1, ifList[i].name);
+			value->set(3, IFTYPE_OTHER);
+			value->set(4, 0);
+			value->set(5, BinToStrA((BYTE *)ifList[i].mac, 6, macAddr));
+
+			char ipList[1024] = "", peerList[1024] = "", tmp[64];
+			bool havePeer = false;
+			for(int j = 0; j < ifList[i].addrCount; j++)
+			{
+				if (j > 0)
+				{
+					strlcat(ipList, ", ", sizeof(ipList));
+					strlcat(peerList, ", ", sizeof(peerList));
+				}
+				snprintf(tmp, sizeof(tmp), "%s/%d", inet_ntoa(ifList[i].addr[j].ip), ifList[i].addr[j].mask);
+				strlcat(ipList, tmp, sizeof(ipList));
+				if (ifList[i].addr[j].hasPeer)
+				{
+					strlcat(peerList, inet_ntoa(ifList[i].addr[j].peer), sizeof(peerList));
+					havePeer = true;
+				}
+				else
+				{
+					strlcat(peerList, "-", sizeof(peerList));
+				}
+			}
+			value->set(6, ipList);
+			if (havePeer)
+				value->set(7, peerList);
+		}
+	}
+
+	for(int i = 0; i < ifCount; i++)
+		free(ifList[i].addr);
+	free(ifList);
+	freeifaddrs(ifAddrList);
+	return rc;
 }
 
 LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)

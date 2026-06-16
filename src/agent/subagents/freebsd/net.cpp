@@ -70,6 +70,7 @@ struct IFLIST
    char *name;
    struct ether_addr *mac;
    InetAddress *addr;
+   InetAddress *peer;   // point-to-point peer addresses, aligned by index with addr (invalid address when none)
    int addrCount;
    int index;
    int type;
@@ -565,6 +566,155 @@ LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList *value, Abstra
 LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    return GetInterfaceList(value, true);
+}
+
+/**
+ * Handler for Net.Interfaces table
+ */
+LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   struct ifaddrs *ifAddrList;
+   if (getifaddrs(&ifAddrList) != 0)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("H_NetIfTable: call to getifaddrs() failed (%s)"), _tcserror(errno));
+      return SYSINFO_RC_ERROR;
+   }
+
+   char *name = nullptr;
+   int ifCount = 0;
+   IFLIST *ifList = nullptr;
+   LONG rc = SYSINFO_RC_SUCCESS;
+
+   for(struct ifaddrs *p = ifAddrList; p != nullptr; p = p->ifa_next)
+   {
+      if (name != p->ifa_name)
+      {
+         ifCount++;
+         IFLIST *tmp = MemRealloc(ifList, ifCount * sizeof(IFLIST));
+         if (tmp == nullptr)
+         {
+            ifCount--;
+            rc = SYSINFO_RC_ERROR;
+            break;
+         }
+         ifList = tmp;
+         memset(&ifList[ifCount - 1], 0, sizeof(IFLIST));
+         ifList[ifCount - 1].name = p->ifa_name;
+         name = p->ifa_name;
+      }
+
+      IFLIST *iface = &ifList[ifCount - 1];
+      switch(p->ifa_addr->sa_family)
+      {
+         case AF_INET:
+         case AF_INET6:
+            {
+               // MemRealloc frees the old block on failure, so reset the pointer to avoid a double free during cleanup
+               InetAddress *atmp = MemRealloc(iface->addr, (iface->addrCount + 1) * sizeof(InetAddress));
+               if (atmp == nullptr)
+               {
+                  iface->addr = nullptr;
+                  rc = SYSINFO_RC_ERROR;
+                  break;
+               }
+               iface->addr = atmp;
+               InetAddress *ptmp = MemRealloc(iface->peer, (iface->addrCount + 1) * sizeof(InetAddress));
+               if (ptmp == nullptr)
+               {
+                  iface->peer = nullptr;
+                  rc = SYSINFO_RC_ERROR;
+                  break;
+               }
+               iface->peer = ptmp;
+               if (p->ifa_addr->sa_family == AF_INET)
+               {
+                  uint32_t addr = htonl(reinterpret_cast<struct sockaddr_in*>(p->ifa_addr)->sin_addr.s_addr);
+                  uint32_t mask = htonl(reinterpret_cast<struct sockaddr_in*>(p->ifa_netmask)->sin_addr.s_addr);
+                  iface->addr[iface->addrCount] = InetAddress(addr, mask);
+               }
+               else
+               {
+                  iface->addr[iface->addrCount] =
+                        InetAddress(reinterpret_cast<struct sockaddr_in6*>(p->ifa_addr)->sin6_addr.s6_addr,
+                              BitsInMask(reinterpret_cast<struct sockaddr_in6*>(p->ifa_netmask)->sin6_addr.s6_addr, 16));
+               }
+               // For point-to-point interfaces ifa_dstaddr holds the remote (peer) address
+               iface->peer[iface->addrCount] = ((p->ifa_flags & IFF_POINTOPOINT) && (p->ifa_dstaddr != nullptr)) ?
+                     InetAddress::createFromSockaddr(p->ifa_dstaddr) : InetAddress();
+               iface->addrCount++;
+            }
+            break;
+         case AF_LINK:
+            {
+               struct sockaddr_dl *sdl = reinterpret_cast<struct sockaddr_dl*>(p->ifa_addr);
+               iface->mac = reinterpret_cast<struct ether_addr*>(LLADDR(sdl));
+               iface->index = sdl->sdl_index;
+               iface->type = static_cast<struct if_data*>(p->ifa_data)->ifi_type;
+               iface->mtu = static_cast<struct if_data*>(p->ifa_data)->ifi_mtu;
+            }
+            break;
+      }
+      if (rc == SYSINFO_RC_ERROR)
+         break;
+   }
+
+   if (rc == SYSINFO_RC_SUCCESS)
+   {
+      value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
+      value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+      value->addColumn(_T("ALIAS"), DCI_DT_STRING, _T("Alias"));
+      value->addColumn(_T("TYPE"), DCI_DT_UINT, _T("Type"));
+      value->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
+      value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
+      value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+      value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
+
+      char macAddr[32], ipText[64];
+      for(int i = 0; i < ifCount; i++)
+      {
+         IFLIST *iface = &ifList[i];
+         value->addRow();
+         value->set(0, iface->index);
+         value->set(1, iface->name);
+         value->set(3, iface->type);
+         value->set(4, iface->mtu);
+         value->set(5, BinToStrA(reinterpret_cast<BYTE*>(iface->mac), 6, macAddr));
+
+         char ipList[1024] = "", peerList[1024] = "", tmp[80];
+         bool havePeer = false;
+         for(int j = 0; j < iface->addrCount; j++)
+         {
+            if (j > 0)
+            {
+               strlcat(ipList, ", ", sizeof(ipList));
+               strlcat(peerList, ", ", sizeof(peerList));
+            }
+            snprintf(tmp, sizeof(tmp), "%s/%d", iface->addr[j].toStringA(ipText), iface->addr[j].getMaskBits());
+            strlcat(ipList, tmp, sizeof(ipList));
+            if (iface->peer[j].isValid())
+            {
+               strlcat(peerList, iface->peer[j].toStringA(ipText), sizeof(peerList));
+               havePeer = true;
+            }
+            else
+            {
+               strlcat(peerList, "-", sizeof(peerList));
+            }
+         }
+         value->set(6, ipList);
+         if (havePeer)
+            value->set(7, peerList);
+      }
+   }
+
+   for(int i = 0; i < ifCount; i++)
+   {
+      MemFree(ifList[i].addr);
+      MemFree(ifList[i].peer);
+   }
+   MemFree(ifList);
+   freeifaddrs(ifAddrList);
+   return rc;
 }
 
 #if __FreeBSD__ >= 13
