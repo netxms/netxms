@@ -4396,6 +4396,16 @@ void Node::updatePrimaryIpAddr()
          .post();
 
       lockProperties();
+
+      // If node name is the old IP address, update it to the new one
+      wchar_t oldIpText[64];
+      m_ipAddress.toString(oldIpText);
+      if (!wcscmp(oldIpText, m_name))
+      {
+         ipAddr.toString(m_name);
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
+
       setPrimaryIPAddress(ipAddr);
       unlockProperties();
 
@@ -11609,6 +11619,13 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       m_ipAddress.toString(ipAddrText);
       if (!_tcscmp(ipAddrText, m_primaryHostName))
          m_primaryHostName = ipAddr.toString();
+
+      // If node name is the old IP address, update it to the new one
+      if (!wcscmp(ipAddrText, m_name))
+      {
+         ipAddr.toString(m_name);
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
 
       setPrimaryIPAddress(ipAddr);
       m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
