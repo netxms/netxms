@@ -98,8 +98,10 @@ public:
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
+   void loadEnumValues(json_t *enumMap);
    void fillMessage(NXCPMessage *msg, uint32_t baseId);
    void updateFromMessage(const NXCPMessage& msg);
+   void updateFromJSON(json_t *json);
    bool saveToDatabase() const;
    bool deleteFromDatabase();
 
@@ -161,6 +163,10 @@ void AssetManagementSchemaToMessage(NXCPMessage *msg);
 uint32_t NXCORE_EXPORTABLE CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
 uint32_t NXCORE_EXPORTABLE UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
 uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
+json_t NXCORE_EXPORTABLE *GetAssetAttributeAsJson(const TCHAR *name);
+uint32_t NXCORE_EXPORTABLE CreateAssetAttributeFromJSON(json_t *json);
+uint32_t NXCORE_EXPORTABLE UpdateAssetAttributeFromJSON(const TCHAR *name, json_t *json);
+uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const TCHAR *name);
 std::pair<uint32_t, String> NXCORE_EXPORTABLE ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value);
 String NXCORE_EXPORTABLE GetAssetAttributeDisplayName(const TCHAR *name);
 bool NXCORE_EXPORTABLE IsMandatoryAssetProperty(const TCHAR *name);

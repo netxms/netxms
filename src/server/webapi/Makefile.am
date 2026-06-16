@@ -1,7 +1,7 @@
 MODULE = webapi
 
 pkglib_LTLIBRARIES = webapi.la
-webapi_la_SOURCES = 2fa.cpp actions.cpp ai.cpp alarm_categories.cpp alarms.cpp chassis.cpp conn_history.cpp datacoll.cpp dcst.cpp epp.cpp event_forwarders.cpp events.cpp find.cpp geoareas.cpp grafana.cpp images.cpp info.cpp main.cpp notifications.cpp object_categories.cpp object_collections.cpp object_helpers.cpp object_node_config.cpp object_properties.cpp objects.cpp objtools.cpp racks.cpp schedules.cpp scripts.cpp snmp_mib.cpp sshkeys.cpp tcpproxy.cpp topology.cpp users.cpp websvc.cpp
+webapi_la_SOURCES = 2fa.cpp actions.cpp ai.cpp alarm_categories.cpp alarms.cpp asset_management.cpp chassis.cpp conn_history.cpp datacoll.cpp dcst.cpp epp.cpp event_forwarders.cpp events.cpp find.cpp geoareas.cpp grafana.cpp images.cpp info.cpp main.cpp notifications.cpp object_categories.cpp object_collections.cpp object_helpers.cpp object_node_config.cpp object_properties.cpp objects.cpp objtools.cpp racks.cpp schedules.cpp scripts.cpp snmp_mib.cpp sshkeys.cpp tcpproxy.cpp topology.cpp users.cpp websvc.cpp
 webapi_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
 webapi_la_LDFLAGS = -module -avoid-version @MICROHTTPD_LDFLAGS@
 webapi_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la @MICROHTTPD_LIBS@

@@ -330,6 +330,7 @@
     <ClCompile Include="ai.cpp" />
     <ClCompile Include="alarm_categories.cpp" />
     <ClCompile Include="alarms.cpp" />
+    <ClCompile Include="asset_management.cpp" />
     <ClCompile Include="chassis.cpp" />
     <ClCompile Include="conn_history.cpp" />
     <ClCompile Include="datacoll.cpp" />

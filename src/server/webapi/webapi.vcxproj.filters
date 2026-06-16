@@ -27,6 +27,9 @@
     <ClCompile Include="alarm_categories.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="asset_management.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="chassis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

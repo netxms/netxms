@@ -24,6 +24,76 @@
 #include <asset_management.h>
 
 /**
+ * Symbolic names for asset attribute data types (indexed by AMDataType).
+ * Used for the JSON representation exposed to external consumers (REST API, export, AI).
+ */
+static const char *s_dataTypeNames[] = { "String", "Integer", "Number", "Boolean", "Enum", "MacAddress", "IPAddress", "UUID", "ObjectReference", "Date" };
+
+/**
+ * Symbolic names for asset attribute system types (indexed by AMSystemType).
+ */
+static const char *s_systemTypeNames[] = { "None", "Serial", "IPAddress", "MacAddress", "Vendor", "Model" };
+
+/**
+ * Get symbolic name for data type
+ */
+static inline const char *DataTypeToName(AMDataType type)
+{
+   int i = static_cast<int>(type);
+   return ((i >= 0) && (i < static_cast<int>(sizeof(s_dataTypeNames) / sizeof(char*)))) ? s_dataTypeNames[i] : s_dataTypeNames[0];
+}
+
+/**
+ * Get symbolic name for system type
+ */
+static inline const char *SystemTypeToName(AMSystemType type)
+{
+   int i = static_cast<int>(type);
+   return ((i >= 0) && (i < static_cast<int>(sizeof(s_systemTypeNames) / sizeof(char*)))) ? s_systemTypeNames[i] : s_systemTypeNames[0];
+}
+
+/**
+ * Read data type from JSON value. Accepts either a symbolic name (case-insensitive) or a numeric code.
+ * Returns defValue if the key is absent or has an unrecognized value.
+ */
+static AMDataType DataTypeFromJson(json_t *json, const char *key, AMDataType defValue)
+{
+   json_t *value = json_object_get(json, key);
+   if (value == nullptr)
+      return defValue;
+   if (json_is_integer(value))
+      return static_cast<AMDataType>(json_integer_value(value));
+   if (json_is_string(value))
+   {
+      const char *s = json_string_value(value);
+      for (size_t i = 0; i < sizeof(s_dataTypeNames) / sizeof(char*); i++)
+         if (!stricmp(s, s_dataTypeNames[i]))
+            return static_cast<AMDataType>(i);
+   }
+   return defValue;
+}
+
+/**
+ * Read system type from JSON value. Accepts either a symbolic name (case-insensitive) or a numeric code.
+ */
+static AMSystemType SystemTypeFromJson(json_t *json, const char *key, AMSystemType defValue)
+{
+   json_t *value = json_object_get(json, key);
+   if (value == nullptr)
+      return defValue;
+   if (json_is_integer(value))
+      return static_cast<AMSystemType>(json_integer_value(value));
+   if (json_is_string(value))
+   {
+      const char *s = json_string_value(value);
+      for (size_t i = 0; i < sizeof(s_systemTypeNames) / sizeof(char*); i++)
+         if (!stricmp(s, s_systemTypeNames[i]))
+            return static_cast<AMSystemType>(i);
+   }
+   return defValue;
+}
+
+/**
  * Create asset attribute from database.
  * Fields:
  * attr_name,display_name,data_type,is_mandatory,is_unique,is_hidden,autofill_script,range_min,range_max,sys_type
@@ -110,41 +180,21 @@ AssetAttribute::AssetAttribute(json_t *json)
 {
    m_name = json_object_get_string_t(json, "name", _T(""));
    m_displayName = json_object_get_string_t(json, "displayName", _T(""));
-   m_dataType = static_cast<AMDataType>(json_object_get_int32(json, "dataType", 0));
+   m_dataType = DataTypeFromJson(json, "dataType", AMDataType::String);
    m_isMandatory = json_object_get_boolean(json, "isMandatory", false);
    m_isUnique = json_object_get_boolean(json, "isUnique", false);
    m_isHidden = json_object_get_boolean(json, "isHidden", false);
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
-   
+
    TCHAR *script = json_object_get_string_t(json, "autofillScript", _T(""));
    setScript(script);
-   
+
    m_rangeMin = json_object_get_int32(json, "rangeMin", 0);
    m_rangeMax = json_object_get_int32(json, "rangeMax", 0);
-   m_systemType = static_cast<AMSystemType>(json_object_get_int32(json, "systemType", 0));
+   m_systemType = SystemTypeFromJson(json, "systemType", AMSystemType::None);
 
-   // Handle enumMap (object with key-value pairs)
-   json_t *enumMap = json_object_get(json, "enumMap");
-   if (enumMap != nullptr && json_is_object(enumMap))
-   {
-      const char *key;
-      json_t *value;
-      json_object_foreach(enumMap, key, value)
-      {
-         if (json_is_string(value))
-         {
-            TCHAR *keyStr = TStringFromUTF8String(key);
-            TCHAR *valueStr = TStringFromUTF8String(json_string_value(value));
-            if (keyStr != nullptr && valueStr != nullptr)
-            {
-               m_enumValues.set(keyStr, valueStr);
-            }
-            MemFree(keyStr);
-            MemFree(valueStr);
-         }
-      }
-   }
+   loadEnumValues(json_object_get(json, "enumMap"));
 }
 
 /**
@@ -167,6 +217,32 @@ void AssetAttribute::loadEnumValues(DB_RESULT result)
    for (int i = 0; i < rowCount; i++)
    {
       m_enumValues.setPreallocated(DBGetField(result, i, 0, nullptr, 0), DBGetField(result, i, 1, nullptr, 0));
+   }
+}
+
+/**
+ * Load enum values from JSON object (key-value pairs). Existing values are replaced.
+ * No-op if enumMap is null or not an object.
+ */
+void AssetAttribute::loadEnumValues(json_t *enumMap)
+{
+   if ((enumMap == nullptr) || !json_is_object(enumMap))
+      return;
+
+   m_enumValues.clear();
+   const char *key;
+   json_t *value;
+   json_object_foreach(enumMap, key, value)
+   {
+      if (json_is_string(value))
+      {
+         TCHAR *keyStr = TStringFromUTF8String(key);
+         TCHAR *valueStr = TStringFromUTF8String(json_string_value(value));
+         if ((keyStr != nullptr) && (valueStr != nullptr))
+            m_enumValues.set(keyStr, valueStr);
+         MemFree(keyStr);
+         MemFree(valueStr);
+      }
    }
 }
 
@@ -206,6 +282,39 @@ void AssetAttribute::updateFromMessage(const NXCPMessage &msg)
 
    m_enumValues.clear();
    m_enumValues.addAllFromMessage(msg, VID_AM_ENUM_MAP_BASE, VID_ENUM_COUNT);
+
+   saveToDatabase();
+}
+
+/**
+ * Update attribute from JSON document (merge-patch: only fields present in the document are applied).
+ * The attribute name is immutable and is never changed here. Persists changes to the database.
+ */
+void AssetAttribute::updateFromJSON(json_t *json)
+{
+   if (json_object_get(json, "displayName") != nullptr)
+   {
+      MemFree(m_displayName);
+      m_displayName = json_object_get_string_t(json, "displayName", _T(""));
+   }
+   if (json_object_get(json, "dataType") != nullptr)
+      m_dataType = DataTypeFromJson(json, "dataType", m_dataType);
+   if (json_object_get(json, "isMandatory") != nullptr)
+      m_isMandatory = json_object_get_boolean(json, "isMandatory", m_isMandatory);
+   if (json_object_get(json, "isUnique") != nullptr)
+      m_isUnique = json_object_get_boolean(json, "isUnique", m_isUnique);
+   if (json_object_get(json, "isHidden") != nullptr)
+      m_isHidden = json_object_get_boolean(json, "isHidden", m_isHidden);
+   if (json_object_get(json, "autofillScript") != nullptr)
+      setScript(json_object_get_string_t(json, "autofillScript", _T("")));
+   if (json_object_get(json, "rangeMin") != nullptr)
+      m_rangeMin = json_object_get_int32(json, "rangeMin", m_rangeMin);
+   if (json_object_get(json, "rangeMax") != nullptr)
+      m_rangeMax = json_object_get_int32(json, "rangeMax", m_rangeMax);
+   if (json_object_get(json, "systemType") != nullptr)
+      m_systemType = SystemTypeFromJson(json, "systemType", m_systemType);
+   if (json_object_get(json, "enumMap") != nullptr)
+      loadEnumValues(json_object_get(json, "enumMap"));
 
    saveToDatabase();
 }
@@ -338,14 +447,14 @@ json_t *AssetAttribute::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "displayName", json_string_t(m_displayName));
-   json_object_set_new(root, "dataType", json_integer(static_cast<uint32_t>(m_dataType)));
+   json_object_set_new(root, "dataType", json_string(DataTypeToName(m_dataType)));
    json_object_set_new(root, "isMandatory", json_boolean(m_isMandatory));
    json_object_set_new(root, "isUnique", json_boolean(m_isUnique));
    json_object_set_new(root, "isHidden", json_boolean(m_isHidden));
    json_object_set_new(root, "autofillScript", json_string_t(m_autofillScriptSource));
    json_object_set_new(root, "rangeMin", json_integer(m_rangeMin));
    json_object_set_new(root, "rangeMax", json_integer(m_rangeMax));
-   json_object_set_new(root, "systemType", json_integer(static_cast<uint32_t>(m_systemType)));
+   json_object_set_new(root, "systemType", json_string(SystemTypeToName(m_systemType)));
    json_object_set_new(root, "enumMap", m_enumValues.toJson());
    return root;
 }
@@ -640,6 +749,122 @@ uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const NXCPMessage &msg, const Cl
       session.writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldAttrData, nullptr, _T("Asset attribute \"%s\" deleted"), name.cstr());
       json_decref(oldAttrData);
 
+      bool success = attribute->deleteFromDatabase();
+      s_schema.remove(name);
+
+      unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(OBJECT_ASSET);
+      for (int i = 0; i < objects->size(); i++)
+      {
+         static_cast<Asset*>(objects->get(i))->deleteCachedProperty(name);
+      }
+
+      NXCPMessage notificationMessage(CMD_DELETE_ASSET_ATTRIBUTE, 0);
+      notificationMessage.setField(VID_NAME, name);
+      NotifyClientSessions(notificationMessage);
+
+      result = success ? RCC_SUCCESS : RCC_DB_FAILURE;
+   }
+   else
+   {
+      result = RCC_UNKNOWN_ATTRIBUTE;
+   }
+   s_schemaLock.unlock();
+   return result;
+}
+
+/**
+ * Get single asset management attribute as JSON. Returns nullptr if attribute does not exist.
+ */
+json_t NXCORE_EXPORTABLE *GetAssetAttributeAsJson(const TCHAR *name)
+{
+   json_t *result = nullptr;
+   s_schemaLock.readLock();
+   AssetAttribute *attribute = s_schema.get(name);
+   if (attribute != nullptr)
+      result = attribute->toJson();
+   s_schemaLock.unlock();
+   return result;
+}
+
+/**
+ * Create asset management attribute from JSON document. Attribute name is taken from the "name" element.
+ */
+uint32_t NXCORE_EXPORTABLE CreateAssetAttributeFromJSON(json_t *json)
+{
+   uint32_t result;
+   s_schemaLock.writeLock();
+   TCHAR *name = json_object_get_string_t(json, "name", _T(""));
+   if (RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
+   {
+      if (s_schema.get(name) == nullptr)
+      {
+         AssetAttribute *attribute = new AssetAttribute(json);
+         if (attribute->saveToDatabase())
+         {
+            s_schema.set(name, attribute);
+
+            NXCPMessage notificationMessage(CMD_UPDATE_ASSET_ATTRIBUTE, 0);
+            attribute->fillMessage(&notificationMessage, VID_AM_ATTRIBUTES_BASE);
+            NotifyClientSessions(notificationMessage);
+
+            result = RCC_SUCCESS;
+         }
+         else
+         {
+            delete attribute;
+            result = RCC_DB_FAILURE;
+         }
+      }
+      else
+      {
+         result = RCC_ATTRIBUTE_ALREADY_EXISTS;
+      }
+   }
+   else
+   {
+      result = RCC_INVALID_OBJECT_NAME;
+   }
+   s_schemaLock.unlock();
+   MemFree(name);
+   return result;
+}
+
+/**
+ * Update existing asset management attribute from JSON document (merge-patch semantics).
+ */
+uint32_t NXCORE_EXPORTABLE UpdateAssetAttributeFromJSON(const TCHAR *name, json_t *json)
+{
+   uint32_t result;
+   s_schemaLock.writeLock();
+   AssetAttribute *attribute = s_schema.get(name);
+   if (attribute != nullptr)
+   {
+      attribute->updateFromJSON(json);
+
+      NXCPMessage notificationMessage(CMD_UPDATE_ASSET_ATTRIBUTE, 0);
+      attribute->fillMessage(&notificationMessage, VID_AM_ATTRIBUTES_BASE);
+      NotifyClientSessions(notificationMessage);
+
+      result = RCC_SUCCESS;
+   }
+   else
+   {
+      result = RCC_UNKNOWN_ATTRIBUTE;
+   }
+   s_schemaLock.unlock();
+   return result;
+}
+
+/**
+ * Delete asset management attribute by name.
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const TCHAR *name)
+{
+   uint32_t result;
+   s_schemaLock.writeLock();
+   AssetAttribute *attribute = s_schema.get(name);
+   if (attribute != nullptr)
+   {
       bool success = attribute->deleteFromDatabase();
       s_schema.remove(name);
 

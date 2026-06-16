@@ -62,6 +62,8 @@ tags:
     description: Two-factor authentication method management and user bindings
   - name: Web Service Definitions
     description: Web service definition management
+  - name: Asset Management Schema
+    description: Asset management schema (asset attribute definitions)
 paths:
   /:
     get:
@@ -1244,6 +1246,155 @@ paths:
         - BearerAuth: []
       tags:
         - Alarms
+  /v1/asset-management-schema:
+    get:
+      operationId: getAssetManagementSchema
+      tags:
+        - Asset Management Schema
+      summary: Get asset management schema
+      description: Retrieve all asset attribute definitions that make up the asset management schema. Available to any authenticated user.
+      responses:
+        '200':
+          description: Asset management schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attributes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AssetAttribute'
+        '401':
+          description: Unauthorized.
+      security:
+        - BearerAuth: []
+    post:
+      operationId: createAssetAttribute
+      tags:
+        - Asset Management Schema
+      summary: Create a new asset attribute
+      description: Create a new asset attribute definition. Requires "Manage asset management schema" system access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetAttribute'
+      responses:
+        '201':
+          description: Asset attribute created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetAttribute'
+        '400':
+          description: Invalid request (missing name, or name does not match the required format).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '409':
+          description: An asset attribute with the same name already exists.
+        '500':
+          description: Internal server error.
+      security:
+        - BearerAuth: []
+  /v1/asset-management-schema/{attribute-name}:
+    get:
+      operationId: getAssetAttribute
+      tags:
+        - Asset Management Schema
+      summary: Get asset attribute details
+      description: Retrieve a single asset attribute definition by name. Available to any authenticated user.
+      parameters:
+        - name: attribute-name
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Asset attribute name.
+      responses:
+        '200':
+          description: Asset attribute details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetAttribute'
+        '400':
+          description: Invalid attribute name.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Asset attribute not found.
+      security:
+        - BearerAuth: []
+    put:
+      operationId: updateAssetAttribute
+      tags:
+        - Asset Management Schema
+      summary: Update an asset attribute
+      description: Update an existing asset attribute definition. Only the fields present in the request body are modified (merge-patch semantics); the attribute name itself cannot be changed. Requires "Manage asset management schema" system access right.
+      parameters:
+        - name: attribute-name
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Asset attribute name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetAttribute'
+      responses:
+        '200':
+          description: Asset attribute updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetAttribute'
+        '400':
+          description: Invalid request.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Asset attribute not found.
+        '500':
+          description: Internal server error.
+      security:
+        - BearerAuth: []
+    delete:
+      operationId: deleteAssetAttribute
+      tags:
+        - Asset Management Schema
+      summary: Delete an asset attribute
+      description: Delete an asset attribute definition. All property values stored for this attribute on existing assets are also removed. Requires "Manage asset management schema" system access right.
+      parameters:
+        - name: attribute-name
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Asset attribute name.
+      responses:
+        '204':
+          description: Asset attribute deleted successfully.
+        '400':
+          description: Invalid attribute name.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Asset attribute not found.
+        '500':
+          description: Internal server error.
+      security:
+        - BearerAuth: []
   /v1/connection-history:
     get:
       operationId: getConnectionHistory
@@ -8359,6 +8510,65 @@ components:
           description: User/group IDs allowed to see alarms in this category. Group IDs have the high bit set.
           items:
             type: integer
+    AssetAttribute:
+      type: object
+      description: Asset attribute definition (a single element of the asset management schema).
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Unique attribute name. Must match the pattern ^[A-Za-z$_][A-Za-z0-9$_]*$. Immutable after creation.
+        displayName:
+          type: string
+          description: Human-readable display name.
+        dataType:
+          type: string
+          description: Attribute data type. Accepts the symbolic name (or, for backward compatibility, the numeric code) on input; always returned as the symbolic name.
+          enum:
+            - String
+            - Integer
+            - Number
+            - Boolean
+            - Enum
+            - MacAddress
+            - IPAddress
+            - UUID
+            - ObjectReference
+            - Date
+        isMandatory:
+          type: boolean
+          description: Whether a value for this attribute is mandatory on assets.
+        isUnique:
+          type: boolean
+          description: Whether the attribute value must be unique across all assets.
+        isHidden:
+          type: boolean
+          description: Whether the attribute is hidden in the UI.
+        autofillScript:
+          type: string
+          description: NXSL script used to automatically populate the attribute value.
+        rangeMin:
+          type: integer
+          description: Minimum value (for numeric types) or minimum length (for strings). 0 means unset.
+        rangeMax:
+          type: integer
+          description: Maximum value (for numeric types) or maximum length (for strings). 0 means unset.
+        systemType:
+          type: string
+          description: System type binding for the attribute. Accepts the symbolic name (or the numeric code) on input; always returned as the symbolic name.
+          enum:
+            - None
+            - Serial
+            - IPAddress
+            - MacAddress
+            - Vendor
+            - Model
+        enumMap:
+          type: object
+          description: For the Enum data type, the map of allowed values to their display names.
+          additionalProperties:
+            type: string
     Alarm:
       type: object
       description: Full alarm representation

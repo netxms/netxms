@@ -77,6 +77,11 @@ int H_AlarmDetails(Context *context);
 int H_AlarmResolve(Context *context);
 int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
+int H_AssetManagementSchema(Context *context);
+int H_AssetAttributeDetails(Context *context);
+int H_AssetAttributeCreate(Context *context);
+int H_AssetAttributeUpdate(Context *context);
+int H_AssetAttributeDelete(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
@@ -320,6 +325,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/terminate")
       .POST(H_AlarmTerminate)
+      .build();
+   RouteBuilder("v1/asset-management-schema")
+      .GET(H_AssetManagementSchema)
+      .POST(H_AssetAttributeCreate)
+      .build();
+   RouteBuilder("v1/asset-management-schema/:attribute-name")
+      .GET(H_AssetAttributeDetails)
+      .PUT(H_AssetAttributeUpdate)
+      .DELETE(H_AssetAttributeDelete)
       .build();
    RouteBuilder("v1/event-processing-policy")
       .GET(H_EventProcessingPolicy)
