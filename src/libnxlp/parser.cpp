@@ -159,6 +159,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = nullptr;
+   m_useSnapshot = false;
 #endif
    m_readBuffer = nullptr;
    m_readBufferSize = 0;
@@ -217,6 +218,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = MemCopyString(src->m_marker);
+   m_useSnapshot = src->m_useSnapshot;
 #endif
    m_readBuffer = nullptr;
    m_readBufferSize = 0;
