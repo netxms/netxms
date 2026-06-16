@@ -303,6 +303,7 @@ compile_commands.json
 /tests/test-libnxdb/test-libnxdb
 /tests/test-libnxsl/test-libnxsl
 /tests/test-libnxsnmp/test-libnxsnmp
+/tests/test-ncd-webhook/test-ncd-webhook
 /tools/inst.tar.gz
 /src/libnxjava/java/base/netxms-base/.classpath
 /src/libnxjava/java/base/netxms-base/.project

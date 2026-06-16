@@ -1,9 +1,9 @@
 # Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
-#  
+#
 # This file is free software; as a special exception the author gives
-# unlimited permission to copy and/or distribute it, with or without 
+# unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -12,7 +12,7 @@ DRIVERS = dbtable dummy gsm portech shell snmptrap textfile @NCDRV_MODULES@
 
 SUBDIRS = $(DRIVERS)
 
-EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la matrix.la mattermost.la mqtt.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smtp.la smseagle.la telegram.la text2reach.la twilio.la websms.la xmpp.la
+EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la matrix.la mattermost.la mqtt.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smtp.la smseagle.la telegram.la text2reach.la twilio.la websms.la webhook.la xmpp.la
 pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la shell.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
 
 anysms_la_SOURCES = anysms/anysms.cpp
@@ -169,6 +169,16 @@ websms_la_SOURCES = websms/websms.cpp
 websms_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 websms_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
 websms_la_LIBADD = ../libnetxms/libnetxms.la
+
+webhook_la_SOURCES = webhook/webhook.cpp webhook/webhook_helpers.cpp
+webhook_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+webhook_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
+webhook_la_LIBADD = ../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+webhook_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+webhook_la_LIBADD += -ljansson
+endif
 
 xmpp_la_SOURCES = xmpp/xmpp.cpp
 xmpp_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build

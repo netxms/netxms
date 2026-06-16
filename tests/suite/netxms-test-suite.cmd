@@ -17,6 +17,9 @@ echo *** test-libnxsnmp ***
 echo *** test-libnxsl ***
 .\x64\%BuildType%\test-libnxsl.exe .\tests\test-libnxsl
 ) && (
+echo *** test-ncd-webhook ***
+.\x64\%BuildType%\test-ncd-webhook.exe
+) && (
 echo *** SUCCESS ***
 ) || (
 echo *** FAILURE ***
