@@ -234,8 +234,8 @@ static void FP_70(TelemetryDataType dataType, const TelemetryValue& value, const
 /**
  * LBS information for field 77 parsing
  */
-#pragma pack(1)
-struct LBS_INFO
+__PACK_BEGIN__
+struct __PACKED__ LBS_INFO
 {
    uint32_t cellId;
    uint16_t lac;
@@ -243,7 +243,7 @@ struct LBS_INFO
    uint16_t mnc;
    int8_t signalLevel;
 };
-#pragma pack()
+__PACK_END__
 
 /**
  * Parser for field 77
