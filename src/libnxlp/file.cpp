@@ -141,9 +141,129 @@ static char *FindEOL(char *start, int length, int encoding)
 }
 
 /**
- * Parse new log records
+ * Convert single record from file encoding to platform encoding and pass it to rule matching.
+ * Record must be null-terminated in original file encoding.
  */
-off_t LogParser::processNewRecords(int fh, const TCHAR *fileName)
+void LogParser::processRecord(char *record, const TCHAR *fileName)
+{
+#ifdef UNICODE
+   switch(m_fileEncoding)
+   {
+      case LP_FCP_ACP:
+         mb_to_wchar(record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UTF8:
+         utf8_to_wchar(record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS2_LE:
+#if WORDS_BIGENDIAN
+         bswap_array_16((UINT16 *)record, -1);
+#endif
+#ifdef UNICODE_UCS2
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#else
+         ucs2_to_ucs4((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#endif
+         break;
+      case LP_FCP_UCS2_BE:
+#if !WORDS_BIGENDIAN
+         bswap_array_16((UINT16 *)record, -1);
+#endif
+#ifdef UNICODE_UCS2
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#else
+         ucs2_to_ucs4((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#endif
+         break;
+      case LP_FCP_UCS2:
+#ifdef UNICODE_UCS2
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#else
+         ucs2_to_ucs4((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#endif
+         break;
+      case LP_FCP_UCS4_LE:
+#if WORDS_BIGENDIAN
+         bswap_array_32((UINT32 *)record, -1);
+#endif
+#ifdef UNICODE_UCS2
+         ucs4_to_ucs2((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#else
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#endif
+         break;
+      case LP_FCP_UCS4_BE:
+#if !WORDS_BIGENDIAN
+         bswap_array_32((UINT32 *)record, -1);
+#endif
+#ifdef UNICODE_UCS2
+         ucs4_to_ucs2((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#else
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#endif
+         break;
+      case LP_FCP_UCS4:
+#ifdef UNICODE_UCS2
+         ucs4_to_ucs2((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+#else
+         wcslcpy(m_textBuffer, (WCHAR *)record, m_readBufferSize);
+#endif
+         break;
+      default:
+         break;
+   }
+#else
+   switch(m_fileEncoding)
+   {
+      case LP_FCP_ACP:
+         _tcslcpy(m_textBuffer, record, m_readBufferSize);
+         break;
+      case LP_FCP_UTF8:
+         utf8_to_mb(record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS2_LE:
+#if WORDS_BIGENDIAN
+         bswap_array_16((UINT16 *)record, -1);
+#endif
+         ucs2_to_mb((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS2_BE:
+#if !WORDS_BIGENDIAN
+         bswap_array_16((UINT16 *)record, -1);
+#endif
+         ucs2_to_mb((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS2:
+         ucs2_to_mb((UCS2CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS4_LE:
+#if WORDS_BIGENDIAN
+         bswap_array_32((UINT32 *)record, -1);
+#endif
+         ucs4_to_mb((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS4_BE:
+#if !WORDS_BIGENDIAN
+         bswap_array_32((UINT32 *)record, -1);
+#endif
+         ucs4_to_mb((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      case LP_FCP_UCS4:
+         ucs4_to_mb((UCS4CHAR *)record, -1, m_textBuffer, m_readBufferSize);
+         break;
+      default:
+         break;
+   }
+#endif
+   matchLine(m_textBuffer, fileName);
+}
+
+/**
+ * Parse new log records. If processIncompleteRecord is set, a trailing record without
+ * end-of-line marker will be parsed as a complete record (used for flushing the last
+ * record in files that do not terminate the final line with a newline character).
+ */
+off_t LogParser::processNewRecords(int fh, const TCHAR *fileName, bool processIncompleteRecord)
 {
    int charSize;
    switch (m_fileEncoding)
@@ -203,6 +323,21 @@ off_t LogParser::processNewRecords(int fh, const TCHAR *fileName)
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
+                  }
+                  if (processIncompleteRecord)
+                  {
+                     // Make sure there is room for string terminator
+                     if (remaining + charSize > m_readBufferSize)
+                     {
+                        m_readBufferSize += 4096;
+                        m_readBuffer = MemRealloc(m_readBuffer, m_readBufferSize);
+                        m_textBuffer = MemReallocArray(m_textBuffer, m_readBufferSize);
+                     }
+                     memset(&m_readBuffer[remaining], 0, charSize);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Flushing incomplete last record (%d bytes) for file \"%s\""), remaining, m_fileName);
+                     processRecord(m_readBuffer, fileName);
+                     resetPos += remaining;
+                     remaining = 0;
                   }
                }
                bufPos = remaining;
@@ -272,117 +407,7 @@ off_t LogParser::processNewRecords(int fh, const TCHAR *fileName)
             }
 
             // Now ptr points to null-terminated string in original encoding
-            // Do the conversion to platform encoding
-#ifdef UNICODE
-            switch(m_fileEncoding)
-            {
-               case LP_FCP_ACP:
-                  mb_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UTF8:
-                  utf8_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS2_LE:
-#if WORDS_BIGENDIAN
-                  bswap_array_16((UINT16 *)ptr, -1);
-#endif
-#ifdef UNICODE_UCS2
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#endif
-                  break;
-               case LP_FCP_UCS2_BE:
-#if !WORDS_BIGENDIAN
-                  bswap_array_16((UINT16 *)ptr, -1);
-#endif
-#ifdef UNICODE_UCS2
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#endif
-                  break;
-               case LP_FCP_UCS2:
-#ifdef UNICODE_UCS2
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#endif
-                  break;
-               case LP_FCP_UCS4_LE:
-#if WORDS_BIGENDIAN
-                  bswap_array_32((UINT32 *)ptr, -1);
-#endif
-#ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#else
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#endif
-                  break;
-               case LP_FCP_UCS4_BE:
-#if !WORDS_BIGENDIAN
-                  bswap_array_32((UINT32 *)ptr, -1);
-#endif
-#ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#else
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#endif
-                  break;
-               case LP_FCP_UCS4:
-#ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-#else
-                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
-#endif
-                  break;
-               default:
-                  break;
-            }
-#else
-            switch(m_fileEncoding)
-            {
-               case LP_FCP_ACP:
-                  _tcslcpy(m_textBuffer, ptr, m_readBufferSize);
-                  break;
-               case LP_FCP_UTF8:
-                  utf8_to_mb(ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS2_LE:
-#if WORDS_BIGENDIAN
-                  bswap_array_16((UINT16 *)ptr, -1);
-#endif
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS2_BE:
-#if !WORDS_BIGENDIAN
-                  bswap_array_16((UINT16 *)ptr, -1);
-#endif
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS2:
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS4_LE:
-#if WORDS_BIGENDIAN
-                  bswap_array_32((UINT32 *)ptr, -1);
-#endif
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS4_BE:
-#if !WORDS_BIGENDIAN
-                  bswap_array_32((UINT32 *)ptr, -1);
-#endif
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               case LP_FCP_UCS4:
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
-                  break;
-               default:
-                  break;
-            }
-#endif
-            matchLine(m_textBuffer, fileName);
+            processRecord(ptr, fileName);
          }
       }
       else
@@ -663,9 +688,14 @@ bool LogParser::monitorFile(off_t startOffset)
 			_lseek(fh, 0, SEEK_END);
 		}
 
+		off_t incompleteRecordStart = -1;
+		int64_t incompleteRecordTime = 0;
 		while(true)
 		{
-			if (m_stopCondition.wait(m_fileCheckInterval))
+			// When an incomplete record is pending, poll at the shorter of check interval and flush timeout
+			uint32_t waitTime = ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0)) ?
+			      std::min(m_incompleteRecordTimeout, m_fileCheckInterval) : m_fileCheckInterval;
+			if (m_stopCondition.wait(waitTime))
 			{
 			   _close(fh);
 				goto stop_parser;
@@ -764,6 +794,31 @@ bool LogParser::monitorFile(off_t startOffset)
 				}
 			}
 
+			// Flush incomplete last record (without trailing newline) after configured timeout
+			if (m_incompleteRecordTimeout > 0)
+			{
+				if ((m_offset >= 0) && (static_cast<size_t>(m_offset) < size))
+				{
+					if (incompleteRecordStart != m_offset)
+					{
+						incompleteRecordStart = m_offset;
+						incompleteRecordTime = GetCurrentTimeMs();
+					}
+					else if (GetCurrentTimeMs() - incompleteRecordTime >= static_cast<int64_t>(m_incompleteRecordTimeout))
+					{
+						_lseek(fh, m_offset, SEEK_SET);
+						off_t resetPos = processNewRecords(fh, fname, true);
+						_lseek(fh, resetPos, SEEK_SET);
+						m_offset = resetPos;
+						incompleteRecordStart = -1;
+					}
+				}
+				else
+				{
+					incompleteRecordStart = -1;
+				}
+			}
+
 			if (isExclusionPeriod())
 			{
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Closing file \"%s\" because of exclusion period"), fname);
@@ -796,8 +851,11 @@ bool LogParser::monitorFile2(off_t startOffset)
 
    nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (\"keep open\" option disabled)"), m_fileName);
    bool exclusionPeriod = false;
+   off_t incompleteRecordStart = -1;
+   int64_t incompleteRecordTime = 0;
    while(true)
    {
+      bool flushIncompleteRecord = false;
       if (isExclusionPeriod())
       {
          if (!exclusionPeriod)
@@ -850,9 +908,21 @@ bool LogParser::monitorFile2(off_t startOffset)
              (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime)))
 #endif
          {
-            if (m_stopCondition.wait(m_fileCheckInterval))
-               break;
-            continue;
+            // File is unchanged: flush incomplete last record (without trailing newline) after configured timeout
+            if ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0) &&
+                (GetCurrentTimeMs() - incompleteRecordTime >= static_cast<int64_t>(m_incompleteRecordTimeout)))
+            {
+               flushIncompleteRecord = true;
+            }
+            else
+            {
+               // When an incomplete record is pending, poll at the shorter of check interval and flush timeout
+               uint32_t waitTime = ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0)) ?
+                     std::min(m_incompleteRecordTimeout, m_fileCheckInterval) : m_fileCheckInterval;
+               if (m_stopCondition.wait(waitTime))
+                  break;
+               continue;
+            }
          }
       }
 
@@ -947,13 +1017,30 @@ bool LogParser::monitorFile2(off_t startOffset)
       }
       readFromStart = false;
 
-      lastPos = processNewRecords(fh, fname);
+      lastPos = processNewRecords(fh, fname, flushIncompleteRecord);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       m_offset = static_cast<off_t>(st.st_size);
       mtime = st.st_mtime;
 
-      if (m_stopCondition.wait(m_fileCheckInterval))
+      // Track incomplete last record (without trailing newline) for timeout-based flushing
+      if (lastPos < static_cast<off_t>(size))
+      {
+         if (incompleteRecordStart != lastPos)
+         {
+            incompleteRecordStart = lastPos;
+            incompleteRecordTime = GetCurrentTimeMs();
+         }
+      }
+      else
+      {
+         incompleteRecordStart = -1;
+      }
+
+      // When an incomplete record is pending, poll at the shorter of check interval and flush timeout
+      uint32_t waitTime = ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0)) ?
+            std::min(m_incompleteRecordTimeout, m_fileCheckInterval) : m_fileCheckInterval;
+      if (m_stopCondition.wait(waitTime))
          break;
 
       checkAbsenceRules(time(nullptr));
@@ -1026,8 +1113,11 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 
    nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (using VSS snapshots)"), m_fileName);
    bool exclusionPeriod = false;
+   off_t incompleteRecordStart = -1;
+   int64_t incompleteRecordTime = 0;
    while(true)
    {
+      bool flushIncompleteRecord = false;
       if (isExclusionPeriod())
       {
          if (!exclusionPeriod)
@@ -1064,9 +1154,21 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 
       if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
       {
-         if (m_stopCondition.wait(m_fileCheckInterval))
-            break;
-         continue;
+         // File is unchanged: flush incomplete last record (without trailing newline) after configured timeout
+         if ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0) &&
+             (GetCurrentTimeMs() - incompleteRecordTime >= static_cast<int64_t>(m_incompleteRecordTimeout)))
+         {
+            flushIncompleteRecord = true;
+         }
+         else
+         {
+            // When an incomplete record is pending, poll at the shorter of check interval and flush timeout
+            uint32_t waitTime = ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0)) ?
+                  std::min(m_incompleteRecordTimeout, m_fileCheckInterval) : m_fileCheckInterval;
+            if (m_stopCondition.wait(waitTime))
+               break;
+            continue;
+         }
       }
 
       FileSnapshot *snapshot = CreateFileSnapshot(fname);
@@ -1130,14 +1232,31 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       }
       readFromStart = false;
 
-      lastPos = processNewRecords(fh, fname);
+      lastPos = processNewRecords(fh, fname, flushIncompleteRecord);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
       m_offset = lastPos;
 
+      // Track incomplete last record (without trailing newline) for timeout-based flushing
+      if (lastPos < static_cast<off_t>(size))
+      {
+         if (incompleteRecordStart != lastPos)
+         {
+            incompleteRecordStart = lastPos;
+            incompleteRecordTime = GetCurrentTimeMs();
+         }
+      }
+      else
+      {
+         incompleteRecordStart = -1;
+      }
+
       DestroyFileSnapshot(snapshot);
-      if (m_stopCondition.wait(m_fileCheckInterval))
+      // When an incomplete record is pending, poll at the shorter of check interval and flush timeout
+      uint32_t waitTime = ((m_incompleteRecordTimeout > 0) && (incompleteRecordStart >= 0)) ?
+            std::min(m_incompleteRecordTimeout, m_fileCheckInterval) : m_fileCheckInterval;
+      if (m_stopCondition.wait(waitTime))
          break;
 
       checkAbsenceRules(time(nullptr));

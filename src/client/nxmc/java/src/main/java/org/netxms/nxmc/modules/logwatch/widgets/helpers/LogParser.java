@@ -44,6 +44,9 @@ public class LogParser
    private Integer checkInterval = null;
 
    @Attribute(required = false)
+   private Integer lastRecordTimeout = null;
+
+   @Attribute(required = false)
    private String name = null;
 
    @ElementMap(entry = "macro", key = "name", attribute = true, required = false)
@@ -143,6 +146,27 @@ public class LogParser
 	{
       this.checkInterval = checkInterval;
 	}
+
+   /**
+    * Get timeout for parsing last record without trailing newline character (in milliseconds).
+    *
+    * @return incomplete last record timeout, or null if not set
+    */
+   public Integer getIncompleteRecordTimeout()
+   {
+      return lastRecordTimeout;
+   }
+
+   /**
+    * Set timeout for parsing last record without trailing newline character (in milliseconds).
+    * Value of 0 disables timeout-based flushing of incomplete records.
+    *
+    * @param timeout new incomplete last record timeout
+    */
+   public void setIncompleteRecordTimeout(Integer timeout)
+   {
+      this.lastRecordTimeout = timeout;
+   }
 
 	/**
     * @return the processALL

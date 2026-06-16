@@ -149,6 +149,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
 	m_fileName = nullptr;
 	m_fileEncoding = LP_FCP_ACP;
    m_fileCheckInterval = 10000;
+   m_incompleteRecordTimeout = 0;
 	m_preallocatedFile = false;
 	m_detectBrokenPrealloc = false;
 	m_eventNameList = nullptr;
@@ -197,6 +198,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 	m_fileName = MemCopyString(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
    m_fileCheckInterval = src->m_fileCheckInterval;
+   m_incompleteRecordTimeout = src->m_incompleteRecordTimeout;
    m_preallocatedFile = src->m_preallocatedFile;
 	m_detectBrokenPrealloc = src->m_detectBrokenPrealloc;
 
@@ -566,6 +568,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_PARSER;
 		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
       ps->parser->setFileCheckInterval(XMLGetAttrUInt32(attrs, "checkInterval", 10000));
+      ps->parser->setIncompleteRecordTimeout(XMLGetAttrUInt32(attrs, "lastRecordTimeout", 0));
 		const char *name = XMLGetAttr(attrs, "name");
 		if (name != nullptr)
 		{

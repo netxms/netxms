@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ public class LogParserEditor extends Composite
    private static final int TAB_XML = 2;
 
    private static final int DEFAULT_FILE_CHECK_INTERVAL = 10000;
+   private static final int DEFAULT_LAST_RECORD_TIMEOUT = 0;
 
    private final I18n i18n = LocalizationHelper.getI18n(LogParserEditor.class);
 
@@ -105,6 +106,7 @@ public class LogParserEditor extends Composite
    /* General section */
    private LabeledText textName;
    private Spinner spinnerFileCheckInterval;
+   private Spinner spinnerLastRecordTimeout;
    private Button checkProcessAll;
 
    /**
@@ -301,7 +303,7 @@ public class LogParserEditor extends Composite
    private void createGeneralArea(Composite generalArea)
    {
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
       generalArea.setLayout(layout);
 
       textName = new LabeledText(generalArea, SWT.NONE);
@@ -326,7 +328,7 @@ public class LogParserEditor extends Composite
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.BOTTOM;
-         spinnerFileCheckInterval = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, i18n.tr("File check interval(ms)"), 1000, 60000, gd);
+         spinnerFileCheckInterval = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, i18n.tr("File check interval (ms)"), 1000, 60000, gd);
          spinnerFileCheckInterval.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
@@ -335,6 +337,19 @@ public class LogParserEditor extends Composite
             }
          });
          spinnerFileCheckInterval.setSelection(parser.getFileCheckInterval() != null ? parser.getFileCheckInterval() : DEFAULT_FILE_CHECK_INTERVAL);
+
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.BOTTOM;
+         spinnerLastRecordTimeout = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, i18n.tr("Newline timeout (ms)"), 0, 3600000, gd);
+         spinnerLastRecordTimeout.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               fireModifyListeners();
+            }
+         });
+         spinnerLastRecordTimeout.setSelection(parser.getIncompleteRecordTimeout() != null ? parser.getIncompleteRecordTimeout() : DEFAULT_LAST_RECORD_TIMEOUT);
       }
 
       checkProcessAll = new Button(generalArea, SWT.CHECK);
@@ -347,6 +362,10 @@ public class LogParserEditor extends Composite
             fireModifyListeners();
          }
       });
+      gd = new GridData();
+      gd.horizontalSpan = 3;
+      gd.horizontalAlignment = SWT.FILL;
+      checkProcessAll.setLayoutData(gd);
 
       if (type == LogParserType.POLICY)
       {
@@ -552,6 +571,7 @@ public class LogParserEditor extends Composite
          for(LogParserFile file : parser.getFiles())
             file.getEditor().save();
          parser.setFileCheckInterval(spinnerFileCheckInterval.getSelection());
+         parser.setIncompleteRecordTimeout(spinnerLastRecordTimeout.getSelection());
       }
       parser.setName(textName.getText());
       parser.setProcessALL(checkProcessAll.getSelection());
@@ -663,6 +683,7 @@ public class LogParserEditor extends Composite
          for(LogParserFile file : parser.getFiles())
             createFileEditor(file).moveAbove(addFileLink);
          spinnerFileCheckInterval.setSelection(parser.getFileCheckInterval() != null ? parser.getFileCheckInterval() : DEFAULT_FILE_CHECK_INTERVAL);
+         spinnerLastRecordTimeout.setSelection(parser.getIncompleteRecordTimeout() != null ? parser.getIncompleteRecordTimeout() : DEFAULT_LAST_RECORD_TIMEOUT);
       }
       textName.setText(parser.getName());
       checkProcessAll.setSelection(parser.getProcessALL());

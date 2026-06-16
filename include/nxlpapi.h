@@ -402,6 +402,7 @@ private:
 	TCHAR *m_fileName;
 	int m_fileEncoding;
    uint32_t m_fileCheckInterval;
+   uint32_t m_incompleteRecordTimeout;
 	StringList m_exclusionSchedules;
 	TCHAR *m_name;
 	CodeLookupElement *m_eventNameList;
@@ -441,7 +442,8 @@ private:
 
    void setStatus(LogParserStatus status) { m_status = status; }
 
-   off_t processNewRecords(int fh, const TCHAR *fileName);
+   off_t processNewRecords(int fh, const TCHAR *fileName, bool processIncompleteRecord = false);
+   void processRecord(char *record, const TCHAR *fileName);
    bool monitorFile2(off_t startOffset);
 
 #ifdef _WIN32
@@ -462,6 +464,7 @@ public:
 	const TCHAR *getFileName() const { return m_fileName; }
 	int getFileEncoding() const { return m_fileEncoding; }
    uint32_t getFileCheckInterval() const { return m_fileCheckInterval; }
+   uint32_t getIncompleteRecordTimeout() const { return m_incompleteRecordTimeout; }
    LogParserStatus getStatus() const { return m_status; }
    const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
@@ -477,6 +480,7 @@ public:
    void setFileName(const TCHAR *name);
    void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
    void setFileCheckInterval(uint32_t interval) { m_fileCheckInterval = interval; }
+   void setIncompleteRecordTimeout(uint32_t timeout) { m_incompleteRecordTimeout = timeout; }
    void setFilePreallocated(bool isPreallocated) { m_preallocatedFile = isPreallocated; }
    void setGuid(const uuid& guid);
 
