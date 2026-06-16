@@ -7,15 +7,16 @@
     "build": "node build.mjs"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "0.28.1"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.0",
-    "@codemirror/commands": "^6.8.0",
-    "@codemirror/language": "^6.10.0",
-    "@codemirror/search": "^6.5.0",
-    "@codemirror/state": "^6.5.0",
-    "@codemirror/view": "^6.36.0",
-    "@lezer/highlight": "^1.2.0"
-  }
+    "@codemirror/autocomplete": "6.20.3",
+    "@codemirror/commands": "6.10.3",
+    "@codemirror/language": "6.12.3",
+    "@codemirror/search": "6.7.0",
+    "@codemirror/state": "6.6.0",
+    "@codemirror/view": "6.43.1",
+    "@lezer/highlight": "1.2.3"
+  },
+  "packageManager": "pnpm@11.7.0+sha512.19cc852c120c7125760f2443ee6be0ca5b40f9f50598de1a09a1f177503e010e57c23c77646e01e761de59bf874fb22a3398c33ab9691fc13eb946b6f0f4d620"
 }
