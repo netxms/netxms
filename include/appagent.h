@@ -82,7 +82,7 @@
 
 __PACK_BEGIN__
 
-typedef PACKED_STRUCT __apagent_msg
+typedef struct __PACKED__ __apagent_msg
 {
 	char prefix[APPAGENT_MSG_START_INDICATOR_LEN];
 	WORD length;		// message length including prefix and length field
