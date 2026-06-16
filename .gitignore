@@ -164,7 +164,6 @@ compile_commands.json
 /src/agent/subagents/ubntlw/.project
 /src/agent/subagents/ubntlw/.settings
 /src/agent/tools/nxaevent/nxaevent
-/src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/agent/tools/nxhwid/nxhwid
 /src/agent/tools/nxtftp/nxtftp

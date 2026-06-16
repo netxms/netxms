@@ -910,9 +910,6 @@ void RestartExtSubagents();
 void ExecuteAction(const TCHAR *name, const StringList& args);
 void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session);
 
-void RegisterApplicationAgent(const TCHAR *name);
-UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
-
 bool WaitForProcess(const TCHAR *name);
 
 String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param);

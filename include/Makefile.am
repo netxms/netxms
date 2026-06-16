@@ -9,7 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 include_HEADERS = \
-	appagent.h \
 	base32.h \
 	base64.h \
 	dbdrv.h \

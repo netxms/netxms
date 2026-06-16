@@ -272,7 +272,6 @@ static TCHAR *s_externalMetricProviders = nullptr;
 static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
 static TCHAR *s_externalSubAgentsList = nullptr;
-static TCHAR *s_appAgentsList = nullptr;
 static TCHAR *s_extensionShorthandList = nullptr;
 static StringSet s_serverConnectionList;
 static StringSet s_crlList;
@@ -316,7 +315,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("AcceptedEnvironmentVariables"), CT_STRING_LIST, 0, 0, 0, 0, &g_acceptedEnvVars, nullptr },
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
-   { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
    { _T("CACertificates"), CT_MB_STRING, 0, 0, 1024, 0, g_caBundle, nullptr },
    { _T("BackgroundExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_backgroundExternalMetrics, nullptr },
@@ -1559,21 +1557,6 @@ BOOL Initialize()
                nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add agent extension from \"%s\""), curr);
          }
          MemFree(s_extensionShorthandList);
-      }
-
-      // Parse application agents list
-	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != nullptr))
-      {
-	      TCHAR *curr, *next;
-         for(curr = next = s_appAgentsList; next != nullptr && *curr != 0; curr = next + 1)
-         {
-            next = _tcschr(curr, _T('\n'));
-            if (next != nullptr)
-               *next = 0;
-            Trim(curr);
-            RegisterApplicationAgent(curr);
-         }
-         MemFree(s_appAgentsList);
       }
 
 	   BYTE hwid[HARDWARE_ID_LENGTH];

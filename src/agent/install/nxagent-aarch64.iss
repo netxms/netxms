@@ -19,7 +19,6 @@ Source: "..\..\..\ARM64\release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\..\..\ARM64\release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\ARM64\release\appagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxcrashsrv.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\Release\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -84,7 +83,6 @@ Source: "..\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java"; Flags:
 Source: "..\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 ; Command-line tools
 Source: "..\..\..\ARM64\release\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\ARM64\release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\nxethernetip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

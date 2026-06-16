@@ -47,7 +47,6 @@ public class AgentConfigEditor extends Composite
 
    private static final String[] CONFIG_KEYWORDS = {
       "Action",
-      "AppAgent",
       "BackgroundLogWriter",
       "ConfigIncludeDir",
       "ControlServers",

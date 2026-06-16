@@ -8,9 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxaevent nxappget nxapush nxhwid nxreload nxtftp scripts
+SUBDIRS = nxaevent nxapush nxhwid nxreload nxtftp scripts
 
-bin_PROGRAMS = nxaevent/nxaevent nxappget/nxappget nxapush/nxapush nxhwid/nxhwid nxtftp/nxtftp
+bin_PROGRAMS = nxaevent/nxaevent nxapush/nxapush nxhwid/nxhwid nxtftp/nxtftp
 
 nxaevent_nxaevent_SOURCES = nxaevent/nxaevent.cpp
 nxaevent_nxaevent_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
@@ -26,23 +26,6 @@ if ALL_STATIC
 nxaevent_nxaevent_LDFLAGS += -all-static
 else
 nxaevent_nxaevent_LDFLAGS += -static
-endif
-endif
-
-nxappget_nxappget_SOURCES = nxappget/nxappget.cpp
-nxappget_nxappget_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
-nxappget_nxappget_LDFLAGS = @EXEC_LDFLAGS@
-nxappget_nxappget_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/appagent/libappagent.la @EXEC_LIBS@
-if USE_INTERNAL_JANSSON
-nxappget_nxappget_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
-else
-nxappget_nxappget_LDADD += -ljansson
-endif
-if STATIC_BUILD
-if ALL_STATIC
-nxappget_nxappget_LDFLAGS += -all-static
-else
-nxappget_nxappget_LDFLAGS += -static
 endif
 endif
 

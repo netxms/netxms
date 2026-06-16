@@ -22,9 +22,6 @@
     <ClCompile Include="actions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="appagent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bkgnd_metrics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

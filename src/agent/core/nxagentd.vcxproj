@@ -422,7 +422,6 @@
   <ItemGroup>
     <ClCompile Include="actions.cpp" />
     <ClCompile Include="aitools.cpp" />
-    <ClCompile Include="appagent.cpp" />
     <ClCompile Include="bkgnd_metrics.cpp" />
     <ClCompile Include="certinfo.cpp" />
     <ClCompile Include="cng_engine.cpp" />
@@ -497,10 +496,6 @@
     <Message_compiler Include="messages.mc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\appagent\appagent.vcxproj">
-      <Project>{6b249e47-4baf-4de2-b62b-c6dd0330753f}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\db\libnxdb\libnxdb.vcxproj">
       <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

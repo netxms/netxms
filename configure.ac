@@ -1086,7 +1086,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -1187,7 +1187,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES appagent libnxlp db agent"
+	MODULES="$MODULES libnxlp db agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
@@ -1278,7 +1278,7 @@ fi
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES appagent libnxlp db agent"
+	MODULES="$MODULES libnxlp db agent"
 	TEST_MODULES="$TEST_MODULES agent"
 	TOOLS="$TOOLS nxlptest"
 
@@ -1444,9 +1444,9 @@ fi
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
-		MODULES="$MODULES libnxmb appagent client"
+		MODULES="$MODULES libnxmb client"
 	else
-		MODULES="$MODULES libnxmb appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
+		MODULES="$MODULES libnxmb client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
 		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
@@ -4721,13 +4721,11 @@ AC_CONFIG_FILES([
 	src/agent/subagents/xen/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxaevent/Makefile
-	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
 	src/agent/tools/nxhwid/Makefile
 	src/agent/tools/nxreload/Makefile
 	src/agent/tools/nxtftp/Makefile
 	src/agent/tools/scripts/Makefile
-	src/appagent/Makefile
 	src/client/Makefile
 	src/client/java/Makefile
 	src/client/java/netxms-client/Makefile

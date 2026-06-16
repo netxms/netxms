@@ -1271,19 +1271,6 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
 
    if (errorCode == ERR_UNKNOWN_METRIC)
    {
-		errorCode = GetParameterValueFromAppAgent(param, value);
-		if (errorCode == ERR_SUCCESS)
-		{
-         InterlockedIncrement(&s_processedRequests);
-		}
-		else if (errorCode != ERR_UNKNOWN_METRIC)
-		{
-         InterlockedIncrement(&s_failedRequests);
-		}
-   }
-
-   if (errorCode == ERR_UNKNOWN_METRIC)
-   {
 		errorCode = GetParameterValueFromExtSubagent(param, value);
 		if (errorCode == ERR_SUCCESS)
 		{
