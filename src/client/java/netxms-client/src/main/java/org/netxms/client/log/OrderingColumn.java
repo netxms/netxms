@@ -18,14 +18,21 @@
  */
 package org.netxms.client.log;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * Ordering column information.
  *
  */
+@Root(name = "orderingColumn", strict = false)
 public class OrderingColumn
 {
+   @Element(required = false)
    private String name;
+   @Element(required = false)
    private String description;
+   @Element(required = false)
    private boolean descending;
 
    /**

@@ -26,13 +26,19 @@ import java.util.Map.Entry;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.Root;
 
 /**
  * Log filter
  */
+@Root(name = "logFilter", strict = false)
 public class LogFilter
 {
+	@ElementMap(required = false, entry = "columnFilter", key = "column", attribute = true)
 	private HashMap<String, ColumnFilter> columnFilters;
+	@ElementList(required = false)
 	private List<OrderingColumn> orderingColumns;
 	
 	/**

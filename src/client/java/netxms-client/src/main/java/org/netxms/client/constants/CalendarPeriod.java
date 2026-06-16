@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2016-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,20 +24,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Time unit
+ * Calendar period for log time filters (resolved relative to current time in client time zone).
  */
-public enum TimeUnit
+public enum CalendarPeriod
 {
-   MINUTE(0),
-   HOUR(1),
-   DAY(2),
-   WEEK(3);
+   TODAY(0),
+   YESTERDAY(1),
+   THIS_WEEK(2),
+   THIS_MONTH(3);
 
-   private static Logger logger = LoggerFactory.getLogger(TimeUnit.class);
-   private static Map<Integer, TimeUnit> lookupTable = new HashMap<Integer, TimeUnit>();
+   private static Logger logger = LoggerFactory.getLogger(CalendarPeriod.class);
+   private static Map<Integer, CalendarPeriod> lookupTable = new HashMap<Integer, CalendarPeriod>();
    static
    {
-      for(TimeUnit element : TimeUnit.values())
+      for(CalendarPeriod element : CalendarPeriod.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -47,17 +47,17 @@ public enum TimeUnit
 
    /**
     * Internal constructor
-    *  
+    *
     * @param value integer value
     */
-   private TimeUnit(int value)
+   private CalendarPeriod(int value)
    {
       this.value = value;
    }
 
    /**
     * Get integer value
-    * 
+    *
     * @return integer value
     */
    public int getValue()
@@ -67,17 +67,17 @@ public enum TimeUnit
 
    /**
     * Get enum element by integer value
-    * 
+    *
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static TimeUnit getByValue(int value)
+   public static CalendarPeriod getByValue(int value)
    {
-      final TimeUnit element = lookupTable.get(value);
+      final CalendarPeriod element = lookupTable.get(value);
       if (element == null)
       {
          logger.warn("Unknown element " + value);
-         return HOUR; // fall-back
+         return TODAY; // fallback
       }
       return element;
    }

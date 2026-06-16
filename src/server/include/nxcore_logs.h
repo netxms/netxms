@@ -56,13 +56,31 @@
 /**
  * Column filter types
  */
-#define FILTER_EQUALS      0
-#define FILTER_RANGE       1
-#define FILTER_SET         2
-#define FILTER_LIKE        3
-#define FILTER_LESS        4
-#define FILTER_GREATER     5
-#define FILTER_CHILDOF     6
+#define FILTER_EQUALS         0
+#define FILTER_RANGE          1
+#define FILTER_SET            2
+#define FILTER_LIKE           3
+#define FILTER_LESS           4
+#define FILTER_GREATER        5
+#define FILTER_CHILDOF        6
+#define FILTER_RELATIVE       7  /* "within last N units" relative to current server time */
+#define FILTER_CURRENT_PERIOD 8  /* calendar period (today, this week, etc.) in client time zone */
+
+/**
+ * Time units for FILTER_RELATIVE (must match org.netxms.client.constants.TimeUnit)
+ */
+#define TIME_UNIT_MINUTE   0
+#define TIME_UNIT_HOUR     1
+#define TIME_UNIT_DAY      2
+#define TIME_UNIT_WEEK     3
+
+/**
+ * Calendar periods for FILTER_CURRENT_PERIOD (must match org.netxms.client.constants.CalendarPeriod)
+ */
+#define CALENDAR_PERIOD_TODAY      0
+#define CALENDAR_PERIOD_YESTERDAY  1
+#define CALENDAR_PERIOD_THIS_WEEK  2
+#define CALENDAR_PERIOD_THIS_MONTH 3
 
 /**
  * Filter set operations
@@ -143,6 +161,16 @@ private:
 			int count;
 			ColumnFilter **filters;
 		} set;
+		struct
+		{
+			int32_t value;   // number of units
+			int unit;        // TIME_UNIT_*
+		} relative;
+		struct
+		{
+			int period;         // CALENDAR_PERIOD_*
+			int32_t tzOffset;   // client UTC offset in seconds (east of UTC), resolved at query send time
+		} currentPeriod;
 	} m_value;
 
 public:

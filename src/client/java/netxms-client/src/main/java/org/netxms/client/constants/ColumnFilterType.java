@@ -32,7 +32,9 @@ public enum ColumnFilterType
    LESS(4),
    GREATER(5),
    CHILDOF(6),
-   UNKNOWN(7);
+   RELATIVE(7),
+   CURRENT_PERIOD(8),
+   UNKNOWN(255);
    
    private static Logger logger = LoggerFactory.getLogger(ColumnFilterType.class);
    private static Map<Integer, ColumnFilterType> lookupTable = new HashMap<Integer, ColumnFilterType>();

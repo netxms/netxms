@@ -57,6 +57,18 @@ ColumnFilter::ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32
 			m_negated = msg.getFieldAsBoolean(baseId + 2);
 			m_varCount = 3;
 			break;
+		case FILTER_RELATIVE:
+			m_value.relative.value = msg.getFieldAsInt32(baseId + 1);
+			m_value.relative.unit = msg.getFieldAsInt16(baseId + 2);
+			m_negated = msg.getFieldAsBoolean(baseId + 3);
+			m_varCount = 4;
+			break;
+		case FILTER_CURRENT_PERIOD:
+			m_value.currentPeriod.period = msg.getFieldAsInt16(baseId + 1);
+			m_value.currentPeriod.tzOffset = msg.getFieldAsInt32(baseId + 2);
+			m_negated = msg.getFieldAsBoolean(baseId + 3);
+			m_varCount = 4;
+			break;
 		case FILTER_SET:
 			m_value.set.operation = msg.getFieldAsInt16(baseId + 1);
 			m_value.set.count = msg.getFieldAsInt16(baseId + 2);
@@ -106,6 +118,23 @@ StringBuffer ColumnFilter::generateSql()
 	// Conversion from the client-supplied epoch value to TSDB timestamptz: millisecond
 	// timestamp columns send epoch milliseconds, all other timestamp columns send epoch seconds.
 	const wchar_t *tsToTimestamp = (m_columnType == LC_TIMESTAMP_MS) ? L"ms_to_timestamptz(" : L"to_timestamp(";
+
+	// Append a timestamp boundary (given as epoch seconds) in the unit expected by the column,
+	// wrapping it for TSDB timestamptz columns the same way as for client-supplied values.
+	auto appendTimestampBoundary = [&](int64_t epochSeconds)
+	{
+		int64_t value = (m_columnType == LC_TIMESTAMP_MS) ? epochSeconds * 1000 : epochSeconds;
+		if ((m_columnFlags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+		{
+			sql.append(tsToTimestamp);
+			sql.append(value);
+			sql.append(L")");
+		}
+		else
+		{
+			sql.append(value);
+		}
+	};
 
 	switch(m_type)
 	{
@@ -184,6 +213,65 @@ StringBuffer ColumnFilter::generateSql()
             sql.append(m_value.range.end);
          }
 			break;
+		case FILTER_RELATIVE:
+		{
+			static const int64_t unitSeconds[] = { 60, 3600, 86400, 604800 };
+			int unit = ((m_value.relative.unit >= 0) && (m_value.relative.unit <= TIME_UNIT_WEEK)) ? m_value.relative.unit : TIME_UNIT_HOUR;
+			int64_t cutoff = static_cast<int64_t>(time(nullptr)) - static_cast<int64_t>(m_value.relative.value) * unitSeconds[unit];
+			sql.append(m_column);
+			sql.append(m_negated ? L" < " : L" >= ");   // negated => "older than N units"
+			appendTimestampBoundary(cutoff);
+			break;
+		}
+		case FILTER_CURRENT_PERIOD:
+		{
+			int32_t tzOffset = m_value.currentPeriod.tzOffset;
+			time_t localNow = time(nullptr) + tzOffset;
+			struct tm lt;
+			gmtime_r(&localNow, &lt);   // broken-down representation of "now" in client local time
+			lt.tm_hour = 0;
+			lt.tm_min = 0;
+			lt.tm_sec = 0;
+			int64_t startLocal, endLocal;   // period boundaries expressed in client local time
+			switch(m_value.currentPeriod.period)
+			{
+				case CALENDAR_PERIOD_YESTERDAY:
+					endLocal = timegm(&lt);   // local midnight starting today
+					startLocal = endLocal - 86400;
+					break;
+				case CALENDAR_PERIOD_THIS_WEEK:
+				{
+					int wday = (lt.tm_wday == 0) ? 6 : lt.tm_wday - 1;   // ISO week: Monday = 0 ... Sunday = 6
+					startLocal = static_cast<int64_t>(timegm(&lt)) - static_cast<int64_t>(wday) * 86400;
+					endLocal = startLocal + 7 * 86400;
+					break;
+				}
+				case CALENDAR_PERIOD_THIS_MONTH:
+					lt.tm_mday = 1;
+					startLocal = timegm(&lt);
+					lt.tm_mon++;   // timegm() normalizes month overflow into the next year
+					endLocal = timegm(&lt);
+					break;
+				default:   // CALENDAR_PERIOD_TODAY
+					startLocal = timegm(&lt);
+					endLocal = startLocal + 86400;
+					break;
+			}
+			int64_t start = startLocal - tzOffset;   // convert local boundaries back to UTC epoch
+			int64_t end = endLocal - tzOffset;
+			if (m_negated)
+				sql.append(L"NOT ");
+			sql.append(L"(");
+			sql.append(m_column);
+			sql.append(L" >= ");
+			appendTimestampBoundary(start);
+			sql.append(L" AND ");
+			sql.append(m_column);
+			sql.append(L" < ");
+			appendTimestampBoundary(end);
+			sql.append(L")");
+			break;
+		}
 		case FILTER_LIKE:
 			if (m_value.like[0] == 0)
 			{

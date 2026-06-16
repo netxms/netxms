@@ -20,23 +20,43 @@ package org.netxms.client.log;
 
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.TimeZone;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.CalendarPeriod;
 import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
+import org.netxms.client.constants.TimeUnit;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
  * Column filter
  */
+@Root(name = "columnFilter", strict = false)
 public class ColumnFilter
 {
+   @Element(required = false)
    private ColumnFilterType type;
+   @Element(required = false)
    private long rangeFrom;
+   @Element(required = false)
    private long rangeTo;
+   @Element(required = false)
    private long numericValue;
+   @Element(required = false)
    private String like;
+   @Element(required = false)
+   private int relativeValue;             // number of units for RELATIVE filter
+   @Element(required = false)
+   private TimeUnit relativeUnit;         // time unit for RELATIVE filter
+   @Element(required = false)
+   private CalendarPeriod period;         // calendar period for CURRENT_PERIOD filter
+   @ElementList(required = false)
    private HashSet<ColumnFilter> set;
+   @Element(required = false)
    private ColumnFilterSetOperation operation;   // Set operation: AND or OR
+   @Element(required = false)
    private boolean negated = false;
 
    /**
@@ -86,6 +106,30 @@ public class ColumnFilter
    }
 
    /**
+    * Create filter of type RELATIVE ("within last N units" relative to current time).
+    *
+    * @param value number of time units
+    * @param unit time unit
+    */
+   public ColumnFilter(int value, TimeUnit unit)
+   {
+      type = ColumnFilterType.RELATIVE;
+      relativeValue = value;
+      relativeUnit = unit;
+   }
+
+   /**
+    * Create filter of type CURRENT_PERIOD (calendar period in client time zone, resolved by server at query time).
+    *
+    * @param period calendar period
+    */
+   public ColumnFilter(CalendarPeriod period)
+   {
+      type = ColumnFilterType.CURRENT_PERIOD;
+      this.period = period;
+   }
+
+   /**
     * Add new element to SET type filter
     *
     * @param filter sub-filter
@@ -127,6 +171,20 @@ public class ColumnFilter
             msg.setField(baseId + 1, like);
             msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
             varCount += 2;
+            break;
+         case RELATIVE:
+            msg.setFieldInt32(baseId + 1, relativeValue);
+            msg.setFieldInt16(baseId + 2, (relativeUnit != null) ? relativeUnit.getValue() : TimeUnit.HOUR.getValue());
+            msg.setFieldInt16(baseId + 3, negated ? 1 : 0);
+            varCount += 3;
+            break;
+         case CURRENT_PERIOD:
+            msg.setFieldInt16(baseId + 1, (period != null) ? period.getValue() : CalendarPeriod.TODAY.getValue());
+            // Resolve client time zone offset (seconds east of UTC) at send time so the server can
+            // align calendar boundaries to the user's time zone without persisting a stale offset.
+            msg.setFieldInt32(baseId + 2, TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 1000);
+            msg.setFieldInt16(baseId + 3, negated ? 1 : 0);
+            varCount += 3;
             break;
          case SET:
             msg.setFieldInt16(baseId + 1, operation.getValue());
@@ -232,6 +290,36 @@ public class ColumnFilter
    public ColumnFilterType getType()
    {
       return type;
+   }
+
+   /**
+    * Get number of time units for RELATIVE filter.
+    *
+    * @return number of time units
+    */
+   public int getRelativeValue()
+   {
+      return relativeValue;
+   }
+
+   /**
+    * Get time unit for RELATIVE filter.
+    *
+    * @return time unit
+    */
+   public TimeUnit getRelativeUnit()
+   {
+      return relativeUnit;
+   }
+
+   /**
+    * Get calendar period for CURRENT_PERIOD filter.
+    *
+    * @return calendar period
+    */
+   public CalendarPeriod getPeriod()
+   {
+      return period;
    }
 
    /**
