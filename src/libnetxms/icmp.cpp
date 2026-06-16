@@ -659,7 +659,11 @@ void PingRequestProcessor::sendRequestV6(PingRequest *request)
    p->sequence = request->sequence;
    memcpy(p->data, payload, MIN(33, size - sizeof(ICMP6_PACKET_HEADER) + 8));
    p->checksum = 0;
+
+   // p is always aligned
+SUPPRESS_WARNING_PACKED_PUSH
    p->checksum = CalculateICMPv6Checksum(reinterpret_cast<uint16_t*>(p), size);
+SUPPRESS_WARNING_PACKED_POP
 
    // Send packet
    bool canRetry = true;

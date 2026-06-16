@@ -243,8 +243,8 @@ struct PolicyChangeNotification
 /**
  * Agent component token
  */
-#pragma pack(1)
-struct AgentComponentToken
+__PACK_BEGIN__
+PACKED_STRUCT AgentComponentToken
 {
    char component[16];
    uint64_t expirationTime;   // In network byte order
@@ -252,7 +252,7 @@ struct AgentComponentToken
    char padding[32];          // Can be used in the future for additional fields without changing structure size
    BYTE hmac[SHA256_DIGEST_SIZE];
 };
-#pragma pack()
+__PACK_END__
 
 /**
  * Validate token
@@ -751,12 +751,12 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCTDESC_SYSTEM_OPEN_FILES                    _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                     _T("Processes")
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * Hash map key for server objects (64 bit server ID + 32 bit object ID)
  */
-struct LIBNXAGENT_EXPORTABLE ServerObjectKey
+PACKED_STRUCT LIBNXAGENT_EXPORTABLE ServerObjectKey
 {
    uint64_t serverId;
    uint32_t objectId;
@@ -773,7 +773,7 @@ struct LIBNXAGENT_EXPORTABLE ServerObjectKey
    }
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Class that stores information about file that will be received

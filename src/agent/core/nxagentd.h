@@ -684,22 +684,22 @@ public:
 
 #define PROXY_CHALLENGE_SIZE 8
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * Data collection proxy message
  */
-struct ProxyMsg
+PACKED_STRUCT ProxyMsg
 {
    BYTE challenge[PROXY_CHALLENGE_SIZE];
-   UINT64 serverId;
-   UINT32 proxyIdDest;
-   UINT32 proxyIdSelf;
+   uint64_t serverId;
+   uint32_t proxyIdDest;
+   uint32_t proxyIdSelf;
    int32_t zoneUin;
    BYTE hmac[SHA256_DIGEST_SIZE];
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Zone configuration

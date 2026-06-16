@@ -91,12 +91,12 @@
  */
 #define NXSL_STOP_SCRIPT_EXECUTION        -1
 
-#pragma pack(1)
+__PACK_BEGIN__
 
 /**
  * Serialized script header
  */
-struct NXSL_FileHeader
+PACKED_STRUCT NXSL_FileHeader
 {
    char magic[4];
    BYTE version;
@@ -109,7 +109,7 @@ struct NXSL_FileHeader
    uint32_t identifierRegionSizeHint;
 };
 
-#pragma pack()
+__PACK_END__
 
 /**
  * Binary format version
