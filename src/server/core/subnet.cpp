@@ -207,7 +207,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
       {
          shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
          if (zone != nullptr)
-            zone->removeFromIndex(*this);
+            zone->removeFromSubnetIndex(m_ipAddress);
       }
       else
       {
@@ -224,7 +224,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
       {
          shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
          if (zone != nullptr)
-            zone->addToIndex(static_pointer_cast<Subnet>(self()));
+            zone->addToIndex(addr, static_pointer_cast<Subnet>(self()));
       }
       else
       {
