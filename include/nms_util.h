@@ -4887,7 +4887,11 @@ public:
    int compareTo(const InetAddress &a) const;
    bool inRange(const InetAddress& start, const InetAddress& end) const;
 
-   void setMaskBits(int m) { m_maskBits = m; }
+   void setMaskBits(int m)
+   {
+      int maxBits = (m_family == AF_INET) ? 32 : 128;
+      m_maskBits = static_cast<short>((m < 0) ? 0 : ((m > maxBits) ? maxBits : m));
+   }
    int getMaskBits() const { return m_maskBits; }
    int getHostBits() const { return (m_family == AF_INET) ? (32 - m_maskBits) : (128 - m_maskBits); }
 
