@@ -4797,11 +4797,13 @@ public:
    virtual bool lockForStatusPoll() override;
 
    void addToIndex(const shared_ptr<Subnet>& subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
+   void addToIndex(const InetAddress& addr, const shared_ptr<Subnet>& subnet) { m_idxSubnetByAddr->put(addr, subnet); }
    void addToIndex(const shared_ptr<Interface>& iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
    void addToIndex(const InetAddress& addr, const shared_ptr<Interface>& iface) { m_idxInterfaceByAddr->put(addr, iface); }
    void addToIndex(const shared_ptr<Node>& node) { m_idxNodeByAddr->put(node->getIpAddress(), node); }
    void addToIndex(const InetAddress& addr, const shared_ptr<Node>& node) { m_idxNodeByAddr->put(addr, node); }
    void removeFromIndex(const Subnet& subnet) { m_idxSubnetByAddr->remove(subnet.getIpAddress()); }
+   void removeFromSubnetIndex(const InetAddress& addr) { m_idxSubnetByAddr->remove(addr); }
    void removeFromIndex(const Interface& iface);
    void removeFromInterfaceIndex(const InetAddress& addr) { m_idxInterfaceByAddr->remove(addr); }
    void removeFromIndex(const Node& node) { m_idxNodeByAddr->remove(node.getIpAddress()); }
