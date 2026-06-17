@@ -345,14 +345,18 @@ std::pair<DeviceBackupApiStatus, BackupData> OxidizedGetBackupById(const Node& n
       return std::pair<DeviceBackupApiStatus, BackupData>(DeviceBackupApiStatus::EXTERNAL_API_ERROR, BackupData());
    }
 
-   // Fetch config for specific version using node/fetch with version parameter
-   // (avoids JSON serialization issues with binary content in version/view.json)
-   char fetchEndpoint[1024];
-   BuildNodePath("node/fetch", name, group, "", fetchEndpoint, sizeof(fetchEndpoint));
-
-   // Append version (git OID) as query parameter
-   size_t endpointLen = strlen(fetchEndpoint);
-   snprintf(fetchEndpoint + endpointLen, sizeof(fetchEndpoint) - endpointLen, "?version=%s", vi.oid.c_str());
+   // Fetch config for specific version using version view endpoint with .text format.
+   // node/fetch ignores the version and always returns the latest config, while
+   // version/view.json breaks on binary content - .text returns the exact version as raw text.
+   char encodedName[512], encodedGroup[256], fetchEndpoint[1024];
+   URLEncode(name, encodedName, sizeof(encodedName));
+   int endpointLen = snprintf(fetchEndpoint, sizeof(fetchEndpoint), "node/version/view.text?node=%s&oid=%s",
+      encodedName, vi.oid.c_str());
+   if ((group[0] != 0) && strcmp(group, "default"))
+   {
+      URLEncode(group, encodedGroup, sizeof(encodedGroup));
+      snprintf(fetchEndpoint + endpointLen, sizeof(fetchEndpoint) - endpointLen, "&group=%s", encodedGroup);
+   }
 
    size_t configSize = 0;
    char *configText = OxidizedApiRequestText(fetchEndpoint, &configSize);
