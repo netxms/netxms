@@ -1107,7 +1107,7 @@ shared_ptr<Subnet> NXCORE_EXPORTABLE FindSubnetForNode(int32_t zoneUIN, const In
 bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
-   while(FindSubnetByIP(zoneUIN, addr) != nullptr)
+   while((baseAddr.getHostBits() > 0) && (FindSubnetByIP(zoneUIN, addr) != nullptr))
    {
       baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
       addr = baseAddr.getSubnetAddress();
