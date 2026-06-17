@@ -203,7 +203,16 @@ void Subnet::setCorrectMask(const InetAddress& addr)
 	bool reAdd = !m_ipAddress.equals(addr);
    if (reAdd)
    {
-      g_idxSubnetByAddr.remove(m_ipAddress);
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+            zone->removeFromIndex(*this);
+      }
+      else
+      {
+         g_idxSubnetByAddr.remove(m_ipAddress);
+      }
    }
 
 	m_ipAddress = addr;
@@ -211,7 +220,16 @@ void Subnet::setCorrectMask(const InetAddress& addr)
 
 	if (reAdd)
    {
-      g_idxSubnetByAddr.put(m_ipAddress, self());
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+            zone->addToIndex(static_pointer_cast<Subnet>(self()));
+      }
+      else
+      {
+         g_idxSubnetByAddr.put(m_ipAddress, self());
+      }
    }
 	setModified(MODIFY_OTHER);
 	unlockProperties();
