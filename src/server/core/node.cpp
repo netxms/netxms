@@ -12689,18 +12689,20 @@ static Mutex s_subnetCreationMutex;
  */
 shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 {
+   if (syntheticMask)
+   {
+      // For synthetic mask, adjust base address using the host-bearing address so that
+      // AdjustSubnetBaseAddress() can narrow the mask to the largest non-overlapping subnet around the host.
+      if (!AdjustSubnetBaseAddress(baseAddr, m_zoneUIN))
+         return shared_ptr<Subnet>();
+   }
+
    InetAddress addr = baseAddr.getSubnetAddress();
    if ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0))
       return shared_ptr<Subnet>();  // Do not create subnet from 0.0.0.0/8
 
    if (IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
       return shared_ptr<Subnet>();
-
-   if (syntheticMask)
-   {
-      if (!AdjustSubnetBaseAddress(addr, m_zoneUIN))
-         return shared_ptr<Subnet>();
-   }
 
    shared_ptr<Subnet> subnet = make_shared<Subnet>(addr, m_zoneUIN, syntheticMask);
 
