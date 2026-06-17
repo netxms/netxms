@@ -5370,6 +5370,65 @@ paths:
         - BearerAuth: []
       tags:
         - Script Library
+  /v1/script-library/compile:
+    post:
+      operationId: compileScript
+      summary: Compile script
+      description: >-
+        Compile an NXSL script to check its syntax without executing it.
+        Returns whether compilation succeeded, the error location and message
+        on failure, and any compilation warnings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: NXSL source code to compile
+      responses:
+        '200':
+          description: Script compiled (check the success field for the outcome)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: True if the script compiled without errors
+                  error:
+                    type: object
+                    description: Present only when success is false
+                    properties:
+                      lineNumber:
+                        type: integer
+                        description: Line number where the error was detected
+                      message:
+                        type: string
+                        description: Error description
+                  warnings:
+                    type: array
+                    description: Compilation warnings (may be present regardless of success)
+                    items:
+                      type: object
+                      properties:
+                        lineNumber:
+                          type: integer
+                        message:
+                          type: string
+        '400':
+          description: Missing or invalid code field
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - Script Library
   /v1/script-library/{script-id}:
     get:
       operationId: getScript

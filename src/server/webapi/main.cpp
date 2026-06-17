@@ -176,6 +176,7 @@ int H_ScheduledTaskUpdate(Context *context);
 int H_ScriptLibrary(Context *context);
 int H_ScriptDetails(Context *context);
 int H_ScriptCreate(Context *context);
+int H_ScriptCompile(Context *context);
 int H_ScriptUpdate(Context *context);
 int H_ScriptDelete(Context *context);
 int H_SshKeys(Context *context);
@@ -634,6 +635,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/script-library")
       .GET(H_ScriptLibrary)
       .POST(H_ScriptCreate)
+      .build();
+   RouteBuilder("v1/script-library/compile")
+      .POST(H_ScriptCompile)
       .build();
    RouteBuilder("v1/script-library/:script-id")
       .GET(H_ScriptDetails)

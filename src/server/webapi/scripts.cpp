@@ -200,6 +200,58 @@ int H_ScriptUpdate(Context *context)
 }
 
 /**
+ * Handler for POST /v1/script-library/compile
+ *
+ * Compiles an NXSL script to check its syntax without executing it. The request
+ * body must contain a "code" field with the script source. The response reports
+ * whether compilation succeeded, the error location and text on failure, and any
+ * compilation warnings.
+ */
+int H_ScriptCompile(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+      return 400;
+
+   json_t *jsonCode = json_object_get(request, "code");
+   if (!json_is_string(jsonCode))
+   {
+      context->setErrorResponse("Missing or invalid code field");
+      return 400;
+   }
+
+   wchar_t *source = WideStringFromUTF8String(json_string_value(jsonCode));
+
+   NXSL_CompilationDiagnostic diag;
+   NXSL_ServerEnv env;
+   NXSL_Program *script = NXSLCompile(source, &env, &diag);
+   MemFree(source);
+
+   json_t *output = json_object();
+   json_object_set_new(output, "success", json_boolean(script != nullptr));
+   if (script != nullptr)
+   {
+      delete script;
+   }
+   else
+   {
+      json_t *error = json_object();
+      json_object_set_new(error, "lineNumber", json_integer(diag.errorLineNumber));
+      json_object_set_new(error, "message", json_string_t(diag.errorText));
+      json_object_set_new(output, "error", error);
+   }
+
+   json_t *warnings = json_array();
+   for(NXSL_CompilationWarning *w : diag.warnings)
+      json_array_append_new(warnings, w->toJson());
+   json_object_set_new(output, "warnings", warnings);
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Handler for DELETE /v1/script-library/:script-id
  */
 int H_ScriptDelete(Context *context)
