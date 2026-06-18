@@ -50,7 +50,9 @@
 #define	LEGAL_ALT(x)		{ if (alt_format & ~(x)) return NULL; }
 
 static char gmt[] = { "GMT" };
+#ifdef TM_ZONE
 static char utc[] = { "UTC" };
+#endif
 /* RFC-822/RFC-2822 */
 static const char * const nast[5] = {
        "EST",    "CST",    "MST",    "PST",    "\0\0\0"
