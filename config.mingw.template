@@ -21,39 +21,44 @@ UNICODE = 1
 # Components to build
 BUILD_AGENT = 1              # Build agent components (nxagentd, subagents)
 BUILD_CLIENT = 1             # Build client libraries and tools
-BUILD_SERVER = 0             # Server components (usually not needed on Windows)
-
-#####################################################################
-# MinGW Toolchain
-#####################################################################
-
-CC = gcc
-CXX = g++
-AR = ar
-RANLIB = ranlib
-WINDRES = windres
-STRIP = strip
-LD = ld
+BUILD_SERVER = 0             # Server components
 
 #####################################################################
 # Target Architecture
 #####################################################################
 
-# Options: x86, x64, arm64
-# For cross-compilation, set the appropriate prefix:
-#   x86:   i686-w64-mingw32-
-#   x64:   x86_64-w64-mingw32-
-#   arm64: aarch64-w64-mingw32-
-ARCH = x64
+# Target architecture: x86, x64, or arm64
+# Override on the command line without editing this file:
+#   make -f Makefile.w32 ARCH=arm64
+ARCH ?= x64
 
-# Uncomment for cross-compilation (prefix toolchain commands)
-# CROSS_PREFIX = x86_64-w64-mingw32-
-# CC = $(CROSS_PREFIX)gcc
-# CXX = $(CROSS_PREFIX)g++
-# AR = $(CROSS_PREFIX)ar
-# RANLIB = $(CROSS_PREFIX)ranlib
-# WINDRES = $(CROSS_PREFIX)windres
-# STRIP = $(CROSS_PREFIX)strip
+# Map architecture to llvm-mingw target triple
+ifeq ($(ARCH),x64)
+TARGET_TRIPLE = x86_64-w64-mingw32
+else ifeq ($(ARCH),x86)
+TARGET_TRIPLE = i686-w64-mingw32
+else ifeq ($(ARCH),arm64)
+TARGET_TRIPLE = aarch64-w64-mingw32
+else
+$(error Unsupported ARCH '$(ARCH)' - valid values are: x86, x64, arm64)
+endif
+
+#####################################################################
+# MinGW Toolchain (llvm-mingw, selected by ARCH)
+#####################################################################
+# The toolchain is derived from the target triple above, so changing
+# ARCH automatically selects the matching cross-compiler. Override
+# TOOLCHAIN_PREFIX here only if your toolchain uses a different naming.
+
+TOOLCHAIN_PREFIX = $(TARGET_TRIPLE)-
+
+CC = $(TOOLCHAIN_PREFIX)gcc
+CXX = $(TOOLCHAIN_PREFIX)g++
+AR = $(TOOLCHAIN_PREFIX)ar
+RANLIB = $(TOOLCHAIN_PREFIX)ranlib
+WINDRES = $(TOOLCHAIN_PREFIX)windres
+STRIP = $(TOOLCHAIN_PREFIX)strip
+LD = $(TOOLCHAIN_PREFIX)ld
 
 #####################################################################
 # Installation
@@ -164,8 +169,7 @@ COMMON_LIBDIRS = -L$(OPENSSL_ROOT)/lib \
 # Common Compiler Flags
 #####################################################################
 
-COMMON_CFLAGS = -D_WIN32 \
-                -DUNICODE \
+COMMON_CFLAGS = -DUNICODE \
                 -D_UNICODE \
                 -Wall \
                 -Wno-unknown-pragmas \
@@ -179,13 +183,9 @@ COMMON_CFLAGS = -D_WIN32 \
                 -I$(CURL_ROOT)/include \
                 -I$(EXPAT_ROOT)/include
 
-# Architecture-specific flags
-ifeq ($(ARCH),x64)
-COMMON_CFLAGS += -m64
-endif
-ifeq ($(ARCH),x86)
-COMMON_CFLAGS += -m32
-endif
+# Note: architecture is selected by the target-triple toolchain above
+# (llvm-mingw uses separate per-arch toolchains), so no -m32/-m64 flag
+# is needed here.
 
 # Debug vs Release
 ifeq ($(DEBUG),1)
@@ -205,7 +205,7 @@ endif
 # Common C++ Flags
 #####################################################################
 
-COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=c++14
+COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=gnu++14
 
 #####################################################################
 # Common Linker Flags

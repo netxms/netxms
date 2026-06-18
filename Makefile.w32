@@ -83,11 +83,15 @@ endif
 # Complete build order
 ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(NC_DIRS) $(SERVER_DIRS)
 
+# Architectures built by the all-arch target
+# Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
+ALL_ARCHS = x64 x86 arm64
+
 #####################################################################
 # Targets
 #####################################################################
 
-.PHONY: all clean install help version check-config build-tag $(ALL_DIRS)
+.PHONY: all all-arch clean install help version check-config build-tag $(ALL_DIRS)
 
 all: check-config build-tag $(ALL_DIRS)
 	@echo ""
@@ -95,6 +99,21 @@ all: check-config build-tag $(ALL_DIRS)
 	@echo "  NetXMS Windows Build Complete"
 	@echo "  Architecture: $(ARCH)"
 	@echo "  Build Type: $(BUILD_TYPE)"
+	@echo "============================================"
+	@echo ""
+
+# Build every architecture in turn (each is a full recursive build)
+all-arch:
+	@for arch in $(ALL_ARCHS); do \
+		echo ""; \
+		echo "############################################"; \
+		echo "#  Building architecture: $$arch"; \
+		echo "############################################"; \
+		$(MAKE) -f Makefile.w32 ARCH=$$arch all || exit 1; \
+	done
+	@echo ""
+	@echo "============================================"
+	@echo "  All architectures built: $(ALL_ARCHS)"
 	@echo "============================================"
 	@echo ""
 
@@ -170,6 +189,8 @@ help:
 	@echo ""
 	@echo "Usage:"
 	@echo "  make -f Makefile.w32           Build all components"
+	@echo "  make -f Makefile.w32 ARCH=arm64  Build for a specific architecture (x86|x64|arm64)"
+	@echo "  make -f Makefile.w32 all-arch  Build all architectures ($(ALL_ARCHS))"
 	@echo "  make -f Makefile.w32 clean     Clean build artifacts"
 	@echo "  make -f Makefile.w32 install   Install to PREFIX"
 	@echo "  make -f Makefile.w32 version   Show version info"

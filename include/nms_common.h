@@ -304,15 +304,19 @@ typedef __int64 off64_t;
 #define TIME_T_FMT      _T("%I64u")
 #define TIME_T_FCAST(x) ((UINT64)(x))
 
-#ifndef __clang__
-
 #define HAVE_DECL_BSWAP_16 1
 #define HAVE_DECL_BSWAP_32 1
 #define HAVE_DECL_BSWAP_64 1
 
+#ifdef _MSC_VER
+#define bswap_16(n)  _byteswap_ushort(n)
+#define bswap_32(n)  _byteswap_ulong(n)
+#define bswap_64(n)  _byteswap_uint64(n)
+#else
 #define bswap_16(n)  __builtin_bswap16(n)
 #define bswap_32(n)  __builtin_bswap32(n)
 #define bswap_64(n)  __builtin_bswap64(n)
+#endif
 
 #define HAVE_LIBEXPAT  1
 

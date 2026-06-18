@@ -57,7 +57,6 @@ SOURCES = \
 	pugixml.cpp \
 	queue.cpp \
 	rbuffer.cpp \
-	scandir.cpp \
 	serial.cpp \
 	sha1.cpp \
 	sha2.cpp \
@@ -74,8 +73,6 @@ SOURCES = \
 	strmapbase.cpp \
 	strptime.cpp \
 	strset.cpp \
-	strtoll.cpp \
-	strtoull.cpp \
 	subproc.cpp \
 	table.cpp \
 	tasks.cpp \
@@ -91,8 +88,6 @@ SOURCES = \
 	wcscasestr.cpp \
 	wcslcat.cpp \
 	wcslcpy.cpp \
-	wcstoll.cpp \
-	wcstoull.cpp \
 	windll.cpp \
 	xml.cpp \
 	ztools.cpp
