@@ -22,11 +22,11 @@
 #include <netxms-regex.h>
 
 /**
- * Create new database instance object
+ * Create new database connection object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
+DatabaseConnection::DatabaseConnection(ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
-   memcpy(&m_info, info, sizeof(DatabaseInfo));
+   memcpy(&m_info, info, sizeof(ConnectionInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
 	m_session = nullptr;
 	m_connected = false;
@@ -37,7 +37,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::F
 /**
  * Destructor
  */
-DatabaseInstance::~DatabaseInstance()
+DatabaseConnection::~DatabaseConnection()
 {
    stop();
    delete m_data;
@@ -46,15 +46,15 @@ DatabaseInstance::~DatabaseInstance()
 /**
  * Run
  */
-void DatabaseInstance::run()
+void DatabaseConnection::run()
 {
-   m_pollerThread = ThreadCreateEx(this, &DatabaseInstance::pollerThread);
+   m_pollerThread = ThreadCreateEx(this, &DatabaseConnection::pollerThread);
 }
 
 /**
  * Stop
  */
-void DatabaseInstance::stop()
+void DatabaseConnection::stop()
 {
    m_stopCondition.set();
    ThreadJoin(m_pollerThread);
@@ -69,7 +69,7 @@ void DatabaseInstance::stop()
 /**
  * Detect Oracle DBMS version
  */
-int DatabaseInstance::getOracleVersion() 
+int DatabaseConnection::getOracleVersion() 
 {
 	DB_RESULT hResult = DBSelect(m_session, _T("SELECT version FROM v$instance"));
 	if (hResult == nullptr)
@@ -87,7 +87,7 @@ int DatabaseInstance::getOracleVersion()
 /**
  * Poller thread
  */
-void DatabaseInstance::pollerThread()
+void DatabaseConnection::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG_ORACLE, 3, _T("ORACLE: poller thread for database %s started"), m_info.id);
    int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * _LL(1000);
@@ -97,7 +97,7 @@ reconnect:
       m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_oracleDriver, m_info.name, nullptr, m_info.username, m_info.password, nullptr, errorText);
+      m_session = DBConnect(g_oracleDriver, m_info.endpoint, nullptr, m_info.username, m_info.password, nullptr, errorText);
       if (m_session == nullptr)
       {
          m_sessionLock.unlock();
@@ -153,7 +153,7 @@ reconnect:
 /**
  * Do actual database polling. Should return false if connection is broken.
  */
-bool DatabaseInstance::poll()
+bool DatabaseConnection::poll()
 {
    StringMap *data = new StringMap();
 
@@ -239,7 +239,7 @@ bool DatabaseInstance::poll()
 /**
  * Get collected data
  */
-bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
+bool DatabaseConnection::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
    m_dataLock.lock();
@@ -285,7 +285,7 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *
 /**
  * Get list of tags matching given pattern from collected data
  */
-bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
+bool DatabaseConnection::getTagList(const TCHAR *pattern, StringList *value)
 {
    bool success = false;
    m_dataLock.lock();
@@ -310,7 +310,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 /**
  * Query table
  */
-bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
+bool DatabaseConnection::queryTable(TableDescriptor *td, Table *value)
 {
    m_sessionLock.lock();
    

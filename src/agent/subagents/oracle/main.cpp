@@ -184,18 +184,18 @@ static TableDescriptor s_tqDataFiles =
 };
 
 /**
- * Database instances
+ * Database connections
  */
-static ObjectArray<DatabaseInstance> *s_instances = nullptr;
+static ObjectArray<DatabaseConnection> *s_connections = nullptr;
 
 /**
- * Find instance by ID
+ * Find connection by ID
  */
-static DatabaseInstance *FindInstance(const TCHAR *id)
+static DatabaseConnection *FindConnection(const TCHAR *id)
 {
-   for(int i = 0; i < s_instances->size(); i++)
+   for(int i = 0; i < s_connections->size(); i++)
    {
-      DatabaseInstance *db = s_instances->get(i);
+      DatabaseConnection *db = s_connections->get(i);
       if (!_tcsicmp(db->getId(), id))
          return db;
    }
@@ -211,7 +211,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -227,7 +227,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -266,7 +266,7 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -284,7 +284,7 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -293,12 +293,12 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 }
 
 /**
- * Handler for Oracle.Databases list
+ * Handler for Oracle.Connections list
  */
-static LONG H_DatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   for(int i = 0; i < s_instances->size(); i++)
-      value->add(s_instances->get(i)->getId());
+   for(int i = 0; i < s_connections->size(); i++)
+      value->add(s_connections->get(i)->getId());
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -311,7 +311,7 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, A
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -327,7 +327,7 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -337,18 +337,35 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 /**
  * Config template
  */
-static DatabaseInfo s_dbInfo;
+static ConnectionInfo s_connInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
-   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,             0, &s_dbInfo.connectionTTL },
-   { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
-	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
-	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
-	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_dbInfo.username },
-	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
-   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
+   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,             0, &s_connInfo.connectionTTL },
+   { _T("Endpoint"),          CT_STRING, 0, 0, MAX_STR,       0, s_connInfo.endpoint },
+   { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, s_connInfo.id },
+   { _T("Login"),             CT_STRING, 0, 0, MAX_USERNAME,  0, s_connInfo.username },
+   { _T("Name"),              CT_STRING, 0, 0, MAX_STR,       0, s_connInfo.endpoint },   // deprecated alias for Endpoint
+   { _T("TnsName"),           CT_STRING, 0, 0, MAX_STR,       0, s_connInfo.endpoint },   // deprecated alias for Endpoint
+   { _T("UserName"),          CT_STRING, 0, 0, MAX_USERNAME,  0, s_connInfo.username },   // deprecated alias for Login
+   { _T("Password"),          CT_STRING, 0, 0, MAX_PASSWORD,  0, s_connInfo.password },
+   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD,  0, s_connInfo.password },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
+
+/**
+ * Log debug-level deprecation warnings for legacy configuration keys in a section
+ */
+static void CheckDeprecatedKeys(Config *config, const TCHAR *section)
+{
+   static const TCHAR *deprecatedKeys[] = { _T("Name"), _T("TnsName"), _T("UserName"), nullptr };
+   for(int i = 0; deprecatedKeys[i] != nullptr; i++)
+   {
+      TCHAR path[MAX_STR];
+      _sntprintf(path, MAX_STR, _T("/%s/%s"), section, deprecatedKeys[i]);
+      if (config->getEntry(path) != nullptr)
+         nxlog_debug_tag(DEBUG_TAG_ORACLE, 3, _T("Configuration key \"%s\" in section [%s] is deprecated"), deprecatedKeys[i], section);
+   }
+}
 
 /*
  * Subagent initialization
@@ -363,57 +380,91 @@ static bool SubAgentInit(Config *config)
 		return false;
 	}
 
-   s_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
+   s_connections = new ObjectArray<DatabaseConnection>(8, 8, Ownership::True);
 
 	// Load configuration from "oracle" section to allow simple configuration
-	// of one database without XML includes
-	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-	s_dbInfo.connectionTTL = 3600;
+	// of one connection without XML includes
+	memset(&s_connInfo, 0, sizeof(s_connInfo));
+	s_connInfo.connectionTTL = 3600;
 	if (config->parseTemplate(_T("ORACLE"), s_configTemplate))
 	{
-		if (s_dbInfo.name[0] != 0)
+		if (s_connInfo.endpoint[0] != 0)
 		{
-			if (s_dbInfo.id[0] == 0)
-				_tcscpy(s_dbInfo.id, s_dbInfo.name);
+			if (s_connInfo.id[0] == 0)
+				_tcscpy(s_connInfo.id, s_connInfo.endpoint);
 
-         DecryptPassword(s_dbInfo.username, s_dbInfo.password, s_dbInfo.password, MAX_PASSWORD);
-         s_instances->add(new DatabaseInstance(&s_dbInfo));
+         CheckDeprecatedKeys(config, _T("ORACLE"));
+         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
 		}
 	}
 
-	// Load full-featured XML configuration
+	// Load named connection subsections (oracle/connections/<id>)
+   ConfigEntry *connectionsRoot = config->getEntry(_T("/oracle/connections"));
+   if (connectionsRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < connections->size(); i++)
+      {
+         ConfigEntry *e = connections->get(i);
+         memset(&s_connInfo, 0, sizeof(s_connInfo));
+         s_connInfo.connectionTTL = 3600;
+         _tcslcpy(s_connInfo.id, e->getName(), MAX_STR);   // Id defaults to subsection name
+
+         TCHAR section[MAX_STR];
+         _sntprintf(section, MAX_STR, _T("oracle/connections/%s"), e->getName());
+         if (!config->parseTemplate(section, s_configTemplate))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("Error parsing Oracle subagent configuration for connection %s"), e->getName());
+            continue;
+         }
+
+         if (s_connInfo.id[0] == 0)
+            continue;
+
+         CheckDeprecatedKeys(config, section);
+         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
+      }
+   }
+
+	// Load legacy numbered connection sections (deprecated, parsed for one major version)
 	for(int i = 1; i <= 64; i++)
 	{
 		TCHAR section[MAX_STR];
-		memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-		s_dbInfo.connectionTTL = 3600;
+		memset(&s_connInfo, 0, sizeof(s_connInfo));
+		s_connInfo.connectionTTL = 3600;
 		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
 
 		if (!config->parseTemplate(section, s_configTemplate))
 		{
-			nxlog_write(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("Error parsing Oracle subagent configuration template #%d"), i);
+			nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("Error parsing Oracle subagent configuration template #%d"), i);
          continue;
 		}
 
-		if (s_dbInfo.name[0] == 0)
+		if (s_connInfo.endpoint[0] == 0)
 			continue;
 
-      DecryptPassword(s_dbInfo.username, s_dbInfo.password, s_dbInfo.password, MAX_PASSWORD);
+      if (s_connInfo.id[0] == 0)
+         _tcscpy(s_connInfo.id, s_connInfo.endpoint);
 
-      s_instances->add(new DatabaseInstance(&s_dbInfo));
+      nxlog_debug_tag(DEBUG_TAG_ORACLE, 3, _T("Configuration section [%s] is deprecated; use [oracle/connections/<id>] instead"), section);
+      CheckDeprecatedKeys(config, section);
+      DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+      s_connections->add(new DatabaseConnection(&s_connInfo));
 	}
 
 	// Exit if no usable configuration found
-   if (s_instances->isEmpty())
+   if (s_connections->isEmpty())
 	{
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("No Oracle databases to monitor"));
-      delete s_instances;
+      delete s_connections;
       return false;
 	}
 
 	// Run query thread for each configured database
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->run();
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->run();
 
 	return true;
 }
@@ -424,9 +475,9 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	nxlog_debug_tag(DEBUG_TAG_ORACLE, 1, _T("Stopping Oracle database pollers"));
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->stop();
-   delete s_instances;
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->stop();
+   delete s_connections;
    DBUnloadDriver(g_oracleDriver);
 	nxlog_debug_tag(DEBUG_TAG_ORACLE, 1, _T("Oracle subagent stopped"));
 }
@@ -515,7 +566,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("Oracle.ASM.DiskGroups(*)"), H_TagList, _T("^ASM_DISKGROUP/STATUS@(.*)$"), _T("List of ASM disk groups") },
-   { _T("Oracle.Databases"), H_DatabasesList, nullptr, _T("Oracle: configured database connections") },
+   { _T("Oracle.Connections"), H_ConnectionsList, nullptr, _T("Oracle: configured database connections") },
    { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/STATUS@(.*)$"), _T("List of data files") },
    { _T("Oracle.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("List of Oracle data collection tags") },
    { _T("Oracle.TableSpaces(*)"), H_TagList, _T("^TABLESPACE/STATUS@(.*)$"), _T("List of tablespaces") }

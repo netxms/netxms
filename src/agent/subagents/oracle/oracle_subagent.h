@@ -42,11 +42,10 @@
 /**
  * Database connection information
  */
-struct DatabaseInfo
+struct ConnectionInfo
 {
-	TCHAR id[MAX_STR];				// instance ID
-	TCHAR name[MAX_STR];
-	TCHAR server[MAX_STR];
+	TCHAR id[MAX_STR];				// connection ID
+	TCHAR endpoint[MAX_STR];		// TNS name / connection string
 	TCHAR username[MAX_USERNAME];
 	TCHAR password[MAX_PASSWORD];
 	UINT32 connectionTTL;
@@ -66,12 +65,12 @@ struct TableDescriptor
 };
 
 /**
- * Database instance
+ * Database connection
  */
-class DatabaseInstance
+class DatabaseConnection
 {
 private:
-   DatabaseInfo m_info;
+   ConnectionInfo m_info;
 	THREAD m_pollerThread;
 	DB_HANDLE m_session;
 	bool m_connected;
@@ -86,8 +85,8 @@ private:
    int getOracleVersion();
 
 public:
-   DatabaseInstance(DatabaseInfo *info);
-   ~DatabaseInstance();
+   DatabaseConnection(ConnectionInfo *info);
+   ~DatabaseConnection();
 
    void run();
    void stop();
