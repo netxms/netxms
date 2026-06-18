@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
@@ -178,7 +178,7 @@ static void EventLogger()
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
-		{ 
+		{
          StringBuffer query(L"INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,"
                             L"origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
          query.append(event->getId());
@@ -442,9 +442,14 @@ static void ParallelEventProcessor()
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Parallel event processing enabled (queue selector \"%s\")"), queueSelector);
 
 	int poolSize = ConfigReadInt(L"Events.Processor.PoolSize", 1);
-	if (poolSize > 128)
+	if (poolSize < 1)
 	{
-	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configured thread pool size for parallel event processing is to big (configured value %d, adjusted to 128)"), poolSize);
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configured thread pool size for parallel event processing is invalid (configured value %d, adjusted to 1)"), poolSize);
+	   poolSize = 1;
+	}
+	else if (poolSize > 128)
+	{
+	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Configured thread pool size for parallel event processing is too big (configured value %d, adjusted to 128)"), poolSize);
 	   poolSize = 128;
 	}
 
