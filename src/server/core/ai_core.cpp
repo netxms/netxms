@@ -521,6 +521,8 @@ static const TCHAR *GetProviderTypeName(LLMProviderType type)
          return _T("OpenAI");
       case LLMProviderType::ANTHROPIC:
          return _T("Anthropic");
+      case LLMProviderType::MISTRAL:
+         return _T("Mistral");
       case LLMProviderType::OLLAMA:
          return _T("Ollama");
       default:
@@ -2629,6 +2631,8 @@ bool InitAIAssistant()
             config.type = LLMProviderType::OPENAI;
          else if (!_tcsicmp(typeStr, _T("anthropic")))
             config.type = LLMProviderType::ANTHROPIC;
+         else if (!_tcsicmp(typeStr, _T("mistral")))
+            config.type = LLMProviderType::MISTRAL;
          else
             config.type = LLMProviderType::OLLAMA;
 
@@ -2646,6 +2650,9 @@ bool InitAIAssistant()
             {
                case LLMProviderType::ANTHROPIC:
                   strlcpy(config.url, "https://api.anthropic.com/v1/messages", sizeof(config.url));
+                  break;
+               case LLMProviderType::MISTRAL:
+                  strlcpy(config.url, "https://api.mistral.ai/v1/chat/completions", sizeof(config.url));
                   break;
                default:
                   strlcpy(config.url, "http://127.0.0.1:11434/api/chat", sizeof(config.url));
@@ -2666,6 +2673,9 @@ bool InitAIAssistant()
             {
                case LLMProviderType::ANTHROPIC:
                   strlcpy(config.model, "claude-sonnet-4-20250514", sizeof(config.model));
+                  break;
+               case LLMProviderType::MISTRAL:
+                  strlcpy(config.model, "mistral-large-latest", sizeof(config.model));
                   break;
                default:
                   strlcpy(config.model, "llama3.2", sizeof(config.model));
@@ -2716,6 +2726,7 @@ bool InitAIAssistant()
          {
             case LLMProviderType::OPENAI: typeName = _T("OpenAI"); break;
             case LLMProviderType::ANTHROPIC: typeName = _T("Anthropic"); break;
+            case LLMProviderType::MISTRAL: typeName = _T("Mistral"); break;
             default: typeName = _T("Ollama"); break;
          }
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Configured AI provider \"%s\" (type=%s, model=%hs, slots=%s, verifySSL=%s)"),

@@ -251,6 +251,8 @@ shared_ptr<LLMProvider> CreateLLMProvider(const LLMProviderConfig& config)
          return make_shared<OpenAIProvider>(config);
       case LLMProviderType::ANTHROPIC:
          return make_shared<AnthropicProvider>(config);
+      case LLMProviderType::MISTRAL:
+         return make_shared<MistralProvider>(config);
       default:
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown provider type %d, defaulting to Ollama"), static_cast<int>(config.type));
          return make_shared<OllamaProvider>(config);

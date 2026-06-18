@@ -33,7 +33,8 @@ enum class LLMProviderType
 {
    OLLAMA = 0,     // Ollama API: response has "message" at root level
    OPENAI = 1,     // OpenAI API: response has "choices[0].message" - works for all compatible APIs
-   ANTHROPIC = 2   // Anthropic Messages API: separate system prompt, content blocks array
+   ANTHROPIC = 2,  // Anthropic Messages API: separate system prompt, content blocks array
+   MISTRAL = 3     // Mistral API: OpenAI-compatible (choices[0].message, Bearer auth)
 };
 
 /**
@@ -140,6 +141,18 @@ class NXCORE_EXPORTABLE OpenAIProvider : public LLMProvider
 public:
    OpenAIProvider(const LLMProviderConfig& config);
    virtual ~OpenAIProvider();
+
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+};
+
+/**
+ * Mistral provider implementation (OpenAI-compatible API)
+ */
+class NXCORE_EXPORTABLE MistralProvider : public LLMProvider
+{
+public:
+   MistralProvider(const LLMProviderConfig& config);
+   virtual ~MistralProvider();
 
    virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
 };
