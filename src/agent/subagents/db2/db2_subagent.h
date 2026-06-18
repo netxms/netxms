@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013 Raden Solutions
+ * Copyright (C) 2013-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,56 +26,79 @@
 
 #include "db2dci.h"
 
-#define SUBAGENT_NAME _T("DB2")
-#define STR_MAX 256
-#define INTERVAL_QUERY_SECONDS 60
-#define INTERVAL_RECONNECT_SECONDS 30
-#define QUERY_MAX 2048
-#define DB_ID_DIGITS_MAX 10 + 1
-#define DCI_LIST_SIZE 53
+#define SUBAGENT_NAME      _T("DB2")
+#define DEBUG_TAG_DB2      _T("db2")
+#define STR_MAX            256
+#define QUERY_MAX          2048
+#define DCI_LIST_SIZE      53
 
 /**
  * DB2 constants
  */
-#define DB2_DB_MAX_NAME 8 + 1
 #ifdef _WIN32
 #define DB2_MAX_USER_NAME 32 + 1
 #else
 #define DB2_MAX_USER_NAME 8 + 1
 #endif
 
-struct DB2_INFO
+/**
+ * Database connection information
+ */
+struct ConnectionInfo
 {
-   int db2Id;
-   TCHAR db2DbName[DB2_DB_MAX_NAME];
-   TCHAR db2DbAlias[DB2_DB_MAX_NAME];
-   TCHAR db2UName[DB2_MAX_USER_NAME];
-   TCHAR db2UPass[MAX_PASSWORD];
-   LONG db2ReconnectInterval;
-   LONG db2QueryInterval;
+   TCHAR id[STR_MAX];                    // connection ID (subsection name)
+   TCHAR endpoint[STR_MAX];              // catalog alias = connect target
+   TCHAR database[STR_MAX];              // DB2 database name
+   TCHAR username[DB2_MAX_USER_NAME];
+   TCHAR password[MAX_PASSWORD];
+   uint32_t connectionTTL;
 };
 
-struct THREAD_INFO
-{
-   THREAD threadHandle;
-   Mutex *mutex;
-   DB_HANDLE hDb;
-   DB2_INFO *db2Info;
-   TCHAR db2Params[NUM_OF_DCI][STR_MAX];
-};
-
+/**
+ * Query for polling
+ */
 struct QUERY
 {
    Dci dciList[DCI_LIST_SIZE];
    TCHAR query[QUERY_MAX];
 };
 
-static bool DB2Init(Config* config);
-static void DB2Shutdown();
+/**
+ * Database connection
+ */
+class DatabaseConnection
+{
+private:
+   ConnectionInfo m_info;
+   THREAD m_pollerThread;
+   DB_HANDLE m_session;
+   bool m_connected;
+   bool m_dataValid;
+   TCHAR m_data[NUM_OF_DCI][STR_MAX];
+   Mutex m_dataLock;
+   Mutex m_sessionLock;
+   Condition m_stopCondition;
 
-static void RunMonitorThread(THREAD_INFO *threadInfo);
-static BOOL PerformQueries(THREAD_INFO*);
-static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-static DB2_INFO *GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName);
+   void pollerThread();
+   bool poll();
+
+public:
+   DatabaseConnection(ConnectionInfo *info);
+   ~DatabaseConnection();
+
+   void run();
+   void stop();
+
+   const TCHAR *getId() { return m_info.id; }
+   bool isConnected() { return m_connected; }
+
+   bool getData(Dci dci, TCHAR *value);
+};
+
+/**
+ * Global variables
+ */
+extern DB_DRIVER g_db2Driver;
+extern QUERY g_queries[];
 
 #endif /* DB2_SUBAGENT_H_ */

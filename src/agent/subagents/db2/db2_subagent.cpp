@@ -20,10 +20,33 @@
 #include "db2_subagent.h"
 #include <netxms-version.h>
 
-static DB_DRIVER s_driver = nullptr;
-static Condition s_condShutdown(true);
-static THREAD_INFO *s_threads = nullptr;
-static int s_threadCount = 0;
+/**
+ * Driver handle
+ */
+DB_DRIVER g_db2Driver = nullptr;
+
+/**
+ * Configured database connections
+ */
+static ObjectArray<DatabaseConnection> *s_connections = nullptr;
+
+/**
+ * Find connection by ID
+ */
+static DatabaseConnection *FindConnection(const TCHAR *id)
+{
+   for(int i = 0; i < s_connections->size(); i++)
+   {
+      DatabaseConnection *db = s_connections->get(i);
+      if (!_tcsicmp(db->getId(), id))
+         return db;
+   }
+   return nullptr;
+}
+
+static bool DB2Init(Config *config);
+static void DB2Shutdown();
+static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 static NETXMS_SUBAGENT_PARAM m_agentParams[] =
 {
@@ -409,6 +432,24 @@ static NETXMS_SUBAGENT_PARAM m_agentParams[] =
    }
 };
 
+/**
+ * Handler for DB2.Connections list
+ */
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_connections->size(); i++)
+      value->add(s_connections->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST m_agentLists[] =
+{
+   { _T("DB2.Connections"), H_ConnectionsList, nullptr, _T("DB2: configured database connections") }
+};
+
 static NETXMS_SUBAGENT_INFO m_agentInfo =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
@@ -416,13 +457,13 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
    NETXMS_VERSION_STRING,
    DB2Init, DB2Shutdown, nullptr, nullptr, nullptr,
    (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
-   0, nullptr,
+   (sizeof(m_agentLists) / sizeof(NETXMS_SUBAGENT_LIST)), m_agentLists,
    0, nullptr,
    0, nullptr,
    0, nullptr
 };
 
-static QUERY g_queries[] =
+QUERY g_queries[] =
 {
    { { DCI_DBMS_VERSION }, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
    { { DCI_NUM_AVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'Y'") },
@@ -518,113 +559,278 @@ static QUERY g_queries[] =
 };
 
 /**
+ * Create new database connection object
+ */
+DatabaseConnection::DatabaseConnection(ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
+{
+   memcpy(&m_info, info, sizeof(ConnectionInfo));
+   m_pollerThread = INVALID_THREAD_HANDLE;
+   m_session = nullptr;
+   m_connected = false;
+   m_dataValid = false;
+   memset(m_data, 0, sizeof(m_data));
+}
+
+/**
+ * Destructor
+ */
+DatabaseConnection::~DatabaseConnection()
+{
+   stop();
+}
+
+/**
+ * Run poller thread
+ */
+void DatabaseConnection::run()
+{
+   m_pollerThread = ThreadCreateEx(this, &DatabaseConnection::pollerThread);
+}
+
+/**
+ * Stop poller thread
+ */
+void DatabaseConnection::stop()
+{
+   m_stopCondition.set();
+   ThreadJoin(m_pollerThread);
+   m_pollerThread = INVALID_THREAD_HANDLE;
+   if (m_session != nullptr)
+   {
+      DBDisconnect(m_session);
+      m_session = nullptr;
+   }
+}
+
+/**
+ * Poller thread
+ */
+void DatabaseConnection::pollerThread()
+{
+   nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("Poller thread for connection %s started"), m_info.id);
+   int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * _LL(1000);
+   do
+   {
+reconnect:
+      m_sessionLock.lock();
+
+      TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      m_session = DBConnect(g_db2Driver, m_info.endpoint, m_info.database, m_info.username, m_info.password, nullptr, errorText);
+      if (m_session == nullptr)
+      {
+         m_sessionLock.unlock();
+         nxlog_debug_tag(DEBUG_TAG_DB2, 6, _T("Cannot connect to database %s: %s"), m_info.id, errorText);
+         continue;
+      }
+
+      m_connected = true;
+      DBEnableReconnect(m_session, false);
+      DBSetLongRunningThreshold(m_session, 5000);  // Override global long running query threshold
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DB2, _T("Connection with database %s restored (connection TTL %u)"), m_info.id, m_info.connectionTTL);
+
+      m_sessionLock.unlock();
+
+      int64_t pollerLoopStartTime = GetCurrentTimeMs();
+      uint32_t sleepTime;
+      do
+      {
+         int64_t startTime = GetCurrentTimeMs();
+         if (!poll())
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Connection with database %s lost"), m_info.id);
+            break;
+         }
+         int64_t currTime = GetCurrentTimeMs();
+         if (currTime - pollerLoopStartTime > connectionTTL)
+         {
+            nxlog_debug_tag(DEBUG_TAG_DB2, 4, _T("Planned connection reset"));
+            m_sessionLock.lock();
+            m_connected = false;
+            DBDisconnect(m_session);
+            m_session = nullptr;
+            m_sessionLock.unlock();
+            goto reconnect;
+         }
+         int64_t elapsedTime = currTime - startTime;
+         sleepTime = static_cast<uint32_t>((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+      }
+      while(!m_stopCondition.wait(sleepTime));
+
+      m_sessionLock.lock();
+      m_connected = false;
+      DBDisconnect(m_session);
+      m_session = nullptr;
+      m_sessionLock.unlock();
+   }
+   while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
+   nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("Poller thread for connection %s stopped"), m_info.id);
+}
+
+/**
+ * Do actual database polling. Should return false if connection is broken.
+ */
+bool DatabaseConnection::poll()
+{
+   TCHAR data[NUM_OF_DCI][STR_MAX];
+   memset(data, 0, sizeof(data));
+
+   int count = 0;
+   int failures = 0;
+
+   for(int queryId = 0; g_queries[queryId].dciList[0] != DCI_NULL; queryId++)
+   {
+      count++;
+      DB_RESULT hResult = DBSelect(m_session, g_queries[queryId].query);
+      if (hResult == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_DB2, 7, _T("Query \"%s\" failed"), g_queries[queryId].query);
+         failures++;
+         continue;
+      }
+
+      const Dci *dciList = g_queries[queryId].dciList;
+      int numCols = DBGetColumnCount(hResult);
+      for(int i = 0; i < numCols; i++)
+         DBGetField(hResult, 0, i, data[dciList[i]], STR_MAX);
+
+      DBFreeResult(hResult);
+   }
+
+   // update cached data
+   m_dataLock.lock();
+   memcpy(m_data, data, sizeof(m_data));
+   m_dataValid = true;
+   m_dataLock.unlock();
+
+   return failures < count;
+}
+
+/**
+ * Get collected data
+ */
+bool DatabaseConnection::getData(Dci dci, TCHAR *value)
+{
+   bool success = false;
+   m_dataLock.lock();
+   if (m_dataValid)
+   {
+      ret_string(value, m_data[dci]);
+      success = true;
+   }
+   m_dataLock.unlock();
+   return success;
+}
+
+/**
+ * Configuration template (shared by simple and named-subsection forms)
+ */
+static ConnectionInfo s_connInfo;
+static NX_CFG_TEMPLATE s_configTemplate[] =
+{
+   { _T("ConnectionTTL"),     CT_LONG,        0, 0, 0,                 0, &s_connInfo.connectionTTL },
+   { _T("Database"),          CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.database },
+   { _T("DBName"),            CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.database },    // deprecated alias for Database
+   { _T("Endpoint"),          CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.endpoint },
+   { _T("DBAlias"),           CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.endpoint },    // deprecated alias for Endpoint
+   { _T("Id"),                CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.id },
+   { _T("Login"),             CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, s_connInfo.username },
+   { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, s_connInfo.username },    // deprecated alias for Login
+   { _T("Password"),          CT_STRING,      0, 0, MAX_PASSWORD,      0, s_connInfo.password },
+   { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_PASSWORD,      0, s_connInfo.password },
+   { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, nullptr }
+};
+
+/**
+ * Log debug-level deprecation warnings for legacy configuration keys in a section
+ */
+static void CheckDeprecatedKeys(Config *config, const TCHAR *section)
+{
+   static const TCHAR *deprecatedKeys[] = { _T("DBName"), _T("DBAlias"), _T("UserName"), nullptr };
+   for(int i = 0; deprecatedKeys[i] != nullptr; i++)
+   {
+      TCHAR path[STR_MAX];
+      _sntprintf(path, STR_MAX, _T("/%s/%s"), section, deprecatedKeys[i]);
+      if (config->getEntry(path) != nullptr)
+         nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("Configuration key \"%s\" in section [%s] is deprecated"), deprecatedKeys[i], section);
+   }
+}
+
+/**
  * Subagent initialization
  */
 static bool DB2Init(Config *config)
 {
-   AgentWriteDebugLog(5, _T("%s: initializing"), SUBAGENT_NAME);
-
-   s_driver = DBLoadDriver(_T("db2.ddr"), NULL, NULL, NULL);
-   if (s_driver == NULL)
+   g_db2Driver = DBLoadDriver(_T("db2.ddr"), nullptr, nullptr, nullptr);
+   if (g_db2Driver == nullptr)
    {
-      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load the database driver"), SUBAGENT_NAME);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DB2, _T("Cannot load DB2 database driver"));
       return false;
    }
 
-   AgentWriteDebugLog(5, _T("%s: loaded the database driver"), SUBAGENT_NAME);
+   s_connections = new ObjectArray<DatabaseConnection>(8, 8, Ownership::True);
 
-   ConfigEntry* db2IniEntry = config->getEntry(_T("/db2"));
-
-   if (db2IniEntry == NULL)
+   // Load configuration from "db2" section to allow simple configuration of one connection
+   memset(&s_connInfo, 0, sizeof(s_connInfo));
+   s_connInfo.connectionTTL = 3600;
+   if (config->parseTemplate(_T("DB2"), s_configTemplate))
    {
-      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no entries found in the configuration file"), SUBAGENT_NAME);
-      return false;
+      if (s_connInfo.endpoint[0] != 0)
+      {
+         if (s_connInfo.id[0] == 0)
+            _tcslcpy(s_connInfo.id, s_connInfo.endpoint, STR_MAX);
+
+         CheckDeprecatedKeys(config, _T("DB2"));
+         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
+      }
    }
 
-   DB2_INFO** arrDb2Info;
-   int numOfPossibleThreads = 0;
-
-   ConfigEntry* xmlFile = db2IniEntry->findEntry(_T("ConfigFile"));
-   if (xmlFile == NULL)
+   // Load named connection subsections (db2/connections/<id>)
+   ConfigEntry *connectionsRoot = config->getEntry(_T("/db2/connections"));
+   if (connectionsRoot != nullptr)
    {
-      AgentWriteDebugLog(7, _T("%s: processing configuration entries in section '%s'"), SUBAGENT_NAME, db2IniEntry->getName());
-
-      DB2_INFO *db2Info = GetConfigs(config, db2IniEntry, _T("db2"));
-      if (db2Info == NULL)
+      unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < connections->size(); i++)
       {
-         return false;
-      }
+         ConfigEntry *e = connections->get(i);
+         memset(&s_connInfo, 0, sizeof(s_connInfo));
+         s_connInfo.connectionTTL = 3600;
+         _tcslcpy(s_connInfo.id, e->getName(), STR_MAX);   // Id defaults to subsection name
 
-      db2Info->db2Id = 1;
-
-      s_threadCount = 1;
-      arrDb2Info = new DB2_INFO*[1];
-      arrDb2Info[0] = db2Info;
-   }
-   else
-   {
-      const TCHAR* pathToXml = xmlFile->getValue();
-      AgentWriteDebugLog(7, _T("%s: processing configuration file '%s'"), SUBAGENT_NAME, pathToXml);
-
-      if (!config->loadXmlConfig(pathToXml))
-      {
-        AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' is not a valid configuration file"), SUBAGENT_NAME, pathToXml);
-        return false;
-      }
-
-      ConfigEntry* db2SubXmlEntry = config->getEntry(_T("/db2sub"));
-      if (db2SubXmlEntry == NULL)
-      {
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' doesn't contain the db2 configuration entry"), SUBAGENT_NAME, pathToXml);
-         return false;
-      }
-
-      unique_ptr<ObjectArray<ConfigEntry>> db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
-      numOfPossibleThreads = db2SubXmlSubEntries->size();
-      AgentWriteDebugLog(7, _T("%s: '%s' loaded with number of db2 entries: %d"), SUBAGENT_NAME, pathToXml, numOfPossibleThreads);
-      arrDb2Info = new DB2_INFO*[numOfPossibleThreads];
-      TCHAR entryName[STR_MAX];
-
-      for(int i = 0; i < numOfPossibleThreads; i++)
-      {
-         ConfigEntry *entry = db2SubXmlSubEntries->get(i);
-         _tcscpy(entryName, _T("db2sub/"));
-         _tcslcat(entryName, entry->getName(), STR_MAX);
-
-         DB2_INFO *db2Info = GetConfigs(config, entry, entryName);
-         if (db2Info == NULL)
+         TCHAR section[STR_MAX];
+         _sntprintf(section, STR_MAX, _T("db2/connections/%s"), e->getName());
+         if (!config->parseTemplate(section, s_configTemplate))
          {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Error parsing DB2 subagent configuration for connection %s"), e->getName());
             continue;
          }
 
-         arrDb2Info[s_threadCount] = db2Info;
-         s_threadCount++;
+         if (s_connInfo.id[0] == 0)
+            continue;
+
+         CheckDeprecatedKeys(config, section);
+         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
       }
    }
 
-   if (s_threadCount > 0)
+   // Exit if no usable configuration found
+   if (s_connections->isEmpty())
    {
-      AgentWriteDebugLog(7, _T("%s: loaded %d configuration section(s)"), SUBAGENT_NAME, s_threadCount);
-      s_threads = new THREAD_INFO[s_threadCount];
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("No DB2 databases to monitor"));
+      delete s_connections;
+      s_connections = nullptr;
+      DBUnloadDriver(g_db2Driver);
+      g_db2Driver = nullptr;
+      return false;
    }
 
-   for(int i = 0; i < s_threadCount; i++)
-   {
-      //s_threads[i] = new THREAD_INFO;
-      s_threads[i].mutex = new Mutex();
-      s_threads[i].db2Info = arrDb2Info[i];
-      s_threads[i].threadHandle = ThreadCreateEx(RunMonitorThread, &s_threads[i]);
-   }
+   // Run poller thread for each configured connection
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->run();
 
-   delete[] arrDb2Info;
-
-   if (s_threadCount > 0)
-   {
-      AgentWriteDebugLog(3, _T("%s: starting with %d query thread(s)"), SUBAGENT_NAME, s_threadCount);
-      return true;
-   }
-
-   return false;
+   nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("DB2 subagent started with %d connection(s)"), s_connections->size());
+   return true;
 }
 
 /**
@@ -632,256 +838,34 @@ static bool DB2Init(Config *config)
  */
 static void DB2Shutdown()
 {
-   AgentWriteDebugLog(9, _T("%s: terminating"), SUBAGENT_NAME);
-   s_condShutdown.set();
-
-   for(int i = 0; i < s_threadCount; i++)
-   {
-      ThreadJoin(s_threads[i].threadHandle);
-      delete s_threads[i].mutex;
-      delete s_threads[i].db2Info;
-   }
-   delete[] s_threads;
-
-   DBUnloadDriver(s_driver);
-
-   s_driver = NULL;
-   s_threads = NULL;
-
-   AgentWriteDebugLog(3, _T("%s: terminated"), SUBAGENT_NAME);
+   nxlog_debug_tag(DEBUG_TAG_DB2, 1, _T("Stopping DB2 database pollers"));
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->stop();
+   delete s_connections;
+   s_connections = nullptr;
+   DBUnloadDriver(g_db2Driver);
+   g_db2Driver = nullptr;
+   nxlog_debug_tag(DEBUG_TAG_DB2, 1, _T("DB2 subagent stopped"));
 }
 
-static void RunMonitorThread(THREAD_INFO *threadInfo)
-{
-   DB2_INFO *db2Info = threadInfo->db2Info;
-   DB_HANDLE dbHandle = NULL;
-   TCHAR connectError[DBDRV_MAX_ERROR_TEXT];
-   DWORD reconnectInterval = (DWORD) db2Info->db2ReconnectInterval;
-
-   while(TRUE)
-   {
-      dbHandle = DBConnect(s_driver, db2Info->db2DbAlias, db2Info->db2DbName, db2Info->db2UName, db2Info->db2UPass, NULL, connectError);
-
-      if (dbHandle == NULL)
-      {
-         AgentWriteLog(
-            EVENTLOG_ERROR_TYPE,
-            _T("%s: failed to connect to the database \"%s\" (%s), reconnecting in %ds"),
-            SUBAGENT_NAME, db2Info->db2DbName, connectError, reconnectInterval);
-
-         if (s_condShutdown.wait(reconnectInterval * 1000))
-         {
-            break;
-         }
-         else
-         {
-            continue;
-         }
-      }
-
-      threadInfo->hDb = dbHandle;
-
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to database '%s'"), SUBAGENT_NAME, db2Info->db2DbName);
-
-      if (PerformQueries(threadInfo))
-      {
-         break;
-      }
-   }
-
-   if(dbHandle != NULL)
-   {
-      DBDisconnect(dbHandle);
-   }
-}
-
-static BOOL PerformQueries(THREAD_INFO *threadInfo)
-{
-   DB2_INFO *db2Info = threadInfo->db2Info;
-   DWORD queryInterval = (DWORD) db2Info->db2QueryInterval;
-
-   while(TRUE)
-   {
-      threadInfo->mutex->lock();
-
-      DB_RESULT hResult;
-      Dci* dciList;
-
-      int queryId = 0;
-      while(*(dciList = g_queries[queryId].dciList) != DCI_NULL)
-      {
-         hResult = DBSelect(threadInfo->hDb, g_queries[queryId].query);
-
-         if (hResult == NULL)
-         {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: query '%s' failed"), SUBAGENT_NAME, g_queries[queryId].query);
-            queryId++;
-            continue;
-         }
-
-         int numCols = DBGetColumnCount(hResult);
-
-         for(int i = 0; i < numCols; i++)
-         {
-            TCHAR* dciVal = threadInfo->db2Params[dciList[i]];
-
-            DBGetField(hResult, 0, i, dciVal, STR_MAX);
-
-            AgentWriteDebugLog(9, _T("%s: got '%s'"), SUBAGENT_NAME, dciVal);
-         }
-
-         DBFreeResult(hResult);
-
-         queryId++;
-      }
-
-      threadInfo->mutex->unlock();
-
-      if (s_condShutdown.wait(queryInterval * 1000))
-      {
-         break;
-      }
-   }
-
-   return TRUE;
-}
-
+/**
+ * Handler for DB2.X(connectionId) parameters
+ */
 static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    Dci dci = StringToDci(arg);
-
    if (dci == DCI_NULL)
-   {
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
-   TCHAR dbIdString[DB_ID_DIGITS_MAX];
-   unsigned long dbId;
-
-   AgentGetParameterArg(parameter, 1, dbIdString, DB_ID_DIGITS_MAX);
-   dbId = _tcstoul(dbIdString, NULL, 0);
-
-   if (dbId == 0)
-   {
-      AgentWriteDebugLog(7, _T("%s: id '%s' is invalid"), SUBAGENT_NAME, dbIdString);
+   TCHAR id[STR_MAX];
+   if (!AgentGetParameterArg(parameter, 1, id, STR_MAX))
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
-   THREAD_INFO threadInfo;
-
-   for(int i = 0; i < s_threadCount; i++)
-   {
-      if (s_threads[i].db2Info->db2Id == dbId)
-      {
-         threadInfo = s_threads[i];
-         break;
-      }
-
-      AgentWriteDebugLog(7, _T("%s: no database with id '%d' found"), SUBAGENT_NAME, dbId);
+   DatabaseConnection *db = FindConnection(id);
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
-   ret_string(value, threadInfo.db2Params[dci]);
-
-   return SYSINFO_RC_SUCCESS;
-}
-
-static DB2_INFO *GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName)
-{
-   unique_ptr<ObjectArray<ConfigEntry>> entryList = configEntry->getSubEntries(_T("*"));
-   if (entryList->size() == 0)
-   {
-      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: entry '%s' contained no values"), SUBAGENT_NAME, entryName);
-      return NULL;
-   }
-
-   DB2_INFO *db2Info = new DB2_INFO();
-   BOOL noErr = TRUE;
-   TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
-
-   db2Info->db2Id = configEntry->getId();
-
-   NX_CFG_TEMPLATE cfgTemplate[] =
-   {
-      { _T("DBName"),            CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbName },
-      { _T("DBAlias"),           CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbAlias },
-      { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, db2Info->db2UName },
-      { _T("Password"),          CT_STRING,      0, 0, MAX_PASSWORD,      0, db2Info->db2UPass },
-      { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_PASSWORD,      0, db2Info->db2UPass },
-      { _T("ReconnectInterval"), CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2ReconnectInterval },
-      { _T("QueryInterval"),     CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2QueryInterval },
-      { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, NULL }
-   };
-
-   if (!config->parseTemplate(entryName, cfgTemplate))
-   {
-      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to process entry '%s'"), SUBAGENT_NAME, entryName);
-      noErr = FALSE;
-   }
-
-   DecryptPassword(db2Info->db2UName, db2Info->db2UPass, db2Info->db2UPass, MAX_PASSWORD);
-
-   if (noErr)
-   {
-      if (*db2Info->db2DbName == '\0')
-      {
-         AgentWriteDebugLog(7, _T("%s: no DBName in '%s'"), SUBAGENT_NAME, entryName);
-         noErr = FALSE;
-      }
-      else
-      {
-         AgentWriteDebugLog(9, _T("%s: got DBName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbName);
-      }
-
-      if (*db2Info->db2DbAlias == '\0')
-      {
-         AgentWriteDebugLog(7, _T("%s: no DBAlias in '%s'"), SUBAGENT_NAME, entryName);
-         noErr = FALSE;
-      }
-      else
-      {
-         AgentWriteDebugLog(9, _T("%s: got DBAlias entry with value '%s'"), SUBAGENT_NAME, db2Info->db2DbAlias);
-      }
-
-      if (*db2Info->db2UName == '\0')
-      {
-         AgentWriteDebugLog(7, _T("%s: no UserName in '%s'"), SUBAGENT_NAME, entryName);
-         noErr = FALSE;
-      }
-      else
-      {
-         AgentWriteDebugLog(9, _T("%s: got UserName entry with value '%s'"), SUBAGENT_NAME, db2Info->db2UName);
-      }
-
-      if (*db2Info->db2UPass == '\0')
-      {
-         AgentWriteDebugLog(7, _T("%s: no Password in '%s'"), SUBAGENT_NAME, entryName);
-         noErr = FALSE;
-      }
-      else
-      {
-         AgentWriteDebugLog(9, _T("%s: got Password entry."), SUBAGENT_NAME);
-      }
-
-      if (db2Info->db2ReconnectInterval == 0)
-      {
-         db2Info->db2ReconnectInterval = INTERVAL_RECONNECT_SECONDS;
-      }
-
-      if (db2Info->db2QueryInterval == 0)
-      {
-         db2Info->db2QueryInterval = INTERVAL_QUERY_SECONDS;
-      }
-   }
-
-   if (!noErr)
-   {
-      AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to process entry '%s'"), SUBAGENT_NAME, entryName);
-      delete db2Info;
-      return NULL;
-   }
-
-   return db2Info;
+   return db->getData(dci, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
