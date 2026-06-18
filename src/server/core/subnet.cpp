@@ -201,38 +201,33 @@ void Subnet::setCorrectMask(const InetAddress& addr)
 	}
 
 	bool reAdd = !m_ipAddress.equals(addr);
-   if (reAdd)
-   {
-      if (IsZoningEnabled())
-      {
-         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-         if (zone != nullptr)
-            zone->removeFromSubnetIndex(m_ipAddress);
-      }
-      else
-      {
-         g_idxSubnetByAddr.remove(m_ipAddress);
-      }
-   }
+	InetAddress oldAddress = m_ipAddress;
 
 	m_ipAddress = addr;
 	m_flags &= ~SF_SYNTETIC_MASK;
+	setModified(MODIFY_OTHER);
+	unlockProperties();
 
+	// Update address index outside of the properties lock to avoid lock order inversion: index readers
+	// (e.g. FindSubnetForNode) lock subnet properties while holding the index lock, so the index lock must
+	// always be acquired before the properties lock, never the other way around.
 	if (reAdd)
    {
       if (IsZoningEnabled())
       {
          shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
          if (zone != nullptr)
+         {
+            zone->removeFromSubnetIndex(oldAddress);
             zone->addToIndex(addr, static_pointer_cast<Subnet>(self()));
+         }
       }
       else
       {
-         g_idxSubnetByAddr.put(m_ipAddress, self());
+         g_idxSubnetByAddr.remove(oldAddress);
+         g_idxSubnetByAddr.put(addr, self());
       }
    }
-	setModified(MODIFY_OTHER);
-	unlockProperties();
 }
 
 /**
