@@ -166,6 +166,139 @@ int H_ObjectCustomAttributeDelete(Context *context)
 }
 
 /**
+ * Load asset object by URL placeholder "object-id" and check the given access
+ * rights. Returns the asset on success. On failure returns nullptr and writes the
+ * corresponding HTTP status code to *httpCode (400 if the object is not an asset).
+ */
+static shared_ptr<Asset> LoadAssetForModify(Context *context, uint32_t requiredRights, int *httpCode)
+{
+   shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
+   if (object == nullptr)
+      return shared_ptr<Asset>();
+   if (object->getObjectClass() != OBJECT_ASSET)
+   {
+      context->setErrorResponse("Object is not an asset");
+      *httpCode = 400;
+      return shared_ptr<Asset>();
+   }
+   return static_pointer_cast<Asset>(object);
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/asset-properties
+ * Returns the asset's properties as a JSON object { name: value }, matching the
+ * "properties" element of the full asset document.
+ */
+int H_ObjectAssetProperties(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<Asset> asset = LoadAssetForModify(context, OBJECT_ACCESS_READ, &httpCode);
+   if (asset == nullptr)
+      return httpCode;
+
+   json_t *output = asset->getPropertiesAsJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/asset-properties/:name
+ * Upserts a single asset property. Body: { "value": "..." }. The attribute name
+ * and value are validated against the asset management schema.
+ */
+int H_ObjectAssetPropertyUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<Asset> asset = LoadAssetForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (asset == nullptr)
+      return httpCode;
+
+   const wchar_t *name = context->getPlaceholderValue(L"name");
+   if ((name == nullptr) || (name[0] == 0))
+   {
+      context->setErrorResponse("Asset property name cannot be empty");
+      return 400;
+   }
+
+   json_t *request = context->getRequestDocument();
+   if ((request == nullptr) || !json_is_object(request))
+   {
+      context->setErrorResponse("Request body must be a JSON object");
+      return 400;
+   }
+
+   json_t *jsonValue = json_object_get(request, "value");
+   if ((jsonValue == nullptr) || !json_is_string(jsonValue))
+   {
+      context->setErrorResponse("Asset property value must be a string");
+      return 400;
+   }
+
+   String value = json_object_get_string(request, "value", L"");
+
+   json_t *oldSnapshot = asset->toJson();
+   std::pair<uint32_t, String> result = asset->setProperty(name, value, context->getUserId());
+   if (result.first != RCC_SUCCESS)
+   {
+      json_decref(oldSnapshot);
+      context->setErrorResponse(result.second.cstr());
+      return (result.first == RCC_UNKNOWN_ATTRIBUTE) ? 404 : 400;
+   }
+
+   json_t *newSnapshot = asset->toJson();
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, asset->getId(), oldSnapshot, newSnapshot,
+      L"Asset property \"%s\" of object %s [%u] changed", name, asset->getName(), asset->getId());
+   json_decref(oldSnapshot);
+   json_decref(newSnapshot);
+
+   json_t *output = json_object();
+   json_object_set_new(output, "name", json_string_w(name));
+   json_object_set_new(output, "value", json_string_t(value));
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id/asset-properties/:name
+ * Removes a single asset property. Returns 404 if the property is not set and
+ * 400 if it is mandatory (and therefore cannot be removed).
+ */
+int H_ObjectAssetPropertyDelete(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<Asset> asset = LoadAssetForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (asset == nullptr)
+      return httpCode;
+
+   const wchar_t *name = context->getPlaceholderValue(L"name");
+   if ((name == nullptr) || (name[0] == 0))
+   {
+      context->setErrorResponse("Asset property name cannot be empty");
+      return 400;
+   }
+
+   json_t *oldSnapshot = asset->toJson();
+   uint32_t rcc = asset->deleteProperty(name, context->getUserId());
+   if (rcc != RCC_SUCCESS)
+   {
+      json_decref(oldSnapshot);
+      if (rcc == RCC_UNKNOWN_ATTRIBUTE)
+         return 404;
+      context->setErrorResponse("Mandatory asset property cannot be deleted");
+      return 400;
+   }
+
+   json_t *newSnapshot = asset->toJson();
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, asset->getId(), oldSnapshot, newSnapshot,
+      L"Asset property \"%s\" of object %s [%u] deleted", name, asset->getName(), asset->getId());
+   json_decref(oldSnapshot);
+   json_decref(newSnapshot);
+   return 204;
+}
+
+/**
  * Handler for GET /v1/objects/:object-id/responsible-users
  * Returns array of the object's own responsible users: [ { userId, tag } ].
  */

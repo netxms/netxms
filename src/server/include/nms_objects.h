@@ -5565,6 +5565,7 @@ public:
    void setLinkedObjectId(uint32_t objectId)  { lockProperties(); m_linkedObjectId = objectId; setModified(MODIFY_ASSET_PROPERTIES); unlockProperties(); }
    uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
    SharedString getProperty(const TCHAR *attr);
+   json_t *getPropertiesAsJson() const;
 
    std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value, uint32_t userId);
    uint32_t deleteProperty(const TCHAR *attr, uint32_t userId);

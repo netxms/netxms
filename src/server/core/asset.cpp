@@ -236,17 +236,9 @@ json_t *Asset::toJson(bool includeSensitiveData)
    json_object_set_new(root, "linkedObjectId", json_integer(m_linkedObjectId));
    json_object_set_new(root, "lastUpdateTimestamp", json_integer(m_lastUpdateTimestamp));
    json_object_set_new(root, "lastUpdateUserId", json_integer(m_lastUpdateUserId));
-
-   json_t *properties = json_object();
-   for(KeyValuePair<const TCHAR> *p : m_properties)
-   {
-      char name[256];
-      tchar_to_utf8(p->key, -1, name, sizeof(name));
-      json_object_set_new(properties, name, json_string_t(p->value));
-   }
-   json_object_set_new(root, "properties", properties);
-
+   json_object_set_new(root, "properties", m_properties.toJson());
    unlockProperties();
+
    return root;
 }
 
@@ -276,6 +268,17 @@ SharedString Asset::getProperty(const TCHAR *attr)
    SharedString result = m_properties.get(attr);
    unlockProperties();
    return result;
+}
+
+/**
+ * Get all properties as JSON object { name: value }
+ */
+json_t *Asset::getPropertiesAsJson() const
+{
+   lockProperties();
+   json_t *json = m_properties.toJson();
+   unlockProperties();
+   return json;
 }
 
 /**

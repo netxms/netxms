@@ -124,6 +124,9 @@ int H_ObjectUnbindChild(Context *context);
 int H_ObjectCustomAttributes(Context *context);
 int H_ObjectCustomAttributeUpdate(Context *context);
 int H_ObjectCustomAttributeDelete(Context *context);
+int H_ObjectAssetProperties(Context *context);
+int H_ObjectAssetPropertyUpdate(Context *context);
+int H_ObjectAssetPropertyDelete(Context *context);
 int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
@@ -514,6 +517,13 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/custom-attributes/:name")
       .PUT(H_ObjectCustomAttributeUpdate)
       .DELETE(H_ObjectCustomAttributeDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/asset-properties")
+      .GET(H_ObjectAssetProperties)
+      .build();
+   RouteBuilder("v1/objects/:object-id/asset-properties/:name")
+      .PUT(H_ObjectAssetPropertyUpdate)
+      .DELETE(H_ObjectAssetPropertyDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/responsible-users")
       .GET(H_ObjectResponsibleUsers)

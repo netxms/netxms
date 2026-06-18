@@ -3265,6 +3265,135 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/asset-properties:
+    get:
+      operationId: getObjectAssetProperties
+      summary: Get asset properties
+      description: |
+        Retrieve the asset object's properties as a JSON object mapping attribute name
+        to value. This is the same representation embedded as the `properties` object in
+        the full asset document. The target object must be an asset.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Asset properties as a name/value map.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                example:
+                  vendor: Cisco
+                  model: Catalyst 2960
+                  serial: FOC1234X56Y
+        '400':
+          description: Object is not an asset
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/asset-properties/{name}:
+    put:
+      operationId: updateObjectAssetProperty
+      summary: Create or update a single asset property
+      description: |
+        Upsert a single asset property identified by name. The name is taken from the URL
+        path (URL-encoded). The attribute name must be defined in the asset management
+        schema and the value is validated against that schema (data type, range, enum,
+        etc.). The target object must be an asset.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Asset property (attribute) name (URL-encoded).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                  description: Property value. Validated against the asset management schema.
+      responses:
+        '200':
+          description: Property created or updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  value:
+                    type: string
+        '400':
+          description: Object is not an asset, invalid request body, or value rejected by schema validation.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object does not exist, or attribute name is not defined in the asset management schema
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteObjectAssetProperty
+      summary: Delete a single asset property
+      description: |
+        Remove an asset property by name. The target object must be an asset. Mandatory
+        properties cannot be removed.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Asset property (attribute) name (URL-encoded).
+      responses:
+        '204':
+          description: Property deleted.
+        '400':
+          description: Object is not an asset, or the property is mandatory and cannot be deleted.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object does not exist, or the property is not set on this asset
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/responsible-users:
     get:
       operationId: getObjectResponsibleUsers
