@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -147,13 +147,15 @@ AssetAttribute::AssetAttribute(const wchar_t *name, const ConfigEntry& entry, bo
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
 
-   TCHAR *script;
+   wchar_t *script;
    if (nxslV5)
+   {
       script = MemCopyString(entry.getSubEntryValue(_T("script")));
+   }
    else
    {
-      StringBuffer output = NXSLConvertToV5(entry.getSubEntryValue(_T("script"), 0, _T("")));
-      script = MemCopyString(output);
+      std::string output = NXSLConvertToV5(entry.getSubEntryValue(_T("script"), 0, _T("")));
+      script = WideStringFromUTF8String(output.c_str());
    }
    setScript(script);
 

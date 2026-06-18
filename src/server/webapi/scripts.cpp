@@ -220,12 +220,11 @@ int H_ScriptCompile(Context *context)
       return 400;
    }
 
-   wchar_t *source = WideStringFromUTF8String(json_string_value(jsonCode));
+   const char *source = json_string_value(jsonCode);
 
    NXSL_CompilationDiagnostic diag;
    NXSL_ServerEnv env;
    NXSL_Program *script = NXSLCompile(source, &env, &diag);
-   MemFree(source);
 
    json_t *output = json_object();
    json_object_set_new(output, "success", json_boolean(script != nullptr));

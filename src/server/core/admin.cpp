@@ -59,9 +59,7 @@ static uint32_t ExecuteServerScript(const wchar_t *script, const StringList& arg
       {
          NXSL_CompilationDiagnostic diag;
          NXSL_ServerEnv env;
-         wchar_t *wscript = WideStringFromUTF8String(scriptSource);
-         compiledScript = NXSLCompile(wscript, &env, &diag);
-         MemFree(wscript);
+         compiledScript = NXSLCompile(scriptSource, &env, &diag);
          MemFree(scriptSource);
          if (compiledScript == nullptr)
          {

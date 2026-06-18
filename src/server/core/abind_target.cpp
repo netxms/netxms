@@ -396,11 +396,13 @@ void AutoBindTarget::updateFromImport(const ConfigEntry& config, bool defaultAut
       if (filter != nullptr)
       {
          if (nxslV5)
+         {
             setAutoBindFilter(i, filter->getValue());
+         }
          else
          {
-            StringBuffer output = NXSLConvertToV5(filter->getValue());
-            setAutoBindFilter(i, output);
+            std::string output = NXSLConvertToV5(filter->getValue());
+            setAutoBindFilter(i, StringBuffer().appendUtf8String(output.c_str(), output.length()));
          }
          setAutoBindMode(i, filter->getAttributeAsBoolean(L"autoBind", defaultAutoBindFlag), filter->getAttributeAsBoolean(L"autoUnbind"));
       }

@@ -124,9 +124,11 @@ __PACK_END__
 /**
  * Functions
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
-NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
-StringBuffer LIBNXSL_EXPORTABLE NXSLConvertToV5(const TCHAR *source);
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const char *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const wchar_t *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const char *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const wchar_t *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag);
+std::string LIBNXSL_EXPORTABLE NXSLConvertToV5(const char *source);
+std::string LIBNXSL_EXPORTABLE NXSLConvertToV5(const wchar_t *source);
 
 #endif

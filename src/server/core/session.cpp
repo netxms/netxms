@@ -12496,7 +12496,7 @@ void ClientSession::compileScript(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR *source = request.getFieldAsString(VID_SCRIPT);
+   char *source = request.getFieldAsUtf8String(VID_SCRIPT);
    if (source != nullptr)
    {
       NXSL_CompilationDiagnostic diag;

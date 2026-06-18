@@ -6,9 +6,9 @@
 
 static TCHAR *s_testScriptDirectory = nullptr;
 
-static const TCHAR *s_prog1 = _T("a = 1;\nb = 2;\nreturn a + b;");
-static const TCHAR *s_prog2 = _T("a = 1;\nb = {;\nreturn a + b;");
-static const TCHAR *s_prog3 = _T("a = substr('abc', 1, 1);");
+static const char *s_prog1 = "a = 1;\nb = 2;\nreturn a + b;";
+static const char *s_prog2 = "a = 1;\nb = {;\nreturn a + b;";
+static const char *s_prog3 = "a = substr('abc', 1, 1);";
 
 /**
  * Test NXSL compiler
@@ -104,7 +104,7 @@ static void RunTestScript(const TCHAR *name)
    }
    _tcslcat(path, name, MAX_PATH);
 
-   TCHAR *source = NXSLLoadFile(path);
+   char *source = LoadFileAsUTF8String(path);
    AssertNotNull(source);
 
    NXSL_Environment *env = new NXSL_Environment();

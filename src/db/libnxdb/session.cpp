@@ -1514,6 +1514,14 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
 }
 
 /**
+ * Bind UTF-8 string
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const std::string& value, int allocType)
+{
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_UTF8_STRING, value.c_str(), allocType);
+}
+
+/**
  * Bind string parameter with length validation
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType, int maxLen)

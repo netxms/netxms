@@ -191,8 +191,8 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("script"), 0, _T("")));
-      m_filterScriptSource = MemCopyString(output);
+      std::string output = NXSLConvertToV5(config.getSubEntryValue(_T("script"), 0, _T("")));
+      m_filterScriptSource = WideStringFromUTF8String(output.c_str());
    }
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
@@ -208,11 +208,13 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    }
 
    if (nxslV5)
+   {
       m_actionScriptSource = MemCopyString(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+   }
    else
    {
-      StringBuffer output = NXSLConvertToV5(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
-      m_actionScriptSource = MemCopyString(output);
+      std::string output = NXSLConvertToV5(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+      m_actionScriptSource = WideStringFromUTF8String(output.c_str());
    }
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {

@@ -97,7 +97,7 @@ void NXSL_Compiler::warning(const TCHAR *format, ...)
 /**
  * Compile source code
  */
-NXSL_Program *NXSL_Compiler::compile(const TCHAR *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings)
+NXSL_Program *NXSL_Compiler::compile(const char *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings)
 {
    m_warnings = warnings;
    m_lexer = new NXSL_Lexer(this, sourceCode);
@@ -159,7 +159,7 @@ inline bool EndsWith(const std::string &str, const char *c)
 /**
  * Convert source code to version 5
  */
-StringBuffer NXSL_Compiler::convertToV5(const TCHAR *sourceCode)
+std::string NXSL_Compiler::convertToV5(const char *sourceCode)
 {
    ObjectArray<NXSL_CompilationWarning> warnings(0, 16, Ownership::True);
    m_warnings = &warnings;
@@ -234,9 +234,7 @@ StringBuffer NXSL_Compiler::convertToV5(const TCHAR *sourceCode)
    output.append(m_lexer->getSourceArPos(lastPos));
 
    yylex_destroy(scanner);
-   StringBuffer sb;
-   sb.appendUtf8String(output.c_str(), output.size());
-   return sb;
+   return output;
 }
 
 /**

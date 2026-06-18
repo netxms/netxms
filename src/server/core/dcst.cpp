@@ -691,9 +691,9 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("title")), DB_BIND_STATIC);
    StringBuffer filter;
    if (nxslV5)
-      filter = config->getSubEntryValue(_T("filter"));
+      filter.append(config->getSubEntryValue(_T("filter")));
    else
-      filter = NXSLConvertToV5(config->getSubEntryValue(_T("filter"), 0, _T("")));
+      filter.appendUtf8String(NXSLConvertToV5(config->getSubEntryValue(_T("filter"), 0, _T(""))).c_str());
    DBBind(hStmt, 3, DB_SQLTYPE_TEXT, filter, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsUInt(_T("flags")));
    DBBind(hStmt, 5, DB_SQLTYPE_TEXT, BuildColumnList(config->findEntry(_T("columns"))), DB_BIND_TRANSIENT);

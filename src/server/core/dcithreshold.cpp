@@ -196,8 +196,8 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem, bool nxslV5)
    }
    else
    {
-      StringBuffer output = NXSLConvertToV5(script);
-      setScript(MemCopyString(output));
+      std::string output = NXSLConvertToV5(script);
+      setScript(WideStringFromUTF8String(output.c_str()));
    }
    m_isReached = false;
    m_wasReachedBeforeMaint = false;

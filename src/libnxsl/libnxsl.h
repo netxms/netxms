@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -351,8 +351,11 @@ protected:
    ByteStream m_text;
 
 public:
-	NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode);
-	~NXSL_Lexer();
+	NXSL_Lexer(NXSL_Compiler *compiler, const char *sourceCode);
+	~NXSL_Lexer()
+	{
+	   MemFree(m_sourceCode);
+	}
 
 	size_t lexerInput(char *buffer, size_t maxSize);
 
@@ -386,11 +389,11 @@ public:
    NXSL_Compiler();
    ~NXSL_Compiler();
 
-   NXSL_Program *compile(const TCHAR *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings);
+   NXSL_Program *compile(const char *sourceCode, NXSL_Environment *env, ObjectArray<NXSL_CompilationWarning> *warnings);
    void error(const char *message);
    void warning(const TCHAR *format, ...);
 
-   StringBuffer convertToV5(const TCHAR *sourceCode);
+   std::string convertToV5(const char *sourceCode);
 
    const TCHAR *getErrorText() const { return m_errorText.cstr(); }
    int getErrorLineNumber() const { return m_errorLineNumber; }

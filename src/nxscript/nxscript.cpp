@@ -43,7 +43,7 @@ static NXSL_ExtFunction s_nxslSystemFunctions[] =
    { "GetCurrentDirectory", F_GetCurrentDirectory, 0 },
    { "SetCurrentDirectory", F_SetCurrentDirectory , 1 }
 };
-static NXSL_ExtModule s_nxslSystemModule = { "OS", sizeof(s_nxslSystemFunctions) / sizeof(NXSL_ExtFunction), s_nxslSystemFunctions };
+static NXSL_ExtModule s_nxslSystemModule = { "OS", static_cast<int>(sizeof(s_nxslSystemFunctions) / sizeof(NXSL_ExtFunction)), s_nxslSystemFunctions };
 
 /**
  * Environment for external scripts
@@ -181,19 +181,25 @@ int main(int argc, char *argv[])
 #ifdef UNICODE
       WCHAR ucName[MAX_PATH];
       MultiByteToWideCharSysLocale(argv[optind], ucName, MAX_PATH);
-      WCHAR *source = NXSLLoadFile(ucName);
+      char *source = LoadFileAsUTF8String(ucName);
 #else
-      char *source = NXSLLoadFile(argv[optind]);
+      char *source = LoadFileAsUTF8String(argv[optind]);
 #endif
       if (source == nullptr)
       {
-         _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         WriteToTerminalEx(_T("Error: cannot load input file \"%hs\" (%s)\n"), argv[optind], _tcserror(errno));
          return 1;
       }
 
-      StringBuffer output = NXSLConvertToV5(source);
+      std::string output = NXSLConvertToV5(source);
       MemFree(source);
-      _putts(output);
+#ifdef UNICODE
+      wchar_t *wt = WideStringFromUTF8String(output.c_str());
+      fputws(wt, stdout);
+      MemFree(wt);
+#else
+      puts(output.c_str());
+#endif
       return 0;
    }
 
@@ -208,7 +214,7 @@ int main(int argc, char *argv[])
 #endif
       if (s == nullptr)
       {
-		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         WriteToTerminalEx(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
          return 1;
       }
 
@@ -220,13 +226,13 @@ int main(int argc, char *argv[])
 #ifdef UNICODE
       WCHAR ucName[MAX_PATH];
       MultiByteToWideCharSysLocale(argv[optind], ucName, MAX_PATH);
-      WCHAR *source = NXSLLoadFile(ucName);
+      char *source = LoadFileAsUTF8String(ucName);
 #else
-      char *source = NXSLLoadFile(argv[optind]);
+      char *source = LoadFileAsUTF8String(argv[optind]);
 #endif
       if (source == nullptr)
 	   {
-		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         WriteToTerminalEx(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
          return 1;
       }
 
@@ -236,7 +242,7 @@ int main(int argc, char *argv[])
 		MemFree(source);
 
 		for(NXSL_CompilationWarning *w : diag.warnings)
-         _tprintf(_T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());
+         WriteToTerminalEx(_T("Compilation warning in line %d: %s\n"), w->lineNumber, w->message.cstr());
 		_tcslcpy(errorMessage, diag.errorText, 1024);
    }
 

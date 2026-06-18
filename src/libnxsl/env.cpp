@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -516,7 +516,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
    {
       TCHAR fileName[MAX_PATH];
       _sntprintf(fileName, MAX_PATH, _T("%s.nxsl"), importInfo->name);
-      TCHAR *source = NXSLLoadFile(fileName);
+      char *source = LoadFileAsUTF8String(fileName);
       if (source != nullptr)
       {
          NXSL_CompilationDiagnostic diag;

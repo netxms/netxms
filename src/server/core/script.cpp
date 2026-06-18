@@ -658,11 +658,9 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context, b
 
    StringBuffer code;
    if (nxslV5)
-      code = config->getSubEntryValue(_T("code"));
+      code.append(config->getSubEntryValue(_T("code")));
    else
-   {
-      code = NXSLConvertToV5(config->getSubEntryValue(_T("code")));
-   }
+      code.appendUtf8String(NXSLConvertToV5(config->getSubEntryValue(_T("code"))).c_str());
 
    if (IsValidScriptName(name))
    {
@@ -1071,7 +1069,7 @@ void ExecuteStartupScripts()
             count++;
             wcscpy(&path[insPos], f->d_name);
 
-            wchar_t *source = NXSLLoadFile(path);
+            char *source = LoadFileAsUTF8String(path);
             if (source != nullptr)
             {
                NXSL_CompilationDiagnostic diag;

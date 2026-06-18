@@ -105,7 +105,7 @@ static void ExecuteHousekeeperScripts()
             count++;
             wcscpy(&path[insPos], f->d_name);
 
-            wchar_t *source = NXSLLoadFile(path);
+            char *source = LoadFileAsUTF8String(path);
             if (source != nullptr)
             {
                NXSL_CompilationDiagnostic diag;

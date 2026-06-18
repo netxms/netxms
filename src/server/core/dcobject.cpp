@@ -277,7 +277,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    }
    else
    {
-      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))));
+      setTransformationScriptInternal(String(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0 , _T(""))).c_str(), "UTF8"));
    }
 
    // for compatibility with old format
@@ -305,7 +305,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    }
    else
    {
-      setInstanceFilter(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))));
+      setInstanceFilter(String(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))).c_str(), "UTF8"));
    }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
@@ -1361,7 +1361,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext 
    }
    else
    {
-      setTransformationScriptInternal(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))));
+      setTransformationScriptInternal(String(NXSLConvertToV5(config->getSubEntryValue(_T("transformation"), 0, _T(""))).c_str(), "UTF8"));
    }
 
    ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -1394,7 +1394,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext 
    }
    else
    {
-      setInstanceFilter(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))));
+      setInstanceFilter(String(NXSLConvertToV5(config->getSubEntryValue(_T("instanceFilter"), 0, _T(""))).c_str(), "UTF8"));
    }
    m_instanceName = config->getSubEntryValue(_T("instance"));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);

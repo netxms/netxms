@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,13 +27,9 @@
 /**
  * Constructor for our lexer class
  */
-NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode)
+NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const char *sourceCode)
 {
-#ifdef UNICODE
-	m_sourceCode = UTF8StringFromWideString(sourceCode);
-#else
-	m_sourceCode = UTF8StringFromMBString(sourceCode);
-#endif
+	m_sourceCode = MemCopyStringA(sourceCode);
    m_sourceSize = strlen(m_sourceCode);
    m_converterMode = false;
    m_currLine = 1;
@@ -41,14 +37,6 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const TCHAR *sourceCode)
    m_compiler = compiler;
    m_commentLevel = 0;
    m_stringSize = 0;
-}
-
-/**
- * Destructor
- */
-NXSL_Lexer::~NXSL_Lexer()
-{
-   MemFree(m_sourceCode);
 }
 
 /**

@@ -466,7 +466,7 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
       success = true;
       for (int i = 0; (i < count) && success; i++)
       {
-         TCHAR *source = DBGetField(result, i, 1, nullptr, 0);
+         char *source = DBGetFieldUTF8(result, i, 1, nullptr, 0);
          if ((source == nullptr) || (*source == 0))
          {
             // Script is empty, nothing to convert
@@ -474,7 +474,7 @@ static bool ConvertNXSLScriptsToV5(const TCHAR *tableName, const TCHAR *idColumn
             continue;
          }
 
-         StringBuffer updatedSource = NXSLConvertToV5(source);
+         std::string updatedSource = NXSLConvertToV5(source);
          MemFree(source);
 
          DBBind(stmt, 1, DB_SQLTYPE_TEXT, updatedSource, DB_BIND_STATIC);
@@ -548,13 +548,7 @@ static bool H_UpgradeFromV32()
 
             pugi::xml_node node = xml.select_node("/element/script").node();
             const char *source = node.text().as_string();
-            wchar_t *tmp = WideStringFromUTF8String(source);
-            StringBuffer updatedScript = NXSLConvertToV5(tmp);
-            MemFree(tmp);
-
-            char *newScript = updatedScript.getUTF8String();
-            node.last_child().set_value(newScript);
-            MemFree(newScript);
+            node.last_child().set_value(NXSLConvertToV5(source).c_str());
 
             xml_string_writer writer;
             xml.print(writer);
@@ -604,13 +598,7 @@ static bool H_UpgradeFromV32()
 
             pugi::xml_node node = xml.select_node("/element/query").node();
             const char *source = node.text().as_string();
-            wchar_t *tmp = WideStringFromUTF8String(source);
-            StringBuffer updatedScript = NXSLConvertToV5(tmp);
-            MemFree(tmp);
-
-            char *newScript = updatedScript.getUTF8String();
-            node.last_child().set_value(newScript);
-            MemFree(newScript);
+            node.last_child().set_value(NXSLConvertToV5(source).c_str());
 
             xml_string_writer writer;
             xml.print(writer);

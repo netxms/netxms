@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,11 +165,13 @@ SNMPTrapMapping::SNMPTrapMapping(const ConfigEntry& entry, const uuid& guid, uin
    m_description = MemCopyString(entry.getSubEntryValue(_T("description")));
    m_eventTag = MemCopyString(entry.getSubEntryValue(_T("eventTag"), 0, entry.getSubEntryValue(_T("userTag"))));
    if (nxslV5)
+   {
       m_scriptSource = MemCopyString(entry.getSubEntryValue(_T("transformationScript")));
+   }
    else
    {
-      StringBuffer output = NXSLConvertToV5(NXSLConvertToV5(entry.getSubEntryValue(_T("transformationScript"), 0, _T(""))));
-      m_scriptSource = MemCopyString(output);
+      std::string output = NXSLConvertToV5(entry.getSubEntryValue(_T("transformationScript"), 0, _T("")));
+      m_scriptSource = WideStringFromUTF8String(output.c_str());
    }
    m_script = nullptr;
 

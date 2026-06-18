@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Interface to compiler
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const char *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
 {
    NXSL_Compiler compiler;
    NXSL_Program *output = compiler.compile(source, env, &diag->warnings);
@@ -38,9 +38,20 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, NXSL_Environme
 }
 
 /**
+ * Interface to compiler
+ */
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const wchar_t *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
+{
+   char *utf8Source = UTF8StringFromWideString(source);
+   NXSL_Program *output = NXSLCompile(utf8Source, env, diag);
+   MemFree(utf8Source);
+   return output;
+}
+
+/**
  * Compile script and create VM
  */
-NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const char *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
 {
    NXSL_Program *p = NXSLCompile(source, env, diag);
    if (p == nullptr)
@@ -61,29 +72,35 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, NXSL_Env
 }
 
 /**
+ * Compile script and create VM
+ */
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const wchar_t *source, NXSL_Environment *env, NXSL_CompilationDiagnostic *diag)
+{
+   char *utf8Source = UTF8StringFromWideString(source);
+   NXSL_VM *vm = NXSLCompileAndCreateVM(utf8Source, env, diag);
+   MemFree(utf8Source);
+   return vm;
+}
+
+/**
  * Convert given script to version 5
  */
-StringBuffer LIBNXSL_EXPORTABLE NXSLConvertToV5(const TCHAR *source)
+std::string LIBNXSL_EXPORTABLE NXSLConvertToV5(const char *source)
 {
    NXSL_Compiler compiler;
    return compiler.convertToV5(source);
 }
 
 /**
- * Load NXSL source file into memory
+ * Convert given script to version 5
  */
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName)
+std::string LIBNXSL_EXPORTABLE NXSLConvertToV5(const wchar_t *source)
 {
-   char *content = LoadFileAsUTF8String(fileName);
-   if (content == nullptr)
-      return nullptr;
-#ifdef UNICODE
-	WCHAR *wContent = WideStringFromUTF8String(content);
-	MemFree(content);
-	return wContent;
-#else
-   return content;
-#endif
+   NXSL_Compiler compiler;
+   char *utf8Source = UTF8StringFromWideString(source);
+   std::string result = compiler.convertToV5(utf8Source);
+   MemFree(utf8Source);
+   return result;
 }
 
 /**
