@@ -28,6 +28,7 @@ cloud.discovery	Cloud domain resource discovery and reconciliation
 cas		CAS
 comm.*		Communications (in agent log)
 comm.listener	All listeners
+crash		Crash dump handler (Windows)
 
 crypto.*	Encryption functions
 crypto.cng	CNG engine

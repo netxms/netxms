@@ -348,6 +348,7 @@
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="object_categories.cpp" />
     <ClCompile Include="object_collections.cpp" />
+    <ClCompile Include="object_dci.cpp" />
     <ClCompile Include="object_helpers.cpp" />
     <ClCompile Include="object_node_config.cpp" />
     <ClCompile Include="object_properties.cpp" />

@@ -5332,6 +5332,8 @@ Condition LIBNETXMS_EXPORTABLE *GetShutdownConditionObject();
 
 #ifdef _WIN32
 void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable);
+bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHAR *dumpDir, bool fullDump);
+void LIBNETXMS_EXPORTABLE StopCrashHandler();
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lookupTable, const TCHAR *defaultText = _T("Unknown"));

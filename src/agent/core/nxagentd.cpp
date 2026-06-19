@@ -29,7 +29,6 @@
 
 #ifdef _WIN32
 #include <conio.h>
-#include <client/windows/handler/exception_handler.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -2099,8 +2098,6 @@ int main(int argc, char *argv[])
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
    DWORD dwSize;
-   ProcessExecutor *crashServer = nullptr;
-   google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
 #else
 	int uid = 0, gid = 0;
 #endif
@@ -2489,48 +2486,8 @@ int main(int argc, char *argv[])
          }
          if (s_startupFlags & SF_CATCH_EXCEPTIONS)
          {
-            TCHAR pipeName[64];
-            _sntprintf(pipeName, 64, _T("\\\\.\\pipe\\nxagentd-crashsrv-%u"), GetCurrentProcessId());
-
-            TCHAR crashServerCmdLine[256];
-            _sntprintf(crashServerCmdLine, 256, _T("nxcrashsrv.exe nxagentd-crashsrv-%u \"%s\""), GetCurrentProcessId(), s_dumpDirectory);
-            crashServer = new ProcessExecutor(crashServerCmdLine, false);
-            if (crashServer->execute())
-            {
-               // Wait for server's named pipe to appear
-               bool success = false;
-               uint32_t timeout = 2000;
-               while (timeout > 0)
-               {
-                  if (WaitNamedPipe(pipeName, timeout))
-                  {
-                     success = true;
-                     break;   // Success
-                  }
-                  if (GetLastError() != ERROR_FILE_NOT_FOUND)
-                     break;   // Unrecoverable error
-                  Sleep(200);
-                  timeout -= 200;
-               }
-               if (success)
-               {
-                  static google_breakpad::CustomInfoEntry clientInfoEntries[] = { { L"ProcessName", L"nxagentd" } };
-                  static google_breakpad::CustomClientInfo clientInfo = { clientInfoEntries, 1 };
-                  exceptionHandler = new google_breakpad::ExceptionHandler(s_dumpDirectory, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_EXCEPTION | google_breakpad::ExceptionHandler::HANDLER_PURECALL,
-                     static_cast<MINIDUMP_TYPE>(((s_startupFlags & SF_WRITE_FULL_DUMP) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
-                     pipeName, &clientInfo);
-               }
-               else
-               {
-                  g_failFlags |= FAIL_CRASH_SERVER_START;
-                  delete_and_null(crashServer);
-               }
-            }
-            else
-            {
+            if (!StartCrashHandler(_T("nxagentd"), s_dumpDirectory, (s_startupFlags & SF_WRITE_FULL_DUMP) != 0))
                g_failFlags |= FAIL_CRASH_SERVER_START;
-               delete_and_null(crashServer);
-            }
          }
 #endif
 
@@ -2766,8 +2723,7 @@ int main(int argc, char *argv[])
    }
 
 #ifdef _WIN32
-   delete exceptionHandler;
-   delete crashServer;
+   StopCrashHandler();
 #endif
 
    return exitCode;

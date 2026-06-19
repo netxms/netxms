@@ -27,7 +27,6 @@
 
 #ifdef _WIN32
 #include <dbghelp.h>
-#include <client/windows/handler/exception_handler.h>
 #if !_M_ARM64
 #include <openssl/applink.c>
 #endif
@@ -464,52 +463,8 @@ int main(int argc, char* argv[])
 
 	// Set exception handler
 #ifdef _WIN32
-   ProcessExecutor *crashServer = nullptr;
-   google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
-
    if (g_flags & AF_CATCH_EXCEPTIONS)
-   {
-      TCHAR pipeName[64];
-      _sntprintf(pipeName, 64, _T("\\\\.\\pipe\\netxmsd-crashsrv-%u"), GetCurrentProcessId());
-
-      TCHAR crashServerCmdLine[256];
-      _sntprintf(crashServerCmdLine, 256, _T("nxcrashsrv.exe netxmsd-crashsrv-%u \"%s\""), GetCurrentProcessId(), g_szDumpDir);
-      crashServer = new ProcessExecutor(crashServerCmdLine, false);
-      if (crashServer->execute())
-      {
-         // Wait for server's named pipe to appear
-         bool success = false;
-         uint32_t timeout = 2000;
-         while (timeout > 0)
-         {
-            if (WaitNamedPipe(pipeName, timeout))
-            {
-               success = true;
-               break;   // Success
-            }
-            if (GetLastError() != ERROR_FILE_NOT_FOUND)
-               break;   // Unrecoverable error
-            Sleep(200);
-            timeout -= 200;
-         }
-         if (success)
-         {
-            static google_breakpad::CustomInfoEntry clientInfoEntries[] = { { L"ProcessName", L"netxmsd" } };
-            static google_breakpad::CustomClientInfo clientInfo = { clientInfoEntries, 1 };
-            exceptionHandler = new google_breakpad::ExceptionHandler(g_szDumpDir, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_EXCEPTION | google_breakpad::ExceptionHandler::HANDLER_PURECALL,
-               static_cast<MINIDUMP_TYPE>(((g_flags & AF_WRITE_FULL_DUMP) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
-               pipeName, &clientInfo);
-         }
-         else
-         {
-            delete_and_null(crashServer);
-         }
-      }
-      else
-      {
-         delete_and_null(crashServer);
-      }
-   }
+      StartCrashHandler(L"netxmsd", g_szDumpDir, (g_flags & AF_WRITE_FULL_DUMP) != 0);
 #endif
 
    // Check database before start if requested
@@ -596,8 +551,7 @@ int main(int argc, char* argv[])
 #endif   /* _WIN32 */
 
 #ifdef _WIN32
-   delete exceptionHandler;
-   delete crashServer;
+   StopCrashHandler();
 #endif
    return 0;
 }

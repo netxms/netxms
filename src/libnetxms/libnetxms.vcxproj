@@ -453,6 +453,7 @@
     <ClCompile Include="net.cpp" />
     <ClCompile Include="npipe.cpp" />
     <ClCompile Include="npipe_win32.cpp" />
+    <ClCompile Include="crashdump.cpp" />
     <ClCompile Include="nxcp.cpp" />
     <ClCompile Include="pa.cpp" />
     <ClCompile Include="procexec.cpp" />

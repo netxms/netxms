@@ -198,6 +198,9 @@
     <ClCompile Include="npipe_win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="crashdump.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="procexec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

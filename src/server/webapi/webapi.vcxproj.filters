@@ -123,6 +123,9 @@
     <ClCompile Include="topology.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="object_dci.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object_helpers.h">

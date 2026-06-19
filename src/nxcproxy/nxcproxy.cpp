@@ -29,7 +29,6 @@
 #include <conio.h>
 #include <locale.h>
 #include <nxproc.h>
-#include <client/windows/handler/exception_handler.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -310,8 +309,6 @@ int main(int argc, char *argv[])
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
    DWORD dwSize;
-   ProcessExecutor *crashServer = nullptr;
-   google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
 #endif
 
    InitNetXMSProcess(false);
@@ -442,48 +439,7 @@ int main(int argc, char *argv[])
 					// Set exception handler
 #ifdef _WIN32
                if (g_flags & AF_CATCH_EXCEPTIONS)
-               {
-                  TCHAR pipeName[64];
-                  _sntprintf(pipeName, 64, _T("\\\\.\\pipe\\nxcproxy-crashsrv-%u"), GetCurrentProcessId());
-
-                  TCHAR crashServerCmdLine[256];
-                  _sntprintf(crashServerCmdLine, 256, _T("nxcrashsrv.exe nxcproxy-crashsrv-%u \"%s\""), GetCurrentProcessId(), s_dumpDir);
-                  crashServer = new ProcessExecutor(crashServerCmdLine, false);
-                  if (crashServer->execute())
-                  {
-                     // Wait for server's named pipe to appear
-                     bool success = false;
-                     uint32_t timeout = 2000;
-                     while (timeout > 0)
-                     {
-                        if (WaitNamedPipe(pipeName, timeout))
-                        {
-                           success = true;
-                           break;   // Success
-                        }
-                        if (GetLastError() != ERROR_FILE_NOT_FOUND)
-                           break;   // Unrecoverable error
-                        Sleep(200);
-                        timeout -= 200;
-                     }
-                     if (success)
-                     {
-                        static google_breakpad::CustomInfoEntry clientInfoEntries[] = { { L"ProcessName", L"nxcproxy" } };
-                        static google_breakpad::CustomClientInfo clientInfo = { clientInfoEntries, 1 };
-                        exceptionHandler = new google_breakpad::ExceptionHandler(s_dumpDir, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_EXCEPTION | google_breakpad::ExceptionHandler::HANDLER_PURECALL,
-                           static_cast<MINIDUMP_TYPE>(((g_flags & AF_WRITE_FULL_DUMP) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
-                           pipeName, &clientInfo);
-                     }
-                     else
-                     {
-                        delete_and_null(crashServer);
-                     }
-                  }
-                  else
-                  {
-                     delete_and_null(crashServer);
-                  }
-               }
+                  StartCrashHandler(_T("nxcproxy"), s_dumpDir, (g_flags & AF_WRITE_FULL_DUMP) != 0);
 #endif
 					if ((!_tcsicmp(g_logFile, _T("{syslog}"))) || 
 						 (!_tcsicmp(g_logFile, _T("{eventlog}"))))
@@ -577,8 +533,7 @@ int main(int argc, char *argv[])
    delete config;
 
 #ifdef _WIN32
-   delete exceptionHandler;
-   delete crashServer;
+   StopCrashHandler();
 #endif
 
    return iExitCode;

@@ -1,16 +1,20 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <Windows.h>
+#define _WIN32_WINNT 0x0501
+
+#include <winsock2.h>
+#include <windows.h>
 #include <psapi.h>
+#include <dbghelp.h>
+#include <tlhelp32.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
-#include <algorithm>
-#include <client/windows/crash_generation/crash_generation_server.h>
-#include <client/windows/crash_generation/client_info.h>
+#include <string>
+#include <nxcrashdump.h>
 #include <netxms-version.h>
 
-using namespace google_breakpad;
+using std::wstring;
 
 /**
  * Deflate given file
@@ -26,11 +30,6 @@ static TCHAR s_logFile[MAX_PATH];
  * Current process ID
  */
 static DWORD s_pid = 0;
-
-/**
- * Non-zero when dump processing is in progress (set by DumpCallback, checked by ClientExitCallback)
- */
-static volatile LONG s_dumpInProgress = 0;
 
 /**
  * Write log record
@@ -51,23 +50,6 @@ static void WriteLog(const TCHAR *format, ...)
       fclose(fp);
    }
    va_end(args);
-}
-
-/**
- * Get value of custom client info entry by name
- */
-static wstring GetCustomClientInfoEntry(const ClientInfo *clientInfo, const WCHAR *name)
-{
-   CustomClientInfo info = clientInfo->GetCustomInfo();
-   if (info.entries != nullptr)
-   {
-      for (size_t i = 0; i < info.count; i++)
-      {
-         if (!_wcsicmp(info.entries[i].name, name))
-            return wstring(info.entries[i].value);
-      }
-   }
-   return wstring();
 }
 
 /**
@@ -256,7 +238,7 @@ static const TCHAR *GetExceptionName(DWORD code)
 /**
  * Write crash info file
  */
-static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, const TCHAR *processName, time_t now)
+static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t exceptionPointers, const TCHAR *processName, time_t now)
 {
    WriteLog(_T("Writing info file %s"), fileName);
 
@@ -267,7 +249,7 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
    HMODULE modules[4096];
    DWORD bytesNeeded;
    int moduleCount;
-   if (EnumProcessModules(clientInfo->process_handle(), modules, sizeof(modules), &bytesNeeded))
+   if (EnumProcessModules(hProcess, modules, sizeof(modules), &bytesNeeded))
    {
       moduleCount = static_cast<int>(bytesNeeded / sizeof(HMODULE));
    }
@@ -281,15 +263,14 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
    struct tm* ltm = localtime(&now);
    _tcsftime(timeText, 32, _T("%Y-%m-%d %H:%M:%S %Z"), ltm);
    _ftprintf(fp, _T("%s CRASH DUMP\n%s\n"), processName, timeText);
-   EXCEPTION_POINTERS *exceptionPointersRef = nullptr;
-   if (clientInfo->GetClientExceptionInfo(&exceptionPointersRef))
+   if (exceptionPointers != 0)
    {
       SIZE_T bytesRead;
-      EXCEPTION_POINTERS exceptionPointers;
-      if (ReadProcessMemory(clientInfo->process_handle(), exceptionPointersRef, &exceptionPointers, sizeof(EXCEPTION_POINTERS), &bytesRead))
+      EXCEPTION_POINTERS ep;
+      if (ReadProcessMemory(hProcess, reinterpret_cast<void*>(static_cast<uintptr_t>(exceptionPointers)), &ep, sizeof(EXCEPTION_POINTERS), &bytesRead))
       {
          EXCEPTION_RECORD exceptionRecord;
-         if (ReadProcessMemory(clientInfo->process_handle(), exceptionPointers.ExceptionRecord, &exceptionRecord, sizeof(EXCEPTION_RECORD), &bytesRead))
+         if (ReadProcessMemory(hProcess, ep.ExceptionRecord, &exceptionRecord, sizeof(EXCEPTION_RECORD), &bytesRead))
          {
 #ifdef _M_IX86
             _ftprintf(fp, _T("EXCEPTION: %08X (%s) at %08X in %s\n"),
@@ -297,7 +278,7 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
             _ftprintf(fp, _T("EXCEPTION: %08X (%s) at %016I64X in %s\n"),
 #endif
                exceptionRecord.ExceptionCode, GetExceptionName(exceptionRecord.ExceptionCode), (ULONG_PTR)exceptionRecord.ExceptionAddress,
-               GetModuleForAddress(clientInfo->process_handle(), exceptionRecord.ExceptionAddress, modules, moduleCount).c_str());
+               GetModuleForAddress(hProcess, exceptionRecord.ExceptionAddress, modules, moduleCount).c_str());
          }
          else
          {
@@ -355,80 +336,124 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
    }
 
    if (moduleCount > 0)
-      DumpProcessModules(fp, clientInfo->process_handle(), modules, moduleCount);
+      DumpProcessModules(fp, hProcess, modules, moduleCount);
 
    fclose(fp);
 }
 
 /**
- * Called when client process requests crash dump generation
+ * Suspend all threads of the target process except the faulting one. The faulting
+ * thread is parked in the crashing process's exception filter waiting for the dump
+ * to complete, so it must stay runnable; suspending the rest keeps process memory
+ * stable while the dump is written.
  */
-static void DumpCallback(void* context, const ClientInfo* clientInfo, const std::wstring* dumpFile)
+static void SuspendOtherThreads(DWORD pid, DWORD faultingThreadId)
 {
-   InterlockedExchange(&s_dumpInProgress, 1);
-   WriteLog(_T("Received dump request from client"));
-   WriteLog(_T("Original dump file: %s"), dumpFile->c_str());
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+   if (snapshot == INVALID_HANDLE_VALUE)
+   {
+      WriteLog(_T("Cannot create thread snapshot (error %u)"), GetLastError());
+      return;
+   }
 
-   wstring processName = GetCustomClientInfoEntry(clientInfo, L"ProcessName");
-   if (processName.empty())
-      processName = _T("netxms-process");
+   THREADENTRY32 te;
+   te.dwSize = sizeof(te);
+   if (Thread32First(snapshot, &te))
+   {
+      do
+      {
+         if ((te.th32OwnerProcessID == pid) && (te.th32ThreadID != faultingThreadId))
+         {
+            HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+            if (hThread != nullptr)
+            {
+               SuspendThread(hThread);
+               CloseHandle(hThread);
+            }
+         }
+         te.dwSize = sizeof(te);
+      } while (Thread32Next(snapshot, &te));
+   }
+   CloseHandle(snapshot);
+}
 
-   TCHAR timeText[64];
+/**
+ * Generate minidump and info file for crashed process
+ */
+static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *request, const TCHAR *dumpDir)
+{
+   WCHAR processName[64];
+   wcsncpy(processName, (request->processName[0] != 0) ? request->processName : L"netxms-process", 64);
+   processName[63] = 0;
+
    time_t now = time(nullptr);
+   TCHAR timeText[64];
    _tcsftime(timeText, 64, _T("%Y%m%d-%H%M%S"), localtime(&now));
 
-   wstring dumpPath = dumpFile->substr(0, dumpFile->find_last_of(L'\\'));
+   TCHAR baseName[MAX_PATH];
+   _sntprintf(baseName, MAX_PATH, _T("%s\\%s-crash-%s-%u"), dumpDir, processName, timeText, pid);
 
-   TCHAR fileName[MAX_PATH];
-   _sntprintf(fileName, MAX_PATH, _T("%s\\%s-crash-%s-%u.info"), dumpPath.c_str(), processName.c_str(), timeText, clientInfo->pid());
-   std::transform(processName.begin(), processName.end(), processName.begin(), ::toupper);
-   WriteInfoFile(fileName, clientInfo, processName.c_str(), now);
+   TCHAR dumpFile[MAX_PATH];
+   _sntprintf(dumpFile, MAX_PATH, _T("%s.mdmp"), baseName);
 
-   // Rename dump file
-   _tcscpy(&fileName[_tcslen(fileName) - 4], _T("mdmp"));
-   wstring fullDumpFile = dumpFile->substr(0, dumpFile->find_last_of(L'.'));
-   fullDumpFile.append(_T("-full.dmp"));
-   if (_waccess(fullDumpFile.c_str(), 0) == 0)
+   // Keep process memory stable while the dump is written
+   SuspendOtherThreads(pid, request->faultingThreadId);
+
+   HANDLE hFile = CreateFile(dumpFile, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+   if (hFile != INVALID_HANDLE_VALUE)
    {
-      _wrename(fullDumpFile.c_str(), fileName);
-      _wremove(dumpFile->c_str());
-      if (DeflateFile(fileName))
-         _wremove(fileName);
+      MINIDUMP_EXCEPTION_INFORMATION mei;
+      mei.ThreadId = request->faultingThreadId;
+      mei.ExceptionPointers = reinterpret_cast<PEXCEPTION_POINTERS>(static_cast<uintptr_t>(request->exceptionPointers));
+      mei.ClientPointers = TRUE;
+
+      static const char *comments = "Version=" NETXMS_VERSION_STRING_A "; BuildTag=" NETXMS_BUILD_TAG_A;
+      MINIDUMP_USER_STREAM us;
+      us.Type = CommentStreamA;
+      us.Buffer = (void*)comments;
+      us.BufferSize = static_cast<ULONG>(strlen(comments) + 1);
+
+      MINIDUMP_USER_STREAM_INFORMATION usi;
+      usi.UserStreamCount = 1;
+      usi.UserStreamArray = &us;
+
+      MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
+         ((request->fullDump != 0) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData);
+
+      if (MiniDumpWriteDump(hProcess, pid, hFile, dumpType, &mei, &usi, nullptr))
+      {
+         CloseHandle(hFile);
+         WriteLog(_T("Minidump written to %s"), dumpFile);
+      }
       else
-         WriteLog(_T("Cannot compress dump file %s (keeping uncompressed file)"), fileName);
+      {
+         CloseHandle(hFile);
+         _wremove(dumpFile);
+         WriteLog(_T("MiniDumpWriteDump failed (error %u)"), GetLastError());
+      }
    }
    else
    {
-      _wrename(dumpFile->c_str(), fileName);
+      WriteLog(_T("Cannot create dump file %s (error %u)"), dumpFile, GetLastError());
    }
 
-   WriteLog(_T("Crash dump processing completed"));
-   ExitProcess(0);
-}
+   // Write accompanying info file (process name in upper case for the title)
+   TCHAR infoFile[MAX_PATH];
+   _sntprintf(infoFile, MAX_PATH, _T("%s.info"), baseName);
+   WCHAR titleName[64];
+   wcsncpy(titleName, processName, 64);
+   titleName[63] = 0;
+   CharUpperW(titleName);
+   WriteInfoFile(infoFile, hProcess, request->exceptionPointers, titleName, now);
 
-/**
- * Called when client process connects to server
- */
-static void ClientConnectCallback(void* context, const ClientInfo* clientInfo)
-{
-   WriteLog(_T("Client process connected"));
-}
-
-/**
- * Called when client process exits
- */
-static void ClientExitCallback(void* context, const ClientInfo* clientInfo)
-{
-   WriteLog(_T("Client process exited"));
-   // This callback and DumpCallback run concurrently on thread pool threads; the client process
-   // exits before dump processing is finished (it only waits for dump completion with a timeout),
-   // so exiting here would truncate the compressed dump file. Let DumpCallback exit the process.
-   if (InterlockedCompareExchange(&s_dumpInProgress, 0, 0) != 0)
+   // Compress dump file
+   if (_waccess(dumpFile, 0) == 0)
    {
-      WriteLog(_T("Dump processing in progress, exit deferred"));
-      return;
+      if (DeflateFile(dumpFile))
+         _wremove(dumpFile);
+      else
+         WriteLog(_T("Cannot compress dump file %s (keeping uncompressed file)"), dumpFile);
    }
-   ExitProcess(0);
 }
 
 /**
@@ -438,27 +463,79 @@ int _tmain(int argc, TCHAR *argv[])
 {
    if (argc < 3)
    {
-      _tprintf(_T("*** Crash Server *** Required arguments msissing\n"));
+      _tprintf(_T("*** Crash Server *** Required arguments missing\n"));
       return 1;
    }
 
    s_pid = GetCurrentProcessId();
-   _sntprintf(s_logFile, MAX_PATH, _T("%s\\nxcrashsrv.log"), argv[2]);
-   WriteLog(_T("Crash server starting (pipe name %s)"), argv[1]);
+   DWORD targetPid = _tcstoul(argv[1], nullptr, 10);
+   const TCHAR *dumpDir = argv[2];
+   _sntprintf(s_logFile, MAX_PATH, _T("%s\\nxcrashsrv.log"), dumpDir);
+   WriteLog(_T("Crash server starting (target PID %u)"), targetPid);
 
-   std::wstring pipeName(L"\\\\.\\pipe\\");
-   pipeName.append(argv[1]);
-   std::wstring dumpPath(argv[2]);
-   CrashGenerationServer server(pipeName, nullptr, ClientConnectCallback, nullptr, DumpCallback, nullptr, ClientExitCallback, nullptr, nullptr, nullptr, true, &dumpPath);
-   if (!server.Start())
+   HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetPid);
+   if (hProcess == nullptr)
    {
-      WriteLog(_T("ERROR: cannot start server instance"));
+      WriteLog(_T("ERROR: cannot open target process %u (error %u)"), targetPid, GetLastError());
       return 2;
    }
 
-   WriteLog(_T("Waiting for requests"));
-   while (true)
-      Sleep(600000);
+   // Open shared memory section and synchronization objects created by the client
+   WCHAR mapName[64], reqName[64], doneName[64], readyName[64];
+   BuildCrashDumpObjectName(mapName, L"Share", targetPid);
+   BuildCrashDumpObjectName(reqName, L"Req", targetPid);
+   BuildCrashDumpObjectName(doneName, L"Done", targetPid);
+   BuildCrashDumpObjectName(readyName, L"Ready", targetPid);
+
+   HANDLE mapping = OpenFileMappingW(FILE_MAP_READ, FALSE, mapName);
+   if (mapping == nullptr)
+   {
+      WriteLog(_T("ERROR: cannot open shared memory section (error %u)"), GetLastError());
+      return 3;
+   }
+   CrashDumpRequest *request = static_cast<CrashDumpRequest*>(MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, sizeof(CrashDumpRequest)));
+   if (request == nullptr)
+   {
+      WriteLog(_T("ERROR: cannot map shared memory section (error %u)"), GetLastError());
+      return 3;
+   }
+   if (request->protocolVersion != NXCRASH_PROTOCOL_VERSION)
+   {
+      WriteLog(_T("ERROR: protocol version mismatch (client %u, expected %u)"), request->protocolVersion, NXCRASH_PROTOCOL_VERSION);
+      return 4;
+   }
+
+   HANDLE eventRequest = OpenEventW(SYNCHRONIZE, FALSE, reqName);
+   HANDLE eventDone = OpenEventW(EVENT_MODIFY_STATE, FALSE, doneName);
+   HANDLE eventReady = OpenEventW(EVENT_MODIFY_STATE, FALSE, readyName);
+   if ((eventRequest == nullptr) || (eventDone == nullptr) || (eventReady == nullptr))
+   {
+      WriteLog(_T("ERROR: cannot open synchronization objects (error %u)"), GetLastError());
+      return 5;
+   }
+
+   // Signal client that we are ready to receive requests
+   SetEvent(eventReady);
+   WriteLog(_T("Waiting for crash dump request"));
+
+   // Wait for a crash request or for the target process to exit
+   HANDLE waitHandles[2] = { eventRequest, hProcess };
+   DWORD rc = WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+   if (rc == WAIT_OBJECT_0)
+   {
+      WriteLog(_T("Crash dump request received"));
+      GenerateDump(targetPid, hProcess, request, dumpDir);
+      SetEvent(eventDone);
+      WriteLog(_T("Crash dump processing completed"));
+   }
+   else if (rc == WAIT_OBJECT_0 + 1)
+   {
+      WriteLog(_T("Target process exited without crash, shutting down"));
+   }
+   else
+   {
+      WriteLog(_T("ERROR: wait failed (error %u)"), GetLastError());
+   }
 
    return 0;
 }
