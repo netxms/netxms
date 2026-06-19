@@ -517,4 +517,33 @@ static inline bool json_object_update_string_utf8(json_t *object, const char *ta
    return true;
 }
 
+/**
+ * Update an enumeration field from a JSON object property using strict validation. The property may
+ * be given either as a symbolic name (string, matched case-insensitively against the supplied
+ * code/name lookup table) or as a raw numeric code (integer); the field is left unchanged when the
+ * property is absent. Returns false only when the property is present with an incompatible type or
+ * with an unknown symbolic name, which the caller typically maps to RCC_INVALID_ARGUMENT.
+ */
+template<typename T> static inline bool json_object_update_enum(json_t *object, const char *tag, CodeLookupElement *lookupTable, T *field)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (json_is_integer(value))
+   {
+      *field = static_cast<T>(json_integer_value(value));
+      return true;
+   }
+   if (json_is_string(value))
+   {
+      // Convert via String so the lookup works with TCHAR in both UNICODE and non-UNICODE builds
+      int code = CodeFromText(String(json_string_value(value), "utf8"), lookupTable, INT_MIN);
+      if (code == INT_MIN)
+         return false;
+      *field = static_cast<T>(code);
+      return true;
+   }
+   return false;
+}
+
 #endif
