@@ -22,14 +22,16 @@
 #include <netxms-version.h>
 
 /**
- * Database instances
+ * Database connections
  */
-ObjectArray<DatabaseInstance> *g_instances;
+ObjectArray<DatabaseConnection> *g_connections;
 static NETXMS_SUBAGENT_PARAM *s_parameters;
 
 static bool SubAgentInit(Config *config);
 static void SubAgentShutdown();
 static LONG H_Databases(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+static LONG H_AllDatabases(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
@@ -37,7 +39,10 @@ static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("MongoDB.ListDatabases(*)"), H_Databases, NULL, _T("List of databases on MongoDB server") }
+   { _T("MongoDB.AllDatabases"), H_AllDatabases, nullptr, _T("MongoDB: all discovered databases across connections") },
+   { _T("MongoDB.Connections"), H_ConnectionsList, nullptr, _T("MongoDB: configured database connections") },
+   { _T("MongoDB.Databases(*)"), H_Databases, nullptr, _T("MongoDB: databases on connection") },
+   { _T("MongoDB.ListDatabases(*)"), H_Databases, nullptr, _T("MongoDB: databases on connection (deprecated, use MongoDB.Databases)") }
 };
 
 /**
@@ -94,9 +99,9 @@ void MongoLogging(mongoc_log_level_t  log_level, const char *log_domain, const c
          break;
    }
 #ifdef UNICODE
-   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %hs. Message: %hs"), log_domain, message);
+   nxlog_write_tag(severity, DEBUG_TAG, _T("driver message (domain %hs): %hs"), log_domain, message);
 #else
-   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %s. Message: %s"),log_domain, message);
+   nxlog_write_tag(severity, DEBUG_TAG, _T("driver message (domain %s): %s"), log_domain, message);
 #endif // UNICODE
 }
 
@@ -113,13 +118,79 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: stopping pollers"));
-   for(int i = 0; i < g_instances->size(); i++)
-      g_instances->get(i)->stop();
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("stopping pollers"));
+   for(int i = 0; i < g_connections->size(); i++)
+      g_connections->get(i)->stop();
 	mongoc_cleanup();
 	//remove names form instances
-   delete g_instances;
-	AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: stopped"));
+   delete g_connections;
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("stopped"));
+}
+
+/**
+ * Connection configuration template
+ */
+static ConnectionInfo s_connInfo;
+static NX_CFG_TEMPLATE s_configTemplate[] =
+{
+   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,            0, &s_connInfo.connectionTTL },
+   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_connInfo.password },
+   { _T("Endpoint"),          CT_STRING, 0, 0, MAX_STR,      0, s_connInfo.endpoint },
+   { _T("Id"),                CT_STRING, 0, 0, MAX_STR,      0, s_connInfo.id },
+   { _T("Login"),             CT_STRING, 0, 0, MAX_STR,      0, s_connInfo.username },
+   { _T("Password"),          CT_STRING, 0, 0, MAX_PASSWORD, 0, s_connInfo.password },
+   { _T("Server"),            CT_STRING, 0, 0, MAX_STR,      0, s_connInfo.endpoint },   // alias for Endpoint (MongoDB endpoint is a URI / host[:port])
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
+};
+
+/**
+ * Add connection from parsed template into the connection list
+ */
+static void AddConnectionFromTemplate()
+{
+   if (s_connInfo.id[0] == 0)
+      return;
+
+   DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+
+   DatabaseConnection *db = new DatabaseConnection(&s_connInfo);
+   if (db->connectionEstablished())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("connection established, added to list: %s"), s_connInfo.id);
+      g_connections->add(db);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("could not connect to database: %s"), s_connInfo.id);
+      delete db;
+   }
+}
+
+/**
+ * Reset connection template buffer to defaults
+ */
+static void ResetConnectionInfoDefaults()
+{
+   memset(&s_connInfo, 0, sizeof(s_connInfo));
+   s_connInfo.connectionTTL = 3600;
+}
+
+/**
+ * Add database connection from legacy colon-delimited record
+ * (id:server:login:password parsed via named options)
+ */
+static void AddLegacyConnection(const TCHAR *record)
+{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("configuration entry [MongoDB/Database] is deprecated; use [mongodb/connections/<id>] instead"));
+
+   ResetConnectionInfoDefaults();
+   ExtractNamedOptionValue(record, _T("id"), s_connInfo.id, MAX_STR);
+   ExtractNamedOptionValue(record, _T("server"), s_connInfo.endpoint, MAX_STR);
+   ExtractNamedOptionValue(record, _T("login"), s_connInfo.username, MAX_STR);
+   if (!ExtractNamedOptionValue(record, _T("password"), s_connInfo.password, MAX_PASSWORD))
+      ExtractNamedOptionValue(record, _T("encryptedPassword"), s_connInfo.password, MAX_PASSWORD);
+
+   AddConnectionFromTemplate();
 }
 
 /**
@@ -127,48 +198,74 @@ static void SubAgentShutdown()
  */
 static BOOL LoadConfiguration(Config *config)
 {
-   g_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
+   g_connections = new ObjectArray<DatabaseConnection>(8, 8, Ownership::True);
    mongoc_init();
-   mongoc_log_set_handler(MongoLogging, NULL);
+   mongoc_log_set_handler(MongoLogging, nullptr);
 
-   // Add database connections
+   // Simple single-connection configuration in [mongodb] section
+   if (config->getEntry(_T("/mongodb/id")) != nullptr || config->getEntry(_T("/mongodb/endpoint")) != nullptr ||
+       config->getEntry(_T("/mongodb/server")) != nullptr || config->getEntry(_T("/mongodb/login")) != nullptr)
+   {
+      ResetConnectionInfoDefaults();
+      _tcscpy(s_connInfo.id, _T("localdb"));
+      _tcscpy(s_connInfo.endpoint, _T("127.0.0.1"));
+      if (config->parseTemplate(_T("MONGODB"), s_configTemplate))
+         AddConnectionFromTemplate();
+   }
+
+   // Named connection subsections (mongodb/connections/<id>)
+   ConfigEntry *connectionsRoot = config->getEntry(_T("/mongodb/connections"));
+   if (connectionsRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < connections->size(); i++)
+      {
+         ConfigEntry *e = connections->get(i);
+         ResetConnectionInfoDefaults();
+         _tcslcpy(s_connInfo.id, e->getName(), MAX_STR);   // Id defaults to subsection name
+
+         TCHAR section[MAX_STR];
+         _sntprintf(section, MAX_STR, _T("mongodb/connections/%s"), e->getName());
+         if (!config->parseTemplate(section, s_configTemplate))
+         {
+            nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("error parsing configuration for connection %s"), e->getName());
+            continue;
+         }
+         AddConnectionFromTemplate();
+      }
+   }
+
+   // Legacy colon-delimited connection records ([MongoDB] Database=id:server:login:password)
 	ConfigEntry *databases = config->getEntry(_T("/MongoDB/Database"));
-   if (databases != NULL)
+   if (databases != nullptr)
    {
       for(int i = 0; i < databases->getValueCount(); i++)
-		{
-         if (!AddMongoDBFromConfig(databases->getValue(i)))
-			{
-            AgentWriteLog(NXLOG_WARNING,
-               _T("MONGODB: Unable to add database connection from configuration file. ")
-									 _T("Original configuration record: %s"), databases->getValue(i));
-			}
-		}
+         AddLegacyConnection(databases->getValue(i));
    }
 
 	// Exit if no usable configuration found
-   if (g_instances->size() == 0)
+   if (g_connections->size() == 0)
 	{
-      AgentWriteLog(NXLOG_WARNING, _T("MONGODB: no databases to monitor, exiting"));
-      delete g_instances;
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("no databases to monitor, exiting"));
+      delete g_connections;
       mongoc_cleanup();
       return FALSE;
 	}
 
    //create list
    int paramCount = 0;
-   for(int i = 0; i < g_instances->size(); i++)
+   for(int i = 0; i < g_connections->size(); i++)
    {
-      s_parameters = g_instances->get(i)->getParameters(&paramCount);
+      s_parameters = g_connections->get(i)->getParameters(&paramCount);
       if (s_parameters != nullptr)
          break;
    }
 
    if (s_parameters == nullptr)
    {
-      delete g_instances;
+      delete g_connections;
       mongoc_cleanup();
-      AgentWriteLog(NXLOG_WARNING, _T("MONGODB: No parameters will be added. Not possible to get any status."));
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("no parameters will be added, not possible to get any status"));
       return FALSE;
    }
 
@@ -180,8 +277,8 @@ static BOOL LoadConfiguration(Config *config)
       paramCount += predefParamCount;
    }
 
-   for(int i = 0; i < g_instances->size(); i++)
-      g_instances->get(i)->run();
+   for(int i = 0; i < g_connections->size(); i++)
+      g_connections->get(i)->run();
 
    s_info.numParameters = paramCount;
    s_info.parameters = s_parameters;
@@ -189,7 +286,7 @@ static BOOL LoadConfiguration(Config *config)
 }
 
 /**
- * Get list of databases
+ * Get list of databases on a connection
  */
 static LONG H_Databases(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
@@ -198,14 +295,34 @@ static LONG H_Databases(const TCHAR *param, const TCHAR *arg, StringList *value,
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
       return SYSINFO_RC_ERROR;
 
-   for(int i = 0; i < g_instances->size(); i++)
+   for(int i = 0; i < g_connections->size(); i++)
    {
-      if(!_tcsicmp(g_instances->get(i)->getConnectionName(), id))
+      if(!_tcsicmp(g_connections->get(i)->getId(), id))
       {
-         result = g_instances->get(i)->setDbNames(value);
+         result = g_connections->get(i)->getDatabaseList(value);
       }
    }
    return result;
+}
+
+/**
+ * Get list of all discovered databases across all connections (connectionId,databaseName)
+ */
+static LONG H_AllDatabases(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < g_connections->size(); i++)
+      g_connections->get(i)->appendAllDatabases(value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get list of configured connections
+ */
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < g_connections->size(); i++)
+      value->add(g_connections->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
 }
 
 static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -215,11 +332,11 @@ static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
    if (!AgentGetParameterArg(param, 1, id, MAX_STR) || arg == NULL)
       return SYSINFO_RC_ERROR;
 
-   for(int i = 0; i < g_instances->size(); i++)
+   for(int i = 0; i < g_connections->size(); i++)
    {
-      if(!_tcsicmp(g_instances->get(i)->getConnectionName(), id))
+      if(!_tcsicmp(g_connections->get(i)->getId(), id))
       {
-         result = g_instances->get(i)->getOtherParam(param, arg, _T("dbStats"), value);
+         result = g_connections->get(i)->getOtherParam(param, arg, _T("dbStats"), value);
       }
    }
    return result;

@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
- ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2014 Raden Solutions
+ ** Subagent for MongoDB monitoring
+ ** Copyright (C) 2009-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -34,15 +34,18 @@
  */
 #define MAX_STR				(256)
 
+#define DEBUG_TAG          _T("mongodb")
+
 /**
  * Database connection information
  */
-struct DatabaseInfo
+struct ConnectionInfo
 {
-	TCHAR id[MAX_STR];				// instance ID
-	TCHAR server[MAX_STR];
+	TCHAR id[MAX_STR];				// connection ID
+	TCHAR endpoint[MAX_STR];		// connect target (URI / host[:port])
 	TCHAR username[MAX_STR];
 	TCHAR password[MAX_PASSWORD];
+	uint32_t connectionTTL;
 };
 
 struct MongoDBCommand
@@ -57,15 +60,15 @@ struct MongoDBCommand
 };
 
 /**
- * Database instance
+ * Database connection
  * As unique request id for selections and commands will be used current time: time(NULL)
  */
-class DatabaseInstance
+class DatabaseConnection
 {
 private:
    mongoc_client_t *m_dbConn;
    THREAD m_pollerThread;
-   DatabaseInfo m_info;
+   ConnectionInfo m_info;
    Condition m_stopCondition;
    //server status
    Mutex m_serverStatusLock;
@@ -84,27 +87,26 @@ private:
    bool connect();
 
 public:
-   DatabaseInstance(DatabaseInfo *info);
-   ~DatabaseInstance();
+   DatabaseConnection(ConnectionInfo *info);
+   ~DatabaseConnection();
 
    void run();
    void stop();
    void getDatabases();
    bool connectionEstablished() { return m_dbConn != nullptr; }
-   const TCHAR *getConnectionName() { return m_info.id; }
+   const TCHAR *getId() { return m_info.id; }
 
    NETXMS_SUBAGENT_PARAM *getParameters(int *paramCount);
    LONG getStatusParam(const char *paramName, TCHAR *value);
    LONG getParam(bson_t *result, const char *paramName, TCHAR *value);
-   LONG setDbNames(StringList *value);
+   LONG getDatabaseList(StringList *value);
+   void appendAllDatabases(StringList *value);
    LONG getOtherParam(const TCHAR *param, const TCHAR *arg, const TCHAR *command, TCHAR *value);
 };
 
 /**
- * Database instances
+ * Database connections
  */
-extern ObjectArray<DatabaseInstance> *g_instances;
-
-bool AddMongoDBFromConfig(const TCHAR *config);
+extern ObjectArray<DatabaseConnection> *g_connections;
 
 #endif   /* _mongodb_subagent_h_ */
