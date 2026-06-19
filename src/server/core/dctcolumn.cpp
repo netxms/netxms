@@ -97,9 +97,23 @@ DCTableColumn::DCTableColumn(json_t *json)
 {
    String name = json_object_get_string(json, "name", _T(""));
    _tcslcpy(m_name, name, MAX_COLUMN_NAME);
-   
-   m_flags = static_cast<UINT16>(json_object_get_int32(json, "flags"));
-   
+
+   m_flags = static_cast<uint16_t>(json_object_get_int32(json, "flags"));
+
+   // Allow symbolic overrides of the packed flag fields (REST API)
+   int dataType = TCF_GET_DATA_TYPE(m_flags);
+   if (json_object_update_enum(json, "dataType", g_dciDataTypeNames, &dataType))
+      m_flags = static_cast<uint16_t>(TCF_SET_DATA_TYPE(m_flags, dataType));
+   int aggregation = TCF_GET_AGGREGATION_FUNCTION(m_flags);
+   if (json_object_update_enum(json, "aggregationFunction", g_dctColumnAggregationNames, &aggregation))
+      m_flags = static_cast<uint16_t>((m_flags & ~TCF_AGGREGATE_FUNCTION_MASK) | ((aggregation & 0x07) << 4));
+   json_t *flagValue = json_object_get(json, "instanceColumn");
+   if (json_is_boolean(flagValue))
+      m_flags = json_is_true(flagValue) ? (m_flags | TCF_INSTANCE_COLUMN) : (m_flags & ~TCF_INSTANCE_COLUMN);
+   flagValue = json_object_get(json, "convertSnmpStringToHex");
+   if (json_is_boolean(flagValue))
+      m_flags = json_is_true(flagValue) ? (m_flags | TCF_SNMP_HEX_STRING) : (m_flags & ~TCF_SNMP_HEX_STRING);
+
    String displayName = json_object_get_string(json, "displayName", _T(""));
    m_displayName = MemCopyString(displayName);
 
@@ -139,6 +153,10 @@ json_t *DCTableColumn::toJson() const
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "displayName", json_string_t(m_displayName));
    json_object_set_new(root, "snmpOid", m_snmpOid.isValid() ? json_string_t(m_snmpOid.toString()) : json_null());
+   json_object_set_new(root, "dataType", json_string_w(CodeToText(TCF_GET_DATA_TYPE(m_flags), g_dciDataTypeNames, L"int32")));
+   json_object_set_new(root, "aggregationFunction", json_string_w(CodeToText(TCF_GET_AGGREGATION_FUNCTION(m_flags), g_dctColumnAggregationNames, L"last")));
+   json_object_set_new(root, "instanceColumn", json_boolean((m_flags & TCF_INSTANCE_COLUMN) != 0));
+   json_object_set_new(root, "convertSnmpStringToHex", json_boolean((m_flags & TCF_SNMP_HEX_STRING) != 0));
    json_object_set_new(root, "flags", json_integer(m_flags));
    return root;
 }

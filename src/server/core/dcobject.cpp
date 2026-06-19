@@ -32,6 +32,80 @@
 uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
 
 /**
+ * Code/name lookup tables for symbolic representation of data collection enumerations in JSON.
+ * Origin names are kept in sync with DCObject::getDataProviderName().
+ */
+CodeLookupElement g_dciOriginNames[] =
+{
+   { DS_INTERNAL, L"internal" }, { DS_NATIVE_AGENT, L"nxagent" }, { DS_SNMP_AGENT, L"snmp" },
+   { DS_WEB_SERVICE, L"websvc" }, { DS_PUSH_AGENT, L"push" }, { DS_WINPERF, L"winperf" },
+   { DS_SMCLP, L"smclp" }, { DS_SCRIPT, L"script" }, { DS_SSH, L"ssh" }, { DS_MQTT, L"mqtt" },
+   { DS_DEVICE_DRIVER, L"driver" }, { DS_MODBUS, L"modbus" }, { DS_ETHERNET_IP, L"ethernetip" },
+   { DS_CLOUD_CONNECTOR, L"cloud" }, { DS_OTLP, L"otlp" }, { 0, nullptr }
+};
+CodeLookupElement g_dciStatusNames[] =
+{
+   { ITEM_STATUS_ACTIVE, L"active" }, { ITEM_STATUS_DISABLED, L"disabled" },
+   { ITEM_STATUS_NOT_SUPPORTED, L"unsupported" }, { 0, nullptr }
+};
+CodeLookupElement g_dciPollingScheduleTypeNames[] =
+{
+   { DC_POLLING_SCHEDULE_DEFAULT, L"default" }, { DC_POLLING_SCHEDULE_CUSTOM, L"custom" },
+   { DC_POLLING_SCHEDULE_ADVANCED, L"advanced" }, { 0, nullptr }
+};
+CodeLookupElement g_dciRetentionTypeNames[] =
+{
+   { DC_RETENTION_DEFAULT, L"default" }, { DC_RETENTION_CUSTOM, L"custom" },
+   { DC_RETENTION_NONE, L"none" }, { 0, nullptr }
+};
+CodeLookupElement g_dciInstanceDiscoveryMethodNames[] =
+{
+   { IDM_NONE, L"none" }, { IDM_AGENT_LIST, L"agentList" }, { IDM_AGENT_TABLE, L"agentTable" },
+   { IDM_SNMP_WALK_VALUES, L"snmpWalkValues" }, { IDM_SNMP_WALK_OIDS, L"snmpWalkOids" },
+   { IDM_SCRIPT, L"script" }, { IDM_WINPERF, L"winperf" }, { IDM_WEB_SERVICE, L"webService" },
+   { IDM_INTERNAL_TABLE, L"internalTable" }, { IDM_SMCLP_TARGETS, L"smclpTargets" },
+   { IDM_SMCLP_PROPERTIES, L"smclpProperties" }, { IDM_PUSH, L"push" }, { IDM_OTLP, L"otlp" },
+   { 0, nullptr }
+};
+CodeLookupElement g_dciDataTypeNames[] =
+{
+   { DCI_DT_INT, L"int32" }, { DCI_DT_UINT, L"uint32" }, { DCI_DT_INT64, L"int64" },
+   { DCI_DT_UINT64, L"uint64" }, { DCI_DT_STRING, L"string" }, { DCI_DT_FLOAT, L"float" },
+   { DCI_DT_NULL, L"null" }, { DCI_DT_COUNTER32, L"counter32" }, { DCI_DT_COUNTER64, L"counter64" },
+   { 0, nullptr }
+};
+CodeLookupElement g_dciDeltaCalculationNames[] =
+{
+   { DCM_ORIGINAL_VALUE, L"none" }, { DCM_SIMPLE, L"simple" },
+   { DCM_AVERAGE_PER_SECOND, L"averagePerSecond" }, { DCM_AVERAGE_PER_MINUTE, L"averagePerMinute" },
+   { 0, nullptr }
+};
+CodeLookupElement g_dciSnmpRawTypeNames[] =
+{
+   { SNMP_RAWTYPE_NONE, L"none" }, { SNMP_RAWTYPE_INT32, L"int32" }, { SNMP_RAWTYPE_UINT32, L"uint32" },
+   { SNMP_RAWTYPE_INT64, L"int64" }, { SNMP_RAWTYPE_UINT64, L"uint64" }, { SNMP_RAWTYPE_DOUBLE, L"double" },
+   { SNMP_RAWTYPE_IP_ADDR, L"ipAddr" }, { SNMP_RAWTYPE_MAC_ADDR, L"macAddr" },
+   { SNMP_RAWTYPE_IP6_ADDR, L"ip6Addr" }, { 0, nullptr }
+};
+CodeLookupElement g_dciThresholdFunctionNames[] =
+{
+   { F_LAST, L"last" }, { F_AVERAGE, L"average" }, { F_MEAN_DEVIATION, L"meanDeviation" },
+   { F_DIFF, L"diff" }, { F_ERROR, L"error" }, { F_SUM, L"sum" }, { F_SCRIPT, L"script" },
+   { F_ABS_DEVIATION, L"absoluteDeviation" }, { F_ANOMALY, L"anomaly" }, { 0, nullptr }
+};
+CodeLookupElement g_dciThresholdOperationNames[] =
+{
+   { OP_LE, L"less" }, { OP_LE_EQ, L"lessOrEqual" }, { OP_EQ, L"equal" }, { OP_GT_EQ, L"greaterOrEqual" },
+   { OP_GT, L"greater" }, { OP_NE, L"notEqual" }, { OP_LIKE, L"like" }, { OP_NOTLIKE, L"notLike" },
+   { OP_ILIKE, L"iLike" }, { OP_INOTLIKE, L"iNotLike" }, { 0, nullptr }
+};
+CodeLookupElement g_dctColumnAggregationNames[] =
+{
+   { DCI_AGG_LAST, L"last" }, { DCI_AGG_MIN, L"min" }, { DCI_AGG_MAX, L"max" },
+   { DCI_AGG_AVG, L"average" }, { DCI_AGG_SUM, L"sum" }, { 0, nullptr }
+};
+
+/**
  * Default retention time for collected data
  */
 int __EXPORT DCObject::m_defaultRetentionTime = 30;
@@ -1722,10 +1796,12 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "systemTag", json_string_w(m_systemTag));
    json_object_set_new(root, "userTag", json_string_w(m_userTag));
    json_object_set_new(root, "lastPollTime", m_lastPollTime.asJson());
+   json_object_set_new(root, "pollingScheduleType", json_string_w(CodeToText(m_pollingScheduleType, g_dciPollingScheduleTypeNames, L"default")));
    json_object_set_new(root, "pollingInterval", json_string_w(m_pollingIntervalSrc));
+   json_object_set_new(root, "retentionType", json_string_w(CodeToText(m_retentionType, g_dciRetentionTypeNames, L"default")));
    json_object_set_new(root, "retentionTime", json_string_w(m_retentionTimeSrc));
-   json_object_set_new(root, "source", json_integer(m_source));
-   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "origin", json_string_w(CodeToText(m_source, g_dciOriginNames, L"unknown")));
+   json_object_set_new(root, "status", json_string_w(CodeToText(m_status, g_dciStatusNames, L"active")));
    json_object_set_new(root, "busy", json_integer(m_busy));
    json_object_set_new(root, "scheduledForDeletion", json_integer(m_scheduledForDeletion));
    json_object_set_new(root, "flags", json_integer(m_flags));
@@ -1742,7 +1818,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "perfTabSettings", json_string_w(m_perfTabSettings));
    json_object_set_new(root, "transformationScript", json_string_w(m_transformationScriptSource));
    json_object_set_new(root, "comments", json_string_w(m_comments));
-   json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
+   json_object_set_new(root, "instanceDiscoveryMethod", json_string_w(CodeToText(m_instanceDiscoveryMethod, g_dciInstanceDiscoveryMethodNames, L"none")));
    json_object_set_new(root, "instanceDiscoveryData", json_string_w(m_instanceDiscoveryData));
    json_object_set_new(root, "instanceFilter", json_string_w(m_instanceFilterSource));
    json_object_set_new(root, "instanceName", json_string_w(m_instanceName));
@@ -1750,6 +1826,184 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    unlock();
    return root;
+}
+
+/**
+ * Apply a JSON string property to a SharedString field using merge semantics. The field is left
+ * unchanged when the property is absent; a null or string value is applied (empty/null clears it).
+ * Returns false only when the property is present with an incompatible (non-string, non-null) value.
+ */
+bool UpdateSharedStringFromJson(json_t *json, const char *key, SharedString *field)
+{
+   json_t *value = json_object_get(json, key);
+   if (value == nullptr)
+      return true;
+   if (json_is_null(value))
+   {
+      *field = SharedString();
+      return true;
+   }
+   if (!json_is_string(value))
+      return false;
+   *field = String(json_string_value(value), "utf8");
+   return true;
+}
+
+/**
+ * Update data collection object from JSON document (REST API). Implements merge-patch semantics:
+ * only properties present in the document are applied, everything else is left unchanged. On create
+ * the object already holds constructor defaults, so the same merge path is used. Returns RCC_SUCCESS
+ * or an error code (RCC_INVALID_ARGUMENT for malformed/invalid property values).
+ */
+uint32_t DCObject::updateFromJSON(json_t *json, bool create)
+{
+   if (create)
+   {
+      json_t *name = json_object_get(json, "name");
+      if (!json_is_string(name) || (*json_string_value(name) == 0))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   lock();
+
+   // Capture old storage class before updating retention settings
+   DCObjectStorageClass oldStorageClass = getStorageClass();
+
+   if (!UpdateSharedStringFromJson(json, "name", &m_name) ||
+       !UpdateSharedStringFromJson(json, "description", &m_description) ||
+       !UpdateSharedStringFromJson(json, "systemTag", &m_systemTag) ||
+       !UpdateSharedStringFromJson(json, "userTag", &m_userTag) ||
+       !UpdateSharedStringFromJson(json, "snmpContext", &m_snmpContext) ||
+       !UpdateSharedStringFromJson(json, "perfTabSettings", &m_perfTabSettings) ||
+       !UpdateSharedStringFromJson(json, "comments", &m_comments) ||
+       !UpdateSharedStringFromJson(json, "instanceDiscoveryData", &m_instanceDiscoveryData) ||
+       !UpdateSharedStringFromJson(json, "instanceName", &m_instanceName))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   if (!json_object_update_integer(json, "flags", &m_flags) ||
+       !json_object_update_enum(json, "origin", g_dciOriginNames, &m_source) ||
+       !json_object_update_integer(json, "resourceId", &m_resourceId) ||
+       !json_object_update_integer(json, "sourceNode", &m_sourceNode) ||
+       !json_object_update_integer(json, "snmpPort", &m_snmpPort) ||
+       !json_object_update_enum(json, "instanceDiscoveryMethod", g_dciInstanceDiscoveryMethodNames, &m_instanceDiscoveryMethod) ||
+       !json_object_update_integer(json, "instanceRetentionTime", &m_instanceRetentionTime))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *value = json_object_get(json, "snmpVersion");
+   if (value != nullptr)
+      m_snmpVersion = static_cast<SNMP_Version>(json_integer_value(value));
+
+   value = json_object_get(json, "status");
+   if (value != nullptr)
+   {
+      int status = m_status;
+      if (!json_object_update_enum(json, "status", g_dciStatusNames, &status))
+      {
+         unlock();
+         return RCC_INVALID_ARGUMENT;
+      }
+      setStatus(status, true, true);
+   }
+
+   // Polling schedule
+   if (!json_object_update_enum(json, "pollingScheduleType", g_dciPollingScheduleTypeNames, &m_pollingScheduleType))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+   if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
+   {
+      value = json_object_get(json, "pollingInterval");
+      if (value != nullptr)
+         m_pollingIntervalSrc = String(json_is_string(value) ? json_string_value(value) : "", "utf8");
+   }
+   else
+   {
+      m_pollingIntervalSrc.reset();
+   }
+
+   // Retention
+   if (!json_object_update_enum(json, "retentionType", g_dciRetentionTypeNames, &m_retentionType))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+   if (m_retentionType == DC_RETENTION_CUSTOM)
+   {
+      value = json_object_get(json, "retentionTime");
+      if (value != nullptr)
+         m_retentionTimeSrc = String(json_is_string(value) ? json_string_value(value) : "", "utf8");
+   }
+   else
+   {
+      m_retentionTimeSrc.reset();
+   }
+   updateTimeIntervalsInternal();
+
+   // Check if storage class changed (TimescaleDB single table mode); skip for instance discovery DCIs
+   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      auto owner = m_owner.lock();
+      if ((owner != nullptr) && owner->isDataCollectionTarget())
+      {
+         DCObjectStorageClass newStorageClass = getStorageClass();
+         if (oldStorageClass != newStorageClass)
+            QueueStorageClassMigration(m_id, (getType() == DCO_TYPE_ITEM) ? 'I' : 'T', oldStorageClass, newStorageClass);
+      }
+   }
+
+   value = json_object_get(json, "transformationScript");
+   if (value != nullptr)
+      setTransformationScriptInternal(json_is_string(value) ? String(json_string_value(value), "utf8").cstr() : nullptr);
+
+   value = json_object_get(json, "instanceFilter");
+   if (value != nullptr)
+   {
+      String script(json_is_string(value) ? json_string_value(value) : "", "utf8");
+      setInstanceFilter(script);
+   }
+
+   value = json_object_get(json, "schedules");
+   if (json_is_array(value))
+   {
+      if (m_schedules != nullptr)
+         m_schedules->clear();
+      else
+         m_schedules = new StringList();
+      size_t i;
+      json_t *element;
+      json_array_foreach(value, i, element)
+      {
+         if (json_is_string(element))
+            m_schedules->addMBString(json_string_value(element));
+      }
+   }
+   else if (json_is_null(value))
+   {
+      delete_and_null(m_schedules);
+   }
+
+   value = json_object_get(json, "accessList");
+   if (json_is_array(value))
+   {
+      m_accessList.clear();
+      size_t i;
+      json_t *element;
+      json_array_foreach(value, i, element)
+      {
+         if (json_is_integer(element))
+            m_accessList.add(static_cast<uint32_t>(json_integer_value(element)));
+      }
+   }
+
+   unlock();
+   return RCC_SUCCESS;
 }
 
 /**

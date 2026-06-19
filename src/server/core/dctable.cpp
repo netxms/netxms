@@ -1400,6 +1400,90 @@ json_t *DCTable::toJson()
 }
 
 /**
+ * Update table DCI from JSON document (REST API). Applies merge-patch semantics; the "columns" and
+ * "thresholds" arrays, when present, replace the whole set (table thresholds are matched by "id" so
+ * their runtime instance state is preserved). Returns RCC_SUCCESS or an error code.
+ */
+uint32_t DCTable::updateFromJSON(json_t *json, bool create)
+{
+   uint32_t rcc = DCObject::updateFromJSON(json, create);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   lock();
+
+   json_t *columnsArray = json_object_get(json, "columns");
+   if (json_is_array(columnsArray))
+   {
+      m_columns->clear();
+      StringSet usedNames;
+      size_t i;
+      json_t *element;
+      json_array_foreach(columnsArray, i, element)
+      {
+         if (!json_is_object(element))
+            continue;
+         DCTableColumn *column = new DCTableColumn(element);
+         if (usedNames.contains(column->getName()))
+         {
+            wchar_t newName[MAX_COLUMN_NAME];
+            for(int suffix = 2; ; suffix++)
+            {
+               _sntprintf(newName, MAX_COLUMN_NAME, L"%s_%d", column->getName(), suffix);
+               if (!usedNames.contains(newName))
+                  break;
+            }
+            column->setName(newName);
+         }
+         usedNames.add(column->getName());
+         m_columns->add(column);
+      }
+   }
+   else if (json_is_null(columnsArray))
+   {
+      m_columns->clear();
+   }
+
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(json_array_size(thresholdsArray), 8, Ownership::True);
+      size_t i;
+      json_t *element;
+      json_array_foreach(thresholdsArray, i, element)
+      {
+         if (!json_is_object(element))
+            continue;
+         DCTableThreshold *threshold = new DCTableThreshold(element);
+         // DCTableThreshold(json_t*) always assigns a fresh id; for an update, honor the id supplied
+         // by the client so existing runtime instance state can be matched and preserved.
+         uint32_t suppliedId = static_cast<uint32_t>(json_object_get_int32(element, "id", 0));
+         if (suppliedId != 0)
+            threshold->setId(suppliedId);
+         newThresholds->add(threshold);
+         for(int j = 0; j < m_thresholds->size(); j++)
+         {
+            DCTableThreshold *old = m_thresholds->get(j);
+            if (old->getId() == threshold->getId())
+            {
+               threshold->copyState(old);
+               break;
+            }
+         }
+      }
+      delete m_thresholds;
+      m_thresholds = newThresholds;
+   }
+   else if (json_is_null(thresholdsArray))
+   {
+      m_thresholds->clear();
+   }
+
+   unlock();
+   return RCC_SUCCESS;
+}
+
+/**
  * Get list of all threshold IDs
  */
 void DCTable::getThresholdIdList(IntegerArray<uint32_t> *idList) const

@@ -3277,9 +3277,9 @@ json_t *DCItem::toJson()
 {
    json_t *root = DCObject::toJson();
    lock();
-   json_object_set_new(root, "deltaCalculation", json_integer(m_deltaCalculation));
-   json_object_set_new(root, "dataType", json_integer(m_dataType));
-   json_object_set_new(root, "transformedDataType", json_integer(m_transformedDataType));
+   json_object_set_new(root, "deltaCalculation", json_string_w(CodeToText(m_deltaCalculation, g_dciDeltaCalculationNames, L"none")));
+   json_object_set_new(root, "dataType", json_string_w(CodeToText(m_dataType, g_dciDataTypeNames, L"int32")));
+   json_object_set_new(root, "transformedDataType", json_string_w(CodeToText(m_transformedDataType, g_dciDataTypeNames, L"int32")));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "sampleSaveInterval", json_integer(m_sampleSaveInterval));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
@@ -3288,11 +3288,110 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "mappingTableId", json_integer(m_mappingTableId));
-   json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
+   json_object_set_new(root, "snmpRawValueType", json_string_w(CodeToText(m_snmpRawValueType, g_dciSnmpRawTypeNames, L"none")));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
+   json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
+   json_object_set_new(root, "aggregationDisabled", json_boolean(m_aggregationDisabled));
+   json_object_set_new(root, "hourlyRetention", json_integer(m_hourlyRetention));
+   json_object_set_new(root, "dailyRetention", json_integer(m_dailyRetention));
    unlock();
    return root;
+}
+
+/**
+ * Update item from JSON document (REST API). Applies merge-patch semantics for scalar fields; the
+ * "thresholds" array, when present, replaces the whole set (existing thresholds are matched by "id"
+ * so their runtime state is preserved). Returns RCC_SUCCESS or an error code.
+ */
+uint32_t DCItem::updateFromJSON(json_t *json, bool create)
+{
+   uint32_t rcc = DCObject::updateFromJSON(json, create);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   lock();
+
+   if (!UpdateSharedStringFromJson(json, "unitName", &m_unitName) ||
+       !UpdateSharedStringFromJson(json, "aiHint", &m_aiHint) ||
+       !json_object_update_string(json, "predictionEngine", m_predictionEngine, MAX_NPE_NAME_LEN))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   if (!json_object_update_enum(json, "dataType", g_dciDataTypeNames, &m_dataType) ||
+       !json_object_update_enum(json, "transformedDataType", g_dciDataTypeNames, &m_transformedDataType) ||
+       !json_object_update_enum(json, "deltaCalculation", g_dciDeltaCalculationNames, &m_deltaCalculation) ||
+       !json_object_update_enum(json, "snmpRawValueType", g_dciSnmpRawTypeNames, &m_snmpRawValueType) ||
+       !json_object_update_integer(json, "sampleCount", &m_sampleCount) ||
+       !json_object_update_integer(json, "sampleSaveInterval", &m_sampleSaveInterval) ||
+       !json_object_update_integer(json, "multiplier", &m_multiplier) ||
+       !json_object_update_integer(json, "mappingTableId", &m_mappingTableId) ||
+       !json_object_update_integer(json, "allThresholdsRearmEvent", &m_allThresholdsRearmEvent) ||
+       !json_object_update_integer(json, "hourlyRetention", &m_hourlyRetention) ||
+       !json_object_update_integer(json, "dailyRetention", &m_dailyRetention) ||
+       !json_object_update_boolean(json, "aggregationDisabled", &m_aggregationDisabled))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   // Thresholds: whole-array replace, matching existing entries by id to preserve runtime state
+   json_t *thresholdsArray = json_object_get(json, "thresholds");
+   if (json_is_array(thresholdsArray))
+   {
+      ObjectArray<Threshold> *newList = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
+      size_t i;
+      json_t *element;
+      json_array_foreach(thresholdsArray, i, element)
+      {
+         Threshold *threshold = nullptr;
+         uint32_t id = static_cast<uint32_t>(json_object_get_int32(element, "id", 0));
+         if ((id != 0) && (m_thresholds != nullptr))
+         {
+            for(int j = 0; j < m_thresholds->size(); j++)
+            {
+               if (m_thresholds->get(j)->getId() == id)
+               {
+                  m_thresholds->setOwner(Ownership::False);
+                  threshold = m_thresholds->get(j);
+                  m_thresholds->remove(j);
+                  m_thresholds->setOwner(Ownership::True);
+                  break;
+               }
+            }
+         }
+         if (threshold != nullptr)
+            threshold->updateFromJson(element);
+         else
+            threshold = new Threshold(element, this);
+         newList->add(threshold);
+      }
+
+      delete m_thresholds;   // deletes any leftover (removed) thresholds
+      if (newList->size() > 0)
+      {
+         m_thresholds = newList;
+      }
+      else
+      {
+         delete newList;
+         m_thresholds = nullptr;
+      }
+
+      // Update data type in thresholds
+      for(int j = 0; j < getThresholdCount(); j++)
+         m_thresholds->get(j)->setDataType(getTransformedDataType());
+   }
+   else if (json_is_null(thresholdsArray))
+   {
+      delete_and_null(m_thresholds);
+   }
+
+   updateCacheSizeInternal(true);
+   unlock();
+   return RCC_SUCCESS;
 }
 
 /**

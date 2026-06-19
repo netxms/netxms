@@ -1568,7 +1568,7 @@ void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object)
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);
 void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, const shared_ptr<BusinessServiceCheck>& check);
 void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t checkId);
-void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
+void NXCORE_EXPORTABLE NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
 void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId);
 void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t dcoId, int status);
 void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object);

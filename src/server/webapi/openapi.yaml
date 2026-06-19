@@ -4428,6 +4428,200 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/objects/{object-id}/data-collection/configuration:
+    get:
+      operationId: listDataCollectionItems
+      summary: List data collection item definitions
+      description: |
+        Retrieve the definitions (configuration) of all data collection items (DCIs) configured on
+        the object. This returns the DCI configuration, not collected values - use the
+        `current-values` and `history` endpoints for data. Enumerations such as `origin`, `dataType`,
+        `status` and threshold `function`/`condition` are returned as symbolic names.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+      responses:
+        '200':
+          description: DCI definitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataCollectionItem'
+        '400':
+          description: Object does not support data collection
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+    post:
+      operationId: createDataCollectionItem
+      summary: Create data collection item
+      description: |
+        Create a new data collection item on the object. The DCI type is selected by the `type`
+        property in the request body (`item` for a single-value DCI or `table` for a table DCI,
+        default `item`). The server assigns the DCI id and returns the full created definition.
+        Enumeration properties accept either symbolic names or raw numeric codes.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCollectionItem'
+      responses:
+        '201':
+          description: Data collection item created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created data collection item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCollectionItem'
+        '400':
+          description: Invalid request body or object does not support data collection
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+  /v1/objects/{object-id}/data-collection/configuration/{dci-id}:
+    get:
+      operationId: getDataCollectionItem
+      summary: Get data collection item definition
+      description: Retrieve the definition of a single data collection item.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Data collection item ID
+      responses:
+        '200':
+          description: DCI definition retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCollectionItem'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object or data collection item not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+    patch:
+      operationId: updateDataCollectionItem
+      summary: Update data collection item
+      description: |
+        Apply a JSON merge-patch to an existing data collection item: only the properties present in
+        the request body are changed. The `thresholds` array (and, for table DCIs, the `columns`
+        array), when present, replaces the whole set; existing thresholds are matched by `id` so
+        their runtime state is preserved. The `type` property, if supplied, must match the existing
+        DCI type - it cannot be changed.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Data collection item ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCollectionItem'
+      responses:
+        '200':
+          description: Data collection item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCollectionItem'
+        '400':
+          description: Invalid request body or attempt to change DCI type
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object or item
+        '404':
+          description: Object or data collection item not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+    delete:
+      operationId: deleteDataCollectionItem
+      summary: Delete data collection item
+      description: Remove a data collection item from the object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Data collection item ID
+      responses:
+        '204':
+          description: Data collection item deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object or item
+        '404':
+          description: Object or data collection item not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/expand-text:
     post:
       operationId: expandText
@@ -10489,6 +10683,198 @@ components:
         - 6
         - 7
         - 8
+    DataCollectionItem:
+      type: object
+      description: |
+        Data collection item (DCI) definition. Covers both single-value items (`type: item`) and
+        table DCIs (`type: table`). Enumeration properties are represented as symbolic names on
+        output and accept either a symbolic name or the raw numeric code on input. Properties marked
+        read-only are ignored in create/update requests.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: DCI ID (assigned by the server)
+        guid:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique DCI identifier
+        type:
+          type: string
+          enum: [item, table]
+          default: item
+          description: DCI type. Selected at creation; cannot be changed afterwards.
+        name:
+          type: string
+          description: Metric/parameter name (required on create)
+        description:
+          type: string
+          description: Human-readable DCI description
+        origin:
+          type: string
+          enum: [internal, nxagent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp]
+          description: Data origin
+        status:
+          type: string
+          enum: [active, disabled, unsupported]
+          description: DCI status
+        dataType:
+          type: string
+          enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+          description: Data type (single-value DCI only)
+        transformedDataType:
+          type: string
+          enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+          description: Data type after transformation (single-value DCI only)
+        deltaCalculation:
+          type: string
+          enum: [none, simple, averagePerSecond, averagePerMinute]
+          description: Delta calculation method (single-value DCI only)
+        pollingScheduleType:
+          type: string
+          enum: [default, custom, advanced]
+          description: Polling schedule type
+        pollingInterval:
+          type: string
+          description: Polling interval expression (used when pollingScheduleType is custom)
+        retentionType:
+          type: string
+          enum: [default, custom, none]
+          description: Data retention type
+        retentionTime:
+          type: string
+          description: Retention time expression (used when retentionType is custom)
+        systemTag:
+          type: string
+        userTag:
+          type: string
+        comments:
+          type: string
+        transformationScript:
+          type: string
+          description: NXSL transformation script source
+        sourceNode:
+          type: integer
+          description: Source (proxy) node ID, or 0 to disable
+        snmpPort:
+          type: integer
+        snmpVersion:
+          type: integer
+        snmpContext:
+          type: string
+        snmpRawValueType:
+          type: string
+          enum: [none, int32, uint32, int64, uint64, double, ipAddr, macAddr, ip6Addr]
+          description: SNMP raw value interpretation (single-value DCI only)
+        multiplier:
+          type: integer
+        unitName:
+          type: string
+        mappingTableId:
+          type: integer
+        sampleCount:
+          type: integer
+        predictionEngine:
+          type: string
+        allThresholdsRearmEvent:
+          type: integer
+        aiHint:
+          type: string
+        aggregationDisabled:
+          type: boolean
+        hourlyRetention:
+          type: integer
+        dailyRetention:
+          type: integer
+        instanceDiscoveryMethod:
+          type: string
+          enum: [none, agentList, agentTable, snmpWalkValues, snmpWalkOids, script, winperf, webService, internalTable, smclpTargets, smclpProperties, push, otlp]
+        instanceDiscoveryData:
+          type: string
+        instanceFilter:
+          type: string
+          description: NXSL instance filter script source
+        instanceName:
+          type: string
+        instanceRetentionTime:
+          type: integer
+        perfTabSettings:
+          type: string
+        accessList:
+          type: array
+          description: Per-DCI access list (user/group IDs)
+          items:
+            type: integer
+        thresholds:
+          type: array
+          description: Thresholds. When present in a request, replaces the whole set.
+          items:
+            $ref: '#/components/schemas/DciThreshold'
+        columns:
+          type: array
+          description: Table columns (table DCI only). When present in a request, replaces the whole set.
+          items:
+            $ref: '#/components/schemas/DciTableColumn'
+        templateId:
+          type: integer
+          readOnly: true
+        templateItemId:
+          type: integer
+          readOnly: true
+    DciThreshold:
+      type: object
+      description: Threshold definition for a single-value DCI
+      properties:
+        id:
+          type: integer
+          description: Threshold ID (0 or omitted for a new threshold; supply the existing id to preserve runtime state on update)
+        activationEvent:
+          type: string
+          description: Event generated when the threshold is reached
+        deactivationEvent:
+          type: string
+          description: Event generated when the threshold is rearmed
+        function:
+          type: string
+          enum: [last, average, meanDeviation, diff, error, sum, script, absoluteDeviation, anomaly]
+        condition:
+          type: string
+          enum: [less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike]
+        value:
+          type: string
+        sampleCount:
+          type: integer
+        deactivationSampleCount:
+          type: integer
+        repeatInterval:
+          type: integer
+        regenerateOnValueChange:
+          type: boolean
+        disabled:
+          type: boolean
+        script:
+          type: string
+    DciTableColumn:
+      type: object
+      description: Column definition for a table DCI
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        snmpOid:
+          type: string
+        dataType:
+          type: string
+          enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+        aggregationFunction:
+          type: string
+          enum: [last, min, max, average, sum]
+        instanceColumn:
+          type: boolean
+        convertSnmpStringToHex:
+          type: boolean
     DCIValue:
       type: object
       description: Data Collection Item (DCI) current value

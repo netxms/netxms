@@ -431,7 +431,7 @@ void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t c
 /**
  * Send DCI update to all active sessions
  */
-void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)
+void NXCORE_EXPORTABLE NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)
 {
    NXCPMessage msg(CMD_MODIFY_NODE_DCI, 0);
    msg.setField(VID_OBJECT_ID, object.getId());

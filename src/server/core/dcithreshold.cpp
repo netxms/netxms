@@ -227,8 +227,10 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
    String deactivationEvent = json_object_get_string(json, "deactivationEvent", _T("SYS_THRESHOLD_REARMED"));
    m_rearmEventCode = EventCodeFromName(deactivationEvent, EVENT_THRESHOLD_REARMED);
 
-   m_function = static_cast<BYTE>(json_object_get_int32(json, "function", F_LAST));
-   m_operation = static_cast<BYTE>(json_object_get_int32(json, "condition", OP_EQ));
+   m_function = F_LAST;
+   json_object_update_enum(json, "function", g_dciThresholdFunctionNames, &m_function);
+   m_operation = OP_EQ;
+   json_object_update_enum(json, "condition", g_dciThresholdOperationNames, &m_operation);
    m_dataType = parentItem->getTransformedDataType();
 
    String value = json_object_get_string(json, "value", _T(""));
@@ -253,7 +255,7 @@ Threshold::Threshold(json_t *json, DCItem *parentItem)
 
    m_isReached = false;
    m_wasReachedBeforeMaint = false;
-   m_disabled = false;
+   m_disabled = json_object_get_boolean(json, "disabled", false);
    m_regenerateOnValueChange = json_object_get_boolean(json, "regenerateOnValueChange", false);
    m_currentSeverity = SEVERITY_NORMAL;
    m_repeatInterval = json_object_get_int32(json, "repeatInterval", -1);
@@ -861,8 +863,8 @@ void Threshold::updateFromJson(json_t *json)
    if (json_is_string(member))
       m_rearmEventCode = EventCodeFromName(String(json_string_value(member), "utf8"), m_rearmEventCode);
 
-   m_function = static_cast<uint8_t>(json_object_get_int32(json, "function", m_function));
-   m_operation = static_cast<uint8_t>(json_object_get_int32(json, "condition", m_operation));
+   json_object_update_enum(json, "function", g_dciThresholdFunctionNames, &m_function);
+   json_object_update_enum(json, "condition", g_dciThresholdOperationNames, &m_operation);
 
    member = json_object_get(json, "value");
    if (json_is_string(member))
@@ -1207,12 +1209,15 @@ json_t *Threshold::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "targetId", json_integer(m_targetId));
-   json_object_set_new(root, "eventCode", json_integer(m_eventCode));
-   json_object_set_new(root, "rearmEventCode", json_integer(m_rearmEventCode));
+   wchar_t eventName[MAX_EVENT_NAME];
+   EventNameFromCode(m_eventCode, eventName);
+   json_object_set_new(root, "activationEvent", json_string_w(eventName));
+   EventNameFromCode(m_rearmEventCode, eventName);
+   json_object_set_new(root, "deactivationEvent", json_string_w(eventName));
    json_object_set_new(root, "value", json_string_t(m_value));
-   json_object_set_new(root, "function", json_integer(m_function));
-   json_object_set_new(root, "operation", json_integer(m_operation));
-   json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "function", json_string_w(CodeToText(m_function, g_dciThresholdFunctionNames, L"last")));
+   json_object_set_new(root, "condition", json_string_w(CodeToText(m_operation, g_dciThresholdOperationNames, L"equal")));
+   json_object_set_new(root, "dataType", json_string_w(CodeToText(m_dataType, g_dciDataTypeNames, L"int32")));
    json_object_set_new(root, "currentSeverity", json_integer(m_currentSeverity));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));

@@ -31,6 +31,29 @@ class ImportContext;
 #define MAX_NPE_NAME_LEN            16
 
 /**
+ * Code/name lookup tables for symbolic representation of data collection enumerations in
+ * JSON (REST API). Each table is terminated by a { 0, nullptr } element and is used both for
+ * emitting symbolic names (CodeToText) and for parsing them back (CodeFromText / json_object_update_enum).
+ */
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciOriginNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciStatusNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciPollingScheduleTypeNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciRetentionTypeNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciInstanceDiscoveryMethodNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciDataTypeNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciDeltaCalculationNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciSnmpRawTypeNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdFunctionNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdOperationNames[];
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dctColumnAggregationNames[];
+
+/**
+ * Apply a JSON string property to a SharedString field using merge semantics (used by updateFromJSON).
+ * Field left unchanged when property absent; null or string applied. Returns false on incompatible type.
+ */
+bool UpdateSharedStringFromJson(json_t *json, const char *key, SharedString *field);
+
+/**
  * Interface for objects that can be searched
  */
 class NXCORE_EXPORTABLE SearchAttributeProvider
@@ -506,6 +529,8 @@ public:
    virtual json_t *toJson();
    virtual void updateFromImport(json_t *json, ImportContext *context = nullptr);
 
+   virtual uint32_t updateFromJSON(json_t *json, bool create);
+
    NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
    session_id_t processForcePoll();
@@ -724,6 +749,7 @@ public:
    virtual void getScriptDependencies(StringSet *dependencies) const override;
    virtual json_t *toJson() override;
    virtual json_t *createExportRecord() const override;
+   virtual uint32_t updateFromJSON(json_t *json, bool create) override;
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
    Threshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }
@@ -925,6 +951,7 @@ public:
    bool equals(const DCTableThreshold *t) const;
 
    uint32_t getId() const { return m_id; }
+   void setId(uint32_t id) { m_id = id; }
    uint32_t getActivationEvent() const { return m_activationEvent; }
    uint32_t getDeactivationEvent() const { return m_deactivationEvent; }
    int getSampleCount() const { return m_sampleCount; }
@@ -993,6 +1020,7 @@ public:
    virtual bool isUsingEvent(uint32_t eventCode) const override;
    virtual json_t *toJson() override;
    virtual json_t *createExportRecord() const override;
+   virtual uint32_t updateFromJSON(json_t *json, bool create) override;
 
    bool processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 

@@ -258,7 +258,7 @@ json_t *DCTableCondition::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "column", json_string_t(m_column));
-   json_object_set_new(root, "operation", json_integer(m_operation));
+   json_object_set_new(root, "operation", json_string_w(CodeToText(m_operation, g_dciThresholdOperationNames, L"equal")));
    json_object_set_new(root, "value", json_string_t(m_value));
    return root;
 }
@@ -362,7 +362,8 @@ DCTableConditionGroup::DCTableConditionGroup(json_t *json)
          {
             String column = json_object_get_string(conditionJson, "column", _T(""));
             String value = json_object_get_string(conditionJson, "value", _T(""));
-            int operation = json_object_get_int32(conditionJson, "operation");
+            int operation = 0;
+            json_object_update_enum(conditionJson, "operation", g_dciThresholdOperationNames, &operation);
             m_conditions->add(new DCTableCondition(column, operation, value));
          }
       }
@@ -1037,8 +1038,11 @@ json_t *DCTableThreshold::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "groups", json_object_array(m_groups));
-   json_object_set_new(root, "activationEvent", json_integer(m_activationEvent));
-   json_object_set_new(root, "deactivationEvent", json_integer(m_deactivationEvent));
+   wchar_t eventName[MAX_EVENT_NAME];
+   EventNameFromCode(m_activationEvent, eventName);
+   json_object_set_new(root, "activationEvent", json_string_w(eventName));
+   EventNameFromCode(m_deactivationEvent, eventName);
+   json_object_set_new(root, "deactivationEvent", json_string_w(eventName));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    return root;

@@ -86,6 +86,11 @@ int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
 int H_PerformanceViewDCIs(Context *context);
+int H_DataCollectionConfigList(Context *context);
+int H_DataCollectionConfigGet(Context *context);
+int H_DataCollectionConfigCreate(Context *context);
+int H_DataCollectionConfigUpdate(Context *context);
+int H_DataCollectionConfigDelete(Context *context);
 int H_NotificationChannelClearQueue(Context *context);
 int H_NotificationChannelCreate(Context *context);
 int H_NotificationChannelDelete(Context *context);
@@ -578,6 +583,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/performance-view")
       .GET(H_PerformanceViewDCIs)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/configuration")
+      .GET(H_DataCollectionConfigList)
+      .POST(H_DataCollectionConfigCreate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/configuration/:dci-id")
+      .GET(H_DataCollectionConfigGet)
+      .PATCH(H_DataCollectionConfigUpdate)
+      .DELETE(H_DataCollectionConfigDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
