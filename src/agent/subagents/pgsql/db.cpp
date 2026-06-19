@@ -27,9 +27,9 @@ static constexpr int64_t CACHE_MAX_AGE_MS = 300 * 1000;
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
+DatabaseConnection::DatabaseConnection(ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
-	memcpy(&m_info, info, sizeof(DatabaseInfo));
+	memcpy(&m_info, info, sizeof(ConnectionInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
 	m_session = nullptr;
 	m_connected = false;
@@ -43,7 +43,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::F
 /**
  * Destructor
  */
-DatabaseInstance::~DatabaseInstance()
+DatabaseConnection::~DatabaseConnection()
 {
 	stop();
 	delete m_data;
@@ -52,15 +52,15 @@ DatabaseInstance::~DatabaseInstance()
 /**
  * Run
  */
-void DatabaseInstance::run()
+void DatabaseConnection::run()
 {
-	m_pollerThread = ThreadCreateEx(DatabaseInstance::pollerThreadStarter, 0, this);
+	m_pollerThread = ThreadCreateEx(DatabaseConnection::pollerThreadStarter, 0, this);
 }
 
 /**
  * Stop
  */
-void DatabaseInstance::stop()
+void DatabaseConnection::stop()
 {
 	m_stopCondition.set();
 	ThreadJoin(m_pollerThread);
@@ -75,7 +75,7 @@ void DatabaseInstance::stop()
 /**
  * Detect PostgreSQL version
  */
-int DatabaseInstance::getPgsqlVersion()
+int DatabaseConnection::getPgsqlVersion()
 {
 	DB_RESULT hResult = DBSelect(m_session, _T("SELECT current_setting('server_version_num')::int"));
 	if (hResult == nullptr)
@@ -112,16 +112,16 @@ int DatabaseInstance::getPgsqlVersion()
 /**
  * Poller thread starter
  */
-THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL DatabaseConnection::pollerThreadStarter(void *arg)
 {
-	((DatabaseInstance *)arg)->pollerThread();
+	((DatabaseConnection *)arg)->pollerThread();
 	return THREAD_OK;
 }
 
 /**
  * Poller thread
  */
-void DatabaseInstance::pollerThread()
+void DatabaseConnection::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("PGSQL: poller thread for database server %s started"), m_info.id);
    int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * 1000LL;
@@ -132,7 +132,7 @@ void DatabaseInstance::pollerThread()
 		m_sessionLock.lock();
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-		m_session = DBConnect(g_pgsqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
+		m_session = DBConnect(g_pgsqlDriver, m_info.endpoint, m_info.name, m_info.login, m_info.password, nullptr, errorText);
 		if (m_session == nullptr)
 		{
 			m_sessionLock.unlock();
@@ -188,7 +188,7 @@ void DatabaseInstance::pollerThread()
 /**
  * Do actual database polling. Should return false if connection is broken.
  */
-bool DatabaseInstance::poll()
+bool DatabaseConnection::poll()
 {
 	StringMap *data = new StringMap();
 
@@ -306,7 +306,7 @@ bool DatabaseInstance::poll()
  * Check whether cached data has exceeded the maximum age. Caller must hold m_dataLock —
  * uses the monotonic clock so it is immune to wall-clock jumps in either direction.
  */
-bool DatabaseInstance::isCacheStaleLocked() const
+bool DatabaseConnection::isCacheStaleLocked() const
 {
 	return (m_lastSuccessfulPoll != 0) &&
 		(GetMonotonicClockTime() - m_lastSuccessfulPoll > CACHE_MAX_AGE_MS);
@@ -316,7 +316,7 @@ bool DatabaseInstance::isCacheStaleLocked() const
  * Get collected data. Returns Found/Missing/Stale so the caller can distinguish "no such tag"
  * (where the ?-prefix "missing as zero" rule applies) from "cache exceeded TTL" (always an error).
  */
-CacheReadResult DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
+CacheReadResult DatabaseConnection::getData(const TCHAR *tag, TCHAR *value)
 {
 	CacheReadResult result = CacheReadResult::Missing;
 	bool shouldLog = false;
@@ -375,7 +375,7 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *
 /**
  * Get list of tags matching given pattern from collected data
  */
-bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
+bool DatabaseConnection::getTagList(const TCHAR *pattern, StringList *value)
 {
 	bool success = false;
 	bool shouldLog = false;
@@ -412,7 +412,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 /**
  * Query table
  */
-bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
+bool DatabaseConnection::queryTable(TableDescriptor *td, Table *value)
 {
 	m_sessionLock.lock();
 

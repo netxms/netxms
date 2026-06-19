@@ -37,11 +37,11 @@ static constexpr int MAX_TABLE_COLUMNS = 32;
 /**
  * Database connection information
  */
-struct DatabaseInfo
+struct ConnectionInfo
 {
-	TCHAR id[MAX_DB_STRING];				// instance ID (connection name)
+	TCHAR id[MAX_DB_STRING];				// connection ID
 	TCHAR name[MAX_DB_STRING];				// maintenance DB name
-	TCHAR server[MAX_DB_STRING];
+	TCHAR endpoint[MAX_DB_STRING];			// connect target (host)
 	TCHAR login[MAX_DB_LOGIN];
 	TCHAR password[MAX_DB_PASSWORD];
 	uint32_t connectionTTL;
@@ -62,7 +62,7 @@ struct TableDescriptor
 };
 
 /**
- * Cache read outcome for DatabaseInstance::getData()
+ * Cache read outcome for DatabaseConnection::getData()
  */
 enum class CacheReadResult
 {
@@ -72,12 +72,12 @@ enum class CacheReadResult
 };
 
 /**
- * Database instance
+ * Database connection
  */
-class DatabaseInstance
+class DatabaseConnection
 {
 private:
-	DatabaseInfo m_info;
+	ConnectionInfo m_info;
 	THREAD m_pollerThread;
 	DB_HANDLE m_session;
 	bool m_connected;
@@ -98,8 +98,8 @@ private:
 	bool isCacheStaleLocked() const;
 
 public:
-	DatabaseInstance(DatabaseInfo *info);
-	~DatabaseInstance();
+	DatabaseConnection(ConnectionInfo *info);
+	~DatabaseConnection();
 
 	void run();
 	void stop();

@@ -286,18 +286,18 @@ static TableDescriptor s_tqPrepared[] =
 };
 
 /**
- * Database instances
+ * Database connections
  */
-static ObjectArray<DatabaseInstance> s_instances(8, 8, Ownership::True);
+static ObjectArray<DatabaseConnection> s_connections(8, 8, Ownership::True);
 
 /**
- * Find instance by ID
+ * Find connection by ID
  */
-static DatabaseInstance *FindInstance(const TCHAR *id)
+static DatabaseConnection *FindConnection(const TCHAR *id)
 {
-	for(int i = 0; i < s_instances.size(); i++)
+	for(int i = 0; i < s_connections.size(); i++)
 	{
-		DatabaseInstance *db = s_instances.get(i);
+		DatabaseConnection *db = s_connections.get(i);
 		if (!_tcsicmp(db->getId(), id))
 			return db;
 	}
@@ -313,7 +313,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	DatabaseInstance *db = FindInstance(id);
+	DatabaseConnection *db = FindConnection(id);
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -360,7 +360,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 		_tcscpy(id, c);
 	}
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -412,7 +412,7 @@ static LONG H_DatabaseServerConnectionStatus(const TCHAR *param, const TCHAR *ar
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	DatabaseInstance *db = FindInstance(id);
+	DatabaseConnection *db = FindConnection(id);
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -429,7 +429,7 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	DatabaseInstance *db = FindInstance(id);
+	DatabaseConnection *db = FindConnection(id);
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -445,23 +445,25 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 }
 
 /**
- * Handler for PostgreSQL.DBServersList list
+ * Handler for PostgreSQL.Connections / PostgreSQL.DBServers lists
  */
-static LONG H_DBServersList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	for(int i = 0; i < s_instances.size(); i++)
-		value->add(s_instances.get(i)->getId());
+	for(int i = 0; i < s_connections.size(); i++)
+		value->add(s_connections.get(i)->getId());
 	return SYSINFO_RC_SUCCESS;
 }
 
 /**
- * Handler for PostgreSQL.AllDatabases list
+ * Handler for PostgreSQL.AllDatabases list. Rows are emitted in canonical positional
+ * form "connectionId,databaseName" so they can be fed directly into the (connectionId,
+ * database) metric signature via instance discovery.
  */
 static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	for(int i = 0; i < s_instances.size(); i++)
+	for(int i = 0; i < s_connections.size(); i++)
    {
-		DatabaseInstance *db = s_instances.get(i);
+		DatabaseConnection *db = s_connections.get(i);
 
 		StringList list;
 		if (!db->getTagList(arg, &list))
@@ -470,7 +472,7 @@ static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList 
 		for(int j = 0; j < list.size(); j++)
       {
 			TCHAR s[MAX_RESULT_LENGTH];
-			_sntprintf(s, MAX_RESULT_LENGTH, _T("%s@%s"), list.get(j), db->getId());
+			_sntprintf(s, MAX_RESULT_LENGTH, _T("%s,%s"), db->getId(), list.get(j));
 			value->add(s);
 		}
 	}
@@ -486,7 +488,7 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	DatabaseInstance *db = FindInstance(id);
+	DatabaseConnection *db = FindConnection(id);
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -502,7 +504,7 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 	if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	DatabaseInstance *db = FindInstance(id);
+	DatabaseConnection *db = FindConnection(id);
 	if (db == nullptr)
 		return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -518,38 +520,76 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 /**
  * Config template
  */
-static DatabaseInfo s_dbInfo;
+static ConnectionInfo s_connInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
-	{ _T("ConnectionTTL"),	CT_LONG, 0, 0, 0, 0, &s_dbInfo.connectionTTL },
-	{ _T("Database"),		CT_STRING, 0, 0, MAX_DB_STRING,	0, s_dbInfo.name },
-	{ _T("Id"),				CT_STRING, 0, 0, MAX_DB_STRING,	0, s_dbInfo.id },
-	{ _T("Login"),			CT_STRING, 0, 0, MAX_DB_LOGIN,	 0, s_dbInfo.login },
-	{ _T("Password"),		CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbInfo.password },
-	{ _T("Server"),			CT_STRING, 0, 0, MAX_DB_STRING,	0, s_dbInfo.server },
+	{ _T("ConnectionTTL"),	CT_LONG, 0, 0, 0, 0, &s_connInfo.connectionTTL },
+	{ _T("Database"),		CT_STRING, 0, 0, MAX_DB_STRING,	0, s_connInfo.name },
+	{ _T("Endpoint"),		CT_STRING, 0, 0, MAX_DB_STRING,	0, s_connInfo.endpoint },
+	{ _T("Id"),				CT_STRING, 0, 0, MAX_DB_STRING,	0, s_connInfo.id },
+	{ _T("Login"),			CT_STRING, 0, 0, MAX_DB_LOGIN,	 0, s_connInfo.login },
+	{ _T("Password"),		CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_connInfo.password },
+	{ _T("Server"),			CT_STRING, 0, 0, MAX_DB_STRING,	0, s_connInfo.endpoint },   // alias for Endpoint (PostgreSQL endpoint is a host)
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
- * Reset s_dbInfo to shared defaults. Caller must assign id afterwards.
+ * Reset s_connInfo to shared defaults. Caller must assign id afterwards.
  */
-static void ResetDatabaseInfoDefaults()
+static void ResetConnectionInfoDefaults()
 {
-	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-	s_dbInfo.connectionTTL = 3600;
-	_tcscpy(s_dbInfo.server, _T("127.0.0.1"));
-	_tcscpy(s_dbInfo.name, _T("postgres"));
-	_tcscpy(s_dbInfo.login, _T("netxms"));
+	memset(&s_connInfo, 0, sizeof(s_connInfo));
+	s_connInfo.connectionTTL = 3600;
+	_tcscpy(s_connInfo.endpoint, _T("127.0.0.1"));
+	_tcscpy(s_connInfo.name, _T("postgres"));
+	_tcscpy(s_connInfo.login, _T("netxms"));
 }
 
 /**
- * Decrypt s_dbInfo password and add a database instance built from the
- * current s_dbInfo to the polling list.
+ * Decrypt s_connInfo password and add a database instance built from the
+ * current s_connInfo to the polling list.
  */
-static void RegisterDatabaseInstance()
+static void RegisterDatabaseConnection()
 {
-	DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-	s_instances.add(new DatabaseInstance(&s_dbInfo));
+	DecryptPassword(s_connInfo.login, s_connInfo.password, s_connInfo.password, MAX_DB_PASSWORD);
+	s_connections.add(new DatabaseConnection(&s_connInfo));
+}
+
+/**
+ * Load named connection subsections from the given root (e.g. "pgsql/connections", no leading slash).
+ * When deprecated is true, a debug-level deprecation warning is logged for each section.
+ */
+static void LoadNamedConnections(Config *config, const TCHAR *root, bool deprecated)
+{
+	TCHAR rootPath[MAX_DB_STRING];
+	_sntprintf(rootPath, MAX_DB_STRING, _T("/%s"), root);   // getEntry expects an absolute path
+	ConfigEntry *connectionsRoot = config->getEntry(rootPath);
+	if (connectionsRoot == nullptr)
+		return;
+
+	unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+	for(int i = 0; i < connections->size(); i++)
+	{
+		ConfigEntry *e = connections->get(i);
+		ResetConnectionInfoDefaults();
+		_tcslcpy(s_connInfo.id, e->getName(), MAX_DB_STRING);   // Id defaults to subsection name
+
+		TCHAR section[MAX_DB_STRING];
+		_sntprintf(section, MAX_DB_STRING, _T("%s/%s"), root, e->getName());
+		if (!config->parseTemplate(section, s_configTemplate))
+		{
+			nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Error parsing PostgreSQL subagent configuration for connection %s"), e->getName());
+			continue;
+		}
+
+		if (s_connInfo.id[0] == 0)
+			continue;
+
+		if (deprecated)
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("Configuration section [%s] is deprecated; use [pgsql/connections/<id>] instead"), section);
+
+		RegisterDatabaseConnection();
+	}
 }
 
 /*
@@ -567,59 +607,39 @@ static bool SubAgentInit(Config *config)
 
 	// Load configuration from "pgsql" section to allow simple configuration
 	// of one connection without XML includes
-	ResetDatabaseInfoDefaults();
-	_tcscpy(s_dbInfo.id, _T("localdb"));
-	if(config->getEntry(_T("/pgsql/id")) != nullptr || config->getEntry(_T("/pgsql/name")) != nullptr ||
-			config->getEntry(_T("/pgsql/server")) != nullptr || config->getEntry(_T("/pgsql/login")) != nullptr  ||
-			config->getEntry(_T("/pgsql/password")) != nullptr)
+	ResetConnectionInfoDefaults();
+	_tcscpy(s_connInfo.id, _T("localdb"));
+	if(config->getEntry(_T("/pgsql/id")) != nullptr || config->getEntry(_T("/pgsql/database")) != nullptr ||
+			config->getEntry(_T("/pgsql/endpoint")) != nullptr || config->getEntry(_T("/pgsql/server")) != nullptr ||
+			config->getEntry(_T("/pgsql/login")) != nullptr || config->getEntry(_T("/pgsql/password")) != nullptr)
 	{
 		if (config->parseTemplate(_T("PGSQL"), s_configTemplate))
 		{
-			if (s_dbInfo.name[0] != 0)
+			if (s_connInfo.name[0] != 0)
 			{
-				if (s_dbInfo.id[0] == 0)
-					_tcscpy(s_dbInfo.id, s_dbInfo.name);
-				RegisterDatabaseInstance();
+				if (s_connInfo.id[0] == 0)
+					_tcscpy(s_connInfo.id, s_connInfo.name);
+				RegisterDatabaseConnection();
 			}
 		}
 	}
 
-	// Load full-featured XML configuration
-	ConfigEntry *metricRoot = config->getEntry(_T("/pgsql/servers"));
-	if (metricRoot != nullptr)
-	{
-      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
-      for (int i = 0; i < metrics->size(); i++)
-      {
-			TCHAR section[MAX_DB_STRING];
-			ConfigEntry *e = metrics->get(i);
-			ResetDatabaseInfoDefaults();
-			_tcscpy(s_dbInfo.id, e->getName());
+	// Load named connection subsections (canonical pgsql/connections/<id>)
+	LoadNamedConnections(config, _T("pgsql/connections"), false);
 
-			_sntprintf(section, MAX_DB_STRING, _T("pgsql/servers/%s"), e->getName());
-			if (!config->parseTemplate(section, s_configTemplate))
-			{
-				nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Error parsing PostgreSQL subagent configuration template %s"), e->getName());
-				continue;
-			}
-
-			if (s_dbInfo.id[0] == 0)
-				continue;
-
-			RegisterDatabaseInstance();
-      }
-   }
+	// Load legacy connection subsections (deprecated pgsql/servers/<name>, parsed for one major version)
+	LoadNamedConnections(config, _T("pgsql/servers"), true);
 
 	// Exit if no usable configuration found
-	if (s_instances.isEmpty())
+	if (s_connections.isEmpty())
 	{
 	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No databases to monitor, exiting"));
 		return false;
 	}
 
 	// Run query thread for each configured database
-	for(int i = 0; i < s_instances.size(); i++)
-		s_instances.get(i)->run();
+	for(int i = 0; i < s_connections.size(); i++)
+		s_connections.get(i)->run();
 
 	return true;
 }
@@ -630,8 +650,8 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Stopping PostgreSQL database pollers"));
-	for(int i = 0; i < s_instances.size(); i++)
-		s_instances.get(i)->stop();
+	for(int i = 0; i < s_connections.size(); i++)
+		s_connections.get(i)->stop();
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("PostgreSQL subagent stopped"));
 }
 
@@ -715,9 +735,10 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("PostgreSQL.DBServers"), H_DBServersList, nullptr, _T("PostgreSQL: database servers being monitored") },
-	{ _T("PostgreSQL.Databases(*)"), H_TagList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: databases on the specific server") },
-	{ _T("PostgreSQL.AllDatabases"), H_AllDatabasesList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: all databases on all monitored servers") },
+	{ _T("PostgreSQL.Connections"), H_ConnectionsList, nullptr, _T("PostgreSQL: configured database connections") },
+	{ _T("PostgreSQL.DBServers"), H_ConnectionsList, nullptr, _T("PostgreSQL: database servers being monitored (deprecated, use PostgreSQL.Connections)") },
+	{ _T("PostgreSQL.Databases(*)"), H_TagList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: databases on the specific connection") },
+	{ _T("PostgreSQL.AllDatabases"), H_AllDatabasesList, _T("^DB_STAT/size@(.*)$"), _T("PostgreSQL: all databases on all monitored connections") },
 	{ _T("PostgreSQL.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("List of PostgreSQL data collection tags") }
 };
 
