@@ -251,9 +251,8 @@
 # Login = netxms
 # Password = secret
 #
-# Multiple servers:
-# *mssql/servers/server#1
-# Id = sql1
+# Multiple servers (subsection name is used as connection Id):
+# *mssql/connections/sql1
 # Server = db1.example.com
 # Login = netxms
 # Password = secret

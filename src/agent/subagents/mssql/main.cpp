@@ -184,16 +184,16 @@ static TableDescriptor s_tqWaitStats =
 /**
  * Database instances
  */
-static ObjectArray<DatabaseInstance> *s_instances = nullptr;
+static ObjectArray<DatabaseInstance> *s_connections = nullptr;
 
 /**
  * Find instance by ID
  */
 static DatabaseInstance *FindInstance(const TCHAR *id)
 {
-   for(int i = 0; i < s_instances->size(); i++)
+   for(int i = 0; i < s_connections->size(); i++)
    {
-      DatabaseInstance *db = s_instances->get(i);
+      DatabaseInstance *db = s_connections->get(i);
       if (!_tcsicmp(db->getId(), id))
          return db;
    }
@@ -273,12 +273,38 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 }
 
 /**
- * Handler for MSSQL.Servers list
+ * Handler for MSSQL.Connections list
  */
-static LONG H_ServerList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+static LONG H_ConnectionList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   for(int i = 0; i < s_instances->size(); i++)
-      value->add(s_instances->get(i)->getId());
+   for(int i = 0; i < s_connections->size(); i++)
+      value->add(s_connections->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for MSSQL.AllDatabases list. Rows are emitted in canonical positional
+ * form "connectionId,databaseName" so they can be fed directly into the
+ * (connectionId, database) metric signature (e.g. MSSQL.Database.DataSize) via
+ * instance discovery.
+ */
+static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_connections->size(); i++)
+   {
+      DatabaseInstance *db = s_connections->get(i);
+
+      StringList list;
+      if (!db->getTagList(arg, &list))
+         return SYSINFO_RC_ERROR;
+
+      for(int j = 0; j < list.size(); j++)
+      {
+         TCHAR s[MAX_RESULT_LENGTH];
+         _sntprintf(s, MAX_RESULT_LENGTH, _T("%s,%s"), db->getId(), list.get(j));
+         value->add(s);
+      }
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -354,7 +380,7 @@ static bool SubAgentInit(Config *config)
       return false;
    }
 
-   s_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
+   s_connections = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
 
    // Load configuration from "mssql" section to allow simple configuration
    // of one server without XML includes
@@ -367,45 +393,51 @@ static bool SubAgentInit(Config *config)
          if (s_dbInfo.id[0] == 0)
             _tcscpy(s_dbInfo.id, s_dbInfo.server);
          DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-         s_instances->add(new DatabaseInstance(&s_dbInfo));
+         s_connections->add(new DatabaseInstance(&s_dbInfo));
       }
    }
 
-   // Load full-featured XML configuration
-   for(int i = 1; i <= 64; i++)
+   // Load full-featured configuration from [mssql/connections/<id>] subsections.
+   // Only sections that actually exist are processed, so absent slots do not
+   // create phantom instances connecting to the default server address.
+   ConfigEntry *connectionsRoot = config->getEntry(_T("/mssql/connections"));
+   if (connectionsRoot != nullptr)
    {
-      TCHAR section[MAX_DB_STRING];
-      ResetDatabaseInfo();
-      _sntprintf(section, MAX_DB_STRING, _T("mssql/servers/server#%d"), i);
-
-      if (!config->parseTemplate(section, s_configTemplate))
+      unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < connections->size(); i++)
       {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Error parsing configuration template #%d"), i);
-         continue;
+         ConfigEntry *e = connections->get(i);
+         ResetDatabaseInfo();
+         _tcslcpy(s_dbInfo.id, e->getName(), MAX_DB_STRING);   // Id defaults to subsection name
+
+         TCHAR section[MAX_DB_STRING];
+         _sntprintf(section, MAX_DB_STRING, _T("mssql/connections/%s"), e->getName());
+         if (!config->parseTemplate(section, s_configTemplate))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Error parsing configuration for SQL Server connection %s"), e->getName());
+            continue;
+         }
+
+         if (s_dbInfo.id[0] == 0)
+            continue;
+
+         DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+         s_connections->add(new DatabaseInstance(&s_dbInfo));
       }
-
-      if (s_dbInfo.server[0] == 0)
-         continue;
-
-      if (s_dbInfo.id[0] == 0)
-         _tcscpy(s_dbInfo.id, s_dbInfo.server);
-
-      DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-      s_instances->add(new DatabaseInstance(&s_dbInfo));
    }
 
    // Exit if no usable configuration found
-   if (s_instances->isEmpty())
+   if (s_connections->isEmpty())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No SQL Server instances to monitor"));
-      delete s_instances;
+      delete s_connections;
       DBUnloadDriver(g_mssqlDriver);
       return false;
    }
 
    // Run query thread for each configured server
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->run();
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->run();
 
    return true;
 }
@@ -416,9 +448,9 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Stopping SQL Server pollers"));
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->stop();
-   delete s_instances;
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->stop();
+   delete s_connections;
    DBUnloadDriver(g_mssqlDriver);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("MSSQL subagent stopped"));
 }
@@ -476,9 +508,10 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+   { _T("MSSQL.AllDatabases"), H_AllDatabasesList, _T("^DATABASES/STATE@(.*)$"), _T("MSSQL: all databases on all monitored connections") },
+   { _T("MSSQL.Connections"), H_ConnectionList, nullptr, _T("MSSQL: configured server connections") },
    { _T("MSSQL.Databases(*)"), H_TagList, _T("^DATABASES/STATE@(.*)$"), _T("MSSQL: databases on monitored server") },
    { _T("MSSQL.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("MSSQL: data collection tags") },
-   { _T("MSSQL.Servers"), H_ServerList, nullptr, _T("MSSQL: configured server connections") },
    { _T("MSSQL.WaitTypes(*)"), H_TagList, _T("^WAITSTATS/WAITTIME@(.*)$"), _T("MSSQL: active wait types on monitored server") }
 };
 
