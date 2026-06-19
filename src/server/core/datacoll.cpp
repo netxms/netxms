@@ -455,6 +455,8 @@ static void ItemPoller()
       int64_t startTime = GetCurrentTimeMs();
       g_idxAccessPointById.forEach(QueueItems, &watchdogId);
       g_idxChassisById.forEach(QueueItems, &watchdogId);
+      g_idxCircuitById.forEach(QueueItems, &watchdogId);
+      g_idxCloudDomainById.forEach(QueueItems, &watchdogId);
       g_idxClusterById.forEach(QueueItems, &watchdogId);
       g_idxCollectorById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
@@ -858,10 +860,13 @@ static void V5DataMigrationManager()
       SharedObjectArray<NetObj> objects(1024, 1024);
       g_idxAccessPointById.getObjects(&objects, filter);
       g_idxChassisById.getObjects(&objects, filter);
+      g_idxCircuitById.getObjects(&objects, filter);
+      g_idxCloudDomainById.getObjects(&objects, filter);
       g_idxClusterById.getObjects(&objects, filter);
       g_idxCollectorById.getObjects(&objects, filter);
       g_idxMobileDeviceById.getObjects(&objects, filter);
       g_idxNodeById.getObjects(&objects, filter);
+      g_idxResourceById.getObjects(&objects, filter);
       g_idxSensorById.getObjects(&objects, filter);
 
       if (objects.isEmpty())
@@ -916,6 +921,10 @@ void StartV5DataMigration()
    if (!hasV5Tables)
       g_idxChassisById.forEach(callback);
    if (!hasV5Tables)
+      g_idxCircuitById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxCloudDomainById.forEach(callback);
+   if (!hasV5Tables)
       g_idxClusterById.forEach(callback);
    if (!hasV5Tables)
       g_idxCollectorById.forEach(callback);
@@ -923,6 +932,8 @@ void StartV5DataMigration()
       g_idxMobileDeviceById.forEach(callback);
    if (!hasV5Tables)
       g_idxNodeById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxResourceById.forEach(callback);
    if (!hasV5Tables)
       g_idxSensorById.forEach(callback);
 

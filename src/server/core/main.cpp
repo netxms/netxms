@@ -1067,6 +1067,9 @@ static void RegenerateMaintenanceModeEvents()
    g_idxAccessPointById.forEach(regenerate);
    g_idxSensorById.forEach(regenerate);
    g_idxChassisById.forEach(regenerate);
+   g_idxCircuitById.forEach(regenerate);
+   g_idxCloudDomainById.forEach(regenerate);
+   g_idxResourceById.forEach(regenerate);
 
    ConfigDelete(L"Internal.MonitoringStateReset");
 

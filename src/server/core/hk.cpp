@@ -294,10 +294,13 @@ static void CleanTimescaleData(DB_HANDLE hdb)
 
    g_idxAccessPointById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxChassisById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxCircuitById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxCloudDomainById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxClusterById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxCollectorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxMobileDeviceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxResourceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
 
    // Always run on default storage class
@@ -544,10 +547,13 @@ static void HouseKeeper()
             SharedObjectArray<NetObj> objects(1024, 1024);
             g_idxAccessPointById.getObjects(&objects);
             g_idxChassisById.getObjects(&objects);
+            g_idxCircuitById.getObjects(&objects);
+            g_idxCloudDomainById.getObjects(&objects);
             g_idxClusterById.getObjects(&objects);
             g_idxCollectorById.getObjects(&objects);
             g_idxMobileDeviceById.getObjects(&objects);
             g_idxNodeById.getObjects(&objects);
+            g_idxResourceById.getObjects(&objects);
             g_idxSensorById.getObjects(&objects);
 
             for(int i = 0; (i < objects.size()) && !s_shutdown; i++)

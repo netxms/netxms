@@ -78,7 +78,7 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"sensors", &list);
    CollectObjectIdentifiers(L"resources", &list);
    CollectObjectIdentifiers(L"cloud_domains", &list);
-   CollectObjectIdentifiers(L"object_containers WHERE object_class=29", &list);   // objects of class "collector"
+   CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list);   // objects of class "collector" or "circuit"
    return list;
 }
 

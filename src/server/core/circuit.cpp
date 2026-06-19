@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2024-2025 Raden Solutions
+** Copyright (C) 2024-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -231,6 +231,17 @@ StringMap *Circuit::getInstanceList(DCObject *dco)
    wchar_t tableName[MAX_DB_STRING], nameColumn[MAX_DB_STRING];
    switch(dco->getInstanceDiscoveryMethod())
    {
+      case IDM_AGENT_LIST:
+         if (sourceNode != nullptr)
+            sourceNode->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         break;
+      case IDM_AGENT_TABLE:
+         if (sourceNode != nullptr)
+         {
+            parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
+            sourceNode->getTableFromAgent(tableName, &instanceTable);
+         }
+         break;
       case IDM_INTERNAL_TABLE:
          parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
          if (sourceNode != nullptr)
