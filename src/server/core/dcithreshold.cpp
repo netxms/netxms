@@ -1154,6 +1154,7 @@ bool Threshold::equals(const Threshold& t) const
           (t.m_deactivationSampleCount == m_deactivationSampleCount) &&
           (t.m_repeatInterval == m_repeatInterval) &&
           (t.m_regenerateOnValueChange == m_regenerateOnValueChange) &&
+          (t.m_disabled == m_disabled) &&
           !_tcscmp(CHECK_NULL_EX(t.m_scriptSource), CHECK_NULL_EX(m_scriptSource));
 }
 
