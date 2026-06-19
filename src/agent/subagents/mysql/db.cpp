@@ -391,9 +391,9 @@ static GlobalData s_globalData[] =
 /**
  * Create new database instance object
  */
-DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
+DatabaseConnection::DatabaseConnection(ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
 {
-   memcpy(&m_info, info, sizeof(DatabaseInfo));
+   memcpy(&m_info, info, sizeof(ConnectionInfo));
 	m_pollerThread = INVALID_THREAD_HANDLE;
 	m_session = nullptr;
 	m_connected = false;
@@ -404,7 +404,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info) : m_dataLock(MutexType::F
 /**
  * Destructor
  */
-DatabaseInstance::~DatabaseInstance()
+DatabaseConnection::~DatabaseConnection()
 {
    stop();
    delete m_data;
@@ -413,15 +413,15 @@ DatabaseInstance::~DatabaseInstance()
 /**
  * Run
  */
-void DatabaseInstance::run()
+void DatabaseConnection::run()
 {
-   m_pollerThread = ThreadCreateEx(DatabaseInstance::pollerThreadStarter, 0, this);
+   m_pollerThread = ThreadCreateEx(DatabaseConnection::pollerThreadStarter, 0, this);
 }
 
 /**
  * Stop
  */
-void DatabaseInstance::stop()
+void DatabaseConnection::stop()
 {
    m_stopCondition.set();
    ThreadJoin(m_pollerThread);
@@ -437,7 +437,7 @@ void DatabaseInstance::stop()
  * Checks if database server is mysql and version is > 5.7.
  * Sets m_usePerformanceSchema flag.
  */
-void DatabaseInstance::checkMySQLVersion()
+void DatabaseConnection::checkMySQLVersion()
 {
    m_usePerformanceSchema = true;
 
@@ -473,16 +473,16 @@ void DatabaseInstance::checkMySQLVersion()
 /**
  * Poller thread starter
  */
-THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL DatabaseConnection::pollerThreadStarter(void *arg)
 {
-   ((DatabaseInstance *)arg)->pollerThread();
+   ((DatabaseConnection *)arg)->pollerThread();
    return THREAD_OK;
 }
 
 /**
  * Poller thread
  */
-void DatabaseInstance::pollerThread()
+void DatabaseConnection::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("MYSQL: poller thread for database %s started"), m_info.id);
    INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
@@ -492,7 +492,7 @@ reconnect:
       m_sessionLock.lock();
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_mysqlDriver, m_info.server, m_info.name, m_info.login, m_info.password, nullptr, errorText);
+      m_session = DBConnect(g_mysqlDriver, m_info.endpoint, m_info.database, m_info.login, m_info.password, nullptr, errorText);
       if (m_session == nullptr)
       {
          m_sessionLock.unlock();
@@ -635,7 +635,7 @@ static StringMap *ReadGlobalStatsTable(DB_HANDLE hdb, const TCHAR *table)
 /**
  * Do actual database polling. Should return false if connection is broken.
  */
-bool DatabaseInstance::poll()
+bool DatabaseConnection::poll()
 {
    // Query global stat tables
    StringMap *globalStatus;
@@ -758,7 +758,7 @@ bool DatabaseInstance::poll()
 /**
  * Get collected data
  */
-bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
+bool DatabaseConnection::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
    m_dataLock.lock();

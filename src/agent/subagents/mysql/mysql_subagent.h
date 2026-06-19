@@ -29,23 +29,23 @@
 /**
  * Database connection information
  */
-struct DatabaseInfo
+struct ConnectionInfo
 {
-	TCHAR id[MAX_DB_STRING];				// instance ID
-	TCHAR name[MAX_DB_STRING];
-	TCHAR server[MAX_DB_STRING];
+	TCHAR id[MAX_DB_STRING];				// connection ID
+	TCHAR database[MAX_DB_STRING];		// default schema
+	TCHAR endpoint[MAX_DB_STRING];		// connect target (host[:port])
 	TCHAR login[MAX_DB_LOGIN];
 	TCHAR password[MAX_DB_PASSWORD];
 	UINT32 connectionTTL;
 };
 
 /**
- * Database instance
+ * Database connection
  */
-class DatabaseInstance
+class DatabaseConnection
 {
 private:
-   DatabaseInfo m_info;
+   ConnectionInfo m_info;
 	THREAD m_pollerThread;
 	DB_HANDLE m_session;
 	bool m_connected;
@@ -62,8 +62,8 @@ private:
    void checkMySQLVersion();
 
 public:
-   DatabaseInstance(DatabaseInfo *info);
-   ~DatabaseInstance();
+   DatabaseConnection(ConnectionInfo *info);
+   ~DatabaseConnection();
 
    void run();
    void stop();

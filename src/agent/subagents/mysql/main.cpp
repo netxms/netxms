@@ -29,18 +29,18 @@
 DB_DRIVER g_mysqlDriver = nullptr;
 
 /**
- * Database instances
+ * Database connections
  */
-static ObjectArray<DatabaseInstance> *s_instances = nullptr;
+static ObjectArray<DatabaseConnection> *s_connections = nullptr;
 
 /**
- * Find instance by ID
+ * Find connection by ID
  */
-static DatabaseInstance *FindInstance(const TCHAR *id)
+static DatabaseConnection *FindConnection(const TCHAR *id)
 {
-   for(int i = 0; i < s_instances->size(); i++)
+   for(int i = 0; i < s_connections->size(); i++)
    {
-      DatabaseInstance *db = s_instances->get(i);
+      DatabaseConnection *db = s_connections->get(i);
       if (!_tcsicmp(db->getId(), id))
          return db;
    }
@@ -48,7 +48,7 @@ static DatabaseInstance *FindInstance(const TCHAR *id)
 }
 
 /**
- * Handler for parameters without instance
+ * Handler for global parameters
  */
 static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
@@ -56,7 +56,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
    if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
+   DatabaseConnection *db = FindConnection(id);
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -72,8 +72,8 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
    if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
       return SYSINFO_RC_UNSUPPORTED;
 
-   DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   DatabaseConnection *db = FindConnection(id);
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    ret_string(value, db->isConnected() ? _T("YES") : _T("NO"));
@@ -81,28 +81,29 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 }
 
 /**
- * Handler for MySQL.Databases list
+ * Handler for MySQL.Connections list
  */
-static LONG H_DatabaseList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   for(int i = 0; i < s_instances->size(); i++)
-      value->add(s_instances->get(i)->getId());
+   for(int i = 0; i < s_connections->size(); i++)
+      value->add(s_connections->get(i)->getId());
    return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Config template
  */
-static DatabaseInfo s_dbInfo;
+static ConnectionInfo s_connInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
-   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,               0, &s_dbInfo.connectionTTL },
-	{ _T("Database"),		      CT_STRING, 0, 0, MAX_DB_STRING,   0, s_dbInfo.name },
-   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbInfo.password },
-   { _T("Id"),                CT_STRING, 0, 0, MAX_DB_STRING,   0, s_dbInfo.id },
-	{ _T("Login"),             CT_STRING, 0, 0, MAX_DB_LOGIN,    0, s_dbInfo.login },
-	{ _T("Password"),			   CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbInfo.password },
-   { _T("Server"),            CT_STRING, 0, 0, MAX_DB_STRING,   0, s_dbInfo.server },
+   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,               0, &s_connInfo.connectionTTL },
+	{ _T("Database"),		      CT_STRING, 0, 0, MAX_DB_STRING,   0, s_connInfo.database },
+   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_connInfo.password },
+   { _T("Endpoint"),          CT_STRING, 0, 0, MAX_DB_STRING,   0, s_connInfo.endpoint },
+   { _T("Id"),                CT_STRING, 0, 0, MAX_DB_STRING,   0, s_connInfo.id },
+	{ _T("Login"),             CT_STRING, 0, 0, MAX_DB_LOGIN,    0, s_connInfo.login },
+	{ _T("Password"),			   CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_connInfo.password },
+   { _T("Server"),            CT_STRING, 0, 0, MAX_DB_STRING,   0, s_connInfo.endpoint },   // alias for Endpoint (MySQL endpoint is a host[:port])
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -118,75 +119,107 @@ static bool SubAgentInit(Config *config)
 		return false;
 	}
 
-   s_instances = new ObjectArray<DatabaseInstance>(8, 8, Ownership::True);
+   s_connections = new ObjectArray<DatabaseConnection>(8, 8, Ownership::True);
 
 	// Load configuration from "mysql" section to allow simple configuration
-	// of one database without XML includes
-	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-	s_dbInfo.connectionTTL = 3600;
-	_tcscpy(s_dbInfo.id, _T("localdb"));
-   _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
-   _tcscpy(s_dbInfo.name, _T("information_schema"));
-   _tcscpy(s_dbInfo.login, _T("netxms"));
-   if (config->getEntry(_T("/mysql/id")) != nullptr || config->getEntry(_T("/mysql/name")) != nullptr ||
-       config->getEntry(_T("mysql/server")) != nullptr || config->getEntry(_T("/mysql/login")) != nullptr  ||
-       config->getEntry(_T("/mysql/password")) != nullptr)
+	// of one connection without XML includes
+	memset(&s_connInfo, 0, sizeof(s_connInfo));
+	s_connInfo.connectionTTL = 3600;
+	_tcscpy(s_connInfo.id, _T("localdb"));
+   _tcscpy(s_connInfo.endpoint, _T("127.0.0.1"));
+   _tcscpy(s_connInfo.database, _T("information_schema"));
+   _tcscpy(s_connInfo.login, _T("netxms"));
+   if (config->getEntry(_T("/mysql/id")) != nullptr || config->getEntry(_T("/mysql/database")) != nullptr ||
+       config->getEntry(_T("/mysql/endpoint")) != nullptr || config->getEntry(_T("/mysql/server")) != nullptr ||
+       config->getEntry(_T("/mysql/login")) != nullptr || config->getEntry(_T("/mysql/password")) != nullptr)
    {
       if (config->parseTemplate(_T("MYSQL"), s_configTemplate))
       {
-         if (s_dbInfo.name[0] != 0)
+         if (s_connInfo.database[0] != 0)
          {
-            if (s_dbInfo.id[0] == 0)
-               _tcscpy(s_dbInfo.id, s_dbInfo.name);
+            if (s_connInfo.id[0] == 0)
+               _tcscpy(s_connInfo.id, s_connInfo.database);
 
-            DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-            s_instances->add(new DatabaseInstance(&s_dbInfo));
+            DecryptPassword(s_connInfo.login, s_connInfo.password, s_connInfo.password, MAX_DB_PASSWORD);
+            s_connections->add(new DatabaseConnection(&s_connInfo));
          }
       }
    }
 
-	// Load full-featured XML configuration
-	ConfigEntry *metricRoot = config->getEntry(_T("/mysql/databases"));
-   if (metricRoot != NULL)
+	// Load named connection subsections (mysql/connections/<id>)
+	ConfigEntry *connectionsRoot = config->getEntry(_T("/mysql/connections"));
+   if (connectionsRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> metrics = metricRoot->getSubEntries(_T("*"));
-      for(int i = 0; i < metrics->size(); i++)
+      unique_ptr<ObjectArray<ConfigEntry>> connections = connectionsRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < connections->size(); i++)
       {
          TCHAR section[MAX_DB_STRING];
-         ConfigEntry *e = metrics->get(i);
-         s_dbInfo.connectionTTL = 3600;
-         _tcscpy(s_dbInfo.id, e->getName());
-         _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
-         _tcscpy(s_dbInfo.name, _T("information_schema"));
-         _tcscpy(s_dbInfo.login, _T("netxms"));
+         ConfigEntry *e = connections->get(i);
+         memset(&s_connInfo, 0, sizeof(s_connInfo));
+         s_connInfo.connectionTTL = 3600;
+         _tcslcpy(s_connInfo.id, e->getName(), MAX_DB_STRING);   // Id defaults to subsection name
+         _tcscpy(s_connInfo.endpoint, _T("127.0.0.1"));
+         _tcscpy(s_connInfo.database, _T("information_schema"));
+         _tcscpy(s_connInfo.login, _T("netxms"));
 
-         _sntprintf(section, MAX_DB_STRING, _T("mysql/databases/%s"), e->getName());//Previous version: mysql/databases/database#%d
+         _sntprintf(section, MAX_DB_STRING, _T("mysql/connections/%s"), e->getName());
          if (!config->parseTemplate(section, s_configTemplate))
          {
-            nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: error parsing configuration template %s"), e->getName());
+            nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: error parsing configuration for connection %s"), e->getName());
             continue;
          }
 
-         if (s_dbInfo.id[0] == 0)
+         if (s_connInfo.id[0] == 0)
             continue;
 
-         DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+         DecryptPassword(s_connInfo.login, s_connInfo.password, s_connInfo.password, MAX_DB_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
+      }
+   }
 
-         s_instances->add(new DatabaseInstance(&s_dbInfo));
+	// Load legacy connection subsections (mysql/databases/<id>, deprecated)
+	ConfigEntry *legacyRoot = config->getEntry(_T("/mysql/databases"));
+   if (legacyRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> legacy = legacyRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < legacy->size(); i++)
+      {
+         TCHAR section[MAX_DB_STRING];
+         ConfigEntry *e = legacy->get(i);
+         memset(&s_connInfo, 0, sizeof(s_connInfo));
+         s_connInfo.connectionTTL = 3600;
+         _tcslcpy(s_connInfo.id, e->getName(), MAX_DB_STRING);
+         _tcscpy(s_connInfo.endpoint, _T("127.0.0.1"));
+         _tcscpy(s_connInfo.database, _T("information_schema"));
+         _tcscpy(s_connInfo.login, _T("netxms"));
+
+         _sntprintf(section, MAX_DB_STRING, _T("mysql/databases/%s"), e->getName());
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("MYSQL: configuration section [mysql/databases/%s] is deprecated; use [mysql/connections/<id>] instead"), e->getName());
+         if (!config->parseTemplate(section, s_configTemplate))
+         {
+            nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: error parsing configuration for connection %s"), e->getName());
+            continue;
+         }
+
+         if (s_connInfo.id[0] == 0)
+            continue;
+
+         DecryptPassword(s_connInfo.login, s_connInfo.password, s_connInfo.password, MAX_DB_PASSWORD);
+         s_connections->add(new DatabaseConnection(&s_connInfo));
       }
    }
 
 	// Exit if no usable configuration found
-   if (s_instances->size() == 0)
+   if (s_connections->isEmpty())
 	{
-      nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: no databases to monitor, exiting"));
-      delete s_instances;
+      nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: no connections to monitor, exiting"));
+      delete s_connections;
       return false;
 	}
 
-	// Run query thread for each configured database
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->run();
+	// Run query thread for each configured connection
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->run();
 
 	return true;
 }
@@ -197,9 +230,9 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("MYSQL: stopping pollers"));
-   for(int i = 0; i < s_instances->size(); i++)
-      s_instances->get(i)->stop();
-   delete s_instances;
+   for(int i = 0; i < s_connections->size(); i++)
+      s_connections->get(i)->stop();
+   delete s_connections;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("MYSQL: stopped"));
 }
 
@@ -281,7 +314,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("MySQL.Databases"), H_DatabaseList, nullptr, _T("MySQL: databases being monitored") }
+   { _T("MySQL.Connections"), H_ConnectionsList, nullptr, _T("MySQL: configured database connections") }
 };
 
 /**
