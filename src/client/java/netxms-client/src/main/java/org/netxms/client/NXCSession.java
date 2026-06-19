@@ -124,6 +124,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
+import org.netxms.client.datacollection.WebServiceCallResult;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
@@ -15338,6 +15339,25 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_WEBSVC_ID, id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Execute ad-hoc web service request through a node's web service proxy and return the raw response. Intended for interactive
+    * testing of web service definitions. The request is always executed against the live service (server-side cache is bypassed).
+    *
+    * @param nodeId ID of the node (or other data collection target) whose web service proxy should execute the request
+    * @param request web service request parameters (URL, HTTP method, authentication, headers, body, flags)
+    * @return result containing HTTP response code and returned document
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public WebServiceCallResult queryWebService(long nodeId, WebServiceDefinition request) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_WEB_SERVICE_CUSTOM_REQUEST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      request.fillMessage(msg);
+      sendMessage(msg);
+      return new WebServiceCallResult(waitForRCC(msg.getMessageId()));
    }
 
    /**

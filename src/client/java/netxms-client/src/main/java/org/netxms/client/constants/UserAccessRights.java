@@ -111,4 +111,5 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_MANAGE_POLICIES  = 0x01000000;
    public static final int OBJECT_ACCESS_MANAGE_INCIDENTS = 0x02000000;
    public static final int OBJECT_ACCESS_READ_CREDENTIALS = 0x04000000;
+   public static final int OBJECT_ACCESS_QUERY_WEBSVC     = 0x08000000;
 }

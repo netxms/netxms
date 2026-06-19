@@ -103,6 +103,7 @@ import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.views.PolicyListView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
+import org.netxms.nxmc.modules.datacollection.views.WebServiceQueryView;
 import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.ContextPredefinedMapView;
@@ -700,6 +701,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       if ((object instanceof Node) && ((Node)object).hasSnmpAgent())
       {
          addObjectToolBarItem(i18n.tr("&MIB Explorer"), imageOpenMibExplorer, () -> addMainView(new MibExplorer(object.getObjectId(), object.getObjectId(), false), true, false));
+      }
+
+      if ((object instanceof Node) && ((Node)object).hasAgent())
+      {
+         addObjectToolBarItem(i18n.tr("Web service query"), SharedIcons.IMG_URL, () -> addMainView(new WebServiceQueryView(object.getObjectId(), object.getObjectId()), true, false));
       }
 
       if ((object instanceof Node) && ((Node)object).hasAgent())

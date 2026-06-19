@@ -112,6 +112,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.datacollection.views.WebServiceQueryView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.tools.views.NetworkScanView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -145,6 +146,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionExecuteScript;
    private Action actionOpenMibExprorer;
    private Action actionOpenAgentExplorer;
+   private Action actionOpenWebServiceQuery;
    private Action actionBind;
    private Action actionUnbind;
    private Action actionBindTo;
@@ -367,6 +369,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openAgentExplorer();
+         }
+      };
+
+      actionOpenWebServiceQuery = new Action(i18n.tr("&Web Service Query"), SharedIcons.URL) {
+         @Override
+         public void run()
+         {
+            openWebServiceQuery();
          }
       };
 
@@ -830,6 +840,7 @@ public class ObjectContextMenuManager extends MenuManager
             if (((Node)object).hasAgent())
             {
                add(actionOpenAgentExplorer);
+               add(actionOpenWebServiceQuery);
             }
             if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
             {
@@ -1495,6 +1506,16 @@ public class ObjectContextMenuManager extends MenuManager
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new MibExplorer(object.getObjectId(), contextId, false));
+   }
+
+   /**
+    * Open web service query tool
+    */
+   private void openWebServiceQuery()
+   {
+      AbstractObject object = getObjectFromSelection();
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new WebServiceQueryView(object.getObjectId(), contextId));
    }
 
    /**

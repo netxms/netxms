@@ -64,7 +64,8 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MAINTENANCE, 'M'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL, 'J'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES, 'Y'),
-      new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, 'i')
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, 'i'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_QUERY_WEBSVC, 'q')
    };
 
    private final NXCSession session = Registry.getSession();

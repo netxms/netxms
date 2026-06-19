@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -202,4 +202,15 @@ public class LabeledCombo extends LabeledControl
 	{
       return (Combo)control;
 	}
+
+   /**
+    * Get index of given element
+    *
+    * @param s element
+    * @return index or -1
+    */
+   public int indexOf(String s)
+   {
+      return ((Combo)control).indexOf(s);
+   }
 }

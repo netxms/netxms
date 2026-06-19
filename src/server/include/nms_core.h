@@ -776,6 +776,7 @@ private:
    void getSessionList(const NXCPMessage& request);
    void killSession(const NXCPMessage& request);
    void startSnmpWalk(const NXCPMessage& request);
+   void queryWebService(const NXCPMessage& request);
    void resolveDCINames(const NXCPMessage& request);
    void sendConfigForAgent(const NXCPMessage& request);
    void getAgentConfigurationList(const NXCPMessage& request);

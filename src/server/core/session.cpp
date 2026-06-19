@@ -1957,6 +1957,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_WEB_SERVICE:
          deleteWebService(*request);
          break;
+      case CMD_WEB_SERVICE_CUSTOM_REQUEST:
+         queryWebService(*request);
+         break;
       case CMD_GET_OBJECT_CATEGORIES:
          getObjectCategories(*request);
          break;
@@ -10344,6 +10347,128 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
          }
          else
          {
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Arguments for ad-hoc web service query thread
+ */
+struct WebServiceQueryArgs
+{
+   ClientSession *session;
+   uint32_t requestId;
+   shared_ptr<Node> proxyNode;
+   HttpRequestMethod requestMethod;
+   WebServiceAuthType authType;
+   uint32_t requestTimeout;
+   SharedString url;
+   SharedString login;
+   SharedString password;
+   SharedString data;
+   StringMap headers;
+   bool verifyCert;
+   bool verifyHost;
+   bool followLocation;
+
+   WebServiceQueryArgs(ClientSession *session, uint32_t requestId, const shared_ptr<Node>& proxyNode) : proxyNode(proxyNode)
+   {
+      this->session = session;
+      this->requestId = requestId;
+   }
+};
+
+/**
+ * Worker thread for ad-hoc web service query
+ */
+static void WebServiceQueryThread(WebServiceQueryArgs *args)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, args->requestId);
+
+   shared_ptr<AgentConnectionEx> conn = args->proxyNode->acquireProxyConnection(WEB_SERVICE_PROXY);
+   if (conn != nullptr)
+   {
+      // Use cache retention time 0 so test queries always hit the live service
+      WebServiceCallResult result = conn->webServiceCustomRequest(args->requestMethod, args->url.cstr(), args->requestTimeout,
+               args->login.cstr(), args->password.cstr(), args->authType, args->headers, args->verifyCert, args->verifyHost,
+               args->followLocation, 0, args->data.cstr());
+      if (result.success)
+      {
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_WEBSVC_RESPONSE_CODE, result.httpResponseCode);
+         response.setField(VID_WEBSVC_RESPONSE, CHECK_NULL_EX(result.document));
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_COMM_FAILURE);
+         response.setField(VID_WEBSVC_ERROR_TEXT, result.errorMessage);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_COMM_FAILURE);
+   }
+
+   args->session->sendMessage(response);
+   args->session->decRefCount();
+   delete args;
+}
+
+/**
+ * Execute ad-hoc web service query on a node's web service proxy
+ */
+void ClientSession::queryWebService(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget())
+      {
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_QUERY_WEBSVC))
+         {
+            uint32_t proxyId = static_cast<DataCollectionTarget&>(*object).getEffectiveWebServiceProxy();
+            shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+            if (proxyNode != nullptr)
+            {
+               auto args = new WebServiceQueryArgs(this, request.getId(), proxyNode);
+               args->requestMethod = HttpRequestMethodFromInt(request.getFieldAsInt16(VID_HTTP_REQUEST_METHOD));
+               args->authType = WebServiceAuthTypeFromInt(request.getFieldAsInt16(VID_AUTH_TYPE));
+               args->requestTimeout = request.getFieldAsUInt32(VID_TIMEOUT);
+               args->url = request.getFieldAsSharedString(VID_URL);
+               args->login = request.getFieldAsSharedString(VID_LOGIN_NAME);
+               args->password = request.getFieldAsSharedString(VID_PASSWORD);
+               args->data = request.getFieldAsSharedString(VID_REQUEST_DATA);
+               args->headers.addAllFromMessage(request, VID_HEADERS_BASE, VID_NUM_HEADERS);
+               uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
+               args->verifyCert = (flags & WSF_VERIFY_CERTIFICATE) != 0;
+               args->verifyHost = (flags & WSF_VERIFY_HOST) != 0;
+               args->followLocation = (flags & WSF_FOLLOW_LOCATION) != 0;
+
+               incRefCount();
+               ThreadPoolExecute(g_clientThreadPool, WebServiceQueryThread, args);
+               return;  // response will be sent by worker thread
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on web service query"));
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
