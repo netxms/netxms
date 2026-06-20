@@ -145,7 +145,18 @@ SmtpDriver *SmtpDriver::createInstance(Config *config, NCDriverStorageManager *s
 
    if (driver->m_port == 0)
    {
-      driver->m_port = driver->m_tlsMode == TLSMode::TLS ? 465 : 25;
+      switch(driver->m_tlsMode)
+      {
+         case TLSMode::TLS:
+            driver->m_port = 465;   // Implicit TLS (SMTPS)
+            break;
+         case TLSMode::STARTTLS:
+            driver->m_port = 587;   // Message submission with STARTTLS
+            break;
+         default:
+            driver->m_port = 25;
+            break;
+      }
    }
 
    if (driver->m_authMethod == AuthMethod::XOAUTH2)
@@ -157,7 +168,15 @@ SmtpDriver *SmtpDriver::createInstance(Config *config, NCDriverStorageManager *s
          delete driver;
          return nullptr;
       }
-      DecryptPasswordA(driver->m_clientId, driver->m_clientSecret, driver->m_clientSecret, sizeof(driver->m_clientSecret));
+      if (driver->m_tlsMode == TLSMode::NONE)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("XOAUTH2 authentication requires an encrypted connection (set TLSMode to TLS or STARTTLS)"));
+         delete driver;
+         return nullptr;
+      }
+      // Client secret is stored using the same scheme as Password, with the encryption key derived from Login.
+      // It must therefore be encrypted with the mailbox login as the key: nxencpasswd <Login> <ClientSecret>
+      DecryptPasswordA(driver->m_login, driver->m_clientSecret, driver->m_clientSecret, sizeof(driver->m_clientSecret));
       if (driver->m_scope[0] == 0)
          strlcpy(driver->m_scope, "https://outlook.office365.com/.default", sizeof(driver->m_scope));
    }
@@ -221,6 +240,15 @@ bool SmtpDriver::acquireOAuthToken()
    char *encodedClientId = curl_easy_escape(curl, m_clientId, 0);
    char *encodedClientSecret = curl_easy_escape(curl, m_clientSecret, 0);
    char *encodedScope = curl_easy_escape(curl, m_scope, 0);
+   if ((encodedClientId == nullptr) || (encodedClientSecret == nullptr) || (encodedScope == nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to URL-encode OAuth2 token request parameters"));
+      curl_free(encodedClientId);
+      curl_free(encodedClientSecret);
+      curl_free(encodedScope);
+      curl_easy_cleanup(curl);
+      return false;
+   }
 
    char postFields[2048];
    snprintf(postFields, sizeof(postFields),
@@ -235,6 +263,8 @@ bool SmtpDriver::acquireOAuthToken()
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+   curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
 
    ByteStream responseData(4096);
    responseData.setAllocationStep(4096);
@@ -242,11 +272,12 @@ bool SmtpDriver::acquireOAuthToken()
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
    char errorBuffer[CURL_ERROR_SIZE];
+   errorBuffer[0] = 0;
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
    CURLcode rc = curl_easy_perform(curl);
 
-   memset(postFields, 0, sizeof(postFields));
+   SecureZeroMemory(postFields, sizeof(postFields));
 
    bool success = false;
    if (rc == CURLE_OK)
@@ -489,6 +520,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
    curl_easy_setopt(curl, CURLOPT_READDATA, &mailBody);
 
    char errorBuffer[CURL_ERROR_SIZE];
+   errorBuffer[0] = 0;
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
    int result = 0;
