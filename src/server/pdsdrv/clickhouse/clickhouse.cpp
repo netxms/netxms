@@ -272,7 +272,7 @@ bool ClickHouseStorageDriver::getTagsFromObject(const NetObj& object, MetricReco
 /**
  * Build and queue metric from item DCI's
  */
-bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value)
+bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value)
 {
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
    {

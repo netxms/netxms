@@ -1201,6 +1201,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(originalValue, timestamp, false);
+   Timestamp prevValueTimestamp = m_prevValueTimeStamp;   // Start of interval covered by this value (null on first poll)
    if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -1289,7 +1290,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
          // Operate on copy with this DCI unlocked to prevent deadlock if fan-out driver access owning object
          DCItem copy(this, false, false);
          unlock();
-         PerfDataStorageRequest(&copy, timestamp, pValue->getString());
+         PerfDataStorageRequest(&copy, timestamp, prevValueTimestamp, pValue->getString());
          lock();
       }
    }

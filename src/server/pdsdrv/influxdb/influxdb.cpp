@@ -220,7 +220,7 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
 /**
  * Build and queue metric from item DCI's
  */
-bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value)
+bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
             _T("Raw metric: OwnerName:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,

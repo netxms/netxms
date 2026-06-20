@@ -56,7 +56,7 @@ public:
    virtual bool init(Config *config);
    virtual void shutdown();
 
-   virtual bool saveDCItemValue(DCItem *dcObject, Timestamp timestamp, const wchar_t *value);
+   virtual bool saveDCItemValue(DCItem *dcObject, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value);
    virtual bool saveDCTableValue(DCTable *dcObject, Timestamp timestamp, Table *value);
 
    virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value);

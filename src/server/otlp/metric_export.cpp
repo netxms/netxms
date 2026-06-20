@@ -80,6 +80,7 @@ struct MetricExportRecord
    std::string description;
    std::string unit;
    uint64_t timeUnixNano;
+   uint64_t startTimeUnixNano;    // delta-sum interval start (0 = unset)
    OtlpMetricKind kind;
    bool monotonic;
    bool isInt;
@@ -125,7 +126,7 @@ public:
    virtual const wchar_t *getName() override;
    virtual bool init(Config *config) override;
    virtual void shutdown() override;
-   virtual bool saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value) override;
+   virtual bool saveDCItemValue(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value) override;
    virtual DataCollectionError getInternalMetric(const wchar_t *metric, wchar_t *value) override;
 };
 
@@ -269,12 +270,13 @@ bool OtlpMetricExportDriver::getAttributesFromObject(const NetObj& object, Metri
 /**
  * Convert and enqueue a single DCI value. Returns immediately - actual delivery is asynchronous.
  */
-bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, const wchar_t *value)
+bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value)
 {
    if (*value == 0)
       return true;
 
    MetricExportRecord rec;
+   rec.startTimeUnixNano = 0;
 
    // Value - OTLP number data points are either int64 or double; string DCIs cannot be represented
    wchar_t *eptr;
@@ -322,6 +324,10 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, c
       case DCM_SIMPLE:
          rec.kind = OtlpMetricKind::SUM_DELTA;
          rec.monotonic = isCounterType;
+         // Delta sums carry an interval: start = previous collection timestamp, end = this timestamp.
+         // Left unset (0) for the first sample, when there is no previous value yet.
+         if (!startTimestamp.isNull())
+            rec.startTimeUnixNano = static_cast<uint64_t>(startTimestamp.asMilliseconds()) * 1000000ULL;
          break;
       default:    // average per second / per minute - already a rate
          rec.kind = OtlpMetricKind::GAUGE;
@@ -522,6 +528,8 @@ bool OtlpMetricExportDriver::sendBatch(const std::vector<MetricExportRecord>& ba
       metrics_v1::NumberDataPoint *dp = (rec.kind == OtlpMetricKind::GAUGE) ?
          metric->mutable_gauge()->add_data_points() : metric->mutable_sum()->add_data_points();
       dp->set_time_unix_nano(rec.timeUnixNano);
+      if (rec.startTimeUnixNano != 0)
+         dp->set_start_time_unix_nano(rec.startTimeUnixNano);
       if (rec.isInt)
          dp->set_as_int(rec.intValue);
       else

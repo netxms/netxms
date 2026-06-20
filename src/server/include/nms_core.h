@@ -1455,7 +1455,7 @@ void StopDBWriter();
 void OnDBWriterMaxQueueSizeChange();
 void ClearDBWriterData(ServerConsole *console, const TCHAR *component);
 
-void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, const TCHAR *value);
+void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const TCHAR *value);
 void PerfDataStorageRequest(DCTable *dci, Timestamp timestamp, Table *value);
 
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);

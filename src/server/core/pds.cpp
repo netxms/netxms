@@ -121,7 +121,7 @@ void PerfDataStorageDriver::shutdown()
 /**
  * Save DCI value
  */
-bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, Timestamp timestamp, const wchar_t *value)
+bool PerfDataStorageDriver::saveDCItemValue(DCItem *dcObject, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value)
 {
    return false;
 }
@@ -143,12 +143,14 @@ DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric
 }
 
 /**
- * Storage request
+ * Storage request. startTimestamp is the timestamp of the previous collected value (the start of the
+ * interval this value covers); it is null on the first sample. Drivers that export interval-based
+ * metrics (e.g. OTLP delta sums) use it as the metric start time; others may ignore it.
  */
-void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, const wchar_t *value)
+void PerfDataStorageRequest(DCItem *dci, Timestamp timestamp, Timestamp startTimestamp, const wchar_t *value)
 {
    for(int i = 0; i < s_numDrivers; i++)
-      s_drivers[i]->saveDCItemValue(dci, timestamp, value);
+      s_drivers[i]->saveDCItemValue(dci, timestamp, startTimestamp, value);
 }
 
 /**
