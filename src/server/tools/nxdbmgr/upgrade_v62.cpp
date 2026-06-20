@@ -25,6 +25,36 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.26 to 62.27
+ */
+static bool H_UpgradeFromV26()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE dashboard_elements ADD element_guid char(36)"));
+
+   DB_RESULT hResult = SQLSelect(L"SELECT dashboard_id,element_id FROM dashboard_elements");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         wchar_t query[256];
+         _sntprintf(query, 256, L"UPDATE dashboard_elements SET element_guid='%s' WHERE dashboard_id=%u AND element_id=%u",
+            uuid::generate().toString().cstr(), DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"dashboard_elements", L"element_guid"));
+   CHK_EXEC(SetMinorSchemaVersion(27));
+   return true;
+}
+
+/**
  * Upgrade from 62.25 to 62.26
  */
 static bool H_UpgradeFromV25()
@@ -1061,6 +1091,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 26, 62, 27, H_UpgradeFromV26 },
    { 25, 62, 26, H_UpgradeFromV25 },
    { 24, 62, 25, H_UpgradeFromV24 },
    { 23, 62, 24, H_UpgradeFromV23 },

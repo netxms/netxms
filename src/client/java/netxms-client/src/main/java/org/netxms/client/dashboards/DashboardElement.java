@@ -18,6 +18,7 @@
  */
 package org.netxms.client.dashboards;
 
+import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -70,10 +71,11 @@ public class DashboardElement
 	private String data;
 	private String layout;
 	private int index;
+	private UUID guid;
 
 	/**
     * Create dashboard element which takes 1 cell with FILL layout in both directions.
-    * 
+    *
     * @param type element's type
     * @param data element's data
     * @param index element's index within dashboard (used for scripted chart update)
@@ -83,6 +85,7 @@ public class DashboardElement
 		this.type = type;
 		this.data = data;
 		this.index = index;
+		this.guid = null;
 		layout = "{\"horizontalSpan\":1,\"verticalSpan\":1,\"horizontalAlignment\":0,\"verticalAlignment\":0}";
 	}
 
@@ -98,12 +101,13 @@ public class DashboardElement
 		type = msg.getFieldAsInt32(baseId);
 		data = msg.getFieldAsString(baseId + 1);
 		layout = msg.getFieldAsString(baseId + 2);
+		guid = msg.getFieldAsUUID(baseId + 3);
 		this.index = index;
 	}
 
 	/**
 	 * Copy constructor
-	 * 
+	 *
 	 * @param src original element
 	 */
 	public DashboardElement(DashboardElement src)
@@ -112,11 +116,12 @@ public class DashboardElement
 		data = src.data;
 		layout = src.layout;
       index = src.index;
+      guid = null;   // a copy is a distinct element; server assigns it a fresh GUID on save
 	}
 
 	/**
 	 * Fill NXCP message with element's data
-	 * 
+	 *
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 */
@@ -125,6 +130,8 @@ public class DashboardElement
 		msg.setFieldInt16(baseId, type);
 		msg.setField(baseId + 1, data);
 		msg.setField(baseId + 2, layout);
+		if (guid != null)
+			msg.setField(baseId + 3, guid);
 	}
 	
 	/**
@@ -166,6 +173,17 @@ public class DashboardElement
 	{
 		this.layout = layout;
 	}
+
+   /**
+    * Get stable per-element GUID identity. May be null for elements created on the client that have not yet been
+    * saved on the server (the server assigns a GUID on first save).
+    *
+    * @return element GUID or null if not yet assigned
+    */
+   public UUID getGuid()
+   {
+      return guid;
+   }
 
    /**
     * @return current element index in dashboard

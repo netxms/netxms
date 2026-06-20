@@ -2586,6 +2586,7 @@ CREATE TABLE dashboard_elements
   element_type integer not null,
   element_data SQL_TEXT null,
   layout_data SQL_TEXT null,
+  element_guid char(36) not null,
   PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
 

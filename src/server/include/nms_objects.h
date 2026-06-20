@@ -5629,12 +5629,14 @@ public:
  */
 struct NXCORE_EXPORTABLE DashboardElement
 {
+   uuid m_guid;
    int m_type;
    json_t *m_data;
    json_t *m_layout;
 
    DashboardElement()
    {
+      m_guid = uuid::generate();
       m_type = 0;
       m_data = nullptr;
       m_layout = nullptr;
@@ -5642,6 +5644,7 @@ struct NXCORE_EXPORTABLE DashboardElement
 
    DashboardElement(const DashboardElement &element)
    {
+      m_guid = uuid::generate();   // copy is a distinct element (e.g. template instance) and gets its own identity
       m_type = element.m_type;
       m_data = json_deep_copy(element.m_data);
       m_layout = json_deep_copy(element.m_layout);
@@ -5656,6 +5659,7 @@ struct NXCORE_EXPORTABLE DashboardElement
    json_t *toJson()
    {
       json_t *root = json_object();
+      json_object_set_new(root, "guid", m_guid.toJson());
       json_object_set_new(root, "type", json_integer(m_type));
       json_object_set_new(root, "data", json_deep_copy(m_data));
       json_object_set_new(root, "layout", json_deep_copy(m_layout));

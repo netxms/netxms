@@ -96,7 +96,7 @@ bool DashboardBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *p
    m_status = STATUS_NORMAL;
 
    wchar_t query[256];
-   nx_swprintf(query, 256, L"SELECT element_type,element_data,layout_data FROM dashboard_elements WHERE dashboard_id=%u ORDER BY element_id", id);
+   nx_swprintf(query, 256, L"SELECT element_type,element_data,layout_data,element_guid FROM dashboard_elements WHERE dashboard_id=%u ORDER BY element_id", id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
@@ -108,6 +108,7 @@ bool DashboardBase::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *p
       e->m_type = DBGetFieldInt32(hResult, i, 0);
       e->m_data = DBGetFieldJson(hResult, i, 1);
       e->m_layout = DBGetFieldJson(hResult, i, 2);
+      e->m_guid = DBGetFieldGUID(hResult, i, 3);
       m_elements.add(e);
       updateObjectAndDciList(e);
    }
@@ -132,7 +133,7 @@ bool DashboardBase::saveToDatabase(DB_HANDLE hdb)
       lockProperties();
       if (success && !m_elements.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)");
+         DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data,element_guid) VALUES (?,?,?,?,?,?)");
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -143,6 +144,7 @@ bool DashboardBase::saveToDatabase(DB_HANDLE hdb)
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, element->m_type);
                DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
                DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, element->m_guid);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -188,7 +190,8 @@ void DashboardBase::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
       msg->setField(fieldId++, static_cast<uint16_t>(element->m_type));
       msg->setField(fieldId++, element->m_data);
       msg->setField(fieldId++, element->m_layout);
-      fieldId += 7;
+      msg->setField(fieldId++, element->m_guid);
+      fieldId += 6;
    }
 }
 
@@ -227,7 +230,10 @@ uint32_t DashboardBase::modifyFromMessageInternal(const NXCPMessage& msg, Client
          e->m_type = msg.getFieldAsInt16(fieldId++);
          e->m_data = msg.getFieldAsJson(fieldId++);
          e->m_layout = msg.getFieldAsJson(fieldId++);
-         fieldId += 7;
+         uuid guid = msg.getFieldAsGUID(fieldId++);
+         if (!guid.isNull())
+            e->m_guid = guid;   // keep generated GUID if client did not provide one (older client)
+         fieldId += 6;
          m_elements.add(e);
          updateObjectAndDciList(e);
       }
