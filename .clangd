@@ -1,0 +1,41 @@
+# Windows-only sources are excluded from the UNIX build, so they have no entry
+# in compile_commands.json and cannot be parsed without the Win32 SDK headers.
+# Suppress all clangd diagnostics for them to avoid bogus errors in editors.
+If:
+  PathMatch:
+    # Windows-only components
+    - src/agent/nxuseragent/.*
+    - src/agent/subagents/winnt/.*
+    - src/agent/subagents/winperf/.*
+    - src/agent/subagents/wineventsync/.*
+    - src/agent/subagents/wmi/.*
+    - src/agent/tools/nxreload/.*
+    - src/client/nxweblauncher/.*
+    - src/tools/nxcrashsrv/.*
+    # Windows-only files within cross-platform components
+    - src/agent/core/cng_engine\.cpp
+    - src/agent/core/pe_cert\.cpp
+    - src/agent/core/service\.cpp
+    - src/agent/core/wincert\.cpp
+    - src/agent/libnxagent/wtsproc\.cpp
+    - src/agent/libnxsde/windll\.cpp
+    - src/agent/smbios/windows\.cpp
+    - src/agent/subagents/ping/scan_win32\.cpp
+    - src/agent/subagents/ups/mec0003\.cpp
+    - src/agent/subagents/ups/usb\.cpp
+    - src/flow-collector/nxflowd/winsrv\.cpp
+    - src/libnetxms/npipe_win32\.cpp
+    - src/libnetxms/windll\.cpp
+    - src/libnxlp/vss\.cpp
+    - src/libnxlp/wevt\.cpp
+    - src/libnxsl/windll\.cpp
+    - src/nxcproxy/winsrv\.cpp
+    - src/server/core/windll\.cpp
+    - src/server/libnxsrv/windll\.cpp
+    - src/server/netxmsd/winsrv\.cpp
+    - src/sqlite/dllmain\.c
+CompileFlags:
+  # Prevent "too many errors emitted" fatal, which cannot be suppressed
+  Add: [-ferror-limit=0]
+Diagnostics:
+  Suppress: '*'
