@@ -259,7 +259,7 @@ LONG DatabaseConnection::getParam(bson_t *bsonDoc, const char *paramName, TCHAR 
 
    //uncomment for debug purposes
    char *json;
-   if ((json = bson_as_json(bsonDoc, NULL))) {
+   if ((json = bson_as_relaxed_extended_json(bsonDoc, NULL))) {
 #ifdef UNICODE
       TCHAR *_json = WideStringFromUTF8String(json);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("trying to get param from %s"), _json);

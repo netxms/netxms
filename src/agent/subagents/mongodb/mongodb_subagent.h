@@ -26,8 +26,13 @@
 #include <nms_agent.h>
 
 //mongodb
+#ifdef HAVE_MONGOC_2
+#include <mongoc/mongoc.h>
+#include <bson/bson.h>
+#else
 #include <mongoc.h>
 #include <bson.h>
+#endif
 
 /**
  * Misc defines

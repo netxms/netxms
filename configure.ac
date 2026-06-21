@@ -4043,35 +4043,67 @@ if test $? = 0; then
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
 
-	if test "x$MONGODB_BASE" != "x"; then
-		MONGODB_CPPFLAGS="-I$MONGODB_BASE/include/libmongoc-1.0/ -I$MONGODB_BASE/include/libbson-1.0/"
-		MONGODB_LDFLAGS="-L$MONGODB_BASE/lib"
-		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
-		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
-	else
-		if test -d /usr/include/libmongoc-1.0; then
-			MONGODB_CPPFLAGS="-I/usr/include/libmongoc-1.0"
-		else
-			if test -d /usr/local/include/libmongoc-1.0; then
-				MONGODB_CPPFLAGS="-I/usr/local/include/libmongoc-1.0"
-				MONGODB_LDFLAGS="-L/usr/local/lib"
-			fi
-		fi
-		if test -d /usr/include/libbson-1.0; then
-			MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/include/libbson-1.0"
-		else
-			if test -d /usr/local/include/libbson-1.0; then
-				MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/local/include/libbson-1.0"
-				MONGODB_LDFLAGS="-L/usr/local/lib"
-			fi
-		fi
-		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
-		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
-    	fi
+	HAVE_MONGOC_2=no
 
-	AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
-	AC_CHECK_LIB(mongoc-1.0, mongoc_client_get_database, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
-	AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
+	# When an explicit installation prefix is given, let pkg-config find the .pc files there
+	if test "x$MONGODB_BASE" != "x"; then
+		PKG_CONFIG_PATH="$MONGODB_BASE/lib/pkgconfig:$MONGODB_BASE/lib64/pkgconfig:$PKG_CONFIG_PATH"
+		export PKG_CONFIG_PATH
+	fi
+
+	# Prefer pkg-config: MongoDB C driver 2.x ships mongoc2/bson2, 1.x ships libmongoc-1.0/libbson-1.0
+	AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+	if test "x$PKG_CONFIG" != "xno"; then
+		if $PKG_CONFIG --exists mongoc2; then
+			MONGODB_CPPFLAGS="`$PKG_CONFIG --cflags mongoc2 bson2`"
+			MONGODB_LIBS="`$PKG_CONFIG --libs mongoc2 bson2`"
+			HAVE_MONGOC_2=yes
+		elif $PKG_CONFIG --exists libmongoc-1.0; then
+			MONGODB_CPPFLAGS="`$PKG_CONFIG --cflags libmongoc-1.0 libbson-1.0`"
+			MONGODB_LIBS="`$PKG_CONFIG --libs libmongoc-1.0 libbson-1.0`"
+		fi
+	fi
+
+	# Fall back to the legacy hardcoded 1.x layout if pkg-config did not resolve the driver
+	if test "x$MONGODB_CPPFLAGS" = "x" -a "x$MONGODB_LIBS" = "x"; then
+		if test "x$MONGODB_BASE" != "x"; then
+			MONGODB_CPPFLAGS="-I$MONGODB_BASE/include/libmongoc-1.0/ -I$MONGODB_BASE/include/libbson-1.0/"
+			MONGODB_LDFLAGS="-L$MONGODB_BASE/lib"
+		else
+			if test -d /usr/include/libmongoc-1.0; then
+				MONGODB_CPPFLAGS="-I/usr/include/libmongoc-1.0"
+			else
+				if test -d /usr/local/include/libmongoc-1.0; then
+					MONGODB_CPPFLAGS="-I/usr/local/include/libmongoc-1.0"
+					MONGODB_LDFLAGS="-L/usr/local/lib"
+				fi
+			fi
+			if test -d /usr/include/libbson-1.0; then
+				MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/include/libbson-1.0"
+			else
+				if test -d /usr/local/include/libbson-1.0; then
+					MONGODB_CPPFLAGS="$MONGODB_CPPFLAGS -I/usr/local/include/libbson-1.0"
+					MONGODB_LDFLAGS="-L/usr/local/lib"
+				fi
+			fi
+		fi
+	fi
+
+	CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
+
+	if test "x$HAVE_MONGOC_2" = "xyes"; then
+		AC_DEFINE(HAVE_MONGOC_2, 1, [Define to 1 if using MongoDB C driver 2.x])
+		AC_CHECK_HEADER(mongoc/mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc/mongoc.h - check your MongoDB installation ***]))
+	else
+		AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
+	fi
+
+	# Probe for libraries only when pkg-config did not already provide the link flags
+	if test "x$MONGODB_LIBS" = "x"; then
+		AC_CHECK_LIB(mongoc-1.0, mongoc_client_get_database, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
+		AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
+	fi
 	LIBS="$LIBS $MONGODB_LIBS"
 
 	AC_CHECK_FUNCS([mongoc_client_get_database_names_with_opts])
