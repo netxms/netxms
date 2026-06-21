@@ -118,6 +118,7 @@ class NXCORE_EXPORTABLE RouteBuilder
 private:
    const char *m_path;
    bool m_auth;
+   bool m_acceptJson;
    bool m_acceptProtobuf;
    bool m_acceptImage;
    char m_scope[32];
@@ -129,6 +130,7 @@ public:
    {
       m_path = path;
       m_auth = true;
+      m_acceptJson = true;
       m_acceptProtobuf = false;
       m_acceptImage = false;
       m_scope[0] = 0;
@@ -174,6 +176,17 @@ public:
    RouteBuilder& scope(const char *s)
    {
       strlcpy(m_scope, s, sizeof(m_scope));
+      return *this;
+   }
+
+   /**
+    * Enable or disable acceptance of application/json request bodies.
+    * Enabled by default; disable for routes that accept only a binary
+    * payload (protobuf, image) so a JSON request is rejected with 415.
+    */
+   RouteBuilder& acceptJson(bool enable)
+   {
+      m_acceptJson = enable;
       return *this;
    }
 
