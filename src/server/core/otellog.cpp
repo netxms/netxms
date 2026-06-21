@@ -472,7 +472,11 @@ static void OtelLogProcessingThread()
       s_parserLock.lock();
       if (s_parser != nullptr)
       {
-         s_parser->matchEvent(record->serviceName, static_cast<uint32_t>(record->severityNumber), record->mappedSeverity,
+         // LogParser severity filtering uses a bitmask (rule level mask AND record level),
+         // so the mapped severity must be passed as a bit (1 << severity), matching the
+         // syslog convention. Passing the raw value would make SEVERITY_NORMAL (0) fail
+         // the mask check for every rule, even rules without a <severity> filter.
+         s_parser->matchEvent(record->serviceName, static_cast<uint32_t>(record->severityNumber), 1 << record->mappedSeverity,
             record->body, nullptr, 0, record->nodeId, static_cast<time_t>(record->originTimestamp / 1000), record->scopeName,
             &writeToDatabase, &record->attributes);
       }

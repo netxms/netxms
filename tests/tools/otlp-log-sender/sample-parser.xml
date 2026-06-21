@@ -1,0 +1,50 @@
+<!--
+  Sample OpenTelemetryLogParser configuration for testing OTLP log event
+  generation (issue #3292, TEST_PLAN.md section 7).
+
+  Field mapping (src/server/core/otellog.cpp -> LogParser::matchEvent):
+    <match>    regex against the log record BODY (capture groups -> event params)
+    <source>   glob against the SERVICE name  (service.name resource attr)
+    <logName>  glob against the SCOPE name    (instrumentation scope name)
+    <id>       numeric range against the OTLP SEVERITY NUMBER (1-24)
+    <severity> bitmask against the mapped NetXMS severity. otellog.cpp passes
+               (1 << mappedSeverity), matching the syslog convention, so the bits
+               are: NORMAL=1, WARNING=2, MAJOR=8, CRITICAL=16. A rule's <severity>
+               value is the OR of the bits to accept. For readability, filtering on
+               <id> (the raw severity number 1-24) is usually clearer.
+
+  All rules fire the stock event SYS_LOG_RECORD_MATCHED (code 44). Named capture
+  groups (?<name>...) and otelService/otelScope/otelSeverity/otelSeverityNumber
+  are passed as event parameters by OtelLogParserCallback.
+
+  NOTE: '<' and '>' inside regex named groups are XML-escaped as &lt; / &gt;.
+-->
+<parser>
+   <rules>
+      <!-- 1. body regex + named capture, restricted to a service (source) -->
+      <rule name="otlp-conn-refused">
+         <source>*payment*</source>
+         <match>connection refused from (?&lt;peer&gt;[0-9.]+)</match>
+         <event>SYS_LOG_RECORD_MATCHED</event>
+      </rule>
+
+      <!-- 2. fire only for ERROR/FATAL severity numbers (17-24) -->
+      <rule name="otlp-disk-error">
+         <id>17-24</id>
+         <match>disk failure on (?&lt;device&gt;/dev/[a-z0-9]+)</match>
+         <event>SYS_LOG_RECORD_MATCHED</event>
+      </rule>
+
+      <!-- 3. scope (logName) filter -->
+      <rule name="otlp-auth-scope">
+         <logName>*auth*</logName>
+         <match>login failed for user (?&lt;user&gt;\S+)</match>
+         <event>SYS_LOG_RECORD_MATCHED</event>
+      </rule>
+
+      <!-- 4. match but suppress DB storage (no event); record is dropped -->
+      <rule name="otlp-drop-trace" doNotSaveToDatabase="true">
+         <match>^TRACE-DROP:</match>
+      </rule>
+   </rules>
+</parser>

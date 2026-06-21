@@ -40,11 +40,13 @@ static bool InitModule(Config *config)
    RouteBuilder("otlp-backend/v1/metrics")
       .POST(H_OtlpMetrics)
       .acceptProtobuf()
+      .acceptJson(false)
       .build();
 
    RouteBuilder("otlp-backend/v1/logs")
       .POST(H_OtlpLogs)
       .acceptProtobuf()
+      .acceptJson(false)
       .build();
 
    RouteBuilder("v1/objects/:object-id/otlp-metrics")
