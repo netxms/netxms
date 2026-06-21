@@ -5707,6 +5707,15 @@ public:
    virtual bool showThresholdSummary() const override;
    String getElementScript(int index) const;
    bool isElementContextObject(int index, uint32_t contextObject) const;
+
+   // Element editing API for AI assistant dashboard-building skill (issue #3344)
+   int getColumnCount() const { return m_numColumns; }
+   void setColumnCount(int columns);
+   uuid addElement(int type, json_t *data, json_t *layout);
+   bool updateElement(const uuid& guid, json_t *data, json_t *layout);
+   bool removeElement(const uuid& guid);
+   bool moveElement(const uuid& guid, int newPosition);
+   json_t *getElementsAsJson();
 };
 
 /**

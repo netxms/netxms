@@ -101,6 +101,14 @@ std::string F_GetBackupList(json_t *arguments, uint32_t userId);
 std::string F_GetBackupContent(json_t *arguments, uint32_t userId);
 std::string F_StartBackup(json_t *arguments, uint32_t userId);
 std::string F_CompareBackups(json_t *arguments, uint32_t userId);
+std::string F_ListDashboardElementTypes(json_t *arguments, uint32_t userId);
+std::string F_DescribeDashboardElementType(json_t *arguments, uint32_t userId);
+std::string F_CreateDashboard(json_t *arguments, uint32_t userId);
+std::string F_GetDashboard(json_t *arguments, uint32_t userId);
+std::string F_AddDashboardElement(json_t *arguments, uint32_t userId);
+std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId);
+std::string F_RemoveDashboardElement(json_t *arguments, uint32_t userId);
+std::string F_MoveDashboardElement(json_t *arguments, uint32_t userId);
 
 /**
  * Module metadata
@@ -1029,6 +1037,84 @@ static void CreateAssistantSkillList()
                { "configType", "config type to compare: running or startup (default: running)" }
             },
             F_CompareBackups)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "dashboard-building",
+      "Provides capabilities for building and editing NetXMS dashboards from natural-language requests. Use this skill to create a new dashboard and incrementally add, configure, reorder, or remove visualization elements such as charts, network maps, alarm viewers, and status maps. The dashboard is built one element at a time with per-element validation. Discover supported element types with list-dashboard-element-types and their configuration schemas with describe-dashboard-element-type before adding elements. Use the existing data collection tools (e.g. get-metrics) to resolve node and DCI identifiers for chart elements.",
+      "@dashboard-building.md",
+      {
+         AssistantFunction(
+            "list-dashboard-element-types",
+            "List all supported dashboard element types with a one-line description of each. Call this first to discover what can be placed on a dashboard.",
+            {},
+            F_ListDashboardElementTypes),
+         AssistantFunction(
+            "describe-dashboard-element-type",
+            "Get the full configuration schema and a filled example for one dashboard element type.",
+            {
+               { "type", "element type name as returned by list-dashboard-element-types (mandatory)" }
+            },
+            F_DescribeDashboardElementType),
+         AssistantFunction(
+            "create-dashboard",
+            "Create a new empty dashboard. Returns the new dashboard ID used by the other dashboard tools.",
+            {
+               { "name", "name of the dashboard (mandatory)" },
+               { "columns", "number of layout columns, 1-12 (default 2)" },
+               { "group", "name or ID of a dashboard group to place the dashboard in (default: top-level Dashboards)" },
+               { "associateWith", "name or ID of an object to associate the dashboard with (optional)" }
+            },
+            F_CreateDashboard),
+         AssistantFunction(
+            "get-dashboard",
+            "Read back a dashboard: its column count and ordered list of elements, each with its stable GUID, type, layout, and configuration. Use the GUIDs to target update/remove/move operations.",
+            {
+               { "dashboard", "name or ID of the dashboard (mandatory)" }
+            },
+            F_GetDashboard),
+         AssistantFunction(
+            "add-dashboard-element",
+            "Append a configured element to a dashboard. References to non-existent or inaccessible objects/DCIs are rejected and the element is not added.",
+            {
+               { "dashboard", "name or ID of the dashboard (mandatory)" },
+               { "type", "element type name as returned by list-dashboard-element-types (mandatory)" },
+               { "config", "element configuration as a JSON object matching the type's schema (mandatory)" },
+               { "width", "layout width intent: full, half, third, or quarter (default full)" },
+               { "height", "optional fixed element height in pixels" },
+               { "grabVerticalSpace", "whether the element grabs extra vertical space (default true); set false for labels so they take only their natural height" }
+            },
+            F_AddDashboardElement),
+         AssistantFunction(
+            "update-dashboard-element",
+            "Replace the configuration (and optionally the layout) of an existing element identified by its GUID.",
+            {
+               { "dashboard", "name or ID of the dashboard (mandatory)" },
+               { "guid", "GUID of the element to update (mandatory)" },
+               { "config", "new element configuration as a JSON object matching the type's schema (mandatory)" },
+               { "width", "optional new layout width intent: full, half, third, or quarter" },
+               { "height", "optional new fixed element height in pixels" },
+               { "grabVerticalSpace", "optional: whether the element grabs extra vertical space; set false for labels so they take only their natural height" }
+            },
+            F_UpdateDashboardElement),
+         AssistantFunction(
+            "remove-dashboard-element",
+            "Remove an element from a dashboard by its GUID.",
+            {
+               { "dashboard", "name or ID of the dashboard (mandatory)" },
+               { "guid", "GUID of the element to remove (mandatory)" }
+            },
+            F_RemoveDashboardElement),
+         AssistantFunction(
+            "move-dashboard-element",
+            "Move an element to a new position in the dashboard's element order. The element GUID is preserved.",
+            {
+               { "dashboard", "name or ID of the dashboard (mandatory)" },
+               { "guid", "GUID of the element to move (mandatory)" },
+               { "position", "new zero-based position in the element list (mandatory)" }
+            },
+            F_MoveDashboardElement)
       }
    );
 }

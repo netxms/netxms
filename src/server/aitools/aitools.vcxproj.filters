@@ -21,6 +21,9 @@
     <ClCompile Include="alarms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dashboards.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="datacoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

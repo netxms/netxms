@@ -326,6 +326,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="alarms.cpp" />
+    <ClCompile Include="dashboards.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="devbackup.cpp" />
     <ClCompile Include="evproc.cpp" />

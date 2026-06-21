@@ -373,6 +373,170 @@ bool DashboardBase::isElementContextObject(int index, uint32_t contextObject) co
    return isContextObject;
 }
 
+/**
+ * Set number of columns (used by AI assistant dashboard-building skill)
+ */
+void DashboardBase::setColumnCount(int columns)
+{
+   lockProperties();
+   m_numColumns = columns;
+   unlockProperties();
+   setModified(MODIFY_OTHER);
+}
+
+/**
+ * Append new element to dashboard (used by AI assistant dashboard-building skill).
+ * Takes ownership of provided data and layout JSON documents. Returns GUID of created element.
+ */
+uuid DashboardBase::addElement(int type, json_t *data, json_t *layout)
+{
+   DashboardElement *e = new DashboardElement();
+   e->m_type = type;
+   e->m_data = data;
+   e->m_layout = layout;
+   uuid guid = e->m_guid;
+
+   lockProperties();
+   m_elements.add(e);
+   updateObjectAndDciList(e);
+   unlockProperties();
+
+   setModified(MODIFY_OTHER);
+   return guid;
+}
+
+/**
+ * Replace configuration and layout of an existing element identified by GUID (used by AI assistant dashboard-building skill).
+ * Takes ownership of provided data and layout JSON documents. If layout is nullptr, existing layout is preserved.
+ * Returns true if element was found and updated.
+ */
+bool DashboardBase::updateElement(const uuid& guid, json_t *data, json_t *layout)
+{
+   bool updated = false;
+   lockProperties();
+   for(int i = 0; i < m_elements.size(); i++)
+   {
+      DashboardElement *e = m_elements.get(i);
+      if (e->m_guid.equals(guid))
+      {
+         json_decref(e->m_data);
+         e->m_data = data;
+         if (layout != nullptr)
+         {
+            json_decref(e->m_layout);
+            e->m_layout = layout;
+         }
+         m_objectSet.clear();
+         m_dciSet.clear();
+         for(int j = 0; j < m_elements.size(); j++)
+            updateObjectAndDciList(m_elements.get(j));
+         updated = true;
+         break;
+      }
+   }
+   unlockProperties();
+
+   if (updated)
+      setModified(MODIFY_OTHER);
+   else
+      json_decref(data);   // element not found - caller passed ownership, release here
+
+   if (!updated && (layout != nullptr))
+      json_decref(layout);
+
+   return updated;
+}
+
+/**
+ * Remove element identified by GUID (used by AI assistant dashboard-building skill).
+ * Returns true if element was found and removed.
+ */
+bool DashboardBase::removeElement(const uuid& guid)
+{
+   bool removed = false;
+   lockProperties();
+   for(int i = 0; i < m_elements.size(); i++)
+   {
+      if (m_elements.get(i)->m_guid.equals(guid))
+      {
+         m_elements.remove(i);
+         m_objectSet.clear();
+         m_dciSet.clear();
+         for(int j = 0; j < m_elements.size(); j++)
+            updateObjectAndDciList(m_elements.get(j));
+         removed = true;
+         break;
+      }
+   }
+   unlockProperties();
+
+   if (removed)
+      setModified(MODIFY_OTHER);
+   return removed;
+}
+
+/**
+ * Move element identified by GUID to a new position (used by AI assistant dashboard-building skill).
+ * Position is clamped to valid range. Returns true if element was found and moved.
+ */
+bool DashboardBase::moveElement(const uuid& guid, int newPosition)
+{
+   bool moved = false;
+   lockProperties();
+   int currentPosition = -1;
+   for(int i = 0; i < m_elements.size(); i++)
+   {
+      if (m_elements.get(i)->m_guid.equals(guid))
+      {
+         currentPosition = i;
+         break;
+      }
+   }
+   if (currentPosition != -1)
+   {
+      if (newPosition < 0)
+         newPosition = 0;
+      else if (newPosition >= m_elements.size())
+         newPosition = m_elements.size() - 1;
+
+      if (newPosition != currentPosition)
+      {
+         DashboardElement *e = m_elements.get(currentPosition);
+         m_elements.unlink(currentPosition);
+         m_elements.insert(newPosition, e);
+      }
+      moved = true;
+   }
+   unlockProperties();
+
+   if (moved)
+      setModified(MODIFY_OTHER);
+   return moved;
+}
+
+/**
+ * Get ordered list of elements as JSON array (used by AI assistant dashboard-building skill).
+ * Each entry contains element position index, GUID, type code, layout, and configuration.
+ */
+json_t *DashboardBase::getElementsAsJson()
+{
+   json_t *elements = json_array();
+   lockProperties();
+   for(int i = 0; i < m_elements.size(); i++)
+   {
+      DashboardElement *e = m_elements.get(i);
+      json_t *entry = json_object();
+      json_object_set_new(entry, "index", json_integer(i));
+      json_object_set_new(entry, "guid", e->m_guid.toJson());
+      json_object_set_new(entry, "type", json_integer(e->m_type));
+      json_object_set_new(entry, "layout", json_deep_copy(e->m_layout));
+      json_object_set_new(entry, "config", json_deep_copy(e->m_data));
+      json_array_append_new(elements, entry);
+   }
+   unlockProperties();
+   return elements;
+}
+
 
 /*****************************************************************
  * Dashboard class
