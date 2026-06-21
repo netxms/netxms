@@ -294,9 +294,13 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
-			goto cleanup;
+			// Some publishers (typically third-party) do not provide message text for all their events,
+			// causing EvtFormatMessage to fail with errors such as ERROR_EVT_MESSAGE_NOT_FOUND. Do not drop
+			// the event in that case - proceed with empty message so rules matching on event ID, level, or
+			// publisher still work.
+			msg[0] = 0;
 		}
-      if (error == ERROR_INSUFFICIENT_BUFFER)
+      else if (error == ERROR_INSUFFICIENT_BUFFER)
       {
 		   msg = MemAllocStringW(reqSize);
 		   success = EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
@@ -309,7 +313,9 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
-			      goto cleanup;
+			      MemFree(msg);
+			      msg = buffer;
+			      msg[0] = 0;
             }
 		   }
       }
