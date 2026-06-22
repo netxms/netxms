@@ -37,16 +37,6 @@
 #define POSTSPAWN_CONNECT_INTERVAL 100   // ms between attempts (50 * 100ms = 5s window)
 
 /**
- * Process-wide lock serialising spawn-time env-var manipulation.
- *
- * We inject NXAGENT_EXTENSION_PORT / NXAGENT_EXTENSION_TOKEN (and optional
- * user-supplied vars) into our own environment, fork+exec, then unset.  Doing
- * this without a lock would race with concurrent spawns; serialising spawns
- * is acceptable since they only happen at startup or after backoff.
- */
-static Mutex s_spawnLock;
-
-/**
  * Reserve a free ephemeral port on loopback by binding+closing.
  * Caller passes the port to the spawned extension, which re-binds it.
  */
@@ -147,55 +137,26 @@ public:
    }
 
    /**
-    * Launch the child with NXAGENT_EXTENSION_PORT/TOKEN injected.  Serialised
-    * through s_spawnLock so concurrent spawns don't corrupt env state.
+    * Launch the child with NXAGENT_EXTENSION_PORT/TOKEN and any admin-configured
+    * variables injected into the child's environment only.  Per-child environment
+    * is carried by ProcessExecutor, so the agent's own environment is never
+    * touched and concurrent spawns don't interfere with each other.
     */
    bool launch(uint16_t port, const TCHAR *token, const StringMap& extraEnv, const TCHAR *runAs)
    {
-      LockGuard guard(s_spawnLock);
-
-      char portStr[16];
-      snprintf(portStr, sizeof(portStr), "%u", port);
-#ifdef UNICODE
-      char *tokenU = UTF8StringFromWideString(token);
-#else
-      char *tokenU = const_cast<char*>(token);
-#endif
-
-#ifndef _WIN32
-      setenv("NXAGENT_EXTENSION_PORT", portStr, 1);
-      setenv("NXAGENT_EXTENSION_TOKEN", tokenU, 1);
-      StringList setKeys;
-      extraEnv.forEach([&setKeys] (const TCHAR *key, const void *value) {
-         SetEnvironmentVariable(key, static_cast<const TCHAR*>(value));
-         setKeys.add(key);
+      TCHAR portStr[16];
+      _sntprintf(portStr, 16, _T("%u"), port);
+      setEnvironmentVariable(_T("NXAGENT_EXTENSION_PORT"), portStr);
+      setEnvironmentVariable(_T("NXAGENT_EXTENSION_TOKEN"), token);
+      extraEnv.forEach([this] (const TCHAR *key, const void *value) -> EnumerationCallbackResult {
+         setEnvironmentVariable(key, static_cast<const TCHAR*>(value));
          return _CONTINUE;
       });
 
       if (runAs != nullptr && *runAs != 0)
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Extension(%s): RunAs=%s ignored — not yet implemented in v1"), m_extensionName.cstr(), runAs);
-#else
-      // Windows env injection — TODO in a follow-up; spawn mode degrades to
-      // inheriting agent's environment and the extension reading port/token
-      // from its own config.  For v1 the primary platform is Linux.
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Extension(%s): spawn-mode env injection not implemented on Windows; child must use connect mode"), m_extensionName.cstr());
-#endif
 
-      bool ok = execute();
-
-#ifndef _WIN32
-      SetEnvironmentVariable(_T("NXAGENT_EXTENSION_PORT"), nullptr);
-      SetEnvironmentVariable(_T("NXAGENT_EXTENSION_TOKEN"), nullptr);
-      for (int i = 0; i < setKeys.size(); i++)
-      {
-         SetEnvironmentVariable(setKeys.get(i), nullptr);
-      }
-#endif
-
-#ifdef UNICODE
-      MemFree(tokenU);
-#endif
-      return ok;
+      return execute();
    }
 
    /**
