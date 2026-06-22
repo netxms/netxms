@@ -114,6 +114,84 @@ DatabaseQuery g_queries[] =
          _T("'BROKER_TRANSMITTER','SQLTRACE_WAIT_ENTRIES','SLEEP_BPOOL_FLUSH','SQLTRACE_LOCK',")
          _T("'HADR_FILESTREAM_IOMGR_IOCOMPLETION','DIRTY_PAGE_POLL','SP_SERVER_DIAGNOSTICS_SLEEP')")
    },
+   { _T("PERFRATES"), 0,
+      // Server-wide performance counters not covered by PERFCOUNTERS. The /sec counters are
+      // cumulative (PERF_COUNTER_BULK_COUNT) and exposed as raw values so the server-side DCI
+      // computes the per-second rate via delta. Single-row pivot over a single table scan.
+      _T("SELECT ")
+         _T("MAX(CASE WHEN counter_name = 'Logins/sec' THEN cntr_value END) AS LOGINS,")
+         _T("MAX(CASE WHEN counter_name = 'Logouts/sec' THEN cntr_value END) AS LOGOUTS,")
+         _T("MAX(CASE WHEN counter_name = 'Page reads/sec' THEN cntr_value END) AS PAGEREADS,")
+         _T("MAX(CASE WHEN counter_name = 'Page writes/sec' THEN cntr_value END) AS PAGEWRITES,")
+         _T("MAX(CASE WHEN counter_name = 'Checkpoint pages/sec' THEN cntr_value END) AS CHECKPOINTPAGES,")
+         _T("MAX(CASE WHEN counter_name = 'Free list stalls/sec' THEN cntr_value END) AS FREELISTSTALLS,")
+         _T("MAX(CASE WHEN counter_name = 'Page lookups/sec' THEN cntr_value END) AS PAGELOOKUPS,")
+         _T("MAX(CASE WHEN counter_name = 'Lock Waits/sec' AND instance_name = '_Total' THEN cntr_value END) AS LOCKWAITSPERSEC,")
+         _T("MAX(CASE WHEN counter_name = 'Lock Timeouts/sec' AND instance_name = '_Total' THEN cntr_value END) AS LOCKTIMEOUTS,")
+         _T("MAX(CASE WHEN counter_name = 'Full Scans/sec' THEN cntr_value END) AS FULLSCANS,")
+         _T("MAX(CASE WHEN counter_name = 'Page Splits/sec' THEN cntr_value END) AS PAGESPLITS,")
+         _T("MAX(CASE WHEN counter_name = 'Forwarded Records/sec' THEN cntr_value END) AS FORWARDEDRECORDS,")
+         _T("MAX(CASE WHEN counter_name = 'Workfiles Created/sec' THEN cntr_value END) AS WORKFILESCREATED,")
+         _T("MAX(CASE WHEN counter_name = 'Worktables Created/sec' THEN cntr_value END) AS WORKTABLESCREATED,")
+         _T("MAX(CASE WHEN counter_name = 'Errors/sec' AND instance_name = '_Total' THEN cntr_value END) AS SQLERRORS,")
+         _T("MAX(CASE WHEN counter_name = 'Errors/sec' AND instance_name = 'User Errors' THEN cntr_value END) AS USERERRORS,")
+         _T("MAX(CASE WHEN counter_name = 'Memory Grants Pending' THEN cntr_value END) AS MEMORYGRANTSPENDING,")
+         _T("MAX(CASE WHEN counter_name = 'Memory Grants Outstanding' THEN cntr_value END) AS MEMORYGRANTSOUTSTANDING,")
+         _T("MAX(CASE WHEN counter_name = 'Cache Pages' AND instance_name = '_Total' AND object_name LIKE '%:Plan Cache%' THEN cntr_value END) AS PLANCACHEPAGES,")
+         _T("MAX(CASE WHEN counter_name = 'Free Space in tempdb (KB)' THEN cntr_value END) * 1024 AS TEMPDBFREESPACE,")
+         _T("MAX(CASE WHEN counter_name = 'Version Store Size (KB)' THEN cntr_value END) * 1024 AS VERSIONSTORESIZE,")
+         _T("MAX(CASE WHEN counter_name = 'Transactions/sec' AND instance_name = '_Total' THEN cntr_value END) AS TOTALTRANSACTIONS,")
+         _T("MAX(CASE WHEN counter_name = 'Active Transactions' AND instance_name = '_Total' THEN cntr_value END) AS TOTALACTIVETRANSACTIONS,")
+         _T("MAX(CASE WHEN counter_name = 'Log Flushes/sec' AND instance_name = '_Total' THEN cntr_value END) AS TOTALLOGFLUSHES,")
+         _T("MAX(CASE WHEN counter_name = 'Log Bytes Flushed/sec' AND instance_name = '_Total' THEN cntr_value END) AS TOTALLOGBYTESFLUSHED,")
+         // Average Wait Time (ms) is a PERF_AVERAGE_BULK pair; value/base yields the lifetime
+         // average wait time per lock wait (same approximation used for buffer cache hit ratio).
+         _T("CASE WHEN MAX(CASE WHEN counter_name = 'Average Wait Time Base' AND instance_name = '_Total' THEN cntr_value END) = 0 THEN 0 ")
+         _T("ELSE CONVERT(DECIMAL(10,2), 1.0 * MAX(CASE WHEN counter_name = 'Average Wait Time (ms)' AND instance_name = '_Total' THEN cntr_value END) / ")
+         _T("MAX(CASE WHEN counter_name = 'Average Wait Time Base' AND instance_name = '_Total' THEN cntr_value END)) END AS AVERAGELOCKWAITTIME ")
+         _T("FROM sys.dm_os_performance_counters")
+   },
+   { _T("DBSTATS"), 1,
+      // Per-database transaction/log activity counters from the Databases performance object.
+      // The /sec counters are cumulative and the DCI computes the rate.
+      _T("SELECT RTRIM(instance_name) AS DBNAME,")
+         _T("MAX(CASE WHEN counter_name = 'Active Transactions' THEN cntr_value END) AS ACTIVETRANSACTIONS,")
+         _T("MAX(CASE WHEN counter_name = 'Transactions/sec' THEN cntr_value END) AS TRANSACTIONS,")
+         _T("MAX(CASE WHEN counter_name = 'Write Transactions/sec' THEN cntr_value END) AS WRITETRANSACTIONS,")
+         _T("MAX(CASE WHEN counter_name = 'Log Flushes/sec' THEN cntr_value END) AS LOGFLUSHES,")
+         _T("MAX(CASE WHEN counter_name = 'Log Growths' THEN cntr_value END) AS LOGGROWTHS,")
+         _T("CASE WHEN MAX(CASE WHEN counter_name = 'Log Cache Hit Ratio Base' THEN cntr_value END) = 0 THEN 0 ")
+         _T("ELSE CONVERT(DECIMAL(5,2), 100.0 * MAX(CASE WHEN counter_name = 'Log Cache Hit Ratio' THEN cntr_value END) / ")
+         _T("MAX(CASE WHEN counter_name = 'Log Cache Hit Ratio Base' THEN cntr_value END)) END AS LOGCACHEHITRATIO ")
+         _T("FROM sys.dm_os_performance_counters ")
+         _T("WHERE object_name LIKE '%:Databases%' AND instance_name <> '_Total' ")
+         _T("GROUP BY instance_name")
+   },
+   { _T("RESOURCEPOOL"), 1,
+      // Per resource-governor pool CPU usage. CPU usage % is a PERF_AVERAGE_BULK pair, so
+      // value/base yields the lifetime average CPU usage for the pool.
+      _T("SELECT RTRIM(instance_name) AS POOLNAME,")
+         _T("CASE WHEN MAX(CASE WHEN counter_name = 'CPU usage % base' THEN cntr_value END) = 0 THEN 0 ")
+         _T("ELSE CONVERT(DECIMAL(5,2), 100.0 * MAX(CASE WHEN counter_name = 'CPU usage %' THEN cntr_value END) / ")
+         _T("MAX(CASE WHEN counter_name = 'CPU usage % base' THEN cntr_value END)) END AS CPUUSAGE ")
+         _T("FROM sys.dm_os_performance_counters ")
+         _T("WHERE object_name LIKE '%:Resource Pool Stats%' ")
+         _T("GROUP BY instance_name")
+   },
+   { _T("WAITCATEGORIES"), 0,
+      // Curated rollups from the Wait Statistics performance object. The 'Cumulative wait time
+      // (ms) per second' instance holds cumulative wait time in ms per category; the DCI computes
+      // the ms/sec rate via delta.
+      _T("SELECT ")
+         _T("MAX(CASE WHEN counter_name = 'Page IO latch waits' THEN cntr_value END) AS PAGEIOLATCH,")
+         _T("MAX(CASE WHEN counter_name = 'Page latch waits' THEN cntr_value END) AS PAGELATCH,")
+         _T("MAX(CASE WHEN counter_name = 'Log write waits' THEN cntr_value END) AS LOGWRITE,")
+         _T("MAX(CASE WHEN counter_name = 'Log buffer waits' THEN cntr_value END) AS LOGBUFFER,")
+         _T("MAX(CASE WHEN counter_name = 'Memory grant queue waits' THEN cntr_value END) AS MEMORYGRANTQUEUE,")
+         _T("MAX(CASE WHEN counter_name = 'Network IO waits' THEN cntr_value END) AS NETWORKIO ")
+         _T("FROM sys.dm_os_performance_counters ")
+         _T("WHERE object_name LIKE '%:Wait Statistics%' AND instance_name = 'Cumulative wait time (ms) per second'")
+   },
    { nullptr, 0, nullptr }
 };
 
@@ -460,6 +538,7 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("MSSQL.Database.ActiveTransactions(*)"), H_InstanceParameter, _T("DBSTATS/ACTIVETRANSACTIONS"), DCI_DT_INT, _T("MSSQL/Database: {instance} active transactions") },
    { _T("MSSQL.Database.Collation(*)"), H_InstanceParameter, _T("DATABASES/COLLATION"), DCI_DT_STRING, _T("MSSQL/Database: {instance} collation") },
    { _T("MSSQL.Database.CompatibilityLevel(*)"), H_InstanceParameter, _T("DATABASES/COMPATLEVEL"), DCI_DT_INT, _T("MSSQL/Database: {instance} compatibility level") },
    { _T("MSSQL.Database.DataSize(*)"), H_InstanceParameter, _T("DBSPACE/DATASIZE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} data file size") },
@@ -468,6 +547,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("MSSQL.Database.LastDiffBackupAge(*)"), H_InstanceParameter, _T("BACKUP/DIFFBACKUPAGE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} time since last differential backup") },
    { _T("MSSQL.Database.LastFullBackupAge(*)"), H_InstanceParameter, _T("BACKUP/FULLBACKUPAGE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} time since last full backup") },
    { _T("MSSQL.Database.LastLogBackupAge(*)"), H_InstanceParameter, _T("BACKUP/LOGBACKUPAGE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} time since last transaction log backup") },
+   { _T("MSSQL.Database.LogCacheHitRatio(*)"), H_InstanceParameter, _T("DBSTATS/LOGCACHEHITRATIO"), DCI_DT_FLOAT, _T("MSSQL/Database: {instance} log cache hit ratio (%)") },
+   { _T("MSSQL.Database.LogFlushes(*)"), H_InstanceParameter, _T("DBSTATS/LOGFLUSHES"), DCI_DT_COUNTER64, _T("MSSQL/Database: {instance} total transaction log flushes") },
+   { _T("MSSQL.Database.LogGrowths(*)"), H_InstanceParameter, _T("DBSTATS/LOGGROWTHS"), DCI_DT_COUNTER64, _T("MSSQL/Database: {instance} transaction log growths") },
    { _T("MSSQL.Database.LogReuseWait(*)"), H_InstanceParameter, _T("DATABASES/LOGREUSEWAIT"), DCI_DT_STRING, _T("MSSQL/Database: {instance} log reuse wait reason") },
    { _T("MSSQL.Database.LogSize(*)"), H_InstanceParameter, _T("DBSPACE/LOGSIZE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} transaction log file size") },
    { _T("MSSQL.Database.LogUsedSize(*)"), H_InstanceParameter, _T("LOGSPACE/LOGUSEDSIZE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} used transaction log size") },
@@ -475,32 +557,67 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("MSSQL.Database.RecoveryModel(*)"), H_InstanceParameter, _T("DATABASES/RECOVERYMODEL"), DCI_DT_STRING, _T("MSSQL/Database: {instance} recovery model") },
    { _T("MSSQL.Database.Status(*)"), H_InstanceParameter, _T("DATABASES/STATE"), DCI_DT_STRING, _T("MSSQL/Database: {instance} status") },
    { _T("MSSQL.Database.TotalSize(*)"), H_InstanceParameter, _T("DBSPACE/TOTALSIZE"), DCI_DT_INT64, _T("MSSQL/Database: {instance} total file size") },
+   { _T("MSSQL.Database.Transactions(*)"), H_InstanceParameter, _T("DBSTATS/TRANSACTIONS"), DCI_DT_COUNTER64, _T("MSSQL/Database: {instance} total transactions") },
    { _T("MSSQL.Database.UserAccess(*)"), H_InstanceParameter, _T("DATABASES/USERACCESS"), DCI_DT_STRING, _T("MSSQL/Database: {instance} user access mode") },
+   { _T("MSSQL.Database.WriteTransactions(*)"), H_InstanceParameter, _T("DBSTATS/WRITETRANSACTIONS"), DCI_DT_COUNTER64, _T("MSSQL/Database: {instance} total write transactions") },
    { _T("MSSQL.IsReachable(*)"), H_DatabaseConnectionStatus, nullptr, DCI_DT_STRING, _T("MSSQL: is server reachable") },
    { _T("MSSQL.Memory.AvailablePhysicalMemory(*)"), H_GlobalParameter, _T("MEMORY/AVAILABLEPHYSICALMEMORY"), DCI_DT_INT64, _T("MSSQL/Memory: available physical memory") },
    { _T("MSSQL.Memory.BufferCacheHitRatio(*)"), H_GlobalParameter, _T("PERFCOUNTERS/BUFFERCACHEHITRATIO"), DCI_DT_FLOAT, _T("MSSQL/Memory: buffer cache hit ratio (%)") },
+   { _T("MSSQL.Memory.MemoryGrantsOutstanding(*)"), H_GlobalParameter, _T("PERFRATES/MEMORYGRANTSOUTSTANDING"), DCI_DT_INT, _T("MSSQL/Memory: outstanding memory grants") },
+   { _T("MSSQL.Memory.MemoryGrantsPending(*)"), H_GlobalParameter, _T("PERFRATES/MEMORYGRANTSPENDING"), DCI_DT_INT, _T("MSSQL/Memory: pending memory grants") },
    { _T("MSSQL.Memory.MemoryUtilization(*)"), H_GlobalParameter, _T("MEMORY/MEMORYUTILIZATIONPCT"), DCI_DT_INT, _T("MSSQL/Memory: memory utilization (%)") },
    { _T("MSSQL.Memory.PageLifeExpectancy(*)"), H_GlobalParameter, _T("PERFCOUNTERS/PAGELIFEEXPECTANCY"), DCI_DT_INT64, _T("MSSQL/Memory: page life expectancy (seconds)") },
    { _T("MSSQL.Memory.PhysicalMemoryInUse(*)"), H_GlobalParameter, _T("MEMORY/PHYSICALMEMORYINUSE"), DCI_DT_INT64, _T("MSSQL/Memory: physical memory in use") },
+   { _T("MSSQL.Memory.PlanCachePages(*)"), H_GlobalParameter, _T("PERFRATES/PLANCACHEPAGES"), DCI_DT_INT64, _T("MSSQL/Memory: plan cache pages") },
    { _T("MSSQL.Memory.TargetServerMemory(*)"), H_GlobalParameter, _T("PERFCOUNTERS/TARGETSERVERMEMORY"), DCI_DT_INT64, _T("MSSQL/Memory: target server memory") },
    { _T("MSSQL.Memory.TotalServerMemory(*)"), H_GlobalParameter, _T("PERFCOUNTERS/TOTALSERVERMEMORY"), DCI_DT_INT64, _T("MSSQL/Memory: total server memory") },
+   { _T("MSSQL.ResourcePool.CPUUsage(*)"), H_InstanceParameter, _T("RESOURCEPOOL/CPUUSAGE"), DCI_DT_FLOAT, _T("MSSQL/ResourcePool: {instance} CPU usage (%)") },
    { _T("MSSQL.Server.ActiveSessions(*)"), H_GlobalParameter, _T("GLOBALSTATS/ACTIVESESSIONS"), DCI_DT_INT, _T("MSSQL/Server: number of active user sessions") },
-   { _T("MSSQL.Server.BatchRequests(*)"), H_GlobalParameter, _T("PERFCOUNTERS/BATCHREQUESTS"), DCI_DT_INT64, _T("MSSQL/Server: total batch requests") },
+   { _T("MSSQL.Server.ActiveTransactions(*)"), H_GlobalParameter, _T("PERFRATES/TOTALACTIVETRANSACTIONS"), DCI_DT_INT, _T("MSSQL/Server: total active transactions") },
+   { _T("MSSQL.Server.AverageLockWaitTime(*)"), H_GlobalParameter, _T("PERFRATES/AVERAGELOCKWAITTIME"), DCI_DT_FLOAT, _T("MSSQL/Server: average lock wait time (ms)") },
+   { _T("MSSQL.Server.BatchRequests(*)"), H_GlobalParameter, _T("PERFCOUNTERS/BATCHREQUESTS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total batch requests") },
    { _T("MSSQL.Server.BlockedProcesses(*)"), H_GlobalParameter, _T("GLOBALSTATS/BLOCKEDPROCESSES"), DCI_DT_INT, _T("MSSQL/Server: number of blocked processes") },
+   { _T("MSSQL.Server.CheckpointPages(*)"), H_GlobalParameter, _T("PERFRATES/CHECKPOINTPAGES"), DCI_DT_COUNTER64, _T("MSSQL/Server: total checkpoint pages") },
    { _T("MSSQL.Server.Connections(*)"), H_GlobalParameter, _T("GLOBALSTATS/CONNECTIONS"), DCI_DT_INT, _T("MSSQL/Server: number of connections") },
-   { _T("MSSQL.Server.Deadlocks(*)"), H_GlobalParameter, _T("PERFCOUNTERS/DEADLOCKS"), DCI_DT_INT64, _T("MSSQL/Server: total number of deadlocks") },
+   { _T("MSSQL.Server.Deadlocks(*)"), H_GlobalParameter, _T("PERFCOUNTERS/DEADLOCKS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total number of deadlocks") },
    { _T("MSSQL.Server.Edition(*)"), H_GlobalParameter, _T("SERVERINFO/EDITION"), DCI_DT_STRING, _T("MSSQL/Server: edition") },
+   { _T("MSSQL.Server.ForwardedRecords(*)"), H_GlobalParameter, _T("PERFRATES/FORWARDEDRECORDS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total forwarded records") },
+   { _T("MSSQL.Server.FreeListStalls(*)"), H_GlobalParameter, _T("PERFRATES/FREELISTSTALLS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total free list stalls") },
+   { _T("MSSQL.Server.FullScans(*)"), H_GlobalParameter, _T("PERFRATES/FULLSCANS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total full scans") },
+   { _T("MSSQL.Server.LockTimeouts(*)"), H_GlobalParameter, _T("PERFRATES/LOCKTIMEOUTS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total lock timeouts") },
    { _T("MSSQL.Server.LockWaits(*)"), H_GlobalParameter, _T("GLOBALSTATS/LOCKWAITS"), DCI_DT_INT, _T("MSSQL/Server: number of lock waits") },
+   { _T("MSSQL.Server.LockWaitsPerSec(*)"), H_GlobalParameter, _T("PERFRATES/LOCKWAITSPERSEC"), DCI_DT_COUNTER64, _T("MSSQL/Server: total lock waits") },
+   { _T("MSSQL.Server.LogBufferWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/LOGBUFFER"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative log buffer wait time (ms)") },
+   { _T("MSSQL.Server.LogBytesFlushed(*)"), H_GlobalParameter, _T("PERFRATES/TOTALLOGBYTESFLUSHED"), DCI_DT_COUNTER64, _T("MSSQL/Server: total log bytes flushed") },
+   { _T("MSSQL.Server.LogFlushes(*)"), H_GlobalParameter, _T("PERFRATES/TOTALLOGFLUSHES"), DCI_DT_COUNTER64, _T("MSSQL/Server: total transaction log flushes") },
+   { _T("MSSQL.Server.Logins(*)"), H_GlobalParameter, _T("PERFRATES/LOGINS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total logins") },
+   { _T("MSSQL.Server.Logouts(*)"), H_GlobalParameter, _T("PERFRATES/LOGOUTS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total logouts") },
+   { _T("MSSQL.Server.LogWriteWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/LOGWRITE"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative log write wait time (ms)") },
+   { _T("MSSQL.Server.MemoryGrantQueueWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/MEMORYGRANTQUEUE"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative memory grant queue wait time (ms)") },
+   { _T("MSSQL.Server.NetworkIOWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/NETWORKIO"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative network IO wait time (ms)") },
+   { _T("MSSQL.Server.PageIOLatchWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/PAGEIOLATCH"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative page IO latch wait time (ms)") },
+   { _T("MSSQL.Server.PageLatchWaitTime(*)"), H_GlobalParameter, _T("WAITCATEGORIES/PAGELATCH"), DCI_DT_COUNTER64, _T("MSSQL/Server: cumulative page latch wait time (ms)") },
+   { _T("MSSQL.Server.PageLookups(*)"), H_GlobalParameter, _T("PERFRATES/PAGELOOKUPS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total page lookups") },
+   { _T("MSSQL.Server.PageReads(*)"), H_GlobalParameter, _T("PERFRATES/PAGEREADS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total page reads") },
+   { _T("MSSQL.Server.PageSplits(*)"), H_GlobalParameter, _T("PERFRATES/PAGESPLITS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total page splits") },
+   { _T("MSSQL.Server.PageWrites(*)"), H_GlobalParameter, _T("PERFRATES/PAGEWRITES"), DCI_DT_COUNTER64, _T("MSSQL/Server: total page writes") },
    { _T("MSSQL.Server.ProductLevel(*)"), H_GlobalParameter, _T("SERVERINFO/PRODUCTLEVEL"), DCI_DT_STRING, _T("MSSQL/Server: product level") },
-   { _T("MSSQL.Server.SQLCompilations(*)"), H_GlobalParameter, _T("PERFCOUNTERS/SQLCOMPILATIONS"), DCI_DT_INT64, _T("MSSQL/Server: total SQL compilations") },
-   { _T("MSSQL.Server.SQLRecompilations(*)"), H_GlobalParameter, _T("PERFCOUNTERS/SQLRECOMPILATIONS"), DCI_DT_INT64, _T("MSSQL/Server: total SQL re-compilations") },
+   { _T("MSSQL.Server.SQLCompilations(*)"), H_GlobalParameter, _T("PERFCOUNTERS/SQLCOMPILATIONS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total SQL compilations") },
+   { _T("MSSQL.Server.SQLErrors(*)"), H_GlobalParameter, _T("PERFRATES/SQLERRORS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total SQL errors") },
+   { _T("MSSQL.Server.SQLRecompilations(*)"), H_GlobalParameter, _T("PERFCOUNTERS/SQLRECOMPILATIONS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total SQL re-compilations") },
+   { _T("MSSQL.Server.TempdbFreeSpace(*)"), H_GlobalParameter, _T("PERFRATES/TEMPDBFREESPACE"), DCI_DT_INT64, _T("MSSQL/Server: free space in tempdb") },
+   { _T("MSSQL.Server.Transactions(*)"), H_GlobalParameter, _T("PERFRATES/TOTALTRANSACTIONS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total transactions") },
    { _T("MSSQL.Server.Uptime(*)"), H_GlobalParameter, _T("SERVERINFO/UPTIME"), DCI_DT_INT64, _T("MSSQL/Server: uptime in seconds") },
    { _T("MSSQL.Server.UserConnections(*)"), H_GlobalParameter, _T("PERFCOUNTERS/USERCONNECTIONS"), DCI_DT_INT, _T("MSSQL/Server: number of user connections") },
+   { _T("MSSQL.Server.UserErrors(*)"), H_GlobalParameter, _T("PERFRATES/USERERRORS"), DCI_DT_COUNTER64, _T("MSSQL/Server: total user errors") },
    { _T("MSSQL.Server.UserSessions(*)"), H_GlobalParameter, _T("GLOBALSTATS/USERSESSIONS"), DCI_DT_INT, _T("MSSQL/Server: number of user sessions") },
    { _T("MSSQL.Server.Version(*)"), H_ServerVersion, nullptr, DCI_DT_STRING, _T("MSSQL/Server: product version") },
-   { _T("MSSQL.WaitStats.SignalWaitTime(*)"), H_InstanceParameter, _T("WAITSTATS/SIGNALWAITTIME"), DCI_DT_INT64, _T("MSSQL/WaitStats: {instance} signal wait time") },
-   { _T("MSSQL.WaitStats.WaitingTasks(*)"), H_InstanceParameter, _T("WAITSTATS/WAITINGTASKS"), DCI_DT_INT64, _T("MSSQL/WaitStats: {instance} waiting tasks count") },
-   { _T("MSSQL.WaitStats.WaitTime(*)"), H_InstanceParameter, _T("WAITSTATS/WAITTIME"), DCI_DT_INT64, _T("MSSQL/WaitStats: {instance} wait time") }
+   { _T("MSSQL.Server.VersionStoreSize(*)"), H_GlobalParameter, _T("PERFRATES/VERSIONSTORESIZE"), DCI_DT_INT64, _T("MSSQL/Server: version store size in tempdb") },
+   { _T("MSSQL.Server.WorkfilesCreated(*)"), H_GlobalParameter, _T("PERFRATES/WORKFILESCREATED"), DCI_DT_COUNTER64, _T("MSSQL/Server: total workfiles created") },
+   { _T("MSSQL.Server.WorktablesCreated(*)"), H_GlobalParameter, _T("PERFRATES/WORKTABLESCREATED"), DCI_DT_COUNTER64, _T("MSSQL/Server: total worktables created") },
+   { _T("MSSQL.WaitStats.SignalWaitTime(*)"), H_InstanceParameter, _T("WAITSTATS/SIGNALWAITTIME"), DCI_DT_COUNTER64, _T("MSSQL/WaitStats: {instance} signal wait time") },
+   { _T("MSSQL.WaitStats.WaitingTasks(*)"), H_InstanceParameter, _T("WAITSTATS/WAITINGTASKS"), DCI_DT_COUNTER64, _T("MSSQL/WaitStats: {instance} waiting tasks count") },
+   { _T("MSSQL.WaitStats.WaitTime(*)"), H_InstanceParameter, _T("WAITSTATS/WAITTIME"), DCI_DT_COUNTER64, _T("MSSQL/WaitStats: {instance} wait time") }
 };
 
 /**
@@ -512,6 +629,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("MSSQL.Connections"), H_ConnectionList, nullptr, _T("MSSQL: configured server connections") },
    { _T("MSSQL.Databases(*)"), H_TagList, _T("^DATABASES/STATE@(.*)$"), _T("MSSQL: databases on monitored server") },
    { _T("MSSQL.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("MSSQL: data collection tags") },
+   { _T("MSSQL.ResourcePools(*)"), H_TagList, _T("^RESOURCEPOOL/CPUUSAGE@(.*)$"), _T("MSSQL: resource governor pools on monitored server") },
    { _T("MSSQL.WaitTypes(*)"), H_TagList, _T("^WAITSTATS/WAITTIME@(.*)$"), _T("MSSQL: active wait types on monitored server") }
 };
 
