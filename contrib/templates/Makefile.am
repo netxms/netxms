@@ -50,6 +50,7 @@ templates_DATA = \
 	ubiquity.xml \
 	unifi.xml \
 	vmware.json \
+        vmware_vcenter_esxi.json \
 	watchguard.xml \
 	wd_mycloud.xml \
 	windows.xml \
