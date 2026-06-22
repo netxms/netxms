@@ -369,23 +369,29 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
    uint32_t result = ERR_SUCCESS;
    if (serviceRequest->isDataExpired(retentionTime))
    {
-      char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
-      char *password = request->getFieldAsUtf8String(VID_PASSWORD);
+      Buffer<char, 128> login, password;
+      request->getFieldAsUtf8String(VID_LOGIN_NAME, login);
+      request->getFieldAsUtf8String(VID_PASSWORD, password);
       bool verifyHost = request->isFieldExist(VID_VERIFY_HOST) ? request->getFieldAsBoolean(VID_VERIFY_HOST) : true;
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
-      char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
+      Buffer<char, 4096> requestData;
+      request->getFieldAsUtf8String(VID_REQUEST_DATA, requestData);
 
       struct curl_slist *headers = nullptr;
       uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
       uint32_t fieldId = VID_HEADERS_BASE;
-      char header[2048];
+      Buffer<char, 2048> header, headerValue;
+      char headerName[256];
       for(uint32_t i = 0; i < headerCount; i++)
       {
-         request->getFieldAsUtf8String(fieldId++, header, sizeof(header) - 4);   // header name
-         size_t len = strlen(header);
+         request->getFieldAsUtf8String(fieldId++, headerName, sizeof(headerName));
+         request->getFieldAsUtf8String(fieldId++, headerValue);
+         size_t len = strlen(headerName);
+         header.reserve(len + 2 + headerValue.size());
+         memcpy(header.buffer(), headerName, len);
          header[len++] = ':';
          header[len++] = ' ';
-         request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
+         memcpy(header.buffer() + len, headerValue.buffer(), headerValue.size());
          headers = curl_slist_append(headers, header);
          nxlog_debug_tag(DEBUG_TAG, 7, _T("QueryWebService(): request header: %hs"), header);
       }
@@ -397,9 +403,6 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
                request->getFieldAsUInt32(VID_TIMEOUT));
 
       curl_slist_free_all(headers);
-      MemFree(login);
-      MemFree(password);
-      MemFree(requestData);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for URL \"%s\" updated"), url);
    }
    else
