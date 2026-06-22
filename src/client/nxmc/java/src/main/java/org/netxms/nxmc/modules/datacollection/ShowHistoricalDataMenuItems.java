@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -36,6 +37,7 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.datacollection.views.DataComparisonView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalDataView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
+import org.netxms.nxmc.modules.datacollection.views.RealTimeGraphView;
 import org.netxms.nxmc.modules.datacollection.views.TableLastValuesView;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -55,6 +57,7 @@ public class ShowHistoricalDataMenuItems
    private Action actionShowHistory;
    private Action actionRawLineChart;
    private Action actionShowLineChart;
+   private Action actionShowRealTimeChart;
    private Action actionShowBarChart;
    private Action actionShowPieChart;
    private Action actionShowTableData;
@@ -76,9 +79,10 @@ public class ShowHistoricalDataMenuItems
          manager.add(items.actionShowHistory);
          manager.add(items.actionRawLineChart);
          manager.add(items.actionShowLineChart);
+         manager.add(items.actionShowRealTimeChart);
          manager.add(items.actionShowBarChart);
          manager.add(items.actionShowPieChart);
-         manager.add(new Separator());   
+         manager.add(new Separator());
       }
       if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
       {
@@ -117,7 +121,7 @@ public class ShowHistoricalDataMenuItems
       };
       view.addKeyBinding("M1+H", actionShowHistory);
       
-      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) { 
+      actionShowLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
          @Override
          public void run()
          {
@@ -125,6 +129,14 @@ public class ShowHistoricalDataMenuItems
          }
       };
       view.addKeyBinding("M1+L", actionShowLineChart);
+
+      actionShowRealTimeChart = new Action(i18n.tr("&Real-time chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
+         @Override
+         public void run()
+         {
+            showRealTimeChart();
+         }
+      };
 
       actionShowBarChart = new Action(i18n.tr("&Bar chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png")) { 
          @Override
@@ -174,6 +186,14 @@ public class ShowHistoricalDataMenuItems
    protected long getObjectId(Object dci)
    {
       return dci instanceof DataCollectionObject ? ((DataCollectionObject)dci).getNodeId() : ((DciValue)dci).getNodeId();
+   }
+
+   /**
+    * Get DCI data origin
+    */
+   protected DataOrigin getOrigin(Object dci)
+   {
+      return dci instanceof DataCollectionObject ? ((DataCollectionObject)dci).getOrigin() : ((DciValue)dci).getSource();
    }
    
    /**
@@ -231,6 +251,27 @@ public class ShowHistoricalDataMenuItems
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new HistoricalGraphView(parent, items, null, contextId));
+   }
+
+   /**
+    * Show real-time chart for selected items
+    */
+   private void showRealTimeChart()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
+      List<DataOrigin> origins = new ArrayList<DataOrigin>(selection.size());
+      for(Object o : selection.toList())
+      {
+         items.add(getConfigFromObject(o));
+         origins.add(getOrigin(o));
+      }
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new RealTimeGraphView(parent, items, origins, contextId));
    }
 
    /**
