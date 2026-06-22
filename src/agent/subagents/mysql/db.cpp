@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for MySQL monitoring
- ** Copyright (C) 2016 Raden Solutions
+ ** Copyright (C) 2016-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -19,6 +19,7 @@
  **/
 
 #include "mysql_subagent.h"
+#include <netxms-regex.h>
 
 #define DEBUG_TAG _T("mysql")
 
@@ -31,7 +32,7 @@ struct GlobalData
    const TCHAR *globalStatusVar;
    const TCHAR *globalVariablesVar;
    const TCHAR *query;
-   bool (*calculator)(const StringMap *, TCHAR *);
+   bool (*calculator)(const StringMap*, TCHAR*);
 };
 
 /**
@@ -39,8 +40,8 @@ struct GlobalData
  */
 static bool A_innodbBufferPoolDataPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
-   INT64 innodbBufferPoolData = attributes->getInt64(_T("innodbBufferPoolData"), -1);
+   int64_t innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
+   int64_t innodbBufferPoolData = attributes->getInt64(_T("innodbBufferPoolData"), -1);
    if ((innodbBufferPoolSize <= 0) || (innodbBufferPoolData < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)innodbBufferPoolData / (double)innodbBufferPoolSize * 100.0);
@@ -52,8 +53,8 @@ static bool A_innodbBufferPoolDataPerc(const StringMap *attributes, TCHAR *value
  */
 static bool A_innodbBufferPoolDirtyPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
-   INT64 innodbBufferPoolDirty = attributes->getInt64(_T("innodbBufferPoolDirty"), -1);
+   int64_t innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
+   int64_t innodbBufferPoolDirty = attributes->getInt64(_T("innodbBufferPoolDirty"), -1);
    if ((innodbBufferPoolSize <= 0) || (innodbBufferPoolDirty < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)innodbBufferPoolDirty / (double)innodbBufferPoolSize * 100.0);
@@ -65,8 +66,8 @@ static bool A_innodbBufferPoolDirtyPerc(const StringMap *attributes, TCHAR *valu
  */
 static bool A_innodbBufferPoolFree(const StringMap *attributes, TCHAR *value)
 {
-   INT64 innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
-   INT64 innodbBufferPoolData = attributes->getInt64(_T("innodbBufferPoolData"), -1);
+   int64_t innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
+   int64_t innodbBufferPoolData = attributes->getInt64(_T("innodbBufferPoolData"), -1);
    if ((innodbBufferPoolSize <= 0) || (innodbBufferPoolData < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, innodbBufferPoolSize - innodbBufferPoolData);
@@ -78,8 +79,8 @@ static bool A_innodbBufferPoolFree(const StringMap *attributes, TCHAR *value)
  */
 static bool A_innodbBufferPoolFreePerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
-   INT64 innodbBufferPoolFree = attributes->getInt64(_T("innodbBufferPoolFree"), -1);
+   int64_t innodbBufferPoolSize = attributes->getInt64(_T("innodbBufferPoolSize"), -1);
+   int64_t innodbBufferPoolFree = attributes->getInt64(_T("innodbBufferPoolFree"), -1);
    if ((innodbBufferPoolSize <= 0) || (innodbBufferPoolFree < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)innodbBufferPoolFree / (double)innodbBufferPoolSize * 100.0);
@@ -91,8 +92,8 @@ static bool A_innodbBufferPoolFreePerc(const StringMap *attributes, TCHAR *value
  */
 static bool A_innodbReadCacheHitRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 innodbDiskReads = attributes->getInt64(_T("innodbDiskReads"), -1);
-   INT64 innodbReadRequests = attributes->getInt64(_T("innodbReadRequests"), -1);
+   int64_t innodbDiskReads = attributes->getInt64(_T("innodbDiskReads"), -1);
+   int64_t innodbReadRequests = attributes->getInt64(_T("innodbReadRequests"), -1);
    if ((innodbDiskReads < 0) || (innodbReadRequests < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((innodbReadRequests > 0) ? (double)innodbDiskReads / (double)innodbReadRequests * 100.0 : (double)0));
@@ -104,8 +105,8 @@ static bool A_innodbReadCacheHitRatio(const StringMap *attributes, TCHAR *value)
  */
 static bool A_maxUsedConnectionsPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 connectionsLimit = attributes->getInt64(_T("connectionsLimit"), -1);
-   INT64 maxUsedConnections = attributes->getInt64(_T("maxUsedConnections"), -1);
+   int64_t connectionsLimit = attributes->getInt64(_T("connectionsLimit"), -1);
+   int64_t maxUsedConnections = attributes->getInt64(_T("maxUsedConnections"), -1);
    if ((connectionsLimit <= 0) || (maxUsedConnections < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)maxUsedConnections / (double)connectionsLimit * 100.0);
@@ -117,8 +118,8 @@ static bool A_maxUsedConnectionsPerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_myISAMKeyCacheFree(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyCacheBlockSize = attributes->getInt64(_T("myISAMKeyCacheBlockSize"), -1);
-   INT64 myISAMKeyCacheBlocksUnused = attributes->getInt64(_T("myISAMKeyCacheBlocksUnused"), -1);
+   int64_t myISAMKeyCacheBlockSize = attributes->getInt64(_T("myISAMKeyCacheBlockSize"), -1);
+   int64_t myISAMKeyCacheBlocksUnused = attributes->getInt64(_T("myISAMKeyCacheBlocksUnused"), -1);
    if ((myISAMKeyCacheBlockSize < 0) || (myISAMKeyCacheBlocksUnused < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, myISAMKeyCacheBlocksUnused * myISAMKeyCacheBlockSize);
@@ -130,8 +131,8 @@ static bool A_myISAMKeyCacheFree(const StringMap *attributes, TCHAR *value)
  */
 static bool A_myISAMKeyCacheFreePerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
-   INT64 myISAMKeyCacheFree = attributes->getInt64(_T("myISAMKeyCacheFree"), -1);
+   int64_t myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
+   int64_t myISAMKeyCacheFree = attributes->getInt64(_T("myISAMKeyCacheFree"), -1);
    if ((myISAMKeyCacheSize < 0) || (myISAMKeyCacheFree < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (myISAMKeyCacheSize > 0) ? (double)myISAMKeyCacheFree / (double)myISAMKeyCacheSize * 100.0 : (double)0);
@@ -143,8 +144,8 @@ static bool A_myISAMKeyCacheFreePerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_myISAMKeyCacheReadHitRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyDiskReads = attributes->getInt64(_T("myISAMKeyDiskReads"), -1);
-   INT64 myISAMKeyReadRequests = attributes->getInt64(_T("myISAMKeyReadRequests"), -1);
+   int64_t myISAMKeyDiskReads = attributes->getInt64(_T("myISAMKeyDiskReads"), -1);
+   int64_t myISAMKeyReadRequests = attributes->getInt64(_T("myISAMKeyReadRequests"), -1);
    if ((myISAMKeyDiskReads < 0) || (myISAMKeyReadRequests < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((myISAMKeyReadRequests > 0) ? (double)myISAMKeyDiskReads / (double)myISAMKeyReadRequests * 100.0 : (double)0));
@@ -156,8 +157,8 @@ static bool A_myISAMKeyCacheReadHitRatio(const StringMap *attributes, TCHAR *val
  */
 static bool A_myISAMKeyCacheUsed(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
-   INT64 myISAMKeyCacheFree = attributes->getInt64(_T("myISAMKeyCacheFree"), -1);
+   int64_t myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
+   int64_t myISAMKeyCacheFree = attributes->getInt64(_T("myISAMKeyCacheFree"), -1);
    if ((myISAMKeyCacheSize < 0) || (myISAMKeyCacheFree < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, myISAMKeyCacheSize - myISAMKeyCacheFree);
@@ -169,8 +170,8 @@ static bool A_myISAMKeyCacheUsed(const StringMap *attributes, TCHAR *value)
  */
 static bool A_myISAMKeyCacheUsedPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
-   INT64 myISAMKeyCacheUsed = attributes->getInt64(_T("myISAMKeyCacheUsed"), -1);
+   int64_t myISAMKeyCacheSize = attributes->getInt64(_T("myISAMKeyCacheSize"), -1);
+   int64_t myISAMKeyCacheUsed = attributes->getInt64(_T("myISAMKeyCacheUsed"), -1);
    if ((myISAMKeyCacheSize < 0) || (myISAMKeyCacheUsed < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (myISAMKeyCacheSize > 0) ? (double)myISAMKeyCacheUsed / (double)myISAMKeyCacheSize * 100.0 : (double)0);
@@ -182,8 +183,8 @@ static bool A_myISAMKeyCacheUsedPerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_myISAMKeyCacheWriteHitRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 myISAMKeyDiskWrites = attributes->getInt64(_T("myISAMKeyDiskWrites"), -1);
-   INT64 myISAMKeyWriteRequests = attributes->getInt64(_T("myISAMKeyWriteRequests"), -1);
+   int64_t myISAMKeyDiskWrites = attributes->getInt64(_T("myISAMKeyDiskWrites"), -1);
+   int64_t myISAMKeyWriteRequests = attributes->getInt64(_T("myISAMKeyWriteRequests"), -1);
    if ((myISAMKeyDiskWrites < 0) || (myISAMKeyWriteRequests < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (myISAMKeyWriteRequests > 0) ? (double)myISAMKeyDiskWrites / (double)myISAMKeyWriteRequests * 100.0 : (double)0);
@@ -195,8 +196,8 @@ static bool A_myISAMKeyCacheWriteHitRatio(const StringMap *attributes, TCHAR *va
  */
 static bool A_openFilesPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 maxOpenFiles = attributes->getInt64(_T("maxOpenFiles"), -1);
-   INT64 openFiles = attributes->getInt64(_T("openFiles"), -1);
+   int64_t maxOpenFiles = attributes->getInt64(_T("maxOpenFiles"), -1);
+   int64_t openFiles = attributes->getInt64(_T("openFiles"), -1);
    if ((maxOpenFiles <= 0) || (openFiles < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)openFiles / (double)maxOpenFiles * 100.0);
@@ -208,8 +209,8 @@ static bool A_openFilesPerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_openTablesPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 openTablesLimit = attributes->getInt64(_T("openTablesLimit"), -1);
-   INT64 openTables = attributes->getInt64(_T("openTables"), -1);
+   int64_t openTablesLimit = attributes->getInt64(_T("openTablesLimit"), -1);
+   int64_t openTables = attributes->getInt64(_T("openTables"), -1);
    if ((openTablesLimit <= 0) || (openTables < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)openTables / (double)openTablesLimit * 100.0);
@@ -221,11 +222,11 @@ static bool A_openTablesPerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_qcacheHitRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 qcacheHits = attributes->getInt64(_T("qcacheHits"), -1);
-   INT64 queriesSelectNoCache = attributes->getInt64(_T("queriesSelectNoCache"), -1);
+   int64_t qcacheHits = attributes->getInt64(_T("qcacheHits"), -1);
+   int64_t queriesSelectNoCache = attributes->getInt64(_T("queriesSelectNoCache"), -1);
    if ((queriesSelectNoCache < 0) || (qcacheHits < 0))
       return false;
-   INT64 totalSelects = qcacheHits + queriesSelectNoCache;
+   int64_t totalSelects = qcacheHits + queriesSelectNoCache;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (totalSelects > 0) ? (double)qcacheHits / (double)totalSelects * 100.0 : (double)0);
    return true;
 }
@@ -235,8 +236,8 @@ static bool A_qcacheHitRatio(const StringMap *attributes, TCHAR *value)
  */
 static bool A_queriesSelect(const StringMap *attributes, TCHAR *value)
 {
-   INT64 qcacheHits = attributes->getInt64(_T("qcacheHits"), -1);
-   INT64 queriesSelectNoCache = attributes->getInt64(_T("queriesSelectNoCache"), -1);
+   int64_t qcacheHits = attributes->getInt64(_T("qcacheHits"), -1);
+   int64_t queriesSelectNoCache = attributes->getInt64(_T("queriesSelectNoCache"), -1);
    if ((queriesSelectNoCache < 0) || (qcacheHits < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, qcacheHits + queriesSelectNoCache);
@@ -248,8 +249,8 @@ static bool A_queriesSelect(const StringMap *attributes, TCHAR *value)
  */
 static bool A_slowQueriesPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 slowQueriesPerc = attributes->getInt64(_T("slowQueries"), -1);
-   INT64 queriesTotal = attributes->getInt64(_T("queriesTotal"), -1);
+   int64_t slowQueriesPerc = attributes->getInt64(_T("slowQueries"), -1);
+   int64_t queriesTotal = attributes->getInt64(_T("queriesTotal"), -1);
    if ((slowQueriesPerc < 0) || (queriesTotal < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (queriesTotal > 0) ? (double)slowQueriesPerc / (double)queriesTotal * 100.0 : (double)0);
@@ -261,12 +262,12 @@ static bool A_slowQueriesPerc(const StringMap *attributes, TCHAR *value)
  */
 static bool A_sortMergeRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 sortMergePasses = attributes->getInt64(_T("sortMergePasses"), -1);
-   INT64 sortRange = attributes->getInt64(_T("sortRange"), -1);
-   INT64 sortScan = attributes->getInt64(_T("sortScan"), -1);
+   int64_t sortMergePasses = attributes->getInt64(_T("sortMergePasses"), -1);
+   int64_t sortRange = attributes->getInt64(_T("sortRange"), -1);
+   int64_t sortScan = attributes->getInt64(_T("sortScan"), -1);
    if ((sortMergePasses < 0) || (sortRange < 0) || (sortScan < 0))
       return false;
-   INT64 sorts = sortRange + sortScan;
+   int64_t sorts = sortRange + sortScan;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (sorts > 0) ? (double)sortMergePasses / (double)sorts * 100.0 : (double)0);
    return true;
 }
@@ -276,8 +277,8 @@ static bool A_sortMergeRatio(const StringMap *attributes, TCHAR *value)
  */
 static bool A_tempTablesCreatedOnDiskPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 tempTablesCreated = attributes->getInt64(_T("tempTablesCreated"), -1);
-   INT64 tempTablesCreatedOnDisk = attributes->getInt64(_T("tempTablesCreatedOnDisk"), -1);
+   int64_t tempTablesCreated = attributes->getInt64(_T("tempTablesCreated"), -1);
+   int64_t tempTablesCreatedOnDisk = attributes->getInt64(_T("tempTablesCreatedOnDisk"), -1);
    if ((tempTablesCreated < 0) || (tempTablesCreatedOnDisk < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (tempTablesCreated > 0) ? (double)tempTablesCreatedOnDisk / (double)tempTablesCreated * 100.0 : (double)0);
@@ -289,8 +290,8 @@ static bool A_tempTablesCreatedOnDiskPerc(const StringMap *attributes, TCHAR *va
  */
 static bool A_threadCacheHitRatio(const StringMap *attributes, TCHAR *value)
 {
-   INT64 connectionsTotal = attributes->getInt64(_T("connectionsTotal"), -1);
-   INT64 threadsCreated = attributes->getInt64(_T("threadsCreated"), -1);
+   int64_t connectionsTotal = attributes->getInt64(_T("connectionsTotal"), -1);
+   int64_t threadsCreated = attributes->getInt64(_T("threadsCreated"), -1);
    if ((connectionsTotal < 0) || (threadsCreated < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((connectionsTotal > 0) ? (double)threadsCreated / (double)connectionsTotal * 100.0 : (double)0));
@@ -302,8 +303,8 @@ static bool A_threadCacheHitRatio(const StringMap *attributes, TCHAR *value)
  */
 static bool A_threadsConnectedPerc(const StringMap *attributes, TCHAR *value)
 {
-   INT64 connectionsLimit = attributes->getInt64(_T("connectionsLimit"), -1);
-   INT64 threadsConnected = attributes->getInt64(_T("threadsConnected"), -1);
+   int64_t connectionsLimit = attributes->getInt64(_T("connectionsLimit"), -1);
+   int64_t threadsConnected = attributes->getInt64(_T("threadsConnected"), -1);
    if ((connectionsLimit <= 0) || (threadsConnected < 0))
       return false;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (double)threadsConnected / (double)connectionsLimit * 100.0);
@@ -387,6 +388,86 @@ static GlobalData s_globalData[] =
    { _T("threadsConnectedPerc"), NULL, NULL, NULL, A_threadsConnectedPerc },
    { NULL, NULL, NULL, NULL, NULL }
 };
+
+/**
+ * Per-database (per-schema) statistics query. The first result column is the schema name
+ * (used as instance); every remaining column is stored in the cached data map under the key
+ * "<columnAlias>@<schema>". Tier 2 queries require performance schema instrumentation and are
+ * skipped on MariaDB and MySQL < 5.7.
+ */
+struct PerDatabaseQuery
+{
+   bool requiresPerformanceSchema;
+   const TCHAR *query;
+};
+
+/**
+ * Per-database statistics queries
+ */
+static PerDatabaseQuery s_perDatabaseQueries[] =
+{
+   // Tier 1: storage statistics from information_schema (always available)
+   { false,
+     _T("SELECT TABLE_SCHEMA AS instance, COUNT(*) AS tableCount, ")
+     _T("COALESCE(SUM(DATA_LENGTH),0) AS dataSize, COALESCE(SUM(INDEX_LENGTH),0) AS indexSize, ")
+     _T("COALESCE(SUM(DATA_LENGTH+INDEX_LENGTH),0) AS totalSize, COALESCE(SUM(TABLE_ROWS),0) AS rowCount, ")
+     _T("COALESCE(SUM(DATA_FREE),0) AS freeSpace, ")
+     _T("SUM(CASE WHEN DATA_FREE > 0 AND ENGINE <> 'MEMORY' THEN 1 ELSE 0 END) AS fragmentedTables ")
+     _T("FROM information_schema.TABLES WHERE TABLE_TYPE='BASE TABLE' ")
+     _T("AND TABLE_SCHEMA NOT IN ('information_schema','performance_schema') GROUP BY TABLE_SCHEMA")
+   },
+   // Tier 2: activity statistics from performance schema (MySQL >= 5.7)
+   { true,
+     _T("SELECT OBJECT_SCHEMA AS instance, COALESCE(SUM(COUNT_READ),0) AS rowsRead, ")
+     _T("COALESCE(SUM(COUNT_FETCH),0) AS rowsFetched, COALESCE(SUM(COUNT_INSERT),0) AS rowsInserted, ")
+     _T("COALESCE(SUM(COUNT_UPDATE),0) AS rowsUpdated, COALESCE(SUM(COUNT_DELETE),0) AS rowsDeleted, ")
+     _T("COALESCE(ROUND(SUM(SUM_TIMER_WAIT)/1000000000),0) AS ioWaitTime ")
+     _T("FROM performance_schema.table_io_waits_summary_by_table ")
+     _T("WHERE OBJECT_SCHEMA IS NOT NULL AND OBJECT_SCHEMA NOT IN ('information_schema','mysql','performance_schema','sys') ")
+     _T("GROUP BY OBJECT_SCHEMA")
+   },
+   { false, nullptr }
+};
+
+/**
+ * Collect per-database (per-schema) statistics into the cached data map. Each metric is stored
+ * under the key "<columnAlias>@<schema>". Best-effort: a failed query is logged but does not mark
+ * the connection as broken, so an absent or disabled performance schema does not disrupt polling.
+ */
+static void ReadPerDatabaseStats(DB_HANDLE hdb, bool usePerformanceSchema, const TCHAR *connId, StringMap *data)
+{
+   for(int i = 0; s_perDatabaseQueries[i].query != nullptr; i++)
+   {
+      if (s_perDatabaseQueries[i].requiresPerformanceSchema && !usePerformanceSchema)
+         continue;
+
+      DB_RESULT hResult = DBSelect(hdb, s_perDatabaseQueries[i].query);
+      if (hResult == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("MYSQL: per-database statistics query failed for connection %s"), connId);
+         continue;
+      }
+
+      int numColumns = DBGetColumnCount(hResult);
+      int numRows = DBGetNumRows(hResult);
+      for(int row = 0; row < numRows; row++)
+      {
+         TCHAR schema[128];
+         DBGetField(hResult, row, 0, schema, 128);
+         if (schema[0] == 0)
+            continue;
+
+         for(int col = 1; col < numColumns; col++)
+         {
+            TCHAR column[128], tag[256];
+            DBGetColumnName(hResult, col, column, 128);
+            _sntprintf(tag, 256, _T("%s@%s"), column, schema);
+            data->setPreallocated(MemCopyString(tag), DBGetField(hResult, row, col, nullptr, 0));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
 
 /**
  * Create new database instance object
@@ -746,6 +827,9 @@ bool DatabaseConnection::poll()
    delete globalStatus;
    delete globalVariables;
 
+   // Collect per-database (per-schema) statistics into the same data map (best-effort)
+   ReadPerDatabaseStats(m_session, m_usePerformanceSchema, m_info.id, data);
+
    // update cached data
    m_dataLock.lock();
    delete m_data;
@@ -768,6 +852,57 @@ bool DatabaseConnection::getData(const TCHAR *tag, TCHAR *value)
       if (v != nullptr)
       {
          ret_string(value, v);
+         success = true;
+      }
+   }
+   m_dataLock.unlock();
+   return success;
+}
+
+/**
+ * Tag list callback data
+ */
+struct TagListCallbackData
+{
+   PCRE *preg;
+   StringList *list;
+};
+
+/**
+ * Tag list callback
+ */
+static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *value, TagListCallbackData *data)
+{
+   int pmatch[9];
+   if (_pcre_exec_t(data->preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, pmatch, 9) >= 2)
+   {
+      size_t slen = pmatch[3] - pmatch[2];
+      Buffer<TCHAR, 256> s(slen + 1);
+      memcpy(s.buffer(), &key[pmatch[2]], slen * sizeof(TCHAR));
+      s[slen] = 0;
+      data->list->add(s);
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Get list of instances captured by group 1 of given pattern from collected data
+ */
+bool DatabaseConnection::getTagList(const TCHAR *pattern, StringList *value)
+{
+   bool success = false;
+   m_dataLock.lock();
+   if (m_data != nullptr)
+   {
+      const char *eptr;
+      int eoffset;
+      TagListCallbackData data;
+      data.list = value;
+      data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+      if (data.preg != nullptr)
+      {
+         m_data->forEach(TagListCallback, &data);
+         _pcre_free_t(data.preg);
          success = true;
       }
    }

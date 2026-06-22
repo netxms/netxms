@@ -64,6 +64,42 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 }
 
 /**
+ * Handler for per-database parameters. The metric is addressed either as
+ * Metric(connectionId, databaseName) or Metric(databaseName@connectionId).
+ */
+static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR id[MAX_DB_STRING];
+   if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   TCHAR *c;
+   TCHAR instance[MAX_DB_STRING];
+   if ((c = _tcschr(id, _T('@'))) != nullptr)  // first parameter in format database@connection
+   {
+      *(c++) = 0;
+      _tcslcpy(instance, id, MAX_DB_STRING);
+      _tcslcpy(id, c, MAX_DB_STRING);
+   }
+
+   DatabaseConnection *db = FindConnection(id);
+   if (db == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   if (c == nullptr)
+   {
+      if (!AgentGetParameterArg(param, 2, instance, MAX_DB_STRING))
+         return SYSINFO_RC_UNSUPPORTED;
+      if (instance[0] == 0)
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+   }
+
+   TCHAR tag[MAX_DB_STRING];
+   _sntprintf(tag, MAX_DB_STRING, _T("%s@%s"), arg, instance);
+   return db->getData(tag, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_NO_SUCH_INSTANCE;
+}
+
+/**
  * Handler for MySQL.IsReachable parameter
  */
 static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -87,6 +123,47 @@ static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *
 {
    for(int i = 0; i < s_connections->size(); i++)
       value->add(s_connections->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for MySQL.Databases list - databases on a single connection
+ */
+static LONG H_DatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   TCHAR id[MAX_DB_STRING];
+   if (!AgentGetParameterArg(param, 1, id, MAX_DB_STRING))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   DatabaseConnection *db = FindConnection(id);
+   if (db == nullptr)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   return db->getTagList(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Handler for MySQL.AllDatabases list. Rows are emitted in canonical positional form
+ * "connectionId,databaseName" so they can be fed directly into the (connectionId, database)
+ * metric signature via instance discovery.
+ */
+static LONG H_AllDatabasesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_connections->size(); i++)
+   {
+      DatabaseConnection *db = s_connections->get(i);
+
+      StringList list;
+      if (!db->getTagList(arg, &list))
+         return SYSINFO_RC_ERROR;
+
+      for(int j = 0; j < list.size(); j++)
+      {
+         TCHAR s[MAX_RESULT_LENGTH];
+         _sntprintf(s, MAX_RESULT_LENGTH, _T("%s,%s"), db->getId(), list.get(j));
+         value->add(s);
+      }
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -251,6 +328,19 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("MySQL.Connections.Max(*)"), H_GlobalParameter, _T("maxUsedConnections"), DCI_DT_UINT64, _T("MySQL: maximum number of simultaneous connections") },
    { _T("MySQL.Connections.MaxPerc(*)"), H_GlobalParameter, _T("maxUsedConnectionsPerc"), DCI_DT_FLOAT, _T("MySQL: maximum connection pool usage  (%)") },
    { _T("MySQL.Connections.Total(*)"), H_GlobalParameter, _T("connectionsTotal"), DCI_DT_UINT64, _T("MySQL: cumulative connection count") },
+   { _T("MySQL.Database.DataSize(*)"), H_InstanceParameter, _T("dataSize"), DCI_DT_UINT64, _T("MySQL: {instance-name} data size") },
+   { _T("MySQL.Database.FragmentedTables(*)"), H_InstanceParameter, _T("fragmentedTables"), DCI_DT_UINT, _T("MySQL: {instance-name} fragmented tables") },
+   { _T("MySQL.Database.FreeSpace(*)"), H_InstanceParameter, _T("freeSpace"), DCI_DT_UINT64, _T("MySQL: {instance-name} reclaimable free space") },
+   { _T("MySQL.Database.IndexSize(*)"), H_InstanceParameter, _T("indexSize"), DCI_DT_UINT64, _T("MySQL: {instance-name} index size") },
+   { _T("MySQL.Database.IOWaitTime(*)"), H_InstanceParameter, _T("ioWaitTime"), DCI_DT_UINT64, _T("MySQL: {instance-name} table I/O wait time (ms)") },
+   { _T("MySQL.Database.Rows(*)"), H_InstanceParameter, _T("rowCount"), DCI_DT_UINT64, _T("MySQL: {instance-name} estimated number of rows") },
+   { _T("MySQL.Database.RowsDeleted(*)"), H_InstanceParameter, _T("rowsDeleted"), DCI_DT_UINT64, _T("MySQL: {instance-name} deleted rows") },
+   { _T("MySQL.Database.RowsFetched(*)"), H_InstanceParameter, _T("rowsFetched"), DCI_DT_UINT64, _T("MySQL: {instance-name} fetched rows") },
+   { _T("MySQL.Database.RowsInserted(*)"), H_InstanceParameter, _T("rowsInserted"), DCI_DT_UINT64, _T("MySQL: {instance-name} inserted rows") },
+   { _T("MySQL.Database.RowsRead(*)"), H_InstanceParameter, _T("rowsRead"), DCI_DT_UINT64, _T("MySQL: {instance-name} read rows") },
+   { _T("MySQL.Database.RowsUpdated(*)"), H_InstanceParameter, _T("rowsUpdated"), DCI_DT_UINT64, _T("MySQL: {instance-name} updated rows") },
+   { _T("MySQL.Database.TableCount(*)"), H_InstanceParameter, _T("tableCount"), DCI_DT_UINT, _T("MySQL: {instance-name} number of tables") },
+   { _T("MySQL.Database.TotalSize(*)"), H_InstanceParameter, _T("totalSize"), DCI_DT_UINT64, _T("MySQL: {instance-name} total size (data + indexes)") },
    { _T("MySQL.InnoDB.BufferPool.Dirty(*)"), H_GlobalParameter, _T("innodbBufferPoolDirty"), DCI_DT_UINT64, _T("MySQL: InnoDB used buffer pool space in dirty pages") },
    { _T("MySQL.InnoDB.BufferPool.DirtyPerc(*)"), H_GlobalParameter, _T("innodbBufferPoolDirtyPerc"), DCI_DT_FLOAT, _T("MySQL: InnoDB used buffer pool space in dirty pages (%)") },
    { _T("MySQL.InnoDB.BufferPool.Free(*)"), H_GlobalParameter, _T("innodbBufferPoolFree"), DCI_DT_UINT64, _T("MySQL: InnoDB free buffer pool space") },
@@ -314,7 +404,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("MySQL.Connections"), H_ConnectionsList, nullptr, _T("MySQL: configured database connections") }
+   { _T("MySQL.Connections"), H_ConnectionsList, nullptr, _T("MySQL: configured database connections") },
+   { _T("MySQL.Databases(*)"), H_DatabasesList, _T("^dataSize@(.*)$"), _T("MySQL: databases on the specific connection") },
+   { _T("MySQL.AllDatabases"), H_AllDatabasesList, _T("^dataSize@(.*)$"), _T("MySQL: all databases on all monitored connections") }
 };
 
 /**

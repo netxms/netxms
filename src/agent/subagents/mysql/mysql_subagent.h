@@ -72,6 +72,7 @@ public:
    bool isConnected() { return m_connected; }
 
    bool getData(const TCHAR *tag, TCHAR *value);
+   bool getTagList(const TCHAR *pattern, StringList *value);
 };
 
 /**
