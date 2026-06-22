@@ -258,6 +258,73 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
 }
 
 /**
+ * Build environment block for child process by merging the current process
+ * environment with caller-supplied overrides. Returns a newly allocated,
+ * double-null-terminated UNICODE environment block (caller frees with MemFree),
+ * or nullptr if no overrides were supplied (child inherits environment as-is).
+ * Override matching is case-insensitive, per Windows environment semantics.
+ */
+static TCHAR *BuildEnvironmentBlock(const StringMap& env)
+{
+   if (env.isEmpty())
+      return nullptr;
+
+   StringList overrideKeys, entries;
+   env.forEach([&overrideKeys, &entries](const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      {
+         overrideKeys.add(key);
+         StringBuffer kv(key);
+         kv.append(_T('='));
+         kv.append(static_cast<const TCHAR*>(value));
+         entries.add(kv);
+         return _CONTINUE;
+      });
+
+   // Copy inherited entries, skipping any whose key is overridden. Entries that
+   // start with '=' (Windows per-drive working-directory vars) are kept as-is.
+   LPWCH current = GetEnvironmentStringsW();
+   if (current != nullptr)
+   {
+      for(const WCHAR *p = current; *p != 0; p += wcslen(p) + 1)
+      {
+         const WCHAR *eq = wcschr(p, L'=');
+         bool overridden = false;
+         if ((eq != nullptr) && (eq != p))
+         {
+            size_t keyLen = static_cast<size_t>(eq - p);
+            for(int i = 0; i < overrideKeys.size(); i++)
+            {
+               const TCHAR *k = overrideKeys.get(i);
+               if ((_tcslen(k) == keyLen) && (_tcsnicmp(k, p, keyLen) == 0))
+               {
+                  overridden = true;
+                  break;
+               }
+            }
+         }
+         if (!overridden)
+            entries.add(p);
+      }
+      FreeEnvironmentStringsW(current);
+   }
+
+   size_t total = 1;   // final terminating null
+   for(int i = 0; i < entries.size(); i++)
+      total += _tcslen(entries.get(i)) + 1;
+
+   TCHAR *block = MemAllocArray<TCHAR>(total);
+   TCHAR *w = block;
+   for(int i = 0; i < entries.size(); i++)
+   {
+      size_t len = _tcslen(entries.get(i));
+      memcpy(w, entries.get(i), (len + 1) * sizeof(TCHAR));
+      w += len + 1;
+   }
+   *w = 0;   // double-null termination
+   return block;
+}
+
+/**
  * Execute command with output capture
  */
 bool ProcessExecutor::executeWithOutput()
@@ -293,7 +360,11 @@ bool ProcessExecutor::executeWithOutput()
    StringBuffer appNameBuffer;
    StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
    const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
-   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT | CREATE_SUSPENDED, nullptr, m_workingDirectory, &si.StartupInfo, &pi))
+   TCHAR *envBlock = BuildEnvironmentBlock(m_environment);
+   DWORD creationFlags = EXTENDED_STARTUPINFO_PRESENT | CREATE_SUSPENDED | ((envBlock != nullptr) ? CREATE_UNICODE_ENVIRONMENT : 0);
+   BOOL created = CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, creationFlags, envBlock, m_workingDirectory, &si.StartupInfo, &pi);
+   MemFree(envBlock);
+   if (created)
    {
       if (appName != nullptr)
          nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
@@ -363,7 +434,11 @@ bool ProcessExecutor::executeWithoutOutput()
    si.cb = sizeof(STARTUPINFO);
 
    PROCESS_INFORMATION pi;
-   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, CREATE_SUSPENDED, nullptr, m_workingDirectory, &si, &pi))
+   TCHAR *envBlock = BuildEnvironmentBlock(m_environment);
+   DWORD creationFlags = CREATE_SUSPENDED | ((envBlock != nullptr) ? CREATE_UNICODE_ENVIRONMENT : 0);
+   BOOL created = CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, creationFlags, envBlock, m_workingDirectory, &si, &pi);
+   MemFree(envBlock);
+   if (!created)
    {
       TCHAR buffer[1024];
       if (appName != nullptr)
@@ -416,6 +491,87 @@ bool ProcessExecutor::executeWithoutOutput()
 #define USE_VFORK 0
 #endif
 
+extern char **environ;
+
+/**
+ * Build environment block for child process by merging the current process
+ * environment with caller-supplied overrides. Returns a newly allocated,
+ * nullptr-terminated array of "KEY=VALUE" strings (free with FreeEnvironmentBlock),
+ * or nullptr if no overrides were supplied (child inherits environment as-is).
+ * The block is built in the parent so the child only reads it before exec().
+ */
+static char **BuildEnvironmentBlock(const StringMap& env)
+{
+   if (env.isEmpty())
+      return nullptr;
+
+   int overrideCount = env.size();
+   char **overrides = MemAllocArray<char*>(overrideCount);
+   size_t *keyLengths = MemAllocArray<size_t>(overrideCount);
+
+   int idx = 0;
+   env.forEach([&overrides, &keyLengths, &idx](const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      {
+         StringBuffer kv(key);
+         kv.append(_T('='));
+         kv.append(static_cast<const TCHAR*>(value));
+#ifdef UNICODE
+         char *mb = MBStringFromWideStringSysLocale(kv);
+#else
+         char *mb = MemCopyStringA(kv);
+#endif
+         const char *eq = strchr(mb, '=');
+         keyLengths[idx] = (eq != nullptr) ? static_cast<size_t>(eq - mb) : strlen(mb);
+         overrides[idx] = mb;
+         idx++;
+         return _CONTINUE;
+      });
+
+   int baseCount = 0;
+   for(char **e = environ; *e != nullptr; e++)
+      baseCount++;
+
+   char **block = MemAllocArray<char*>(baseCount + overrideCount + 1);
+   int n = 0;
+
+   // Copy inherited entries, skipping any whose key is overridden (case-sensitive)
+   for(char **e = environ; *e != nullptr; e++)
+   {
+      bool overridden = false;
+      for(int i = 0; i < overrideCount; i++)
+      {
+         if (!strncmp(*e, overrides[i], keyLengths[i]) && ((*e)[keyLengths[i]] == '='))
+         {
+            overridden = true;
+            break;
+         }
+      }
+      if (!overridden)
+         block[n++] = MemCopyStringA(*e);
+   }
+
+   // Append overrides (ownership of the rendered strings transfers to the block)
+   for(int i = 0; i < overrideCount; i++)
+      block[n++] = overrides[i];
+   block[n] = nullptr;
+
+   MemFree(overrides);
+   MemFree(keyLengths);
+   return block;
+}
+
+/**
+ * Free environment block created by BuildEnvironmentBlock
+ */
+static void FreeEnvironmentBlock(char **block)
+{
+   if (block == nullptr)
+      return;
+   for(char **e = block; *e != nullptr; e++)
+      MemFree(*e);
+   MemFree(block);
+}
+
 /**
  * Arguments for process entry
  */
@@ -425,6 +581,7 @@ struct ProcessEntryArgs
    bool shellExec;
    int pipe[2];
    const char *workingDirectory;
+   char **envp;
    int *execError;
 #if USE_VFORK
    sigset_t oldmask;
@@ -471,7 +628,15 @@ static int ProcessEntry(void *argsp)
 
    if (args->shellExec)
    {
-      execl("/bin/sh", "/bin/sh", "-c", args->cmdline, nullptr);
+      if (args->envp != nullptr)
+      {
+         char *argv[] = { const_cast<char*>("/bin/sh"), const_cast<char*>("-c"), args->cmdline, nullptr };
+         execve("/bin/sh", argv, args->envp);
+      }
+      else
+      {
+         execl("/bin/sh", "/bin/sh", "-c", args->cmdline, nullptr);
+      }
    }
    else
    {
@@ -582,7 +747,10 @@ static int ProcessEntry(void *argsp)
          }
          argv[index] = nullptr;
       }
-      execv(argv[0], argv);
+      if (args->envp != nullptr)
+         execve(argv[0], argv, args->envp);
+      else
+         execv(argv[0], argv);
    }
 
    // exec failed
@@ -597,13 +765,14 @@ static int ProcessEntry(void *argsp)
 /**
  * Spawn new process
  */
-static pid_t spawn(char *cmdline, bool shellExec, int *pipe, const char *workingDirectory, int *execError)
+static pid_t spawn(char *cmdline, bool shellExec, int *pipe, const char *workingDirectory, char **envp, int *execError)
 {
    ProcessEntryArgs args;
    args.cmdline = cmdline;
    args.shellExec = shellExec;
    memcpy(args.pipe, pipe, sizeof(int) * 2);
    args.workingDirectory = workingDirectory;
+   args.envp = envp;
    args.execError = execError;
 
 #if USE_VFORK
@@ -683,8 +852,10 @@ bool ProcessExecutor::execute()
    char *cmdline = MemCopyStringA(m_cmd);
 #endif
    int execError = 0;
-   m_pid = spawn(cmdline, m_shellExec, m_pipe, m_workingDirectory, &execError);
+   char **envp = BuildEnvironmentBlock(m_environment);
+   m_pid = spawn(cmdline, m_shellExec, m_pipe, m_workingDirectory, envp, &execError);
    MemFree(cmdline);
+   FreeEnvironmentBlock(envp);
 
    if (m_pid != -1)
    {

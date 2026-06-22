@@ -121,6 +121,7 @@ protected:
    bool m_sendOutput;
    bool m_replaceNullCharacters;
    bool m_selfDestruct;
+   StringMap m_environment;
 
 #ifdef _WIN32
    HANDLE getOutputPipe() { return m_pipe; }
@@ -163,6 +164,11 @@ public:
 #ifdef _WIN32
    void detach();
 #endif
+
+   void setEnvironmentVariable(const TCHAR *name, const TCHAR *value)
+   {
+      m_environment.set(name, value);
+   }
 
    void setWorkingDirectory(const TCHAR *workingDirectory)
    {
