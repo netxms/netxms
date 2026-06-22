@@ -270,11 +270,16 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
    frame.AddrFrame.Mode = AddrModeFlat;
    frame.AddrStack.Mode = AddrModeFlat;
    DWORD machineType;
-#ifdef _M_IX86
+#if defined(_M_IX86)
    machineType = IMAGE_FILE_MACHINE_I386;
    frame.AddrPC.Offset = context.Eip;
    frame.AddrFrame.Offset = context.Ebp;
    frame.AddrStack.Offset = context.Esp;
+#elif defined(_M_ARM64)
+   machineType = IMAGE_FILE_MACHINE_ARM64;
+   frame.AddrPC.Offset = context.Pc;
+   frame.AddrFrame.Offset = context.Fp;
+   frame.AddrStack.Offset = context.Sp;
 #else
    machineType = IMAGE_FILE_MACHINE_AMD64;
    frame.AddrPC.Offset = context.Rip;
