@@ -165,8 +165,10 @@ public:
    TCHAR *getFieldAsString(uint32_t fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, nullptr, 0); }
    TCHAR *getFieldAsString(uint32_t fieldId, TCHAR *buffer = nullptr, size_t bufferSize = 0) const { return getFieldAsString(fieldId, nullptr, buffer, bufferSize); }
    TCHAR *getFieldAsString(uint32_t fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, nullptr, nullptr, 0); return *buffer; }
+   TCHAR *getFieldAsString(uint32_t fieldId, BufferImpl<TCHAR>& buffer) const;
 	char *getFieldAsMBString(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
 	char *getFieldAsUtf8String(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
+   char *getFieldAsUtf8String(uint32_t fieldId, BufferImpl<char>& buffer) const;
    SharedString getFieldAsSharedString(uint32_t fieldId, size_t maxSize = 0) const;
    String getFieldAsString(uint32_t fieldId, size_t maxSize) const;
    size_t getFieldAsBinary(uint32_t fieldId, BYTE *buffer, size_t bufferSize) const;

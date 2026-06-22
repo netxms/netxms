@@ -47,7 +47,6 @@
 #include <base64.h>
 
 #include <functional>
-#include <array>
 #include <vector>
 #include <string>
 
@@ -570,106 +569,106 @@ public:
 };
 
 /**
- * Buffer pointer with small allocation optimization
+ * Buffer with small allocation optimization - base implementation
  */
-template<typename T, size_t BUFFER_SIZE = 64> class Buffer
+template<typename T> class BufferImpl
 {
-private:
-   T *m_allocatedBuffer;
-   size_t m_size;
-   BYTE m_internalBuffer[BUFFER_SIZE - sizeof(T*) - sizeof(size_t)];
+protected:
+   T *m_allocatedBuffer;     // non-null => heap; null => inline storage in use
+   size_t m_size;            // current size in bytes
+   T *m_inlineStorage;       // points into the derived object's inline array
+   size_t m_inlineCapacity;  // inline capacity in bytes
 
-public:
-   Buffer()
+   /**
+    * Only the derived class can construct: it must supply its own inline storage.
+    */
+   BufferImpl(T *inlineStorage, size_t inlineCapacity)
    {
       m_allocatedBuffer = nullptr;
       m_size = 0;
+      m_inlineStorage = inlineStorage;
+      m_inlineCapacity = inlineCapacity;
    }
 
-   Buffer(size_t numElements)
-   {
-      m_size = numElements * sizeof(T);
-      if (m_size <= sizeof(m_internalBuffer))
-      {
-         m_allocatedBuffer = nullptr;
-         memset(m_internalBuffer, 0, m_size);
-      }
-      else
-      {
-         m_allocatedBuffer = MemAllocArray<T>(numElements);
-      }
-   }
-
-   Buffer(const T* data, size_t numElements)
-   {
-      m_size = numElements * sizeof(T);
-      if (m_size <= sizeof(m_internalBuffer))
-      {
-         memcpy(m_internalBuffer, data, m_size);
-         m_allocatedBuffer = nullptr;
-      }
-      else
-      {
-         m_allocatedBuffer = MemCopyBlock(data, m_size);
-      }
-   }
-
-   Buffer(const Buffer& src)
-   {
-      m_size = src.m_size;
-      if (src.m_allocatedBuffer != nullptr)
-      {
-         m_allocatedBuffer = MemCopyBlock(src.m_allocatedBuffer, m_size);
-      }
-      else
-      {
-         m_allocatedBuffer = nullptr;
-         memcpy(m_internalBuffer, src.m_internalBuffer, sizeof(m_internalBuffer));
-      }
-   }
-
-   Buffer(Buffer&& src)
-   {
-      m_allocatedBuffer = src.m_allocatedBuffer;
-      m_size = src.m_size;
-      if (m_allocatedBuffer != nullptr)
-      {
-         src.m_allocatedBuffer = nullptr;
-      }
-      else
-      {
-         memcpy(m_internalBuffer, src.m_internalBuffer, sizeof(m_internalBuffer));
-      }
-      src.m_size = 0;
-   }
-
-   ~Buffer()
+   ~BufferImpl()
    {
       MemFree(m_allocatedBuffer);
    }
 
-   T *buffer() { return (m_allocatedBuffer != nullptr) ? m_allocatedBuffer : reinterpret_cast<T*>(m_internalBuffer); }
+public:
+   // Copy/move *construction* of the base makes no sense (no inline storage of its
+   // own), so forbid it. Derived ctors call the protected ctor above instead.
+   BufferImpl(const BufferImpl&) = delete;
+   BufferImpl(BufferImpl&&) = delete;
+
+   // Assignment copies *contents* into this object's own storage, so it works
+   // across different inline capacities (Buffer<char,64> = Buffer<char,1024>).
+   BufferImpl& operator=(const BufferImpl& src)
+   {
+      if (this != &src)
+         set(src.buffer(), src.numElements());
+      return *this;
+   }
+
+   BufferImpl& operator=(BufferImpl&& src)
+   {
+      if (this == &src)
+         return *this;
+      MemFree(m_allocatedBuffer);
+      if (src.m_allocatedBuffer != nullptr)
+      {
+         m_allocatedBuffer = src.m_allocatedBuffer;
+         m_size = src.m_size;
+         src.m_allocatedBuffer = nullptr;
+      }
+      else
+      {
+         m_allocatedBuffer = nullptr;
+         m_size = 0;
+         set(src.buffer(), src.numElements());
+      }
+      src.m_size = 0;
+      return *this;
+   }
+
+   T *buffer() { return (m_allocatedBuffer != nullptr) ? m_allocatedBuffer : m_inlineStorage; }
+   const T *buffer() const { return (m_allocatedBuffer != nullptr) ? m_allocatedBuffer : m_inlineStorage; }
    operator T*() { return buffer(); }
    operator const T*() const { return buffer(); }
    T& operator[](size_t index) { return buffer()[index]; }
-   T& operator[](ssize_t index) { return buffer()[index]; }
-#ifdef __64BIT__
-   T& operator[](int index) { return buffer()[index]; }
-   T& operator[](uint32_t index) { return buffer()[index]; }
-#endif
+   const T& operator[](size_t index) const { return buffer()[index]; }
    size_t size() const { return m_size; }
    size_t numElements() const { return m_size / sizeof(T); }
    bool isInternal() const { return m_allocatedBuffer == nullptr; }
 
+   /**
+    * ensure capacity for numElements, do NOT preserve contents
+    */
+   void reserve(size_t numElements)
+   {
+      size_t size = numElements * sizeof(T);
+      if (size > m_inlineCapacity)
+      {
+         if (m_allocatedBuffer == nullptr)
+            m_allocatedBuffer = MemAllocArrayNoInit<T>(numElements);
+         else
+            m_allocatedBuffer = MemRealloc(m_allocatedBuffer, size);
+      }
+      m_size = size;
+   }
+
+   /**
+    * ensure capacity for numElements preserving contents
+    */
    void realloc(size_t numElements)
    {
       size_t size = numElements * sizeof(T);
-      if (size > sizeof(m_internalBuffer))
+      if (size > m_inlineCapacity)
       {
          if (m_allocatedBuffer == nullptr)
          {
             m_allocatedBuffer = MemAllocArrayNoInit<T>(numElements);
-            memcpy(m_allocatedBuffer, m_internalBuffer, m_size);
+            memcpy(m_allocatedBuffer, m_inlineStorage, m_size);
          }
          else
          {
@@ -678,18 +677,24 @@ public:
       }
       else if (m_allocatedBuffer != nullptr)
       {
-         memcpy(m_internalBuffer, m_allocatedBuffer, size);
+         memcpy(m_inlineStorage, m_allocatedBuffer, size);
          MemFreeAndNull(m_allocatedBuffer);
       }
       m_size = size;
    }
 
+   /**
+    * Set buffer content
+    */
    void set(const T *data, size_t numElements)
    {
-      realloc(numElements);
+      reserve(numElements);
       memcpy(buffer(), data, numElements * sizeof(T));
    }
 
+   /**
+    * Set buffer content to pre-allocated data block
+    */
    void setPreallocated(T *data, size_t numElements)
    {
       MemFree(m_allocatedBuffer);
@@ -697,6 +702,9 @@ public:
       m_size = numElements * sizeof(T);
    }
 
+   /**
+    * Take ownership of the content; buffer object became empty
+    */
    T *takeBuffer()
    {
       T *data;
@@ -707,11 +715,81 @@ public:
       }
       else
       {
-         data = MemCopyBlock(reinterpret_cast<T*>(m_internalBuffer), m_size);
+         data = MemCopyBlock(m_inlineStorage, m_size);
       }
       m_size = 0;
       return data;
    }
+};
+
+/**
+ * Buffer with small allocation optimization
+ */
+template<typename T, size_t BUFFER_SIZE = 64> class Buffer : public BufferImpl<T>
+{
+   static_assert(BUFFER_SIZE > sizeof(BufferImpl<T>), "BUFFER_SIZE too small to leave any inline storage");
+
+private:
+   alignas(T) BYTE m_internalBuffer[BUFFER_SIZE - sizeof(BufferImpl<T>)];
+
+   // Helper so every ctor's base-init reads the same.
+   // Taking the address of m_internalBuffer here is well-defined: the derived
+   // object's construction has *started* (we're in its mem-init-list), even
+   // though the array isn't "initialized" yet — and we only store the pointer.
+   static T *inlinePtr(BYTE *p) { return reinterpret_cast<T*>(p); }
+
+public:
+   Buffer() : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer)) {}
+
+   Buffer(size_t numElements)
+      : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer))
+   {
+      this->reserve(numElements);
+      memset(this->buffer(), 0, this->m_size);
+   }
+
+   Buffer(const T *data, size_t numElements)
+      : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer))
+   {
+      this->set(data, numElements);
+   }
+
+   Buffer(const Buffer& src)
+      : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer))
+   {
+      *this = src;            // delegates to BufferImpl::operator=(const&)
+   }
+
+   // Accepts ANY inline capacity, not just BUFFER_SIZE
+   template<size_t N> Buffer(const Buffer<T, N>& src)
+      : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer))
+   {
+      *this = src;
+   }
+
+   Buffer(Buffer&& src)
+      : BufferImpl<T>(inlinePtr(m_internalBuffer), sizeof(m_internalBuffer))
+   {
+      BufferImpl<T>::operator=(std::move(src)); // delegates to BufferImpl::operator=(&&)
+   }
+
+   // Declaring the constructors above implicitly deletes the derived copy/move
+   // assignment operators, and those deleted declarations would hide (and be
+   // preferred over) the base ones. Define them explicitly to forward to the base.
+   Buffer& operator=(const Buffer& src)
+   {
+      BufferImpl<T>::operator=(src);
+      return *this;
+   }
+
+   Buffer& operator=(Buffer&& src)
+   {
+      BufferImpl<T>::operator=(std::move(src));
+      return *this;
+   }
+
+   // Make base assignment visible for cross-capacity assignment (Buffer<T,64> = Buffer<T,1024>)
+   using BufferImpl<T>::operator=;
 };
 
 /**

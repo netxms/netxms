@@ -156,6 +156,66 @@ void TestMessageClass()
    AssertTrue(!safe_strcmp(msg.getFieldAsMBString(12, buffer2, 64), "test text 3"));
    AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(12, buffer2, 64), "test text 3"));
 
+   // getFieldAsString / getFieldAsUtf8String with Buffer (BufferImpl) argument.
+   // At default protocol version (>= 5) string fields are stored as NXCP_DT_UTF8_STRING.
+   {
+      static const TCHAR shortText[] = _T("short");
+      // Long enough to overflow the inline storage of a default-size Buffer (inline
+      // capacity is 32 bytes -> 16 WCHARs / 32 chars), forcing heap promotion.
+      static const TCHAR longBufText[] = _T("this string is definitely longer than the inline buffer capacity");
+      static const char *longBufTextUtf8 = "this string is definitely longer than the inline buffer capacity";
+
+      msg.setField(200, shortText);
+      msg.setField(201, longBufText);
+
+      Buffer<TCHAR> tbuf;
+      AssertTrue(!safe_tcscmp(msg.getFieldAsString(200, tbuf), _T("short")));
+      AssertTrue(tbuf.isInternal());
+      AssertTrue(!safe_tcscmp(msg.getFieldAsString(201, tbuf), longBufText));
+      AssertTrue(!tbuf.isInternal());
+
+      Buffer<char> cbuf;
+      AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(200, cbuf), "short"));
+      AssertTrue(cbuf.isInternal());
+      AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(201, cbuf), longBufTextUtf8));
+      AssertTrue(!cbuf.isInternal());
+
+      // Missing field -> nullptr returned, buffer left usable
+      Buffer<TCHAR> tmissing;
+      AssertNull(msg.getFieldAsString(999, tmissing));
+      Buffer<char> cmissing;
+      AssertNull(msg.getFieldAsUtf8String(999, cmissing));
+
+      // Buffer object reused across calls must be reset, not appended to
+      Buffer<char> reuse;
+      msg.getFieldAsUtf8String(201, reuse);
+      AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(200, reuse), "short"));
+      Buffer<TCHAR> treuse;
+      msg.getFieldAsString(201, treuse);
+      AssertTrue(!safe_tcscmp(msg.getFieldAsString(200, treuse), _T("short")));
+
+      // Same fields after downgrade to protocol version 4 are stored as NXCP_DT_STRING
+      msg.setProtocolVersion(4);
+      Buffer<TCHAR> tbuf2;
+      AssertTrue(!safe_tcscmp(msg.getFieldAsString(200, tbuf2), _T("short")));
+      AssertTrue(!safe_tcscmp(msg.getFieldAsString(201, tbuf2), longBufText));
+      Buffer<char> cbuf2;
+      AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(200, cbuf2), "short"));
+      AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(201, cbuf2), longBufTextUtf8));
+
+      // Allocating variant (buffer == nullptr) on NXCP_DT_STRING fields must not truncate
+      char *allocated = msg.getFieldAsUtf8String(200);
+      AssertNotNull(allocated);
+      AssertTrue(!strcmp(allocated, "short"));
+      MemFree(allocated);
+      allocated = msg.getFieldAsUtf8String(201);
+      AssertNotNull(allocated);
+      AssertTrue(!strcmp(allocated, longBufTextUtf8));
+      MemFree(allocated);
+
+      msg.setProtocolVersion(NXCP_VERSION);
+   }
+
    // Test JSON serialization
    json_t *json = json_object();
    json_object_set_new(json, "key1", json_string("value1"));

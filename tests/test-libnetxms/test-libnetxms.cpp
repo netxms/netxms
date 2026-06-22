@@ -2980,6 +2980,282 @@ static void TestRingBuffer()
 }
 
 /**
+ * Test Buffer class (small allocation optimization).
+ * Default Buffer<char> has BUFFER_SIZE = 64; with sizeof(BufferImpl<char>) == 32
+ * (two pointers + two size_t on 64-bit) the inline capacity is 32 bytes. Strings
+ * up to 32 bytes stay inline, larger content is promoted to the heap.
+ */
+static void TestBuffer()
+{
+   static const char *smallData = "small";                          // 6 bytes incl. NUL, stays inline
+   static const char *largeData = "this is a long buffer payload exceeding inline capacity"; // 56 bytes
+   const size_t smallLen = strlen(smallData) + 1;
+   const size_t largeLen = strlen(largeData) + 1;
+
+   StartTest(_T("Buffer: default construction"));
+   {
+      Buffer<char> b;
+      AssertEquals(b.size(), static_cast<size_t>(0));
+      AssertEquals(b.numElements(), static_cast<size_t>(0));
+      AssertTrue(b.isInternal());
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: set() inline"));
+   {
+      Buffer<char> b;
+      b.set(smallData, smallLen);
+      AssertEquals(b.size(), smallLen);
+      AssertEquals(b.numElements(), smallLen);
+      AssertTrue(b.isInternal());
+      AssertTrue(!strcmp(static_cast<const char*>(b), smallData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: set() heap promotion"));
+   {
+      Buffer<char> b;
+      b.set(largeData, largeLen);
+      AssertEquals(b.size(), largeLen);
+      AssertTrue(!b.isInternal());
+      AssertTrue(!strcmp(static_cast<const char*>(b), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: sized constructor is zero-filled"));
+   {
+      Buffer<char> b(static_cast<size_t>(48));
+      AssertEquals(b.size(), static_cast<size_t>(48));
+      AssertTrue(!b.isInternal());
+      bool allZero = true;
+      for(size_t i = 0; i < b.numElements(); i++)
+         if (b[i] != 0)
+            allZero = false;
+      AssertTrue(allZero);
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: data constructor"));
+   {
+      Buffer<char> b(largeData, largeLen);
+      AssertEquals(b.size(), largeLen);
+      AssertTrue(!strcmp(static_cast<const char*>(b), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: reserve (no content preservation)"));
+   {
+      Buffer<char> b;
+      b.set(smallData, smallLen);
+      AssertTrue(b.isInternal());
+      b.reserve(100);
+      AssertEquals(b.size(), static_cast<size_t>(100));
+      AssertTrue(!b.isInternal());
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: realloc preserves content across heap promotion and shrink"));
+   {
+      Buffer<char> b;
+      b.set(smallData, smallLen);
+      AssertTrue(b.isInternal());
+      b.realloc(100);                  // promote to heap, content preserved
+      AssertEquals(b.size(), static_cast<size_t>(100));
+      AssertTrue(!b.isInternal());
+      AssertTrue(!strcmp(b.buffer(), smallData));
+      b.realloc(smallLen);             // shrink back to inline, content preserved
+      AssertEquals(b.size(), smallLen);
+      AssertTrue(b.isInternal());
+      AssertTrue(!strcmp(b.buffer(), smallData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: copy construction (inline source)"));
+   {
+      Buffer<char> src;
+      src.set(smallData, smallLen);
+      Buffer<char> copy(src);
+      AssertTrue(copy.isInternal());
+      AssertTrue(!strcmp(static_cast<const char*>(copy), smallData));
+      AssertTrue(!strcmp(static_cast<const char*>(src), smallData)); // source intact
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: copy construction (heap source)"));
+   {
+      Buffer<char> src;
+      src.set(largeData, largeLen);
+      Buffer<char> copy(src);
+      AssertTrue(!copy.isInternal());
+      AssertTrue(!strcmp(static_cast<const char*>(copy), largeData));
+      AssertTrue(!strcmp(static_cast<const char*>(src), largeData)); // source intact
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: copy assignment"));
+   {
+      Buffer<char> src;
+      src.set(largeData, largeLen);
+      Buffer<char> dst;
+      dst.set(smallData, smallLen);
+      dst = src;
+      AssertTrue(!strcmp(static_cast<const char*>(dst), largeData));
+      AssertTrue(!strcmp(static_cast<const char*>(src), largeData)); // source intact
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: self-assignment"));
+   {
+      Buffer<char> b;
+      b.set(largeData, largeLen);
+      Buffer<char> &alias = b;
+      b = alias;
+      AssertTrue(!strcmp(static_cast<const char*>(b), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: move construction (heap source steals pointer)"));
+   {
+      Buffer<char> src;
+      src.set(largeData, largeLen);
+      const char *originalPtr = src.buffer();
+      Buffer<char> moved(std::move(src));
+      AssertTrue(!moved.isInternal());
+      AssertTrue(moved.buffer() == originalPtr);  // heap block transferred, not copied
+      AssertTrue(!strcmp(static_cast<const char*>(moved), largeData));
+      AssertEquals(src.size(), static_cast<size_t>(0)); // source emptied
+      AssertTrue(src.isInternal());
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: move construction (inline source)"));
+   {
+      Buffer<char> src;
+      src.set(smallData, smallLen);
+      Buffer<char> moved(std::move(src));
+      AssertTrue(moved.isInternal());
+      AssertTrue(!strcmp(static_cast<const char*>(moved), smallData));
+      AssertEquals(src.size(), static_cast<size_t>(0));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: move assignment"));
+   {
+      Buffer<char> src;
+      src.set(largeData, largeLen);
+      const char *originalPtr = src.buffer();
+      Buffer<char> dst;
+      dst.set(smallData, smallLen);
+      dst = std::move(src);
+      AssertTrue(dst.buffer() == originalPtr);
+      AssertTrue(!strcmp(static_cast<const char*>(dst), largeData));
+      AssertEquals(src.size(), static_cast<size_t>(0));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: cross-capacity copy construction"));
+   {
+      Buffer<char, 1024> big;
+      big.set(largeData, largeLen);
+      AssertTrue(big.isInternal());          // fits in 1024-byte inline storage
+      Buffer<char, 64> small(big);           // templated cross-capacity ctor
+      AssertTrue(!small.isInternal());        // exceeds 32-byte inline storage
+      AssertTrue(!strcmp(static_cast<const char*>(small), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: cross-capacity assignment"));
+   {
+      Buffer<char, 1024> big;
+      big.set(largeData, largeLen);
+      Buffer<char, 64> small;
+      small = big;                           // base operator= via using-declaration
+      AssertTrue(!strcmp(static_cast<const char*>(small), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: takeBuffer from heap"));
+   {
+      Buffer<char> b;
+      b.set(largeData, largeLen);
+      char *taken = b.takeBuffer();
+      AssertNotNull(taken);
+      AssertTrue(!strcmp(taken, largeData));
+      AssertEquals(b.size(), static_cast<size_t>(0));  // buffer emptied
+      MemFree(taken);
+      b.set(smallData, smallLen);                      // still usable after take
+      AssertTrue(!strcmp(static_cast<const char*>(b), smallData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: takeBuffer from inline"));
+   {
+      Buffer<char> b;
+      b.set(smallData, smallLen);
+      char *taken = b.takeBuffer();
+      AssertNotNull(taken);
+      AssertTrue(!strcmp(taken, smallData));
+      AssertEquals(b.size(), static_cast<size_t>(0));
+      MemFree(taken);
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: setPreallocated"));
+   {
+      Buffer<char> b;
+      b.set(smallData, smallLen);            // start inline
+      char *block = MemCopyStringA(largeData);
+      b.setPreallocated(block, largeLen);
+      AssertTrue(!b.isInternal());
+      AssertEquals(b.size(), largeLen);
+      AssertTrue(!strcmp(static_cast<const char*>(b), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: element access via operator[]"));
+   {
+      Buffer<char> b;
+      b.set(largeData, largeLen);
+      for(size_t i = 0; i < largeLen; i++)
+         AssertTrue(b[i] == largeData[i]);
+      b[0] = 'X';
+      AssertTrue(b[0] == 'X');
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: usable as vector element with reallocation"));
+   {
+      std::vector<Buffer<char>> v;
+      v.reserve(2);
+      for(int i = 0; i < 8; i++)        // force vector growth -> move/copy of elements
+      {
+         Buffer<char> b;
+         b.set(largeData, largeLen);
+         v.push_back(std::move(b));
+      }
+      AssertEquals(v.size(), static_cast<size_t>(8));
+      for(size_t i = 0; i < v.size(); i++)
+         AssertTrue(!strcmp(static_cast<const char*>(v[i]), largeData));
+   }
+   EndTest();
+
+   StartTest(_T("Buffer: integer element type"));
+   {
+      Buffer<uint32_t> b;
+      uint32_t values[20];
+      for(int i = 0; i < 20; i++)
+         values[i] = static_cast<uint32_t>(i * 7 + 1);
+      b.set(values, 20);
+      AssertEquals(b.numElements(), static_cast<size_t>(20));
+      AssertEquals(b.size(), static_cast<size_t>(20 * sizeof(uint32_t)));
+      AssertTrue(!b.isInternal());     // 80 bytes > 32-byte inline capacity
+      for(int i = 0; i < 20; i++)
+         AssertTrue(b[i] == values[i]);
+   }
+   EndTest();
+}
+
+/**
  * Test get/set debug level
  */
 static void TestDebugLevel()
@@ -3368,6 +3644,7 @@ int main(int argc, char *argv[])
    TestByteSwap();
    TestDiff();
    TestRingBuffer();
+   TestBuffer();
    TestDebugLevel();
    TestDebugTags();
    TestGeoLocation();

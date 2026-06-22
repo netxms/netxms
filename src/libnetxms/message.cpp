@@ -978,6 +978,58 @@ TCHAR *NXCPMessage::getFieldAsString(uint32_t fieldId, MemoryPool *pool, TCHAR *
    return (str != nullptr) ? str : buffer;
 }
 
+/**
+ * Get field as string
+ */
+TCHAR *NXCPMessage::getFieldAsString(uint32_t fieldId, BufferImpl<TCHAR>& buffer) const
+{
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == nullptr)
+      return nullptr;
+
+   TCHAR *str = nullptr;
+   if (type == NXCP_DT_STRING)
+   {
+#if defined(UNICODE) && defined(UNICODE_UCS4)
+      size_t bytes = *((UINT32 *)value) * 2 + 4;
+#elif defined(UNICODE) && defined(UNICODE_UCS2)
+      size_t bytes = *((UINT32 *)value) + 2;
+#else
+      size_t bytes = *((UINT32 *)value) / 2 + 1;
+#endif
+      buffer.reserve(bytes / sizeof(TCHAR));
+      str = buffer;
+
+      size_t length = static_cast<size_t>(*static_cast<uint32_t*>(value) / 2);
+#if defined(UNICODE) && defined(UNICODE_UCS4)
+      ucs2_to_ucs4((UCS2CHAR *)((BYTE *)value + 4), length, str, length);
+#elif defined(UNICODE) && defined(UNICODE_UCS2)
+      memcpy(str, (BYTE *)value + 4, length * 2);
+#else
+      ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), length, str, length);
+#endif
+      str[length] = 0;
+   }
+   else if (type == NXCP_DT_UTF8_STRING)
+   {
+      size_t length = static_cast<size_t>(*static_cast<uint32_t*>(value));
+#ifdef UNICODE
+      size_t outlen = utf8_wcharlen(static_cast<char*>(value) + 4, length);
+      buffer.reserve(outlen + 1);
+      str = buffer;
+      outlen = utf8_to_wchar(static_cast<char*>(value) + 4, length, str, outlen);
+      str[outlen] = 0;
+#else
+      buffer.reserve(length + 1);
+      str = buffer;
+      size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
+      str[outlen] = 0;
+#endif
+   }
+   return str;
+}
+
 #ifdef UNICODE
 
 /**
@@ -1054,7 +1106,7 @@ char *NXCPMessage::getFieldAsMBString(uint32_t fieldId, char *buffer, size_t buf
 #endif
 
 /**
- * get field as UTF-8 string
+ * Get field as UTF-8 string
  */
 char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t bufferSize) const
 {
@@ -1074,7 +1126,7 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
          size_t outSize;
          if (buffer == nullptr)
          {
-            outSize = ucs2_utf8len(in, inSize);
+            outSize = ucs2_utf8len(in, inSize) + 1;   // content length (no terminator) + terminator slot
             str = MemAllocArray<char>(outSize);
          }
          else
@@ -1111,8 +1163,50 @@ char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, char *buffer, size_t b
    }
    else if (buffer != nullptr)
    {
-      str = buffer;
-      str[0] = 0;
+      buffer[0] = 0;
+   }
+   return str;
+}
+
+/**
+ * Get field as UTF-8 string
+ */
+char *NXCPMessage::getFieldAsUtf8String(uint32_t fieldId, BufferImpl<char>& buffer) const
+{
+   char *str = nullptr;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value != nullptr)
+   {
+      if (type == NXCP_DT_STRING)
+      {
+         UCS2CHAR *in = reinterpret_cast<UCS2CHAR*>(static_cast<BYTE*>(value) + 4);
+         int inSize = *static_cast<uint32_t*>(value) / 2;
+         size_t outSize = ucs2_utf8len(in, inSize);   // length without terminator (explicit srcLen)
+         buffer.reserve(outSize + 1);
+         str = buffer;
+         size_t cc = ucs2_to_utf8(in, inSize, str, outSize);
+         str[cc] = 0;
+      }
+      else if (type == NXCP_DT_UTF8_STRING)
+      {
+         size_t srcLen = *static_cast<uint32_t*>(value);
+         buffer.reserve(srcLen + 1);
+         str = buffer;
+         memcpy(str, static_cast<BYTE*>(value) + 4, srcLen);
+         str[srcLen] = 0;
+      }
+      else
+      {
+         buffer.reserve(1);
+         str = buffer;
+         str[0] = 0;
+      }
+   }
+   else
+   {
+      buffer.reserve(1);
+      buffer[0] = 0;
    }
    return str;
 }
