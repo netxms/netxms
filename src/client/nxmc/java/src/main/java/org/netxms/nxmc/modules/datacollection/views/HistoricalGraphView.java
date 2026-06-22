@@ -277,8 +277,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
-      if ((newContext == null) || !(newContext instanceof AbstractObject)
-            || (((AbstractObject)newContext).getObjectId() != objectId))
+      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != objectId))
          return;
 
       if (configuration.getTimePeriod().isBackFromNow())
@@ -291,16 +290,14 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
-    * Memento to load context
-    * 
-    * @param memento
+    * @see org.netxms.nxmc.base.views.ViewWithContext#restoreContext(org.netxms.nxmc.Memento)
     */
    @Override
    public Object restoreContext(Memento memento)
    {      
       long objectId = memento.getAsLong("context", 0);
       return session.findObjectById(objectId);
-   }   
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#isCloseable()

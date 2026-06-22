@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -163,7 +163,7 @@ public abstract class ViewWithContext extends View
    protected abstract void contextChanged(Object oldContext, Object newContext);
 
    /**
-    * Restore context form momento
+    * Restore context form memento
     *
     * @param memento memento
     */
