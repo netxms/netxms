@@ -236,9 +236,103 @@ static const TCHAR *GetExceptionName(DWORD code)
 }
 
 /**
+ * Walk and dump the call stack of the faulting thread. The context to start from is
+ * taken from the exception's CONTEXT record so the trace reflects the exact point of
+ * failure. Symbol names and source lines are resolved if matching PDB files are
+ * available; otherwise frames are reported as module+offset (still symbolizable later).
+ */
+static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, const CONTEXT *contextRecord, HMODULE *modules, int moduleCount)
+{
+   _ftprintf(fp, _T("\nFaulting thread ID: %u\nStack trace:\n"), faultingThreadId);
+
+   HANDLE hThread = OpenThread(THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION, FALSE, faultingThreadId);
+   if (hThread == nullptr)
+   {
+      _ftprintf(fp, _T("   Cannot open faulting thread (error %u)\n"), GetLastError());
+      return;
+   }
+
+   SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_FAIL_CRITICAL_ERRORS);
+   if (!SymInitializeW(hProcess, nullptr, TRUE))
+   {
+      _ftprintf(fp, _T("   Cannot initialize symbol handler (error %u)\n"), GetLastError());
+      CloseHandle(hThread);
+      return;
+   }
+
+   // StackWalk64 modifies the context as it unwinds, so work on a private copy
+   CONTEXT context;
+   memcpy(&context, contextRecord, sizeof(CONTEXT));
+
+   STACKFRAME64 frame;
+   memset(&frame, 0, sizeof(frame));
+   frame.AddrPC.Mode = AddrModeFlat;
+   frame.AddrFrame.Mode = AddrModeFlat;
+   frame.AddrStack.Mode = AddrModeFlat;
+   DWORD machineType;
+#ifdef _M_IX86
+   machineType = IMAGE_FILE_MACHINE_I386;
+   frame.AddrPC.Offset = context.Eip;
+   frame.AddrFrame.Offset = context.Ebp;
+   frame.AddrStack.Offset = context.Esp;
+#else
+   machineType = IMAGE_FILE_MACHINE_AMD64;
+   frame.AddrPC.Offset = context.Rip;
+   frame.AddrFrame.Offset = context.Rbp;
+   frame.AddrStack.Offset = context.Rsp;
+#endif
+
+   for (int i = 0; i < 256; i++)
+   {
+      if (!StackWalk64(machineType, hProcess, hThread, &frame, &context, nullptr,
+                       SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
+         break;
+      if (frame.AddrPC.Offset == 0)
+         break;
+
+      DWORD64 address = frame.AddrPC.Offset;
+      wstring moduleName = GetModuleForAddress(hProcess, reinterpret_cast<void*>(static_cast<uintptr_t>(address)), modules, moduleCount);
+
+      BYTE symbolBuffer[sizeof(SYMBOL_INFOW) + 256 * sizeof(WCHAR)];
+      SYMBOL_INFOW *symbol = reinterpret_cast<SYMBOL_INFOW*>(symbolBuffer);
+      memset(symbol, 0, sizeof(SYMBOL_INFOW));
+      symbol->SizeOfStruct = sizeof(SYMBOL_INFOW);
+      symbol->MaxNameLen = 255;
+
+      DWORD64 displacement = 0;
+      if (SymFromAddrW(hProcess, address, &displacement, symbol))
+      {
+         IMAGEHLP_LINEW64 line;
+         memset(&line, 0, sizeof(line));
+         line.SizeOfStruct = sizeof(IMAGEHLP_LINEW64);
+         DWORD lineDisplacement = 0;
+         if (SymGetLineFromAddrW64(hProcess, address, &lineDisplacement, &line))
+         {
+            _ftprintf(fp, _T("   %2d  %s!%s+0x%I64x  (%s:%u)  [0x%016I64x]\n"),
+               i, moduleName.c_str(), symbol->Name, displacement, line.FileName, line.LineNumber, address);
+         }
+         else
+         {
+            _ftprintf(fp, _T("   %2d  %s!%s+0x%I64x  [0x%016I64x]\n"),
+               i, moduleName.c_str(), symbol->Name, displacement, address);
+         }
+      }
+      else
+      {
+         DWORD64 moduleBase = SymGetModuleBase64(hProcess, address);
+         _ftprintf(fp, _T("   %2d  %s+0x%I64x  [0x%016I64x]\n"),
+            i, moduleName.c_str(), (moduleBase != 0) ? (address - moduleBase) : 0, address);
+      }
+   }
+
+   SymCleanup(hProcess);
+   CloseHandle(hThread);
+}
+
+/**
  * Write crash info file
  */
-static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t exceptionPointers, const TCHAR *processName, time_t now)
+static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t exceptionPointers, DWORD faultingThreadId, const TCHAR *processName, time_t now)
 {
    WriteLog(_T("Writing info file %s"), fileName);
 
@@ -283,6 +377,17 @@ static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t excep
          else
          {
             _ftprintf(fp, _T("Cannot read exception record\n"));
+         }
+
+         // Walk the faulting thread's stack starting from the exception context
+         CONTEXT context;
+         if (ReadProcessMemory(hProcess, ep.ContextRecord, &context, sizeof(CONTEXT), &bytesRead))
+         {
+            DumpThreadStack(fp, hProcess, faultingThreadId, &context, modules, moduleCount);
+         }
+         else
+         {
+            _ftprintf(fp, _T("Cannot read thread context for stack trace\n"));
          }
       }
       else
@@ -444,7 +549,7 @@ static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *req
    wcsncpy(titleName, processName, 64);
    titleName[63] = 0;
    CharUpperW(titleName);
-   WriteInfoFile(infoFile, hProcess, request->exceptionPointers, titleName, now);
+   WriteInfoFile(infoFile, hProcess, request->exceptionPointers, request->faultingThreadId, titleName, now);
 
    // Compress dump file
    if (_waccess(dumpFile, 0) == 0)
