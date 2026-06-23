@@ -6407,6 +6407,9 @@ json_t NXCORE_EXPORTABLE *GetSshKeyByIdAsJson(uint32_t id);
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to);
 void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage* msg);
 
+void CheckNodeCountRestrictions();
+int GetMaxAllowedNodeCount();
+
 /**
  * Global variables
  */

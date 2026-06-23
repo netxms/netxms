@@ -2484,20 +2484,49 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
 
 /**
- * Unmanage nodes that exceeed node limit
+ * Default managed node limit for builds without a valid node-count license
+ */
+#define DEFAULT_NODE_LIMIT 250
+
+/**
+ * Minimum interval (in seconds) between two license re-reads from the database.
+ * License keys can be added at runtime, so the limit is re-evaluated on demand
+ * (when node creation is about to be blocked) in addition to startup, housekeeping
+ * and the hourly enforcement task. This throttle keeps a burst of blocked node
+ * creations (e.g. during network discovery) from re-decoding all license keys on
+ * every attempt, while still letting a newly added license take effect quickly.
+ */
+#define LICENSE_RECHECK_INTERVAL 60
+
+/**
+ * Cached effective managed node limit (0x7fffffff means unlimited). Read lock-free
+ * by GetMaxAllowedNodeCount(); updated only by CheckNodeCountRestrictions() under
+ * s_licenseCheckLock.
+ */
+static int s_maxNodeCount = DEFAULT_NODE_LIMIT;
+static bool s_licenseChecked = false;
+static time_t s_lastLicenseCheck = 0;
+static Mutex s_licenseCheckLock(MutexType::FAST);
+
+/**
+ * Unmanage nodes that exceed node limit
  */
 static void UnmanageExtraNodes()
 {
-   if (g_idxNodeById.size() > 250)
+   // Re-read license keys so a license added at runtime lifts the limit within the hour
+   CheckNodeCountRestrictions();
+
+   int maxNodes = GetMaxAllowedNodeCount();
+   if (g_idxNodeById.size() > static_cast<uint32_t>(maxNodes))
    {
       int count = 0;
       g_idxNodeById.forEach(
-         [&count](NetObj *node) -> EnumerationCallbackResult
+         [&count, maxNodes](NetObj *node) -> EnumerationCallbackResult
          {
             if (node->getStatus() != STATUS_UNMANAGED)
             {
                count++;
-               if (count > 250)
+               if (count > maxNodes)
                {
                   node->setMgmtStatus(false);
                   nxlog_write_tag(NXLOG_WARNING, _T("licensing"), _T("Node \"%s\" [%u] set to unmanaged state because limit of number of managed nodes is exceeded"), node->getName(), node->getId());
@@ -2514,11 +2543,23 @@ static void UnmanageExtraNodes()
 #endif
 
 /**
- * Check restrictions on node count
+ * Check restrictions on node count. Re-reads license keys from the database and
+ * updates the cached limit and AF_UNLIMITED_NODES flag, so that license keys added
+ * at runtime take effect without a server restart. Safe to call repeatedly; database
+ * reads are throttled to at most once per LICENSE_RECHECK_INTERVAL seconds. Licensing
+ * is only relaxed at runtime, never tightened - AF_UNLIMITED_NODES is set but never
+ * cleared, and nodes already unmanaged because of a previous limit stay unmanaged.
  */
 void CheckNodeCountRestrictions()
 {
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
+   LockGuard lockGuard(s_licenseCheckLock);
+
+   time_t now = time(nullptr);
+   if (s_licenseChecked && (now - s_lastLicenseCheck < LICENSE_RECHECK_INTERVAL))
+      return;
+   s_lastLicenseCheck = now;
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    int enterpriseEditionCount = CountLicensesForProduct(hdb, "NXEE");
 #if defined(_WIN32) && !WITH_PRIVATE_EXTENSIONS
@@ -2526,34 +2567,50 @@ void CheckNodeCountRestrictions()
 #endif
    DBConnectionPoolReleaseConnection(hdb);
 
+   int maxNodes;
    if (enterpriseEditionCount > 0)
    {
-      if (enterpriseEditionCount == 0x7fffffff)
-      {
-         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
-         InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
-      }
-      else
-      {
-         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to %d"), enterpriseEditionCount);
-      }
-      return;
+      maxNodes = enterpriseEditionCount;
    }
-
 #if defined(_WIN32) && !WITH_PRIVATE_EXTENSIONS
-   if (unrestrictedWindowsBuild)
+   else if (unrestrictedWindowsBuild)
    {
-      nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
-      InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
-      return;
+      maxNodes = 0x7fffffff;
    }
 #endif
+   else
+   {
+      maxNodes = DEFAULT_NODE_LIMIT;
+   }
 
-   nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to 250"));
-   UnmanageExtraNodes();
+   bool changed = !s_licenseChecked || (maxNodes != s_maxNodeCount);
+   if (maxNodes == 0x7fffffff)
+      InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
+   s_maxNodeCount = maxNodes;
+
+   if (changed)
+   {
+      if (maxNodes == 0x7fffffff)
+         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes is not restricted"));
+      else
+         nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes restricted to %d"), maxNodes);
+   }
+
+   // Start enforcement task on first (startup) check whenever a finite limit is in effect,
+   // including enterprise installations with a finite node-count license. The task unmanages
+   // extra nodes and then re-schedules itself to run every hour, re-reading the license each
+   // time and lifting the restriction if a license is added later. It is dispatched to the
+   // thread pool rather than called inline to avoid re-entering s_licenseCheckLock.
+   if (!s_licenseChecked && (maxNodes != 0x7fffffff))
+      ThreadPoolExecute(g_mainThreadPool, UnmanageExtraNodes);
+
+   s_licenseChecked = true;
 #else
-   nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Initialized without restriction on number of managed nodes"));
-   InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
+   if (!(g_flags & AF_UNLIMITED_NODES))
+   {
+      nxlog_write_tag(NXLOG_INFO, _T("licensing"), _T("Number of managed nodes is not restricted"));
+      InterlockedOr64(&g_flags, AF_UNLIMITED_NODES);
+   }
 #endif
 }
 
@@ -2565,20 +2622,10 @@ int GetMaxAllowedNodeCount()
    if (g_flags & AF_UNLIMITED_NODES)
       return 0x7fffffff;
 
-   if (!(g_flags & AF_ENTERPRISE_EDITION))
-#if defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD)
-      return 250;
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
+   return s_maxNodeCount;
 #else
-      return 0x7fffffff;
-#endif
-
-#if WITH_PRIVATE_EXTENSIONS
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   int count = CountLicensesForProduct(hdb, "NXEE");
-   DBConnectionPoolReleaseConnection(hdb);
-   return count;
-#else
-   return 0;
+   return 0x7fffffff;
 #endif
 }
 

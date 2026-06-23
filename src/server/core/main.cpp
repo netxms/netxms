@@ -109,7 +109,6 @@ void StopSNMPAgent();
 void LoadTrapMappings();
 void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
-void CheckNodeCountRestrictions();
 void InitializeDeviceBackupInterface();
 void InitializeCloudConnectors();
 void LoadWellKnownPortList();

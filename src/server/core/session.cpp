@@ -136,10 +136,6 @@ void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
 void ExportSyslogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 
-#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
-int GetMaxAllowedNodeCount();
-#endif
-
 /**
  * Maximum client message size
  */
@@ -6603,6 +6599,10 @@ void ClientSession::createObject(const NXCPMessage& request)
 #if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
          if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
          {
+            // Re-read license keys from the database in case a new license was added at runtime
+            CheckNodeCountRestrictions();
+
+            int maxNodes = GetMaxAllowedNodeCount();
             int count = 0;
             g_idxNodeById.forEach(
                [&count](NetObj *node) -> EnumerationCallbackResult
@@ -6611,7 +6611,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   count++;
                return _CONTINUE;
             });
-            if (count >= 250)
+            if (count >= maxNodes)
             {
                debugPrintf(4, _T("Creation of node \"%s\" blocked by license check"), objectName);
                rcc = RCC_LICENSE_VIOLATION;

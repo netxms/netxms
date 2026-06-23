@@ -26,11 +26,6 @@
 #define DEBUG_TAG _T("obj.poll.node")
 
 /**
- * Get maximum number of allowed nodes
- */
-int GetMaxAllowedNodeCount();
-
-/**
  * Constructor for NewNodeData
  */
 NewNodeData::NewNodeData(const InetAddress& ipAddress) : ipAddr(ipAddress)
@@ -159,6 +154,10 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData, uint32_
 
    if (!(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
    {
+      // Re-read license keys from the database in case a new license was added at runtime
+      CheckNodeCountRestrictions();
+
+      int maxNodes = GetMaxAllowedNodeCount();
       int count = 0;
       g_idxNodeById.forEach(
          [&count](NetObj *node) -> EnumerationCallbackResult
@@ -167,7 +166,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData, uint32_
             count++;
          return _CONTINUE;
       });
-      if (count >= 250)
+      if (count >= maxNodes)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: creation of node \"%s\" blocked by license check"), ipAddrText);
          if (rcc != nullptr)

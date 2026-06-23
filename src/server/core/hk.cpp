@@ -646,6 +646,9 @@ static void HouseKeeper()
 
       GetEventProcessingPolicy()->validateConfig();
 
+      // Re-read license keys so a license added at runtime takes effect without a server restart
+      CheckNodeCountRestrictions();
+
       uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u seconds)"), elapsedTime);
       EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
