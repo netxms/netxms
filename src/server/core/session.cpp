@@ -19765,7 +19765,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
    if (chat != nullptr)
    {
       char *context = request.getFieldAsUtf8String(VID_AI_QUESTION_CONTEXT);
-      char *answer = chat->sendRequest(userMessage, 16, context);
+      char *answer = chat->sendRequest(userMessage, context);
       if (answer != nullptr)
       {
          response.setField(VID_RCC, RCC_SUCCESS);

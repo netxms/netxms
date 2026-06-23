@@ -131,7 +131,7 @@ int H_AiChatSendMessage(Context *context)
    nxlog_debug_tag(DEBUG_TAG, 6, _T("H_SendMessage: starting async message processing for chat %u"), chatId);
 
    // Start async processing
-   if (!chat->startAsyncRequest(message, 10, contextStr))
+   if (!chat->startAsyncRequest(message, contextStr))
    {
       MemFree(contextStr);
       context->setErrorResponse("Request already in progress");

@@ -358,7 +358,7 @@ void AITask::execute()
    }
 
    Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str(), false);
-   char *response = chat.sendRequest(prompt.c_str(), 64);
+   char *response = chat.sendRequest(prompt.c_str());
    if (response != nullptr)
    {
       json_t *json = json_loads(response, 0, nullptr);

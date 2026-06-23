@@ -293,7 +293,7 @@ std::string Chat::delegateToSkill(const char *skillName, const char *task)
    delegationChat.addMessage("system", loadResult.c_str());
 
    // Execute the task
-   char *result = delegationChat.sendRequest(task, 16);
+   char *result = delegationChat.sendRequest(task);
    std::string output;
    if (result != nullptr)
    {

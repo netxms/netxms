@@ -972,6 +972,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       OnOtelLogsConfigurationChange(name, value);
    }
+   else if (!_tcsncmp(name, L"AI.", 3))
+   {
+      OnAIConfigurationChange(name, value);
+   }
 }
 
 /**

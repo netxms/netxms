@@ -69,6 +69,8 @@ static shared_ptr<LLMProvider> s_defaultProvider;
  * Prompt injection guard enabled flag
  */
 static bool s_guardEnabled = true;
+static int s_maxInteractiveIterations = 30;
+static int s_maxBackgroundIterations = 64;
 
 /**
  * Functions
@@ -1632,7 +1634,7 @@ static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const
 /**
  * Send request to assistant
  */
-char *Chat::sendRequest(const char *prompt, int maxIterations, const char *context)
+char *Chat::sendRequest(const char *prompt, const char *context)
 {
    LockGuard lockGuard(m_mutex);
 
@@ -1677,7 +1679,10 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
 
    addMessage("user", prompt);
 
+   // Tool-call iteration budget depends on the chat type; interactive chats can ask the user to extend it
+   int maxIterations = m_isInteractive ? s_maxInteractiveIterations : s_maxBackgroundIterations;
    int iterations = maxIterations;
+   bool finalAttempt = false;   // set when the tool-call limit was reached and the model is given one last chance to answer without tools
    char *answer = nullptr;
    while(iterations-- > 0)
    {
@@ -1698,6 +1703,15 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
          json_t *toolCalls = json_object_get(message, "tool_calls");
          if (json_is_array(toolCalls) && json_array_size(toolCalls) > 0)
          {
+            if (finalAttempt)
+            {
+               // Model was told that the tool-call limit was reached but still requested tools - hard stop
+               nxlog_debug_tag(DEBUG_TAG, 4, L"Chat [%u]: tool call requested after limit was reached, stopping request", m_id);
+               m_lastError = "Tool call limit reached";
+               json_decref(message);
+               break;
+            }
+
             size_t i;
             json_t *tool;
             json_array_foreach(toolCalls, i, tool)
@@ -1728,6 +1742,32 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
                      }
                      json_array_append_new(m_messages, functionMessage);
                   }
+               }
+            }
+
+            // Tool-call iteration budget exhausted while the model still wants to use tools
+            if (iterations <= 0)
+            {
+               bool continueProcessing = false;
+               if (m_isInteractive)
+               {
+                  continueProcessing = askConfirmation(
+                     "The AI assistant has reached the configured tool call limit for this request. Allow it to continue?",
+                     "Continuing lets the assistant run more tool calls to finish the task.",
+                     ConfirmationType::CONFIRM_CANCEL);
+               }
+
+               if (continueProcessing)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, L"Chat [%u]: user allowed continuation past tool call limit", m_id);
+                  iterations = maxIterations;   // grant another budget of iterations
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, L"Chat [%u]: tool call limit reached, requesting final answer", m_id);
+                  addMessage("user", "The tool call limit for this request has been reached. Do not call any more tools - provide your final answer based on the information gathered so far.");
+                  finalAttempt = true;
+                  iterations = 1;   // allow exactly one more response to wrap up
                }
             }
          }
@@ -1764,7 +1804,7 @@ char *Chat::sendRequest(const char *prompt, int maxIterations, const char *conte
  * Start async request processing (for WebAPI)
  * Returns false if a request is already in progress
  */
-bool Chat::startAsyncRequest(const char *prompt, int maxIterations, const char *context)
+bool Chat::startAsyncRequest(const char *prompt, const char *context)
 {
    m_asyncMutex.lock();
    if (m_asyncState == AsyncRequestState::PROCESSING)
@@ -1788,9 +1828,9 @@ bool Chat::startAsyncRequest(const char *prompt, int maxIterations, const char *
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Chat [%u]: starting async request processing"), m_id);
 
    ThreadPoolExecute(s_aiTaskThreadPool,
-      [self, promptCopy, maxIterations, contextCopy]() -> void
+      [self, promptCopy, contextCopy]() -> void
       {
-         char *result = self->sendRequest(promptCopy, maxIterations, contextCopy);
+         char *result = self->sendRequest(promptCopy, contextCopy);
 
          self->m_asyncMutex.lock();
          if (result != nullptr)
@@ -2070,7 +2110,7 @@ char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, co
    Chat chat(context, nullptr, 0, nullptr, false, enableTools);
    if (slot != nullptr)
       chat.setSlot(slot);
-   return chat.sendRequest(prompt, enableTools ? 32 : 1);
+   return chat.sendRequest(prompt);
 }
 
 /**
@@ -2085,7 +2125,7 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
       [prompt, object, eventData, eventId] () -> void
       {
          Chat chat(object.get(), eventData, 0, s_systemPromptBackground, false);
-         char *response = chat.sendRequest(prompt, 10);
+         char *response = chat.sendRequest(prompt);
          if (response != nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for event " UINT64_FMT L": %hs", eventId, response);
@@ -2288,7 +2328,7 @@ static void ExecuteAIAgentTask(const shared_ptr<ScheduledTaskParameters>& parame
    char *prompt = UTF8StringFromWideString(parameters->m_persistentData);
    shared_ptr<NetObj> context = FindObjectById(parameters->m_objectId);
    Chat chat(context.get(), nullptr, parameters->m_userId, s_systemPromptBackground, false);
-   char *response = chat.sendRequest(prompt, 64);
+   char *response = chat.sendRequest(prompt);
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI assistant response for scheduled task on object [%u]: %hs",
          parameters->m_objectId, (response != nullptr) ? response : "no response");
    MemFree(prompt);
@@ -2378,7 +2418,7 @@ static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssi
    // Create chat and execute analysis
    Chat chat(sourceObject.get(), nullptr, 0, s_systemPromptBackground, false);
    chat.setSlot("analytical");
-   char *response = chat.sendRequest(prompt.c_str(), 32);
+   char *response = chat.sendRequest(prompt.c_str());
 
    if (response != nullptr)
    {
@@ -2607,6 +2647,32 @@ static std::string F_GetAIProviderStats(json_t *arguments, uint32_t userId)
 }
 
 /**
+ * Load tool-call iteration limits from server configuration
+ */
+static void LoadAIIterationLimits()
+{
+   s_maxInteractiveIterations = ConfigReadInt(L"AI.MaxInteractiveIterations", 30);
+   if (s_maxInteractiveIterations < 1)
+      s_maxInteractiveIterations = 1;
+   s_maxBackgroundIterations = ConfigReadInt(L"AI.MaxBackgroundIterations", 64);
+   if (s_maxBackgroundIterations < 1)
+      s_maxBackgroundIterations = 1;
+}
+
+/**
+ * Handle runtime change of AI.* configuration variables
+ */
+void OnAIConfigurationChange(const wchar_t *name, const wchar_t *value)
+{
+   if (!wcscmp(name, L"AI.MaxInteractiveIterations") || !wcscmp(name, L"AI.MaxBackgroundIterations"))
+   {
+      LoadAIIterationLimits();
+      nxlog_debug_tag(DEBUG_TAG, 3, L"AI tool-call iteration limits updated: interactive=%d, background=%d",
+         s_maxInteractiveIterations, s_maxBackgroundIterations);
+   }
+}
+
+/**
  * Initialize AI assistant
  */
 bool InitAIAssistant()
@@ -2744,6 +2810,11 @@ bool InitAIAssistant()
    // Read prompt injection guard configuration
    s_guardEnabled = g_serverConfig.getValueAsBoolean(L"/AI/PromptInjectionGuard", true);
    nxlog_debug_tag(DEBUG_TAG, 3, L"Prompt injection guard is %s", s_guardEnabled ? L"enabled" : L"disabled");
+
+   // Read tool-call iteration limits (number of LLM round-trips before the request is stopped)
+   LoadAIIterationLimits();
+   nxlog_debug_tag(DEBUG_TAG, 3, L"AI tool-call iteration limits: interactive=%d, background=%d",
+      s_maxInteractiveIterations, s_maxBackgroundIterations);
 
    NXSL_Library *scriptLibrary = GetServerScriptLibrary();
    scriptLibrary->lock();

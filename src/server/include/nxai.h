@@ -226,9 +226,9 @@ public:
    void bindToIncident(uint32_t incidentId);
    void enableVisualizationOutput();
 
-   char *sendRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+   char *sendRequest(const char *prompt, const char *context = nullptr);
 
-   bool startAsyncRequest(const char *prompt, int maxIterations, const char *context = nullptr);
+   bool startAsyncRequest(const char *prompt, const char *context = nullptr);
    AsyncRequestState getAsyncState() const { return m_asyncState; }
    const char *getCurrentFunction() const { return m_currentFunction; }
    char *takeAsyncResult();

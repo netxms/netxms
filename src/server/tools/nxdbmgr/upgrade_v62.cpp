@@ -25,6 +25,21 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.27 to 62.28
+ */
+static bool H_UpgradeFromV27()
+{
+   CHK_EXEC(CreateConfigParam(L"AI.MaxInteractiveIterations", L"30",
+      L"Maximum number of LLM tool-call iterations for interactive AI assistant chats before the user is asked whether to continue.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AI.MaxBackgroundIterations", L"64",
+      L"Maximum number of LLM tool-call iterations for background AI assistant requests (event processing, scheduled tasks, incident analysis) before the request is stopped.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Upgrade from 62.26 to 62.27
  */
 static bool H_UpgradeFromV26()
@@ -1091,6 +1106,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 27, 62, 28, H_UpgradeFromV27 },
    { 26, 62, 27, H_UpgradeFromV26 },
    { 25, 62, 26, H_UpgradeFromV25 },
    { 24, 62, 25, H_UpgradeFromV24 },
