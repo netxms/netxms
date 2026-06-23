@@ -2401,7 +2401,7 @@ FileUpload-FocusIndicator {
 Composite.PerspectiveSwitcher,
 ScrolledComposite.PerspectiveSwitcher,
 Label.PerspectiveSwitcher {
-   background-color: #5A6D80;
+   background-color: #113C51;
 }
 
 Composite.SVGCanvas {
@@ -2409,41 +2409,32 @@ Composite.SVGCanvas {
 }
 
 Composite.PerspectiveSwitcherItem {
-   background-color: #5A6D80;
+   background-color: transparent;
+   border-radius: 10px;
 }
 
 Composite.PerspectiveSwitcherItem:hover {
    background-color: #1A7A9E;
+   border-radius: 10px;
 }
 
 Composite.PerspectiveSwitcherItemSelected {
-   background-color: #005A82;
+   background-color: #ff7201;
+   border-radius: 10px;
 }
 
 Label.PerspectiveSwitcherItemText {
    background-color: transparent;
    color: #ffffff;
-   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   text-align: center;
+   font: 12px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 Label.PerspectiveSwitcherItemTextSelected {
    background-color: transparent;
    color: #ffffff;
-   font: 16px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
-}
-
-Label.PerspectiveSwitcherSectionHeader {
-   background-color: transparent;
-   color: #96B4C8;
-   font: bold 12px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
-}
-
-Label.PerspectiveSwitcherAccent {
-   background-color: #5A6D80;
-}
-
-Label.PerspectiveSwitcherAccentSelected {
-   background-color: #ffffff;
+   text-align: center;
+   font: 12px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 Label.PerspectiveSwitcherToggle {

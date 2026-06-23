@@ -43,18 +43,23 @@ import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * Custom perspective switcher sidebar widget (RWT version). Uses CSS custom variants for styling instead of programmatic color
- * management. Supports expanded (icon + text) and collapsed (icon only) modes with section grouping and scrolling.
+ * Custom perspective switcher sidebar widget (RWT version). Each perspective is shown as an icon with its name centered underneath.
+ * Uses CSS custom variants for styling (including the rounded selection/hover highlight via border-radius). Supports expanded (icon
+ * + text) and collapsed (icon only) modes with section grouping and scrolling.
  */
 public class PerspectiveSwitcher extends Composite
 {
-   private static final int EXPANDED_WIDTH = 200;
+   private static final int EXPANDED_WIDTH = 112;
    private static final int COLLAPSED_WIDTH = 48;
-   private static final int ICON_SIZE_EXPANDED = 18;
-   private static final int ICON_SIZE_COLLAPSED = 20;
-   private static final int ITEM_HEIGHT = 36;
-   private static final int SECTION_HEADER_HEIGHT = 28;
+   private static final int ICON_SIZE_EXPANDED = 22;
+   private static final int ICON_SIZE_COLLAPSED = 22;
+   private static final int ITEM_HEIGHT_EXPANDED = 60;
+   private static final int ITEM_HEIGHT_COLLAPSED = 44;
    private static final int SECTION_SPACING = 16;
+   private static final int HIGHLIGHT_MARGIN_H = 6;
+   private static final int HIGHLIGHT_MARGIN_V = 3;
+   private static final int HIGHLIGHT_COLLAPSED_SIZE = 36;
+   private static final int TEXT_WIDTH = EXPANDED_WIDTH - 2 * HIGHLIGHT_MARGIN_H - 8;
 
    private boolean expanded;
    private Consumer<Perspective> switchCallback;
@@ -146,7 +151,7 @@ public class PerspectiveSwitcher extends Composite
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(false);
       scroller.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
-      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, ITEM_HEIGHT);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED);
 
       scrollContent = new Composite(scroller, SWT.NONE);
       GridLayout scrollLayout = new GridLayout();
@@ -164,6 +169,7 @@ public class PerspectiveSwitcher extends Composite
 
          if (!firstSection)
          {
+            // Spacing between sections (replaces section header)
             Label spacer = new Label(scrollContent, SWT.NONE);
             spacer.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
             GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
@@ -172,21 +178,12 @@ public class PerspectiveSwitcher extends Composite
          }
          firstSection = false;
 
-         if (expanded && !sectionName.isEmpty())
-         {
-            Label header = new Label(scrollContent, SWT.NONE);
-            header.setText(sectionName.toUpperCase());
-            header.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherSectionHeader");
-            GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-            gd.heightHint = SECTION_HEADER_HEIGHT;
-            gd.horizontalIndent = 11;
-            header.setLayoutData(gd);
-         }
-
          for(Perspective p : sectionPerspectives)
          {
             PerspectiveItemComposite item = new PerspectiveItemComposite(scrollContent, p);
-            item.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+            GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+            gd.heightHint = expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED;
+            item.setLayoutData(gd);
             allItems.add(item);
          }
       }
@@ -215,7 +212,9 @@ public class PerspectiveSwitcher extends Composite
       if (pinboardPerspective != null)
       {
          pinboardItem = new PerspectiveItemComposite(bottomArea, pinboardPerspective);
-         pinboardItem.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+         GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.heightHint = expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED;
+         pinboardItem.setLayoutData(gd);
       }
 
       Composite toggleButton = new Composite(bottomArea, SWT.NONE);
@@ -227,7 +226,7 @@ public class PerspectiveSwitcher extends Composite
       toggleButton.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
 
       Label toggleLabel = new Label(toggleButton, SWT.CENTER);
-      toggleLabel.setText(expanded ? "\u00AB" : "\u00BB");
+      toggleLabel.setText(expanded ? "«" : "»");
       toggleLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherToggle");
       toggleLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
       toggleLabel.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -334,12 +333,13 @@ public class PerspectiveSwitcher extends Composite
    }
 
    /**
-    * Inner composite representing a single perspective item in the sidebar.
+    * Inner composite representing a single perspective item in the sidebar. The full-width row is transparent; an inner highlight
+    * composite (which carries the selection/hover CSS variant with rounded corners) holds the icon and the centered label.
     */
    private class PerspectiveItemComposite extends Composite
    {
       private Perspective perspective;
-      private Label accentBar;
+      private Composite highlight;
       private SVGCanvas iconLabel;
       private Label textLabel;
       private boolean selected = false;
@@ -349,54 +349,54 @@ public class PerspectiveSwitcher extends Composite
          super(parent, SWT.NONE);
          this.perspective = perspective;
 
-         setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItem");
+         setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
 
          GridLayout layout = new GridLayout();
-         layout.marginWidth = 0;
-         layout.marginHeight = 4;
+         layout.marginWidth = HIGHLIGHT_MARGIN_H;
+         layout.marginHeight = HIGHLIGHT_MARGIN_V;
          layout.horizontalSpacing = 0;
          layout.verticalSpacing = 0;
-
-         if (expanded)
-         {
-            layout.numColumns = 3;
-         }
-         else
-         {
-            layout.numColumns = 1;
-         }
          setLayout(layout);
+
+         highlight = new Composite(this, SWT.NONE);
+         highlight.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItem");
+         GridLayout highlightLayout = new GridLayout();
+         highlightLayout.marginWidth = 0;
+         highlightLayout.marginHeight = 0;
+         highlightLayout.horizontalSpacing = 0;
+         highlightLayout.verticalSpacing = 2;
+         highlight.setLayout(highlightLayout);
 
          int iconSize = expanded ? ICON_SIZE_EXPANDED : ICON_SIZE_COLLAPSED;
          if (expanded)
          {
-            accentBar = new Label(this, SWT.NONE);
-            accentBar.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherAccent");
-            GridData gd = new GridData(SWT.LEFT, SWT.FILL, false, true);
-            gd.widthHint = 3;
-            gd.heightHint = ITEM_HEIGHT - 4;
-            accentBar.setLayoutData(gd);
+            highlight.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-            iconLabel = new SVGCanvas(this, SWT.NONE);
-            gd = new GridData(SWT.CENTER, SWT.CENTER, false, false);
-            gd.widthHint = iconSize + 8;
-            gd.heightHint = ITEM_HEIGHT - 6;
-            gd.horizontalIndent = 4;
+            iconLabel = new SVGCanvas(highlight, SWT.NONE);
+            GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, false);
+            gd.widthHint = iconSize;
+            gd.heightHint = iconSize;
+            gd.verticalIndent = 2;
             iconLabel.setLayoutData(gd);
 
-            textLabel = new Label(this, SWT.NONE);
+            textLabel = new Label(highlight, SWT.CENTER | SWT.WRAP);
             textLabel.setText(perspective.getName());
             textLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemText");
-            gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-            gd.horizontalIndent = 6;
+            gd = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+            gd.widthHint = TEXT_WIDTH;
             textLabel.setLayoutData(gd);
          }
          else
          {
-            iconLabel = new SVGCanvas(this, SWT.NONE);
-            GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, false);
-            gd.widthHint = iconSize + 8;
-            gd.heightHint = ITEM_HEIGHT - 4;
+            GridData hgd = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+            hgd.widthHint = HIGHLIGHT_COLLAPSED_SIZE;
+            hgd.heightHint = HIGHLIGHT_COLLAPSED_SIZE;
+            highlight.setLayoutData(hgd);
+
+            iconLabel = new SVGCanvas(highlight, SWT.NONE);
+            GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+            gd.widthHint = iconSize;
+            gd.heightHint = iconSize;
             iconLabel.setLayoutData(gd);
          }
 
@@ -406,6 +406,7 @@ public class PerspectiveSwitcher extends Composite
          KeyStroke shortcut = perspective.getKeyboardShortcut();
          String tooltip = (shortcut != null) ? perspective.getName() + "\t" + shortcut.toString() : perspective.getName();
          setToolTipText(tooltip);
+         highlight.setToolTipText(tooltip);
          iconLabel.setToolTipText(tooltip);
          if (textLabel != null)
             textLabel.setToolTipText(tooltip);
@@ -419,18 +420,16 @@ public class PerspectiveSwitcher extends Composite
          };
 
          addMouseListener(clickListener);
+         highlight.addMouseListener(clickListener);
          iconLabel.addMouseListener(clickListener);
          if (textLabel != null)
             textLabel.addMouseListener(clickListener);
-         if (accentBar != null)
-            accentBar.addMouseListener(clickListener);
 
          setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+         highlight.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
          iconLabel.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
          if (textLabel != null)
             textLabel.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-         if (accentBar != null)
-            accentBar.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       }
 
       /**
@@ -453,19 +452,15 @@ public class PerspectiveSwitcher extends Composite
       {
          if (selected)
          {
-            setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemSelected");
+            highlight.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemSelected");
             if (textLabel != null)
                textLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemTextSelected");
-            if (accentBar != null)
-               accentBar.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherAccentSelected");
          }
          else
          {
-            setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItem");
+            highlight.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItem");
             if (textLabel != null)
                textLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemText");
-            if (accentBar != null)
-               accentBar.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherAccent");
          }
       }
    }

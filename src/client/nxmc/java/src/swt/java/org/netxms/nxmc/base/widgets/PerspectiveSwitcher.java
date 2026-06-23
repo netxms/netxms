@@ -32,9 +32,11 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.nxmc.PreferenceStore;
@@ -46,19 +48,25 @@ import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * Custom perspective switcher sidebar widget. Supports expanded (icon + text) and collapsed (icon only) modes with section grouping
- * and scrolling.
+ * Custom perspective switcher sidebar widget. Each perspective is shown as an icon with its name centered underneath. Supports
+ * expanded (icon + text) and collapsed (icon only) modes with section grouping and scrolling. The selected (or hovered) item is
+ * highlighted with a rounded filled rectangle.
  */
 public class PerspectiveSwitcher extends Composite
 {
-   private static final int EXPANDED_WIDTH = 200;
+   private static final int EXPANDED_WIDTH = 112;
    private static final int COLLAPSED_WIDTH = 48;
-   private static final int ICON_SIZE_EXPANDED = 18;
-   private static final int ICON_SIZE_COLLAPSED = 20;
-   private static final int ITEM_HEIGHT = 36;
-   private static final int SECTION_HEADER_HEIGHT = 28;
+   private static final int ICON_SIZE_EXPANDED = 22;
+   private static final int ICON_SIZE_COLLAPSED = 22;
+   private static final int ITEM_HEIGHT_EXPANDED = 60;
+   private static final int ITEM_HEIGHT_COLLAPSED = 44;
+   private static final int ITEM_PADDING_TOP = 6;
+   private static final int TEXT_GAP = 3;
    private static final int SECTION_SPACING = 16;
-   private static final int ACCENT_WIDTH = 3;
+   private static final int HIGHLIGHT_MARGIN_H = 6;
+   private static final int HIGHLIGHT_MARGIN_V = 3;
+   private static final int HIGHLIGHT_COLLAPSED_SIZE = 36;
+   private static final int HIGHLIGHT_RADIUS = 12;
 
    private boolean expanded;
    private Consumer<Perspective> switchCallback;
@@ -82,8 +90,8 @@ public class PerspectiveSwitcher extends Composite
    private Color selectionForeground;
    private Color hoverBackground;
    private Color sectionHeaderForeground;
-   private Font mainFont;
-   private Font sectionHeaderFont;
+   private Font itemFont;
+   private Font toggleFont;
 
    /**
     * Create perspective switcher.
@@ -105,8 +113,8 @@ public class PerspectiveSwitcher extends Composite
       selectionForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.Selection");
       hoverBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Hover");
       sectionHeaderForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.SectionHeader");
-      mainFont = FontTools.createAdjustedFont(getFont(), 2);
-      sectionHeaderFont = FontTools.createAdjustedFont(getFont(), -2, SWT.BOLD);
+      itemFont = FontTools.createAdjustedFont(getFont(), -1);
+      toggleFont = FontTools.createAdjustedFont(getFont(), 2);
 
       buildSections(perspectives);
 
@@ -120,8 +128,8 @@ public class PerspectiveSwitcher extends Composite
       createContent();
 
       addDisposeListener((e) -> {
-         mainFont.dispose();
-         sectionHeaderFont.dispose();
+         itemFont.dispose();
+         toggleFont.dispose();
       });
    }
 
@@ -173,7 +181,7 @@ public class PerspectiveSwitcher extends Composite
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(false);
       scroller.setBackground(backgroundColor);
-      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, ITEM_HEIGHT);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED);
 
       scrollContent = new Composite(scroller, SWT.NONE);
       GridLayout scrollLayout = new GridLayout();
@@ -191,40 +199,14 @@ public class PerspectiveSwitcher extends Composite
 
          if (!firstSection)
          {
-            if (expanded && !sectionName.isEmpty())
-            {
-               // Add spacing before section header
-               Label spacer = new Label(scrollContent, SWT.NONE);
-               spacer.setBackground(backgroundColor);
-               GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-               gd.heightHint = SECTION_SPACING;
-               spacer.setLayoutData(gd);
-            }
-            else
-            {
-               // Collapsed mode or unnamed section: thin gap
-               Label spacer = new Label(scrollContent, SWT.NONE);
-               spacer.setBackground(backgroundColor);
-               GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-               gd.heightHint = SECTION_SPACING;
-               spacer.setLayoutData(gd);
-            }
+            // Spacing between sections (replaces section header)
+            Label spacer = new Label(scrollContent, SWT.NONE);
+            spacer.setBackground(backgroundColor);
+            GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+            gd.heightHint = SECTION_SPACING;
+            spacer.setLayoutData(gd);
          }
          firstSection = false;
-
-         // Section header (only in expanded mode with named sections)
-         if (expanded && !sectionName.isEmpty())
-         {
-            Label header = new Label(scrollContent, SWT.NONE);
-            header.setText(sectionName.toUpperCase());
-            header.setFont(sectionHeaderFont);
-            header.setForeground(sectionHeaderForeground);
-            header.setBackground(backgroundColor);
-            GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-            gd.heightHint = SECTION_HEADER_HEIGHT;
-            gd.horizontalIndent = ACCENT_WIDTH + 8;
-            header.setLayoutData(gd);
-         }
 
          // Perspective items
          for(Perspective p : sectionPerspectives)
@@ -274,8 +256,8 @@ public class PerspectiveSwitcher extends Composite
       toggleButton.setBackground(backgroundColor);
 
       Label toggleLabel = new Label(toggleButton, SWT.CENTER);
-      toggleLabel.setText(expanded ? "\u00AB" : "\u00BB");
-      toggleLabel.setFont(mainFont);
+      toggleLabel.setText(expanded ? "«" : "»");
+      toggleLabel.setFont(toggleFont);
       toggleLabel.setForeground(sectionHeaderForeground);
       toggleLabel.setBackground(backgroundColor);
       toggleLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
@@ -385,92 +367,41 @@ public class PerspectiveSwitcher extends Composite
    }
 
    /**
-    * Inner composite representing a single perspective item in the sidebar.
+    * Inner widget representing a single perspective item in the sidebar. Paints its own rounded selection/hover highlight and the
+    * perspective name (centered, up to two lines) below the icon.
     */
-   private class PerspectiveItemComposite extends Composite
+   private class PerspectiveItemComposite extends Canvas
    {
       private Perspective perspective;
-      private Label accentBar;
-      private SVGCanvas iconLabel;
-      private Label textLabel;
+      private SVGCanvas icon;
+      private String[] textLines;
       private boolean selected = false;
       private boolean hovered = false;
 
       PerspectiveItemComposite(Composite parent, Perspective perspective)
       {
-         super(parent, SWT.NONE);
+         super(parent, SWT.DOUBLE_BUFFERED);
          this.perspective = perspective;
 
          setBackground(backgroundColor);
 
-         GridLayout layout = new GridLayout();
-         layout.marginWidth = 0;
-         layout.marginHeight = 4;
-         layout.horizontalSpacing = 0;
-         layout.verticalSpacing = 0;
+         icon = new SVGCanvas(this, SWT.NONE);
+         icon.setBackground(backgroundColor);
+         icon.setDefaultColor(foregroundColor);
+         icon.setImageResource(perspective.getImagePath());
 
          if (expanded)
-         {
-            layout.numColumns = 3; // accent + icon + text
-         }
-         else
-         {
-            layout.numColumns = 1; // icon only (centered)
-         }
-         setLayout(layout);
-
-         int iconSize = expanded ? ICON_SIZE_EXPANDED : ICON_SIZE_COLLAPSED;
-         if (expanded)
-         {
-            // Accent bar
-            accentBar = new Label(this, SWT.NONE);
-            accentBar.setBackground(backgroundColor);
-            GridData gd = new GridData(SWT.LEFT, SWT.FILL, false, true);
-            gd.widthHint = ACCENT_WIDTH;
-            gd.heightHint = ITEM_HEIGHT - 4;
-            accentBar.setLayoutData(gd);
-
-            // Icon
-            iconLabel = new SVGCanvas(this, SWT.NONE);
-            gd = new GridData(SWT.CENTER, SWT.CENTER, false, false);
-            gd.widthHint = iconSize + 8;
-            gd.heightHint = ITEM_HEIGHT - 6;
-            gd.horizontalIndent = 4;
-            iconLabel.setLayoutData(gd);
-
-            // Text
-            textLabel = new Label(this, SWT.NONE);
-            textLabel.setText(perspective.getName());
-            textLabel.setFont(mainFont);
-            textLabel.setForeground(foregroundColor);
-            textLabel.setBackground(backgroundColor);
-            gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-            gd.horizontalIndent = 6;
-            textLabel.setLayoutData(gd);
-         }
-         else
-         {
-            // Icon only, centered
-            iconLabel = new SVGCanvas(this, SWT.NONE);
-            GridData gd = new GridData(SWT.CENTER, SWT.CENTER, true, false);
-            gd.widthHint = iconSize + 8;
-            gd.heightHint = ITEM_HEIGHT - 4;
-            iconLabel.setLayoutData(gd);
-         }
-
-         iconLabel.setBackground(backgroundColor);
-         iconLabel.setDefaultColor(foregroundColor);
-         iconLabel.setImageResource(perspective.getImagePath());
+            textLines = splitText(perspective.getName());
 
          // Tooltip
          KeyStroke shortcut = perspective.getKeyboardShortcut();
          String tooltip = (shortcut != null) ? perspective.getName() + "\t" + shortcut.toString() : perspective.getName();
          setToolTipText(tooltip);
-         iconLabel.setToolTipText(tooltip);
-         if (textLabel != null)
-            textLabel.setToolTipText(tooltip);
+         icon.setToolTipText(tooltip);
 
-         // Mouse listeners on all child controls
+         addPaintListener((e) -> paint(e.gc));
+         addListener(SWT.Resize, (e) -> layoutIcon());
+
          MouseAdapter clickListener = new MouseAdapter() {
             @Override
             public void mouseUp(MouseEvent e)
@@ -495,25 +426,121 @@ public class PerspectiveSwitcher extends Composite
 
          addMouseListener(clickListener);
          addMouseTrackListener(hoverListener);
-         iconLabel.addMouseListener(clickListener);
-         iconLabel.addMouseTrackListener(hoverListener);
-         if (textLabel != null)
-         {
-            textLabel.addMouseListener(clickListener);
-            textLabel.addMouseTrackListener(hoverListener);
-         }
-         if (accentBar != null)
-         {
-            accentBar.addMouseListener(clickListener);
-            accentBar.addMouseTrackListener(hoverListener);
-         }
+         icon.addMouseListener(clickListener);
+         icon.addMouseTrackListener(hoverListener);
 
          setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-         iconLabel.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-         if (textLabel != null)
-            textLabel.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-         if (accentBar != null)
-            accentBar.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+         icon.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+      }
+
+      /**
+       * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+       */
+      @Override
+      public Point computeSize(int wHint, int hHint, boolean changed)
+      {
+         int width = (wHint != SWT.DEFAULT) ? wHint : (expanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH);
+         return new Point(width, expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED);
+      }
+
+      /**
+       * Position the icon within the item.
+       */
+      private void layoutIcon()
+      {
+         Point size = getSize();
+         int iconSize = expanded ? ICON_SIZE_EXPANDED : ICON_SIZE_COLLAPSED;
+         int x = (size.x - iconSize) / 2;
+         int y = expanded ? ITEM_PADDING_TOP : (size.y - iconSize) / 2;
+         icon.setBounds(x, y, iconSize, iconSize);
+      }
+
+      /**
+       * Paint highlight and text.
+       */
+      private void paint(GC gc)
+      {
+         Point size = getSize();
+
+         gc.setBackground(backgroundColor);
+         gc.fillRectangle(0, 0, size.x, size.y);
+
+         if (selected || hovered)
+         {
+            gc.setAntialias(SWT.ON);
+            gc.setBackground(selected ? selectionBackground : hoverBackground);
+            if (expanded)
+            {
+               gc.fillRoundRectangle(HIGHLIGHT_MARGIN_H, HIGHLIGHT_MARGIN_V, size.x - 2 * HIGHLIGHT_MARGIN_H,
+                     size.y - 2 * HIGHLIGHT_MARGIN_V, HIGHLIGHT_RADIUS, HIGHLIGHT_RADIUS);
+            }
+            else
+            {
+               int x = (size.x - HIGHLIGHT_COLLAPSED_SIZE) / 2;
+               int y = (size.y - HIGHLIGHT_COLLAPSED_SIZE) / 2;
+               gc.fillRoundRectangle(x, y, HIGHLIGHT_COLLAPSED_SIZE, HIGHLIGHT_COLLAPSED_SIZE, HIGHLIGHT_RADIUS, HIGHLIGHT_RADIUS);
+            }
+         }
+
+         if (expanded && (textLines != null))
+         {
+            gc.setFont(itemFont);
+            gc.setForeground(selected ? selectionForeground : foregroundColor);
+            int lineHeight = gc.getFontMetrics().getHeight();
+            int y = ITEM_PADDING_TOP + ICON_SIZE_EXPANDED + TEXT_GAP;
+            for(String line : textLines)
+            {
+               Point extent = gc.textExtent(line);
+               gc.drawText(line, (size.x - extent.x) / 2, y, SWT.DRAW_TRANSPARENT);
+               y += lineHeight;
+            }
+         }
+      }
+
+      /**
+       * Split perspective name into at most two centered lines that fit the item width.
+       */
+      private String[] splitText(String text)
+      {
+         GC gc = new GC(this);
+         gc.setFont(itemFont);
+         int maxWidth = EXPANDED_WIDTH - 2 * HIGHLIGHT_MARGIN_H - 4;
+         if (gc.textExtent(text).x <= maxWidth)
+         {
+            gc.dispose();
+            return new String[] { text };
+         }
+
+         String[] words = text.split(" ");
+         if (words.length < 2)
+         {
+            gc.dispose();
+            return new String[] { text };
+         }
+
+         StringBuilder line1 = new StringBuilder();
+         int i = 0;
+         for(; i < words.length; i++)
+         {
+            String candidate = (line1.length() == 0) ? words[i] : line1 + " " + words[i];
+            if ((gc.textExtent(candidate).x > maxWidth) && (line1.length() > 0))
+               break;
+            line1.setLength(0);
+            line1.append(candidate);
+         }
+         gc.dispose();
+
+         if (i >= words.length)
+            return new String[] { line1.toString() };
+
+         StringBuilder line2 = new StringBuilder();
+         for(; i < words.length; i++)
+         {
+            if (line2.length() > 0)
+               line2.append(' ');
+            line2.append(words[i]);
+         }
+         return new String[] { line1.toString(), line2.toString() };
       }
 
       /**
@@ -526,7 +553,9 @@ public class PerspectiveSwitcher extends Composite
             return;
 
          this.selected = isSelected;
-         applyColors();
+         if (isSelected)
+            this.hovered = false;
+         applyState();
       }
 
       /**
@@ -538,44 +567,19 @@ public class PerspectiveSwitcher extends Composite
             return;
 
          this.hovered = hovered;
-         applyColors();
+         applyState();
       }
 
       /**
-       * Apply colors based on current state.
+       * Apply visual state (icon color/background and repaint) based on current selection and hover state.
        */
-      private void applyColors()
+      private void applyState()
       {
-         Color bg;
-         Color fg;
-
-         if (selected)
-         {
-            bg = selectionBackground;
-            fg = selectionForeground;
-         }
-         else if (hovered)
-         {
-            bg = hoverBackground;
-            fg = foregroundColor;
-         }
-         else
-         {
-            bg = backgroundColor;
-            fg = foregroundColor;
-         }
-
-         setBackground(bg);
-         iconLabel.setBackground(bg);
-         if (textLabel != null)
-         {
-            textLabel.setBackground(bg);
-            textLabel.setForeground(fg);
-         }
-         if (accentBar != null)
-         {
-            accentBar.setBackground(selected ? selectionForeground : bg);
-         }
+         Color highlight = selected ? selectionBackground : (hovered ? hoverBackground : backgroundColor);
+         icon.setBackground(highlight);
+         icon.setDefaultColor(selected ? selectionForeground : foregroundColor);
+         icon.redraw();
+         redraw();
       }
    }
 }
