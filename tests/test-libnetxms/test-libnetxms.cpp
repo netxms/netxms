@@ -3158,9 +3158,9 @@ static void TestBuffer()
       Buffer<char, 1024> big;
       big.set(largeData, largeLen);
       AssertTrue(big.isInternal());          // fits in 1024-byte inline storage
-      Buffer<char, 64> small(big);           // templated cross-capacity ctor
-      AssertTrue(!small.isInternal());        // exceeds 32-byte inline storage
-      AssertTrue(!strcmp(static_cast<const char*>(small), largeData));
+      Buffer<char, 64> smallBuffer(big);           // templated cross-capacity ctor
+      AssertTrue(!smallBuffer.isInternal());        // exceeds 32-byte inline storage
+      AssertTrue(!strcmp(static_cast<const char*>(smallBuffer), largeData));
    }
    EndTest();
 
@@ -3168,9 +3168,9 @@ static void TestBuffer()
    {
       Buffer<char, 1024> big;
       big.set(largeData, largeLen);
-      Buffer<char, 64> small;
-      small = big;                           // base operator= via using-declaration
-      AssertTrue(!strcmp(static_cast<const char*>(small), largeData));
+      Buffer<char, 64> smallBuffer;
+      smallBuffer = big;                           // base operator= via using-declaration
+      AssertTrue(!strcmp(static_cast<const char*>(smallBuffer), largeData));
    }
    EndTest();
 

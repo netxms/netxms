@@ -23,6 +23,8 @@
 #ifndef _nms_alarm_h_
 #define _nms_alarm_h_
 
+#include <array>
+
 /**
  * Scheduled task handler ID for alarm summary email
  */
