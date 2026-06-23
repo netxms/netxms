@@ -28,6 +28,11 @@
 #define DEBUG_TAG_DISCOVERY      L"poll.discovery"
 
 /**
+ * EtherNet/IP identity probe via proxy agent
+ */
+CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status);
+
+/**
  * Thread pool
  */
 ThreadPool *g_discoveryThreadPool = nullptr;
@@ -1818,17 +1823,21 @@ void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList
  * Owned by ScanNetworkRangeInteractive; referenced from per-call callback
  * contexts; protected by resultLock during record updates.
  */
-namespace {
-
 struct InteractiveScanState
 {
    const InteractiveScanContext *publicCtx;
    Mutex resultLock;
    HashMap<uint32_t, InteractiveScanRecord> records;
 
-   InteractiveScanState() : resultLock(MutexType::FAST), records(Ownership::True) { }
+   InteractiveScanState() : resultLock(MutexType::FAST), records(Ownership::True)
+   {
+      publicCtx = nullptr;
+   }
 };
 
+/**
+ * Context for port scan callbacks
+ */
 struct InteractiveScanPortContext
 {
    InteractiveScanState *state;
@@ -1837,16 +1846,13 @@ struct InteractiveScanPortContext
    int16_t snmpVersion;
 };
 
-} // anonymous namespace
-
 /**
  * Merge one probe hit into the aggregated per-host record and emit a snapshot
  * of the current cumulative state. Snapshot is built under lock and passed to
  * the user-supplied emitter outside it to keep socket I/O out of the critical
  * section.
  */
-static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolFlag, uint32_t rtt,
-      uint16_t port, int16_t snmpVersion, InteractiveScanState *state)
+static void RecordInteractiveScanHit(const InetAddress& addr, uint32_t protocolFlag, uint32_t rtt, uint16_t port, int16_t snmpVersion, InteractiveScanState *state)
 {
    if (addr.getFamily() != AF_INET)
       return;
@@ -1920,9 +1926,6 @@ static void InteractiveScanProxyPortCallback(const InetAddress& addr, int32_t zo
    auto pctx = static_cast<InteractiveScanPortContext*>(context);
    RecordInteractiveScanHit(addr, pctx->protocolFlag, rtt, pctx->port, pctx->snmpVersion, pctx->state);
 }
-
-// EtherNet/IP identity probe via proxy agent (defined in eip.cpp, no public header).
-CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status);
 
 /**
  * Phase 2 protocol verification: confirm a NetXMS agent on the given address/port

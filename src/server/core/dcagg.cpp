@@ -868,11 +868,12 @@ static bool ExecuteBackfillRefresh(DB_HANDLE hdb, const wchar_t *query)
       if (DBQuery(hdb, query))
          return true;
       if (attempt == 3)
-         return false;
+         break;
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Continuous aggregate refresh failed (attempt %d of 3), retry in 60 seconds", attempt);
       if (SleepAndCheckForShutdown(60))
-         return false;
+         break;
    }
+   return false;
 }
 
 /**

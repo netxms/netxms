@@ -46,7 +46,6 @@
  */
 bool RadiusAuth(const wchar_t *login, const char *passwd);
 int RadiusAuthEx(const wchar_t *login, const char *passwd, RADIUSChallengeData *challengeData);
-int RadiusChallengeResponse(const wchar_t *login, const wchar_t *otp, const RADIUSChallengeData *challengeData);
 
 /**
  * Static data

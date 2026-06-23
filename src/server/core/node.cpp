@@ -73,6 +73,10 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
  */
 DataCollectionError GetEtherNetIPAttribute(const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, uint32_t timeout, TCHAR *buffer, size_t size);
 DataCollectionError GetEtherNetIPAttributeViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, const TCHAR *symbolicPath, TCHAR *buffer, size_t size);
+
+/**
+ * EtherNet/IP identity probe via proxy agent
+ */
 CIP_Identity *EIP_ListIdentityViaProxy(const shared_ptr<AgentConnectionEx>& conn, const InetAddress& addr, uint16_t port, EIP_Status *status);
 
 /**

@@ -10386,6 +10386,12 @@ struct WebServiceQueryArgs
    {
       this->session = session;
       this->requestId = requestId;
+      requestMethod = HttpRequestMethod::_GET;
+      authType = WebServiceAuthType::NONE;
+      requestTimeout = 30000;
+      verifyCert = false;
+      verifyHost = false;
+      followLocation = false;
    }
 };
 
