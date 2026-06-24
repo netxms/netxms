@@ -1091,7 +1091,7 @@ AC_ARG_WITH(dist,
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
-	AGENT_DIRS="libnxappc libnxtux nxsagent"
+	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
 	HDLINK_DIRS="jira redmine"
 	PDSDRV_DIRS="clickhouse influxdb rrdtool"
@@ -1450,7 +1450,6 @@ if test $? = 0; then
 		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
-	AGENT_DIRS="$AGENT_DIRS libnxappc"
 fi
 
 MODULES="$MODULES tools"
@@ -4694,7 +4693,6 @@ AC_CONFIG_FILES([
 	src/agent/extensions/vcenter/Makefile
 	src/agent/install/Makefile
 	src/agent/libnxagent/Makefile
-	src/agent/libnxappc/Makefile
 	src/agent/libnxsde/Makefile
 	src/agent/libnxtux/Makefile
 	src/agent/nxsagent/Makefile

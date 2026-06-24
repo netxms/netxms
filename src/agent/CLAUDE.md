@@ -13,7 +13,6 @@ src/agent/
 ├── core/           # Agent core (60+ files)
 ├── install/        # Installation scripts
 ├── libnxagent/     # Agent library (also used by server)
-├── libnxappc/      # Application connectivity library
 ├── libnxsde/       # Subagent development library
 ├── libnxtux/       # Tuxedo integration library
 ├── nxsagent/       # Session agent
