@@ -46,6 +46,7 @@ struct ElementTypeDescriptor
    const char *description;   // one-line description
    std::vector<ElementFieldSchema> fields;
    const char *example;       // filled JSON configuration example
+   bool noTitle;              // true if element has no title bar (common title fields do not apply)
 };
 
 /**
@@ -233,18 +234,19 @@ static const std::vector<ElementTypeDescriptor>& GetElementTypeDescriptors()
       // Static elements
       {
          "label", DCE_LABEL, "static",
-         "Static text label, useful as a section heading",
+         "Static text label, useful as a section heading. For a label the common title fields ARE the rendered text and its styling: \"title\" is the text, and titleForeground/titleBackground/titleFontSize/titleFontName control its appearance",
          {
             { "title", "label text", true }
          },
-         "{\"title\":\"Production servers\"}"
+         "{\"title\":\"Production servers\",\"titleBackground\":\"#336699\",\"titleForeground\":\"#ffffff\"}"
       },
       {
          "separator", DCE_SEPARATOR, "static",
          "Horizontal separator line",
          {
          },
-         "{}"
+         "{}",
+         true   // separator has no title bar
       }
    };
    return descriptors;
@@ -290,6 +292,46 @@ static std::string ToUtf8(const wchar_t *s)
 }
 
 /**
+ * Common title fields shared by every element that has a title bar (i.e. all element types
+ * except the separator). The title text is also exposed per-type where it has a specific
+ * meaning (e.g. "chart title", or the required label text); for elements that do not declare
+ * their own title field a generic optional "title" is added by AppendCommonTitleFields().
+ */
+static const ElementFieldSchema s_commonTitleStyleFields[] =
+{
+   { "titleForeground", "title text color as a CSS color string (e.g. \"#ffffff\", \"rgb(255,255,255)\", or a name like \"white\"); optional, defaults to the theme color", false },
+   { "titleBackground", "title background color as a CSS color string (e.g. \"#336699\", \"rgb(51,102,153)\", or a name like \"navy\"); optional, defaults to the theme color", false },
+   { "titleFontSize", "title font size adjustment from the standard size in points (positive = larger, negative = smaller; default 0)", false },
+   { "titleFontName", "title font family name (e.g. \"Arial\"); optional, defaults to the standard font", false }
+};
+
+/**
+ * Append a single field schema entry to a JSON array
+ */
+static void AppendFieldSchema(json_t *fields, const ElementFieldSchema& f)
+{
+   json_t *field = json_object();
+   json_object_set_new(field, "key", json_string(f.key));
+   json_object_set_new(field, "description", json_string(f.description));
+   json_object_set_new(field, "required", json_boolean(f.required));
+   json_array_append_new(fields, field);
+}
+
+/**
+ * Append the common title fields (a generic "title" if the type does not declare its own, plus
+ * the title styling fields) to a field schema array, unless the element has no title bar.
+ */
+static void AppendCommonTitleFields(json_t *fields, const ElementTypeDescriptor& d, bool hasOwnTitle)
+{
+   if (d.noTitle)
+      return;
+   if (!hasOwnTitle)
+      AppendFieldSchema(fields, { "title", "optional title shown as a header above the element", false });
+   for(const ElementFieldSchema& f : s_commonTitleStyleFields)
+      AppendFieldSchema(fields, f);
+}
+
+/**
  * Build descriptor JSON for a single element type
  */
 static json_t *ElementTypeToJson(const ElementTypeDescriptor& d, bool full)
@@ -301,14 +343,14 @@ static json_t *ElementTypeToJson(const ElementTypeDescriptor& d, bool full)
    if (full)
    {
       json_t *fields = json_array();
+      bool hasOwnTitle = false;
       for(const ElementFieldSchema& f : d.fields)
       {
-         json_t *field = json_object();
-         json_object_set_new(field, "key", json_string(f.key));
-         json_object_set_new(field, "description", json_string(f.description));
-         json_object_set_new(field, "required", json_boolean(f.required));
-         json_array_append_new(fields, field);
+         AppendFieldSchema(fields, f);
+         if (!strcmp(f.key, "title"))
+            hasOwnTitle = true;
       }
+      AppendCommonTitleFields(fields, d, hasOwnTitle);
       json_object_set_new(root, "fields", fields);
 
       json_error_t error;
@@ -636,6 +678,9 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
    auto dashboard = make_shared<Dashboard>(name);
    NetObjInsert(dashboard, true, false);
    dashboard->setColumnCount(columns);
+   bool scrollable = json_object_get_boolean(arguments, "scrollable", false);
+   if (scrollable)
+      dashboard->setFlag(DBF_SCROLLABLE);
    NetObj::linkObjects(parent, dashboard);
    parent->calculateCompoundStatus();
    dashboard->publish();
@@ -651,6 +696,7 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
    json_object_set_new(output, "guid", dashboard->getGuid().toJson());
    json_object_set_new(output, "name", json_string_t(dashboard->getName()));
    json_object_set_new(output, "numColumns", json_integer(columns));
+   json_object_set_new(output, "scrollable", json_boolean(scrollable));
    return JsonToString(output);
 }
 
@@ -680,7 +726,57 @@ std::string F_GetDashboard(json_t *arguments, uint32_t userId)
    json_object_set_new(output, "id", json_integer(dashboard->getId()));
    json_object_set_new(output, "name", json_string_t(dashboard->getName()));
    json_object_set_new(output, "numColumns", json_integer(dashboard->getColumnCount()));
+   json_object_set_new(output, "scrollable", json_boolean((dashboard->getFlags() & DBF_SCROLLABLE) != 0));
    json_object_set_new(output, "elements", elements);
+   return JsonToString(output);
+}
+
+/**
+ * Update dashboard-level properties (name, column count, scrollable flag)
+ */
+std::string F_UpdateDashboard(json_t *arguments, uint32_t userId)
+{
+   std::string error;
+   shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
+   if (dashboard == nullptr)
+      return error;
+
+   if (json_object_get(arguments, "name") != nullptr)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      utf8_to_wchar(json_object_get_string_utf8(arguments, "name", ""), -1, name, MAX_OBJECT_NAME);
+      name[MAX_OBJECT_NAME - 1] = 0;
+      if ((name[0] == 0) || !IsValidObjectName(name, TRUE))
+         return std::string("A valid dashboard name must be provided");
+      dashboard->setName(name);
+   }
+
+   if (json_object_get(arguments, "columns") != nullptr)
+   {
+      int columns = json_object_get_int32(arguments, "columns", 2);
+      if (columns < 1)
+         columns = 1;
+      else if (columns > 12)
+         columns = 12;
+      dashboard->setColumnCount(columns);
+   }
+
+   if (json_object_get(arguments, "scrollable") != nullptr)
+   {
+      if (json_object_get_boolean(arguments, "scrollable", false))
+         dashboard->setFlag(DBF_SCROLLABLE);
+      else
+         dashboard->clearFlag(DBF_SCROLLABLE);
+   }
+
+   WriteAuditLog(AUDIT_OBJECTS, true, userId, nullptr, 0, dashboard->getId(),
+      L"AI assistant updated dashboard \"%s\" [%u]", dashboard->getName(), dashboard->getId());
+
+   json_t *output = json_object();
+   json_object_set_new(output, "id", json_integer(dashboard->getId()));
+   json_object_set_new(output, "name", json_string_t(dashboard->getName()));
+   json_object_set_new(output, "numColumns", json_integer(dashboard->getColumnCount()));
+   json_object_set_new(output, "scrollable", json_boolean((dashboard->getFlags() & DBF_SCROLLABLE) != 0));
    return JsonToString(output);
 }
 

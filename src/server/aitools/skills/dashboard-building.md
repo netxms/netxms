@@ -21,13 +21,17 @@ Follow this order:
    `nodeId`/`dciId` for each metric the user wants to chart, and the object tools to
    resolve object IDs for reference elements. Never invent IDs.
 4. **Create the dashboard.** Call `create-dashboard` with a name and a column count.
-   Two or three columns is a good default. It returns the dashboard `id`.
+   Two or three columns is a good default. For a dashboard that will have many rows of
+   charts, also pass `scrollable: true` (see **Vertical space** below). It returns the
+   dashboard `id`.
 5. **Add elements one by one.** For each element call `add-dashboard-element` with the
    dashboard ID, the element `type`, a `config` object that matches the type's schema,
    and a `width` intent. Check the result before adding the next element.
-6. **Review and adjust.** Call `get-dashboard` to read back the column count and the
-   ordered elements, each with its stable `guid`. Use the GUID to `update-dashboard-element`,
-   `remove-dashboard-element`, or `move-dashboard-element`.
+6. **Review and adjust.** Call `get-dashboard` to read back the name, column count,
+   scrollable flag, and the ordered elements, each with its stable `guid`. Use the GUID to
+   `update-dashboard-element`, `remove-dashboard-element`, or `move-dashboard-element`. To
+   change dashboard-level properties — its name, column count, or scrollable flag — call
+   `update-dashboard` (only the properties you supply are changed).
 
 ## Layout
 
@@ -51,6 +55,51 @@ an element row would otherwise look stretched or sparse.
 
 Plan the layout from the column count. For a two-column dashboard, two `half`-width charts
 sit side by side on one row; a `full`-width alarm viewer spans both columns on the next row.
+
+## Vertical space
+
+By default a dashboard is **not** scrollable: it occupies exactly the visible area and
+divides the available vertical space equally among its rows (every element that grabs extra
+space shares the height). This is fine for a compact dashboard of one to three rows, but a
+dashboard with many rows of charts ends up with each chart squeezed into a thin, barely
+readable strip.
+
+Keep dashboards readable in one of two ways:
+
+- **Limit the number of rows.** A dashboard meant to be viewed at a glance should stay at
+  roughly **three or four rows** of space-grabbing elements. Combining gauges that share a
+  scale into a single dial-chart (see below) and using wider elements helps keep the row
+  count down.
+- **Make it scrollable.** If the request genuinely needs many rows (five or more rows of
+  charts), create the dashboard with `scrollable: true`, or turn it on for an existing
+  dashboard with `update-dashboard`. A scrollable dashboard gives each row its natural height
+  and adds a vertical scrollbar instead of compressing everything into the viewport, so
+  charts stay readable. When you make a dashboard scrollable, give the space-grabbing
+  elements a sensible fixed `height` (for example 250–300 px for a chart) so each row has a
+  predictable size.
+
+When in doubt for a complex, multi-row dashboard, prefer `scrollable: true` — a cramped,
+unreadable dashboard is worse than one the user has to scroll.
+
+## Titles and styling
+
+**Every element except the separator** accepts a common set of optional title fields, in
+addition to its type-specific configuration. They appear in every type's
+`describe-dashboard-element-type` schema:
+
+- `title` — text shown as a header above the element. Chart types describe this as the chart
+  title; for a label it is the label text itself (and is required there).
+- `titleForeground` — title text color, as a CSS color string (`#336699`, `rgb(51,102,153)`,
+  or a name like `navy`).
+- `titleBackground` — title background color, same format.
+- `titleFontSize` — font size adjustment from the standard size, in points (positive larger,
+  negative smaller).
+- `titleFontName` — font family name (e.g. `Arial`).
+
+So a request to color or restyle a title — on a chart, an alarm viewer, a label, or any other
+element — is always satisfiable; set the relevant title fields rather than telling the user it
+is not configurable. A label is the special case where these fields style the rendered text
+directly (it has no separate body).
 
 ## Element identity
 
@@ -95,7 +144,9 @@ an ID or silently dropping the metric.
   `grabVerticalSpace: false` (optionally with a modest `height`) to keep it compact;
   otherwise the default is fine.
 - **Static elements** are layout aids: text labels (useful as section headings) and
-  separators.
+  separators. For a label the common title fields (see **Titles and styling** below) *are*
+  the rendered content: `title` is the text and the title colors/font style it — so a colored
+  section heading is just a label with `titleBackground`/`titleForeground` set.
 
 Prefer the curated element types this skill exposes. For a request that needs an element
 type not in the list (for example scripted/NXSL charts or dashboard templates), explain the

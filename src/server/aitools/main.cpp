@@ -105,6 +105,7 @@ std::string F_ListDashboardElementTypes(json_t *arguments, uint32_t userId);
 std::string F_DescribeDashboardElementType(json_t *arguments, uint32_t userId);
 std::string F_CreateDashboard(json_t *arguments, uint32_t userId);
 std::string F_GetDashboard(json_t *arguments, uint32_t userId);
+std::string F_UpdateDashboard(json_t *arguments, uint32_t userId);
 std::string F_AddDashboardElement(json_t *arguments, uint32_t userId);
 std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId);
 std::string F_RemoveDashboardElement(json_t *arguments, uint32_t userId);
@@ -1063,6 +1064,7 @@ static void CreateAssistantSkillList()
             {
                { "name", "name of the dashboard (mandatory)" },
                { "columns", "number of layout columns, 1-12 (default 2)" },
+               { "scrollable", "make the dashboard scrollable vertically instead of squeezing all rows into the visible area (default false); set true when the dashboard has many rows of charts (default false)" },
                { "group", "name or ID of a dashboard group to place the dashboard in (default: top-level Dashboards)" },
                { "associateWith", "name or ID of an object to associate the dashboard with (optional)" }
             },
@@ -1074,6 +1076,16 @@ static void CreateAssistantSkillList()
                { "dashboard", "name or ID of the dashboard (mandatory)" }
             },
             F_GetDashboard),
+         AssistantFunction(
+            "update-dashboard",
+            "Update dashboard-level properties. Only the properties supplied are changed; omitted ones are left as-is.",
+            {
+               { "dashboard", "name or ID of the dashboard to update (mandatory)" },
+               { "name", "new dashboard name (optional)" },
+               { "columns", "new number of layout columns, 1-12 (optional)" },
+               { "scrollable", "whether the dashboard is scrollable vertically; set true for dashboards with many rows of charts so they are not squeezed into the visible area (optional)" }
+            },
+            F_UpdateDashboard),
          AssistantFunction(
             "add-dashboard-element",
             "Append a configured element to a dashboard. References to non-existent or inaccessible objects/DCIs are rejected and the element is not added.",
