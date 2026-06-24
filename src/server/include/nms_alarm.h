@@ -122,6 +122,7 @@ public:
 
    NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm) const;
    NXSL_Value *relatedEventsToNXSLArray(NXSL_VM *vm) const;
+   json_t *categoryListToJson() const;
 
    void createInDatabase();
    void updateInDatabase();

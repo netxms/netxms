@@ -48,6 +48,7 @@ int H_Alarms(Context *context)
          json_object_set_new(json, "source", json_integer(object->getId()));
          json_object_set_new(json, "message", json_string_t(alarm->getMessage()));
          json_object_set_new(json, "lastChangeTime", json_time_string(alarm->getLastChangeTime()));
+         json_object_set_new(json, "categories", alarm->categoryListToJson());
          if (includeObjectDetails)
          {
             json_object_set_new(json, "sourceObject", CreateObjectSummary(*object));

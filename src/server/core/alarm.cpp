@@ -708,6 +708,32 @@ NXSL_Value *Alarm::categoryListToNXSLArray(NXSL_VM *vm) const
 }
 
 /**
+ * Convert alarm category list to JSON array of {id, name} objects
+ */
+json_t *Alarm::categoryListToJson() const
+{
+   json_t *array = json_array();
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
+   {
+      uint32_t id = m_alarmCategoryList.get(i);
+      json_t *category = json_object();
+      json_object_set_new(category, "id", json_integer(id));
+      AlarmCategory *c = GetAlarmCategory(id);
+      if (c != nullptr)
+      {
+         json_object_set_new(category, "name", json_string_t(c->getName()));
+         delete c;
+      }
+      else
+      {
+         json_object_set_new(category, "name", json_null());
+      }
+      json_array_append_new(array, category);
+   }
+   return array;
+}
+
+/**
  * Check alarm category access
  */
 bool Alarm::checkCategoryAccess(uint32_t userId, uint64_t systemAccessRights) const
@@ -1038,7 +1064,7 @@ json_t *Alarm::toJson() const
    json_object_set_new(root, "helpDeskState", json_integer(m_helpDeskState));
    json_object_set_new(root, "repeatCount", json_integer(m_repeatCount));
    json_object_set_new(root, "subordinateAlarms", m_subordinateAlarms.toJson());
-   json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "categories", categoryListToJson());
 
    return root;
 }

@@ -1139,6 +1139,11 @@ paths:
                     lastChangeTime:
                       type: string
                       format: date-time
+                    categories:
+                      type: array
+                      description: Alarm categories (as assigned by the event processing policy rule that raised the alarm)
+                      items:
+                        $ref: '#/components/schemas/AlarmCategoryReference'
                     sourceObject:
                       allOf:
                         - $ref: '#/components/schemas/ObjectSummary'
@@ -9040,9 +9045,20 @@ components:
             type: integer
         categories:
           type: array
-          description: Alarm category IDs
+          description: Alarm categories (as assigned by the event processing policy rule that raised the alarm)
           items:
-            type: integer
+            $ref: '#/components/schemas/AlarmCategoryReference'
+    AlarmCategoryReference:
+      type: object
+      description: Reference to an alarm category assigned to an alarm
+      properties:
+        id:
+          type: integer
+          description: Alarm category ID
+        name:
+          type: string
+          nullable: true
+          description: Alarm category name, or null if the category no longer exists
     User:
       type: object
       description: User account
