@@ -393,7 +393,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
          header[len++] = ' ';
          memcpy(header.buffer() + len, headerValue.buffer(), headerValue.size());
          headers = curl_slist_append(headers, header);
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("QueryWebService(): request header: %hs"), header);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("QueryWebService(): request header: %hs"), header.buffer());
       }
 
       result = serviceRequest->query(url, requestMethodCode, requestData, login, password, authType, headers,
@@ -498,16 +498,20 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
       struct curl_slist *headers = nullptr;
       uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
       uint32_t fieldId = VID_HEADERS_BASE;
-      char header[2048];
+      Buffer<char, 2048> header, headerValue;
+      char headerName[256];
       for(uint32_t i = 0; i < headerCount; i++)
       {
-         request->getFieldAsUtf8String(fieldId++, header, sizeof(header) - 4);   // header name
-         size_t len = strlen(header);
+         request->getFieldAsUtf8String(fieldId++, headerName, sizeof(headerName));   // header name
+         request->getFieldAsUtf8String(fieldId++, headerValue);   // value
+         size_t len = strlen(headerName);
+         header.reserve(len + 2 + headerValue.size());
+         memcpy(header.buffer(), headerName, len);
          header[len++] = ':';
          header[len++] = ' ';
-         request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
+         memcpy(header.buffer() + len, headerValue.buffer(), headerValue.size());
          headers = curl_slist_append(headers, header);
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request header: %hs"), header.buffer());
       }
 
       result = serviceRequest->query(url, requestMethodCode, requestData, login, password, authType, headers,
