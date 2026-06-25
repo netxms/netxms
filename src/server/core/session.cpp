@@ -10450,15 +10450,24 @@ void ClientSession::queryWebService(const NXCPMessage& request)
             shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
             if (proxyNode != nullptr)
             {
+               auto& target = static_cast<DataCollectionTarget&>(*object);
                auto args = new WebServiceQueryArgs(this, request.getId(), proxyNode);
                args->requestMethod = HttpRequestMethodFromInt(request.getFieldAsInt16(VID_HTTP_REQUEST_METHOD));
                args->authType = WebServiceAuthTypeFromInt(request.getFieldAsInt16(VID_AUTH_TYPE));
                args->requestTimeout = request.getFieldAsUInt32(VID_TIMEOUT);
-               args->url = request.getFieldAsSharedString(VID_URL);
+               args->url = target.expandText(request.getFieldAsSharedString(VID_URL), nullptr, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, nullptr, nullptr);
                args->login = request.getFieldAsSharedString(VID_LOGIN_NAME);
                args->password = request.getFieldAsSharedString(VID_PASSWORD);
                args->data = request.getFieldAsSharedString(VID_REQUEST_DATA);
-               args->headers.addAllFromMessage(request, VID_HEADERS_BASE, VID_NUM_HEADERS);
+
+               StringMap rawHeaders;
+               rawHeaders.addAllFromMessage(request, VID_HEADERS_BASE, VID_NUM_HEADERS);
+               auto it = rawHeaders.begin();
+               while(it.hasNext())
+               {
+                  auto h = it.next();
+                  args->headers.set(h->key, target.expandText(h->value, nullptr, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, nullptr, nullptr));
+               }
                uint32_t flags = request.getFieldAsUInt32(VID_FLAGS);
                args->verifyCert = (flags & WSF_VERIFY_CERTIFICATE) != 0;
                args->verifyHost = (flags & WSF_VERIFY_HOST) != 0;
