@@ -28,7 +28,10 @@ public class InetAddressListElement
 {
 	public static final int SUBNET = 0;
 	public static final int RANGE = 1;
-	
+
+	/** Zone UIN value indicating that element applies to all zones */
+	public static final int ALL_ZONES = -1;
+
 	private int type;
 	private InetAddress baseAddress;
 	private InetAddress endAddress;

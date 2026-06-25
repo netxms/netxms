@@ -159,7 +159,7 @@ String InetAddressListElement::toString() const
       s.append(_T('-'));
       s.append(m_endAddress.toString());
    }
-   if (m_zoneUIN != 0)
+   if (m_zoneUIN != ALL_ZONES)
    {
       s.append(_T('@'));
       s.append(m_zoneUIN);
@@ -299,7 +299,7 @@ bool NXCORE_EXPORTABLE IsAddressInTopologyExcludedSubnet(int32_t zoneUIN, const 
       for(int i = 0; i < s_topologyExcludedSubnets->size(); i++)
       {
          InetAddressListElement *e = s_topologyExcludedSubnets->get(i);
-         if (e->contains(addr) && ((e->getZoneUIN() == 0) || (e->getZoneUIN() == zoneUIN)))
+         if (e->contains(addr) && ((e->getZoneUIN() == ALL_ZONES) || (e->getZoneUIN() == zoneUIN)))
          {
             result = true;
             break;

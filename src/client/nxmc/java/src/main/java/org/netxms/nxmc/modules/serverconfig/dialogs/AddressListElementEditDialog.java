@@ -61,20 +61,23 @@ public class AddressListElementEditDialog extends Dialog
 	private InetAddressListElement element;
 	private boolean enableProxySelection;
    private boolean warnOnWideMask;
+   private boolean allowAllZones;
 
 	/**
     * Create IP address list element edit dialog
-    * 
+    *
     * @param parentShell parent shell
     * @param enableProxySelection true to enable proxy selector
     * @param warnOnWideMask warn user when mask is too wide
+    * @param allowAllZones true if empty zone selection means "all zones" (otherwise it means the default zone)
     * @param element address list element to edit
     */
-   public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, boolean warnOnWideMask, InetAddressListElement element)
+   public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, boolean warnOnWideMask, boolean allowAllZones, InetAddressListElement element)
 	{
 		super(parentShell);
 		this.enableProxySelection = enableProxySelection;
       this.warnOnWideMask = warnOnWideMask;
+      this.allowAllZones = allowAllZones;
       this.element = element;
 	}
 
@@ -152,6 +155,8 @@ public class AddressListElementEditDialog extends Dialog
 		   {
 		      zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
             zoneSelector.setLabel(i18n.tr("Zone"));
+            if (allowAllZones)
+               zoneSelector.setEmptySelectionText(i18n.tr("All zones"));
 		      gd = new GridData();
 		      gd.horizontalAlignment = SWT.FILL;
 		      gd.grabExcessHorizontalSpace = true;
@@ -211,7 +216,7 @@ public class AddressListElementEditDialog extends Dialog
 		{
 		   int zoneUIN = (zoneSelector != null) ? zoneSelector.getZoneUIN() : 0;
 		   if (zoneUIN == -1)
-		      zoneUIN = 0;
+		      zoneUIN = allowAllZones ? InetAddressListElement.ALL_ZONES : 0;
 		   long proxyId = (proxySelector != null) ? proxySelector.getObjectId() : 0;
 	      if (radioSubnet.getSelection())
 	      {

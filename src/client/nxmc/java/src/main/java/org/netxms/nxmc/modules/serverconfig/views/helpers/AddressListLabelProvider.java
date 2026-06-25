@@ -64,7 +64,9 @@ public class AddressListLabelProvider extends LabelProvider  implements ITableLa
          case NetworkDiscoveryConfigurator.RANGE:
             return (e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress();
          case NetworkDiscoveryConfigurator.ZONE:
-            return isDiscoveryTarget ? session.getZoneName(e.getZoneUIN()) : e.getComment();
+            if (!isDiscoveryTarget)
+               return e.getComment();
+            return (e.getZoneUIN() == InetAddressListElement.ALL_ZONES) ? i18n.tr("All zones") : session.getZoneName(e.getZoneUIN());
          case NetworkDiscoveryConfigurator.PROXY:
             return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : i18n.tr("Zone proxy");
          case NetworkDiscoveryConfigurator.COMMENTS:

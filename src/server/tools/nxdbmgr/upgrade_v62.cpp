@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.28 to 62.29
+ */
+static bool H_UpgradeFromV28()
+{
+   // Topology excluded subnets use zone UIN -1 (ALL_ZONES) to indicate "all zones".
+   // Previously zone UIN 0 was used as the "all zones" marker, which conflicted with the default zone.
+   CHK_EXEC(SQLQuery(L"UPDATE address_lists SET zone_uin=-1 WHERE list_type=3 AND zone_uin=0"));
+   CHK_EXEC(SetMinorSchemaVersion(29));
+   return true;
+}
+
+/**
  * Upgrade from 62.27 to 62.28
  */
 static bool H_UpgradeFromV27()
@@ -1106,6 +1118,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 28, 62, 29, H_UpgradeFromV28 },
    { 27, 62, 28, H_UpgradeFromV27 },
    { 26, 62, 27, H_UpgradeFromV26 },
    { 25, 62, 26, H_UpgradeFromV25 },
