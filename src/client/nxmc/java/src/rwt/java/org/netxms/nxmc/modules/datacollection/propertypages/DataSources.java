@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,12 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -132,13 +128,7 @@ public class DataSources extends PreferencePage
 		*/
 
       viewer.setInput(dciList.toArray());
-      labelProvider.resolveDciNames(dciList, new Runnable() {
-         @Override
-         public void run()
-         {
-            viewer.refresh();
-         }
-      });
+      labelProvider.resolveDciNames(dciList, () -> viewer.refresh());
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -166,13 +156,7 @@ public class DataSources extends PreferencePage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
-      upButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -186,13 +170,7 @@ public class DataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
-      downButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -218,13 +196,7 @@ public class DataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -237,13 +209,7 @@ public class DataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
-      editButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -257,13 +223,7 @@ public class DataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -272,24 +232,14 @@ public class DataSources extends PreferencePage
       });
       deleteButton.setEnabled(false);
 
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				editButton.notifyListeners(SWT.Selection, new Event());
-			}
-      });
+      viewer.addDoubleClickListener((event) -> editButton.notifyListeners(SWT.Selection, new Event()));
 
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				editButton.setEnabled(selection.size() == 1);
-				deleteButton.setEnabled(selection.size() > 0);
-				upButton.setEnabled(selection.size() == 1);
-				downButton.setEnabled(selection.size() == 1);
-			}
+      viewer.addSelectionChangedListener((event) -> {
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         editButton.setEnabled(selection.size() == 1);
+         deleteButton.setEnabled(selection.size() > 0);
+         upButton.setEnabled(selection.size() == 1);
+         downButton.setEnabled(selection.size() == 1);
 		});
 
 		return dialogArea;
