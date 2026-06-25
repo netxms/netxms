@@ -1294,6 +1294,25 @@ StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(SNMP_Transport *snm
 }
 
 /**
+ * Get additional STP bridge ID used by the device in spanning tree protocol in addition to the
+ * standard dot1dBaseBridgeAddress. Some devices (e.g. running MC-LAG / V-STP) advertise a shared
+ * virtual bridge ID that differs from their per-chassis dot1dBaseBridgeAddress; reporting it here
+ * allows the STP topology code to recognize the device's own designated ports and avoid creating
+ * false inter-switch links toward the MC-LAG peer.
+ * Default implementation returns an invalid (empty) address, meaning the device uses only its
+ * dot1dBaseBridgeAddress as STP bridge identifier.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return additional STP bridge ID or invalid MacAddress if none
+ */
+MacAddress NetworkDeviceDriver::getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return MacAddress();
+}
+
+/**
  * Returns true if FDB uses ifIndex instead of bridge port number for referencing interfaces.
  * Default implementation always return false;
  *

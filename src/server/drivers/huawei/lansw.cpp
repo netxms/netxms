@@ -162,6 +162,24 @@ void HuaweiSWDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, Driv
 }
 
 /**
+ * Get additional STP bridge ID. Huawei devices running M-LAG (V-STP) present the M-LAG system as a single
+ * logical bridge with a shared virtual bridge ID that differs from each chassis' dot1dBaseBridgeAddress.
+ * On every downstream M-LAG member port the device advertises that shared ID (which equals the peer chassis'
+ * bridge MAC) as the segment's designated bridge. Reporting it here lets the STP topology code recognize
+ * these as the node's own designated ports and avoid creating false inter-switch links toward the M-LAG peer.
+ */
+MacAddress HuaweiSWDriver::getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   // hwMstpiBridgeID (1.3.6.1.4.1.2011.5.25.42.4.1.19.1.2.0) - bridge identifier for the spanning tree
+   // instance, encoded as 8 octets: 2-byte priority followed by the 6-byte bridge MAC address.
+   BYTE bridgeId[16];
+   uint32_t dataLen = 0;
+   if ((SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 2011, 5, 25, 42, 4, 1, 19, 1, 2, 0 }, bridgeId, sizeof(bridgeId), SG_RAW_RESULT, &dataLen) != SNMP_ERR_SUCCESS) || (dataLen < 8))
+      return MacAddress();
+   return MacAddress(&bridgeId[2], 6);
+}
+
+/**
  * Get SSH driver hints for Huawei VRP devices
  */
 void HuaweiSWDriver::getSSHDriverHints(SSHDriverHints *hints) const

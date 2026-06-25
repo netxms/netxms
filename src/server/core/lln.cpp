@@ -169,7 +169,11 @@ shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 	// For bridges get STP data and scan forwarding database
 	if (node->isBridge())
 	{
-	   if (processStandardMibs)
+	   // STP-based topology discovery can be disabled globally (Topology.EnableSTPDiscovery) and
+	   // overridden per node via SysConfig:Topology.EnableSTPDiscovery custom attribute. It is useful
+	   // to turn off for devices where STP data produces false inter-switch links (e.g. MC-LAG / V-STP).
+	   if (processStandardMibs &&
+	       node->getCustomAttributeAsBoolean(L"SysConfig:Topology.EnableSTPDiscovery", ConfigReadBoolean(L"Topology.EnableSTPDiscovery", true)))
 	      AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}

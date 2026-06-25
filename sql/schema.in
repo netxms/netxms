@@ -464,6 +464,7 @@ CREATE TABLE nodes
   snmp_sys_contact varchar(127) null,
   snmp_sys_location varchar(255) null,
   bridge_base_addr varchar(15) null,
+  stp_bridge_id varchar(15) null,
   lldp_id varchar(255) null,
   down_since integer not null,
   boot_time integer not null,

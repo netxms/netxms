@@ -950,7 +950,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName)
  */
 static bool BridgeIdComparator(NetObj *object, const BYTE *bridgeId)
 {
-	return static_cast<Node*>(object)->isBridge() && !memcmp(static_cast<Node*>(object)->getBridgeId(), bridgeId, MAC_ADDR_LENGTH);
+	return static_cast<Node*>(object)->isBridge() && static_cast<Node*>(object)->getBridgeId().equals(bridgeId);
 }
 
 /**

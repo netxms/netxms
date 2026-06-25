@@ -3255,7 +3255,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("bridgeBaseAddress"))
    {
       TCHAR buffer[64];
-      value = vm->createValue(BinToStr(node->getBridgeId(), MAC_ADDR_LENGTH, buffer));
+      value = vm->createValue(node->getBridgeId().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("capabilities"))
    {

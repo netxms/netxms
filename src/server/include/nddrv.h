@@ -581,6 +581,7 @@ public:
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual bool isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData);
    virtual StructArray<BridgePort> *getBridgePorts(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual MacAddress getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

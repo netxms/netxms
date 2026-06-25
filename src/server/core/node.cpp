@@ -198,7 +198,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
    m_winPerfObjectsTimestamp = 0;
-   memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
@@ -336,7 +335,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_hardwareComponents = nullptr;
    m_winPerfObjects = nullptr;
    m_winPerfObjectsTimestamp = 0;
-   memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
@@ -445,7 +443,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
       _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time,")
-      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name FROM nodes WHERE id=?"));
+      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name,stp_bridge_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -522,12 +520,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    }
 
    m_sysName = DBGetField(hResult, 0, 20, nullptr, 0);
-
-   TCHAR baseAddr[16];
-   TCHAR *value = DBGetField(hResult, 0, 21, baseAddr, 16);
-   if (value != nullptr)
-      StrToBin(value, m_baseBridgeAddress, MAC_ADDR_LENGTH);
-
+   m_baseBridgeAddress = DBGetFieldMacAddr(hResult, 0, 21);
+   m_stpBridgeId = DBGetFieldMacAddr(hResult, 0, 99);
    m_savedDownSince = m_downSince = DBGetFieldLong(hResult, 0, 22);
    m_bootTime = DBGetFieldLong(hResult, 0, 23);
 
@@ -1118,7 +1112,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          L"modbus_unit_id", L"vnc_password", L"vnc_port", L"vnc_proxy", L"path_check_reason", L"path_check_node_id",
          L"path_check_iface_id", L"expected_capabilities", L"last_events", L"decommission_time",
          L"trap_snmp_version", L"trap_community", L"trap_usm_auth_password", L"trap_usm_priv_password", L"trap_usm_methods",
-         L"eip_address", L"agent_platform_name", nullptr
+         L"eip_address", L"agent_platform_name", L"stp_bridge_id", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1127,7 +1121,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          lockProperties();
 
          int32_t snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
-         TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1], routerId[16];
+         TCHAR ipAddr[64], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1], routerId[16];
 
          const TCHAR *icmpPollMode;
          switch(m_icmpStatCollectionMode)
@@ -1182,7 +1176,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, snmpMethods);
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
+         DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_baseBridgeAddress);
          DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
          DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_driver->getName(), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_rackImageFront);   // rack image front
@@ -1287,7 +1281,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          wchar_t eipAddr[64];
          DBBind(hStmt, 98, DB_SQLTYPE_VARCHAR, m_eipAddress.isValidUnicast() ? m_eipAddress.toString(eipAddr) : nullptr, DB_BIND_STATIC);
          DBBind(hStmt, 99, DB_SQLTYPE_VARCHAR, m_agentPlatformName, DB_BIND_STATIC);
-         DBBind(hStmt, 100, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 100, DB_SQLTYPE_VARCHAR, m_stpBridgeId);
+         DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -5591,13 +5586,12 @@ bool Node::isDuplicateOf(Node *node, TCHAR *reason, size_t size)
                   {
                      static const BYTE zeroMac[MAC_ADDR_LENGTH] = { 0 };
                      lockProperties();
-                     bool thisHasBridge = (memcmp(m_baseBridgeAddress, zeroMac, MAC_ADDR_LENGTH) != 0);
-                     BYTE thisBridge[MAC_ADDR_LENGTH];
-                     memcpy(thisBridge, m_baseBridgeAddress, MAC_ADDR_LENGTH);
+                     bool thisHasBridge = m_baseBridgeAddress.isValid();
+                     MacAddress thisBridge = m_baseBridgeAddress;
                      unlockProperties();
 
                      bool candidateHasBridge = (memcmp(candidateBridgeAddr, zeroMac, MAC_ADDR_LENGTH) != 0);
-                     if (thisHasBridge && candidateHasBridge && memcmp(thisBridge, candidateBridgeAddr, MAC_ADDR_LENGTH) != 0)
+                     if (thisHasBridge && candidateHasBridge && !thisBridge.equals(candidateBridgeAddr))
                      {
                         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4,
                            _T("DuplicateCheck(%s [%u] vs %s [%u]): bridge base MAC mismatch, not a duplicate"),
@@ -7285,9 +7279,15 @@ void Node::checkBridgeMib(SNMP_Transport *snmp)
    if ((SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 1, 0 }, baseBridgeAddress, sizeof(baseBridgeAddress), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
        (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 2, 0 }, &portCount, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
    {
+      // Some devices (e.g. running MC-LAG / V-STP) use an additional shared/virtual bridge ID in STP
+      // that differs from dot1dBaseBridgeAddress. Read it via driver so STP topology can recognize
+      // the node's own designated ports and avoid false inter-switch links toward the MC-LAG peer.
+      MacAddress stpBridgeId = m_driver->getStpBridgeId(snmp, this, m_driverData);
+
       lockProperties();
       m_capabilities |= NC_IS_BRIDGE;
-      memcpy(m_baseBridgeAddress, baseBridgeAddress, 6);
+      m_baseBridgeAddress = MacAddress(baseBridgeAddress, 6);
+      m_stpBridgeId = stpBridgeId;
       unlockProperties();
 
       // Check for Spanning Tree (IEEE 802.1d) MIB support
@@ -9812,7 +9812,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
    msg->setFieldFromTime(VID_BOOT_TIME, m_bootTime);
    msg->setFieldFromTime(VID_AGENT_COMM_TIME, m_lastAgentCommTime);
-   msg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
+   msg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress);
    if (m_lldpNodeId != nullptr)
       msg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
    msg->setField(VID_USE_IFXTABLE, m_nUseIfXTable);
@@ -15246,8 +15246,7 @@ json_t *Node::toJson(bool includeSensitiveData)
 
    json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
-   char baseBridgeAddrText[64];
-   json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
+   json_object_set_new(root, "baseBridgeAddress", m_baseBridgeAddress.toJson());
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
    json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));
@@ -15285,8 +15284,6 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    unlockProperties();
 
-   // Polling, SNMP and agent property groups (round-trippable with the matching
-   // GET / PATCH /v1/objects/:id/polling, /snmp and /agent sub-resources)
    json_object_set_new(root, "polling", pollingConfigToJson());
    json_object_set_new(root, "snmp", snmpConfigToJson(includeSensitiveData));
    json_object_set_new(root, "agent", agentConfigToJson(includeSensitiveData));

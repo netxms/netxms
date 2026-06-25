@@ -60,6 +60,7 @@ public:
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual bool is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual void get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState) override;
+   virtual MacAddress getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 

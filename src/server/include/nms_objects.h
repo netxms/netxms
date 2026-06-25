@@ -4063,7 +4063,8 @@ protected:
    shared_ptr<VrrpInfo> m_vrrpInfo;
    StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
-   BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
+   MacAddress m_baseBridgeAddress;   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
+   MacAddress m_stpBridgeId;   // Additional STP bridge ID reported by driver (e.g. MC-LAG/V-STP shared virtual bridge ID); invalid if none
    bool m_l1TopologyUsed;
    int m_topologyDepth;
    shared_ptr<NetworkMapObjectList> m_topology;
@@ -4370,7 +4371,9 @@ public:
    const TCHAR *getSysLocation() const { return CHECK_NULL_EX(m_sysLocation); }
    time_t getBootTime() const { return m_bootTime; }
    const TCHAR *getLLDPNodeId() const { return m_lldpNodeId; }
-   const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
+   const MacAddress& getBridgeId() const { return m_baseBridgeAddress; }
+   const MacAddress& getStpBridgeId() const { return m_stpBridgeId; }
+   bool matchBridgeId(const BYTE *bridgeId) const { return m_baseBridgeAddress.equals(bridgeId) || (m_stpBridgeId.isValid() && m_stpBridgeId.equals(bridgeId)); }
    const TCHAR *getDriverName() const { return m_driver->getName(); }
    uint16_t getAgentPort() const { return m_agentPort; }
    int16_t getAgentCacheMode() const { return is_bit_set(m_state, NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }

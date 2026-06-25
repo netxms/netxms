@@ -25,6 +25,20 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.29 to 62.30
+ */
+static bool H_UpgradeFromV29()
+{
+   // Additional STP bridge ID reported by device driver (e.g. MC-LAG / V-STP shared virtual bridge ID).
+   CHK_EXEC(SQLQuery(L"ALTER TABLE nodes ADD stp_bridge_id varchar(15)"));
+   CHK_EXEC(CreateConfigParam(L"Topology.EnableSTPDiscovery", L"1",
+            L"Enable use of Spanning Tree Protocol (STP) information for layer 2 topology discovery. Can be overridden per node with custom attribute SysConfig:Topology.EnableSTPDiscovery.",
+            nullptr, 'B', true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(30));
+   return true;
+}
+
+/**
  * Upgrade from 62.28 to 62.29
  */
 static bool H_UpgradeFromV28()
@@ -1118,6 +1132,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 29, 62, 30, H_UpgradeFromV29 },
    { 28, 62, 29, H_UpgradeFromV28 },
    { 27, 62, 28, H_UpgradeFromV27 },
    { 26, 62, 27, H_UpgradeFromV26 },
