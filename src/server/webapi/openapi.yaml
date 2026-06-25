@@ -6371,6 +6371,76 @@ paths:
         - BearerAuth: []
       tags:
         - Event Forwarders
+  /v1/log-parsers/{parser-type}:
+    parameters:
+      - name: parser-type
+        in: path
+        required: true
+        description: Log parser to manage.
+        schema:
+          type: string
+          enum:
+            - syslog
+            - windows-event
+            - opentelemetry
+    get:
+      operationId: getLogParser
+      summary: Get log parser configuration
+      description: |
+        Retrieve the configuration document for the given server-side log parser
+        (syslog, Windows event log, or OpenTelemetry log). The configuration is an
+        XML document returned verbatim in the `content` field; an empty string means
+        no parser rules are configured.
+      responses:
+        '200':
+          description: Log parser configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogParser'
+        '403':
+          description: Access denied (requires "Server configuration" access right)
+        '404':
+          description: Unknown parser type
+      security:
+        - BearerAuth: []
+      tags:
+        - Log Parsers
+    put:
+      operationId: updateLogParser
+      summary: Update log parser configuration
+      description: |
+        Replace the configuration document for the given server-side log parser.
+        The body must contain a `content` field holding a well-formed XML document
+        with a `<parser>` root element (an empty string clears the parser). Saving
+        the configuration reinitializes the live parser immediately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  description: Parser configuration as an XML document, or an empty string to clear it.
+      responses:
+        '204':
+          description: Log parser configuration updated successfully
+        '400':
+          description: Missing/invalid content field or malformed parser XML
+        '403':
+          description: Access denied (requires "Server configuration" access right)
+        '404':
+          description: Unknown parser type
+        '500':
+          description: Failed to store configuration
+      security:
+        - BearerAuth: []
+      tags:
+        - Log Parsers
   /v1/snmp-mib:
     get:
       operationId: getMibRoot
@@ -8821,6 +8891,19 @@ components:
         queueSize:
           type: integer
           description: Current message queue size
+    LogParser:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Log parser type
+          enum:
+            - syslog
+            - windows-event
+            - opentelemetry
+        content:
+          type: string
+          description: Parser configuration as an XML document (empty string if no rules are configured)
     EventForwarder:
       type: object
       properties:

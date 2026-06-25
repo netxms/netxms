@@ -218,6 +218,8 @@ int H_EventForwarderUpdate(Context *context);
 int H_EventForwarderDelete(Context *context);
 int H_EventForwarderRename(Context *context);
 int H_EventForwarderDrivers(Context *context);
+int H_LogParser(Context *context);
+int H_LogParserUpdate(Context *context);
 int H_SummaryTables(Context *context);
 int H_SummaryTableDetails(Context *context);
 int H_SummaryTableCreate(Context *context);
@@ -450,6 +452,10 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/event-forwarder-drivers")
       .GET(H_EventForwarderDrivers)
+      .build();
+   RouteBuilder("v1/log-parsers/:parser-type")
+      .GET(H_LogParser)
+      .PUT(H_LogParserUpdate)
       .build();
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)

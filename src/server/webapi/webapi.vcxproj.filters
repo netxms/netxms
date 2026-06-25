@@ -48,6 +48,9 @@
     <ClCompile Include="info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="log_parsers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
