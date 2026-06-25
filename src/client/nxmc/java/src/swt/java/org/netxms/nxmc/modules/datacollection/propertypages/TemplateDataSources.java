@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -43,7 +41,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -126,13 +123,9 @@ public class TemplateDataSources extends PreferencePage
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
-      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				if (event.index == COLUMN_COLOR)
-					drawColorCell(event);
-			}
+      viewer.getTable().addListener(SWT.PaintItem, (event) -> {
+         if (event.index == COLUMN_COLOR)
+            drawColorCell(event);
 		});
       viewer.setInput(dciList.toArray());
 
@@ -251,13 +244,7 @@ public class TemplateDataSources extends PreferencePage
       });
       deleteButton.setEnabled(false);
 
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				editButton.notifyListeners(SWT.Selection, new Event());
-			}
-      });
+      viewer.addDoubleClickListener((event) -> editButton.notifyListeners(SWT.Selection, new Event()));
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

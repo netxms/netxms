@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ public class TemplateDciSelector extends AbstractSelector
             if (noValueObject)
             {
                value = Pattern.quote(value);
-               value = value.replace("{instance}", "\\E(.*)\\Q").replace("{instance-name}", "\\E(.*)\\Q");
+               value = value.replace("{instance}", "\\E(.*)\\Q").replace("{instance-name}", "\\E(.*)\\Q").replace("{instance-value}", "\\E(.*)\\Q");
             }
             setText(value);
          }
