@@ -111,8 +111,9 @@ public class RoundedLabel extends Composite
       }
       else
       {
-         label.setBackground(getParent().getBackground());
-         label.setForeground(ColorConverter.isDarkColor(color) ? labelLightColor : labelDarkColor);
+         Color fillColor = getParent().getBackground();
+         label.setBackground(fillColor);
+         label.setForeground(ColorConverter.isDarkColor(fillColor) ? labelLightColor : labelDarkColor);
       }
    }
 
