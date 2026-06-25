@@ -20403,11 +20403,11 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:145
 #, fuzzy
-msgid "Replace syslog parser definitons"
+msgid "Replace syslog parser definitions"
 msgstr "Definice log parseru je neplatná"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:146
-msgid "Replace windows event log parser definitons"
+msgid "Replace windows event log parser definitions"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:147

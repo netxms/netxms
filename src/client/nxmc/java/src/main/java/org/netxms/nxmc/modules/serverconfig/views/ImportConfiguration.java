@@ -142,8 +142,9 @@ public class ImportConfiguration extends ConfigurationView
       addOptionCheckBox(i18n.tr("Replace &mapping tables"), NXCSession.CFG_IMPORT_REPLACE_MAPPING_TABLES);
       addOptionCheckBox(i18n.tr("Replace &web service definitions"), NXCSession.CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS);
       addOptionCheckBox(i18n.tr("Replace logparser &macro definitions"), NXCSession.CFG_IMPORT_REPLACE_LOGPARSER_MACROS);
-      addOptionCheckBox(i18n.tr("Replace syslog parser definitons"), NXCSession.CFG_IMPORT_REPLACE_SYSLOG_PARSERS);
-      addOptionCheckBox(i18n.tr("Replace windows event log parser definitons"), NXCSession.CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS);
+      addOptionCheckBox(i18n.tr("Replace syslog parser definitions"), NXCSession.CFG_IMPORT_REPLACE_SYSLOG_PARSERS);
+      addOptionCheckBox(i18n.tr("Replace windows event log parser definitions"), NXCSession.CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS);
+      addOptionCheckBox(i18n.tr("Replace OpenTelemetry log parser definitions"), NXCSession.CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS);
       addOptionCheckBox(i18n.tr("Remove empty template &groups after import"), NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS);
       addOptionCheckBox(i18n.tr("&Ignore missing EPP rule actions"), NXCSession.CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS);
 

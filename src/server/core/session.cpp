@@ -135,6 +135,7 @@ void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
 
 void ExportSyslogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
+void ExportOtelLogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 
 /**
  * Maximum client message size
@@ -11711,6 +11712,10 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             json_t *winlog = json_object();
             ExportWinlogParserRulesJSON(request, VID_WIN_LOG_NUM_RECORDS, VID_WIN_EVENT_RULES_LIST_BASE, winlog);
             json_object_set_new(root, "winlog", winlog);
+
+            json_t *opentelemetry = json_object();
+            ExportOtelLogParserRulesJSON(request, VID_OTEL_LOG_NUM_RECORDS, VID_OTEL_LOG_RULES_LIST_BASE, opentelemetry);
+            json_object_set_new(root, "opentelemetry", opentelemetry);
 
             // Write JSON to file
             char *jsonString = json_dumps(root, JSON_INDENT(2) | JSON_PRESERVE_ORDER);

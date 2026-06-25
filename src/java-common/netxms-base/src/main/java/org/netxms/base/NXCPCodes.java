@@ -1544,6 +1544,7 @@ public class NXCPCodes
    public static final long VID_TRANSFER_ID = 989;
    public static final long VID_MAP_CANVAS_TYPE = 990;
    public static final long VID_MAP_INITIAL_VIEW_MODE = 991;
+   public static final long VID_OTEL_LOG_NUM_RECORDS = 992;
    public static final long VID_NUM_TRANSLATIONS = 993;
    public static final long VID_RECONCILIATION_QUEUE_SIZE = 994;
    public static final long VID_RECONCILIATION_OLDEST_DATA = 995;
@@ -1655,6 +1656,7 @@ public class NXCPCodes
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
 	public static final long VID_SYSLOG_RULES_LIST_BASE = 0x20000000L;
 	public static final long VID_WIN_EVENT_RULES_LIST_BASE = 0x30000000L;
+	public static final long VID_OTEL_LOG_RULES_LIST_BASE = 0x40000000L;
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;

@@ -292,6 +292,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_SYSLOG_PARSERS            = 0x00002000;
    public static final int CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS       = 0x00004000;
    public static final int CFG_IMPORT_REPLACE_MAPPING_TABLES            = 0x00008000;
+   public static final int CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS          = 0x00010000;
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS        = 0x00100000;
 
    // Address list IDs
@@ -10786,6 +10787,7 @@ public class NXCSession
     * @param assetAttributes List of asset management atributes to be exported
     * @param syslogList List of Syslog processing rule GUIDs
     * @param windowsEventList List of Windows Event Log processing rule GUIDs
+    * @param otelLogList List of OpenTelemetry log processing rule GUIDs
     * @param mappingTables List of mapping table identifiers
     * @return file with resulting XML document
     * @throws IOException if socket I/O error occurs
@@ -10793,7 +10795,7 @@ public class NXCSession
     */
    public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
-         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, long[] mappingTables) throws IOException, NXCException
+         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, UUID[] otelLogList, long[] mappingTables) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -10835,6 +10837,12 @@ public class NXCSession
       for(int i = 0; i < windowsEventList.length; i++)
       {
          msg.setField(varId++, windowsEventList[i]);
+      }
+      msg.setFieldInt32(NXCPCodes.VID_OTEL_LOG_NUM_RECORDS, otelLogList.length);
+      varId = NXCPCodes.VID_OTEL_LOG_RULES_LIST_BASE;
+      for(int i = 0; i < otelLogList.length; i++)
+      {
+         msg.setField(varId++, otelLogList[i]);
       }
 
       sendMessage(msg);

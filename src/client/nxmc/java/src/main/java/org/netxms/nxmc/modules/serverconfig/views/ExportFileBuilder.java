@@ -134,6 +134,7 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer assetAttributeViewer;
    private TableViewer syslogLogParserViewer;
    private TableViewer windowsLogParserViewer;
+   private TableViewer otelLogParserViewer;
 	private Action actionExport;
 	private Action actionClear;
    private Map<Long, ServerAction> actions = new HashMap<>();
@@ -149,12 +150,14 @@ public class ExportFileBuilder extends ConfigurationView
    private Map<String, AssetAttribute> assetAttributes = new HashMap<>();
    private Map<UUID, LogParserRule> syslogLogParsers = new HashMap<>();
    private Map<UUID, LogParserRule> windowsLogParsers = new HashMap<>();
+   private Map<UUID, LogParserRule> otelLogParsers = new HashMap<>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
    private List<ServerAction> actionsCache = null;
    private LogParser syslogLogParserCache = null;
    private LogParser windowsLogParserCache = null;
+   private LogParser otelLogParserCache = null;
 
    /**
     * Create configuration export view
@@ -204,6 +207,7 @@ public class ExportFileBuilder extends ConfigurationView
       createAssetAttributesSection();
       createSyslogSection();
       createWindowsEventLogSection();
+      createOpenTelemetryLogSection();
 		createActions();
       createMappingTablesSection();
 	}
@@ -1380,6 +1384,114 @@ public class ExportFileBuilder extends ConfigurationView
       });
    }
 
+   /**
+    * Create OpenTelemetry log selection section
+    */
+   private void createOpenTelemetryLogSection()
+   {
+      Section section = new Section(content, i18n.tr("OpenTelemetry Log Rules"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+
+      otelLogParserViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      otelLogParserViewer.getTable().setLayoutData(gd);
+      otelLogParserViewer.setContentProvider(new ArrayContentProvider());
+      otelLogParserViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((LogParserRule)element).getEffectiveDisplayName();
+         }
+      });
+      otelLogParserViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((LogParserRule)e1).getEffectiveDisplayName().compareToIgnoreCase(((LogParserRule)e2).getEffectiveDisplayName());
+         }
+      });
+      otelLogParserViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            if (otelLogParserCache == null)
+            {
+               new Job(i18n.tr("Loading OpenTelemetry log parsers"), ExportFileBuilder.this) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     try
+                     {
+                        String content = session.getServerConfigClob("OpenTelemetryLogParser");
+                        otelLogParserCache = LogParser.createFromXml(content);
+                     }
+                     catch(NXCException e)
+                     {
+                        otelLogParserCache = new LogParser();
+                     }
+
+                     runInUIThread(() -> addOtelLogRules());
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return i18n.tr("Cannot load OpenTelemetry log parsers");
+                  }
+               }.start();
+            }
+            else
+            {
+               addOtelLogRules();
+            }
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)otelLogParserViewer.getSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(otelLogParserViewer, otelLogParsers);
+            }
+         }
+      });
+   }
+
 	/**
 	 * Create actions
 	 */
@@ -1492,6 +1604,11 @@ public class ExportFileBuilder extends ConfigurationView
       for(LogParserRule r : windowsLogParsers.values())
          windowsEventList[i++] = r.getGuid();
 
+      final UUID[] otelLogList = new UUID[otelLogParsers.size()];
+      i = 0;
+      for(LogParserRule r : otelLogParsers.values())
+         otelLogList[i++] = r.getGuid();
+
       final long[] mappingTableList = new long[mappingTables.size()];
       i = 0;
       for(MappingTableDescriptor t : mappingTables.values())
@@ -1504,7 +1621,7 @@ public class ExportFileBuilder extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final File json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
-                  assetAttributesList, syslogList, windowsEventList, mappingTableList);
+                  assetAttributesList, syslogList, windowsEventList, otelLogList, mappingTableList);
             runInUIThread(() -> completionHandler.exportCompleted(json));
          }
 
@@ -2266,6 +2383,22 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
    /**
+    * Add OpenTelemetry log parser to list
+    */
+   private void addOtelLogRules()
+   {
+      SelectLogParserRuleDlg dlg = new SelectLogParserRuleDlg(getWindow().getShell(), otelLogParserCache, "OpenTelemetryLogParser");
+      if (dlg.open() == Window.OK)
+      {
+         for(LogParserRule rule : dlg.getSelectedRules())
+            otelLogParsers.put(rule.getGuid(), rule);
+         otelLogParserViewer.setInput(otelLogParsers.values().toArray());
+         setModified();
+         addLogParserRuleEvents(dlg.getSelectedRules());
+      }
+   }
+
+   /**
     * Clear configuration
     */
    private void clear()
@@ -2284,6 +2417,7 @@ public class ExportFileBuilder extends ConfigurationView
       assetAttributes.clear();
       syslogLogParsers.clear();
       windowsLogParsers.clear();
+      otelLogParsers.clear();
 
       actionViewer.setInput(new Object[0]);
       eventViewer.setInput(new Object[0]);
@@ -2297,6 +2431,7 @@ public class ExportFileBuilder extends ConfigurationView
       assetAttributeViewer.setInput(new Object[0]);
       syslogLogParserViewer.setInput(new Object[0]);
       windowsLogParserViewer.setInput(new Object[0]);
+      otelLogParserViewer.setInput(new Object[0]);
 
       modified = false;
       actionExport.setEnabled(false);

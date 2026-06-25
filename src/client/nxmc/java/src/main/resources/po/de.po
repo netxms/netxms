@@ -20173,11 +20173,11 @@ msgid "Replace logparser &macro definitions"
 msgstr "Logparser-&Makrodefinitionen ersetzen"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:145
-msgid "Replace syslog parser definitons"
+msgid "Replace syslog parser definitions"
 msgstr "Syslog-Parser-Definitionen ersetzen"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:146
-msgid "Replace windows event log parser definitons"
+msgid "Replace windows event log parser definitions"
 msgstr "Windows-Ereignisprotokoll-Parser-Definitionen ersetzen"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:147

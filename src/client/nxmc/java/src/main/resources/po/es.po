@@ -20173,12 +20173,12 @@ msgid "Replace logparser &macro definitions"
 msgstr "Reemplazar definiciones de &macros del analizador de registros"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:145
-msgid "Replace syslog parser definitons"
-msgstr "Replace syslog analizador definitons"
+msgid "Replace syslog parser definitions"
+msgstr "Replace syslog analizador definitions"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:146
-msgid "Replace windows event log parser definitons"
-msgstr "Replace windows evento registro analizador definitons"
+msgid "Replace windows event log parser definitions"
+msgstr "Replace windows evento registro analizador definitions"
 
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:147
 msgid "Remove empty template &groups after import"

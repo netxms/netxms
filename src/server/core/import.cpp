@@ -1162,6 +1162,8 @@ static bool ImportLogParser(json_t *parserObj, uint32_t flags, ImportContext *co
             shouldReplace = (flags & CFG_IMPORT_REPLACE_SYSLOG_PARSERS) != 0;
          else if (_tcsicmp(configKey, _T("WindowsEventParser")) == 0)
             shouldReplace = (flags & CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS) != 0;
+         else if (_tcsicmp(configKey, _T("OpenTelemetryLogParser")) == 0)
+            shouldReplace = (flags & CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS) != 0;
 
          if (shouldReplace)
          {
@@ -1324,7 +1326,7 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfigFromJson() called, flags=0x%04X"), flags);
 
    uint32_t rcc = RCC_SUCCESS;
-   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *mappingTables, *webServices, *assets, *syslog, *winlog;
+   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *mappingTables, *webServices, *assets, *syslog, *winlog, *opentelemetry;
 
    // Import events
    events = json_object_get(root, "events");
@@ -1481,6 +1483,16 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
       if (!ImportLogParser(winlog, flags, context, _T("WindowsEventLog"), _T("WindowsEventParser")))
       {
          context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import winlog parser rules"));
+      }
+   }
+
+   // Import OpenTelemetry log parser rules
+   opentelemetry = json_object_get(root, "opentelemetry");
+   if (json_is_object(opentelemetry))
+   {
+      if (!ImportLogParser(opentelemetry, flags, context, _T("OpenTelemetryLog"), _T("OpenTelemetryLogParser")))
+      {
+         context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import OpenTelemetry log parser rules"));
       }
    }
 

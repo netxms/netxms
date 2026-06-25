@@ -170,3 +170,11 @@ void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, 
 {
    ExportLogParserRulesJSON(request, countFieldId, baseId, object, L"WindowsEventParser");
 }
+
+/**
+ * Export OpenTelemetry log parser rules to JSON object (matching XML structure)
+ */
+void ExportOtelLogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object)
+{
+   ExportLogParserRulesJSON(request, countFieldId, baseId, object, L"OpenTelemetryLogParser");
+}

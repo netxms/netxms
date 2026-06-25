@@ -1735,6 +1735,7 @@ __PACK_END__
 #define VID_TRANSFER_ID             ((uint32_t)989)
 #define VID_MAP_CANVAS_TYPE         ((uint32_t)990)
 #define VID_MAP_INITIAL_VIEW_MODE   ((uint32_t)991)
+#define VID_OTEL_LOG_NUM_RECORDS    ((uint32_t)992)
 #define VID_NUM_TRANSLATIONS        ((uint32_t)993)
 #define VID_RECONCILIATION_QUEUE_SIZE ((uint32_t)994)
 #define VID_RECONCILIATION_OLDEST_DATA ((uint32_t)995)
@@ -1963,6 +1964,7 @@ __PACK_END__
 #define VID_RULE_LIST_BASE          ((uint32_t)0x10000000)
 #define VID_SYSLOG_RULES_LIST_BASE  ((uint32_t)0x20000000)
 #define VID_WIN_EVENT_RULES_LIST_BASE ((uint32_t)0x30000000)
+#define VID_OTEL_LOG_RULES_LIST_BASE ((uint32_t)0x40000000)
 
 #define VID_EXTENSION_LIST_BASE     ((uint32_t)0x10000000)
 
