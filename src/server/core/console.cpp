@@ -1146,7 +1146,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             {
                if (start.isValid() && end.isValid())
                {
-                  InetAddressListElement range(start, end, proxyId, zoneUIN);
+                  InetAddressListElement range(start, end, zoneUIN, proxyId);
                   ConsolePrintf(console, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
                   CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, console, nullptr);
                   ConsolePrintf(console, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
