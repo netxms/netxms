@@ -3024,8 +3024,8 @@ static void TestBuffer()
 
    StartTest(_T("Buffer: sized constructor is zero-filled"));
    {
-      Buffer<char> b(static_cast<size_t>(48));
-      AssertEquals(b.size(), static_cast<size_t>(48));
+      Buffer<char> b(static_cast<size_t>(100));   // exceeds inline capacity on both 32-bit and 64-bit
+      AssertEquals(b.size(), static_cast<size_t>(100));
       AssertTrue(!b.isInternal());
       bool allZero = true;
       for(size_t i = 0; i < b.numElements(); i++)
