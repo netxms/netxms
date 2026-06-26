@@ -28,7 +28,7 @@ templates_DATA = \
 	linux.xml \
 	lsi_megaraid.xml \
 	mikrotik-authentication-failures-syslog.json \
-	mssql_perf_counters_default_instance.json \
+	mssql.json \
 	netgear_nas.xml \
 	netxms_agent.xml \
         netxms_ai_providers.json \
@@ -36,8 +36,8 @@ templates_DATA = \
 	netxms_server.xml \
 	nvme_ssd.json \
 	object_tools.xml \
-	oracle_server.json \
-	pgsql_server.json \
+	oracle.json \
+	pgsql.json \
 	printers.xml \
 	qnap.xml \
 	rapl_energy_consumption.xml \
