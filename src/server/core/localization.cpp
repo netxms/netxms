@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include "nms_localization.h"
+#include <nms_localization.h>
 
 #define DEBUG_TAG L"localization"
 

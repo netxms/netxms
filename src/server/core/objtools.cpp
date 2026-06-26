@@ -25,7 +25,7 @@
 #include <nxtools.h>
 #include <nms_users.h>
 #include <pugixml.h>
-#include "nms_localization.h"
+#include <nms_localization.h>
 
 /**
  * Translate object class to applicable tool mask bit.
