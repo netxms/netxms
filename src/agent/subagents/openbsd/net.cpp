@@ -228,7 +228,6 @@ LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, Abstrac
 LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
 	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO };
 	size_t nNeeded;
 	char *pNext, *pBuff;
@@ -423,7 +422,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 	if (getifaddrs(&pIfAddr) == 0)
 	{
 		char *pName = NULL;
-		int nIndex, nMask, i;
+		int i;
 		int nIfCount = 0;
 		IFLIST *pList = NULL;
 
