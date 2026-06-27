@@ -66,6 +66,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -326,6 +328,21 @@ public class ExtendedGraphViewer extends GraphViewer
          public void zoomChanged(double zoom)
          {
             ExtendedGraphViewer.this.refresh(true);
+         }
+      });
+
+      // Ctrl/Cmd + mouse wheel zooms to the cursor; plain wheel keeps the canvas's default scroll.
+      // Registered via untyped addListener so it compiles under RWT (which has no MouseWheelListener);
+      // RWT does not generate wheel events, so this handler is inert on the web client.
+      graph.addListener(SWT.MouseWheel, new Listener() {
+         @Override
+         public void handleEvent(Event event)
+         {
+            if ((event.stateMask & SWT.MOD1) == 0)
+               return; // plain wheel scrolls the map; zoom only with Ctrl/Cmd held
+            event.doit = false; // suppress default scroll while zooming
+            if (event.count != 0)
+               zoomToCursor(event.count > 0, event.x, event.y);
          }
       });
 
@@ -781,6 +798,51 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		getZoomManager().zoomOut();
 	}
+
+   /**
+    * Zoom one level in or out while keeping the map point under the cursor fixed on screen.
+    *
+    * @param zoomIn true to zoom in, false to zoom out
+    * @param cursorX cursor X position in control coordinates
+    * @param cursorY cursor Y position in control coordinates
+    */
+   private void zoomToCursor(boolean zoomIn, int cursorX, int cursorY)
+   {
+      double oldZoom = getZoom();
+      org.eclipse.draw2d.geometry.Point viewLocation = graph.getViewport().getViewLocation();
+
+      // Map point (unscaled) currently under the cursor
+      double mapX = (cursorX + viewLocation.x) / oldZoom;
+      double mapY = (cursorY + viewLocation.y) / oldZoom;
+
+      if (zoomIn)
+         getZoomManager().zoomIn();
+      else
+         getZoomManager().zoomOut();
+
+      double newZoom = getZoom();
+      if (newZoom == oldZoom)
+         return; // already at minimum or maximum zoom level
+
+      // New scroll offset so the same map point stays under the cursor
+      int nx = (int)Math.round(mapX * newZoom - cursorX);
+      int ny = (int)Math.round(mapY * newZoom - cursorY);
+
+      // Clamp to the valid scroll range (mirrors the drag-pan clamp in the background motion listener)
+      Dimension scaledSize = backgroundLayer.getSize();
+      scaledSize.performScale(newZoom);
+      org.eclipse.draw2d.geometry.Rectangle viewportArea = graph.getViewport().getClientArea();
+      if (nx > scaledSize.width - viewportArea.width)
+         nx = scaledSize.width - viewportArea.width;
+      if (ny > scaledSize.height - viewportArea.height)
+         ny = scaledSize.height - viewportArea.height;
+      if (nx < 0)
+         nx = 0;
+      if (ny < 0)
+         ny = 0;
+
+      graph.getViewport().setViewLocation(new org.eclipse.draw2d.geometry.Point(nx, ny));
+   }
 
    /**
     * Zoom to fit available screen area
