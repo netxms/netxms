@@ -18,10 +18,16 @@
  */
 package org.netxms.nxmc.modules.datacollection.views;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -49,6 +55,7 @@ import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.HistoricalDataReceiver;
 import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractObject;
@@ -102,12 +109,16 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Last year") 
       };
 
+   private static final int LOADER_THREAD_POOL_SIZE = 4;
+
    private long objectId;
    private long contextId;
    private String fullName;
    private NXCSession session = Registry.getSession();
    private Chart chart = null;
    private boolean updateInProgress = false;
+   private volatile boolean loadCancelled = false;
+   private final AtomicBoolean refreshScheduled = new AtomicBoolean(false);
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
    private GraphDefinition configuration;
@@ -115,6 +126,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private boolean showDeleteAction = false;
 
    private Action actionRefresh;
+   private Action actionStopLoading;
    private Action actionAutoRefresh;
    private Action actionZoomIn;
    private Action actionZoomOut;
@@ -476,64 +488,143 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          return;
       }
 
-      // Request data from server
+      final Date timeFrom = configuration.getTimeFrom();
+      final Date timeTo = configuration.getTimeTo();
+
+      // Prepare for incremental loading: reset cancellation, set axis range up front so series render
+      // correctly while data is still arriving, and enable the "stop loading" action.
+      loadCancelled = false;
+      refreshScheduled.set(false);
+      if (!((Widget)chart).isDisposed())
+         chart.setTimeRange(timeFrom, timeTo);
+      actionStopLoading.setEnabled(true);
+
+      // Load each DCI in parallel (bounded pool) and draw the graph progressively (newest to oldest)
+      // as pages arrive, instead of waiting for the entire data set.
       Job job = new Job(i18n.tr("Get DCI values for history graph"), this) {
-         private ChartDciConfig currentItem;
+         private volatile ChartDciConfig failedItem;
 
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask(getName(), dciList.length);
-            final DataSeries[] data = new DataSeries[dciList.length];
-            for(int i = 0; i < dciList.length; i++)
+            final ExecutorService executor = Executors.newFixedThreadPool(Math.min(LOADER_THREAD_POOL_SIZE, dciList.length));
+            final CountDownLatch latch = new CountDownLatch(dciList.length);
+            final AtomicReference<Exception> loadError = new AtomicReference<Exception>();
+            try
             {
-               currentItem = dciList[i];
-               if (currentItem.type == ChartDciConfig.ITEM)
+               for(int i = 0; i < dciList.length; i++)
                {
-                  HistoricalDataType valueType = currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED;
-                  // Raw-value requests bypass the tier dispatcher; min/max band needs aggregated data so it
-                  // also forces PROCESSED. Otherwise honor the user-selected tier and band toggle.
-                  if (currentItem.useRawValues || (requestedTier == DciTier.AUTO && !showMinMaxBand))
-                  {
-                     data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
-                           configuration.getTimeTo(), 0, valueType);
-                  }
-                  else
-                  {
-                     DciAggregationFunction function = showMinMaxBand ? DciAggregationFunction.MINMAX : DciAggregationFunction.AVG;
-                     data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
-                           configuration.getTimeTo(), 0, HistoricalDataType.PROCESSED, requestedTier, function);
-                  }
+                  final int index = i;
+                  final ChartDciConfig item = dciList[i];
+                  executor.execute(() -> {
+                     try
+                     {
+                        loadItem(index, item);
+                     }
+                     catch(Exception e)
+                     {
+                        if (loadError.compareAndSet(null, e))
+                           failedItem = item;
+                     }
+                     finally
+                     {
+                        latch.countDown();
+                     }
+                  });
                }
-               else
-               {
-                  data[i] = session.getCollectedTableData(currentItem.nodeId, currentItem.dciId, currentItem.instance,
-                        currentItem.column, configuration.getTimeFrom(), configuration.getTimeTo(), 0);
-               }
-               monitor.worked(1);
+               latch.await();
             }
+            finally
+            {
+               executor.shutdownNow();
+            }
+
+            // Surface the first load failure unless the user cancelled loading
+            Exception e = loadError.get();
+            if ((e != null) && !loadCancelled)
+               throw e;
 
             runInUIThread(() -> {
                if (!((Widget)chart).isDisposed())
                {
-                  chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
-                  setChartData(data);
+                  chart.refresh();
                   clearMessages();
                }
+               actionStopLoading.setEnabled(false);
                updateInProgress = false;
             });
+         }
+
+         /**
+          * Load single DCI and feed pages into the chart as they arrive.
+          */
+         private void loadItem(final int index, final ChartDciConfig item) throws IOException, NXCException
+         {
+            HistoricalDataReceiver receiver = (data) -> {
+               final DataSeries snapshot = new DataSeries(data);
+               runInUIThread(() -> {
+                  if (!((Widget)chart).isDisposed())
+                     chart.updateParameter(index, snapshot, false);
+               });
+               scheduleChartRefresh();
+               return !loadCancelled;
+            };
+
+            if (item.type == ChartDciConfig.ITEM)
+            {
+               HistoricalDataType valueType = item.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED;
+               // Raw-value requests bypass the tier dispatcher; min/max band needs aggregated data so it
+               // also forces PROCESSED. Otherwise honor the user-selected tier and band toggle.
+               if (item.useRawValues || (requestedTier == DciTier.AUTO && !showMinMaxBand))
+               {
+                  session.getCollectedData(item.nodeId, item.dciId, timeFrom, timeTo, valueType, DciTier.AUTO,
+                        DciAggregationFunction.AVG, 0, receiver);
+               }
+               else
+               {
+                  DciAggregationFunction function = showMinMaxBand ? DciAggregationFunction.MINMAX : DciAggregationFunction.AVG;
+                  session.getCollectedData(item.nodeId, item.dciId, timeFrom, timeTo, HistoricalDataType.PROCESSED,
+                        requestedTier, function, 0, receiver);
+               }
+            }
+            else
+            {
+               session.getCollectedTableData(item.nodeId, item.dciId, item.instance, item.column, timeFrom, timeTo, 0, receiver);
+            }
+         }
+
+         /**
+          * Schedule a single coalesced chart refresh on the UI thread, avoiding redraw thrash when
+          * multiple DCIs deliver pages concurrently.
+          */
+         private void scheduleChartRefresh()
+         {
+            if (refreshScheduled.compareAndSet(false, true))
+            {
+               runInUIThread(() -> {
+                  refreshScheduled.set(false);
+                  if (!((Widget)chart).isDisposed())
+                     chart.refresh();
+               });
+            }
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentItem.nodeId), currentItem.name);
+            ChartDciConfig item = failedItem;
+            if (item == null)
+               return i18n.tr("Cannot get DCI values for history graph");
+            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(item.nodeId), item.name);
          }
 
          @Override
          protected void jobFailureHandler(Exception e)
          {
-            updateInProgress = false;
+            runInUIThread(() -> {
+               actionStopLoading.setEnabled(false);
+               updateInProgress = false;
+            });
          }
       };
       job.setUser(false);
@@ -552,6 +643,16 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             updateChart();
          }
       };
+
+      actionStopLoading = new Action(i18n.tr("Stop loading"), SharedIcons.TERMINATE) {
+         @Override
+         public void run()
+         {
+            loadCancelled = true;
+            setEnabled(false);
+         }
+      };
+      actionStopLoading.setEnabled(false);
 
       actionProperties = new Action(i18n.tr("Properties")) {
          @Override
@@ -946,6 +1047,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionStopLoading);
+      manager.add(new Separator());
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
@@ -1023,18 +1126,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
-    * Set chart data
-    * 
-    * @param data Retrieved DCI data
-    */
-   private void setChartData(final DataSeries[] data)
-   {
-      for(int i = 0; i < data.length; i++)
-         chart.updateParameter(i, data[i], false);
-      chart.refresh();
-   }
-
-   /**
     * Update chart
     */
    private void updateChart()
@@ -1066,6 +1157,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    public void dispose()
    {
+      loadCancelled = true; // abort any in-flight incremental loading
       if (refreshController != null)
          refreshController.dispose();
       super.dispose();

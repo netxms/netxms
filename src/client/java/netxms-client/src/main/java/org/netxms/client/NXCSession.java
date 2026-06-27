@@ -105,6 +105,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DataSeries;
+import org.netxms.client.datacollection.HistoricalDataReceiver;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.DciLastValue;
@@ -313,6 +314,7 @@ public class NXCSession
    // Private constants
    private static final int CLIENT_CHALLENGE_SIZE = 256;
    private static final int MAX_DCI_DATA_ROWS = 200000;
+   private static final int DEFAULT_HISTORICAL_DATA_PAGE_SIZE = 10000;
    private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
    private static final int FILE_BUFFER_SIZE = 32768; // 32KB
 
@@ -6387,7 +6389,7 @@ public class NXCSession
          int maxRows, HistoricalDataType valueType, long delegateReadObject) throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject, 0,
-            DciTier.AUTO, DciAggregationFunction.AVG);
+            DciTier.AUTO, DciAggregationFunction.AVG, null, MAX_DCI_DATA_ROWS);
    }
 
    /**
@@ -6411,7 +6413,7 @@ public class NXCSession
          int maxRows, HistoricalDataType valueType, long delegateReadObject, int maxDataPoints) throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, valueType, delegateReadObject,
-            maxDataPoints, DciTier.AUTO, DciAggregationFunction.AVG);
+            maxDataPoints, DciTier.AUTO, DciAggregationFunction.AVG, null, MAX_DCI_DATA_ROWS);
    }
 
    /**
@@ -6429,13 +6431,16 @@ public class NXCSession
     * @param maxDataPoints maximum number of data points that can be displayed / processed by caller
     * @param tier aggregation tier
     * @param function aggregation function
+    * @param receiver optional callback invoked after each page of data (newest to oldest) for incremental
+    *           processing; may return false to abort loading. If null, all data is loaded before returning.
+    * @param pageSize number of rows to request per server round trip when receiver is set
     * @return DCI data set
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private DataSeries getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
          int maxRows, HistoricalDataType valueType, long delegateReadObject, int maxDataPoints, DciTier tier,
-         DciAggregationFunction function) throws IOException, NXCException
+         DciAggregationFunction function, HistoricalDataReceiver receiver, int pageSize) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -6485,11 +6490,14 @@ public class NXCSession
       }
       else
       {
+         // When a receiver is set, request data in smaller pages so the caller can process them
+         // incrementally (newest to oldest); otherwise keep the original single hard-cap behavior.
+         final int page = (receiver != null) ? pageSize : MAX_DCI_DATA_ROWS;
          int rowsReceived, rowsRemaining = maxRows;
          do
          {
             msg.setMessageId(requestId.getAndIncrement());
-            msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
+            msg.setFieldInt32(NXCPCodes.VID_MAX_ROWS, (receiver != null) ? page : maxRows);
             msg.setFieldInt64(NXCPCodes.VID_TIME_FROM, timeFrom);
             msg.setFieldInt64(NXCPCodes.VID_TIME_TO, timeTo);
             sendMessage(msg);
@@ -6502,7 +6510,7 @@ public class NXCSession
                throw new NXCException(RCC.INTERNAL_ERROR);
 
             rowsReceived = parseDataRows(response.getBinaryData(), data);
-            if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
+            if (((rowsRemaining == 0) || (rowsRemaining > page)) && (rowsReceived == page))
             {
                // adjust boundaries for next request
                if (rowsRemaining > 0)
@@ -6521,7 +6529,11 @@ public class NXCSession
                   }
                }
             }
-         } while(rowsReceived == MAX_DCI_DATA_ROWS);
+
+            // Hand the cumulative data to the receiver after each page; abort if it requests so
+            if ((receiver != null) && !receiver.dataReceived(data))
+               break;
+         } while(rowsReceived == page);
       }
       return data;
    }
@@ -6609,7 +6621,31 @@ public class NXCSession
    public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType,
          DciTier tier, DciAggregationFunction function) throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0, 0, tier, function);
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType, 0, 0, tier, function, null, MAX_DCI_DATA_ROWS);
+   }
+
+   /**
+    * Get collected DCI data from server incrementally. Data is read in pages (newest to oldest) and the
+    * receiver is invoked after each page with the cumulative data set, allowing the caller to render a
+    * graph progressively and abort loading early. The full data set is also returned on completion.
+    *
+    * @param nodeId    Node ID
+    * @param dciId     DCI ID
+    * @param from      Start of time range or null for no limit
+    * @param to        End of time range or null for no limit
+    * @param valueType type of historical data to retrieve
+    * @param tier      tier to read from (AUTO/RAW/HOURLY/DAILY)
+    * @param function  aggregation function to apply (AVG/MIN/MAX/MINMAX)
+    * @param delegateReadObject delegate object read access should be provided thought
+    * @param receiver  callback invoked after each page; returns false to abort loading
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataSeries getCollectedData(long nodeId, long dciId, Date from, Date to, HistoricalDataType valueType, DciTier tier,
+         DciAggregationFunction function, long delegateReadObject, HistoricalDataReceiver receiver) throws IOException, NXCException
+   {
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, 0, valueType, delegateReadObject, 0, tier, function, receiver, DEFAULT_HISTORICAL_DATA_PAGE_SIZE);
    }
 
    /**
@@ -6634,6 +6670,32 @@ public class NXCSession
       if (instance == null || dataColumn == null)
          throw new NXCException(RCC.INVALID_ARGUMENT);
       return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, HistoricalDataType.PROCESSED, delegateReadObject);
+   }
+
+   /**
+    * Get collected table DCI data from server incrementally. Data is read in pages (newest to oldest) and
+    * the receiver is invoked after each page with the cumulative data set, allowing the caller to render a
+    * graph progressively and abort loading early. The full data set is also returned on completion.
+    *
+    * @param nodeId     Node ID
+    * @param dciId      DCI ID
+    * @param instance   instance value
+    * @param dataColumn name of column to retrieve data from
+    * @param from       Start of time range or null for no limit
+    * @param to         End of time range or null for no limit
+    * @param delegateReadObject delegate object read access should be provided thought
+    * @param receiver   callback invoked after each page; returns false to abort loading
+    * @return DCI data set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataSeries getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         long delegateReadObject, HistoricalDataReceiver receiver) throws IOException, NXCException
+   {
+      if (instance == null || dataColumn == null)
+         throw new NXCException(RCC.INVALID_ARGUMENT);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, 0, HistoricalDataType.PROCESSED,
+            delegateReadObject, 0, DciTier.AUTO, DciAggregationFunction.AVG, receiver, DEFAULT_HISTORICAL_DATA_PAGE_SIZE);
    }
 
    /**

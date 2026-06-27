@@ -18,9 +18,15 @@
  */
 package org.netxms.nxmc.modules.dashboards.widgets;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -30,7 +36,10 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DciAggregationFunction;
+import org.netxms.client.constants.DciTier;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
@@ -39,6 +48,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.HistoricalDataReceiver;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
@@ -66,10 +76,14 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
    private static final Logger logger = LoggerFactory.getLogger(LineChartElement.class);
    private final I18n i18n = LocalizationHelper.getI18n(LineChartElement.class);
 
+   private static final int LOADER_THREAD_POOL_SIZE = 4;
+
    private Chart chart;
 	private LineChartConfig config;
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
+	private volatile int loadGeneration = 0;
+	private final AtomicBoolean refreshScheduled = new AtomicBoolean(false);
 	private NXCSession session;
    private List<ChartDciConfig> runtimeDciList = new ArrayList<>();
 	private List<DataCacheElement> dataCache = new ArrayList<DataCacheElement>(16);
@@ -126,6 +140,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig, view);
 
       addDisposeListener((e) -> {
+         loadGeneration++; // abort any in-flight incremental loading
          if (refreshController != null)
             refreshController.dispose();
       });
@@ -365,64 +380,154 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		updateInProgress = true;
 
       final long dashboardId = getDashboardObjectId();
-      Job job = new Job(i18n.tr("Reading DCI data for line chart"), view, this) {
-			private ChartDciConfig currentDci;
+      final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
+      final Date to = new Date(System.currentTimeMillis());
+      final List<ChartDciConfig> dciList = runtimeDciList;
+      final int generation = ++loadGeneration;
 
-			@Override
+      refreshScheduled.set(false);
+      if (!chart.isDisposed())
+         chart.setTimeRange(from, to);
+
+      // Load each DCI in parallel (bounded pool) and draw the chart progressively (newest to oldest)
+      // as pages arrive, instead of waiting for the entire data set.
+      Job job = new Job(i18n.tr("Reading DCI data for line chart"), view, this) {
+         private volatile ChartDciConfig failedDci;
+         private final DataSeries[] cacheData = new DataSeries[dciList.size()];
+
+         @Override
          protected void run(IProgressMonitor monitor) throws Exception
-			{
-				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
-				final Date to = new Date(System.currentTimeMillis());
-            final DataSeries[] data = new DataSeries[runtimeDciList.size()];
-            for(int i = 0; i < runtimeDciList.size(); i++)
+         {
+            final ExecutorService executor = Executors.newFixedThreadPool(Math.min(LOADER_THREAD_POOL_SIZE, Math.max(dciList.size(), 1)));
+            final CountDownLatch latch = new CountDownLatch(dciList.size());
+            final AtomicReference<Exception> loadError = new AtomicReference<Exception>();
+            try
             {
-               currentDci = runtimeDciList.get(i);
-               if ((currentDci.nodeId == AbstractObject.UNKNOWN) || (currentDci.dciId <= 0))
-                  throw new UnmappedDciException();
-               if (currentDci.type == ChartDciConfig.ITEM)
+               for(int i = 0; i < dciList.size(); i++)
                {
-                  data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED, dashboardId);
+                  final int index = i;
+                  final ChartDciConfig dci = dciList.get(i);
+                  executor.execute(() -> {
+                     try
+                     {
+                        loadItem(index, dci);
+                     }
+                     catch(Exception e)
+                     {
+                        if (loadError.compareAndSet(null, e))
+                           failedDci = dci;
+                     }
+                     finally
+                     {
+                        latch.countDown();
+                     }
+                  });
                }
-               else
-               {
-                  data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0, dashboardId);
-               }
+               latch.await();
             }
+            finally
+            {
+               executor.shutdownNow();
+            }
+
+            // Surface the first load failure unless a newer refresh superseded this one
+            Exception e = loadError.get();
+            if ((e != null) && (generation == loadGeneration))
+               throw e;
+
             runInUIThread(() -> {
-               if (!chart.isDisposed())
+               if (!chart.isDisposed() && (generation == loadGeneration))
                {
-                  dataCache.clear();
-                  chart.setTimeRange(from, to);
-                  for(int i = 0; i < data.length; i++)
-                  {
-                     chart.updateParameter(i, data[i], false);
-                     dataCache.add(new DataCacheElement(runtimeDciList.get(i), data[i]));
-                  }
                   chart.refresh();
                   clearMessages();
                }
                updateInProgress = false;
             });
-			}
+         }
 
-			@Override
-			protected String getErrorMessage()
-			{
-            if ((currentDci.nodeId == AbstractObject.UNKNOWN) || (currentDci.dciId <= 0))
+         /**
+          * Load single DCI and feed pages into the chart and data cache as they arrive.
+          */
+         private void loadItem(final int index, final ChartDciConfig dci) throws Exception
+         {
+            if ((dci.nodeId == AbstractObject.UNKNOWN) || (dci.dciId <= 0))
+               throw new UnmappedDciException();
+
+            HistoricalDataReceiver receiver = (data) -> {
+               final DataSeries snapshot = new DataSeries(data);
+               runInUIThread(() -> {
+                  if (!chart.isDisposed() && (generation == loadGeneration))
+                  {
+                     chart.updateParameter(index, snapshot, false);
+                     cacheData[index] = snapshot;
+                     rebuildDataCache();
+                  }
+               });
+               scheduleChartRefresh();
+               return (generation == loadGeneration) && !chart.isDisposed();
+            };
+
+            if (dci.type == ChartDciConfig.ITEM)
+            {
+               session.getCollectedData(dci.nodeId, dci.dciId, from, to, HistoricalDataType.PROCESSED, DciTier.AUTO,
+                     DciAggregationFunction.AVG, dashboardId, receiver);
+            }
+            else
+            {
+               session.getCollectedTableData(dci.nodeId, dci.dciId, dci.instance, dci.column, from, to, dashboardId, receiver);
+            }
+         }
+
+         /**
+          * Rebuild data cache from per-DCI snapshots. Must be called on UI thread.
+          */
+         private void rebuildDataCache()
+         {
+            dataCache.clear();
+            for(int i = 0; i < cacheData.length; i++)
+            {
+               if (cacheData[i] != null)
+                  dataCache.add(new DataCacheElement(dciList.get(i), cacheData[i]));
+            }
+         }
+
+         /**
+          * Schedule a single coalesced chart refresh on the UI thread, avoiding redraw thrash when
+          * multiple DCIs deliver pages concurrently.
+          */
+         private void scheduleChartRefresh()
+         {
+            if (refreshScheduled.compareAndSet(false, true))
+            {
+               runInUIThread(() -> {
+                  refreshScheduled.set(false);
+                  if (!chart.isDisposed() && (generation == loadGeneration))
+                     chart.refresh();
+               });
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            ChartDciConfig dci = failedDci;
+            if (dci == null)
+               return i18n.tr("Cannot get DCI values for line chart");
+            if ((dci.nodeId == AbstractObject.UNKNOWN) || (dci.dciId <= 0))
                return i18n.tr("Dashboard misconfiguration");
-            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(currentDci.nodeId), currentDci.name);
-			}
+            return String.format(i18n.tr("Cannot get value for DCI %s:\"%s\""), session.getObjectName(dci.nodeId), dci.name);
+         }
 
-			@Override
+         @Override
          protected void jobFailureHandler(Exception e)
-			{
-				updateInProgress = false;
+         {
+            updateInProgress = false;
             super.jobFailureHandler(e);
-			}
-		};
-		job.setUser(false);
-		job.start();
-	}
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 
 	/**
 	 * Get data cache for this chart. Must be called on UI thread.
