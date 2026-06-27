@@ -178,16 +178,43 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     *
     * @param contextObject context object
     * @param items initial set of DCIs to show
+    * @param items DCI list
+    * @param title chart title
+    */
+   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, long contextId, String title)
+   {
+      this(contextObject, items, null, title, contextId);
+   }
+
+   /**
+    * Create historical graph view with given context object and DCI list.
+    *
+    * @param contextObject context object
+    * @param items initial set of DCIs to show
     * @param templateConfig template configuration (can be null)
     * @param items DCI list
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, ChartConfiguration templateConfig, long contextId)
    {
+      this(contextObject, items, templateConfig, null, contextId);
+   }
+
+   /**
+    * Create historical graph view with given context object and DCI list.
+    *
+    * @param contextObject context object
+    * @param items initial set of DCIs to show
+    * @param templateConfig template configuration (can be null)
+    * @param title chart title (can be null)
+    * @param items DCI list
+    */
+   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, ChartConfiguration templateConfig, String title, long contextId)
+   {
       super(LocalizationHelper.getI18n(HistoricalGraphView.class).tr("Line Chart"),
             ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
       this.contextId = contextId;
-      fullName = i18n.tr("Line Chart");
+      fullName = (title != null) ? title : i18n.tr("Line Chart");
 
       configuration = new GraphDefinition();
       if (templateConfig != null)
@@ -211,6 +238,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       else
       {
          configuration.setTimePeriod(new TimePeriod(TimeFrameType.BACK_FROM_NOW, session.getClientConfigurationHintAsInt("DefaultLineChartPeriod", 60), TimeUnit.MINUTE, null, null));
+         if (title != null)
+         {
+            configuration.setTitle(title);
+            configuration.setTitleVisible(true);
+         }
       }
 
       configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
@@ -1034,7 +1066,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    public void dispose()
    {
-      refreshController.dispose();
+      if (refreshController != null)
+         refreshController.dispose();
       super.dispose();
    }
 

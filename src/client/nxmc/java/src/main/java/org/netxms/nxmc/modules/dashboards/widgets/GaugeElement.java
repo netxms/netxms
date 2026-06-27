@@ -106,6 +106,7 @@ public class GaugeElement extends ComparisonChartElement
       chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
 
       configureMetrics();
+      createContextMenu();
 
       addDisposeListener((e) -> {
          if (heightCalculationFont != null)

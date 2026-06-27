@@ -24,6 +24,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
@@ -40,6 +43,7 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.UnmappedDciException;
 import org.netxms.nxmc.modules.datacollection.MappingTableCache;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -279,6 +283,77 @@ public abstract class ComparisonChartElement extends ElementWidget
 		job.setUser(false);
 		job.start();
 	}
+
+   /**
+    * Create context menu and double-click handler for the chart. Should be called by subclass after chart is created.
+    */
+   protected void createContextMenu()
+   {
+      final MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener((m) -> fillContextMenu(m));
+      chart.setMenuManager(manager);
+
+      chart.addDoubleClickListener((e) -> {
+         if (chart.getDrillDownObjectId() == 0)
+            showLineChart();
+      });
+   }
+
+   /**
+    * Fill context menu for the chart.
+    *
+    * @param manager menu manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      if (!runtimeDciList.isEmpty())
+      {
+         manager.add(new Action(i18n.tr("Show &line chart")) {
+            @Override
+            public void run()
+            {
+               showLineChart();
+            }
+         });
+      }
+
+      final long drillDownObjectId = chart.getDrillDownObjectId();
+      if (drillDownObjectId != 0)
+      {
+         final AbstractObject object = session.findObjectById(drillDownObjectId);
+         if (object != null)
+         {
+            manager.add(new Action(String.format(i18n.tr("&Open %s"), object.getObjectName())) {
+               @Override
+               public void run()
+               {
+                  chart.openDrillDownObject();
+               }
+            });
+         }
+      }
+   }
+
+   /**
+    * Open historical line chart for this element's DCIs.
+    */
+   protected void showLineChart()
+   {
+      if (runtimeDciList.isEmpty())
+         return;
+
+      AbstractObject contextObject = getContext();
+      if (contextObject == null)
+         contextObject = session.findObjectById(runtimeDciList.get(0).nodeId);
+      if (contextObject == null)
+         return;
+
+      List<ChartDciConfig> items = new ArrayList<>(runtimeDciList.size());
+      for(ChartDciConfig dci : runtimeDciList)
+         items.add(new ChartDciConfig(dci));
+      view.openView(new HistoricalGraphView(contextObject, items, view.getObjectId(), titleText));
+   }
 
    /**
     * Get list of configured DCIs.

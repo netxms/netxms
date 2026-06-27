@@ -82,6 +82,7 @@ public class BarChartElement extends ComparisonChartElement
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
       configureMetrics();
+      createContextMenu();
 	}
 
    /**

@@ -657,7 +657,7 @@ public class Chart extends Composite
    /**
     * Open drill-down object
     */
-   void openDrillDownObject()
+   public void openDrillDownObject()
    {
       if (view == null)
          return;

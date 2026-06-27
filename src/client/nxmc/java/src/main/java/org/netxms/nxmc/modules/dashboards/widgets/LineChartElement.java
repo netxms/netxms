@@ -74,6 +74,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
    private List<ChartDciConfig> runtimeDciList = new ArrayList<>();
 	private List<DataCacheElement> dataCache = new ArrayList<DataCacheElement>(16);
    private Action actionRefresh;
+   private Action actionShowLineChart;
    private Action actionAdjustX;
    private Action actionAdjustY;
    private Action actionAdjustBoth;
@@ -129,11 +130,13 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
             refreshController.dispose();
       });
 
-		if (config.isInteractive())
-		{
-		   createActions();
-		   createChartContextMenu();
-		}
+      createActions();
+      createChartContextMenu();
+
+      chart.addDoubleClickListener((e) -> {
+         if (chart.getDrillDownObjectId() == 0)
+            showLineChart();
+      });
 
       configureMetrics();
 	}   
@@ -271,6 +274,14 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
          }
       };
 
+      actionShowLineChart = new Action(i18n.tr("Show &line chart")) {
+         @Override
+         public void run()
+         {
+            showLineChart();
+         }
+      };
+
       actionAdjustX = HistoricalGraphView.createAction(ChartActionType.ADJUST_X, this);
       actionAdjustY = HistoricalGraphView.createAction(ChartActionType.ADJUST_Y, this);
       actionAdjustBoth = HistoricalGraphView.createAction(ChartActionType.ADJUST_BOTH, this);
@@ -304,6 +315,12 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
+      manager.add(actionShowLineChart);
+      if (!config.isInteractive())
+         return;
+
+      manager.add(new Separator());
+
       MenuManager presets = new MenuManager("&Presets");
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
@@ -315,6 +332,26 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       manager.add(actionAdjustY);
       manager.add(new Separator());
       manager.add(actionRefresh);
+	}
+
+	/**
+	 * Open historical line chart for this element's DCIs in a separate view.
+	 */
+	private void showLineChart()
+	{
+      if (runtimeDciList.isEmpty())
+         return;
+
+      AbstractObject contextObject = getContext();
+      if (contextObject == null)
+         contextObject = session.findObjectById(runtimeDciList.get(0).nodeId);
+      if (contextObject == null)
+         return;
+
+      List<ChartDciConfig> items = new ArrayList<>(runtimeDciList.size());
+      for(ChartDciConfig dci : runtimeDciList)
+         items.add(new ChartDciConfig(dci));
+      view.openView(new HistoricalGraphView(contextObject, items, view.getObjectId(), titleText));
 	}
 
 	/**

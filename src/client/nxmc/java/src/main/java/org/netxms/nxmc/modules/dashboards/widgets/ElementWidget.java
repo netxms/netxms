@@ -59,6 +59,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 
 	protected DashboardElement element;
    protected AbstractDashboardView view;
+   protected String titleText;
 
    private DashboardControl dbc;
    private Label title;
@@ -304,7 +305,10 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected void processCommonSettings(DashboardElementConfig config)
    {
       if (!config.getTitle().isEmpty())
-         setTitle(config.getTitle(), ColorConverter.parseColorDefinition(config.getTitleBackground()), ColorConverter.parseColorDefinition(config.getTitleForeground()), config.getTitleFontSize(), config.getTitleFontName());
+      {
+         titleText = config.getTitle().trim();
+         setTitle(titleText, ColorConverter.parseColorDefinition(config.getTitleBackground()), ColorConverter.parseColorDefinition(config.getTitleForeground()), config.getTitleFontSize(), config.getTitleFontName());
+      }
    }
 
 	/**

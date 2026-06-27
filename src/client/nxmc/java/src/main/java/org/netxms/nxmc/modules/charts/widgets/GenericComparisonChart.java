@@ -21,8 +21,6 @@ package org.netxms.nxmc.modules.charts.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -70,23 +68,8 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
          }
       });
 
-      addMouseListener(new MouseListener() {
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
-         }
-
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-         }
-
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
-         {
-            chart.fireDoubleClickListeners();
-         }
-      });
+      // Mouse handling (drill-down, double click) is provided by the owning Chart widget, which registers its own
+      // mouse listener on this plot area composite. No additional listener is needed here.
    }
 
    /**
