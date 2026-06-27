@@ -3022,6 +3022,125 @@ NXSL_METHOD_DEFINITION(Node, setProductVersion)
 }
 
 /**
+ * Node::setSNMPCommunity(community) method.
+ * Sets SNMP community string for polling (SNMP v1/v2c).
+ */
+NXSL_METHOD_DEFINITION(Node, setSNMPCommunity)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpCommunity(argv[0]->getValueAsMBString());
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
+ * Resolve SNMP v3 authentication method from NXSL value. Accepts either a numeric enum
+ * value (0-6) or a symbolic name ("none", "md5", "sha1", "sha224", "sha256", "sha384",
+ * "sha512", case-insensitive). Returns false if the value is not a valid method.
+ */
+static bool ResolveSnmpAuthMethodArg(NXSL_Value *value, SNMP_AuthMethod *method)
+{
+   if (value->isInteger())
+   {
+      int m = value->getValueAsInt32();
+      if ((m < SNMP_AUTH_NONE) || (m > SNMP_AUTH_SHA512))
+         return false;
+      *method = static_cast<SNMP_AuthMethod>(m);
+      return true;
+   }
+   if (value->isString())
+      return SnmpAuthMethodFromName(value->getValueAsMBString(), method);
+   return false;
+}
+
+/**
+ * Resolve SNMP v3 encryption method from NXSL value. Accepts either a numeric enum value
+ * (0-4) or a symbolic name ("none", "des", "aes-128", "aes-192", "aes-256",
+ * case-insensitive). Returns false if the value is not a valid method.
+ */
+static bool ResolveSnmpPrivMethodArg(NXSL_Value *value, SNMP_EncryptionMethod *method)
+{
+   if (value->isInteger())
+   {
+      int m = value->getValueAsInt32();
+      if ((m < SNMP_ENCRYPT_NONE) || (m > SNMP_ENCRYPT_AES_256))
+         return false;
+      *method = static_cast<SNMP_EncryptionMethod>(m);
+      return true;
+   }
+   if (value->isString())
+      return SnmpPrivMethodFromName(value->getValueAsMBString(), method);
+   return false;
+}
+
+/**
+ * Node::setSNMPUSMCredentials(userName, authPassword, privPassword, authMethod, privMethod) method.
+ * Sets SNMP v3 USM credentials for polling and switches the node to SNMP v3.
+ * authMethod: numeric 0-6 or name "none"/"md5"/"sha1"/"sha224"/"sha256"/"sha384"/"sha512".
+ * privMethod: numeric 0-4 or name "none"/"des"/"aes-128"/"aes-192"/"aes-256".
+ */
+NXSL_METHOD_DEFINITION(Node, setSNMPUSMCredentials)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   SNMP_AuthMethod authMethod;
+   SNMP_EncryptionMethod privMethod;
+   if (!ResolveSnmpAuthMethodArg(argv[3], &authMethod) || !ResolveSnmpPrivMethodArg(argv[4], &privMethod))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpUSMCredentials(
+            argv[0]->getValueAsMBString(), argv[1]->getValueAsMBString(), argv[2]->getValueAsMBString(),
+            authMethod, privMethod);
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
+ * Node::setSNMPVersion(version) method.
+ * version: numeric 0=v1, 1=v2c, 3=v3, or symbolic name "1", "2c", "3".
+ */
+NXSL_METHOD_DEFINITION(Node, setSNMPVersion)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   SNMP_Version version;
+   if (!SnmpVersionFromName(argv[0]->getValueAsMBString(), &version) || (version == SNMP_VERSION_DEFAULT))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpVersion(version);
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
  * Node::setSerialNumber(serialNumber) method
  */
 NXSL_METHOD_DEFINITION(Node, setSerialNumber)
@@ -3178,6 +3297,9 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, setProductCode, 1);
    NXSL_REGISTER_METHOD(Node, setProductName, 1);
    NXSL_REGISTER_METHOD(Node, setProductVersion, 1);
+   NXSL_REGISTER_METHOD(Node, setSNMPCommunity, 1);
+   NXSL_REGISTER_METHOD(Node, setSNMPUSMCredentials, 5);
+   NXSL_REGISTER_METHOD(Node, setSNMPVersion, 1);
    NXSL_REGISTER_METHOD(Node, setSerialNumber, 1);
    NXSL_REGISTER_METHOD(Node, setVendor, 1);
 }

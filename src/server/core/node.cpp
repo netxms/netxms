@@ -10387,84 +10387,6 @@ static const struct
 };
 
 /**
- * Symbolic names for SNMP versions used by the "snmp" property group (WebAPI).
- */
-static const char *SnmpVersionToName(SNMP_Version version)
-{
-   switch(version)
-   {
-      case SNMP_VERSION_1:
-         return "1";
-      case SNMP_VERSION_2C:
-         return "2c";
-      case SNMP_VERSION_3:
-         return "3";
-      default:
-         return "default";
-   }
-}
-
-/**
- * Parse SNMP version from symbolic name. Returns false on unknown name.
- */
-static bool SnmpVersionFromName(const char *name, SNMP_Version *version)
-{
-   if (!strcmp(name, "1"))
-      *version = SNMP_VERSION_1;
-   else if (!strcmp(name, "2c"))
-      *version = SNMP_VERSION_2C;
-   else if (!strcmp(name, "3"))
-      *version = SNMP_VERSION_3;
-   else if (!strcmp(name, "default"))
-      *version = SNMP_VERSION_DEFAULT;
-   else
-      return false;
-   return true;
-}
-
-/**
- * Symbolic names for SNMP v3 authentication methods (index = enum value).
- */
-static const char *s_snmpAuthMethodNames[] = { "NONE", "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" };
-
-/**
- * Symbolic names for SNMP v3 encryption methods (index = enum value).
- */
-static const char *s_snmpPrivMethodNames[] = { "NONE", "DES", "AES-128", "AES-192", "AES-256" };
-
-static const char *SnmpAuthMethodToName(SNMP_AuthMethod method)
-{
-   return ((method >= SNMP_AUTH_NONE) && (method <= SNMP_AUTH_SHA512)) ? s_snmpAuthMethodNames[method] : "NONE";
-}
-
-static bool SnmpAuthMethodFromName(const char *name, SNMP_AuthMethod *method)
-{
-   for(size_t i = 0; i < sizeof(s_snmpAuthMethodNames) / sizeof(char*); i++)
-      if (!stricmp(name, s_snmpAuthMethodNames[i]))
-      {
-         *method = static_cast<SNMP_AuthMethod>(i);
-         return true;
-      }
-   return false;
-}
-
-static const char *SnmpPrivMethodToName(SNMP_EncryptionMethod method)
-{
-   return ((method >= SNMP_ENCRYPT_NONE) && (method <= SNMP_ENCRYPT_AES_256)) ? s_snmpPrivMethodNames[method] : "NONE";
-}
-
-static bool SnmpPrivMethodFromName(const char *name, SNMP_EncryptionMethod *method)
-{
-   for(size_t i = 0; i < sizeof(s_snmpPrivMethodNames) / sizeof(char*); i++)
-      if (!stricmp(name, s_snmpPrivMethodNames[i]))
-      {
-         *method = static_cast<SNMP_EncryptionMethod>(i);
-         return true;
-      }
-   return false;
-}
-
-/**
  * Symbolic names for agent DCI cache mode and protocol compression mode.
  */
 static const char *AgentCacheModeToName(int16_t mode)
@@ -14881,6 +14803,65 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
    lockProperties();
    m_sshLogin = login;
    m_sshPassword = password;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set SNMP protocol version. Enforces the configured minimum SNMP version and
+ * switches the security model to match the version (USM for v3, community-based
+ * otherwise).
+ */
+void Node::setSnmpVersion(SNMP_Version version)
+{
+   lockProperties();
+   SNMP_Version minVersion = SNMP_VersionFromInt(
+            getCustomAttributeAsUInt32(L"SysConfig:SNMP.MinVersion", static_cast<uint32_t>(g_snmpMinVersion)));
+   if (version < minVersion)
+      version = minVersion;
+   m_snmpVersion = version;
+   m_snmpSecurity->setSecurityModel((version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+   m_lastSnmpTrapAuthFailureEventTime = 0;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set SNMP community string for polling (SNMP v1/v2c). If the node is currently
+ * configured for SNMP v3, it is switched to v2c because a community string is not
+ * applicable to the USM security model.
+ */
+void Node::setSnmpCommunity(const char *community)
+{
+   lockProperties();
+   if (m_snmpVersion == SNMP_VERSION_3)
+   {
+      m_snmpVersion = SNMP_VERSION_2C;
+      m_snmpSecurity->setSecurityModel(SNMP_SECURITY_MODEL_V2C);
+   }
+   m_snmpSecurity->setCommunity(CHECK_NULL_EX_A(community));
+   m_lastSnmpTrapAuthFailureEventTime = 0;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set SNMP USM credentials for polling and switch the node to SNMP v3. Derived
+ * authentication/privacy keys are recalculated from the supplied passwords.
+ */
+void Node::setSnmpUSMCredentials(const char *userName, const char *authPassword, const char *privPassword,
+         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod privMethod)
+{
+   lockProperties();
+   m_snmpVersion = SNMP_VERSION_3;
+   m_snmpSecurity->setSecurityModel(SNMP_SECURITY_MODEL_USM);
+   m_snmpSecurity->setUserName(CHECK_NULL_EX_A(userName));
+   m_snmpSecurity->setAuthPassword(CHECK_NULL_EX_A(authPassword));
+   m_snmpSecurity->setPrivPassword(CHECK_NULL_EX_A(privPassword));
+   m_snmpSecurity->setAuthMethod(authMethod);
+   m_snmpSecurity->setPrivMethod(privMethod);
+   m_snmpSecurity->recalculateKeys();
+   m_lastSnmpTrapAuthFailureEventTime = 0;
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
 }

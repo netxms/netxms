@@ -501,3 +501,96 @@ int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *r
       return -1;
    return count;
 }
+
+/**
+ * Convert SNMP protocol version to symbolic name ("1", "2c", "3", or "default").
+ */
+const char LIBNXSNMP_EXPORTABLE *SnmpVersionToName(SNMP_Version version)
+{
+   switch(version)
+   {
+      case SNMP_VERSION_1:
+         return "1";
+      case SNMP_VERSION_2C:
+         return "2c";
+      case SNMP_VERSION_3:
+         return "3";
+      default:
+         return "default";
+   }
+}
+
+/**
+ * Parse SNMP protocol version from symbolic name ("1", "2c", "3", "default").
+ * Returns false on unknown name.
+ */
+bool LIBNXSNMP_EXPORTABLE SnmpVersionFromName(const char *name, SNMP_Version *version)
+{
+   if (!strcmp(name, "1"))
+      *version = SNMP_VERSION_1;
+   else if (!strcmp(name, "2c"))
+      *version = SNMP_VERSION_2C;
+   else if (!strcmp(name, "3"))
+      *version = SNMP_VERSION_3;
+   else if (!strcmp(name, "default"))
+      *version = SNMP_VERSION_DEFAULT;
+   else
+      return false;
+   return true;
+}
+
+/**
+ * Symbolic names for SNMP v3 authentication methods (index = enum value).
+ */
+static const char *s_snmpAuthMethodNames[] = { "NONE", "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" };
+
+/**
+ * Symbolic names for SNMP v3 encryption methods (index = enum value).
+ */
+static const char *s_snmpPrivMethodNames[] = { "NONE", "DES", "AES-128", "AES-192", "AES-256" };
+
+/**
+ * Convert SNMP v3 authentication method to symbolic name.
+ */
+const char LIBNXSNMP_EXPORTABLE *SnmpAuthMethodToName(SNMP_AuthMethod method)
+{
+   return ((method >= SNMP_AUTH_NONE) && (method <= SNMP_AUTH_SHA512)) ? s_snmpAuthMethodNames[method] : "NONE";
+}
+
+/**
+ * Parse SNMP v3 authentication method from symbolic name (case-insensitive).
+ * Returns false on unknown name.
+ */
+bool LIBNXSNMP_EXPORTABLE SnmpAuthMethodFromName(const char *name, SNMP_AuthMethod *method)
+{
+   for(size_t i = 0; i < sizeof(s_snmpAuthMethodNames) / sizeof(char*); i++)
+      if (!stricmp(name, s_snmpAuthMethodNames[i]))
+      {
+         *method = static_cast<SNMP_AuthMethod>(i);
+         return true;
+      }
+   return false;
+}
+
+/**
+ * Convert SNMP v3 encryption method to symbolic name.
+ */
+const char LIBNXSNMP_EXPORTABLE *SnmpPrivMethodToName(SNMP_EncryptionMethod method)
+{
+   return ((method >= SNMP_ENCRYPT_NONE) && (method <= SNMP_ENCRYPT_AES_256)) ? s_snmpPrivMethodNames[method] : "NONE";
+}
+
+/**
+ * Parse SNMP v3 encryption method from symbolic name (case-insensitive).
+ * Returns false on unknown name.
+ */
+bool LIBNXSNMP_EXPORTABLE SnmpPrivMethodFromName(const char *name, SNMP_EncryptionMethod *method)
+{
+   for(size_t i = 0; i < sizeof(s_snmpPrivMethodNames) / sizeof(char*); i++)
+      if (!stricmp(name, s_snmpPrivMethodNames[i]))
+      {
+         *method = static_cast<SNMP_EncryptionMethod>(i);
+         return true;
+      }
+   return false;
+}

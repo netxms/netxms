@@ -266,6 +266,16 @@ enum SNMP_EncryptionMethod
    SNMP_ENCRYPT_AES_256 = 4,
 };
 
+/**
+ * Conversion between SNMP version / v3 security method enums and their symbolic names
+ */
+const char LIBNXSNMP_EXPORTABLE *SnmpVersionToName(SNMP_Version version);
+bool LIBNXSNMP_EXPORTABLE SnmpVersionFromName(const char *name, SNMP_Version *version);
+const char LIBNXSNMP_EXPORTABLE *SnmpAuthMethodToName(SNMP_AuthMethod method);
+bool LIBNXSNMP_EXPORTABLE SnmpAuthMethodFromName(const char *name, SNMP_AuthMethod *method);
+const char LIBNXSNMP_EXPORTABLE *SnmpPrivMethodToName(SNMP_EncryptionMethod method);
+bool LIBNXSNMP_EXPORTABLE SnmpPrivMethodFromName(const char *name, SNMP_EncryptionMethod *method);
+
 //
 // MIB object access types
 //
