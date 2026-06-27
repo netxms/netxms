@@ -49,6 +49,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
+import org.netxms.nxmc.modules.charts.api.ChartMarker;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
@@ -590,6 +591,74 @@ public class Chart extends Composite
    {
       if (plotArea instanceof LineChart)
          ((LineChart)plotArea).zoomOut();
+   }
+
+   /**
+    * Add a marker at given timestamp (line charts only).
+    *
+    * @param timestamp marker position (milliseconds since epoch)
+    * @return created marker, or null if chart is not a line chart
+    */
+   public ChartMarker addMarker(long timestamp)
+   {
+      return (plotArea instanceof LineChart) ? ((LineChart)plotArea).addMarker(timestamp) : null;
+   }
+
+   /**
+    * Remove given marker (line charts only).
+    *
+    * @param marker marker to remove
+    */
+   public void removeMarker(ChartMarker marker)
+   {
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).removeMarker(marker);
+   }
+
+   /**
+    * Remove all markers (line charts only).
+    */
+   public void clearMarkers()
+   {
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).clearMarkers();
+   }
+
+   /**
+    * @return true if chart is a line chart with at least one marker
+    */
+   public boolean hasMarkers()
+   {
+      return (plotArea instanceof LineChart) && ((LineChart)plotArea).hasMarkers();
+   }
+
+   /**
+    * Get marker under the current cursor position (line charts only).
+    *
+    * @return marker under cursor or null
+    */
+   public ChartMarker getMarkerAtCursor()
+   {
+      return (plotArea instanceof LineChart) ? ((LineChart)plotArea).getMarkerAtCursor() : null;
+   }
+
+   /**
+    * Get timestamp under the current cursor position (line charts only).
+    *
+    * @return timestamp in milliseconds since epoch, or Long.MIN_VALUE if unavailable
+    */
+   public long getTimestampAtCursor()
+   {
+      return (plotArea instanceof LineChart) ? ((LineChart)plotArea).getTimestampAtCursor() : Long.MIN_VALUE;
+   }
+
+   /**
+    * Redraw chart after a marker was modified externally (line charts only).
+    */
+   public void markerChanged()
+   {
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).markerChanged();
    }
 
    /**

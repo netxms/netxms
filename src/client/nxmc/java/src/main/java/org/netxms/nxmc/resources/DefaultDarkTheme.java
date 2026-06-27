@@ -57,6 +57,7 @@ public class DefaultDarkTheme extends Theme
       elements.put("Chart.DialScale", new ThemeElement(null, new RGB(118, 120, 122)));
       elements.put("Chart.Gauge", new ThemeElement(new RGB(80, 80, 80), new RGB(51, 160, 44)));
       elements.put("Chart.Grid", new ThemeElement(null, new RGB(232, 232, 232)));
+      elements.put("Chart.Marker", new ThemeElement(null, new RGB(140, 165, 200)));
       elements.put("Chart.PlotArea", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
       elements.put("Chart.Selection", new ThemeElement(new RGB(0, 0, 128), null));
       elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));

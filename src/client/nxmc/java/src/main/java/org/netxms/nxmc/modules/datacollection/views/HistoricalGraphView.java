@@ -68,8 +68,10 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.charts.api.ChartMarker;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
+import org.netxms.nxmc.modules.datacollection.dialogs.ChartMarkerDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SaveGraphDlg;
 import org.netxms.nxmc.modules.datacollection.propertypages.DataSources;
 import org.netxms.nxmc.modules.datacollection.propertypages.GeneralChart;
@@ -1022,6 +1024,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
+      addMarkerMenuItems(manager);
+      manager.add(new Separator());
       manager.add(actionAreaChart);
       manager.add(actionStacked);
       manager.add(actionLogScale);
@@ -1039,6 +1043,59 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionRefresh);
       manager.add(new Separator());
       manager.add(actionProperties);
+   }
+
+   /**
+    * Add marker-related items to the chart context menu, depending on what is under the cursor at the
+    * moment the menu is shown.
+    *
+    * @param manager context menu manager
+    */
+   private void addMarkerMenuItems(IMenuManager manager)
+   {
+      final ChartMarker markerUnderCursor = chart.getMarkerAtCursor();
+      if (markerUnderCursor != null)
+      {
+         manager.add(new Action(i18n.tr("&Edit marker...")) {
+            @Override
+            public void run()
+            {
+               if (new ChartMarkerDialog(getWindow().getShell(), markerUnderCursor).open() == Window.OK)
+                  chart.markerChanged();
+            }
+         });
+         manager.add(new Action(i18n.tr("&Remove marker")) {
+            @Override
+            public void run()
+            {
+               chart.removeMarker(markerUnderCursor);
+            }
+         });
+      }
+      else
+      {
+         final long timestamp = chart.getTimestampAtCursor();
+         if (timestamp != Long.MIN_VALUE)
+         {
+            manager.add(new Action(i18n.tr("&Add marker here")) {
+               @Override
+               public void run()
+               {
+                  chart.addMarker(timestamp);
+               }
+            });
+         }
+      }
+      if (chart.hasMarkers())
+      {
+         manager.add(new Action(i18n.tr("Remove a&ll markers")) {
+            @Override
+            public void run()
+            {
+               chart.clearMarkers();
+            }
+         });
+      }
    }
 
    /**

@@ -57,6 +57,7 @@ public class DefaultLightTheme extends Theme
       elements.put("Chart.DialScale", new ThemeElement(null, new RGB(118, 120, 122)));
       elements.put("Chart.Gauge", new ThemeElement(new RGB(242, 242, 242), new RGB(51, 160, 44)));
       elements.put("Chart.Grid", new ThemeElement(null, new RGB(232, 232, 232)));
+      elements.put("Chart.Marker", new ThemeElement(null, new RGB(72, 96, 132)));
       elements.put("Chart.PlotArea", new ThemeElement(new RGB(255, 255, 255), new RGB(22, 22, 22)));
       elements.put("Chart.Selection", new ThemeElement(new RGB(0, 0, 128), null));
       elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));

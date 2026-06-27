@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.charts.widgets;
 import java.text.DateFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.swt.SWT;
@@ -33,6 +34,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -62,6 +64,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
+import org.netxms.nxmc.modules.charts.api.ChartMarker;
 import org.netxms.nxmc.modules.charts.api.DataPoint;
 import org.netxms.nxmc.modules.charts.widgets.internal.SelectionRectangle;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -99,6 +102,11 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
    private boolean zoomedToSelectionY = false;
    private Date delayedRangeFrom;
    private Date delayedRangeTo;
+
+   private static final int MARKER_HIT_TOLERANCE = 4;
+   private final List<ChartMarker> markers = new ArrayList<ChartMarker>();
+   private int lastMouseX = -1;
+   private int lastMouseY = -1;
 
 	/**
 	 * @param parent
@@ -214,12 +222,30 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          @Override
          public void mouseDown(MouseEvent e)
          {
+            // Track last pointer position so context-menu actions can resolve the time/marker under the
+            // cursor (RAP has no reliable Display.getCursorLocation()).
+            lastMouseX = e.x;
+            lastMouseY = e.y;
+            if ((e.button == 1) && ((e.stateMask & SWT.MOD1) != 0))
+            {
+               // Ctrl+click places a new marker at the clicked position.
+               addMarker((long)getAxisSet().getXAxis(0).getDataCoordinate(e.x));
+            }
          }
 
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
             chart.fireDoubleClickListeners();
+         }
+      });
+
+      ((Composite)plotArea.getControl()).addMouseMoveListener(new MouseMoveListener() {
+         @Override
+         public void mouseMove(MouseEvent e)
+         {
+            lastMouseX = e.x;
+            lastMouseY = e.y;
          }
       });
 
@@ -275,6 +301,21 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          public void paintControl(PaintEvent e)
          {
             paintPercentile(e, yAxis);
+         }
+
+         @Override
+         public boolean drawBehindSeries()
+         {
+            return false;
+         }
+      });
+
+      // User-defined markers are drawn on top of everything.
+      ((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
+         @Override
+         public void paintControl(PaintEvent e)
+         {
+            paintMarkers(e, xAxis);
          }
 
          @Override
@@ -538,6 +579,200 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
             gc.setForeground(((ILineSeries<?>)series).getLineColor());
          gc.drawLine(0, y, clientArea.width, y);
       }
+   }
+
+   /**
+    * Paint user-defined vertical markers and, when two or more markers are present, the time (and
+    * single-series value) delta between adjacent markers.
+    */
+   private void paintMarkers(PaintEvent e, IAxis xAxis)
+   {
+      if (markers.isEmpty())
+         return;
+
+      GC gc = e.gc;
+      Rectangle clientArea = ((Composite)getPlotArea().getControl()).getClientArea();
+      gc.setLineStyle(SWT.LINE_DASH);
+      gc.setLineWidth(2);
+      for(ChartMarker m : markers)
+      {
+         int x = xAxis.getPixelCoordinate(m.getTimestamp());
+         if ((x < 0) || (x > clientArea.width))
+            continue;
+         gc.setForeground(colorCache.create(m.getColor()));
+         gc.drawLine(x, 0, x, clientArea.height);
+         if ((m.getLabel() != null) && !m.getLabel().isEmpty())
+            gc.drawString(m.getLabel(), x + 3, 3, true);
+      }
+
+      paintMarkerDeltas(gc, xAxis, clientArea);
+   }
+
+   /**
+    * Paint delta readouts between adjacent markers (sorted by time). Value delta is shown only when the
+    * chart holds exactly one data series, where it is unambiguous.
+    */
+   private void paintMarkerDeltas(GC gc, IAxis xAxis, Rectangle clientArea)
+   {
+      if (markers.size() < 2)
+         return;
+
+      List<ChartMarker> sorted = new ArrayList<ChartMarker>(markers);
+      sorted.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+
+      List<DataSeries> dataSeries = chart.getDataSeries();
+      DataSeries single = (dataSeries.size() == 1) ? dataSeries.get(0) : null;
+      MeasurementUnit unit = (single != null) ? single.getMeasurementUnit() : null;
+
+      gc.setForeground(ThemeEngine.getForegroundColor("Chart.PlotArea"));
+      for(int i = 1; i < sorted.size(); i++)
+      {
+         ChartMarker m1 = sorted.get(i - 1);
+         ChartMarker m2 = sorted.get(i);
+         int x1 = xAxis.getPixelCoordinate(m1.getTimestamp());
+         int x2 = xAxis.getPixelCoordinate(m2.getTimestamp());
+         if ((x2 < 0) || (x1 > clientArea.width))
+            continue;
+
+         StringBuilder text = new StringBuilder("Δt=").append(formatDuration(m2.getTimestamp() - m1.getTimestamp()));
+         if (single != null)
+         {
+            DciDataRow r1 = findNearestRow(single, m1.getTimestamp());
+            DciDataRow r2 = findNearestRow(single, m2.getTimestamp());
+            if ((r1 != null) && (r2 != null))
+            {
+               double delta = r2.getValueAsDouble() - r1.getValueAsDouble();
+               text.append("  Δ=").append(useMultipliers ? DataFormatter.roundDecimalValue(delta, cachedTickStep, 5, unit) : Double.toString(delta));
+            }
+         }
+
+         Point ext = gc.textExtent(text.toString());
+         gc.drawString(text.toString(), (x1 + x2) / 2 - ext.x / 2, clientArea.height - ext.y - 3, true);
+      }
+   }
+
+   /**
+    * Format duration (given in milliseconds) as a compact human-readable string, e.g. "1d 2h 5m".
+    */
+   private static String formatDuration(long ms)
+   {
+      long seconds = Math.abs(ms) / 1000;
+      long days = seconds / 86400;
+      seconds %= 86400;
+      long hours = seconds / 3600;
+      seconds %= 3600;
+      long minutes = seconds / 60;
+      seconds %= 60;
+
+      StringBuilder sb = new StringBuilder();
+      if (days > 0)
+         sb.append(days).append("d ");
+      if (hours > 0)
+         sb.append(hours).append("h ");
+      if (minutes > 0)
+         sb.append(minutes).append("m ");
+      if ((seconds > 0) || (sb.length() == 0))
+         sb.append(seconds).append("s");
+      return sb.toString().trim();
+   }
+
+   /**
+    * Find marker whose vertical line is within the hit tolerance of the given plot-area X coordinate.
+    *
+    * @param px X coordinate in plot area
+    * @return matching marker or null
+    */
+   private ChartMarker markerAtPixel(int px)
+   {
+      IAxis xAxis = getAxisSet().getXAxis(0);
+      for(ChartMarker m : markers)
+      {
+         if (Math.abs(xAxis.getPixelCoordinate(m.getTimestamp()) - px) <= MARKER_HIT_TOLERANCE)
+            return m;
+      }
+      return null;
+   }
+
+   /**
+    * Get last known cursor X coordinate relative to the plot area, or -1 if outside.
+    */
+   private int cursorXInPlotArea()
+   {
+      if (lastMouseX < 0)
+         return -1;
+      Rectangle clientArea = ((Composite)getPlotArea().getControl()).getClientArea();
+      if ((lastMouseX > clientArea.width) || (lastMouseY < 0) || (lastMouseY > clientArea.height))
+         return -1;
+      return lastMouseX;
+   }
+
+   /**
+    * Get timestamp under the last known cursor position, or Long.MIN_VALUE if cursor is outside plot area.
+    */
+   public long getTimestampAtCursor()
+   {
+      int x = cursorXInPlotArea();
+      return (x < 0) ? Long.MIN_VALUE : (long)getAxisSet().getXAxis(0).getDataCoordinate(x);
+   }
+
+   /**
+    * Get marker under the last known cursor position, or null.
+    */
+   public ChartMarker getMarkerAtCursor()
+   {
+      int x = cursorXInPlotArea();
+      return (x < 0) ? null : markerAtPixel(x);
+   }
+
+   /**
+    * Add a marker at given timestamp with an auto-generated label and the default marker color.
+    *
+    * @param timestamp marker position (milliseconds since epoch)
+    * @return created marker
+    */
+   public ChartMarker addMarker(long timestamp)
+   {
+      RGB color = ThemeEngine.getForegroundColor("Chart.Marker").getRGB();
+      ChartMarker marker = new ChartMarker(timestamp, DateFormatFactory.getDateTimeFormat().format(new Date(timestamp)), color);
+      markers.add(marker);
+      redraw();
+      return marker;
+   }
+
+   /**
+    * Remove given marker.
+    *
+    * @param marker marker to remove
+    */
+   public void removeMarker(ChartMarker marker)
+   {
+      markers.remove(marker);
+      redraw();
+   }
+
+   /**
+    * Remove all markers.
+    */
+   public void clearMarkers()
+   {
+      markers.clear();
+      redraw();
+   }
+
+   /**
+    * @return true if chart has at least one marker
+    */
+   public boolean hasMarkers()
+   {
+      return !markers.isEmpty();
+   }
+
+   /**
+    * Redraw chart after a marker was modified externally (e.g. via properties dialog).
+    */
+   public void markerChanged()
+   {
+      redraw();
    }
 
    /**
