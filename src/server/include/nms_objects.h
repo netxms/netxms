@@ -4570,7 +4570,8 @@ public:
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
-   SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
+   SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false);
+   SNMP_Transport *createSnmpTransportForPoller() { return createSnmpTransport(0, SNMP_VERSION_DEFAULT, nullptr, nullptr, true); }
    SNMP_SecurityContext *getSnmpSecurityContext() const;
    SNMP_SecurityContext *getSnmpTrapSecurityContext() const;
    void reportSnmpTrapAuthFailure(TrapCredentialCheckResult reason, const SNMP_PDU& pdu, const InetAddress& sourceAddress);

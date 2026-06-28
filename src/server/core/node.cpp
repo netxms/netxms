@@ -2734,12 +2734,13 @@ restart_status_poll:
    // Check SNMP agent connectivity
    if ((m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)) && m_ipAddress.isValidUnicast())
    {
+      poller->setStatus(_T("check SNMP"));
+      sendPollerMsg(_T("Checking SNMP agent connectivity\r\n"));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): check SNMP"), m_name);
-      SNMP_Transport *pTransport = createSnmpTransport();
+
+      SNMP_Transport *pTransport = createSnmpTransportForPoller();
       if (pTransport != nullptr)
       {
-         poller->setStatus(_T("check SNMP"));
-         sendPollerMsg(_T("Checking SNMP agent connectivity\r\n"));
          SharedString testOid = getCustomAttribute(_T("snmp.testoid"));
          if (testOid.isEmpty())
          {
@@ -6543,7 +6544,7 @@ bool Node::confPollSnmp()
    AddDriverSpecificOids(&oids);
 
    // Check current SNMP settings first
-   SNMP_Transport *pTransport = createSnmpTransport();
+   SNMP_Transport *pTransport = createSnmpTransportForPoller();
    if ((pTransport != nullptr) && !SnmpTestRequest(pTransport, oids, ConfigReadBoolean(_T("SNMP.Discovery.SeparateProbeRequests"), false)))
    {
       delete_and_null(pTransport);
@@ -12172,9 +12173,11 @@ uint32_t Node::getEffectiveAgentProxy()
 }
 
 /**
- * Create SNMP transport
+ * Create SNMP transport.
+ * If pollerMessageOnFailure is set, an SNMP proxy that is unavailable (missing, down, or with an
+ * unreachable agent) is reported via poller messages at the point of failure.
  */
-SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const char *context, const char *community)
+SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const char *context, const char *community, bool pollerMessageOnFailure)
 {
    if (community != nullptr)
    {
@@ -12228,6 +12231,25 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
             // Use loopback address if node is SNMP proxy for itself
             transport = new SNMP_ProxyTransport(conn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
          }
+         else
+         {
+            if (pollerMessageOnFailure)
+            {
+               if (proxyNode->isDown())
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy %s is down\r\n"), proxyNode->getName());
+               else if (proxyNode->isNativeAgent() && (proxyNode->getState() & NSF_AGENT_UNREACHABLE))
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - agent on SNMP proxy %s is unreachable\r\n"), proxyNode->getName());
+               else
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - cannot establish connection to SNMP proxy %s\r\n"), proxyNode->getName());
+            }
+            nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): cannot acquire connection to SNMP proxy %s [%u]", m_name, m_id, proxyNode->getName(), snmpProxy);
+         }
+      }
+      else
+      {
+         if (pollerMessageOnFailure)
+            sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy node [%u] does not exist\r\n"), snmpProxy);
+         nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): SNMP proxy node [%u] does not exist", m_name, m_id, snmpProxy);
       }
    }
 
@@ -12692,7 +12714,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    if (isSNMPSupported())
    {
       poller->setStatus(_T("reading VLANs"));
-      SNMP_Transport *snmp = createSnmpTransport();
+      SNMP_Transport *snmp = createSnmpTransportForPoller();
       if (snmp != nullptr)
       {
          VlanList *vlanList = m_driver->getVlans(snmp, this, m_driverData);
