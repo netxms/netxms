@@ -206,6 +206,15 @@ bool NXSL_SecurityContext::validateAccess(int subsystem, uint64_t requiredAccess
 }
 
 /**
+ * Get associated user ID. Default implementation always returns 0.
+ */
+uint32_t NXSL_SecurityContext::getUserId() const
+{
+   return 0;
+}
+
+
+/**
  * Constructor
  */
 NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_objectClassData(64), m_objects(64),

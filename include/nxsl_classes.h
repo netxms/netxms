@@ -1009,6 +1009,7 @@ public:
    virtual ~NXSL_SecurityContext();
 
    virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr);
+   virtual uint32_t getUserId() const;
 };
 
 class NXSL_Library;
@@ -1601,6 +1602,10 @@ public:
          return true;
       nxlog_debug_tag(_T("nxsl.security"), 7, _T("NXSL access validation failed (subsystem=%d requiredAccess=") UINT64X_FMT(_T("016")) _T(")"), subsystem, requiredAccess);
       return false;
+   }
+   uint32_t getUserId() const
+   {
+      return (m_securityContext != nullptr) ? m_securityContext->getUserId() : 0;
    }
 
    void setAssertMessage(const TCHAR *msg) { MemFree(m_assertMessage); m_assertMessage = MemCopyString(msg); }

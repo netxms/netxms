@@ -55,6 +55,14 @@ bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAc
 }
 
 /**
+ * Get user ID
+ */
+uint32_t NXSL_UserSecurityContext::getUserId() const
+{
+   return m_userId;
+}
+
+/**
  * Validate access for read-only NXSL scripts (transformation, filter, predicate, analysis).
  */
 bool NXSL_ReadOnlySecurityContext::validateAccess(int subsystem, uint64_t requiredAccess, const void *object)

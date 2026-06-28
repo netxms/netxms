@@ -442,9 +442,8 @@ public:
       m_userId = userId;
    }
 
-   uint32_t getUserId() const { return m_userId; }
-
    virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr) override;
+   virtual uint32_t getUserId() const override;
 };
 
 /**

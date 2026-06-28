@@ -1853,6 +1853,12 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, createDCI)
       retentionType = DC_RETENTION_NONE;
 
    shared_ptr<DataCollectionTarget> target = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, target.get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
    DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[1]->getValueAsCString(),
             origin, dataType, scheduleType,
             ((argc > 4) && argv[4]->isString()) ? argv[4]->getValueAsCString() : nullptr,
@@ -1861,6 +1867,43 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, createDCI)
             target, argv[2]->getValueAsCString());
    target->addDCObject(dci);
    *result = dci->createNXSLObject(vm);
+   return 0;
+}
+
+/**
+ * DataCollectionTarget::deleteDCI() method
+ *
+ * Deletes DCI from this object. DCIs created from a template cannot be deleted this way.
+ * Returns true on success, false on failure (no modify access, template-originated DCI, or owner/DCI already gone).
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, deleteDCI)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   shared_ptr<DataCollectionTarget> target = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, target.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   shared_ptr<DCObject> dci = target->getDCObjectById(argv[0]->getValueAsUInt32(), vm->getUserId());
+   if (dci == nullptr)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   // DCIs created from a template are managed by that template and cannot be deleted directly
+   if (dci->getTemplateId() != 0)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   bool success = target->deleteDCObject(dci->getId(), true, vm->getUserId());
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -1909,6 +1952,7 @@ NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(DataCollectionTarget, applyTemplate, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, createDCI, -1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, deleteDCI, -1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableDataCollection, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableStatusPolling, 1);
@@ -6747,6 +6791,42 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
 }
 
 /**
+ * DCI::delete() method
+ *
+ * Deletes this DCI from its owner. DCIs created from a template cannot be deleted this way.
+ * Returns true on success, false on failure (no modify access, template-originated DCI, or owner/DCI already gone).
+ */
+NXSL_METHOD_DEFINITION(DCI, delete)
+{
+   const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+
+   shared_ptr<DataCollectionTarget> target;
+   shared_ptr<DCObject> dci = ResolveLiveDCObjectFromNXSL(info, &target);
+   if (dci == nullptr)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, target.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   // DCIs created from a template are managed by that template and cannot be deleted directly
+   if (dci->getTemplateId() != 0)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   bool success = target->deleteDCObject(dci->getId(), true, vm->getUserId());
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
  * DCI::forcePoll() method
  */
 NXSL_METHOD_DEFINITION(DCI, forcePoll)
@@ -6959,6 +7039,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
    setName(_T("DCI"));
 
+   NXSL_REGISTER_METHOD(DCI, delete, 0);
    NXSL_REGISTER_METHOD(DCI, detectAnomalies, -1);
    NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
    NXSL_REGISTER_METHOD(DCI, generateAnomalyProfile, 0);
