@@ -124,6 +124,18 @@ public class DciTemplateSelectionWidget extends Composite
    }
 
    /**
+    * Set data collection object type to filter DCIs in the selection dialogs of all pattern fields.
+    *
+    * @param dcObjectType data collection object type (e.g. DataCollectionObject.DCO_TYPE_TABLE), or -1 for any type
+    */
+   public void setDcObjectType(int dcObjectType)
+   {
+      dciNameSelector.setDcObjectType(dcObjectType);
+      dciDescriptionSelector.setDcObjectType(dcObjectType);
+      dciTagSelector.setDcObjectType(dcObjectType);
+   }
+
+   /**
     * Set visibility of the multi-match option.
     *
     * @param visible true to show multi-match option, false to hide

@@ -141,6 +141,7 @@ public class TableValue extends DashboardElementPropertyPage
       templateDciWidget = new DciTemplateSelectionWidget(dialogArea, SWT.NONE);
       templateDciWidget.setConfig(config.getTemplateConfig());
       templateDciWidget.setMultiMatchVisible(false);
+      templateDciWidget.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

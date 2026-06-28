@@ -40,6 +40,7 @@ public class TemplateDciSelector extends AbstractSelector
 
    private Field field = Field.NAME;
    private boolean noValueObject = false;
+   private int dcObjectType = -1;
 
    /**
     * @param parent
@@ -63,6 +64,7 @@ public class TemplateDciSelector extends AbstractSelector
       dlg.setSingleSelection(true);
       dlg.setAllowNoValueObjects(true);
       dlg.setAllowTemplateItems(true);
+      dlg.setDcObjectType(dcObjectType);
       if (dlg.open() == Window.OK)
       {
          List<DciValue> dci = dlg.getSelection();
@@ -119,6 +121,16 @@ public class TemplateDciSelector extends AbstractSelector
    public void setField(Field field)
    {
       this.field = field;
+   }
+
+   /**
+    * Set data collection object type to filter DCIs in selection dialog.
+    *
+    * @param dcObjectType data collection object type (e.g. DataCollectionObject.DCO_TYPE_TABLE), or -1 for any type
+    */
+   public void setDcObjectType(int dcObjectType)
+   {
+      this.dcObjectType = dcObjectType;
    }
 
    /**
