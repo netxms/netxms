@@ -3290,6 +3290,48 @@ NXSL_METHOD_DEFINITION(Node, getBlockedPorts)
 }
 
 /**
+ * Common implementation for Node::traceL2Path and Node::traceRoute methods
+ */
+static int TraceNetworkPath(shared_ptr<NetworkPath> (*traceFunction)(const shared_ptr<Node>&, const shared_ptr<Node>&),
+         NXSL_VM *vm, NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result)
+{
+   if (!arg->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *destObject = arg->getValueAsObject();
+   if (!destObject->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<Node> dest = *static_cast<shared_ptr<Node>*>(destObject->getData());
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, dest.get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   shared_ptr<Node> src = *static_cast<shared_ptr<Node>*>(object->getData());
+   shared_ptr<NetworkPath> path = traceFunction(src, dest);
+   *result = (path != nullptr) ? vm->createValue(vm->createObject(&g_nxslNetworkPathClass, new shared_ptr<NetworkPath>(path))) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::traceL2Path(destination) method
+ */
+NXSL_METHOD_DEFINITION(Node, traceL2Path)
+{
+   return TraceNetworkPath(TraceL2Path, vm, object, argv[0], result);
+}
+
+/**
+ * Node::traceRoute(destination) method
+ */
+NXSL_METHOD_DEFINITION(Node, traceRoute)
+{
+   return TraceNetworkPath(TraceRoute, vm, object, argv[0], result);
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
@@ -3346,6 +3388,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, setSNMPVersion, 1);
    NXSL_REGISTER_METHOD(Node, setSerialNumber, 1);
    NXSL_REGISTER_METHOD(Node, setVendor, 1);
+   NXSL_REGISTER_METHOD(Node, traceL2Path, 1);
+   NXSL_REGISTER_METHOD(Node, traceRoute, 1);
 }
 
 /**
@@ -9386,6 +9430,232 @@ void NXSL_NetworkPathCheckResultClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * Symbolic name for network path element type
+ */
+static const wchar_t *NetworkPathElementTypeName(NetworkPathElementType type)
+{
+   switch(type)
+   {
+      case NetworkPathElementType::ROUTE:
+         return L"ROUTE";
+      case NetworkPathElementType::VPN:
+         return L"VPN";
+      case NetworkPathElementType::PROXY:
+         return L"PROXY";
+      case NetworkPathElementType::DESTINATION:
+         return L"DESTINATION";
+      case NetworkPathElementType::L2_LINK:
+         return L"L2_LINK";
+      default:
+         return L"UNKNOWN";
+   }
+}
+
+/**
+ * NXSL "NetworkPathElement" class
+ */
+NXSL_NetworkPathElementClass::NXSL_NetworkPathElementClass()
+{
+   setName(_T("NetworkPathElement"));
+}
+
+/**
+ * NXSL class NetworkPathElement: get attribute
+ */
+NXSL_Value *NXSL_NetworkPathElementClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto element = static_cast<NetworkPathElement*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
+   {
+      value = vm->createValue(element->ifIndex);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("interface"))
+   {
+      // For ROUTE and L2_LINK hops ifIndex refers to an interface on the hop node
+      if ((element->object != nullptr) && (element->object->getObjectClass() == OBJECT_NODE) && (element->ifIndex != 0) &&
+          ((element->type == NetworkPathElementType::ROUTE) || (element->type == NetworkPathElementType::L2_LINK)))
+      {
+         shared_ptr<Interface> iface = static_cast<Node&>(*element->object).findInterfaceByIndex(element->ifIndex);
+         value = (iface != nullptr) ? iface->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(element->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nextHop"))
+   {
+      if (element->nextHop.isValid())
+      {
+         wchar_t buffer[64];
+         value = vm->createValue(element->nextHop.toString(buffer));
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("node"))
+   {
+      value = (element->object != nullptr) ? element->object->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeId"))
+   {
+      value = vm->createValue((element->object != nullptr) ? element->object->getId() : 0);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("route"))
+   {
+      if (element->route.isValid())
+      {
+         wchar_t buffer[64];
+         value = vm->createValue(element->route.toString(buffer));
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(NetworkPathElementTypeName(element->type));
+   }
+   return value;
+}
+
+/**
+ * Get string representation
+ */
+void NXSL_NetworkPathElementClass::toString(StringBuffer *sb, NXSL_Object *object)
+{
+   auto element = static_cast<NetworkPathElement*>(object->getData());
+
+   sb->append(NetworkPathElementTypeName(element->type));
+   sb->append(L' ');
+   if (element->object != nullptr)
+   {
+      sb->append(element->object->getName());
+      sb->append(L" [");
+      sb->append(element->object->getId());
+      sb->append(L']');
+   }
+
+   switch(element->type)
+   {
+      case NetworkPathElementType::ROUTE:
+         if (element->nextHop.isValid())
+         {
+            wchar_t buffer[64];
+            sb->append(L" ==> ");
+            sb->append(element->nextHop.toString(buffer));
+         }
+         if (element->ifIndex != 0)
+         {
+            sb->append(L" (ifIndex=");
+            sb->append(element->ifIndex);
+            sb->append(L')');
+         }
+         break;
+      case NetworkPathElementType::L2_LINK:
+         if (element->ifIndex != 0)
+         {
+            sb->append(L" (ifIndex=");
+            sb->append(element->ifIndex);
+            sb->append(L')');
+         }
+         break;
+      case NetworkPathElementType::PROXY:
+      case NetworkPathElementType::VPN:
+         if (element->ifIndex != 0)
+         {
+            sb->append(L" via ");
+            sb->append(GetObjectName(element->ifIndex, L"unknown"));
+            sb->append(L" [");
+            sb->append(element->ifIndex);
+            sb->append(L']');
+         }
+         break;
+      default:
+         break;
+   }
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_NetworkPathElementClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<NetworkPathElement*>(object->getData());
+}
+
+/**
+ * NXSL "NetworkPath" class
+ */
+NXSL_NetworkPathClass::NXSL_NetworkPathClass()
+{
+   setName(_T("NetworkPath"));
+}
+
+/**
+ * NXSL class NetworkPath: get attribute
+ */
+NXSL_Value *NXSL_NetworkPathClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto path = static_cast<shared_ptr<NetworkPath>*>(object->getData())->get();
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("hopCount"))
+   {
+      value = vm->createValue(path->getHopCount());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("hops"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(int i = 0; i < path->getHopCount(); i++)
+         array->append(vm->createValue(vm->createObject(&g_nxslNetworkPathElementClass, new NetworkPathElement(*path->getHopInfo(i)))));
+      value = vm->createValue(array);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isComplete"))
+   {
+      value = vm->createValue(path->isComplete());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("sourceAddress"))
+   {
+      if (path->getSourceAddress().isValid())
+      {
+         wchar_t buffer[64];
+         value = vm->createValue(path->getSourceAddress().toString(buffer));
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_NetworkPathClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<shared_ptr<NetworkPath>*>(object->getData());
+}
+
+/**
  * SSHSession::execute(command, [timeout]) method
  */
 NXSL_METHOD_DEFINITION(SSHSession, execute)
@@ -9552,6 +9822,8 @@ NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NetworkMapClass g_nxslNetworkMapClass;
 NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 NXSL_NetworkPathCheckResultClass g_nxslNetworkPathCheckResultClass;
+NXSL_NetworkPathClass g_nxslNetworkPathClass;
+NXSL_NetworkPathElementClass g_nxslNetworkPathElementClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;

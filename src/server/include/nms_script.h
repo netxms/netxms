@@ -708,6 +708,31 @@ public:
 };
 
 /**
+ * NXSL "NetworkPathElement" class (single hop in a traced network path)
+ */
+class NXSL_NetworkPathElementClass : public NXSL_Class
+{
+public:
+   NXSL_NetworkPathElementClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * NXSL "NetworkPath" class (result of L2/L3 path trace)
+ */
+class NXSL_NetworkPathClass : public NXSL_Class
+{
+public:
+   NXSL_NetworkPathClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "SSHSession" class
  */
 class NXSL_SSHSessionClass : public NXSL_Class
@@ -833,6 +858,8 @@ extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NetworkMapClass g_nxslNetworkMapClass;
 extern NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;
 extern NXSL_NetworkPathCheckResultClass g_nxslNetworkPathCheckResultClass;
+extern NXSL_NetworkPathClass g_nxslNetworkPathClass;
+extern NXSL_NetworkPathElementClass g_nxslNetworkPathElementClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
