@@ -66,6 +66,7 @@ private:
    curl_slist *m_headers;
    uint32_t m_timeout;
    bool m_verifyPeer;
+   bool m_urlHasPlaceholders;
    IntegerArray<int> m_successHttpCodes;
    IntegerArray<int> m_retryHttpCodes;
    char m_successJsonPath[1024];
@@ -79,6 +80,7 @@ private:
       m_headers = nullptr;
       m_timeout = 10;
       m_verifyPeer = true;
+      m_urlHasPlaceholders = false;
       m_successJsonPath[0] = 0;
       m_successValue[0] = 0;
    }
@@ -180,6 +182,11 @@ WebhookDriver *WebhookDriver::createInstance(Config *config)
       delete driver;
       return nullptr;
    }
+
+   // A static URL (no placeholders - the common case) lets send() skip the
+   // whole substitution path: no per-send TCHAR->UTF-8 conversions, escaping,
+   // or allocation. Decide once here.
+   driver->m_urlHasPlaceholders = (strstr(driver->m_url, "${") != nullptr);
 
    if (driver->m_templateFile[0] == 0)
    {
@@ -352,7 +359,8 @@ int WebhookDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       return -1;
    }
 
-   char *effectiveUrl = SubstituteUrlPlaceholders(curl, m_url, recipient, subject, body);
+   char *substitutedUrl = m_urlHasPlaceholders ? SubstituteUrlPlaceholders(curl, m_url, recipient, subject, body) : nullptr;
+   char *effectiveUrl = (substitutedUrl != nullptr) ? substitutedUrl : m_url;
    char *requestBody = SubstitutePlaceholdersJSONUtf8(tpl, recipient, subject, body);
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Effective URL: %hs"), effectiveUrl);
@@ -459,7 +467,7 @@ int WebhookDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
    }
 
    curl_easy_cleanup(curl);
-   MemFree(effectiveUrl);
+   MemFree(substitutedUrl);
    MemFree(requestBody);
    MemFree(tpl);
    return result;

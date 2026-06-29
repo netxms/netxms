@@ -2339,7 +2339,7 @@ if test "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel matrix mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms webhook"
+		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel matrix mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio webhook websms"
 		HDLINK_DIRS="$HDLINK_DIRS redmine"
 	else
 		AC_MSG_ERROR(libcurl is required)
