@@ -133,6 +133,43 @@ NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) :
 }
 
 /**
+ * Create NewNodeData from JSON definition (REST API)
+ */
+NewNodeData::NewNodeData(json_t *json, const InetAddress& ipAddress) : ipAddr(ipAddress)
+{
+   ipAddr.setMaskBits(json_object_get_int32(json, "ipNetMask"));
+   creationFlags = json_object_get_uint32(json, "creationFlags");
+   agentPort = static_cast<uint16_t>(json_object_get_uint32(json, "agentPort", AGENT_LISTEN_PORT));
+   snmpPort = static_cast<uint16_t>(json_object_get_uint32(json, "snmpPort", SNMP_DEFAULT_PORT));
+   eipPort = static_cast<uint16_t>(json_object_get_uint32(json, "etherNetIpPort", ETHERNET_IP_DEFAULT_PORT));
+   eipAddress = InetAddress::parse(json_object_get_string(json, "etherNetIpAddress", L"").cstr());
+   modbusTcpPort = static_cast<uint16_t>(json_object_get_uint32(json, "modbusTcpPort", 502));
+   modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(json, "modbusUnitId", 255));
+   wcslcpy(name, json_object_get_string(json, "name", L"").cstr(), MAX_OBJECT_NAME);
+   agentProxyId = json_object_get_uint32(json, "agentProxy");
+   snmpProxyId = json_object_get_uint32(json, "snmpProxy");
+   mqttProxyId = json_object_get_uint32(json, "mqttProxy");
+   modbusProxyId = json_object_get_uint32(json, "modbusProxy");
+   eipProxyId = json_object_get_uint32(json, "etherNetIpProxy");
+   icmpProxyId = json_object_get_uint32(json, "icmpProxy");
+   sshProxyId = json_object_get_uint32(json, "sshProxy");
+   wcslcpy(sshLogin, json_object_get_string(json, "sshLogin", L"").cstr(), MAX_USER_NAME);
+   wcslcpy(sshPassword, json_object_get_string(json, "sshPassword", L"").cstr(), MAX_PASSWORD);
+   sshPort = static_cast<uint16_t>(json_object_get_uint32(json, "sshPort", SSH_PORT));
+   sshKeyId = 0;
+   vncProxyId = json_object_get_uint32(json, "vncProxy");
+   wcslcpy(vncPassword, json_object_get_string(json, "vncPassword", L"").cstr(), MAX_PASSWORD);
+   vncPort = static_cast<uint16_t>(json_object_get_uint32(json, "vncPort", 5900));
+   zoneUIN = json_object_get_int32(json, "zoneUIN");
+   doConfPoll = false;
+   origin = NODE_ORIGIN_MANUAL;
+   agentSecret[0] = 0;
+   snmpSecurity = nullptr;
+   snmpVersion = SNMP_VERSION_2C;
+   webServiceProxyId = json_object_get_uint32(json, "webServiceProxy");
+}
+
+/**
  * Destructor for NewNodeData
  */
 NewNodeData::~NewNodeData()

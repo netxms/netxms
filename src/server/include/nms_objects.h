@@ -883,6 +883,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    NewNodeData(const InetAddress& ipAddress);
    NewNodeData(const InetAddress& ipAddress, const MacAddress& macAddress);
    NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress);
+   NewNodeData(json_t *json, const InetAddress& ipAddress);
    ~NewNodeData();
 };
 
@@ -1765,6 +1766,13 @@ public:
    static int getObjectClassByNameA(const char *name);
    static int getObjectClassByName(const wchar_t *name) { return getObjectClassByNameW(name); }
 };
+
+/**
+ * Create new object from JSON definition (used by REST API). On success returns RCC_SUCCESS
+ * and stores the new object in *newObject. On subnet overlap / IP address conflict the list of
+ * conflicting object identifiers is returned via *conflictList (caller must release it).
+ */
+uint32_t NXCORE_EXPORTABLE CreateObjectFromJSON(json_t *json, GenericClientSession *session, shared_ptr<NetObj> *newObject, json_t **conflictList);
 
 /**
  * Object find functions
@@ -3485,6 +3493,7 @@ protected:
 public:
    Sensor();
    Sensor(const wchar_t *name, const NXCPMessage& request);
+   Sensor(const wchar_t *name, json_t *json);
    Sensor(const wchar_t *name, SensorDeviceClass deviceClass, uint32_t gatewayNodeId, uint16_t modbusUnitId);
    virtual ~Sensor();
 
@@ -3553,6 +3562,7 @@ protected:
 public:
    CloudDomain();
    CloudDomain(const wchar_t *name, const NXCPMessage& request);
+   CloudDomain(const wchar_t *name, json_t *json);
    virtual ~CloudDomain();
 
    shared_ptr<CloudDomain> self() { return static_pointer_cast<CloudDomain>(NObject::self()); }

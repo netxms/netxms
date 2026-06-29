@@ -63,6 +63,41 @@ CloudDomain::CloudDomain(const wchar_t *name, const NXCPMessage& request) : supe
 }
 
 /**
+ * Constructor from JSON definition (REST API)
+ */
+CloudDomain::CloudDomain(const wchar_t *name, json_t *json) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
+{
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
+   m_connectorName = json_object_get_string(json, "connectorName", L"");
+
+   // Credentials may be supplied either as a raw JSON string or as a nested JSON object/array
+   json_t *credentials = json_object_get(json, "credentials");
+   if (json_is_object(credentials) || json_is_array(credentials))
+   {
+      char *text = json_dumps(credentials, JSON_COMPACT);
+      m_credentials = MemCopyStringA(text);
+      free(text);
+   }
+   else if (json_is_string(credentials))
+   {
+      m_credentials = MemCopyStringA(json_string_value(credentials));
+   }
+   else
+   {
+      m_credentials = nullptr;
+   }
+   m_parsedCredentials = nullptr;
+   parseCredentials();
+
+   m_discoveryFilter = json_object_get_string(json, "discoveryFilter", L"");
+   m_removalPolicy = static_cast<int16_t>(json_object_get_int32(json, "removalPolicy"));
+   m_gracePeriod = json_object_get_uint32(json, "gracePeriod", 30);
+   m_lastDiscoveryStatus = 0;
+   m_lastDiscoveryTime = 0;
+   m_status = STATUS_NORMAL;
+}
+
+/**
  * Parse credentials JSON string and cache the result
  */
 void CloudDomain::parseCredentials()

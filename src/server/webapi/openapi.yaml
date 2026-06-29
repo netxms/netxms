@@ -2557,6 +2557,54 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+    post:
+      operationId: createObject
+      summary: Create a new object
+      description: |
+        Create a new object. The caller must have CREATE access on the parent object (or on
+        the entire network when creating a top-level node). The `class` field selects the
+        object type and determines which additional fields are meaningful; fields not relevant
+        to the selected class are ignored. After construction the same document is applied to
+        the new object using merge-patch semantics (see `PATCH /v1/objects/{object-id}`), so
+        common scalar properties such as `comments` and `alias` can be set in the same call.
+        On success the full created object is returned and the `Location` header points to it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectCreationRequest'
+      responses:
+        '201':
+          description: Object created. Response body is the full object representation.
+          headers:
+            Location:
+              description: Relative URL of the created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request, unknown object class, or invalid property value.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: User does not have create access on the parent object, or node count license exceeded.
+        '404':
+          description: Parent object or referenced asset does not exist.
+        '409':
+          description: |
+            Conflict — subnet overlaps an existing subnet, node IP address is already in use,
+            or zone UIN is already taken. For a subnet overlap the response body contains a
+            `conflictingObjects` array with the identifiers of the conflicting objects.
+        '500':
+          description: Object creation failed (internal error).
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}:
     get:
       operationId: getObject
@@ -10585,6 +10633,233 @@ components:
           type: string
           nullable: true
           description: Certificate mapping data (interpretation depends on certificateMappingMethod).
+    ObjectCreationRequest:
+      type: object
+      required:
+        - class
+        - name
+      description: |
+        Object creation document. Common fields apply to every class; the remaining fields are
+        only meaningful for the class indicated by `class` (and are ignored otherwise). Any
+        common scalar property accepted by `PATCH /v1/objects/{object-id}` may also be supplied
+        and is applied to the new object after construction.
+      properties:
+        class:
+          type: string
+          description: Symbolic object class name.
+          enum:
+            - Subnet
+            - Node
+            - Interface
+            - Container
+            - Zone
+            - Template
+            - TemplateGroup
+            - NetworkService
+            - VPNConnector
+            - Condition
+            - Cluster
+            - BusinessServiceProto
+            - Asset
+            - AssetGroup
+            - NetworkMapGroup
+            - NetworkMap
+            - Dashboard
+            - DashboardTemplate
+            - DashboardGroup
+            - BusinessService
+            - Collector
+            - Circuit
+            - MobileDevice
+            - Rack
+            - WirelessDomain
+            - Chassis
+            - Sensor
+            - CloudDomain
+        name:
+          type: string
+          description: Object name.
+        parentId:
+          type: integer
+          description: Parent object ID. Required for all classes except Node (where a parent subnet is resolved automatically from the IP address when omitted).
+        zoneUIN:
+          type: integer
+          description: Zone UIN (when zoning is enabled).
+        comments:
+          type: string
+          description: Free-form object comments.
+        alias:
+          type: string
+          description: Object alias.
+        assetId:
+          type: integer
+          description: Optional ID of an existing asset object to link to the new object.
+        # --- Node ---
+        primaryName:
+          type: string
+          description: (Node) Primary host name. If present it is resolved to the primary IP address.
+        ipAddress:
+          type: string
+          description: (Node/Interface/Subnet) IP address. For a node it is the primary IP address used when no primary name is given.
+        ipNetMask:
+          type: integer
+          description: (Node) Network mask length in bits for the primary IP address.
+        creationFlags:
+          type: integer
+          description: (Node) Bit mask controlling node creation (disable polling protocols, create unmanaged, etc.).
+        agentPort:
+          type: integer
+        snmpPort:
+          type: integer
+        etherNetIpPort:
+          type: integer
+        etherNetIpAddress:
+          type: string
+        modbusTcpPort:
+          type: integer
+        modbusUnitId:
+          type: integer
+          description: (Node/Sensor) Modbus unit ID.
+        sshLogin:
+          type: string
+        sshPassword:
+          type: string
+        sshPort:
+          type: integer
+        vncPassword:
+          type: string
+        vncPort:
+          type: integer
+        agentProxy:
+          type: integer
+        snmpProxy:
+          type: integer
+        mqttProxy:
+          type: integer
+        modbusProxy:
+          type: integer
+        etherNetIpProxy:
+          type: integer
+        icmpProxy:
+          type: integer
+        sshProxy:
+          type: integer
+        vncProxy:
+          type: integer
+        webServiceProxy:
+          type: integer
+        # --- Interface ---
+        ifIndex:
+          type: integer
+          description: (Interface) Interface index.
+        ifType:
+          type: integer
+          description: (Interface) Interface type (IANA ifType).
+        macAddress:
+          type: string
+          description: (Interface/Sensor) MAC address.
+        chassis:
+          type: integer
+          description: (Interface) Physical chassis number.
+        module:
+          type: integer
+          description: (Interface) Physical module number.
+        pic:
+          type: integer
+          description: (Interface) Physical PIC number.
+        port:
+          type: integer
+          description: (Interface) Physical port number.
+        physicalPort:
+          type: boolean
+          description: (Interface) Whether the interface is a physical port.
+        # --- Network service ---
+        serviceType:
+          type: integer
+          description: (NetworkService) Service type.
+        ipProtocol:
+          type: integer
+          description: (NetworkService) IP protocol number (default 6/TCP).
+        ipPort:
+          type: integer
+          description: (NetworkService) Port number.
+        request:
+          type: string
+          description: (NetworkService) Request string sent to the service.
+        response:
+          type: string
+          description: (NetworkService) Expected response string.
+        createStatusDci:
+          type: boolean
+          description: (NetworkService) Create a status DCI on the parent node.
+        # --- Network map ---
+        mapType:
+          type: integer
+          description: (NetworkMap) Map type.
+        mapCanvasType:
+          type: integer
+          description: (NetworkMap) Canvas rendering type.
+        seedObjects:
+          type: array
+          items:
+            type: integer
+          description: (NetworkMap) Seed object IDs.
+        # --- Other class-specific fields ---
+        controllerId:
+          type: integer
+          description: (Chassis) Controller node ID.
+        height:
+          type: integer
+          description: (Rack) Rack height in units.
+        deviceId:
+          type: string
+          description: (MobileDevice) Device identifier.
+        instanceDiscoveryMethod:
+          type: integer
+          description: (BusinessServiceProto) Instance discovery method.
+        flags:
+          type: integer
+          description: (Sensor) Sensor flags.
+        deviceClass:
+          type: integer
+          description: (Sensor) Sensor device class.
+        vendor:
+          type: string
+          description: (Sensor) Vendor name.
+        model:
+          type: string
+          description: (Sensor) Model.
+        serialNumber:
+          type: string
+          description: (Sensor) Serial number.
+        deviceAddress:
+          type: string
+          description: (Sensor) Device address.
+        gatewayNode:
+          type: integer
+          description: (Sensor) Gateway node ID.
+        connectorName:
+          type: string
+          description: (CloudDomain) Cloud connector name.
+        credentials:
+          oneOf:
+            - type: string
+            - type: object
+          description: (CloudDomain) Cloud credentials as a JSON object or raw JSON string.
+        discoveryFilter:
+          type: string
+          description: (CloudDomain) Resource discovery filter.
+        removalPolicy:
+          type: integer
+          description: (CloudDomain) Resource removal policy.
+        gracePeriod:
+          type: integer
+          description: (CloudDomain) Grace period in seconds before removing vanished resources.
+        assetProperties:
+          type: object
+          additionalProperties:
+            type: string
+          description: (Asset) Asset attribute values keyed by attribute name. All mandatory attributes must be present.
     ObjectDetails:
       type: object
       properties:

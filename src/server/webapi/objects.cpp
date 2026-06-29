@@ -208,6 +208,71 @@ int H_Objects(Context *context)
 }
 
 /**
+ * Handler for POST /v1/objects
+ */
+int H_ObjectCreate(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if ((request == nullptr) || !json_is_object(request))
+   {
+      context->setErrorResponse("Request body must be a JSON object");
+      return 400;
+   }
+
+   shared_ptr<NetObj> object;
+   json_t *conflictList = nullptr;
+   uint32_t rcc = CreateObjectFromJSON(request, context, &object, &conflictList);
+   if (rcc != RCC_SUCCESS)
+   {
+      int httpCode;
+      switch(rcc)
+      {
+         case RCC_ACCESS_DENIED:
+         case RCC_LICENSE_VIOLATION:
+            httpCode = 403;
+            break;
+         case RCC_INVALID_OBJECT_ID:
+            httpCode = 404;
+            break;
+         case RCC_SUBNET_OVERLAP:
+         case RCC_IP_ADDRESS_CONFLICT:
+         case RCC_ZONE_ID_ALREADY_IN_USE:
+            httpCode = 409;
+            break;
+         case RCC_OBJECT_CREATION_FAILED:
+            httpCode = 500;
+            break;
+         default:
+            httpCode = 400;
+            break;
+      }
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"H_ObjectCreate: object creation failed with RCC %u", rcc);
+      if (conflictList != nullptr)
+      {
+         json_t *response = json_object();
+         json_object_set_new(response, "error", json_string("Object creation failed due to conflict"));
+         json_object_set_new(response, "conflictingObjects", conflictList);  // ownership transferred
+         context->setResponseData(response);
+         json_decref(response);
+      }
+      else
+      {
+         context->setErrorResponse("Object creation failed");
+      }
+      return httpCode;
+   }
+
+   wchar_t location[256];
+   nx_swprintf(location, 256, L"/v1/objects/%u", object->getId());
+   context->setResponseHeader(L"Location", location);
+
+   json_t *output = object->toJson(true);
+   context->setResponseData(output);
+   json_decref(output);
+   return 201;
+}
+
+/**
  * Handler for /v1/objects/:object-id
  */
 int H_ObjectDetails(Context *context)

@@ -55,6 +55,25 @@ Sensor::Sensor(const wchar_t *name, const NXCPMessage& request) : super(name, Po
 }
 
 /**
+ * Constructor for creating sensor object from JSON definition (REST API)
+ */
+Sensor::Sensor(const wchar_t *name, json_t *json) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
+{
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
+   m_flags = json_object_get_uint32(json, "flags");
+   m_macAddress = MacAddress::parse(json_object_get_string(json, "macAddress", L"").cstr());
+   m_deviceClass = static_cast<SensorDeviceClass>(json_object_get_int32(json, "deviceClass"));
+   m_vendor = json_object_get_string(json, "vendor", L"");
+   m_model = json_object_get_string(json, "model", L"");
+   m_serialNumber = json_object_get_string(json, "serialNumber", L"");
+   m_deviceAddress = json_object_get_string(json, "deviceAddress", L"");
+   m_gatewayNodeId = json_object_get_uint32(json, "gatewayNode");
+   m_modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(json, "modbusUnitId", 255));
+   m_capabilities = 0;
+   m_status = STATUS_NORMAL;
+}
+
+/**
  * Constructor for creating sensor object from scratch
  */
 Sensor::Sensor(const wchar_t *name, SensorDeviceClass deviceClass, uint32_t gatewayNodeId, uint16_t modbusUnitId) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)

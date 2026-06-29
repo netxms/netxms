@@ -135,6 +135,7 @@ int H_ObjectAssetPropertyDelete(Context *context);
 int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
+int H_ObjectCreate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
@@ -506,6 +507,7 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects")
       .GET(H_Objects)
+      .POST(H_ObjectCreate)
       .build();
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)

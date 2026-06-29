@@ -24,6 +24,8 @@
 #include <netxms-regex.h>
 #include <agent_tunnel.h>
 #include <dci_table_creation.h>
+#include <netxms_maps.h>
+#include <asset_management.h>
 
 #if WITH_PRIVATE_EXTENSIONS
 #include <nxlicensing.h>
@@ -2750,4 +2752,386 @@ uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent,
       rcc = RCC_INVALID_ARGUMENT;
    }
    return rcc;
+}
+
+/**
+ * Create new object from JSON definition (used by REST API). Mirrors the logic of
+ * ClientSession::createObject but reads object definition from a JSON document. On success
+ * returns RCC_SUCCESS and stores the new object in *newObject. On subnet overlap the list of
+ * conflicting object identifiers is returned via *conflictList (caller must release it).
+ *
+ * Note: module-provided object classes (pfCreateObject) and the pfValidateObjectCreation hook
+ * are not invoked here because both require an NXCPMessage; only built-in classes are supported.
+ */
+uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, shared_ptr<NetObj> *newObject, json_t **conflictList)
+{
+   *newObject = shared_ptr<NetObj>();
+   if (conflictList != nullptr)
+      *conflictList = nullptr;
+
+   if (!json_is_object(json))
+      return RCC_INVALID_ARGUMENT;
+
+   int objectClass = NetObj::getObjectClassByName(json_object_get_string(json, "class", L"").cstr());
+
+   wchar_t objectName[MAX_OBJECT_NAME];
+   wcslcpy(objectName, json_object_get_string(json, "name", L"").cstr(), MAX_OBJECT_NAME);
+   if (objectName[0] == 0)
+      return RCC_INVALID_OBJECT_NAME;
+
+   int32_t zoneUIN = json_object_get_int32(json, "zoneUIN");
+
+   // Find parent object
+   shared_ptr<NetObj> parent = FindObjectById(json_object_get_uint32(json, "parentId"));
+
+   wchar_t nodePrimaryName[MAX_DNS_NAME] = L"";
+   InetAddress ipAddr;
+   bool parentAlwaysValid = false;
+   if (objectClass == OBJECT_NODE)
+   {
+      if (json_object_get(json, "primaryName") != nullptr)
+      {
+         wcslcpy(nodePrimaryName, json_object_get_string(json, "primaryName", L"").cstr(), MAX_DNS_NAME);
+         ipAddr = ResolveHostName(zoneUIN, nodePrimaryName);
+      }
+      else
+      {
+         ipAddr = InetAddress::parse(json_object_get_string(json, "ipAddress", L"").cstr());
+         ipAddr.toString(nodePrimaryName);
+      }
+      if ((parent == nullptr) && ipAddr.isValidUnicast())
+      {
+         parent = FindSubnetForNode(zoneUIN, ipAddr);
+         parentAlwaysValid = true;
+      }
+   }
+
+   uint32_t assetId = json_object_get_uint32(json, "assetId");
+   shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
+
+   if (((parent == nullptr) && (objectClass != OBJECT_NODE)) || ((assetId != 0) && (asset == nullptr)))
+      return RCC_INVALID_OBJECT_ID;
+
+   // User should have create access to parent object
+   uint32_t userId = session->getUserId();
+   bool hasAccess = (parent != nullptr) ?
+            parent->checkAccessRights(userId, OBJECT_ACCESS_CREATE) :
+            g_entireNetwork->checkAccessRights(userId, OBJECT_ACCESS_CREATE);
+   if (!hasAccess)
+   {
+      session->writeAuditLog(AUDIT_OBJECTS, false, (parent != nullptr) ? parent->getId() : 0, L"Access denied on new object creation");
+      return RCC_ACCESS_DENIED;
+   }
+
+   // Parent object should be of valid type; if asset ID is set then class should be valid target for linking asset
+   if ((!parentAlwaysValid && !IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1)) ||
+       ((assetId != 0) && !IsValidAssetLinkTargetClass(objectClass)))
+      return RCC_INCOMPATIBLE_OPERATION;
+
+   // Check zone
+   if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) && (FindZoneByUIN(zoneUIN) == nullptr))
+      return RCC_INVALID_ZONE_ID;
+
+   // Check if all mandatory asset properties are set and are valid
+   StringMap assetProperties;
+   if (objectClass == OBJECT_ASSET)
+   {
+      json_t *ap = json_object_get(json, "assetProperties");
+      if (json_is_object(ap))
+      {
+         const char *key;
+         json_t *value;
+         json_object_foreach(ap, key, value)
+         {
+            if (json_is_string(value))
+               assetProperties.setPreallocated(WideStringFromUTF8String(key), WideStringFromUTF8String(json_string_value(value)));
+         }
+      }
+      unique_ptr<StringSet> mandatoryAttributes = GetAssetAttributeNames(true);
+      for(const wchar_t *a : *mandatoryAttributes)
+      {
+         if (!assetProperties.contains(a))
+            return RCC_MANDATORY_ATTRIBUTE_MISSING;
+      }
+      for (KeyValuePair<const wchar_t> *entry : assetProperties)
+      {
+         std::pair<uint32_t, String> result = ValidateAssetPropertyValue(entry->key, entry->value);
+         if (result.first != RCC_SUCCESS)
+            return result.first;
+      }
+   }
+
+#if WITH_PRIVATE_EXTENSIONS || (defined(_WIN32) && !defined(WIN32_UNRESTRICTED_BUILD))
+   if ((objectClass == OBJECT_NODE) && !(g_flags & AF_UNLIMITED_NODES) && (g_idxNodeById.size() >= GetMaxAllowedNodeCount()))
+   {
+      // Re-read license keys from the database in case a new license was added at runtime
+      CheckNodeCountRestrictions();
+
+      int maxNodes = GetMaxAllowedNodeCount();
+      int count = 0;
+      g_idxNodeById.forEach(
+         [&count](NetObj *node) -> EnumerationCallbackResult
+         {
+            if (node->getStatus() != STATUS_UNMANAGED)
+               count++;
+            return _CONTINUE;
+         });
+      if (count >= maxNodes)
+         return RCC_LICENSE_VIOLATION;
+   }
+#endif
+
+   // Create new object
+   shared_ptr<NetObj> object;
+   uint32_t nodeCreateRCC = RCC_OBJECT_CREATION_FAILED;
+   switch(objectClass)
+   {
+      case OBJECT_ASSET:
+         object = make_shared<Asset>(objectName, assetProperties);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_ASSETGROUP:
+         object = make_shared<AssetGroup>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_BUSINESSSERVICEPROTO:
+         object = make_shared<BusinessServicePrototype>(objectName, json_object_get_uint32(json, "instanceDiscoveryMethod"));
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_BUSINESSSERVICE:
+         object = make_shared<BusinessService>(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_CHASSIS:
+         object = make_shared<Chassis>(objectName, json_object_get_uint32(json, "controllerId"));
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_CIRCUIT:
+         object = make_shared<Circuit>(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_CLUSTER:
+         object = make_shared<Cluster>(objectName, zoneUIN);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_COLLECTOR:
+         object = make_shared<Collector>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_CONDITION:
+         object = make_shared<ConditionObject>(true);
+         object->setName(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_CONTAINER:
+         object = make_shared<Container>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_DASHBOARD:
+         object = make_shared<Dashboard>(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_DASHBOARDTEMPLATE:
+         object = make_shared<DashboardTemplate>(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_DASHBOARDGROUP:
+         object = make_shared<DashboardGroup>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();
+         break;
+      case OBJECT_INTERFACE:
+         {
+            InterfaceInfo ifInfo(json_object_get_uint32(json, "ifIndex"));
+            wcslcpy(ifInfo.name, objectName, MAX_DB_STRING);
+            InetAddress addr = InetAddress::parse(json_object_get_string(json, "ipAddress", L"").cstr());
+            if (addr.isValidUnicast())
+               ifInfo.ipAddrList.add(addr);
+            ifInfo.type = json_object_get_uint32(json, "ifType", 1);
+            MacAddress mac = MacAddress::parse(json_object_get_string(json, "macAddress", L"").cstr());
+            if (mac.length() == MAC_ADDR_LENGTH)
+               memcpy(ifInfo.macAddr, mac.value(), MAC_ADDR_LENGTH);
+            ifInfo.location.chassis = json_object_get_uint32(json, "chassis");
+            ifInfo.location.module = json_object_get_uint32(json, "module");
+            ifInfo.location.pic = json_object_get_uint32(json, "pic");
+            ifInfo.location.port = json_object_get_uint32(json, "port");
+            ifInfo.isPhysicalPort = json_object_get_boolean(json, "physicalPort");
+            object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
+         }
+         break;
+      case OBJECT_MOBILEDEVICE:
+         {
+            String deviceId = json_object_get_string(json, "deviceId", L"");
+            object = make_shared<MobileDevice>(objectName, deviceId.cstr());
+            NetObjInsert(object, true, false);
+         }
+         break;
+      case OBJECT_SENSOR:
+         object = make_shared<Sensor>(objectName, json);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_CLOUDDOMAIN:
+         object = make_shared<CloudDomain>(objectName, json);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_NETWORKMAP:
+         {
+            IntegerArray<uint32_t> seeds;
+            json_t *seedArray = json_object_get(json, "seedObjects");
+            if (json_is_array(seedArray))
+            {
+               size_t i;
+               json_t *v;
+               json_array_foreach(seedArray, i, v)
+                  seeds.add(static_cast<uint32_t>(json_integer_value_ex(v, 0)));
+            }
+            auto netmap = make_shared<NetworkMap>(json_object_get_int32(json, "mapType"), seeds);
+            netmap->setName(objectName);
+            if (json_object_get(json, "mapCanvasType") != nullptr)
+               netmap->setCanvasType(static_cast<MapCanvasType>(json_object_get_int32(json, "mapCanvasType")));
+            object = netmap;
+            NetObjInsert(object, true, false);
+         }
+         break;
+      case OBJECT_NETWORKMAPGROUP:
+         object = make_shared<NetworkMapGroup>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_NETWORKSERVICE:
+         object = make_shared<NetworkService>(json_object_get_int32(json, "serviceType"),
+                                     static_cast<uint16_t>(json_object_get_uint32(json, "ipProtocol", 6)),
+                                     static_cast<uint16_t>(json_object_get_uint32(json, "ipPort", 80)),
+                                     json_object_get_string_t(json, "request", L""),
+                                     json_object_get_string_t(json, "response", L""),
+                                     static_pointer_cast<Node>(parent));
+         object->setName(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_NODE:
+         {
+            NewNodeData newNodeData(json, ipAddr);
+            if ((parent != nullptr) && (parent->getObjectClass() == OBJECT_CLUSTER))
+               newNodeData.cluster = static_pointer_cast<Cluster>(parent);
+            object = PollNewNode(&newNodeData, &nodeCreateRCC);
+            if (object != nullptr)
+               static_cast<Node&>(*object).setPrimaryHostName(nodePrimaryName);
+         }
+         break;
+      case OBJECT_RACK:
+         object = make_shared<Rack>(objectName, json_object_get_int32(json, "height"));
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_SUBNET:
+         {
+            InetAddress subnetAddr = InetAddress::parse(json_object_get_string(json, "ipAddress", L"").cstr());
+            IntegerArray<uint32_t> conflicts = CheckSubnetOverlap(subnetAddr, zoneUIN);
+            if (conflicts.size() > 0)
+            {
+               if (conflictList != nullptr)
+               {
+                  *conflictList = json_array();
+                  for(int i = 0; i < conflicts.size(); i++)
+                     json_array_append_new(*conflictList, json_integer(conflicts.get(i)));
+               }
+            }
+            else
+            {
+               object = make_shared<Subnet>(objectName, subnetAddr, zoneUIN);
+               NetObjInsert(object, true, false);
+            }
+         }
+         break;
+      case OBJECT_TEMPLATE:
+         object = make_shared<Template>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_TEMPLATEGROUP:
+         object = make_shared<TemplateGroup>(objectName);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
+      case OBJECT_VPNCONNECTOR:
+         object = make_shared<VPNConnector>(true);
+         object->setName(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_WIRELESSDOMAIN:
+         object = make_shared<WirelessDomain>(objectName);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_ZONE:
+         if (zoneUIN == 0)
+            zoneUIN = FindUnusedZoneUIN();
+         if ((zoneUIN > 0) && (zoneUIN != ALL_ZONES) && (FindZoneByUIN(zoneUIN) == nullptr))
+         {
+            object = make_shared<Zone>(zoneUIN, objectName);
+            NetObjInsert(object, true, false);
+         }
+         break;
+      default:
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   if (object == nullptr)
+   {
+      if (objectClass == OBJECT_NODE)
+         return nodeCreateRCC;
+      if (objectClass == OBJECT_ZONE)
+         return RCC_ZONE_ID_ALREADY_IN_USE;
+      if (objectClass == OBJECT_SUBNET)
+         return RCC_SUBNET_OVERLAP;
+      return RCC_OBJECT_CREATION_FAILED;
+   }
+
+   // Bind to parent and apply class-specific post-creation actions
+   if ((parent != nullptr) &&             // parent can be nullptr for nodes
+       (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
+   {
+      NetObj::linkObjects(parent, object);
+      parent->calculateCompoundStatus();
+      if (parent->getObjectClass() == OBJECT_CLUSTER)
+      {
+         static_cast<Cluster&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
+      }
+      else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && json_object_get_boolean(json, "createStatusDci"))
+      {
+         wchar_t dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
+         nx_swprintf(dciName, MAX_DB_STRING, L"ChildStatus(%d)", object->getId());
+         nx_swprintf(dciDescription, MAX_DB_STRING, L"Status of network service %s", object->getName());
+         static_cast<Node&>(*parent).addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+               DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent), dciDescription));
+      }
+      else if (object->getObjectClass() == OBJECT_ASSET)
+      {
+         for (KeyValuePair<const wchar_t> *pair : assetProperties)
+            WriteAssetChangeLog(object->getId(), pair->key, AssetOperation::Create, nullptr, pair->value, userId, 0);
+      }
+   }
+
+   // Apply remaining editable properties (comments, alias, flags, etc.) from the same document.
+   // On failure roll back the freshly created object so creation is all-or-nothing.
+   uint32_t rcc = object->modifyFromJSON(json, session);
+   if (rcc != RCC_SUCCESS)
+   {
+      object->deleteObject();
+      return rcc;
+   }
+
+   json_t *objData = object->toJson();
+   session->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), static_cast<json_t*>(nullptr), objData,
+         L"Object %s created (class %s)", object->getName(), object->getObjectClassName());
+   json_decref(objData);
+
+   if (asset != nullptr)
+      LinkAsset(asset.get(), object.get(), nullptr);
+
+   object->publish();
+   *newObject = object;
+   return RCC_SUCCESS;
 }
