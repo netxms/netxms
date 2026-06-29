@@ -277,6 +277,9 @@ public class TimePeriodCompactSelector extends Composite
                case MINUTE:
                   sb.append(i18n.tr("minute"));
                   break;
+               case WEEK:
+                  sb.append(i18n.tr("week"));
+                  break;
             }
          }
          else if ((p.getTimeRange() == 7) && (p.getTimeUnit() == TimeUnit.DAY))
@@ -296,6 +299,9 @@ public class TimePeriodCompactSelector extends Composite
                   break;
                case MINUTE:
                   sb.append(i18n.tr(" minutes"));
+                  break;
+               case WEEK:
+                  sb.append(i18n.tr(" weeks"));
                   break;
             }
          }

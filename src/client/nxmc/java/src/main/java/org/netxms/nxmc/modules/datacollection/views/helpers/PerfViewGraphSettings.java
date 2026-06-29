@@ -399,6 +399,8 @@ public class PerfViewGraphSettings
             return (long)timeRange * 60L * 60L * 1000L;
          case DAY:
             return (long)timeRange * 24L * 60L * 60L * 1000L;
+         case WEEK:
+            return (long)timeRange * 7L * 24L * 60L * 60L * 1000L;
       }
       return 0;
    }

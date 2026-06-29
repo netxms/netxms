@@ -217,6 +217,8 @@ public class TimePeriod
                return new Date(System.currentTimeMillis() - (long)timeRange * 60L * 60L * 1000L);
             case DAY:
                return new Date(System.currentTimeMillis() - (long)timeRange * 24L * 60L * 60L * 1000L);
+            case WEEK:
+               return new Date(System.currentTimeMillis() - (long)timeRange * 7L * 24L * 60L * 60L * 1000L);
          }
          return new Date();
       }

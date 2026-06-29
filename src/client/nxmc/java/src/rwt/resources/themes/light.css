@@ -2321,6 +2321,12 @@ Label.RoundedLabel {
    padding: 3px 8px;
 }
 
+/* ATM component health tile - rounded box; background is set programmatically to a severity tint */
+Composite.AtmComponentTile {
+   border: 1px solid #d0d0d5;
+   border-radius: 8px;
+}
+
 Button.DashboardEditorButton[PUSH] {
   color: inherit;
   background-color: transparent;

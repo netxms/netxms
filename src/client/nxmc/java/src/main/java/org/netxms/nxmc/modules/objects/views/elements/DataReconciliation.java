@@ -31,8 +31,6 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.ViewRefreshController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -41,8 +39,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DataReconciliation extends TableElement
 {
-   private static final Logger logger = LoggerFactory.getLogger(DataReconciliation.class);
-
    private final I18n i18n = LocalizationHelper.getI18n(DataReconciliation.class);
 
    private ViewRefreshController refreshController;
