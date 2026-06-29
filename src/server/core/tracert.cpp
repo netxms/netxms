@@ -415,7 +415,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
 /**
  * Select best route to given destination from routing table
  */
-const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination)
+const ROUTE NXCORE_EXPORTABLE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination)
 {
    const ROUTE *bestRoute = nullptr;
    for(int i = 0; i < routes.size(); i++)
