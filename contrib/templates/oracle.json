@@ -174,7 +174,7 @@
       "autoBind": {
         "filter": {
           "autoBind": true,
-          "autoUnbind": true,
+          "autoUnbind": false,
           "source": "if (classof($object) != \"Node\")\n   return false;\nif (!$node.isAgent)\n   return false;\nloaded = $node.readAgentParameter(\"Agent.IsSubagentLoaded(ORACLE)\");\nreturn loaded == \"1\";\n"
         },
         "filter2": {
@@ -1260,7 +1260,7 @@
       "autoBind": {
         "filter": {
           "autoBind": true,
-          "autoUnbind": true,
+          "autoUnbind": false,
           "source": "if (classof($object) != \"Node\")\n   return false;\nif (!$node.isAgent)\n   return false;\nif (!($node.platformName like \"Linux-*\"))\n   return false;\ncount = $node.readAgentParameter(\"Process.CountEx(^ora_pmon_)\");\nreturn count != null && count != \"0\";\n"
         },
         "filter2": {
@@ -1538,7 +1538,7 @@
       "autoBind": {
         "filter": {
           "autoBind": true,
-          "autoUnbind": true,
+          "autoUnbind": false,
           "source": "if (classof($object) != \"Node\")\n   return false;\nif (!$node.isAgent)\n   return false;\nif (!($node.platformName like \"windows-*\"))\n   return false;\ncount = $node.readAgentParameter(\"Process.Count(oracle.exe)\");\nreturn count != null && count != \"0\";\n"
         },
         "filter2": {
