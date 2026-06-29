@@ -57,6 +57,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
 import org.netxms.client.asset.AssetAttribute;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.mt.MappingTableDescriptor;
@@ -1825,12 +1828,13 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 			templateViewer.setInput(templates.values().toArray());
 			setModified();
-			new Job(i18n.tr("Resolving event dependencies"), this) {
+			new Job(i18n.tr("Resolving template dependencies"), this) {
 				@Override
 				protected void run(IProgressMonitor monitor) throws Exception
 				{
                final Set<Integer> eventCodes = new HashSet<>();
                final Map<Long, Script> scriptList = new HashMap<>();
+               final Set<Long> mappingTableIds = new HashSet<>();
                Set<String> allMatches = new HashSet<>();
 					for(Long id : idList)
 					{
@@ -1855,7 +1859,27 @@ public class ExportFileBuilder extends ConfigurationView
 	                     }
 						   }
 						}
+
+						DataCollectionConfiguration dcc = session.openDataCollectionConfiguration(id);
+						try
+						{
+						   for(DataCollectionObject dco : dcc.getItems())
+						   {
+						      if (dco instanceof DataCollectionItem)
+						      {
+						         long mappingTableId = ((DataCollectionItem)dco).getMappingTableId();
+						         if (mappingTableId != 0)
+						            mappingTableIds.add(mappingTableId);
+						      }
+						   }
+						}
+						finally
+						{
+						   dcc.close();
+						}
 					}
+
+               final List<MappingTableDescriptor> referencedMappingTables = mappingTableIds.isEmpty() ? null : session.listMappingTables();
                runInUIThread(() -> {
                   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes))
                   {
@@ -1871,6 +1895,16 @@ public class ExportFileBuilder extends ConfigurationView
 
                   scripts.putAll(scriptList);
                   scriptViewer.setInput(scripts.values().toArray());
+
+                  if (referencedMappingTables != null)
+                  {
+                     for(MappingTableDescriptor t : referencedMappingTables)
+                     {
+                        if (mappingTableIds.contains((long)t.getId()))
+                           mappingTables.put(t.getId(), t);
+                     }
+                     mappingTableViewer.setInput(mappingTables.values().toArray());
+                  }
 					});
 				}
 

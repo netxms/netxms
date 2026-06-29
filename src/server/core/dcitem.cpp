@@ -21,7 +21,36 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_mt.h>
 #include <cmath>
+
+/**
+ * Resolve mapping table reference from imported JSON by GUID ("mappingTable"). Returns 0 and logs
+ * a warning when the reference cannot be resolved. The numeric "mappingTableId" is intentionally not
+ * used as a fallback - it is server-local and would risk linking a different table on the target server.
+ */
+static uint32_t ResolveImportedMappingTableId(json_t *json, ImportContext *context)
+{
+   json_t *guidField = json_object_get(json, "mappingTable");
+   if (json_is_string(guidField))
+   {
+      const char *guidText = json_string_value(guidField);
+      uuid guid = uuid::parseA(guidText);
+      uint32_t id = guid.isNull() ? 0 : GetMappingTableId(guid);
+      if (id == 0)
+         context->log(NXLOG_WARNING, _T("ImportConfigFromJson()"),
+            _T("Mapping table %hs referenced by data collection item \"%s\" not found - value mapping left unconfigured"),
+            guidText, json_object_get_string(json, "description", _T("")).cstr());
+      return id;
+   }
+
+   // Configuration exported by an older server references the mapping table only by numeric ID
+   if (json_object_get_uint32(json, "mappingTableId", 0) != 0)
+      context->log(NXLOG_WARNING, _T("ImportConfigFromJson()"),
+         _T("Data collection item \"%s\" references a mapping table by numeric ID without GUID - value mapping left unconfigured"),
+         json_object_get_string(json, "description", _T("")).cstr());
+   return 0;
+}
 
 /**
  * Thread pool for threshold repeat events
@@ -425,7 +454,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    m_sustainedLowStart = 0;
    m_recentAverage = std::nan("");
    m_multiplier = json_object_get_int32(json, "multiplier");
-   m_mappingTableId = json_object_get_uint32(json, "mappingTableId", 0);
+   m_mappingTableId = ResolveImportedMappingTableId(json, context);
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
    m_sampleSaveInterval = json_object_get_int32(json, "sampleSaveInterval", 1);
@@ -437,7 +466,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
 
    String predictionEngine = json_object_get_string(json, "predictionEngine", _T(""));
    _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
-   
+
    m_unitName = json_object_get_string(json, "unitName", _T(""));
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
@@ -2944,7 +2973,7 @@ bool DCItem::isUsingEvent(uint32_t eventCode) const
 json_t *DCItem::createExportRecord() const
 {
    json_t *root = json_object();
-   
+
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "name", json_string_t(m_name));
@@ -2973,6 +3002,12 @@ json_t *DCItem::createExportRecord() const
    json_object_set_new(root, "unitName", json_string_t(m_unitName));
    json_object_set_new(root, "multiplier", json_integer(m_multiplier));
    json_object_set_new(root, "mappingTableId", json_integer(m_mappingTableId));
+   if (m_mappingTableId != 0)
+   {
+      uuid guid = GetMappingTableGuid(m_mappingTableId);
+      if (!guid.isNull())
+         json_object_set_new(root, "mappingTable", json_string_t(guid.toString()));
+   }
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
 
    if (!m_transformationScriptSource.isBlank())
@@ -3232,7 +3267,7 @@ void DCItem::updateFromImport(json_t *json, ImportContext *context)
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
    m_unitName = json_object_get_string(json, "unitName", _T(""));
    m_multiplier = json_object_get_int32(json, "multiplier");
-   m_mappingTableId = json_object_get_uint32(json, "mappingTableId", 0);
+   m_mappingTableId = ResolveImportedMappingTableId(json, context);
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
@@ -3242,7 +3277,7 @@ void DCItem::updateFromImport(json_t *json, ImportContext *context)
          m_thresholds->clear();
       else
          m_thresholds = new ObjectArray<Threshold>(json_array_size(thresholdsArray), 8, Ownership::True);
-         
+
       size_t index;
       json_t *thresholdJson;
       json_array_foreach(thresholdsArray, index, thresholdJson)

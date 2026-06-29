@@ -1346,6 +1346,28 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
          goto cleanup;
    }
 
+   // Import mapping tables before templates so that data collection items can resolve mapping table references by GUID
+   mappingTables = json_object_get(root, "mappingTables");
+   if (json_is_array(mappingTables))
+   {
+      size_t count = json_array_size(mappingTables);
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d mapping tables to import"), (int)count);
+
+      size_t index;
+      json_t *table;
+      json_array_foreach(mappingTables, index, table)
+      {
+         if (json_is_object(table))
+         {
+            if (!ImportMappingTable(table, (flags & CFG_IMPORT_REPLACE_MAPPING_TABLES) != 0, context))
+            {
+               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import mapping table"));
+            }
+         }
+      }
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Mapping tables import completed"));
+   }
+
    // Import templates
    templates = json_object_get(root, "templates");
    if (json_is_array(templates))
@@ -1411,28 +1433,6 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
          }
       }
       context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("DCI summary tables import completed"));
-   }
-
-   // Import mapping tables
-   mappingTables = json_object_get(root, "mappingTables");
-   if (json_is_array(mappingTables))
-   {
-      size_t count = json_array_size(mappingTables);
-      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d mapping tables to import"), (int)count);
-
-      size_t index;
-      json_t *table;
-      json_array_foreach(mappingTables, index, table)
-      {
-         if (json_is_object(table))
-         {
-            if (!ImportMappingTable(table, (flags & CFG_IMPORT_REPLACE_MAPPING_TABLES) != 0, context))
-            {
-               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import mapping table"));
-            }
-         }
-      }
-      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Mapping tables import completed"));
    }
 
    // Import web service definitions

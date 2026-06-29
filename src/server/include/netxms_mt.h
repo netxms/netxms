@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
@@ -105,6 +105,8 @@ uint32_t DeleteMappingTable(uint32_t id, ClientSession *session);
 uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg);
 uint32_t ListMappingTables(NXCPMessage *msg);
 void CreateMappingTableExportRecord(json_t *array, uint32_t id);
+uuid GetMappingTableGuid(uint32_t id);
+uint32_t GetMappingTableId(const uuid& guid);
 bool ImportMappingTable(json_t *config, bool overwrite, ImportContext *context);
 
 #endif

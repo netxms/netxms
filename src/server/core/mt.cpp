@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2025 Victor Kirhenshtein
 **
@@ -696,6 +696,44 @@ void CreateMappingTableExportRecord(json_t *array, uint32_t id)
       }
    }
    s_mappingTablesLock.unlock();
+}
+
+/**
+ * Get GUID of mapping table by ID. Returns null UUID if table not found.
+ */
+uuid GetMappingTableGuid(uint32_t id)
+{
+   uuid guid = uuid::NULL_UUID;
+   s_mappingTablesLock.readLock();
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      if (s_mappingTables.get(i)->getId() == id)
+      {
+         guid = s_mappingTables.get(i)->getGuid();
+         break;
+      }
+   }
+   s_mappingTablesLock.unlock();
+   return guid;
+}
+
+/**
+ * Get ID of mapping table by GUID. Returns 0 if table not found.
+ */
+uint32_t GetMappingTableId(const uuid& guid)
+{
+   uint32_t id = 0;
+   s_mappingTablesLock.readLock();
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      if (s_mappingTables.get(i)->getGuid().equals(guid))
+      {
+         id = s_mappingTables.get(i)->getId();
+         break;
+      }
+   }
+   s_mappingTablesLock.unlock();
+   return id;
 }
 
 /**
