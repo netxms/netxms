@@ -240,15 +240,6 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          }
       });
 
-      ((Composite)plotArea.getControl()).addMouseMoveListener(new MouseMoveListener() {
-         @Override
-         public void mouseMove(MouseEvent e)
-         {
-            lastMouseX = e.x;
-            lastMouseY = e.y;
-         }
-      });
-
 		zoomMouseListener = new MouseListener() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
