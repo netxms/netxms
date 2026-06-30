@@ -23,10 +23,13 @@ SOURCES = \
 	cch.cpp \
 	cert.cpp \
 	config.cpp \
+	crashdump.cpp \
 	crypto.cpp \
 	curl.cpp \
 	debug_tag_tree.cpp \
 	diff.cpp \
+	dir.cpp \
+	dirw.cpp \
 	dload.cpp \
 	geolocation.cpp \
 	getopt.cpp \
@@ -116,8 +119,10 @@ LIBS = -L$(TOPDIR)/src/jansson -lnxjansson \
 	$(SSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(ZLIB_LIBS) \
+	$(EXPAT_LIBS) \
+	$(CURL_LIBS) \
 	$(WIN_LIBS) \
-	-lrpcrt4
+	-lrpcrt4 -lWintrust
 
 # Add cURL if enabled
 ifeq ($(WITH_CURL),1)

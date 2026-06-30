@@ -74,33 +74,35 @@ PREFIX = C:/NetXMS
 # Use forward slashes (/) even on Windows
 # Use $(ARCH) variable to support multiple architectures
 
+SDK_ROOT = C:/SDK-llvm-mingw
+
 # zlib (required)
-ZLIB_ROOT = C:/SDK/zlib
+ZLIB_ROOT = $(SDK_ROOT)/zlib
 
 # OpenSSL (required)
-OPENSSL_ROOT = C:/SDK/OpenSSL/$(ARCH)
+OPENSSL_ROOT = $(SDK_ROOT)/openssl
 
 # PCRE (required for regex support)
-PCRE_ROOT = C:/SDK/PCRE/$(ARCH)
+PCRE_ROOT = $(SDK_ROOT)/pcre
 
 # cURL (optional, for HTTP/REST features)
-CURL_ROOT = C:/SDK/cURL/$(ARCH)
+CURL_ROOT = $(SDK_ROOT)/curl
 
 # libexpat (required for XML parsing)
-EXPAT_ROOT = C:/SDK/libexpat
+EXPAT_ROOT = $(SDK_ROOT)/expat
 
 # libssh (optional, for SSH subagent)
-LIBSSH_ROOT = C:/SDK/libssh/$(ARCH)
+LIBSSH_ROOT = $(SDK_ROOT)/libssh/$(ARCH)
 
 # PostgreSQL client library (optional, for pgsql database driver)
-PGSQL_ROOT = C:/SDK/PostgreSQL/$(ARCH)
+PGSQL_ROOT = $(SDK_ROOT)/PostgreSQL/$(ARCH)
 
 # MySQL/MariaDB client library (optional, for mysql database driver)
-MYSQL_ROOT = C:/SDK/mysql/$(ARCH)
-MARIADB_ROOT = C:/SDK/MariaDB/$(ARCH)
+MYSQL_ROOT = $(SDK_ROOT)/mysql/$(ARCH)
+MARIADB_ROOT = $(SDK_ROOT)/MariaDB/$(ARCH)
 
 # libmosquitto (optional, for MQTT subagent)
-MOSQUITTO_ROOT = C:/SDK/libmosquitto/$(ARCH)
+MOSQUITTO_ROOT = $(SDK_ROOT)/libmosquitto/$(ARCH)
 
 # Python (optional, for Python subagent)
 PYTHON_ROOT = C:/Program Files/Python37
@@ -110,25 +112,25 @@ PYTHON_ROOT = C:/Program Files/Python37
 JAVA_HOME = C:/Program Files/Java/jdk1.8.0_144
 
 # Oracle Instant Client (optional, for Oracle database driver)
-ORACLE_ROOT = C:/SDK/Oracle/instantclient_12_1.$(ARCH)
+ORACLE_ROOT = $(SDK_ROOT)/Oracle/instantclient_12_1.$(ARCH)
 
 # Microsoft SQL Server SDK (optional, for MSSQL database driver)
 MSSQL_SDK = C:/Program Files/Microsoft SQL Server/110/SDK
 
 # IBM Informix SDK (optional, for Informix database driver)
-INFORMIX_ROOT = C:/SDK/Informix/$(ARCH)
+INFORMIX_ROOT = $(SDK_ROOT)/Informix/$(ARCH)
 
 # IBM DB2 SDK (optional, for DB2 database driver)
-DB2_ROOT = C:/SDK/DB2/$(ARCH)
+DB2_ROOT = $(SDK_ROOT)/DB2/$(ARCH)
 
 # Oracle Tuxedo SDK (optional, for Tuxedo subagent)
 TUXEDO_ROOT = C:/Oracle/tuxedo12.2.2.0.0_VS2015
 
 # IBM MQ SDK (optional, for MQ features)
-MQ_ROOT = C:/SDK/IBM-MQ
+MQ_ROOT = $(SDK_ROOT)/IBM-MQ
 
 # Windows Driver Development Kit (optional, for low-level drivers)
-WINDDK_ROOT = C:/SDK/WINDDK
+WINDDK_ROOT = $(SDK_ROOT)/WINDDK
 
 #####################################################################
 # Optional Features
@@ -159,10 +161,10 @@ WITH_CURL = 1                # cURL support (for HTTP features)
 # Common Library Paths
 #####################################################################
 
-COMMON_LIBDIRS = -L$(OPENSSL_ROOT)/lib \
-                 -L$(PCRE_ROOT)/lib \
+COMMON_LIBDIRS = -L$(OPENSSL_ROOT)/lib/$(ARCH) \
+                 -L$(PCRE_ROOT)/lib/$(ARCH) \
                  -L$(ZLIB_ROOT)/lib/$(ARCH) \
-                 -L$(CURL_ROOT)/lib \
+                 -L$(CURL_ROOT)/lib/$(ARCH) \
                  -L$(EXPAT_ROOT)/lib/$(ARCH)
 
 #####################################################################
@@ -248,13 +250,13 @@ WIN_LIBS = -lws2_32 \
 SSL_LIBS = -lssl -lcrypto
 
 # PCRE library
-PCRE_LIBS = -lpcre
+PCRE_LIBS = -lpcre -lpcre16
 
 # cURL library
 CURL_LIBS = -lcurl
 
 # Compression libraries
-ZLIB_LIBS = -lzlib
+ZLIB_LIBS = -lz
 
 # XML parsing library
 EXPAT_LIBS = -lexpat
