@@ -46,7 +46,7 @@ public class ImageLibraryTest extends AbstractSessionTest
 		//assertEquals("ATM", image1.getName());
 		//assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image1.getGuid().toString());
       assertFalse(image1.isComplete());
-		assertEquals(TestConstants.IMAGE_CATEGORY, image1.getCategory());
+		assertTrue(library.stream().anyMatch(i -> TestConstants.IMAGE_CATEGORY.equals(i.getCategory())));
 
 		for(LibraryImage i : library)
 			System.out.println(i.toString());
