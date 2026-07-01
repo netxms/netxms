@@ -1,8 +1,20 @@
-# Windows-only sources are excluded from the UNIX build, so they have no entry
-# in compile_commands.json and cannot be parsed without the Win32 SDK headers.
-# Suppress all clangd diagnostics for them to avoid bogus errors in editors.
+# Platform-specific sources not built on this host have no entry in
+# compile_commands.json and cannot be parsed without their target SDK headers
+# (Win32) or on a foreign OS. Suppress all clangd diagnostics for them to avoid
+# bogus errors in editors.
 If:
   PathMatch:
+    # Non-Linux Unix platform subagents (built only on their target OS)
+    - src/agent/subagents/aix/.*
+    - src/agent/subagents/darwin/.*
+    - src/agent/subagents/freebsd/.*
+    - src/agent/subagents/netbsd/.*
+    - src/agent/subagents/openbsd/.*
+    - src/agent/subagents/sunos/.*
+    # Per-platform SMBIOS sources (#included into one TU, not compiled directly)
+    - src/agent/smbios/freebsd\.cpp
+    - src/agent/smbios/linux\.cpp
+    - src/agent/smbios/solaris\.cpp
     # Windows-only components
     - src/agent/nxuseragent/.*
     - src/agent/subagents/winnt/.*
@@ -37,5 +49,66 @@ If:
 CompileFlags:
   # Prevent "too many errors emitted" fatal, which cannot be suppressed
   Add: [-ferror-limit=0]
+Diagnostics:
+  Suppress: '*'
+
+---
+# Third-party, generated, and out-of-tree sources have no entry in
+# compile_commands.json. clangd would parse them with guessed flags and report
+# bogus errors. Unlike first-party code, these are never meant to be linted in
+# this tree, so all diagnostics are suppressed.
+If:
+  PathMatch:
+    # Private / closed-source modules (built from a separate source tree)
+    - private/.*
+    # Eclipse workspace metadata
+    - eclipse\.cpp/.*
+    # Bundled third-party libraries
+    - src/jansson/.*
+    - src/libargon2/.*
+    - src/libpng/.*
+    - src/sqlite/.*
+    # Generated sources (protobuf, bison/flex output)
+    - .*/generated/.*
+    - .*\.tab\.(c|cpp)
+    - .*/lex\..*\.(c|cpp)
+Diagnostics:
+  Suppress: '*'
+
+---
+# Optional components that are not built in this configuration because their
+# external dependency (DB client library, JDK, libpython, libvirt, librrd, ...)
+# is not installed here. They have no compile command, so clangd would guess
+# flags and report bogus errors. Install the dependency and reconfigure to lint
+# any of these; until then, suppress their diagnostics.
+If:
+  PathMatch:
+    # Documentation example (never compiled)
+    - doc/misc/embedded_nxcp\.c
+    # Database drivers (libnxdb backends)
+    - src/db/dbdrv/db2/.*
+    - src/db/dbdrv/informix/.*
+    - src/db/dbdrv/mssql/.*
+    - src/db/dbdrv/mysql/.*
+    - src/db/dbdrv/odbc/.*
+    # Dependency-gated subagents
+    - src/agent/subagents/db2/.*
+    - src/agent/subagents/informix/.*
+    - src/agent/subagents/redis/.*
+    - src/agent/subagents/java/.*
+    - src/agent/subagents/python/.*
+    - src/agent/subagents/vmgr/.*
+    - src/agent/subagents/xen/.*
+    - src/agent/subagents/rpi/.*
+    # Language bridge libraries
+    - src/libnxjava/.*
+    - src/libnxpython/.*
+    # RRDtool performance-data storage driver
+    - src/server/pdsdrv/rrdtool/.*
+    # Flow collector (NetFlow/IPFIX) - not built in this configuration
+    - src/flow-collector/.*
+    # JDK-gated C++ launchers for the Java client tools (need --with-jdk)
+    - src/client/nxmc/nxmc\.cpp
+    - src/client/nxshell/nxshell\.cpp
 Diagnostics:
   Suppress: '*'
