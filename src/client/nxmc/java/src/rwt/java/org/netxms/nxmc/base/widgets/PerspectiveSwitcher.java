@@ -30,11 +30,13 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
@@ -77,6 +79,9 @@ public class PerspectiveSwitcher extends Composite
    private List<PerspectiveItemComposite> allItems = new ArrayList<>();
    private PerspectiveItemComposite pinboardItem;
 
+   private Color backgroundColor;
+   private Color selectionBackground;
+
    /**
     * Create perspective switcher.
     *
@@ -91,7 +96,11 @@ public class PerspectiveSwitcher extends Composite
       this.switchCallback = switchCallback;
       this.expanded = PreferenceStore.getInstance().getAsBoolean("PerspectiveSwitcher.Expanded", true);
 
+      backgroundColor = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherBackground());
+      selectionBackground = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherSelectionBackground());
+
       setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+      setBackground(backgroundColor);
 
       buildSections(perspectives);
 
@@ -102,6 +111,11 @@ public class PerspectiveSwitcher extends Composite
       setLayout(layout);
 
       createContent();
+
+      addDisposeListener((e) -> {
+         backgroundColor.dispose();
+         selectionBackground.dispose();
+      });
    }
 
    /**
@@ -151,6 +165,7 @@ public class PerspectiveSwitcher extends Composite
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(false);
       scroller.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+      scroller.setBackground(backgroundColor);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, expanded ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COLLAPSED);
 
       scrollContent = new Composite(scroller, SWT.NONE);
@@ -161,6 +176,7 @@ public class PerspectiveSwitcher extends Composite
       scrollLayout.verticalSpacing = 0;
       scrollContent.setLayout(scrollLayout);
       scrollContent.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+      scrollContent.setBackground(backgroundColor);
 
       boolean firstSection = true;
       for(String sectionName : sectionOrder)
@@ -172,6 +188,7 @@ public class PerspectiveSwitcher extends Composite
             // Spacing between sections (replaces section header)
             Label spacer = new Label(scrollContent, SWT.NONE);
             spacer.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+            spacer.setBackground(backgroundColor);
             GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
             gd.heightHint = SECTION_SPACING;
             spacer.setLayoutData(gd);
@@ -208,6 +225,7 @@ public class PerspectiveSwitcher extends Composite
       bottomArea.setLayout(bottomLayout);
       bottomArea.setLayoutData(new GridData(SWT.FILL, SWT.END, true, false));
       bottomArea.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+      bottomArea.setBackground(backgroundColor);
 
       if (pinboardPerspective != null)
       {
@@ -224,6 +242,7 @@ public class PerspectiveSwitcher extends Composite
       toggleButton.setLayout(toggleLayout);
       toggleButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       toggleButton.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+      toggleButton.setBackground(backgroundColor);
 
       Label toggleLabel = new Label(toggleButton, SWT.CENTER);
       toggleLabel.setText(expanded ? "«" : "»");
@@ -350,6 +369,7 @@ public class PerspectiveSwitcher extends Composite
          this.perspective = perspective;
 
          setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcher");
+         setBackground(backgroundColor);
 
          GridLayout layout = new GridLayout();
          layout.marginWidth = HIGHLIGHT_MARGIN_H;
@@ -453,12 +473,14 @@ public class PerspectiveSwitcher extends Composite
          if (selected)
          {
             highlight.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemSelected");
+            highlight.setBackground(selectionBackground);
             if (textLabel != null)
                textLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemTextSelected");
          }
          else
          {
             highlight.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItem");
+            highlight.setBackground(null);
             if (textLabel != null)
                textLabel.setData(RWT.CUSTOM_VARIANT, "PerspectiveSwitcherItemText");
          }

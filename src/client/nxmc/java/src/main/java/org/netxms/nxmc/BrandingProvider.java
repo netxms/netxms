@@ -86,6 +86,27 @@ public interface BrandingProvider
     */
    public RGB getAppHeaderBackground();
 
+   /**
+    * Get background color for perspective switcher. If not defined, the application header background color is used, so that the
+    * switcher visually matches a branded header.
+    *
+    * @return background color for perspective switcher or null to use default
+    */
+   default RGB getPerspectiveSwitcherBackground()
+   {
+      return null;
+   }
+
+   /**
+    * Get background color for selected item in perspective switcher.
+    *
+    * @return selection background color for perspective switcher or null to use default
+    */
+   default RGB getPerspectiveSwitcherSelectionBackground()
+   {
+      return null;
+   }
+
 	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)
 	 * 

@@ -39,6 +39,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
@@ -107,9 +108,9 @@ public class PerspectiveSwitcher extends Composite
       this.switchCallback = switchCallback;
       this.expanded = PreferenceStore.getInstance().getAsBoolean("PerspectiveSwitcher.Expanded", true);
 
-      backgroundColor = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher");
+      backgroundColor = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherBackground());
       foregroundColor = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher");
-      selectionBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Selection");
+      selectionBackground = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherSelectionBackground());
       selectionForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.Selection");
       hoverBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Hover");
       sectionHeaderForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.SectionHeader");
@@ -130,6 +131,8 @@ public class PerspectiveSwitcher extends Composite
       addDisposeListener((e) -> {
          itemFont.dispose();
          toggleFont.dispose();
+         backgroundColor.dispose();
+         selectionBackground.dispose();
       });
    }
 
