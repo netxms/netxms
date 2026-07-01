@@ -5,9 +5,9 @@
 
 # Note: Variables are exported from top-level Makefile.w32
 
-# Target
-TARGET = libnxdb.dll
-IMPLIB = libnxdb.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/libnxdb.dll
+IMPLIB = $(LIB_DIR)/libnxdb.dll.a
 
 # Source files
 SOURCES = \
@@ -34,8 +34,8 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-shared \
 	-Wl,--out-implib,$(IMPLIB)
 
-# Libraries
-LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS)
+LIBS = -lnetxms -lnxjansson \
 	$(WIN_LIBS)
 
 # Targets
@@ -44,6 +44,7 @@ LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

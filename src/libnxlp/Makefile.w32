@@ -5,9 +5,9 @@
 
 # Note: Variables are exported from top-level Makefile.w32
 
-# Target
-TARGET = libnxlp.dll
-IMPLIB = libnxlp.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/libnxlp.dll
+IMPLIB = $(LIB_DIR)/libnxlp.dll.a
 
 # Source files (Windows build includes vss.cpp and wevt.cpp)
 SOURCES = \
@@ -34,12 +34,14 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-shared \
 	-Wl,--out-implib,$(IMPLIB)
 
-# Libraries (includes VSS libraries for Windows Event Log support)
-LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS; includes VSS libraries for Windows Event Log support)
+LIBS = -lnetxms \
 	$(PCRE_LIBS) \
+	$(EXPAT_LIBS) \
 	$(WIN_LIBS) \
 	-lvssapi \
-	-lwevtapi
+	-lwevtapi \
+	-luuid
 
 # Targets
 .PHONY: all clean install
@@ -47,6 +49,7 @@ LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

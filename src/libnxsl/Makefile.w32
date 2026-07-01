@@ -5,9 +5,9 @@
 
 # Note: Variables are exported from top-level Makefile.w32
 
-# Target
-TARGET = libnxsl.dll
-IMPLIB = libnxsl.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/libnxsl.dll
+IMPLIB = $(LIB_DIR)/libnxsl.dll.a
 
 # Source files (Windows build)
 # Note: lex.parser.cpp and parser.tab.cpp are pre-generated from parser.l and parser.y
@@ -61,8 +61,8 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-shared \
 	-Wl,--out-implib,$(IMPLIB)
 
-# Libraries
-LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS)
+LIBS = -lnetxms -lnxjansson \
 	$(PCRE_LIBS) \
 	$(WIN_LIBS)
 
@@ -72,6 +72,7 @@ LIBS = -L$(TOPDIR)/src/libnetxms -lnetxms \
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

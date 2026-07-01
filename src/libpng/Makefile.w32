@@ -5,9 +5,9 @@
 
 # Note: Variables are exported from top-level Makefile.w32
 
-# Target
-TARGET = nxpng.dll
-IMPLIB = nxpng.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/nxpng.dll
+IMPLIB = $(LIB_DIR)/nxpng.dll.a
 
 # Source files
 SOURCES = \
@@ -58,6 +58,7 @@ LIBS = $(ZLIB_LIBS) -lm
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

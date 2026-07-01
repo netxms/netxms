@@ -23,7 +23,19 @@
 
 #include "libnxlp.h"
 #include <winevt.h>
+#if __has_include(<winmeta.h>)
 #include <winmeta.h>
+#else
+// Some MinGW toolchains (e.g. llvm-mingw) do not ship winmeta.h.
+// Define the few constants used below with their standard Windows SDK values.
+#define WINEVENT_LEVEL_CRITICAL        0x1
+#define WINEVENT_LEVEL_ERROR           0x2
+#define WINEVENT_LEVEL_WARNING         0x3
+#define WINEVENT_LEVEL_INFO            0x4
+#define WINEVENT_LEVEL_VERBOSE         0x5
+#define WINEVENT_KEYWORD_AUDIT_SUCCESS 0x0020000000000000ULL
+#define WINEVENT_KEYWORD_AUDIT_FAILURE 0x0010000000000000ULL
+#endif
 
 /**
  * Log metadata property
@@ -166,6 +178,13 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	BOOL success;
 	TCHAR publisherName[MAX_PATH];
 
+   // Declared before the first "goto cleanup" so the jump does not bypass their initialization
+   PEVT_VARIANT values;
+   DWORD eventId = 0;
+   DWORD level = 0;
+   uint64_t recordId = 0;
+   StringList *variables = nullptr;
+
 	// Create render context for event values - we need provider name,
 	// event id, and severity level
 	static PCWSTR eventProperties[] =
@@ -199,7 +218,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
 	// Publisher name
-	PEVT_VARIANT values = PEVT_VARIANT(renderBuffer);
+	values = PEVT_VARIANT(renderBuffer);
 	if ((values[0].Type == EvtVarTypeString) && (values[0].StringVal != NULL))
 	{
 #ifdef UNICODE
@@ -215,12 +234,10 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
 	// Event id
-	DWORD eventId = 0;
 	if (values[1].Type == EvtVarTypeUInt16)
 		eventId = values[1].UInt16Val;
 
 	// Severity level
-	DWORD level = 0;
 	if (values[2].Type == EvtVarTypeByte)
 	{
 		switch(values[2].ByteVal)
@@ -251,7 +268,6 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		level = EVENTLOG_AUDIT_FAILURE;
 
    // Record ID
-   uint64_t recordId = 0;
    if ((values[4].Type == EvtVarTypeUInt64) || (values[4].Type == EvtVarTypeInt64))
       recordId = values[4].UInt64Val;
    else if ((values[4].Type == EvtVarTypeUInt32) || (values[4].Type == EvtVarTypeInt32))
@@ -321,7 +337,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       }
 	}
 
-   StringList *variables = ExtractVariables(event);
+   variables = ExtractVariables(event);
 #ifdef UNICODE
    static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables, recordId, 0, timestamp);
 #else

@@ -7,9 +7,9 @@
 # If building standalone, define TOPDIR first:
 #   make -f Makefile.w32 TOPDIR=../..
 
-# Target
-TARGET = nxjansson.dll
-IMPLIB = nxjansson.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/nxjansson.dll
+IMPLIB = $(LIB_DIR)/nxjansson.dll.a
 
 # Source files
 SOURCES = \
@@ -48,6 +48,7 @@ LIBS = -lm
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

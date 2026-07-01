@@ -5,9 +5,9 @@
 
 # Note: Variables are exported from top-level Makefile.w32
 
-# Target
-TARGET = libnetxms.dll
-IMPLIB = libnetxms.dll.a
+# Target (emitted into the centralized output directories)
+TARGET = $(BIN_DIR)/libnetxms.dll
+IMPLIB = $(LIB_DIR)/libnetxms.dll.a
 
 # Source files (Windows build)
 SOURCES = \
@@ -114,8 +114,8 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-shared \
 	-Wl,--out-implib,$(IMPLIB)
 
-# Libraries
-LIBS = -L$(TOPDIR)/src/jansson -lnxjansson \
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS)
+LIBS = -lnxjansson \
 	$(SSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(ZLIB_LIBS) \
@@ -135,6 +135,7 @@ endif
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR) $(LIB_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 	@echo "  Built: $(TARGET)"

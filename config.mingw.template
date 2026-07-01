@@ -161,7 +161,8 @@ WITH_CURL = 1                # cURL support (for HTTP features)
 # Common Library Paths
 #####################################################################
 
-COMMON_LIBDIRS = -L$(OPENSSL_ROOT)/lib/$(ARCH) \
+COMMON_LIBDIRS = -L$(LIB_DIR) \
+                 -L$(OPENSSL_ROOT)/lib/$(ARCH) \
                  -L$(PCRE_ROOT)/lib/$(ARCH) \
                  -L$(ZLIB_ROOT)/lib/$(ARCH) \
                  -L$(CURL_ROOT)/lib/$(ARCH) \
