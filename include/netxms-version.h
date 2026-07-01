@@ -28,8 +28,8 @@
 /**
  * Version constants 
  */
-#define NETXMS_VERSION_MAJOR        6
-#define NETXMS_VERSION_MINOR        2
+#define NETXMS_VERSION_MAJOR        7
+#define NETXMS_VERSION_MINOR        0
 #define NETXMS_VERSION_RELEASE      0
 
 #ifdef UNICODE
