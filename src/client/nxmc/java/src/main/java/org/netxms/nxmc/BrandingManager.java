@@ -167,8 +167,48 @@ public final class BrandingManager
       return ThemeEngine.getBackgroundColorDefinition("Window.Header");
    }
 
+   /**
+    * Get perspective switcher background. Uses explicit branding override if provided, otherwise falls back to the application
+    * header background so that the switcher matches a branded header.
+    *
+    * @return perspective switcher background
+    */
+   public static RGB getPerspectiveSwitcherBackground()
+   {
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getPerspectiveSwitcherBackground();
+         if (color != null)
+            return color;
+      }
+      // No explicit switcher color - follow a branded header if one is set, otherwise use theme
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getAppHeaderBackground();
+         if (color != null)
+            return color;
+      }
+      return ThemeEngine.getBackgroundColorDefinition("Window.PerspectiveSwitcher");
+   }
+
+   /**
+    * Get perspective switcher selection (active item) background.
+    *
+    * @return perspective switcher selection background
+    */
+   public static RGB getPerspectiveSwitcherSelectionBackground()
+   {
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getPerspectiveSwitcherSelectionBackground();
+         if (color != null)
+            return color;
+      }
+      return ThemeEngine.getBackgroundColorDefinition("Window.PerspectiveSwitcher.Selection");
+   }
+
 	/**
-	 * Get default perspective ID. 
+	 * Get default perspective ID.
 	 * 
 	 * @return default perspective ID or null if no branding provider defines one.
 	 */
