@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -139,39 +139,39 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    struct tm *st = (attr.value[0] != '?') ? &(static_cast<DateTime*>(object->getData())->data) : nullptr;
    if (compareAttributeName(attr, "second") || compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
-      value = vm->createValue((LONG)st->tm_sec);
+      value = vm->createValue(st->tm_sec);
    }
    else if (compareAttributeName(attr, "minute") || compareAttributeName(attr, "min") || compareAttributeName(attr, "tm_min"))
    {
-      value = vm->createValue((LONG)st->tm_min);
+      value = vm->createValue(st->tm_min);
    }
    else if (compareAttributeName(attr, "hour") || compareAttributeName(attr, "tm_hour"))
    {
-      value = vm->createValue((LONG)st->tm_hour);
+      value = vm->createValue(st->tm_hour);
    }
    else if (compareAttributeName(attr, "day") || compareAttributeName(attr, "mday") || compareAttributeName(attr, "tm_mday"))
    {
-      value = vm->createValue((LONG)st->tm_mday);
+      value = vm->createValue(st->tm_mday);
    }
    else if (compareAttributeName(attr, "month") || compareAttributeName(attr, "mon") || compareAttributeName(attr, "tm_mon"))
    {
-      value = vm->createValue((LONG)st->tm_mon);
+      value = vm->createValue(st->tm_mon);
    }
    else if (compareAttributeName(attr, "year") || compareAttributeName(attr, "tm_year"))
    {
-      value = vm->createValue((LONG)(st->tm_year + 1900));
+      value = vm->createValue(st->tm_year + 1900);
    }
    else if (compareAttributeName(attr, "dayOfYear") || compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
-      value = vm->createValue((LONG)st->tm_yday);
+      value = vm->createValue(st->tm_yday);
    }
    else if (compareAttributeName(attr, "dayOfWeek") || compareAttributeName(attr, "wday") || compareAttributeName(attr, "tm_wday"))
    {
-      value = vm->createValue((LONG)st->tm_wday);
+      value = vm->createValue(st->tm_wday);
    }
    else if (compareAttributeName(attr, "isDST") || compareAttributeName(attr, "isdst") || compareAttributeName(attr, "tm_isdst"))
    {
-      value = vm->createValue((LONG)st->tm_isdst);
+      value = vm->createValue(st->tm_isdst);
    }
    else if (compareAttributeName(attr, "isUTC"))
    {

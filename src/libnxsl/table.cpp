@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -194,7 +194,7 @@ NXSL_METHOD_DEFINITION(Table, getColumnIndex)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = vm->createValue((LONG)static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnIndex(argv[0]->getValueAsCString()));
+   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnIndex(argv[0]->getValueAsCString()));
    return NXSL_ERR_SUCCESS;
 }
 
@@ -356,7 +356,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    Table *table = (object->getData() != nullptr) ? static_cast<shared_ptr<Table>*>(object->getData())->get() : nullptr;
    if (NXSL_COMPARE_ATTRIBUTE_NAME("columnCount"))
    {
-      value = vm->createValue((LONG)table->getNumColumns());
+      value = vm->createValue(table->getNumColumns());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("columns"))
    {
@@ -394,7 +394,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("rowCount"))
    {
-      value = vm->createValue((LONG)table->getNumRows());
+      value = vm->createValue(table->getNumRows());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("rows"))
    {

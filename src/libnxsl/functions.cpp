@@ -391,7 +391,7 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   *result = (argc == 0) ? vm->createValue((LONG)0) : vm->createValue(argv[0]);
+   *result = (argc == 0) ? vm->createValue(static_cast<int32_t>(0)) : vm->createValue(argv[0]);
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
 
