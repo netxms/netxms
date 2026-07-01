@@ -39,8 +39,8 @@ private:
    char *m_postUrl;
    char *m_statusUrl;
    char m_token[64];
-   TCHAR *m_footer;
-   TCHAR m_color[16];
+   char *m_footer;
+   char m_color[16];
    uint32_t m_flags;
    StringMap m_channels;
 
@@ -58,8 +58,10 @@ private:
       strcat(m_statusUrl, "api/v4/users/me");
 
       strlcpy(m_token, token, 64);
-      m_footer = MemCopyString(footer);
-      _tcslcpy(m_color, color, 16);
+      m_footer = UTF8StringFromTString(footer);
+      char *color8 = UTF8StringFromTString(color);
+      strlcpy(m_color, color8, 16);
+      MemFree(color8);
    }
 
 public:
@@ -70,7 +72,7 @@ public:
       MemFree(m_footer);
    }
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    virtual bool checkHealth() override;
 
@@ -142,62 +144,81 @@ MattermostDriver *MattermostDriver::createInstance(Config *config)
 }
 
 /**
+ * Append UTF-8 text to request being built
+ */
+static inline void AppendText(ByteStream& request, const char *text)
+{
+   request.write(text, strlen(text));
+}
+
+/**
  * Send notification
  */
-int MattermostDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int MattermostDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   // Attempt to lookup channel alias
-   const TCHAR *channelId = m_channels.get(recipient);
-   if (channelId == nullptr)
-      channelId = recipient;
+   // Attempt to lookup channel alias (channel mappings are stored as wide strings)
+   TCHAR *key = TStringFromUTF8String(recipient);
+   const TCHAR *alias = m_channels.get(key);
+   char *channelId = (alias != nullptr) ? UTF8StringFromTString(alias) : MemCopyStringA(recipient);
+   MemFree(key);
 
-   String jsubject = EscapeStringForJSON(subject);
-   String jbody = EscapeStringForJSON(body);
+   char *jsubject = EscapeStringForJSONUtf8(subject);
+   char *jbody = EscapeStringForJSONUtf8(body);
 
-   StringBuffer request(_T("{ \"channel_id\":\""));
-   request.append(channelId);
-   request.append(_T("\", "));
+   ByteStream request(4096);
+   AppendText(request, "{ \"channel_id\":\"");
+   AppendText(request, channelId);
+   AppendText(request, "\", ");
    if (m_flags & MM_USE_ATTACHMENTS)
    {
-      request.append(_T("\"message\":\"\", \"props\":{ \"attachments\": [{ \"fallback\":\""));
-      if (jsubject.isEmpty())
+      AppendText(request, "\"message\":\"\", \"props\":{ \"attachments\": [{ \"fallback\":\"");
+      if (jsubject[0] == 0)
       {
-         request.append(jbody);
+         AppendText(request, jbody);
       }
       else
       {
-         request.append(jsubject);
-         request.append(_T("\", \"title\":\""));
-         request.append(jsubject);
+         AppendText(request, jsubject);
+         AppendText(request, "\", \"title\":\"");
+         AppendText(request, jsubject);
       }
-      request.append(_T("\", \"text\":\""));
-      request.append(jbody);
-      request.append(_T("\""));
+      AppendText(request, "\", \"text\":\"");
+      AppendText(request, jbody);
+      AppendText(request, "\"");
       if (m_color[0] != 0)
       {
-         request.append(_T(", \"color\":\""));
-         request.append(m_color);
-         request.append(_T("\""));
+         AppendText(request, ", \"color\":\"");
+         AppendText(request, m_color);
+         AppendText(request, "\"");
       }
       if (m_footer[0] != 0)
       {
-         request.append(_T(", \"footer\":\""));
-         request.append(EscapeStringForJSON(m_footer));
-         request.append(_T("\""));
+         AppendText(request, ", \"footer\":\"");
+         char *jfooter = EscapeStringForJSONUtf8(m_footer);
+         AppendText(request, jfooter);
+         MemFree(jfooter);
+         AppendText(request, "\"");
       }
-      request.append(_T("}]}"));
+      AppendText(request, "}]}");
    }
    else
    {
-      request.append(_T("\"message\":\""));
-      request.append(jsubject);
-      if (!jsubject.isEmpty() && !jbody.isEmpty())
-         request.append(_T("\\n\\n"));
-      request.append(jbody);
-      request.append(_T("\""));
+      AppendText(request, "\"message\":\"");
+      AppendText(request, jsubject);
+      if ((jsubject[0] != 0) && (jbody[0] != 0))
+         AppendText(request, "\\n\\n");
+      AppendText(request, jbody);
+      AppendText(request, "\"");
    }
-   request.append(_T(" }"));
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
+   AppendText(request, " }");
+   request.write('\0');
+
+   MemFree(channelId);
+   MemFree(jsubject);
+   MemFree(jbody);
+
+   const char *json = reinterpret_cast<const char*>(request.buffer());
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %hs"), json);
 
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -225,7 +246,6 @@ int MattermostDriver::send(const TCHAR *recipient, const TCHAR *subject, const T
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-   char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
 
    struct curl_slist *headers = nullptr;
@@ -274,7 +294,6 @@ int MattermostDriver::send(const TCHAR *recipient, const TCHAR *subject, const T
 
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   MemFree(json);
    return result;
 }
 

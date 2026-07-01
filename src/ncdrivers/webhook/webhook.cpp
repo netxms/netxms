@@ -92,7 +92,7 @@ public:
          curl_slist_free_all(m_headers);
    }
 
-   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static WebhookDriver *createInstance(Config *config);
 };
@@ -273,17 +273,11 @@ WebhookDriver *WebhookDriver::createInstance(Config *config)
  *
  * Returns a heap-allocated, null-terminated UTF-8 buffer (caller MemFree).
  */
-static char *SubstituteUrlPlaceholders(CURL *curl, const char *urlTemplate, const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+static char *SubstituteUrlPlaceholders(CURL *curl, const char *urlTemplate, const char *recipient, const char *subject, const char *body)
 {
-   char *utf8r = UTF8StringFromTString(recipient);
-   char *utf8s = UTF8StringFromTString(subject);
-   char *utf8b = UTF8StringFromTString(body);
-   char *recipientRepl = curl_easy_escape(curl, utf8r, 0);
-   char *subjectRepl = curl_easy_escape(curl, utf8s, 0);
-   char *bodyRepl = curl_easy_escape(curl, utf8b, 0);
-   MemFree(utf8r);
-   MemFree(utf8s);
-   MemFree(utf8b);
+   char *recipientRepl = curl_easy_escape(curl, CHECK_NULL_EX_A(recipient), 0);
+   char *subjectRepl = curl_easy_escape(curl, CHECK_NULL_EX_A(subject), 0);
+   char *bodyRepl = curl_easy_escape(curl, CHECK_NULL_EX_A(body), 0);
 
    char *result = SubstitutePlaceholders(urlTemplate, recipientRepl, subjectRepl, bodyRepl);
 
@@ -340,7 +334,7 @@ static char *JsonValueToUtf8(json_t *node)
  * Returns 0 on success, 10 to request a retry (retryable HTTP code, or
  * success code with a JSON-path value mismatch), and -1 on hard failure.
  */
-int WebhookDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int WebhookDriver::send(const char *recipient, const char *subject, const char *body)
 {
    // Reload template from disk on every send so edits take effect without
    // restarting the channel (sends are infrequent; the read is cheap).

@@ -39,7 +39,7 @@ private:
 public:
    NXAgentDriver(Config *config);
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -71,9 +71,12 @@ NXAgentDriver::NXAgentDriver(Config *config)
 /**
  * Send SMS
  */
-int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int NXAgentDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
+
+   WCHAR *wideRecipient = WideStringFromUTF8String(recipient);
+   WCHAR *wideBody = WideStringFromUTF8String(body);
 
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
@@ -104,8 +107,8 @@ int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
          if (conn->connect(serverKey, &rcc))
          {
             StringList list;
-            list.add(recipient);
-            list.add(body);
+            list.add(wideRecipient);
+            list.add(wideBody);
             rcc = conn->executeCommand(_T("SMS.Send"), list);
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
             switch (rcc)
@@ -126,6 +129,9 @@ int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
          }
       }
 	}
+
+   MemFree(wideRecipient);
+   MemFree(wideBody);
    return result;
 }
 

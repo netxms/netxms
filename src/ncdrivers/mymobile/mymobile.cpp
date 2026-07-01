@@ -38,7 +38,7 @@ private:
 
 public:
    MyMobileDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -105,11 +105,11 @@ static bool ParseResponse(const char *xml)
 /**
  * Send SMS
  */
-int MyMobileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int MyMobileDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", body=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", body=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != nullptr)
@@ -132,17 +132,8 @@ int MyMobileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
       responseData.setAllocationStep(32768);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-#ifdef UNICODE
-      char *mbphone = MBStringFromWideString(recipient);
-      char *mbmsg = MBStringFromWideString(body);
-      char *phone = curl_easy_escape(curl, mbphone, 0);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      MemFree(mbphone);
-      MemFree(mbmsg);
-#else
       char *phone = curl_easy_escape(curl, recipient, 0);
       char *msg = curl_easy_escape(curl, body, 0);
-#endif
 
       char url[4096];
       snprintf(url, 4096, "http://www.mymobileapi.com/api5/http5.aspx?Type=sendparam&username=%s&password=%s&numto=%s&data1=%s",

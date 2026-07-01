@@ -120,29 +120,29 @@ public:
    NCDriverServerStorageManager(const wchar_t *channelName) : NCDriverStorageManager() { wcslcpy(m_channelName, channelName, MAX_OBJECT_NAME); }
    virtual ~NCDriverServerStorageManager() { }
 
-   virtual wchar_t *get(const TCHAR *key) override;
-   virtual StringMap *getAll() override;
-   virtual void set(const wchar_t *key, const wchar_t *value) override;
-   virtual void clear(const wchar_t *key) override;
+   virtual char *get(const char *key) override;
+   virtual void getAll(std::function<void (const char*, const char*)> callback) override;
+   virtual void set(const char *key, const char *value) override;
+   virtual void clear(const char *key) override;
 };
 
 /**
  * Get value for given key
  */
-TCHAR *NCDriverServerStorageManager::get(const wchar_t *key)
+char *NCDriverServerStorageManager::get(const char *key)
 {
-   TCHAR *value = nullptr;
+   char *value = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_value FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT entry_value FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, key, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
-            value = DBGetField(hResult, 0, 0, nullptr, 0);
+            value = DBGetFieldUTF8(hResult, 0, 0, nullptr, 0);
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -152,11 +152,10 @@ TCHAR *NCDriverServerStorageManager::get(const wchar_t *key)
 }
 
 /**
- * Get all keys for this channel
+ * Enumerate all entries for this channel
  */
-StringMap *NCDriverServerStorageManager::getAll()
+void NCDriverServerStorageManager::getAll(std::function<void (const char*, const char*)> callback)
 {
-   StringMap *values = new StringMap();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT entry_name,entry_value FROM nc_persistent_storage WHERE channel_name=?");
    if (hStmt != nullptr)
@@ -168,38 +167,32 @@ StringMap *NCDriverServerStorageManager::getAll()
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            wchar_t *key = DBGetField(hResult, i, 0, nullptr, 0);
-            wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+            char *key = DBGetFieldUTF8(hResult, i, 0, nullptr, 0);
+            char *value = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
             if ((key != nullptr) && (value != nullptr))
-            {
-               values->setPreallocated(key, value);
-            }
-            else
-            {
-               MemFree(key);
-               MemFree(value);
-            }
+               callback(key, value);
+            MemFree(key);
+            MemFree(value);
          }
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   return values;
 }
 
 /**
  * Set value for given key
  */
-void NCDriverServerStorageManager::set(const wchar_t *key, const wchar_t *value)
+void NCDriverServerStorageManager::set(const char *key, const char *value)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT entry_name FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?");
    if (hStmt != nullptr)
    {
       bool update = false;
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, key, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -210,13 +203,13 @@ void NCDriverServerStorageManager::set(const wchar_t *key, const wchar_t *value)
 
       hStmt = DBPrepare(hdb,
                update ?
-                        _T("UPDATE nc_persistent_storage SET entry_value=? WHERE channel_name=? AND entry_name=?") :
-                        _T("INSERT INTO nc_persistent_storage (entry_value,channel_name,entry_name) VALUES (?,?,?)"));
+                        L"UPDATE nc_persistent_storage SET entry_value=? WHERE channel_name=? AND entry_name=?" :
+                        L"INSERT INTO nc_persistent_storage (entry_value,channel_name,entry_name) VALUES (?,?,?)");
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, value, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, key, DB_BIND_STATIC);
          DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -227,14 +220,14 @@ void NCDriverServerStorageManager::set(const wchar_t *key, const wchar_t *value)
 /**
  * Delete given key
  */
-void NCDriverServerStorageManager::clear(const wchar_t *key)
+void NCDriverServerStorageManager::clear(const char *key)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, key, DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -677,6 +670,11 @@ void NotificationChannel::workerThread()
       m_messageCount++;
       m_lastMessageTime = time(nullptr);
 
+      // Driver interface uses UTF-8, convert message once before send attempts
+      char *recipientUtf8 = UTF8StringFromWideString(notification->getRecipient());
+      char *subjectUtf8 = UTF8StringFromWideString(notification->getSubject());
+      char *bodyUtf8 = UTF8StringFromWideString(notification->getBody());
+
       int retryCount = ConfigReadInt(L"NotificationChannels.MaxRetryCount", 30);
       while (true)
       {
@@ -691,7 +689,7 @@ void NotificationChannel::workerThread()
          else if (m_driver != nullptr)
          {
             // External driver
-            result = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
+            result = m_driver->send(recipientUtf8, subjectUtf8, bodyUtf8);
          }
          else
          {
@@ -739,6 +737,9 @@ void NotificationChannel::workerThread()
             break;
          }
       }
+      MemFree(recipientUtf8);
+      MemFree(subjectUtf8);
+      MemFree(bodyUtf8);
       delete notification;
    }
    nxlog_debug_tag(DEBUG_TAG, 2, L"Worker thread for channel \"%s\" stopped", m_name);

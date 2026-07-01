@@ -39,7 +39,7 @@ private:
    char m_sid[128];
    char m_token[128];
    char m_callerId[128];
-   TCHAR m_voice[128];
+   char m_voice[128];
    bool m_useTTS;
    bool m_verifyPeer;
 
@@ -54,7 +54,7 @@ private:
    }
 
 public:
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static TwilioDriver *createInstance(Config *config);
 };
@@ -94,7 +94,9 @@ TwilioDriver *TwilioDriver::createInstance(Config *config)
    strcpy(driver->m_callerId, callerId);
    strcpy(driver->m_sid, sid);
    strcpy(driver->m_token, token);
-   _tcslcpy(driver->m_voice, voice, 128);
+   char *utf8voice = UTF8StringFromTString(voice);
+   strlcpy(driver->m_voice, utf8voice, 128);
+   MemFree(utf8voice);
    driver->m_useTTS = (flags & 1) ? true : false;
    driver->m_verifyPeer = (flags & 2) ? true : false;
 
@@ -103,20 +105,54 @@ TwilioDriver *TwilioDriver::createInstance(Config *config)
 }
 
 /**
- * Convert provided string to UTF8 and URLencode it
+ * Escape string for XML. Returns dynamically allocated UTF-8 string (empty string for null input).
  */
-static inline char *URLEncode(CURL *curl, const TCHAR *s)
+static char *EscapeStringForXMLUtf8(const char *s)
 {
-   char *utf8s = UTF8StringFromTString(s);
-   char *es = curl_easy_escape(curl, utf8s, 0);
-   MemFree(utf8s);
-   return es;
+   if (s == nullptr)
+      return MemCopyStringA("");
+   char *xs = MemAllocStringA(strlen(s) * 6 + 1);
+   char *out = xs;
+   for(const char *p = s; *p != 0; p++)
+   {
+      switch(*p)
+      {
+         case '&':
+            memcpy(out, "&amp;", 5);
+            out += 5;
+            break;
+         case '<':
+            memcpy(out, "&lt;", 4);
+            out += 4;
+            break;
+         case '>':
+            memcpy(out, "&gt;", 4);
+            out += 4;
+            break;
+         case '"':
+            memcpy(out, "&quot;", 6);
+            out += 6;
+            break;
+         case '\'':
+            memcpy(out, "&apos;", 6);
+            out += 6;
+            break;
+         default:
+            if (static_cast<unsigned char>(*p) < 32)
+               out += snprintf(out, 7, "&#x%02X;", *p);
+            else
+               *out++ = *p;
+            break;
+      }
+   }
+   *out = 0;
+   return xs;
 }
 
 /**
  * Send notification
  */
-int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int TwilioDriver::send(const char *recipient, const char *subject, const char *body)
 {
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -149,33 +185,28 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
    strlcat(request, s, 8192);
    curl_free(s);
    strlcat(request, "&To=", 8192);
-   s = URLEncode(curl, recipient);
+   s = curl_easy_escape(curl, recipient, 0);
    strlcat(request, s, 8192);
    curl_free(s);
    if (m_useTTS)
    {
       strlcat(request, "&Twiml=", 8192);
-      StringBuffer payload = _T("<Response><Say");
+      char *xbody = EscapeStringForXMLUtf8(body);
+      char *payload = MemAllocStringA(strlen(xbody) + strlen(m_voice) + 64);
       if (m_voice[0] != 0)
-      {
-         payload.append(_T(" voice=\""));
-         payload.append(m_voice);
-         payload.append(_T("\">"));
-      }
+         sprintf(payload, "<Response><Say voice=\"%s\">%s</Say></Response>", m_voice, xbody);
       else
-      {
-         payload.append(_T(">"));
-      }
-      payload.append(EscapeStringForXML2(body));
-      payload.append(_T("</Say></Response>"));
-      s = URLEncode(curl, payload);
+         sprintf(payload, "<Response><Say>%s</Say></Response>", xbody);
+      MemFree(xbody);
+      s = curl_easy_escape(curl, payload, 0);
+      MemFree(payload);
       strlcat(request, s, 8192);
       curl_free(s);
    }
    else
    {
       strlcat(request, "&Body=", 8192);
-      s = URLEncode(curl, body);
+      s = curl_easy_escape(curl, body, 0);
       strlcat(request, s, 8192);
       curl_free(s);
    }

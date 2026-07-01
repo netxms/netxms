@@ -41,16 +41,18 @@ class MicrosoftTeamsDriver : public NCDriver
 private:
    uint32_t m_flags;
    StringMap m_channels;
-   TCHAR m_themeColor[8];
+   char m_themeColor[8];
 
    MicrosoftTeamsDriver(uint32_t flags, const TCHAR *themeColor) : NCDriver()
    {
       m_flags = flags;
-      _tcslcpy(m_themeColor, themeColor, 8);
+      char *color8 = UTF8StringFromTString(themeColor);
+      strlcpy(m_themeColor, color8, 8);
+      MemFree(color8);
    }
 
 public:
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static MicrosoftTeamsDriver *createInstance(Config *config);
 };
@@ -94,54 +96,71 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 }
 
 /**
+ * Append UTF-8 text to request being built
+ */
+static inline void AppendText(ByteStream& request, const char *text)
+{
+   request.write(text, strlen(text));
+}
+
+/**
  * Send notification
  */
-int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int MicrosoftTeamsDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   String jsubject = EscapeStringForJSON(subject);
-   String jbody = EscapeStringForJSON(body);
+   char *jsubject = EscapeStringForJSONUtf8(subject);
+   char *jbody = EscapeStringForJSONUtf8(body);
 
-   StringBuffer request(_T("{ "));
+   ByteStream request(4096);
+   AppendText(request, "{ ");
    if (m_flags & MST_USE_CARDS)
    {
-      request.append(_T("\"@type\":\"MessageCard\", \"@context\":\"https://schema.org/extensions\", \"themeColor\":\""));
-      request.append(m_themeColor);
-      request.append(_T("\", \"summary\":\""));
-      if (jsubject.isEmpty())
+      AppendText(request, "\"@type\":\"MessageCard\", \"@context\":\"https://schema.org/extensions\", \"themeColor\":\"");
+      AppendText(request, m_themeColor);
+      AppendText(request, "\", \"summary\":\"");
+      if (jsubject[0] == 0)
       {
-         request.append(jbody);
+         AppendText(request, jbody);
       }
       else
       {
-         request.append(jsubject);
-         request.append(_T("\", \"title\":\""));
-         request.append(jsubject);
+         AppendText(request, jsubject);
+         AppendText(request, "\", \"title\":\"");
+         AppendText(request, jsubject);
       }
-      request.append(_T("\", \"text\":\""));
-      request.append(jbody);
-      request.append(_T("\""));
+      AppendText(request, "\", \"text\":\"");
+      AppendText(request, jbody);
+      AppendText(request, "\"");
    }
    else
    {
-      request.append(_T("\"text\":\""));
-      request.append(jsubject);
-      if (!jsubject.isEmpty() && !jbody.isEmpty())
-         request.append(_T("\\n\\n"));
-      request.append(jbody);
-      request.append(_T("\""));
+      AppendText(request, "\"text\":\"");
+      AppendText(request, jsubject);
+      if ((jsubject[0] != 0) && (jbody[0] != 0))
+         AppendText(request, "\\n\\n");
+      AppendText(request, jbody);
+      AppendText(request, "\"");
    }
-   request.append(_T(" }"));
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
+   AppendText(request, " }");
+   request.write('\0');
 
-   // Attempt to lookup URL alias
-   const TCHAR *url = m_channels.get(recipient);
-   if (url == nullptr)
-      url = recipient;
+   MemFree(jsubject);
+   MemFree(jbody);
+
+   const char *json = reinterpret_cast<const char*>(request.buffer());
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %hs"), json);
+
+   // Attempt to lookup URL alias (channel mappings are stored as wide strings)
+   TCHAR *key = TStringFromUTF8String(recipient);
+   const TCHAR *alias = m_channels.get(key);
+   char *url = (alias != nullptr) ? UTF8StringFromTString(alias) : MemCopyStringA(recipient);
+   MemFree(key);
 
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      MemFree(url);
       return -1;
    }
 
@@ -164,7 +183,6 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-   char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
 
    struct curl_slist *headers = nullptr;
@@ -176,14 +194,7 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
 
    int result = 0;
 
-   char utf8url[256];
-#ifdef UNICODE
-   wchar_to_utf8(url, -1, utf8url, 256);
-#else
-   mb_to_utf8(url, -1, utf8url, 256);
-#endif
-
-   if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) != CURLE_OK)
+   if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       result = -1;
@@ -237,7 +248,7 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
 
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   MemFree(json);
+   MemFree(url);
    return result;
 }
 

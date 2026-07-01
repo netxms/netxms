@@ -41,7 +41,7 @@ private:
    GoogleChatDriver() { }
 
 public:
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static GoogleChatDriver *createInstance(Config *config);
 };
@@ -69,21 +69,35 @@ GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
 }
 
 /**
+ * Append UTF-8 text to request being built
+ */
+static inline void AppendText(ByteStream& request, const char *text)
+{
+   request.write(text, strlen(text));
+}
+
+/**
  * Send notification
  */
-int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int GoogleChatDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   String jsubject = EscapeStringForJSON(subject);
-   String jbody = EscapeStringForJSON(body);
+   char *jsubject = EscapeStringForJSONUtf8(subject);
+   char *jbody = EscapeStringForJSONUtf8(body);
 
-   StringBuffer request(_T("{ \"text\":\""));
-   request.append(jsubject);
-   if (!jsubject.isEmpty() && !jbody.isEmpty())
-      request.append(_T("\\n\\n"));
-   request.append(jbody);
-   request.append(_T("\" }"));
+   ByteStream request(4096);
+   AppendText(request, "{ \"text\":\"");
+   AppendText(request, jsubject);
+   if ((jsubject[0] != 0) && (jbody[0] != 0))
+      AppendText(request, "\\n\\n");
+   AppendText(request, jbody);
+   AppendText(request, "\" }");
+   request.write('\0');
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
+   MemFree(jsubject);
+   MemFree(jbody);
+
+   const char *json = reinterpret_cast<const char*>(request.buffer());
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %hs"), json);
 
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -107,7 +121,6 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);
 
    struct curl_slist *headers = nullptr;
-   char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -117,18 +130,13 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
 
    int result = -1;
 
-   // Attempt to lookup URL alias
-   const TCHAR *url = m_rooms.get(recipient);
-   if (url == nullptr)
-      url = recipient;
+   // Attempt to lookup URL alias (room mappings are stored as wide strings)
+   TCHAR *key = TStringFromUTF8String(recipient);
+   const TCHAR *alias = m_rooms.get(key);
+   char *url = (alias != nullptr) ? UTF8StringFromTString(alias) : MemCopyStringA(recipient);
+   MemFree(key);
 
-   char utf8url[256];
-#ifdef UNICODE
-   wchar_to_utf8(url, -1, utf8url, 256);
-#else
-   mb_to_utf8(url, -1, utf8url, 256);
-#endif
-   if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) == CURLE_OK)
+   if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
    {
       CURLcode rc = curl_easy_perform(curl);
       if (rc == CURLE_OK)
@@ -158,7 +166,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    }
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
-   MemFree(json);
+   MemFree(url);
    return result;
 }
 

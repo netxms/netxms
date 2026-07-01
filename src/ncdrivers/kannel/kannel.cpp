@@ -40,7 +40,7 @@ private:
 
 public:
    KannelDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -70,11 +70,11 @@ KannelDriver::KannelDriver(Config *config)
 /**
  * Send SMS
  */
-int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int KannelDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", text=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != nullptr)
@@ -97,18 +97,9 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       ByteStream *data = new ByteStream();
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
 
-      bool intlPrefix = (recipient[0] == _T('+'));
-#ifdef UNICODE
-      char *utf8phone = UTF8StringFromWideString(intlPrefix ? &recipient[1] : recipient);
-      char *utf8msg = UTF8StringFromWideString(body);
-#else
-      char *utf8phone = UTF8StringFromMBString(intlPrefix ? &recipient[1] : recipient);
-      char *utf8msg = UTF8StringFromMBString(body);
-#endif
-      char *phone = curl_easy_escape(curl, utf8phone, 0);
-      char *msg = curl_easy_escape(curl, utf8msg, 0);
-      MemFree(utf8phone);
-      MemFree(utf8msg);
+      bool intlPrefix = (recipient[0] == '+');
+      char *phone = curl_easy_escape(curl, intlPrefix ? &recipient[1] : recipient, 0);
+      char *msg = curl_easy_escape(curl, body, 0);
 
       char url[4096];
       snprintf(url, 4096, "http://%s:%d/cgi-bin/sendsms?username=%s&password=%s&to=%s%s&text=%s",

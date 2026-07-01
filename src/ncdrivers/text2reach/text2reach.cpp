@@ -40,7 +40,7 @@ private:
 
 public:
    Text2ReachDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -90,11 +90,11 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 /**
  * Send SMS
  */
-int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int Text2ReachDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", text=\"%hs\""), recipient, body);
 	
    char errorBuffer[CURL_ERROR_SIZE];
    CURL *curl = curl_easy_init();
@@ -114,19 +114,8 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
       responseData.setAllocationStep(32768);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-#ifdef UNICODE
-      char *mbphone = MBStringFromWideString(recipient);
-      char *mbmsg = UTF8StringFromWideString(body);
-      char *phone = curl_easy_escape(curl, mbphone, 0);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
-#else
       char *phone = curl_easy_escape(curl, recipient, 0);
-      char *mbmsg = UTF8StringFromMBString(body);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbmsg);
-#endif
+      char *msg = curl_easy_escape(curl, body, 0);
 
       char url[4096];
       snprintf(url, 4096, "http://www.text2reach.com/api/1.1/sms/bulk/?api_key=%s&phone=%s&from=%s&message=%s&unicode=%s&blacklist=%s",

@@ -45,20 +45,20 @@ char *SubstitutePlaceholders(const char *tpl, const char *recipientRepl, const c
 
 /**
  * Substitute ${recipient}, ${subject}, ${body} placeholders in the request
- * body template, replacing each with its JSON-escaped (EscapeStringForJSON)
- * value. Unknown tokens are left literal so user typos are visible.
+ * body template, replacing each with its JSON-escaped value. Unknown tokens
+ * are left literal so user typos are visible. A null value is treated as an
+ * empty string.
  *
  * The template is the raw UTF-8 byte string loaded from disk
- * (LoadFileAsUTF8String). Substitution runs directly over those bytes -
- * placeholder names are pure ASCII, so scanning for the ASCII bytes "${...}"
- * inside a UTF-8 stream is safe regardless of any multi-byte sequences
- * elsewhere in the template. Replacement values are JSON-escaped and emitted
- * as UTF-8 bytes, so the result is ready for CURLOPT_POSTFIELDS without any
- * extra re-encoding round-trip.
+ * (LoadFileAsUTF8String) and the values are UTF-8. Substitution runs directly
+ * over those bytes - placeholder names and JSON escapes are pure ASCII, so
+ * scanning and escaping byte-by-byte is safe regardless of any multi-byte
+ * sequences in the data, and the result is ready for CURLOPT_POSTFIELDS
+ * without any re-encoding round-trip.
  *
  * Returns a heap-allocated, null-terminated UTF-8 buffer; caller must MemFree.
  */
-char *SubstitutePlaceholdersJSONUtf8(const char *tpl, const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
+char *SubstitutePlaceholdersJSONUtf8(const char *tpl, const char *recipient, const char *subject, const char *body);
 
 /**
  * Parse a comma-separated list of integers into the provided array.

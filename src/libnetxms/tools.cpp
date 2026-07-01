@@ -4039,6 +4039,45 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 }
 
 /**
+ * Escape UTF-8 string for JSON. Returns dynamically allocated UTF-8 string (empty string for null input).
+ */
+char LIBNETXMS_EXPORTABLE *EscapeStringForJSONUtf8(const char *s)
+{
+   if (s == nullptr)
+      return MemCopyStringA("");
+   char *js = MemAllocStringA(strlen(s) * 2 + 1);
+   char *out = js;
+   for(const char *p = s; *p != 0; p++)
+   {
+      switch(*p)
+      {
+         case '\r':
+            *out++ = '\\';
+            *out++ = 'r';
+            break;
+         case '\n':
+            *out++ = '\\';
+            *out++ = 'n';
+            break;
+         case '\t':
+            *out++ = '\\';
+            *out++ = 't';
+            break;
+         case '"':
+         case '\\':
+            *out++ = '\\';
+            *out++ = *p;
+            break;
+         default:
+            *out++ = *p;
+            break;
+      }
+   }
+   *out = 0;
+   return js;
+}
+
+/**
  * Convert JSON string in ISO 8601 format or integer to UNIX timestamp
  */
 time_t LIBNETXMS_EXPORTABLE json_object_get_time(json_t *object, const char *tag, time_t defval)

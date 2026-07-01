@@ -39,7 +39,7 @@ private:
 
 public:
    NexmoDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -147,11 +147,11 @@ static bool ParseResponse(const char *response)
 /**
  * Send SMS
  */
-int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int NexmoDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", text=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != nullptr)
@@ -175,19 +175,9 @@ int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
       responseData.setAllocationStep(32768);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-#ifdef UNICODE
-      char *mbphone = MBStringFromWideString(recipient);
-      char *mbmsg = MBStringFromWideString(body);
-      char *phone = curl_easy_escape(curl, mbphone, 0);
-      char *from = curl_easy_escape(curl, m_from, 0);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
-#else
       char *phone = curl_easy_escape(curl, recipient, 0);
       char *from = curl_easy_escape(curl, m_from, 0);
       char *msg = curl_easy_escape(curl, body, 0);
-#endif
 
       char url[4096];
       snprintf(url, 4096, "https://rest.nexmo.com/sms/json?api_key=%s&api_secret=%s&to=%s&from=%s&text=%s",

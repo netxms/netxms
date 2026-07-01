@@ -50,7 +50,7 @@ private:
 
 public:
    PortechDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char* recipient, const char* subject, const char* body) override;
 };
 
 
@@ -135,13 +135,36 @@ static void DoLogout(SocketConnection *conn)
 #define __chk(x) if (!(x)) { return false; }
 
 /**
+ * Copy UTF-8 message text into fixed-size buffer, limiting it to at most
+ * bufferSize - 1 bytes. If the text has to be truncated, the cut is moved
+ * back to a codepoint boundary so no partial UTF-8 sequence is sent.
+ */
+static void CopyMessageText(const char *text, char *buffer, size_t bufferSize)
+{
+   if (strlcpy(buffer, text, bufferSize) < bufferSize)
+      return;  // no truncation
+
+   size_t len = bufferSize - 1;
+   size_t start = len;
+   while((start > 0) && ((buffer[start - 1] & 0xC0) == 0x80))
+      start--;  // back up over continuation bytes
+   if (start > 0)
+   {
+      BYTE lead = static_cast<BYTE>(buffer[start - 1]);
+      size_t expected = (lead >= 0xF0) ? 4 : (lead >= 0xE0) ? 3 : (lead >= 0xC0) ? 2 : 1;
+      if (expected != len - start + 1)
+         buffer[start - 1] = 0;   // incomplete sequence at cut point, drop it
+   }
+}
+
+/**
  * Send SMS in text mode
  */
-static bool SendText(SocketConnection *conn, const TCHAR *recipient, const TCHAR *body)
+static bool SendText(SocketConnection *conn, const char *recipient, const char *body)
 {
 	char szTmp[128];
-	
-	nxlog_debug_tag(DEBUG_TAG, 3, _T("Text mode:rcpt=\"%s\" text=\"%s\""), recipient, body);
+
+	nxlog_debug_tag(DEBUG_TAG, 3, _T("Text mode:rcpt=\"%hs\" text=\"%hs\""), recipient, body);
 
    // Older versions responded with OK, newer with 0
    const char *okText;
@@ -169,25 +192,13 @@ static bool SendText(SocketConnection *conn, const TCHAR *recipient, const TCHAR
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("AT+CMGF=1 sent"));
 
    ThreadSleep(1);
-#ifdef UNICODE
-	char mbPhoneNumber[256];
-	wchar_to_ASCII(recipient, -1, mbPhoneNumber, 256);
-	mbPhoneNumber[255] = 0;
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
-#else
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", recipient);
-#endif
 	__chk(conn->writeLine(szTmp));	// set number
 	__chk(conn->waitForText(">", 10000));
 
-#ifdef UNICODE
-	char mbText[161];
-	wchar_to_utf8(body, -1, mbText, 161);
-	mbText[160] = 0;
-   __chk(conn->writeLine(mbText));
-#else
-   __chk(conn->writeLine(body));
-#endif
+	char text[161];
+	CopyMessageText(body, text, sizeof(text));
+   __chk(conn->writeLine(text));
    snprintf(szTmp, sizeof(szTmp), "%c\r\n", 0x1A);
    __chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
 	__chk(conn->waitForText("+CMGS", 45000));
@@ -200,25 +211,16 @@ static bool SendText(SocketConnection *conn, const TCHAR *recipient, const TCHAR
 /**
  * Send SMS in PDU mode
  */
-static bool SendPDU(SocketConnection *conn, const TCHAR *recipient, const TCHAR *body)
+static bool SendPDU(SocketConnection *conn, const char *recipient, const char *body)
 {
 	const int bufferSize = 512;
 	char szTmp[bufferSize];
 	char phoneNumber[bufferSize], text[bufferSize];
 
-	nxlog_debug_tag(DEBUG_TAG, 3, _T("PDU mode: rcpt=\"%s\" text=\"%s\""), recipient, body);
+	nxlog_debug_tag(DEBUG_TAG, 3, _T("PDU mode: rcpt=\"%hs\" text=\"%hs\""), recipient, body);
 
-#ifdef UNICODE
-	if (wchar_to_ASCII(recipient, -1, phoneNumber, bufferSize) == 0 ||
-	    wchar_to_utf8(body, -1, text, bufferSize) == 0)
-	{
-		nxlog_debug_tag(DEBUG_TAG, 2, _T("Failed to convert phone number or text to multibyte string"));
-		return false;
-	}
-#else
 	strlcpy(phoneNumber, recipient, bufferSize);
-	strlcpy(text, body, bufferSize);
-#endif
+	CopyMessageText(body, text, bufferSize);
 
    // Older versions responded with OK, newer with 0
    const char *okText;
@@ -266,7 +268,7 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *recipient, const TCHAR 
 /**
  * Send SMS
  */
-int PortechDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int PortechDriver::send(const char* recipient, const char* subject, const char* body)
 {
 	SocketConnection *conn;
    int result = -1;

@@ -72,12 +72,12 @@ private:
 
    SmtpDriver();
 
-   void prepareMailBody(ByteStream *data, const char *recipient, const TCHAR *subject, const TCHAR *body);
+   void prepareMailBody(ByteStream *data, const char *recipient, const char *subject, const char *body);
    bool acquireOAuthToken();
 
 public:
    virtual ~SmtpDriver();
-   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static SmtpDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
 };
@@ -372,7 +372,7 @@ static char *EncodeHeader(const char *header, const char *data, char *buffer, si
 /**
  * Prepare mail body
  */
-void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const TCHAR *subject, const TCHAR *body)
+void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const char *subject, const char *body)
 {
    char buffer[1204];
 
@@ -384,13 +384,7 @@ void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const 
    snprintf(buffer, sizeof(buffer), "To: <%s>\r\n", recipient);
    data->writeString(buffer, strlen(buffer), false, false);
 
-   char utf8subject[1024];
-#ifdef UNICODE
-   wchar_to_utf8(subject, -1, utf8subject, sizeof(utf8subject));
-#else
-   mb_to_utf8(subject, -1, utf8subject, sizeof(utf8subject));
-#endif
-   EncodeHeader("Subject", utf8subject, buffer, sizeof(buffer));
+   EncodeHeader("Subject", subject, buffer, sizeof(buffer));
    data->writeString(buffer, strlen(buffer), false, false);
 
    // date
@@ -440,9 +434,7 @@ void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const 
    data->writeString(buffer, strlen(buffer), false, false);
 
    // Mail body
-   char *utf8body = UTF8StringFromTString(body);
-   data->writeString(utf8body, strlen(utf8body), false, false);
-   MemFree(utf8body);
+   data->writeString(body, strlen(body), false, false);
    data->writeString("\r\n", 2, false, false);
 }
 
@@ -457,7 +449,7 @@ static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *data)
 /**
  * Driver send method
  */
-int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int SmtpDriver::send(const char *recipient, const char *subject, const char *body)
 {
 #ifdef CURLPROTO_SMTP
    CURL *curl = curl_easy_init();
@@ -467,13 +459,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       return -1;
    }
 
-   char rcptTo[MAX_RCPT_ADDR_LEN];
-#ifdef UNICODE
-   wchar_to_utf8(recipient, -1, rcptTo, MAX_RCPT_ADDR_LEN);
-#else
-   mb_to_utf8(recipient, -1, rcptTo, MAX_RCPT_ADDR_LEN);
-#endif
-   struct curl_slist *recipients = curl_slist_append(nullptr, rcptTo);
+   struct curl_slist *recipients = curl_slist_append(nullptr, recipient);
    curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
    curl_easy_setopt(curl, CURLOPT_MAIL_FROM, m_fromAddr);
@@ -512,7 +498,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
    }
 
    ByteStream mailBody;
-   prepareMailBody(&mailBody, rcptTo, subject, body);
+   prepareMailBody(&mailBody, recipient, subject, body);
    mailBody.seek(0, SEEK_SET);
 
    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
@@ -535,7 +521,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
 
    if (result == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Sending mail with url=\"%hs\", to=\"%s\", subject=\"%s\", login=\"%hs\""), url, recipient, subject, m_login);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Sending mail with url=\"%hs\", to=\"%hs\", subject=\"%hs\", login=\"%hs\""), url, recipient, subject, m_login);
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {

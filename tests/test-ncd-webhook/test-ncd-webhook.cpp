@@ -30,11 +30,6 @@
 NETXMS_EXECUTABLE_HEADER(test-ncd-webhook)
 
 /**
- * é (U+00E9) as a TCHAR string - used for UTF-8 round-trip checks
- */
-static const TCHAR s_eacute[2] = { static_cast<TCHAR>(0x00E9), 0 };
-
-/**
  * Test JSON-context placeholder substitution (UTF-8 request-body path)
  */
 static void TestSubstituteJSONUtf8()
@@ -45,66 +40,71 @@ static void TestSubstituteJSONUtf8()
 
    // all three placeholders
    r = SubstitutePlaceholdersJSONUtf8("{\"to\":\"${recipient}\",\"s\":\"${subject}\",\"m\":\"${body}\"}",
-            _T("+123"), _T("hi"), _T("world"));
+            "+123", "hi", "world");
    AssertEquals(r, "{\"to\":\"+123\",\"s\":\"hi\",\"m\":\"world\"}");
    MemFree(r);
 
    // repeated placeholder, and adjacent placeholders with no separator
-   r = SubstitutePlaceholdersJSONUtf8("${body}-${body}", _T(""), _T(""), _T("x"));
+   r = SubstitutePlaceholdersJSONUtf8("${body}-${body}", "", "", "x");
    AssertEquals(r, "x-x");
    MemFree(r);
-   r = SubstitutePlaceholdersJSONUtf8("${recipient}${body}", _T("R"), _T(""), _T("B"));
+   r = SubstitutePlaceholdersJSONUtf8("${recipient}${body}", "R", "", "B");
    AssertEquals(r, "RB");
    MemFree(r);
 
    // missing placeholder value -> empty substitution
-   r = SubstitutePlaceholdersJSONUtf8("a${subject}b", _T(""), _T(""), _T(""));
+   r = SubstitutePlaceholdersJSONUtf8("a${subject}b", "", "", "");
+   AssertEquals(r, "ab");
+   MemFree(r);
+
+   // null placeholder value -> empty substitution
+   r = SubstitutePlaceholdersJSONUtf8("a${subject}b", nullptr, nullptr, nullptr);
    AssertEquals(r, "ab");
    MemFree(r);
 
    // empty (non-null) template -> empty string
-   r = SubstitutePlaceholdersJSONUtf8("", _T("r"), _T("s"), _T("b"));
+   r = SubstitutePlaceholdersJSONUtf8("", "r", "s", "b");
    AssertEquals(r, "");
    MemFree(r);
 
    // null template -> empty string
-   r = SubstitutePlaceholdersJSONUtf8(static_cast<const char*>(nullptr), _T("r"), _T("s"), _T("b"));
+   r = SubstitutePlaceholdersJSONUtf8(nullptr, "r", "s", "b");
    AssertEquals(r, "");
    MemFree(r);
 
    // JSON escaping of replacement value: quote, backslash, newline, CR, tab
-   r = SubstitutePlaceholdersJSONUtf8("{\"m\":\"${body}\"}", _T(""), _T(""), _T("a\"b\\c\nd\re\tf"));
+   r = SubstitutePlaceholdersJSONUtf8("{\"m\":\"${body}\"}", "", "", "a\"b\\c\nd\re\tf");
    AssertEquals(r, "{\"m\":\"a\\\"b\\\\c\\nd\\re\\tf\"}");
    MemFree(r);
 
    // UTF-8 bytes already in the template are preserved verbatim
-   r = SubstitutePlaceholdersJSONUtf8("caf\xC3\xA9 ${body}", _T(""), _T(""), _T("x"));
+   r = SubstitutePlaceholdersJSONUtf8("caf\xC3\xA9 ${body}", "", "", "x");
    AssertEquals(r, "caf\xC3\xA9 x");
    MemFree(r);
 
-   // UTF-8 in the replacement value (é -> C3 A9)
-   r = SubstitutePlaceholdersJSONUtf8("[${subject}]", _T(""), s_eacute, _T(""));
+   // UTF-8 in the replacement value (é = C3 A9) passes through unmodified
+   r = SubstitutePlaceholdersJSONUtf8("[${subject}]", "", "\xC3\xA9", "");
    AssertEquals(r, "[\xC3\xA9]");
    MemFree(r);
 
    // unknown token left literal
-   r = SubstitutePlaceholdersJSONUtf8("a${xyz}b", _T("r"), _T("s"), _T("b"));
+   r = SubstitutePlaceholdersJSONUtf8("a${xyz}b", "r", "s", "b");
    AssertEquals(r, "a${xyz}b");
    MemFree(r);
 
    // token that only shares a prefix with a known name is unknown (exact-length
    // match, not prefix match) - guards against a regression to prefix matching
-   r = SubstitutePlaceholdersJSONUtf8("${bod}-${bodyX}", _T("r"), _T("s"), _T("B"));
+   r = SubstitutePlaceholdersJSONUtf8("${bod}-${bodyX}", "r", "s", "B");
    AssertEquals(r, "${bod}-${bodyX}");
    MemFree(r);
 
    // empty token name left literal
-   r = SubstitutePlaceholdersJSONUtf8("a${}b", _T("r"), _T("s"), _T("b"));
+   r = SubstitutePlaceholdersJSONUtf8("a${}b", "r", "s", "b");
    AssertEquals(r, "a${}b");
    MemFree(r);
 
    // unterminated placeholder copied literally
-   r = SubstitutePlaceholdersJSONUtf8("abc${body", _T("r"), _T("s"), _T("b"));
+   r = SubstitutePlaceholdersJSONUtf8("abc${body", "r", "s", "b");
    AssertEquals(r, "abc${body");
    MemFree(r);
 

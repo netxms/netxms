@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2021 Raden Solutions
+** Copyright (C) 2019-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,11 +25,12 @@
 
 #include <nms_common.h>
 #include <nxconfig.h>
+#include <functional>
 
 /**
  * API version
  */
-#define NCDRV_API_VERSION           3
+#define NCDRV_API_VERSION           4
 
 /**
  * Notification channel status
@@ -61,7 +62,7 @@ struct NCConfigurationTemplate
 };
 
 /**
- * Storage interface for notification channel drivers
+ * Storage interface for notification channel drivers. All keys and values are UTF-8 strings.
  */
 class NCDriverStorageManager
 {
@@ -70,14 +71,14 @@ protected:
    virtual ~NCDriverStorageManager() { }
 
 public:
-   virtual TCHAR *get(const TCHAR *key) = 0;
-   virtual StringMap *getAll() = 0;
-   virtual void set(const TCHAR *key, const TCHAR *value) = 0;
-   virtual void clear(const TCHAR *key) = 0;
+   virtual char *get(const char *key) = 0;
+   virtual void getAll(std::function<void (const char*, const char*)> callback) = 0;
+   virtual void set(const char *key, const char *value) = 0;
+   virtual void clear(const char *key) = 0;
 };
 
 /**
- * Notification Channel Driver base class
+ * Notification Channel Driver base class. All strings passed to send() are UTF-8.
  */
 class NCDriver
 {
@@ -87,7 +88,7 @@ protected:
 public:
    virtual ~NCDriver() { }
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) = 0;
+   virtual int send(const char *recipient, const char *subject, const char *body) = 0;
 
    virtual bool checkHealth() { return true; }
 };

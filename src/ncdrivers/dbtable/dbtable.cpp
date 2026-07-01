@@ -48,7 +48,7 @@ private:
 public:
    static DBTableDriver *createFromConfig(Config *config);
    virtual ~DBTableDriver();
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 
@@ -123,9 +123,36 @@ finish:
 }
 
 /**
+ * Make copy of UTF-8 string truncated to given number of characters (returns nullptr for null input)
+ */
+static char *TruncateText(const char *s, uint32_t maxChars)
+{
+   if (s == nullptr)
+      return nullptr;
+
+   size_t bytes = 0;
+   uint32_t chars = 0;
+   for(const char *p = s; *p != 0; p++)
+   {
+      if ((*p & 0xC0) != 0x80)  // start of next character
+      {
+         if (chars == maxChars)
+            break;
+         chars++;
+      }
+      bytes++;
+   }
+
+   char *copy = MemAllocStringA(bytes + 1);
+   memcpy(copy, s, bytes);
+   copy[bytes] = 0;
+   return copy;
+}
+
+/**
  * Send message
  */
-int DBTableDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int DBTableDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
@@ -142,8 +169,10 @@ int DBTableDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
 		DB_STATEMENT dbs = DBPrepare(m_dbh, m_sqlTemplate);
 		if (dbs != NULL)
 		{
-			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC, m_maxNumberLength);
-			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC, m_maxMessageLength);
+			char *number = TruncateText(recipient, m_maxNumberLength);
+			char *text = TruncateText(body, m_maxMessageLength);
+			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, number, DB_BIND_STATIC);
+			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, text, DB_BIND_STATIC);
          if (!DBExecute(dbs))
          {
             nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot execute"));
@@ -151,9 +180,11 @@ int DBTableDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
          else
          {
             result = 0;
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("sent sms '%s' to %s"), body, recipient);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("sent sms '%hs' to %hs"), text, number);
          }
 			DBFreeStatement(dbs);
+			MemFree(number);
+			MemFree(text);
 		}
 	}
 

@@ -48,7 +48,7 @@ private:
 public:
 	GSMDriver(Config *config);
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char* recipient, const char* subject, const char* body) override;
 };
 
 /**
@@ -59,6 +59,29 @@ static void NormalizeText(char *text)
    for(int i = 0; text[i] != 0; i++)
       if (text[i] < ' ')
          text[i] = ' ';
+}
+
+/**
+ * Copy UTF-8 message text into fixed-size buffer, limiting it to at most
+ * bufferSize - 1 bytes. If the text has to be truncated, the cut is moved
+ * back to a codepoint boundary so no partial UTF-8 sequence is sent.
+ */
+static void CopyMessageText(const char *text, char *buffer, size_t bufferSize)
+{
+   if (strlcpy(buffer, text, bufferSize) < bufferSize)
+      return;  // no truncation
+
+   size_t len = bufferSize - 1;
+   size_t start = len;
+   while((start > 0) && ((buffer[start - 1] & 0xC0) == 0x80))
+      start--;  // back up over continuation bytes
+   if (start > 0)
+   {
+      BYTE lead = static_cast<BYTE>(buffer[start - 1]);
+      size_t expected = (lead >= 0xF0) ? 4 : (lead >= 0xE0) ? 3 : (lead >= 0xC0) ? 2 : 1;
+      if (expected != len - start + 1)
+         buffer[start - 1] = 0;   // incomplete sequence at cut point, drop it
+   }
 }
 
 /**
@@ -258,12 +281,12 @@ cleanup:
 /**
  * Send SMS
  */
-int GSMDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int GSMDriver::send(const char* recipient, const char* subject, const char* body)
 {
 	if ((recipient == NULL) || (body == NULL))
       return -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Send to {%s}: {%s}"), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Send to {%hs}: {%hs}"), recipient, body);
    if (!m_serial.restart())
    {
    	nxlog_debug_tag(DEBUG_TAG, 5, _T("Failed to open port"));
@@ -282,19 +305,9 @@ int GSMDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* b
 	   nxlog_debug_tag(DEBUG_TAG, 5, _T("AT+CMGF=0 sent, got OK"));
 
 		char pduBuffer[PDU_BUFFER_SIZE];
-#ifdef UNICODE
-	   char mbPhoneNumber[128], mbText[161];
-
-	   wchar_to_ASCII(recipient, -1, mbPhoneNumber, 128);
-	   mbPhoneNumber[127] = 0;
-
-	   wchar_to_utf8(body, -1, mbText, 161);
-	   mbText[160] = 0;
-
-		SMSCreatePDUString(mbPhoneNumber, mbText, pduBuffer);
-#else
-		SMSCreatePDUString(recipient, body, pduBuffer);
-#endif
+	   char text[161];
+	   CopyMessageText(body, text, sizeof(text));
+		SMSCreatePDUString(recipient, text, pduBuffer);
 
       char buffer[256];
 		snprintf(buffer, sizeof(buffer), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
@@ -321,20 +334,10 @@ int GSMDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* b
 	   nxlog_debug_tag(DEBUG_TAG, 5, _T("AT+CMGF=1 sent, got OK"));
 
       char buffer[256];
-#ifdef UNICODE
-	   char mbPhoneNumber[128];
-	   wchar_to_ASCII(recipient, -1, mbPhoneNumber, 128);
-	   mbPhoneNumber[127] = 0;
-      if (m_cmgsUseQuotes)
-         snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
-      else
-         snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", mbPhoneNumber);
-#else
       if (m_cmgsUseQuotes)
          snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", recipient);
       else
          snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", recipient);
-#endif
 	   m_serial.write(buffer, (int)strlen(buffer)); // set number
 
       char *mark;
@@ -347,22 +350,9 @@ int GSMDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* b
          goto cleanup;
       }
    	
-#ifdef UNICODE
-	   char mbText[161];
-      wchar_to_utf8(body, -1, mbText, 161);
-	   mbText[160] = 0;
-      snprintf(buffer, sizeof(buffer), "%s\x1A", mbText);
-#else
-      if (strlen(body) <= 160)
-      {
-         snprintf(buffer, sizeof(buffer), "%s\x1A", body);
-      }
-      else
-      {
-         strncpy(buffer, body, 160);
-         strcpy(&buffer[160], "\x1A");
-      }
-#endif
+      char text[161];
+      CopyMessageText(body, text, sizeof(text));
+      snprintf(buffer, sizeof(buffer), "%s\x1A", text);
 	   m_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
    }
 

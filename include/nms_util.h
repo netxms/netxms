@@ -6064,6 +6064,7 @@ uint32_t LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *n
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
+char LIBNETXMS_EXPORTABLE *EscapeStringForJSONUtf8(const char *s);
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 
 char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size);

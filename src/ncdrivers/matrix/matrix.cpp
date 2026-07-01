@@ -168,12 +168,12 @@ private:
    int64_t nextTxnId();
    json_t *doRequest(const char *method, const char *url, json_t *payload);
    char *resolveRoomAlias(const char *alias);
-   char *getRoomId(const TCHAR *recipient);
+   char *getRoomId(const char *recipient);
 
 public:
    virtual ~MatrixDriver();
 
-   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
    virtual bool checkHealth() override;
 
    static MatrixDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
@@ -193,9 +193,9 @@ int64_t MatrixDriver::nextTxnId()
 {
    m_txnLock.lock();
    m_txnId++;
-   TCHAR value[32];
+   char value[32];
    IntegerToString(m_txnId, value);
-   m_storageManager->set(_T("TxnId"), value);
+   m_storageManager->set("TxnId", value);
    m_txnLock.unlock();
    return m_txnId;
 }
@@ -351,21 +351,16 @@ char *MatrixDriver::resolveRoomAlias(const char *alias)
  * Room aliases are cached with configurable TTL.
  * Caller must MemFree() the result.
  */
-char *MatrixDriver::getRoomId(const TCHAR *recipient)
+char *MatrixDriver::getRoomId(const char *recipient)
 {
-#ifdef UNICODE
-   char *recipientUtf8 = MBStringFromWideString(recipient);
-#else
-   char *recipientUtf8 = MemCopyStringA(recipient);
-#endif
-
    // If it starts with '!' it's already a room ID
-   if (recipientUtf8[0] != '#')
-      return recipientUtf8;
+   if (recipient[0] != '#')
+      return MemCopyStringA(recipient);
 
-   // Check alias cache
+   // Check alias cache (cache map is keyed by wide strings)
+   TCHAR *cacheKey = TStringFromUTF8String(recipient);
    m_aliasCacheLock.lock();
-   RoomAliasCacheEntry *cached = m_aliasCache.get(recipient);
+   RoomAliasCacheEntry *cached = m_aliasCache.get(cacheKey);
    if (cached != nullptr)
    {
       time_t now = time(nullptr);
@@ -373,25 +368,24 @@ char *MatrixDriver::getRoomId(const TCHAR *recipient)
       {
          char *roomId = MemCopyStringA(cached->roomId);
          m_aliasCacheLock.unlock();
-         MemFree(recipientUtf8);
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Room alias cache hit for %s -> %hs"), recipient, roomId);
+         MemFree(cacheKey);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Room alias cache hit for %hs -> %hs"), recipient, roomId);
          return roomId;
       }
       // Expired - remove from cache
-      m_aliasCache.remove(recipient);
+      m_aliasCache.remove(cacheKey);
    }
    m_aliasCacheLock.unlock();
 
    // Resolve alias via API
-   char *roomId = resolveRoomAlias(recipientUtf8);
-   MemFree(recipientUtf8);
-
+   char *roomId = resolveRoomAlias(recipient);
    if (roomId != nullptr)
    {
       m_aliasCacheLock.lock();
-      m_aliasCache.set(recipient, new RoomAliasCacheEntry(roomId));
+      m_aliasCache.set(cacheKey, new RoomAliasCacheEntry(roomId));
       m_aliasCacheLock.unlock();
    }
+   MemFree(cacheKey);
 
    return roomId;
 }
@@ -399,9 +393,9 @@ char *MatrixDriver::getRoomId(const TCHAR *recipient)
 /**
  * Send notification
  */
-int MatrixDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int MatrixDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %s: \"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %hs: \"%hs\""), recipient, body);
 
    char *roomId = getRoomId(recipient);
    if (roomId == nullptr)
@@ -428,40 +422,31 @@ int MatrixDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    json_t *message = json_object();
 
    json_object_set_new(message, "msgtype", json_string("m.text"));
+
+   bool hasSubject = (subject != nullptr) && (*subject != 0);
+   const char *bodyText = (body != nullptr) ? body : "";
+   size_t bufferSize = (hasSubject ? strlen(subject) : 0) + strlen(bodyText) + 64;
+
+   // Plain text version (used as fallback in HTML mode)
+   char *plainText = MemAllocStringA(bufferSize);
+   if (hasSubject)
+      snprintf(plainText, bufferSize, "%s\n\n%s", subject, bodyText);
+   else
+      strlcpy(plainText, bodyText, bufferSize);
+   json_object_set_new(message, "body", json_string(plainText));
+   MemFree(plainText);
+
    if (m_htmlFormatting)
    {
-      // Plain text fallback
-      StringBuffer plainText;
-      if (subject != nullptr && *subject != 0)
-      {
-         plainText.append(subject);
-         plainText.append(_T("\n\n"));
-      }
-      plainText.append(body);
-      json_object_set_new(message, "body", json_string_t(plainText));
-
       // HTML formatted version
-      StringBuffer htmlBody;
-      if (subject != nullptr && *subject != 0)
-      {
-         htmlBody.append(_T("<strong>"));
-         htmlBody.append(subject);
-         htmlBody.append(_T("</strong><br/><br/>"));
-      }
-      htmlBody.append(body);
+      char *htmlBody = MemAllocStringA(bufferSize);
+      if (hasSubject)
+         snprintf(htmlBody, bufferSize, "<strong>%s</strong><br/><br/>%s", subject, bodyText);
+      else
+         strlcpy(htmlBody, bodyText, bufferSize);
       json_object_set_new(message, "format", json_string("org.matrix.custom.html"));
-      json_object_set_new(message, "formatted_body", json_string_t(htmlBody));
-   }
-   else
-   {
-      StringBuffer text;
-      if (subject != nullptr && *subject != 0)
-      {
-         text.append(subject);
-         text.append(_T("\n\n"));
-      }
-      text.append(body);
-      json_object_set_new(message, "body", json_string_t(text));
+      json_object_set_new(message, "formatted_body", json_string(htmlBody));
+      MemFree(htmlBody);
    }
 
    json_t *response = doRequest("PUT", url, message);
@@ -473,7 +458,7 @@ int MatrixDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       const char *eventId = json_string_value(json_object_get(response, "event_id"));
       if (eventId != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("Message sent to %s, event ID: %hs"), recipient, eventId);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Message sent to %hs, event ID: %hs"), recipient, eventId);
          result = 0;
       }
       else
@@ -483,12 +468,12 @@ int MatrixDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
          {
             int retryMs = static_cast<int>(json_integer_value(json_object_get(response, "retry_after_ms")));
             result = (retryMs > 0) ? (retryMs / 1000 + 1) : 30;
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Rate limited sending to %s, retry in %d seconds"), recipient, result);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Rate limited sending to %hs, retry in %d seconds"), recipient, result);
          }
          else
          {
             const char *error = json_string_value(json_object_get(response, "error"));
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to send message to %s: %hs (%hs)"),
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to send message to %hs: %hs (%hs)"),
                recipient, (error != nullptr) ? error : "unknown error", (errcode != nullptr) ? errcode : "?");
             result = -1;
          }
@@ -497,7 +482,7 @@ int MatrixDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("No response from server when sending to %s"), recipient);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("No response from server when sending to %hs"), recipient);
       result = -1;
    }
 
@@ -630,10 +615,10 @@ MatrixDriver *MatrixDriver::createInstance(Config *config, NCDriverStorageManage
       driver->m_proxies.add(*proxies.get(i));
 
    // Restore persistent transaction ID
-   TCHAR *txnValue = storageManager->get(_T("TxnId"));
+   char *txnValue = storageManager->get("TxnId");
    if (txnValue != nullptr)
    {
-      driver->m_txnId = _tcstoll(txnValue, nullptr, 10);
+      driver->m_txnId = strtoll(txnValue, nullptr, 10);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Restored transaction ID: ") INT64_FMT, driver->m_txnId);
       MemFree(txnValue);
    }

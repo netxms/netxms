@@ -93,16 +93,16 @@ char *SubstitutePlaceholders(const char *tpl, const char *recipientRepl, const c
 
 /**
  * UTF-8 request-body substitution. Escapes the replacement values for a JSON
- * context (EscapeStringForJSON) and feeds them to the shared scan, so the
- * result is ready for CURLOPT_POSTFIELDS without any extra re-encoding.
+ * context and feeds them to the shared scan, so the result is ready for
+ * CURLOPT_POSTFIELDS without any extra re-encoding.
  *
  * Returns a heap-allocated, null-terminated UTF-8 buffer (caller MemFree).
  */
-char *SubstitutePlaceholdersJSONUtf8(const char *tpl, const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+char *SubstitutePlaceholdersJSONUtf8(const char *tpl, const char *recipient, const char *subject, const char *body)
 {
-   char *recipientRepl = EscapeStringForJSON(recipient).getUTF8String();
-   char *subjectRepl = EscapeStringForJSON(subject).getUTF8String();
-   char *bodyRepl = EscapeStringForJSON(body).getUTF8String();
+   char *recipientRepl = EscapeStringForJSONUtf8(recipient);
+   char *subjectRepl = EscapeStringForJSONUtf8(subject);
+   char *bodyRepl = EscapeStringForJSONUtf8(body);
 
    char *result = SubstitutePlaceholders(tpl, recipientRepl, subjectRepl, bodyRepl);
 

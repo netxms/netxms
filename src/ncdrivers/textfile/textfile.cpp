@@ -38,7 +38,7 @@ private:
 
 public:
    TextFileDriver(const TCHAR *fileName);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -52,7 +52,7 @@ TextFileDriver::TextFileDriver(const TCHAR *fileName)
 /**
  * Driver send method
  */
-int TextFileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int TextFileDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
    FILE *f = _tfopen(m_fileName, _T("a"));
@@ -62,8 +62,8 @@ int TextFileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
       return -1;
    }
 
-   result = (_fputts(body, f) >= 0) ? 0 : -1;
-   _fputts(_T("\n"), f);
+   result = (fputs(body, f) >= 0) ? 0 : -1;
+   fputs("\n", f);
 
    fclose(f);
    return result;

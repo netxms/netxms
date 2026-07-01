@@ -54,7 +54,7 @@ public:
    MQTTDriver(Config *config);
    virtual ~MQTTDriver();
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char* recipient, const char* subject, const char* body) override;
 };
 
 /**
@@ -130,7 +130,7 @@ bool MQTTDriver::checkHandle()
 /**
  * Send notification
  */
-int MQTTDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int MQTTDriver::send(const char* recipient, const char* subject, const char* body)
 {
    if (!checkHandle())
       return -1;
@@ -143,27 +143,24 @@ int MQTTDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* 
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Connected to MQTT broker %hs:%d as %hs"), m_hostname, m_port, (m_login[0] != 0) ? m_login : "anonymous");
 
-   char topic[1024];
-   size_t l = tchar_to_utf8(recipient, -1, topic, sizeof(topic) - 1);
-   topic[l] = 0;
-   char *payload = UTF8StringFromTString(CHECK_NULL_EX(body));
+   const char *topic = CHECK_NULL_EX_A(recipient);
+   const char *payload = CHECK_NULL_EX_A(body);
 
    int result;
    int rc = mosquitto_publish(m_handle, nullptr, topic, static_cast<int>(strlen(payload)), payload, 0, false);
    if (rc == MOSQ_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Successfully published via %hs:%d in topic %s: \"%s\""), m_hostname, m_port, recipient, body);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Successfully published via %hs:%d in topic %hs: \"%hs\""), m_hostname, m_port, topic, payload);
       result = 0;
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot publish message via %hs:%d in topic %s (libmosquitto error %d)"), m_hostname, m_port, recipient, rc);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot publish message via %hs:%d in topic %hs (libmosquitto error %d)"), m_hostname, m_port, topic, rc);
       result = -1;
    }
 
    mosquitto_loop(m_handle, 100, 1);
 
-   MemFree(payload);
    mosquitto_disconnect(m_handle);
    return result;
 }

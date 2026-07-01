@@ -78,10 +78,10 @@ struct MessageInfo
    char* recipient;
    char* body;
 
-   MessageInfo(const TCHAR* _recipient, const TCHAR* _body)
+   MessageInfo(const char* _recipient, const char* _body)
    {
-      recipient = UTF8StringFromWideString(_recipient);
-      body = UTF8StringFromWideString(_body);
+      recipient = MemCopyStringA(_recipient);
+      body = MemCopyStringA(_body);
    }
 
    ~MessageInfo()
@@ -127,7 +127,7 @@ private:
 public:
    ~XmppDriver();
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char* recipient, const char* subject, const char* body) override;
 
    static XmppDriver* createInstance(Config* config);
 };
@@ -193,7 +193,7 @@ XmppDriver* XmppDriver::createInstance(Config* config)
 /**
  * Driver send method
  */
-int XmppDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int XmppDriver::send(const char* recipient, const char* subject, const char* body)
 {
    m_sendQueue.put(new MessageInfo(recipient, body));
    return 0;

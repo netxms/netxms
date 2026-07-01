@@ -38,7 +38,7 @@ private:
 
 public:
    SlackDriver(Config *config);
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -63,11 +63,11 @@ SlackDriver::SlackDriver(Config *config)
 /**
  * Send SMS
  */
-int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int SlackDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = 0;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%hs\", text=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl != nullptr)
@@ -90,24 +90,16 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
       responseData.setAllocationStep(32768);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-#ifdef UNICODE
-      char *_channel = MBStringFromWideString(recipient);
-      char *_text = MBStringFromWideString(body);
-#else
-      char *_channel = strdup(recipient);
-      char *_text = strdup(body);
-#endif
-
       json_t *root = json_object();
-      if (_channel[0] != 0)
+      if ((recipient != nullptr) && (recipient[0] != 0))
       {
-         json_object_set_new(root, "channel", json_string(_channel));
+         json_object_set_new(root, "channel", json_string(recipient));
       }
       if (s_username[0] != 0)
       {
          json_object_set_new(root, "username", json_string(s_username));
       }
-      json_object_set_new(root, "text", json_string(_text));
+      json_object_set_new(root, "text", json_string(body));
       char *json_body = json_dumps(root, 0);
 
       char request[4096];
@@ -119,9 +111,6 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
 
       char errBuff[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
-
-      MemFree(_channel);
-      MemFree(_text);
 
       if (curl_easy_setopt(curl, CURLOPT_URL, s_url) != CURLE_OK)
       {

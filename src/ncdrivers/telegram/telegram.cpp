@@ -93,19 +93,24 @@ struct Chat
     */
    void save(NCDriverStorageManager *storageManager)
    {
-      TCHAR key[64], value[2000];
-      _sntprintf(key, 64, _T("Chat.") INT64_FMT, id);
+      char key[64];
+      snprintf(key, 64, "Chat." INT64_FMTA, id);
+      TCHAR value[2000];
       _sntprintf(value, 2000, _T("%d/%s%d/%s%d/%s"), static_cast<int>(_tcslen(firstName)), firstName,
             static_cast<int>(_tcslen(lastName)), lastName, static_cast<int>(_tcslen(userName)), userName);
-      storageManager->set(key, value);
+      char *utf8Value = UTF8StringFromTString(value);
+      storageManager->set(key, utf8Value);
+      MemFree(utf8Value);
 
       topics.forEach(
          [this, storageManager] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
          {
-            TCHAR skey[64];
+            char skey[64];
             int64_t topicId = _tcstoll(static_cast<const TCHAR*>(value), nullptr, 10);
-            _sntprintf(skey, 64, _T("Topic.") INT64_FMT _T(".") INT64_FMT, id, topicId);
-            storageManager->set(skey, key);
+            snprintf(skey, 64, "Topic." INT64_FMTA "." INT64_FMTA, id, topicId);
+            char *utf8Name = UTF8StringFromTString(key);
+            storageManager->set(skey, utf8Name);
+            MemFree(utf8Name);
             return _CONTINUE;
          });
    }
@@ -115,15 +120,15 @@ struct Chat
     */
    void remove(NCDriverStorageManager *storageManager)
    {
-      TCHAR key[64];
-      _sntprintf(key, 64, _T("Chat.") INT64_FMT, id);
+      char key[64];
+      snprintf(key, 64, "Chat." INT64_FMTA, id);
       storageManager->clear(key);
       topics.forEach(
          [this, storageManager] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
          {
-            TCHAR skey[64];
+            char skey[64];
             int64_t topicId = _tcstoll(static_cast<const TCHAR*>(value), nullptr, 10);
-            _sntprintf(skey, 64, _T("Topic.") INT64_FMT _T(".") INT64_FMT, id, topicId);
+            snprintf(skey, 64, "Topic." INT64_FMTA "." INT64_FMTA, id, topicId);
             storageManager->clear(skey);
             return _CONTINUE;
          });
@@ -139,6 +144,8 @@ struct Chat
       if (*eptr != _T('/'))
          return MemCopyString(_T(""));
       eptr++;
+      if ((l < 0) || (static_cast<size_t>(l) > _tcslen(eptr)))
+         return MemCopyString(_T(""));   // Malformed entry - length prefix exceeds remaining data
       TCHAR *s = MemAllocString(l + 1);
       memcpy(s, eptr, l * sizeof(TCHAR));
       s[l] = 0;
@@ -217,7 +224,7 @@ private:
 public:
    virtual ~TelegramDriver();
 
-   virtual int send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    virtual bool checkHealth() override;
 
@@ -433,12 +440,12 @@ static CallResponse SendTelegramRequest(const char *token, const StructArray<Pro
 }
 
 /**
- * Restore chats from persistent data
+ * Restore chat from persistent storage entry
  */
-static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
+static void RestoreChat(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
 {
    if (_tcsncmp(key, _T("Chat."), 5))
-      return _CONTINUE; // Not a chat record
+      return; // Not a chat record
 
    auto chat = new Chat(key, value);
    if ((chat->id != 0) && (chat->userName != nullptr) && (chat->userName[0] != 0))
@@ -451,22 +458,21 @@ static EnumerationCallbackResult RestoreChats(const TCHAR *key, const TCHAR *val
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading chat object from storage entry \"%s\" = \"%s\""), key, value);
       delete chat;
    }
-   return _CONTINUE;
 }
 
 /**
- * Restore topics from persistent data
+ * Restore topic from persistent storage entry
  */
-static EnumerationCallbackResult RestoreTopics(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
+static void RestoreTopic(const TCHAR *key, const TCHAR *value, StringObjectMap<Chat> *chats)
 {
    if (_tcsncmp(key, _T("Topic."), 6))
-      return _CONTINUE; // Not a char record
+      return; // Not a topic record
 
    const TCHAR *p = _tcschr(&key[6], _T('.'));
    if (p == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\""), key, value);
-      return _CONTINUE;
+      return;
    }
 
    TCHAR *eptr;
@@ -474,7 +480,7 @@ static EnumerationCallbackResult RestoreTopics(const TCHAR *key, const TCHAR *va
    if (eptr != p)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\""), key, value);
-      return _CONTINUE;
+      return;
    }
 
    Chat *chat = (Chat*)chats->findElement(
@@ -485,12 +491,11 @@ static EnumerationCallbackResult RestoreTopics(const TCHAR *key, const TCHAR *va
    if (chat == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Error loading topic object from storage entry \"%s\" = \"%s\" (chat object not found)"), key, value);
-      return _CONTINUE;
+      return;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Loaded topic object %s = %s for chat %s"), value, p + 1, chat->userName);
    chat->topics.set(value, p + 1);
-   return _CONTINUE;
 }
 
 /**
@@ -680,10 +685,27 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 #endif
                nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Telegram driver instantiated for bot %s"), driver->m_botName);
 
-               StringMap *data = storageManager->getAll();
-               data->forEach(RestoreChats, &driver->m_chats);
-               data->forEach(RestoreTopics, &driver->m_chats);
-               delete data;
+               // Restore chats first, then topics (topic entries reference chat objects).
+               // Storage entries are UTF-8; legacy parsing logic works on wide strings.
+               StringObjectMap<Chat> *chats = &driver->m_chats;
+               storageManager->getAll(
+                  [chats] (const char *key, const char *value)
+                  {
+                     TCHAR *tkey = TStringFromUTF8String(key);
+                     TCHAR *tvalue = TStringFromUTF8String(value);
+                     RestoreChat(tkey, tvalue, chats);
+                     MemFree(tkey);
+                     MemFree(tvalue);
+                  });
+               storageManager->getAll(
+                  [chats] (const char *key, const char *value)
+                  {
+                     TCHAR *tkey = TStringFromUTF8String(key);
+                     TCHAR *tvalue = TStringFromUTF8String(value);
+                     RestoreTopic(tkey, tvalue, chats);
+                     MemFree(tkey);
+                     MemFree(tvalue);
+                  });
 
                driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, driver);
                strlcpy(driver->m_parseMode, parseMode, 32);
@@ -986,51 +1008,55 @@ void TelegramDriver::processUpdate(json_t *data)
 /**
  * Send notification
  */
-int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+int TelegramDriver::send(const char *recipient, const char *subject, const char *body)
 {
    int result = -1;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %s: \"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %hs: \"%hs\""), recipient, body);
 
    // Recipient name started with @ indicates public channel
    // In that case use channel name instead of chat ID
    int64_t chatId = 0;
-   bool useRecipientName = recipient[0] == _T('@');
+   bool useRecipientName = recipient[0] == '@';
    if (!useRecipientName)
    {
-      size_t numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), _T("0123456789"));
-      size_t textLen = _tcslen(recipient);
-      useRecipientName = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
+      size_t numCount = strspn((recipient[0] != '-') ? recipient : (recipient + 1), "0123456789");
+      size_t textLen = strlen(recipient);
+      useRecipientName = (recipient[0] == '-') ? (numCount == (textLen - 1)) : (numCount == textLen);
    }
 
    int64_t topicId = 0;
    if ((subject != nullptr) && (*subject != 0))
    {
-      topicId = _tcstoll(subject, nullptr, 10);
+      topicId = strtoll(subject, nullptr, 10);
    }
 
    if (!useRecipientName)
    {
+      TCHAR *recipientKey = TStringFromUTF8String(recipient);
       m_chatsLock.lock();
-      Chat *chatObject = m_chats.get(recipient);
+      Chat *chatObject = m_chats.get(recipientKey);
       if (chatObject != nullptr)
       {
          chatId = chatObject->id;
          if ((subject != nullptr) && (*subject != 0) && (topicId == 0))
          {
-            const TCHAR *id = chatObject->topics.get(subject);
+            TCHAR *topicKey = TStringFromUTF8String(subject);
+            const TCHAR *id = chatObject->topics.get(topicKey);
             if (id != nullptr)
                topicId = _tcstoll(id, nullptr, 10);
+            MemFree(topicKey);
          }
       }
       m_chatsLock.unlock();
+      MemFree(recipientKey);
    }
 
    if ((chatId != 0) || useRecipientName)
    {
       json_t *request = json_object();
-      json_object_set_new(request, "chat_id", useRecipientName ? json_string_t(recipient) : json_integer(chatId));
-      json_object_set_new(request, "text", json_string_t(body));
+      json_object_set_new(request, "chat_id", useRecipientName ? json_string(recipient) : json_integer(chatId));
+      json_object_set_new(request, "text", json_string(body));
       if (*m_parseMode != 0)
       {
          json_object_set_new(request, "parse_mode", json_string(m_parseMode));
@@ -1047,7 +1073,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       {
          if (json_is_true(json_object_get(response.data, "ok")))
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %s successfully sent"), m_botName, recipient);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %hs successfully sent"), m_botName, recipient);
             result = 0;
          }
          else
@@ -1058,11 +1084,11 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
                case 420: // FLOOD
                case 429: // Too many requests
                   result = json_object_get_int32(json_object_get(response.data, "parameters"), "retry_after", 15);
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Too many requests, retry is allowed in %d seconds (message from bot %s to recipient %s)"), result, m_botName, recipient);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Too many requests, retry is allowed in %d seconds (message from bot %s to recipient %hs)"), result, m_botName, recipient);
                   break;
                default:
                   result = -1;
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: API error (%hs)"),
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: API error (%hs)"),
                            m_botName, recipient, json_object_get_string_utf8(response.data, "description", "Unknown reason"));
                   break;
             }
@@ -1070,7 +1096,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response (HTTP response status code %03d)"), m_botName, recipient, response.statusCode);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: invalid API response (HTTP response status code %03d)"), m_botName, recipient, response.statusCode);
          if (response.allowRetry)
             result = 60;   // Retry in 60 seconds if allowed by SendTelegramRequest
       }
@@ -1078,7 +1104,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %s and bot %s"), recipient, m_botName);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %hs and bot %s"), recipient, m_botName);
    }
    return result;
 }

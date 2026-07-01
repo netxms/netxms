@@ -57,7 +57,7 @@ private:
    SNMPTrapDriver();
 
 public:
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 
    static SNMPTrapDriver *createInstance(Config *config);
 };
@@ -98,28 +98,25 @@ static inline SNMP_Variable *CreateVarbind(const SNMP_ObjectId& name, uint32_t t
  *    severity    - event severity (integer in range 0..4)
  *    timestamp   - original even timestamp as UNIX time
  */
-int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int SNMPTrapDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%s\", subject=\"%s\", text=\"%s\""), recipient, subject, body);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%hs\", subject=\"%hs\", text=\"%hs\""), recipient, subject, body);
 
    SNMP_PDU pdu(m_useInformRequest ? SNMP_INFORM_REQUEST : SNMP_TRAP, m_version, m_trapId, static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));
 
-   pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, body));
+   WCHAR *wideBody = WideStringFromUTF8String(body);
+   pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, wideBody));
+   MemFree(wideBody);
    if ((subject != nullptr) && (*subject != 0))
    {
-      pdu.bindVariable(CreateVarbind(m_additionalDataFieldId, ASN_OCTET_STRING, subject));
+      WCHAR *wideSubject = WideStringFromUTF8String(subject);
+      pdu.bindVariable(CreateVarbind(m_additionalDataFieldId, ASN_OCTET_STRING, wideSubject));
 
-      if (*subject == _T('{'))
+      if (*subject == '{')
       {
          // JSON format
-#ifdef UNICODE
-         char *utfString = UTF8StringFromWideString(subject);
-#else
-         char *utfString = UTF8StringFromMBString(subject);
-#endif
          json_error_t error;
-         json_t *json = json_loads(utfString, 0, &error);
-         MemFree(utfString);
+         json_t *json = json_loads(subject, 0, &error);
          if (json != nullptr)
          {
             TCHAR *sv = json_object_get_string_t(json, "source", nullptr);
@@ -163,22 +160,25 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
       {
          // Key=value format
          TCHAR value[256];
-         if (ExtractNamedOptionValue(subject, _T("source"), value, 256))
+         if (ExtractNamedOptionValue(wideSubject, _T("source"), value, 256))
             pdu.bindVariable(CreateVarbind(m_sourceFieldId, ASN_OCTET_STRING, value));
-         if (ExtractNamedOptionValue(subject, _T("severity"), value, 256))
+         if (ExtractNamedOptionValue(wideSubject, _T("severity"), value, 256))
             pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, value));
-         if (ExtractNamedOptionValue(subject, _T("timestamp"), value, 256))
+         if (ExtractNamedOptionValue(wideSubject, _T("timestamp"), value, 256))
             pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, value));
-         if (ExtractNamedOptionValue(subject, _T("key"), value, 256))
+         if (ExtractNamedOptionValue(wideSubject, _T("key"), value, 256))
             pdu.bindVariable(CreateVarbind(m_keyFieldId, ASN_OCTET_STRING, value));
       }
+      MemFree(wideSubject);
    }
 
+   WCHAR *wideRecipient = WideStringFromUTF8String(recipient);
    SNMP_UDPTransport transport;
-   uint32_t rc = transport.createUDPTransport(recipient, m_port);
+   uint32_t rc = transport.createUDPTransport(wideRecipient, m_port);
+   MemFree(wideRecipient);
    if (rc != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SNMP transport for target %s (%s)"), recipient, SnmpGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SNMP transport for target %hs (%s)"), recipient, SnmpGetErrorText(rc));
       return -1;
    }
 
@@ -194,7 +194,7 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
    rc = transport.sendTrap(&pdu, 2000);
    if (rc != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send SNMP trap to %s (%s)"), recipient, SnmpGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send SNMP trap to %hs (%s)"), recipient, SnmpGetErrorText(rc));
       return -1;
    }
    return 0;

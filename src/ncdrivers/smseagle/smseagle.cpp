@@ -49,7 +49,7 @@ private:
 public:
    SMSEagleDriver(Config *config);
 
-   virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
+   virtual int send(const char *recipient, const char *subject, const char *body) override;
 };
 
 /**
@@ -120,9 +120,9 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
 /**
  * Send SMS
  */
-int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
+int SMSEagleDriver::send(const char *recipient, const char *subject, const char *body)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone/group=\"%s\", body=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("phone/group=\"%hs\", body=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -156,18 +156,9 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
    char errbuf[CURL_ERROR_SIZE];
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
 
-   bool intlPrefix = (recipient[0] == _T('+')); // this will be used to decide whether it is number or group name
-#ifdef UNICODE
-   char *mbphone = MBStringFromWideString(recipient);
-   char *mbmsg = MBStringFromWideString(body);
-   char *phone = curl_easy_escape(curl, mbphone, 0);
-   char *msg = curl_easy_escape(curl, mbmsg, 0);
-   free(mbphone);
-   free(mbmsg);
-#else
+   bool intlPrefix = (recipient[0] == '+'); // this will be used to decide whether it is number or group name
    char *phone = curl_easy_escape(curl, recipient, 0);
    char *msg = curl_easy_escape(curl, body, 0);
-#endif
 
    char url[4096];
    snprintf(url, 4096,
