@@ -141,7 +141,7 @@ public class ServerClock extends Composite
       DateFormat df = DateFormatFactory.getShortTimeFormat();
       NXCSession session = Registry.getSession();
       String tz = session.getServerTimeZone();
-      df.setTimeZone(TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+)(:[0-9]+)?.*", "GMT$1$2")));
+      df.setTimeZone(TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]*([\\+\\-][0-9]+)(:[0-9]+)?.*", "GMT$1$2")));
       String timeText = showTimeZone ? (df.format(new Date(session.getServerTime())) + " " + tz) : df.format(new Date(session.getServerTime()));
       time.setText(showText ? String.format(i18n.tr("Server time is %s"), timeText) : timeText);
       getParent().layout(true, true);
