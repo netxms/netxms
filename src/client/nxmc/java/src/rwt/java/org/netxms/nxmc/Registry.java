@@ -440,7 +440,7 @@ public final class Registry
       if (instance.session != null)
       {
          String tz = instance.session.getServerTimeZone();
-         instance.timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1"));
+         instance.timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]*([\\+\\-][0-9]+)(:[0-9]+)?.*", "GMT$1$2"));
       }
    }
 
