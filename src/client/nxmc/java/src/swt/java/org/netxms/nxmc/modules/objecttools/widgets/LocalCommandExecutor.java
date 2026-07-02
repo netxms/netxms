@@ -32,6 +32,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.TcpPortForwarder;
+import org.netxms.nxmc.tools.SandboxHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -131,7 +132,7 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
       }
       else
       {
-         process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine });
+         process = Runtime.getRuntime().exec(SandboxHelper.buildHostShellCommand(commandLine));
       }
 
       InputStream in = process.getInputStream();

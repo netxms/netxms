@@ -37,6 +37,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.TcpPortForwarder;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.SandboxHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -57,7 +58,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 
    /**
     * Constructor
-    * 
+    *
     * @param node
     * @param tool
     * @param inputValues
@@ -69,13 +70,13 @@ public class LocalCommandResults extends AbstractCommandResultView
    }
 
    /**
-    * Clone constructor 
+    * Clone constructor
     */
    protected LocalCommandResults()
    {
       super();
    }
-   
+
 	/**
     * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -137,7 +138,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 
 	/**
 	 * Fill context menu
-	 * 
+	 *
 	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
@@ -154,7 +155,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 	{
       if (!restoreUserInputFields())
          return;
-      
+
 		synchronized(mutex)
 		{
 			if (running)
@@ -209,7 +210,7 @@ public class LocalCommandResults extends AbstractCommandResultView
             }
             else
             {
-               process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine });
+               process = Runtime.getRuntime().exec(SandboxHelper.buildHostShellCommand(commandLine));
             }
 
 				InputStream in = process.getInputStream();
