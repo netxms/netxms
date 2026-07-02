@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - netsvc subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = netsvc
+SOURCES = http.cpp main.cpp other.cpp pop3.cpp smtp.cpp ssh.cpp tcp.cpp telnet.cpp tls.cpp util.cpp
+SA_LIBS = $(CURL_LIBS) $(SSL_LIBS) $(PCRE_LIBS)
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

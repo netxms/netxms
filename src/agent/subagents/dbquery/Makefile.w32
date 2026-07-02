@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - dbquery subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = dbquery
+SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp table.cpp
+SA_LIBS = -lnxdb
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

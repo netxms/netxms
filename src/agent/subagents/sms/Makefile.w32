@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - sms subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = sms
+SOURCES = main.cpp pdumode.cpp sender.cpp
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

@@ -792,8 +792,8 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt) const
 {
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dciId);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_type));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_origin));
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_statusCode);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpNode);
    DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, m_timestamp);

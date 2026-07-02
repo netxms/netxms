@@ -1,0 +1,114 @@
+#
+# Makefile.w32 - nxagentd (NetXMS monitoring agent) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# Note: Variables are exported from top-level Makefile.w32
+
+# Target (console executable, emitted into the centralized bin directory)
+TARGET = $(BIN_DIR)/nxagentd.exe
+
+# Source files (Windows build)
+# Note: subagents are separate DLLs on Windows, so static_subagents.cpp is not built.
+#       modbus.cpp / jq usage are enabled via nms_common.h (WITH_MODBUS / HAVE_LIBJQ).
+SOURCES = \
+	actions.cpp \
+	aitools.cpp \
+	bkgnd_metrics.cpp \
+	certinfo.cpp \
+	cng_engine.cpp \
+	comm.cpp \
+	config.cpp \
+	ctrl.cpp \
+	datacoll.cpp \
+	dbupgrade.cpp \
+	dcsnmp.cpp \
+	ethernetip.cpp \
+	event.cpp \
+	exec.cpp \
+	extagent.cpp \
+	extdp.cpp \
+	extension.cpp \
+	extension_lifecycle.cpp \
+	extension_registry.cpp \
+	filemon.cpp \
+	hddinfo.cpp \
+	localdb.cpp \
+	master.cpp \
+	metrics.cpp \
+	modbus.cpp \
+	nproc.cpp \
+	nxagentd.cpp \
+	package.cpp \
+	pe_cert.cpp \
+	policy.cpp \
+	problems.cpp \
+	proxy.cpp \
+	push.cpp \
+	register.cpp \
+	sa.cpp \
+	service.cpp \
+	session.cpp \
+	snmpproxy.cpp \
+	snmptrapproxy.cpp \
+	subagent.cpp \
+	sysinfo.cpp \
+	syslog.cpp \
+	tcpproxy.cpp \
+	tftp.cpp \
+	tools.cpp \
+	tunnel.cpp \
+	watchdog.cpp \
+	websvc.cpp \
+	wincert.cpp
+
+# Resource file (embeds version info and the compiled message table MSG00001.bin)
+RC_SOURCE = nxagentd.rc
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+RC_OBJECT = nxagentd.res.o
+
+# Compiler flags
+CXXFLAGS = $(COMMON_CXXFLAGS) \
+	-D_CONSOLE
+
+# Linker flags (console executable - no -shared)
+LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS)
+
+# Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS)
+LIBS = -lnxagent -lnxsde -lnxsnmp -lethernetip -lnxdb -lnetxms -lnxjansson \
+	$(JQ_LIBS) \
+	$(MODBUS_LIBS) \
+	$(CURL_LIBS) \
+	$(SSL_LIBS) \
+	$(PCRE_LIBS) \
+	$(WIN_LIBS) \
+	-lncrypt -lmsi
+
+# Targets
+.PHONY: all clean install
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
+	@mkdir -p $(BIN_DIR)
+	@echo "  LD      $@"
+	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+	@echo "  Built: $(TARGET)"
+
+%.o: %.cpp
+	@echo "  CXX     $<"
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RC_OBJECT): $(RC_SOURCE)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) .depend
+
+install: $(TARGET)
+	@echo "  INSTALL $(TARGET)"
+	mkdir -p "$(PREFIX)/bin"
+	cp $(TARGET) "$(PREFIX)/bin/"

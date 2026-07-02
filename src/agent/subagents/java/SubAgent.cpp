@@ -98,7 +98,7 @@ static void JNICALL J_postEvent(JNIEnv *jenv, jclass jcls, jint event, jstring j
       for(jsize i = 0; i < numArgs; i++)
       {
          jstring resString = reinterpret_cast<jstring>(jenv->GetObjectArrayElement(jargs, i));
-         IntegerToString(i + 1, &paramName[9]);
+         IntegerToString(static_cast<int32_t>(i + 1), &paramName[9]);
          parameters.set(paramName, CStringFromJavaString(jenv, resString));
          jenv->DeleteLocalRef(resString);
       }

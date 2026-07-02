@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - prometheus subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = prometheus
+SOURCES = handler.cpp main.cpp parser.cpp printer.cpp receiver.cpp scraper.cpp generated/remote.pb.cc generated/types.pb.cc
+SA_LIBS = -lnxsde $(CURL_LIBS) $(PROTOBUF_LIBS) $(MICROHTTPD_LIBS) $(SNAPPY_LIBS)
+SA_CPPFLAGS = -Igenerated -I$(PROTOBUF_ROOT)/include -I$(MICROHTTPD_ROOT)/include -I$(SNAPPY_ROOT)/include
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

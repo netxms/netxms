@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxaevent agent tool for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxaevent
+SOURCES = nxaevent.cpp
+TOOL_LIBS = -lnetxms
+
+include $(TOPDIR)/src/agent/tools/tool-common.mk

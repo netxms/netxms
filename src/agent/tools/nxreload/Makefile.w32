@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - nxreload agent tool for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxreload
+SOURCES = nxreload.cpp
+
+include $(TOPDIR)/src/agent/tools/tool-common.mk

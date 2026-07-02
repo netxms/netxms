@@ -26,6 +26,12 @@
 #include <comdef.h>
 #include <VersionHelpers.h>
 
+// SERVICE_TRIGGER_INFO and the IAutomaticUpdates2/IAutomaticUpdatesResults COM
+// interfaces are missing from mingw's SDK headers; provide them for MinGW builds.
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#include <mingw/win_missing_defs.h>
+#endif
+
 /**
  * Handler for System.ServiceState parameter
  */
@@ -776,7 +782,7 @@ static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
    bool success = false;
 
    IAutomaticUpdates2 *updateService;
-   if (CoCreateInstance(CLSID_AutomaticUpdates, nullptr, CLSCTX_ALL, IID_IAutomaticUpdates2, (void**)&updateService) == S_OK)
+   if (CoCreateInstance(CLSID_AutomaticUpdates, nullptr, CLSCTX_ALL, __uuidof(IAutomaticUpdates2), (void**)&updateService) == S_OK)
    {
       // Enable call cancellation and attempt to cancel call after timeout
       // as there were reports of this call hanging

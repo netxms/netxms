@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - gps subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = gps
+SOURCES = main.cpp nmea.c
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

@@ -460,6 +460,12 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    time_t timestamp = 0;
    int64_t timestampMs = 0;
 
+   // Declared before the first "goto cleanup" so the jumps do not bypass their initialization
+   PEVT_VARIANT values = nullptr;
+   bool explicitlyIncluded = false;
+   uint32_t eventId = 0;
+   uint32_t level = 0;
+
    // Get event values
    DWORD reqSize, propCount = 0;
    BOOL success = EvtRender(reader->m_renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
@@ -477,7 +483,7 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
 
    // Publisher name
    TCHAR publisherName[MAX_PATH];
-   PEVT_VARIANT values = PEVT_VARIANT(renderBuffer);
+   values = PEVT_VARIANT(renderBuffer);
    if ((values[0].Type == EvtVarTypeString) && (values[0].StringVal != NULL))
    {
 #ifdef UNICODE
@@ -514,7 +520,6 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    }
 
    // Check event source against filters
-   bool explicitlyIncluded = false;
    for (int i = 0; i < reader->m_includedSources.size(); i++)
    {
       if (MatchString(reader->m_includedSources.get(i), publisherName, false))
@@ -536,7 +541,6 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    }
 
    // Event ID
-   uint32_t eventId = 0;
    if (values[1].Type == EvtVarTypeUInt16)
       eventId = values[1].UInt16Val;
 
@@ -565,7 +569,6 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    }
 
    // Severity level
-   uint32_t level = 0;
    if (values[2].Type == EvtVarTypeByte)
    {
       switch (values[2].ByteVal)

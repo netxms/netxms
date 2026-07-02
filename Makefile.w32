@@ -11,6 +11,13 @@ TOPDIR := $(CURDIR)
 # Include user configuration
 include config.mingw
 
+# Normalize gating flags: inline comments in config.mingw leave trailing
+# whitespace on values (e.g. "1              "), which would break exact-match
+# ifeq comparisons. Strip them so "$(BUILD_AGENT)" etc. compare cleanly.
+BUILD_AGENT := $(strip $(BUILD_AGENT))
+BUILD_CLIENT := $(strip $(BUILD_CLIENT))
+BUILD_SERVER := $(strip $(BUILD_SERVER))
+
 # Build subdirectories sequentially (one at a time)
 # Each subdirectory will still compile its files in parallel with -j
 .NOTPARALLEL:
@@ -19,10 +26,12 @@ include config.mingw
 export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD
 export ARCH DEBUG PREFIX
 export COMMON_CFLAGS COMMON_CXXFLAGS COMMON_LDFLAGS COMMON_LIBDIRS
-export WIN_LIBS SSL_LIBS PCRE_LIBS CURL_LIBS ZLIB_LIBS EXPAT_LIBS
+export WIN_LIBS SSL_LIBS PCRE_LIBS CURL_LIBS ZLIB_LIBS EXPAT_LIBS JQ_LIBS MODBUS_LIBS LIBSSH_LIBS
+export MOSQUITTO_LIBS PROTOBUF_LIBS MICROHTTPD_LIBS SNAPPY_LIBS
 export BUILD_DIR BIN_DIR LIB_DIR OBJ_DIR
 export VERBOSE Q
-export OPENSSL_ROOT PCRE_ROOT ZLIB_ROOT CURL_ROOT EXPAT_ROOT
+export OPENSSL_ROOT PCRE_ROOT ZLIB_ROOT CURL_ROOT EXPAT_ROOT JQ_ROOT MODBUS_ROOT LIBSSH_ROOT
+export MOSQUITTO_ROOT JNI_ROOT PROTOBUF_ROOT MICROHTTPD_ROOT SNAPPY_ROOT
 
 #####################################################################
 # Build Order
@@ -39,7 +48,11 @@ CORE_LIBS = \
 MID_LIBS = \
     src/libnxsl \
     src/libnxlp \
-    src/db/libnxdb
+    src/db/libnxdb \
+    src/snmp/libnxsnmp \
+    src/ethernetip/libethernetip \
+    src/agent/libnxsde \
+    src/libnxjava
 
 # All libraries
 LIBS = $(CORE_LIBS) $(MID_LIBS)
