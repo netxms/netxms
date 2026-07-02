@@ -2809,7 +2809,12 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    uint32_t assetId = json_object_get_uint32(json, "assetId");
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
 
-   if (((parent == nullptr) && (objectClass != OBJECT_NODE)) || ((assetId != 0) && (asset == nullptr)))
+   // Object to link the new asset to (create + link + autofill in one request)
+   uint32_t linkedObjectId = (objectClass == OBJECT_ASSET) ? json_object_get_uint32(json, "linkedObjectId") : 0;
+   shared_ptr<NetObj> linkedObject = FindObjectById(linkedObjectId);
+
+   if (((parent == nullptr) && (objectClass != OBJECT_NODE)) || ((assetId != 0) && (asset == nullptr)) ||
+       ((linkedObjectId != 0) && (linkedObject == nullptr)))
       return RCC_INVALID_OBJECT_ID;
 
    // User should have create access to parent object
@@ -2827,6 +2832,21 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    if ((!parentAlwaysValid && !IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1)) ||
        ((assetId != 0) && !IsValidAssetLinkTargetClass(objectClass)))
       return RCC_INCOMPATIBLE_OPERATION;
+
+   // Object to be linked to the new asset should be of valid class and user should have modify access to it
+   // (as well as to the asset currently linked to that object, because it will be unlinked)
+   if (linkedObject != nullptr)
+   {
+      if (!IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
+         return RCC_INCOMPATIBLE_OPERATION;
+      shared_ptr<NetObj> oldAsset = FindObjectById(linkedObject->getAssetId(), OBJECT_ASSET);
+      if (!linkedObject->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
+          ((oldAsset != nullptr) && !oldAsset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)))
+      {
+         session->writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking this object to new asset \"%s\"", objectName);
+         return RCC_ACCESS_DENIED;
+      }
+   }
 
    // Check zone
    if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) && (FindZoneByUIN(zoneUIN) == nullptr))
@@ -3130,6 +3150,20 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
 
    if (asset != nullptr)
       LinkAsset(asset.get(), object.get(), nullptr);
+
+   if (linkedObject != nullptr)
+   {
+      shared_ptr<Asset> newAsset = static_pointer_cast<Asset>(object);
+      std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), userId);
+      if (result.first != RCC_SUCCESS)
+      {
+         // Not a fatal error - asset is already created from validated properties, so link it anyway
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"CreateObjectFromJSON: cannot update identification of new asset \"%s\" [%u] from object %s [%u] (%s)",
+               newAsset->getName(), newAsset->getId(), linkedObject->getName(), linkedObject->getId(), result.second.cstr());
+      }
+      LinkAsset(newAsset.get(), linkedObject.get(), nullptr);
+      newAsset->autoFillProperties();
+   }
 
    object->publish();
    *newObject = object;

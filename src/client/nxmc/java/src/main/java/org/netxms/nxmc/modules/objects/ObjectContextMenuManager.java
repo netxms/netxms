@@ -75,6 +75,7 @@ import org.netxms.nxmc.modules.agentmanagement.SendUserAgentNotificationAction;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.PackageSelectionDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
+import org.netxms.nxmc.modules.assetmanagement.CreateAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
@@ -175,6 +176,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionForcePolicyInstall;
    private ObjectAction<?> actionLinkAssetToObject;
    private ObjectAction<?> actionUnlinkAssetFromObject;
+   private ObjectAction<?> actionCreateAssetFromObject;
    private ObjectAction<?> actionLinkObjectToAsset;
    private ObjectAction<?> actionUnlinkObjectFromAsset;
    private ObjectAction<?> actionCloneAsDashboard;
@@ -577,6 +579,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
       actionLinkAssetToObject = new LinkAssetToObjectAction(viewPlacement, selectionProvider);
       actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
+      actionCreateAssetFromObject = new CreateAssetFromObjectAction(viewPlacement, selectionProvider);
       actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
       actionCloneAsDashboard = new CloneAsDashboardAction(viewPlacement, selectionProvider);
@@ -658,6 +661,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
          if (actionLinkObjectToAsset.isValidForSelection(selection))
          {
+            add(actionCreateAssetFromObject);
             add(actionLinkObjectToAsset);
             if (object.getAssetId() != 0)
                add(actionUnlinkObjectFromAsset);

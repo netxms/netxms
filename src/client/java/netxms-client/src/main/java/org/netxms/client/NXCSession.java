@@ -7042,6 +7042,7 @@ public class NXCSession
          case AbstractObject.OBJECT_ASSET:
             if (data.getAssetProperties() != null)
                msg.setFieldsFromStringMap(data.getAssetProperties(), NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
+            msg.setFieldUInt32(NXCPCodes.VID_LINKED_OBJECT, data.getLinkedObjectId());
             break;
          case AbstractObject.OBJECT_CHASSIS:
             msg.setFieldUInt32(NXCPCodes.VID_CONTROLLER_ID, data.getControllerId());

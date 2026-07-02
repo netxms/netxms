@@ -10860,6 +10860,9 @@ components:
           additionalProperties:
             type: string
           description: (Asset) Asset attribute values keyed by attribute name. All mandatory attributes must be present.
+        linkedObjectId:
+          type: integer
+          description: (Asset) Optional ID of an existing object to link the new asset to. Server will update asset identification (serial number or MAC address) from that object and run auto fill scripts after linking. Requires modify access to that object.
     ObjectDetails:
       type: object
       properties:

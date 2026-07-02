@@ -6537,8 +6537,13 @@ void ClientSession::createObject(const NXCPMessage& request)
    uint32_t assetId = request.getFieldAsUInt32(VID_ASSET_ID);
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
 
+   // Object to link the new asset to (create + link + autofill in one request)
+   uint32_t linkedObjectId = (objectClass == OBJECT_ASSET) ? request.getFieldAsUInt32(VID_LINKED_OBJECT) : 0;
+   shared_ptr<NetObj> linkedObject = FindObjectById(linkedObjectId);
+
    if (((parent != nullptr) || (objectClass == OBJECT_NODE)) &&
-       ((assetId == 0) || (asset != nullptr)))
+       ((assetId == 0) || (asset != nullptr)) &&
+       ((linkedObjectId == 0) || (linkedObject != nullptr)))
    {
       // User should have create access to parent object
       if ((parent != nullptr) ?
@@ -6559,6 +6564,28 @@ void ClientSession::createObject(const NXCPMessage& request)
             debugPrintf(4, _T("Creation of object \"%s\" of class %d under %s [%u] failed (incompatible operation)"), objectName, objectClass,
                   (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0);
             rcc = RCC_INCOMPATIBLE_OPERATION;
+         }
+
+         // Object to be linked to the new asset should be of valid class and user should have modify access to it
+         // (as well as to the asset currently linked to that object, because it will be unlinked)
+         if ((rcc == RCC_SUCCESS) && (linkedObject != nullptr))
+         {
+            if (IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
+            {
+               shared_ptr<NetObj> oldAsset = FindObjectById(linkedObject->getAssetId(), OBJECT_ASSET);
+               if (!linkedObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) ||
+                   ((oldAsset != nullptr) && !oldAsset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)))
+               {
+                  writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking this object to new asset \"%s\"", objectName);
+                  rcc = RCC_ACCESS_DENIED;
+               }
+            }
+            else
+            {
+               debugPrintf(4, L"Creation of asset object \"%s\" failed (object %s [%u] cannot be linked to an asset)",
+                     objectName, linkedObject->getName(), linkedObject->getId());
+               rcc = RCC_INCOMPATIBLE_OPERATION;
+            }
          }
 
          // Check zone
@@ -6877,6 +6904,20 @@ void ClientSession::createObject(const NXCPMessage& request)
                if (asset != nullptr)
                {
                   LinkAsset(asset.get(), object.get(), this);
+               }
+
+               if (linkedObject != nullptr)
+               {
+                  shared_ptr<Asset> newAsset = static_pointer_cast<Asset>(object);
+                  std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), m_userId);
+                  if (result.first != RCC_SUCCESS)
+                  {
+                     // Not a fatal error - asset is already created from validated properties, so link it anyway
+                     debugPrintf(4, L"Cannot update identification of new asset \"%s\" [%u] from object %s [%u] (%s)",
+                           newAsset->getName(), newAsset->getId(), linkedObject->getName(), linkedObject->getId(), result.second.cstr());
+                  }
+                  LinkAsset(newAsset.get(), linkedObject.get(), this);
+                  newAsset->autoFillProperties();
                }
 
                object->publish();

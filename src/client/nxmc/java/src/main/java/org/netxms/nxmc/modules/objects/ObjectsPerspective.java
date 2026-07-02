@@ -87,6 +87,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
+import org.netxms.nxmc.modules.assetmanagement.CreateAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
@@ -304,6 +305,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       actionContributions.add(new ForcedPolicyDeploymentAction(new ViewPlacement(this), this));
       actionContributions.add(new LinkAssetToObjectAction(new ViewPlacement(this), this));
       actionContributions.add(new UnlinkAssetFromObjectAction(new ViewPlacement(this), this));
+      actionContributions.add(new CreateAssetFromObjectAction(new ViewPlacement(this), this));
       actionContributions.add(new LinkObjectToAssetAction(new ViewPlacement(this), this));
       actionContributions.add(new UnlinkObjectFromAssetAction(new ViewPlacement(this), this));
       actionContributions.add(new ExportDashboardAction(new ViewPlacement(this), this));

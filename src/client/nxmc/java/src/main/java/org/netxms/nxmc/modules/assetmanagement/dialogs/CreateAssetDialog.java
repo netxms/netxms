@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,10 @@ package org.netxms.nxmc.modules.assetmanagement.dialogs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -31,10 +33,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.asset.AssetAttribute;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AssetGroup;
+import org.netxms.client.objects.AssetRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.assetmanagement.widgets.AssetPropertyEditor;
+import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.ObjectNameValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -49,10 +55,15 @@ public class CreateAssetDialog extends Dialog
    private Map<String, AssetAttribute> schema = Registry.getSession().getAssetManagementSchema();
    private LabeledText nameField;
    private LabeledText aliasField;
+   private ObjectSelector parentSelector;
    private List<AssetPropertyEditor> propertyEditors = new ArrayList<AssetPropertyEditor>(schema.size());
+   private String defaultName;
+   private Map<String, String> prefilledProperties;
+   private boolean selectParent;
    private String name;
    private String alias;
    private Map<String, String> properties;
+   private long parentId;
 
    /**
     * Create dialog.
@@ -61,7 +72,22 @@ public class CreateAssetDialog extends Dialog
     */
    public CreateAssetDialog(Shell parentShell)
    {
+      this(parentShell, null, null);
+   }
+
+   /**
+    * Create dialog with pre-filled name and properties and asset group selector (for creating asset from existing object).
+    *
+    * @param parentShell parent shell
+    * @param defaultName initial value for asset name (can be null)
+    * @param prefilledProperties initial values for asset properties (can be null)
+    */
+   public CreateAssetDialog(Shell parentShell, String defaultName, Map<String, String> prefilledProperties)
+   {
       super(parentShell);
+      this.defaultName = defaultName;
+      this.prefilledProperties = prefilledProperties;
+      selectParent = (defaultName != null) || (prefilledProperties != null);
    }
 
    /**
@@ -86,18 +112,41 @@ public class CreateAssetDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      layout.numColumns = 2;
+      layout.numColumns = schema.isEmpty() ? 1 : 2;
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
+
+      GridData gd;
+      if (selectParent)
+      {
+         parentSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+         parentSelector.setLabel(i18n.tr("Asset group"));
+         Set<Class<? extends AbstractObject>> classSet = new HashSet<>();
+         classSet.add(AssetGroup.class);
+         classSet.add(AssetRoot.class);
+         parentSelector.setObjectClass(classSet);
+         Set<Integer> classFilter = new HashSet<>();
+         classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+         classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
+         parentSelector.setClassFilter(classFilter);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.widthHint = 300;
+         gd.horizontalSpan = layout.numColumns;
+         parentSelector.setLayoutData(gd);
+      }
 
       nameField = new LabeledText(dialogArea, SWT.NONE);
       nameField.setLabel(i18n.tr("Name"));
       nameField.getTextControl().setTextLimit(63);
-      GridData gd = new GridData();
+      if (defaultName != null)
+         nameField.setText(defaultName);
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
       nameField.setLayoutData(gd);
 
       aliasField = new LabeledText(dialogArea, SWT.NONE);
@@ -106,9 +155,9 @@ public class CreateAssetDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
       aliasField.setLayoutData(gd);
-      
+
       schema.values().stream().sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName())).forEach((a) -> createPropertyEditor(dialogArea, a));
 
       Label label = new Label(dialogArea, SWT.NONE);
@@ -136,6 +185,12 @@ public class CreateAssetDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.TOP;
       editor.setLayoutData(gd);
+      if (prefilledProperties != null)
+      {
+         String value = prefilledProperties.get(attribute.getName());
+         if (value != null)
+            editor.setValue(value);
+      }
       propertyEditors.add(editor);
    }
 
@@ -146,6 +201,18 @@ public class CreateAssetDialog extends Dialog
    protected void okPressed()
    {
       boolean success = WidgetHelper.validateTextInput(nameField, new ObjectNameValidator());
+      if (selectParent)
+      {
+         if (parentSelector.getObjectId() == 0)
+         {
+            parentSelector.setErrorMessage(i18n.tr("Asset group must be selected"));
+            success = false;
+         }
+         else
+         {
+            parentSelector.setErrorMessage(null);
+         }
+      }
       for(AssetPropertyEditor e : propertyEditors)
       {
          if (!e.validateInput())
@@ -159,6 +226,8 @@ public class CreateAssetDialog extends Dialog
 
       alias = aliasField.getText().trim();
       name = nameField.getText().trim();
+      if (selectParent)
+         parentId = parentSelector.getObjectId();
 
       properties = new HashMap<>();
       for(AssetPropertyEditor e : propertyEditors)
@@ -199,5 +268,15 @@ public class CreateAssetDialog extends Dialog
    public Map<String, String> getProperties()
    {
       return properties;
+   }
+
+   /**
+    * Get ID of selected parent object (only valid if dialog was created with asset group selector).
+    *
+    * @return ID of selected parent object
+    */
+   public long getParentId()
+   {
+      return parentId;
    }
 }

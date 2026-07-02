@@ -113,6 +113,7 @@ public class NXCObjectCreationData
    private int instanceDiscoveryMethod;
    private long assetId;
    private Map<String, String> assetProperties;
+   private long linkedObjectId;
    private String connectorName;
    private String credentials;
    private String discoveryFilter;
@@ -1293,6 +1294,27 @@ public class NXCObjectCreationData
    }
 
    /**
+    * Get ID of object that will be linked to newly created asset (only for asset creation).
+    *
+    * @return ID of object that will be linked to newly created asset
+    */
+   public long getLinkedObjectId()
+   {
+      return linkedObjectId;
+   }
+
+   /**
+    * Set ID of object that will be linked to newly created asset (only for asset creation). Server will update asset
+    * identification (serial number or MAC address) from that object and run auto fill scripts after linking.
+    *
+    * @param linkedObjectId ID of object that will be linked to newly created asset
+    */
+   public void setLinkedObjectId(long linkedObjectId)
+   {
+      this.linkedObjectId = linkedObjectId;
+   }
+
+   /**
     * @return the connectorName
     */
    public String getConnectorName()
@@ -1387,7 +1409,7 @@ public class NXCObjectCreationData
             ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
-            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties +
+            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId +
             ", connectorName=" + connectorName + ", credentials=" + credentials +
             ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + "]";
    }
