@@ -8973,11 +8973,21 @@ void ClientSession::getParametersList(const NXCPMessage& request)
             WriteFullParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
             break;
          case OBJECT_CHASSIS:
+            response.setField(VID_RCC, RCC_SUCCESS);
             if (static_cast<Chassis&>(*object).getControllerId() != 0)
             {
                shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
                if (controller != nullptr)
                   static_cast<Node&>(*controller).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
+            }
+            break;
+         case OBJECT_SENSOR:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            if (static_cast<Sensor&>(*object).getGatewayNodeId() != 0)
+            {
+               shared_ptr<NetObj> gatewayNode = FindObjectById(static_cast<Sensor&>(*object).getGatewayNodeId(), OBJECT_NODE);
+               if (gatewayNode != nullptr)
+                  static_cast<Node&>(*gatewayNode).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
             }
             break;
          default:
@@ -9008,6 +9018,15 @@ void ClientSession::getListsList(const NXCPMessage& request)
          case OBJECT_NODE:
             response.setField(VID_RCC, RCC_SUCCESS);
             static_cast<Node&>(*object).writeListListToMessage(&response);
+            break;
+         case OBJECT_SENSOR:
+            response.setField(VID_RCC, RCC_SUCCESS);
+            if (static_cast<Sensor&>(*object).getGatewayNodeId() != 0)
+            {
+               shared_ptr<NetObj> gatewayNode = FindObjectById(static_cast<Sensor&>(*object).getGatewayNodeId(), OBJECT_NODE);
+               if (gatewayNode != nullptr)
+                  static_cast<Node&>(*gatewayNode).writeListListToMessage(&response);
+            }
             break;
          default:
             response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
