@@ -319,9 +319,14 @@ static bool ReadProcessCommandLine(DWORD pid, TCHAR *cmdLine, size_t len)
    bool success = false;
 
 #ifdef __64BIT__
+   // NtQueryInformationProcess lives in ntdll.dll, which nxagentd does not link against - resolve it dynamically
+   typedef NTSTATUS (NTAPI *NtQueryInformationProcessFn)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+   NtQueryInformationProcessFn queryInformationProcess = reinterpret_cast<NtQueryInformationProcessFn>(
+         GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtQueryInformationProcess"));
    ULONG size;
    PROCESS_BASIC_INFORMATION pbi;
-   if (NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size) == 0)  // STATUS_SUCCESS
+   if ((queryInformationProcess != nullptr) &&
+       (queryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size) == 0))  // STATUS_SUCCESS
    {
       SIZE_T dummy;
       PEB peb;
