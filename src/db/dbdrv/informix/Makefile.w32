@@ -1,0 +1,13 @@
+#
+# Makefile.w32 - Informix database driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = informix
+SOURCES = informix.cpp
+
+# infxcli.h lives in incl/cli within the Informix SDK
+DRV_CPPFLAGS = -I$(INFORMIX_ROOT)/incl -I$(INFORMIX_ROOT)/incl/cli
+DRV_LIBS = $(INFORMIX_LIBS)
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk

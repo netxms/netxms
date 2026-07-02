@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - Oracle database driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = oracle
+SOURCES = oracle.cpp
+
+DRV_CPPFLAGS = -I$(ORACLE_ROOT)/sdk/include
+DRV_LIBS = $(ORACLE_LIBS)
+
+include $(TOPDIR)/src/db/dbdrv/driver-common.mk
