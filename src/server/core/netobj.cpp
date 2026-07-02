@@ -3854,14 +3854,14 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
       {
          if ((dci == nullptr) && !dciNotFound && ((alarm != nullptr) || (event != nullptr)))
          {
-            shared_ptr<NetObj> object;
+            shared_ptr<NetObj> sourceObject;
             uint32_t dciId = 0;
             if (alarm != nullptr)
             {
                if (alarm->getDciId() != 0)
                {
                   dciId = alarm->getDciId();
-                  object = FindObjectById(alarm->getSourceObject());
+                  sourceObject = FindObjectById(alarm->getSourceObject());
                }
             }
             else if (event != nullptr)
@@ -3869,12 +3869,12 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
                if (event->getDciId() != 0)
                {
                   dciId = event->getDciId();
-                  object = FindObjectById(event->getSourceId());
+                  sourceObject = FindObjectById(event->getSourceId());
                }
             }
-            if (object != nullptr && object->isDataCollectionTarget())
+            if (sourceObject != nullptr && sourceObject->isDataCollectionTarget())
             {
-               shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, 0);
+               shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*sourceObject).getDCObjectById(dciId, 0);
                if (dcObject != nullptr)
                {
                   dci = dcObject->createDescriptor();
