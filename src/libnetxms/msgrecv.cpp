@@ -38,6 +38,7 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
    m_maxSize = maxSize;
    m_dataSize = 0;
    m_bytesToSkip = 0;
+   m_totalBytesReceived = 0;
    m_buffer = MemAllocArrayNoInit<BYTE>(initialSize);
    m_decryptionBuffer = nullptr;
 }
@@ -168,6 +169,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
             *result = MSGRECV_COMM_FAILURE;
          break;
       }
+      m_totalBytesReceived += bytes;
       if (m_bytesToSkip > 0)
       {
          if (bytes <= m_bytesToSkip)

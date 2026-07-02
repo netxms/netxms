@@ -277,6 +277,8 @@ void GetAllQueueStatistics(Table *table)
 extern VolatileCounter64 g_snmpTrapsReceived;
 extern VolatileCounter64 g_syslogMessagesReceived;
 extern VolatileCounter64 g_windowsEventsReceived;
+extern VolatileCounter64 g_agentTrafficBytesSent;
+extern VolatileCounter64 g_agentTrafficBytesReceived;
 extern uint32_t g_averageDCIQueuingTime;
 
 /**
@@ -439,6 +441,14 @@ DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t 
          ret_int64(buffer, totalRequests);
       else
          rc = DCE_NOT_SUPPORTED;
+   }
+   else if (!wcsicmp(name, L"Server.AgentTraffic.BytesReceived"))
+   {
+      ret_uint64(buffer, g_agentTrafficBytesReceived);
+   }
+   else if (!wcsicmp(name, L"Server.AgentTraffic.BytesSent"))
+   {
+      ret_uint64(buffer, g_agentTrafficBytesSent);
    }
    else if (!wcsicmp(name, L"Server.AgentTunnels.Bound.AgentProxy"))
    {

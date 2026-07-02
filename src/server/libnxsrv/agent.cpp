@@ -89,6 +89,7 @@ private:
    shared_ptr<AbstractCommChannel> m_channel;
    TCHAR m_threadPoolKey[16];
    bool m_attached;
+   uint64_t m_reportedBytesReceived;
 
    void debugPrintf(int level, const TCHAR *format, ...);
 
@@ -109,6 +110,7 @@ public:
       m_recvTimeout = connection->m_recvTimeout;
       _sntprintf(m_threadPoolKey, 16, _T("RECV-%u"), m_debugId);
       m_attached = true;
+      m_reportedBytesReceived = 0;
    }
 
    ~AgentConnectionReceiver()
@@ -214,6 +216,13 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
    {
       delete msg;
       return MSGRECV_COMM_FAILURE;   // Parent connection was destroyed
+   }
+
+   uint64_t totalBytesReceived = m_messageReceiver->getTotalBytesReceived();
+   if (totalBytesReceived > m_reportedBytesReceived)
+   {
+      connection->onBytesReceived(totalBytesReceived - m_reportedBytesReceived);
+      m_reportedBytesReceived = totalBytesReceived;
    }
 
    // Check for timeout
@@ -793,6 +802,7 @@ setup_encryption:
 	   msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
 	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, &m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
+	      onBytesSent(NXCP_HEADER_SIZE);
 	      NXCPMessage *rsp = m_messageWaitQueue.waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
 	      if (rsp != nullptr)
 	      {
@@ -1418,7 +1428,10 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
       NXCP_ENCRYPTED_MESSAGE *encryptedMsg = encryptionContext->encryptMessage(rawMsg);
       if (encryptedMsg != nullptr)
       {
-         success = (channel->send(encryptedMsg, ntohl(encryptedMsg->size), &m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         size_t size = ntohl(encryptedMsg->size);
+         success = (channel->send(encryptedMsg, size, &m_mutexSocketWrite) == (ssize_t)size);
+         if (success)
+            onBytesSent(size);
          MemFree(encryptedMsg);
       }
       else
@@ -1428,7 +1441,10 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    }
    else
    {
-      success = (channel->send(rawMsg, ntohl(rawMsg->size), &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      size_t size = ntohl(rawMsg->size);
+      success = (channel->send(rawMsg, size, &m_mutexSocketWrite) == (ssize_t)size);
+      if (success)
+         onBytesSent(size);
    }
    MemFree(rawMsg);
    return success;
@@ -1477,7 +1493,10 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = encryptionContext->encryptMessage(rawMsg);
       if (pEnMsg != nullptr)
       {
-         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), &m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         size_t size = ntohl(pEnMsg->size);
+         success = (channel->send(pEnMsg, size, &m_mutexSocketWrite) == (ssize_t)size);
+         if (success)
+            onBytesSent(size);
          MemFree(pEnMsg);
       }
       else
@@ -1487,7 +1506,10 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    }
    else
    {
-      success = (channel->send(rawMsg, ntohl(rawMsg->size), &m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      size_t size = ntohl(rawMsg->size);
+      success = (channel->send(rawMsg, size, &m_mutexSocketWrite) == (ssize_t)size);
+      if (success)
+         onBytesSent(size);
    }
    return success;
 }
@@ -1869,6 +1891,7 @@ struct FileUploadContext
    std::function<void (size_t)> userCallback;
    time_t lastProbeTime;
    uint32_t messageCount;
+   size_t reportedBytes;
 };
 
 /**
@@ -1877,6 +1900,12 @@ struct FileUploadContext
 static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
 {
    auto context = static_cast<FileUploadContext*>(_context);
+
+   if (bytesTransferred > context->reportedBytes)
+   {
+      context->connection->onBytesSent(bytesTransferred - context->reportedBytes);
+      context->reportedBytes = bytesTransferred;
+   }
 
    context->messageCount++;
    time_t now = time(nullptr);
@@ -2000,6 +2029,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          context.userCallback = progressCallback;
          context.lastProbeTime = time(nullptr);
          context.messageCount = 0;
+         context.reportedBytes = 0;
 
          if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr, bandwidthLimit))
          {
@@ -2230,6 +2260,7 @@ uint32_t AgentConnection::uploadAgentUpgradePackage(const TCHAR *localFile, uint
    context.userCallback = progressCallback;
    context.lastProbeTime = time(nullptr);
    context.messageCount = 0;
+   context.reportedBytes = 0;
 
    if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), 0, FileUploadProgressCalback, &context,
             &m_mutexSocketWrite, NXCP_STREAM_COMPRESSION_NONE, nullptr, bandwidthLimit))

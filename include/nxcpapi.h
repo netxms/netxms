@@ -346,6 +346,7 @@ private:
    size_t m_maxSize;
    size_t m_dataSize;
    ssize_t m_bytesToSkip;
+   uint64_t m_totalBytesReceived;
 
    NXCPMessage *getMessageFromBuffer(bool *protocolError, bool *decryptionError);
 
@@ -362,6 +363,7 @@ public:
 
    NXCPMessage *readMessage(uint32_t timeout, MessageReceiverResult *result, bool allowReadBytes = true);
    NXCP_MESSAGE *getRawMessageBuffer() { return (NXCP_MESSAGE *)m_buffer; }
+   uint64_t getTotalBytesReceived() const { return m_totalBytesReceived; }
 
    static const TCHAR *resultToText(MessageReceiverResult result);
 };
