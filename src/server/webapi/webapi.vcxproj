@@ -332,6 +332,7 @@
     <ClCompile Include="alarms.cpp" />
     <ClCompile Include="asset_management.cpp" />
     <ClCompile Include="chassis.cpp" />
+    <ClCompile Include="cloud_connectors.cpp" />
     <ClCompile Include="conn_history.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="dcst.cpp" />
