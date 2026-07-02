@@ -64,6 +64,8 @@ tags:
     description: Web service definition management
   - name: Asset Management Schema
     description: Asset management schema (asset attribute definitions)
+  - name: Cloud Connectors
+    description: Cloud connector information
 paths:
   /:
     get:
@@ -1400,6 +1402,24 @@ paths:
           description: Internal server error.
       security:
         - BearerAuth: []
+  /v1/cloud-connectors:
+    get:
+      operationId: listCloudConnectors
+      summary: List cloud connectors
+      description: Retrieve a list of all available cloud connector names. Cloud connectors are provided by server modules and referenced by name when configuring cloud domain objects.
+      responses:
+        '200':
+          description: Cloud connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      security:
+        - BearerAuth: []
+      tags:
+        - Cloud Connectors
   /v1/connection-history:
     get:
       operationId: getConnectionHistory

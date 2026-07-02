@@ -33,6 +33,9 @@
     <ClCompile Include="chassis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cloud_connectors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="datacoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
