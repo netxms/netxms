@@ -421,6 +421,23 @@ static bool RunExportDDL(sqlite3 *db, const wchar_t *query)
 }
 
 /**
+ * Callback for copying module schema version metadata entry into export file
+ */
+static bool ExportModuleSchemaVersion(const wchar_t *module, const wchar_t *tag, void *context)
+{
+   wchar_t value[256];
+   if (!DBMgrMetaDataReadStr(tag, value, 256, L"") || (value[0] == 0))
+   {
+      WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Cannot read metadata entry \"%s\" (schema version for module %s)\n", tag, module);
+      return false;
+   }
+
+   wchar_t query[1024];
+   nx_swprintf(query, 1024, L"INSERT OR REPLACE INTO metadata (var_name,var_value) VALUES ('%s','%s')", tag, value);
+   return RunExportDDL(static_cast<sqlite3*>(context), query);
+}
+
+/**
  * Export per-object aggregate table idata_1h_<id> / idata_1d_<id> (issue #419).
  * Per-object aggregate tables exist only on non-TSDB sources that are not in
  * single-table mode - on TSDB the aggregates live in global continuous aggregates,
@@ -558,6 +575,12 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
    if (!ValidateDatabase())
       return;
 
+   if (!CheckModuleSchemaVersions())
+   {
+      WriteToTerminal(L"Database schema extensions version check failed\n");
+      return;
+   }
+
 	// Create new SQLite database
 	remove(file);
    sqlite3 *db;
@@ -605,6 +628,11 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
 	   WriteToTerminal(L"\x1b[31;1mERROR:\x1b[0m Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n");
 		goto cleanup;
 	}
+
+	// Copy module schema versions into export file (module schema files do not provide them),
+	// so that the export file can be upgraded and validated on import
+	if (!EnumerateModuleSchemaVersionTags(ExportModuleSchemaVersion, db))
+	   goto cleanup;
 
 	// Export tables
 	for(int i = 0; g_tables[i] != nullptr; i++)

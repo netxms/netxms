@@ -87,6 +87,7 @@ void GenerateRandomPassword(TCHAR *buffer, size_t length);
 bool LoadServerModules(wchar_t *moduleLoadList, bool quiet);
 bool EnumerateModuleTables(bool (*handler)(const wchar_t*, void*), void *userData);
 bool EnumerateModuleSchemas(bool (*handler)(const wchar_t*, void*), void *userData);
+bool EnumerateModuleSchemaVersionTags(bool (*handler)(const wchar_t*, const wchar_t*, void*), void *userData);
 bool UpgradeModuleSchemas();
 bool CheckModuleSchemas();
 bool CheckModuleSchemaVersions();
