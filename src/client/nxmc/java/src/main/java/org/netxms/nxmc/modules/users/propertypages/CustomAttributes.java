@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -104,6 +102,7 @@ public class CustomAttributes extends PropertyPage
 
       Composite listArea = new Composite(dialogArea, SWT.BORDER);
       listArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      listArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       layout = new GridLayout();
 		layout.marginWidth = 0;
@@ -206,13 +205,7 @@ public class CustomAttributes extends PropertyPage
          }
       });
 
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editAttribute();
-         }
-      });
+      viewer.addDoubleClickListener((e) -> editAttribute());
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
