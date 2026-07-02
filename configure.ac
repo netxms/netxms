@@ -1086,8 +1086,8 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	TEST_MODULES="agent test-libnxsl test-libnxsnmp test-ncd-webhook"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
@@ -1446,8 +1446,8 @@ if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
 		MODULES="$MODULES libnxmb client"
 	else
-		MODULES="$MODULES libnxmb client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
-		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
+		MODULES="$MODULES libnxmb client libnxsl libnxlp db nxscript ncdrivers snmp"
+		TEST_MODULES="$TEST_MODULES test-libnxsl test-libnxsnmp test-ncd-webhook"
 		TOOLS="$TOOLS nxlptest"
 	fi
 fi
@@ -4790,7 +4790,6 @@ AC_CONFIG_FILES([
 	src/java-common/Makefile
 	src/java-common/netxms-base/Makefile
 	src/libnetxms/Makefile
-	src/libnxcc/Makefile
 	src/libnxjava/Makefile
 	src/libnxjava/java/Makefile
 	src/libnxlp/Makefile
@@ -4930,7 +4929,6 @@ AC_CONFIG_FILES([
 	tests/include/Makefile
 	tests/suite/Makefile
 	tests/test-libnetxms/Makefile
-	tests/test-libnxcc/Makefile
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile

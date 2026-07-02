@@ -122,7 +122,6 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 - **libnxsl** (`src/libnxsl/`) - NXSL scripting language interpreter
 - **libnxdb** (`src/db/libnxdb/`) - Database abstraction
 - **libnxsnmp** (`src/snmp/libnxsnmp/`) - SNMP protocol support
-- **libnxcc** (`src/libnxcc/`) - Cluster communication library
 
 ## C++ Development Guidelines
 

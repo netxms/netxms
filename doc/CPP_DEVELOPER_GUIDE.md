@@ -63,7 +63,6 @@ NetXMS System Architecture
 ├── libnetxms/           # Core utility library (THIS IS CRUCIAL)
 ├── libnxsl/             # NetXMS Scripting Language
 ├── libnxdb/             # Database abstraction layer
-├── libnxcc/             # Client-server communication
 ├── server/core/         # Core server functionality
 ├── agent/core/          # Agent core functionality
 └── client/              # Client libraries and applications
@@ -100,11 +99,6 @@ This is the **most important library** for NetXMS C++ development. It provides:
 
 **Location:** `src/libnxdb/`  
 **Purpose:** Database abstraction supporting PostgreSQL, MySQL, Oracle, MSSQL, SQLite
-
-### 4. libnxcc - Communication
-
-**Location:** `src/libnxcc/`  
-**Purpose:** Client-server communication using NXCP protocol
 
 ## String Handling
 
