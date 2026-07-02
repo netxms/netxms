@@ -245,8 +245,19 @@ bool AgentExtension::spawnAndConnect()
       return false;
    }
 
+   // Re-read environment file on every launch so rotated secrets are picked up
+   // by a simple extension restart; failure to read it fails this launch attempt
+   // (the extension would be useless without its credentials) and the normal
+   // restart backoff retries.
+   StringMap environment(m_config.environment);
+   if (!m_config.environmentFile.isEmpty() && !LoadEnvironmentFile(m_config.environmentFile.cstr(), &environment))
+   {
+      setLastError(_T("cannot read environment file \"%s\""), m_config.environmentFile.cstr());
+      return false;
+   }
+
    m_process = new ExtensionProcess(m_config.command.cstr(), m_config.name, getDebugTag());
-   if (!m_process->launch(port, m_runtimeToken.cstr(), m_config.environment, m_config.runAs.cstr()))
+   if (!m_process->launch(port, m_runtimeToken.cstr(), environment, m_config.runAs.cstr()))
    {
       setLastError(_T("failed to spawn extension process"));
       delete m_process;

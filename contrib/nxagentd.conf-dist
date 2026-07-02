@@ -100,6 +100,20 @@
 # EnabledCiphers = 5
 
 #
+# EnvironmentFile
+#
+# File with additional environment variables for the agent process, one
+# KEY=VALUE per line (leading/trailing whitespace is stripped, empty lines
+# and lines starting with # are ignored, no quoting or expansion). Suitable
+# for keeping secrets out of the agent configuration file: only the file
+# path appears in configuration dumps, never its contents. Protect the file
+# with filesystem permissions. Can be used more than once to load multiple
+# files.
+#
+# Example:
+# EnvironmentFile = /etc/nxagentd.d/agent.env
+
+#
 # SharedSecret
 #
 # Agent's shared secret. Used only if RequireAuthentication set to "yes".
@@ -324,6 +338,7 @@
 # Mode = spawn
 # Command = /usr/bin/python3 /opt/myext/temperature.py
 # Environment = SENSOR_BUS=/dev/i2c-1
+# EnvironmentFile = /etc/nxagentd.d/temperature.env
 # RestartDelay = 5
 # RestartDelayMax = 300
 # ShutdownTimeout = 10
