@@ -13,6 +13,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
@@ -20,7 +22,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
  */
 public class UserLabelDecorator implements ILabelDecorator
 {
-   private Map<Image, Image[]> imageCache = new HashMap<Image, Image[]>();
+   private Map<ImageDescriptor, Image[]> imageCache = new HashMap<ImageDescriptor, Image[]>();
 
    /**
     * @see org.eclipse.jface.viewers.ILabelDecorator#decorateImage(org.eclipse.swt.graphics.Image, java.lang.Object)
@@ -39,8 +41,13 @@ public class UserLabelDecorator implements ILabelDecorator
       if (state == 0)
          return null; // Decoration is not needed
 
+      // Do not use provided image for composition - in web client it can be bound to another UI
+      // session, and reading image data from it will fail once the owning session is closed.
+      // Select matching image descriptor and create base image on the current display instead.
+      ImageDescriptor baseDescriptor = (element instanceof User) ? (((User)element).isServiceAccount() ? SharedIcons.SERVICE : SharedIcons.USER) : SharedIcons.GROUP;
+
       int index = state - 1;
-      Image[] decoratedImages = imageCache.get(image);
+      Image[] decoratedImages = imageCache.get(baseDescriptor);
       if (decoratedImages != null)
       {
          if (decoratedImages[index] != null)
@@ -49,7 +56,7 @@ public class UserLabelDecorator implements ILabelDecorator
       else
       {
          decoratedImages = new Image[3];
-         imageCache.put(image, decoratedImages);
+         imageCache.put(baseDescriptor, decoratedImages);
       }
 
       ImageDescriptor[] overlays = new ImageDescriptor[6];
@@ -57,8 +64,10 @@ public class UserLabelDecorator implements ILabelDecorator
          overlays[IDecoration.BOTTOM_RIGHT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.DISABLED);
       if ((state & 2) != 0)
          overlays[IDecoration.TOP_LEFT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.MINOR);
-      DecorationOverlayIcon icon = new DecorationOverlayIcon(image, overlays);
+      Image baseImage = baseDescriptor.createImage();
+      DecorationOverlayIcon icon = new DecorationOverlayIcon(baseImage, overlays);
       decoratedImages[index] = icon.createImage();
+      baseImage.dispose();
       return decoratedImages[index];
    }
 
