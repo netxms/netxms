@@ -851,8 +851,8 @@ AC_ARG_WITH(microhttpd,
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		MICROHTTPD_LDFLAGS="$LDFLAGS -L${withval}/lib"
-		MICROHTTPD_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		MICROHTTPD_LDFLAGS="-L${withval}/lib"
+		MICROHTTPD_CPPFLAGS="-I${withval}/include"
 	fi
 ])
 
@@ -4132,8 +4132,8 @@ if test $? = 0 -o "x$REQUIRE_MICROHTTPD" = "xyes"; then
 		AC_MSG_ERROR([*** libmicrohttpd is required ***])
 	fi
 
-	CPPFLAGS="$OLD_CPPFLAGS"
-	LDFLAGS="$OLD_LDFLAGS"
+	CPPFLAGS="$OLD_CPPFLAGS $MICROHTTPD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS $MICROHTTPD_LDFLAGS"
 	LIBS="$OLD_LIBS"
 fi
 
@@ -5550,6 +5550,7 @@ echo "const TCHAR *g_cxx = _T(\"${CXX}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ld = _T(\"${LD}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_perl = _T(\"${PERL}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_serverLibs = _T(\"${SERVER_LIBS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_microHttpdLibs = _T(\"${MICROHTTPD_LIBS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_tuxedoCppFlags = _T(\"${TUXEDO_CPPFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_tuxedoLdFlags = _T(\"${TUXEDO_LDFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_tuxedoLibs = _T(\"${TUXEDO_LIBS}\");" >> $FLAGS_CPP

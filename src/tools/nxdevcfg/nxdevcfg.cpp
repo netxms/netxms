@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Development configuration helper
 ** Copyright (C) 2003-2025 Raden Solutions
@@ -27,7 +27,7 @@
 
 NETXMS_EXECUTABLE_HEADER(nxdevcfg)
 
-#define VALID_OPTIONS "bcCdDeEijlLoOpPStTuUX"
+#define VALID_OPTIONS "bcCdDeEijlLmoOpPStTuUX"
 
 /**
  * Externals
@@ -44,6 +44,7 @@ extern const TCHAR *g_cxx;
 extern const TCHAR *g_ld;
 extern const TCHAR *g_perl;
 extern const TCHAR *g_serverLibs;
+extern const TCHAR *g_microHttpdLibs;
 extern const TCHAR *g_tuxedoCppFlags;
 extern const TCHAR *g_tuxedoLdFlags;
 extern const TCHAR *g_tuxedoLibs;
@@ -70,6 +71,7 @@ static void ShowHelp()
 	       "   -l, --ldflags         Linker flags (all except -l)\n"
 	       "   -L, --libdir          Library directory\n"
 	       "   -i, --libs            Linker flags (only -l)\n"
+	       "   -m, --microhttpd-libs Linker flags for using libmicrohttpd\n"
 	       "   -p, --perl            Perl interpreter\n"
 	       "   -P, --prefix          Installation prefix\n"
 	       "   -S, --server-libs     Linker flags for server binaries (only -l)\n"
@@ -89,6 +91,7 @@ static void ShowHelp()
 	       "   -j  Linker flags for using libjansson\n"
 	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
+	       "   -m  Linker flags for using libmicrohttpd\n"
 	       "   -o  C compiler\n"
 	       "   -O  C++ compiler\n"
 	       "   -p  Perl interpreter\n"
@@ -125,7 +128,7 @@ static void PrintFlags(const TCHAR *src)
 int main(int argc, char *argv[])
 {
 #if HAVE_DECL_GETOPT_LONG
-	static struct option longOptions[] = 
+	static struct option longOptions[] =
 	{
 		{ (char *)"bindir", 0, NULL, 'b' },
 		{ (char *)"cc", 0, NULL, 'o' },
@@ -142,6 +145,7 @@ int main(int argc, char *argv[])
 		{ (char *)"ldflags", 0, NULL, 'l' },
 		{ (char *)"libdir", 0, NULL, 'L' },
 		{ (char *)"libs", 0, NULL, 'i' },
+		{ (char *)"microhttpd-libs", 0, NULL, 'm' },
 		{ (char *)"perl", 0, NULL, 'p' },
 		{ (char *)"prefix", 0, NULL, 'P' },
 		{ (char *)"server-libs", 0, NULL, 'S' },
@@ -205,6 +209,9 @@ int main(int argc, char *argv[])
             return 0;
 			case 'L':
 				_tprintf(_T("%s\n"), LIBDIR);
+				return 0;
+			case 'm':
+				_tprintf(_T("%s\n"), g_microHttpdLibs);
 				return 0;
 			case 'o':
 				_tprintf(_T("%s\n"), g_cc);
