@@ -23,6 +23,8 @@
 #include "nxagentd.h"
 #ifdef _WIN32
 #include <WtsApi32.h>
+#include <tlhelp32.h>
+#include <winternl.h>
 #else
 #include <signal.h>
 #include <syslog.h>
@@ -31,6 +33,8 @@
 #define DEBUG_TAG _T("watchdog")
 
 StringList GetDisconnectedExtSubagents();
+bool IsExternalSubagentConfigured(const TCHAR *name);
+uint32_t GetConnectedExtSubagentPid(const TCHAR *name);
 
 /**
  * Static data
@@ -298,6 +302,176 @@ struct ExternalSubagentInstance
 };
 
 /**
+ * Read command line of a process identified by PID. Returns false on failure.
+ */
+static bool ReadProcessCommandLine(DWORD pid, TCHAR *cmdLine, size_t len)
+{
+#ifdef __64BIT__
+   const DWORD desiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+#else
+   const DWORD desiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE |
+                               PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION;
+#endif
+   HANDLE hProcess = OpenProcess(desiredAccess, FALSE, pid);
+   if (hProcess == nullptr)
+      return false;
+
+   bool success = false;
+
+#ifdef __64BIT__
+   ULONG size;
+   PROCESS_BASIC_INFORMATION pbi;
+   if (NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size) == 0)  // STATUS_SUCCESS
+   {
+      SIZE_T dummy;
+      PEB peb;
+      if (ReadProcessMemory(hProcess, pbi.PebBaseAddress, &peb, sizeof(PEB), &dummy))
+      {
+         RTL_USER_PROCESS_PARAMETERS pp;
+         if (ReadProcessMemory(hProcess, peb.ProcessParameters, &pp, sizeof(RTL_USER_PROCESS_PARAMETERS), &dummy))
+         {
+            size_t bufSize = (pp.CommandLine.Length + 1) * sizeof(WCHAR);
+            WCHAR *buffer = static_cast<WCHAR*>(MemAlloc(bufSize));
+            if (ReadProcessMemory(hProcess, pp.CommandLine.Buffer, buffer, bufSize, &dummy))
+            {
+               buffer[pp.CommandLine.Length / sizeof(WCHAR)] = 0;
+#ifdef UNICODE
+               wcslcpy(cmdLine, buffer, len);
+#else
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1, cmdLine, static_cast<int>(len), nullptr, nullptr);
+               cmdLine[len - 1] = 0;
+#endif
+               success = true;
+            }
+            MemFree(buffer);
+         }
+      }
+   }
+#else
+   FARPROC pfnGetCommandLine = GetProcAddress(GetModuleHandle(_T("KERNEL32.DLL")),
+#ifdef UNICODE
+      "GetCommandLineW");
+#else
+      "GetCommandLineA");
+#endif
+   HANDLE hThread = CreateRemoteThread(hProcess, 0, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(pfnGetCommandLine), 0, 0, 0);
+   if (hThread != nullptr)
+   {
+      WaitForSingleObject(hThread, INFINITE);
+      DWORD addressOfCommandLine;
+      GetExitCodeThread(hThread, &addressOfCommandLine);
+      SIZE_T dummy;
+      success = ReadProcessMemory(hProcess, reinterpret_cast<PVOID>(static_cast<uintptr_t>(addressOfCommandLine)), cmdLine, len * sizeof(TCHAR), &dummy);
+      cmdLine[len - 1] = 0;
+      CloseHandle(hThread);
+   }
+#endif
+
+   CloseHandle(hProcess);
+   return success;
+}
+
+/**
+ * Extract the external subagent name from an agent command line of the form
+ * "<agent executable>" ... -G EXT:<name>. Returns false if the command line does not
+ * belong to an external subagent started from this agent's executable.
+ */
+static bool ParseExternalSubagentName(const TCHAR *cmdLine, TCHAR *name, size_t nameLen)
+{
+   if (_tcsstr(cmdLine, GetAgentExecutableName()) == nullptr)
+      return false;   // not our executable - could be a different agent installation
+
+   const TCHAR *marker = _tcsstr(cmdLine, _T("-G EXT:"));
+   if (marker == nullptr)
+      return false;
+   marker += 7;   // length of "-G EXT:"
+
+   size_t i = 0;
+   while ((marker[i] != 0) && (marker[i] != _T(' ')) && (marker[i] != _T('\t')) && (i < nameLen - 1))
+   {
+      name[i] = marker[i];
+      i++;
+   }
+   name[i] = 0;
+   return i > 0;
+}
+
+/**
+ * Forcibly terminate process identified by PID
+ */
+static void TerminateProcessByPid(DWORD pid)
+{
+   HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+   if (hProcess != nullptr)
+   {
+      TerminateProcess(hProcess, 0);
+      CloseHandle(hProcess);
+   }
+}
+
+/**
+ * Terminate orphaned and duplicate external subagent processes.
+ *
+ * External subagent processes survive a master agent restart and reconnect on their own, but the
+ * in-memory tracking of the watchdog does not survive a restart. This sweep reconciles the actual
+ * running processes against configuration and the currently connected instances, and terminates:
+ *   - orphans: name no longer present in configuration (e.g. its section was removed);
+ *   - duplicates: name is configured and connected, but this process is not the connected instance.
+ * A configured name with no connected instance yet is left alone - it may still be initializing, and
+ * we cannot tell a stale instance from a legitimate one until one of them connects.
+ */
+static void ReconcileExternalSubagentProcesses()
+{
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+   if (snapshot == INVALID_HANDLE_VALUE)
+   {
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReconcileExternalSubagentProcesses: CreateToolhelp32Snapshot failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      return;
+   }
+
+   const TCHAR *exePath = GetAgentExecutableName();
+   const TCHAR *exeBaseName = _tcsrchr(exePath, _T('\\'));
+   exeBaseName = (exeBaseName != nullptr) ? exeBaseName + 1 : exePath;
+   DWORD selfPid = GetCurrentProcessId();
+
+   PROCESSENTRY32 pe;
+   pe.dwSize = sizeof(PROCESSENTRY32);
+   if (Process32First(snapshot, &pe))
+   {
+      do
+      {
+         if ((pe.th32ProcessID == selfPid) || _tcsicmp(pe.szExeFile, exeBaseName))
+            continue;   // not our executable image
+
+         TCHAR cmdLine[4096];
+         if (!ReadProcessCommandLine(pe.th32ProcessID, cmdLine, 4096))
+            continue;
+
+         TCHAR name[MAX_SUBAGENT_NAME];
+         if (!ParseExternalSubagentName(cmdLine, name, MAX_SUBAGENT_NAME))
+            continue;
+
+         if (!IsExternalSubagentConfigured(name))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Terminating orphaned external subagent process (PID %u): %s is no longer configured"), pe.th32ProcessID, name);
+            TerminateProcessByPid(pe.th32ProcessID);
+            continue;
+         }
+
+         uint32_t connectedPid = GetConnectedExtSubagentPid(name);
+         if ((connectedPid != 0) && (pe.th32ProcessID != connectedPid))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Terminating duplicate external subagent %s process (PID %u); connected instance is PID %u"), name, pe.th32ProcessID, connectedPid);
+            TerminateProcessByPid(pe.th32ProcessID);
+         }
+      } while (Process32Next(snapshot, &pe));
+   }
+
+   CloseHandle(snapshot);
+}
+
+/**
  * Watchdog for external subagents
  */
 void ExternalSubagentWatchdog()
@@ -317,6 +491,10 @@ void ExternalSubagentWatchdog()
 
    while (!AgentSleepAndCheckForShutdown(60000))
    {
+      // Reap orphaned and duplicate subagent processes (e.g. left over from a previous master agent
+      // instance, or from a removed configuration section) before deciding what to relaunch.
+      ReconcileExternalSubagentProcesses();
+
       StringList disconnectedSubagents = GetDisconnectedExtSubagents();
       if (disconnectedSubagents.isEmpty())
          continue;

@@ -136,6 +136,12 @@ void MasterAgentListener()
       {
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
+         // Announce our process ID so the master agent can reconcile running subagent processes
+         // (detect duplicates and orphans) - it cannot obtain it from the pipe on Windows XP.
+         NXCPMessage registration(CMD_REGISTER_SUBAGENT, 0);
+         registration.setField(VID_PROCESS_ID, static_cast<uint32_t>(GetCurrentProcessId()));
+         SendMessageToMasterAgent(&registration);
+
          PipeMessageReceiver receiver(s_pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{

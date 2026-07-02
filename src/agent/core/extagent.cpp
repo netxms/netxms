@@ -66,6 +66,7 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
    m_msgQueue = new MsgWaitQueue();
    m_requestId = 1;
    m_listenerStartDelay = 10000;
+   m_connectedPid = 0;
 }
 
 /**
@@ -175,6 +176,11 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
       switch(msg->getCode())
       {
+         case CMD_REGISTER_SUBAGENT:
+            m_connectedPid = msg->getFieldAsUInt32(VID_PROCESS_ID);
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): reported process id %u"), m_name, m_connectedPid);
+            delete msg;
+            break;
          case CMD_PUSH_DCI_DATA:
             g_sessionLock.lock();
             for(int i = 0; i < g_sessions.size(); i++)
@@ -200,6 +206,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
+	m_connectedPid = 0;
 	m_msgQueue->clear();
 	m_pipe = nullptr;
 }
@@ -1079,4 +1086,30 @@ StringList GetDisconnectedExtSubagents()
          ds.add(s_subagents.get(i)->getName());
    }
    return ds;
+}
+
+/**
+ * Check if external subagent with given name is present in configuration
+ */
+bool IsExternalSubagentConfigured(const TCHAR *name)
+{
+   for (int i = 0; i < s_subagents.size(); i++)
+      if (!_tcsicmp(s_subagents.get(i)->getName(), name))
+         return true;
+   return false;
+}
+
+/**
+ * Get process ID reported by a connected external subagent, or 0 if the named subagent
+ * is not configured or has not (yet) reported its PID
+ */
+uint32_t GetConnectedExtSubagentPid(const TCHAR *name)
+{
+   for (int i = 0; i < s_subagents.size(); i++)
+   {
+      ExternalSubagent *subagent = s_subagents.get(i);
+      if (!_tcsicmp(subagent->getName(), name))
+         return subagent->isConnected() ? subagent->getConnectedPid() : 0;
+   }
+   return 0;
 }
