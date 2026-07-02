@@ -223,6 +223,7 @@ Full block form (`nxagentd.conf`):
 Mode = spawn
 Command = /usr/bin/python3 /opt/myext/temperature.py
 Environment = SENSOR_BUS=/dev/i2c-1
+EnvironmentFile = /etc/nxagentd.d/temperature.env
 RestartDelay = 5
 RestartDelayMax = 300
 ShutdownTimeout = 10
@@ -240,6 +241,7 @@ AllowRemote = no
 | `Mode` | both | — | `spawn` or `connect` (required) |
 | `Command` | spawn | — | Required; argv split with shell-like quoting, **not** run through a shell |
 | `Environment` | spawn | — | Repeatable `KEY=VALUE`; overlaid on the agent's environment |
+| `EnvironmentFile` | spawn | — | File with `KEY=VALUE` lines (`#` comments allowed), re-read at every launch; overrides `Environment` on key collision. Keeps secrets out of the config file and its log/remote dumps |
 | `RunAs` | spawn | agent's uid | Drop privileges before exec (Unix; not yet implemented — currently logged and ignored) |
 | `RestartDelay` / `RestartDelayMax` | spawn | 5 / 300 (sec) | Exponential backoff on crash |
 | `ShutdownTimeout` | spawn | 10 (sec) | Grace period before SIGTERM → SIGKILL |

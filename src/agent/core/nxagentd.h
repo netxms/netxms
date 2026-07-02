@@ -831,6 +831,7 @@ void DebugPrintf(int level, const TCHAR *format, ...);
 void BuildFullPath(const TCHAR *pszFileName, TCHAR *pszFullPath);
 
 bool DownloadConfig(const TCHAR *server);
+bool LoadEnvironmentFile(const TCHAR *path, StringMap *env);
 
 void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
          const TCHAR *arg, int dataType, const TCHAR *description, bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));

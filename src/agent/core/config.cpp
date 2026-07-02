@@ -441,3 +441,61 @@ bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, b
    g_config.set(config);
    return validConfig;
 }
+
+/**
+ * Load environment file (KEY=VALUE per line, "#" starts a comment line) into
+ * given string map, overwriting existing keys. Values from environment files
+ * never enter the configuration tree, so they are not exposed by configuration
+ * dumps. Malformed lines are reported by line number only, without content, to
+ * avoid leaking secrets into the log. Returns false if file cannot be read.
+ */
+bool LoadEnvironmentFile(const TCHAR *path, StringMap *env)
+{
+   size_t size;
+   BYTE *data = LoadFile(path, &size);
+   if (data == nullptr)
+   {
+      nxlog_write(NXLOG_WARNING, _T("Cannot read environment file \"%s\" (%s)"), path, _tcserror(errno));
+      return false;
+   }
+
+   char *curr = reinterpret_cast<char*>(data);  // LoadFile null-terminates the buffer
+   for(int lineNumber = 1; *curr != 0; lineNumber++)
+   {
+      char *line = curr;
+      char *eol = strchr(curr, '\n');
+      if (eol != nullptr)
+      {
+         *eol = 0;
+         curr = eol + 1;
+      }
+      else
+      {
+         curr += strlen(curr);
+      }
+
+      TrimA(line);
+      if ((*line == 0) || (*line == '#'))
+         continue;
+
+      char *eq = strchr(line, '=');
+      if ((eq == nullptr) || (eq == line))
+      {
+         nxlog_write(NXLOG_WARNING, _T("Ignoring malformed line %d in environment file \"%s\""), lineNumber, path);
+         continue;
+      }
+
+      *eq = 0;
+      char *key = line;
+      char *value = eq + 1;
+      TrimA(key);
+      TrimA(value);
+#ifdef UNICODE
+      env->setPreallocated(WideStringFromUTF8String(key), WideStringFromUTF8String(value));
+#else
+      env->set(key, value);
+#endif
+   }
+   MemFree(data);
+   return true;
+}

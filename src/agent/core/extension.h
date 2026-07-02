@@ -66,6 +66,7 @@ struct ExtensionConfig
    // spawn mode
    MutableString command;
    StringMap environment;
+   MutableString environmentFile;   // read at each launch; overrides inline Environment entries
    MutableString runAs;
    uint32_t restartDelayMs;
    uint32_t restartDelayMaxMs;

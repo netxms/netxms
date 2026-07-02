@@ -221,6 +221,10 @@ bool AddExtensionFromConfig(const ConfigEntry *config)
             }
          }
       }
+
+      const TCHAR *envFile = config->getSubEntryValue(_T("EnvironmentFile"));
+      if ((envFile != nullptr) && (*envFile != 0))
+         cfg.environmentFile = envFile;
    }
    else  // CONNECT
    {

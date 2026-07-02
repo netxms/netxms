@@ -1017,6 +1017,8 @@ static void LogAgentInfo()
 #endif
 }
 
+static void UpdateEnvironment();
+
 /**
  * Agent initialization
  */
@@ -1074,6 +1076,10 @@ BOOL Initialize()
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }
    }
+
+   // Applied here rather than before Initialize() so that environment file
+   // problems are reported into the already opened log
+   UpdateEnvironment();
 
    LogAgentInfo();
    nxlog_set_rotation_hook(LogAgentInfo);
@@ -2006,14 +2012,34 @@ static void UpdateEnvironment()
 {
    shared_ptr<Config> config = g_config;
    unique_ptr<ObjectArray<ConfigEntry>> entrySet = config->getSubEntries(_T("/ENV"), _T("*"));
-   if (entrySet == nullptr)
+   const ConfigEntry *fileEntry = config->getEntry(_T("/%agent/EnvironmentFile"));
+   if ((entrySet == nullptr) && (fileEntry == nullptr))
       return;
 
-   for(int i = 0; i < entrySet->size(); i++)
+   if (entrySet != nullptr)
    {
-      ConfigEntry *e = entrySet->get(i);
-      SetEnvironmentVariable(e->getName(), e->getValue());
+      for(int i = 0; i < entrySet->size(); i++)
+      {
+         ConfigEntry *e = entrySet->get(i);
+         SetEnvironmentVariable(e->getName(), e->getValue());
+      }
    }
+
+   if (fileEntry != nullptr)
+   {
+      for(int i = 0; i < fileEntry->getValueCount(); i++)
+      {
+         StringMap env;
+         if (LoadEnvironmentFile(fileEntry->getValue(i), &env))
+         {
+            env.forEach([] (const TCHAR *key, const void *value) -> EnumerationCallbackResult {
+               SetEnvironmentVariable(key, static_cast<const TCHAR*>(value));
+               return _CONTINUE;
+            });
+         }
+      }
+   }
+
    UpdateUserAgentsEnvironment();
 }
 
@@ -2512,7 +2538,6 @@ int main(int argc, char *argv[])
             s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
          }
 #ifdef _WIN32
-         UpdateEnvironment();
          if (g_dwFlags & AF_DAEMON)
          {
             InitService();
@@ -2584,8 +2609,6 @@ int main(int argc, char *argv[])
                   _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
             }
 #endif
-
-            UpdateEnvironment();
 
             s_pid = getpid();
             if (Initialize())

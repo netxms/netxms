@@ -607,11 +607,22 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
 }
 
 /**
+ * Check if entry or variable name suggests that the value contains sensitive information
+ */
+static bool IsSecretName(const TCHAR *name)
+{
+   TCHAR lname[256];
+   _tcslcpy(lname, name, 256);
+   _tcslwr(lname);
+   return (_tcsstr(lname, _T("password")) != nullptr) || (_tcsstr(lname, _T("secret")) != nullptr) || (_tcsstr(lname, _T("token")) != nullptr);
+}
+
+/**
  * Print config entry
  */
 void ConfigEntry::print(FILE *file, StringList *slist, int level, TCHAR *prefix) const
 {
-   bool maskValue;
+   bool maskValue, maskEnvValues;
    if (file != nullptr)
    {
       if (_isatty(_fileno(file)))
@@ -619,26 +630,22 @@ void ConfigEntry::print(FILE *file, StringList *slist, int level, TCHAR *prefix)
       else
          _tprintf(_T("%s%s\n"), prefix, m_name);
       maskValue = false;
-   }
-   else if (slist != nullptr)
-   {
-      StringBuffer sb(prefix);
-      sb.append(m_name);
-      slist->add(sb);
-
-      TCHAR name[256];
-      _tcslcpy(name, m_name, 256);
-      _tcslwr(name);
-      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr) || (_tcsstr(name, _T("token")) != nullptr);
+      maskEnvValues = false;
    }
    else
    {
-      nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s%s"), prefix, m_name);
-
-      TCHAR name[256];
-      _tcslcpy(name, m_name, 256);
-      _tcslwr(name);
-      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr) || (_tcsstr(name, _T("token")) != nullptr);
+      if (slist != nullptr)
+      {
+         StringBuffer sb(prefix);
+         sb.append(m_name);
+         slist->add(sb);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s%s"), prefix, m_name);
+      }
+      maskValue = IsSecretName(m_name);
+      maskEnvValues = !maskValue && !_tcsicmp(m_name, _T("Environment"));   // NAME=value lists where individual variables may hold secrets
    }
 
    if (level > 0)
@@ -652,27 +659,50 @@ void ConfigEntry::print(FILE *file, StringList *slist, int level, TCHAR *prefix)
    {
       for(int i = 0; i < m_values.size(); i++)
       {
+         // Mask values likely containing passwords
+         const TCHAR *value = m_values.get(i);
+         StringBuffer maskedValue;
+         if (maskValue)
+         {
+            value = _T("********");
+         }
+         else if (maskEnvValues)
+         {
+            const TCHAR *eq = _tcschr(value, _T('='));
+            if (eq != nullptr)
+            {
+               TCHAR varName[256];
+               size_t len = static_cast<size_t>(eq - value);
+               if (len > 255)
+                  len = 255;
+               memcpy(varName, value, len * sizeof(TCHAR));
+               varName[len] = 0;
+               if (IsSecretName(varName))
+               {
+                  maskedValue.append(value, eq - value + 1);
+                  maskedValue.append(_T("********"));
+                  value = maskedValue;
+               }
+            }
+         }
+
          if (file != nullptr)
          {
             if (_isatty(_fileno(file)))
-               WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values.get(i));
+               WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, value);
             else
-               _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));
+               _tprintf(_T("%s  value: %s\n"), prefix, value);
          }
          else if (slist != nullptr)
          {
             StringBuffer sb(prefix);
             sb.append(_T("  value: "));
-            sb.append(maskValue ? _T("********") : m_values.get(i)); // Mask values likely containing passwords
+            sb.append(value);
             slist->add(sb);
          }
          else
          {
-            // Mask values likely containing passwords
-            if (maskValue)
-               nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s  value: ********"), prefix);
-            else
-               nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s  value: %s"), prefix, m_values.get(i));
+            nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s  value: %s"), prefix, value);
          }
       }
    }
