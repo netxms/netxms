@@ -266,6 +266,30 @@ bool IsTimestampConversionNeeded(const wchar_t *table)
 }
 
 /**
+ * Callback for comparing module schema version between source database and destination
+ */
+static bool CompareModuleSchemaVersion(const wchar_t *module, const wchar_t *tag, void *context)
+{
+   int32_t sourceVersion = DBMgrMetaDataReadInt32Ex(s_hdbSource, tag, 0);
+   int32_t destVersion = DBMgrMetaDataReadInt32(tag, 0);
+   if (sourceVersion == 0)
+   {
+      if (s_import)
+         WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Import file does not contain schema version for module %s. Re-export source database with the current version of nxdbmgr.\n", module);
+      else
+         WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Source database does not have schema extension for module %s.\n", module);
+      return false;
+   }
+   if (sourceVersion != destVersion)
+   {
+      WriteToTerminalEx(L"\x1b[31;1mERROR:\x1b[0m Schema version mismatch for module %s: %s has version %d, destination database has version %d.\n",
+            module, s_import ? L"import file" : L"source database", sourceVersion, destVersion);
+      return false;
+   }
+   return true;
+}
+
+/**
  * Connect to source database
  */
 static bool ConnectToSource()
@@ -330,6 +354,10 @@ static bool ConnectToSource()
                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
       return false;
    }
+
+   // Check that module schema versions in source match destination
+   if (!EnumerateModuleSchemaVersionTags(CompareModuleSchemaVersion, nullptr))
+      return false;
 
    return true;
 }

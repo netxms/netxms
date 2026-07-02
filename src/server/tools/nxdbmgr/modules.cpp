@@ -37,6 +37,7 @@ struct Module
    bool (*UpgradeDB)();
    const TCHAR* const * (*GetTables)();
    const TCHAR* (*GetSchemaPrefix)();
+   const TCHAR* (*GetSchemaVersionMetadataTag)();
 };
 
 /**
@@ -96,6 +97,7 @@ static bool LoadServerModule(const wchar_t *name, bool mandatory, bool quiet)
       m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", errorText);
       m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", errorText);
       m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
+      m->GetSchemaVersionMetadataTag = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaVersionMetadataTag", errorText);
       if ((m->CheckDB != nullptr) || (m->UpgradeDB != nullptr) || (m->GetTables != nullptr) || (m->GetSchemaPrefix != nullptr))
       {
          if (!quiet)
@@ -203,6 +205,25 @@ bool EnumerateModuleSchemas(bool (*handler)(const wchar_t*, void*), void *userDa
       if (schema == nullptr)
          continue;
       if (!handler(schema, userData))
+         return false;
+   }
+   return true;
+}
+
+/**
+ * Enumerate metadata tags holding module schema versions. Handler is called with module name and tag name.
+ */
+bool EnumerateModuleSchemaVersionTags(bool (*handler)(const wchar_t*, const wchar_t*, void*), void *userData)
+{
+   for(int i = 0; i < s_modules.size(); i++)
+   {
+      Module *m = s_modules.get(i);
+      if (m->GetSchemaVersionMetadataTag == nullptr)
+         continue;
+      const wchar_t *tag = m->GetSchemaVersionMetadataTag();
+      if (tag == nullptr)
+         continue;
+      if (!handler(m->name, tag, userData))
          return false;
    }
    return true;
