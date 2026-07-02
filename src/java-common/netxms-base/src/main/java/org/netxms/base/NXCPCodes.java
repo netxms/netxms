@@ -547,6 +547,7 @@ public class NXCPCodes
    public static final int CMD_GET_EVENT_FORWARDER_DRIVERS = 0x0211;
    public static final int CMD_GET_OTLP_METRICS = 0x0212;
    public static final int CMD_GET_RECONCILIATION_STATUS = 0x0213;
+   public static final int CMD_REGISTER_SUBAGENT = 0x0214;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

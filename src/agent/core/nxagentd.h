@@ -242,6 +242,7 @@ private:
 	MsgWaitQueue *m_msgQueue;
 	uint32_t m_requestId;
    uint32_t m_listenerStartDelay;
+   uint32_t m_connectedPid;
 
 	bool sendMessage(const NXCPMessage *msg);
 	NXCPMessage *waitForMessage(uint16_t code, uint32_t id);
@@ -261,6 +262,7 @@ public:
 	bool isConnected() { return m_connected; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getUserName() { return m_user; }
+	uint32_t getConnectedPid() { return m_connectedPid; }
 
    uint32_t getParameter(const TCHAR *name, TCHAR *buffer);
    uint32_t getTable(const TCHAR *name, Table *value);
