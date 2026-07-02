@@ -25,6 +25,24 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.30 to 62.31
+ */
+static bool H_UpgradeFromV30()
+{
+   // Add OBJECT_ACCESS_QUERY_WEBSVC (0x08000000) to all ACL entries with MODIFY access set for Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+134217728 WHERE user_id=1073741825 AND (BITAND(access_rights, 134217728)=0) AND (BITAND(access_rights, 2)<>0)"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+134217728 WHERE user_id=1073741825 AND ((access_rights & 134217728)=0) AND ((access_rights & 2)<>0)"));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 62.29 to 62.30
  */
 static bool H_UpgradeFromV29()
@@ -1214,6 +1232,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 30, 62, 31, H_UpgradeFromV30 },
    { 29, 62, 30, H_UpgradeFromV29 },
    { 28, 62, 29, H_UpgradeFromV28 },
    { 27, 62, 28, H_UpgradeFromV27 },
