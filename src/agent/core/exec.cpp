@@ -261,7 +261,7 @@ static inline void ExecuteInAllSessionsLogError(const TCHAR *function, const TCH
 /**
  * Execute given command in specific session
  */
-bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions)
+bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions, DWORD *pid)
 {
    const TCHAR *function = allSessions ? _T("ExecuteInAllSessions") : _T("ExecuteInSession");
    nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: attempting to execute command in session #%u (%s)"),
@@ -281,8 +281,10 @@ bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSession
          PROCESS_INFORMATION pi;
          if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, _T("C:\\"), &si, &pi))
          {
-            nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s)"),
-                  function, session->SessionId, session->pWinStationName);
+            nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s), PID %u"),
+                  function, session->SessionId, session->pWinStationName, pi.dwProcessId);
+            if (pid != nullptr)
+               *pid = pi.dwProcessId;
             CloseHandle(pi.hThread);
             CloseHandle(pi.hProcess);
             success = true;
@@ -327,7 +329,7 @@ bool ExecuteInAllSessions(const TCHAR *command)
    {
       if (sessions[i].SessionId == 0)
          continue;
-      ExecuteInSession(&sessions[i], cmdLine, true);
+      ExecuteInSession(&sessions[i], cmdLine, true, nullptr);
    }
 
    WTSFreeMemory(sessions);
