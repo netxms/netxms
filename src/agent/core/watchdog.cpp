@@ -197,7 +197,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
 
 #ifdef _WIN32
 
-bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions);
+bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions, HANDLE *processHandle, DWORD *pid);
 
 /**
  * Verify executable
@@ -266,7 +266,7 @@ void UserAgentWatchdog(TCHAR *executableName)
             if (VerifyExecutable(command.cstr() + 1)) // skip leading "
             {
                command.append(_T("\""));
-               ExecuteInSession(&sessions[i], command.getBuffer(), false);
+               ExecuteInSession(&sessions[i], command.getBuffer(), false, nullptr, nullptr);
             }
             else
             {
@@ -284,11 +284,36 @@ void UserAgentWatchdog(TCHAR *executableName)
 }
 
 /**
+ * Tracking state for an external subagent instance started by the watchdog.
+ * The process handle is kept open for the lifetime of the instance so that the PID cannot be recycled
+ * by Windows while we are still tracking it - checking a raw PID would otherwise race against reuse.
+ */
+struct ExternalSubagentInstance
+{
+   HANDLE hProcess;
+   DWORD pid;
+   time_t startTime;
+
+   ~ExternalSubagentInstance() { CloseHandle(hProcess); }
+};
+
+/**
  * Watchdog for external subagents
  */
 void ExternalSubagentWatchdog()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, L"External subagent watchdog started");
+
+   // Time (in seconds) given to a freshly started external subagent to initialize and connect to the
+   // master agent before it is considered hung. Device autodetection can take a long time, and until the
+   // subagent connects it is indistinguishable from a not-running one, so it must not be relaunched too early.
+   uint32_t startupTimeout = g_config->getValueAsUInt(_T("/CORE/ExternalSubagentStartupTimeout"), 120);
+   if (startupTimeout < 30)
+      startupTimeout = 30;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent startup timeout set to %u seconds"), startupTimeout);
+
+   // Instances started by this watchdog, keyed by subagent name
+   StringObjectMap<ExternalSubagentInstance> instances(Ownership::True);
 
    while (!AgentSleepAndCheckForShutdown(60000))
    {
@@ -296,7 +321,35 @@ void ExternalSubagentWatchdog()
       if (disconnectedSubagents.isEmpty())
          continue;
 
-      nxlog_debug_tag(DEBUG_TAG, 6, L"%d external subagent%s not running", disconnectedSubagents.size(), disconnectedSubagents.size() == 1 ? L" is" : L"s are");
+      nxlog_debug_tag(DEBUG_TAG, 6, L"%d external subagent%s not connected", disconnectedSubagents.size(), disconnectedSubagents.size() == 1 ? L" is" : L"s are");
+
+      // Decide which subagents actually need to be (re)started. A subagent whose process was started by
+      // this watchdog and is still alive is either still initializing (given time until startup timeout)
+      // or hung (terminated before relaunch) - either way it must not be launched again blindly, otherwise
+      // duplicate instances would compete for the same config directory and local database.
+      StringList subagentsToStart;
+      time_t now = time(nullptr);
+      for(int i = 0; i < disconnectedSubagents.size(); i++)
+      {
+         const TCHAR *name = disconnectedSubagents.get(i);
+         ExternalSubagentInstance *instance = instances.get(name);
+         if ((instance != nullptr) && (WaitForSingleObject(instance->hProcess, 0) == WAIT_TIMEOUT))
+         {
+            if (now - instance->startTime < static_cast<time_t>(startupTimeout))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("External subagent %s (PID %u) is still initializing (%d of %u seconds elapsed)"),
+                     name, instance->pid, static_cast<int>(now - instance->startTime), startupTimeout);
+               continue;
+            }
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("External subagent %s (PID %u) did not connect within %u seconds, terminating hung process"),
+                  name, instance->pid, startupTimeout);
+            TerminateProcess(instance->hProcess, 0);
+         }
+         subagentsToStart.add(name);
+      }
+
+      if (subagentsToStart.isEmpty())
+         continue;
 
       // Find session to run
       WTS_SESSION_INFO *sessions;
@@ -309,17 +362,28 @@ void ExternalSubagentWatchdog()
       {
          if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
          {
-            for (int j = 0; j < disconnectedSubagents.size(); j++)
+            for (int j = 0; j < subagentsToStart.size(); j++)
             {
-               const wchar_t *name = disconnectedSubagents.get(j);
+               const wchar_t *name = subagentsToStart.get(j);
                StringBuffer command = L"\"";
                command.append(GetAgentExecutableName());
                command.append(L"\" -H -G EXT:");
                command.append(name);
-               if (ExecuteInSession(&sessions[i], command.getBuffer(), false))
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s in session %u", name, sessions[i].SessionId);
+               HANDLE hProcess = nullptr;
+               DWORD pid = 0;
+               if (ExecuteInSession(&sessions[i], command.getBuffer(), false, &hProcess, &pid))
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s (PID %u) in session %u", name, pid, sessions[i].SessionId);
+                  ExternalSubagentInstance *instance = new ExternalSubagentInstance();
+                  instance->hProcess = hProcess;
+                  instance->pid = pid;
+                  instance->startTime = time(nullptr);
+                  instances.set(name, instance);   // replacing a tracked instance closes its previous handle
+               }
                else
+               {
                   nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
+               }
             }
             found = true;
             break;
@@ -328,6 +392,8 @@ void ExternalSubagentWatchdog()
 
       if (!found)
          nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot find suitable session for starting external subagent");
+
+      WTSFreeMemory(sessions);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, L"External subagent watchdog stopped");
