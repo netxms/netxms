@@ -266,6 +266,9 @@ public:
    shared_ptr<AgentConnectionEx> self() { return static_pointer_cast<AgentConnectionEx>(AgentConnection::self()); }
    shared_ptr<const AgentConnectionEx> self() const { return static_pointer_cast<const AgentConnectionEx>(AgentConnection::self()); }
 
+   virtual void onBytesSent(size_t numBytes) override;
+   virtual void onBytesReceived(size_t numBytes) override;
+
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
@@ -4095,6 +4098,8 @@ protected:
    int64_t m_syslogMessageCount;
    int64_t m_snmpTrapCount;
    int64_t m_snmpTrapLastTotal;
+   VolatileCounter64 m_agentTrafficBytesSent;      // NXCP bytes sent to agent since server start (not persisted)
+   VolatileCounter64 m_agentTrafficBytesReceived;  // NXCP bytes received from agent since server start (not persisted)
    time_t m_snmpTrapStormLastCheckTime;
    uint32_t m_snmpTrapStormActualDuration;
    time_t m_lastSnmpTrapAuthFailureEventTime;   // last time SYS_SNMP_TRAP_AUTH_FAILURE was posted for this node; 0 = never. Not persisted.
@@ -4650,6 +4655,13 @@ public:
 
    void incSyslogMessageCount();
    void incSnmpTrapCount();
+   void updateAgentTrafficCounters(uint64_t bytesSent, uint64_t bytesReceived)
+   {
+      if (bytesSent > 0)
+         InterlockedAdd64(&m_agentTrafficBytesSent, bytesSent);
+      if (bytesReceived > 0)
+         InterlockedAdd64(&m_agentTrafficBytesReceived, bytesReceived);
+   }
    bool checkTrapShouldBeProcessed();
 
    static const TCHAR *typeName(NodeType type);

@@ -1273,6 +1273,11 @@ public:
    void postMessage(NXCPMessage *msg);
    bool sendRawMessage(NXCP_MESSAGE *msg);
    void postRawMessage(NXCP_MESSAGE *msg);
+
+   // Traffic accounting hooks, called with number of bytes transferred over communication channel
+   virtual void onBytesSent(size_t numBytes) { }
+   virtual void onBytesReceived(size_t numBytes) { }
+
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_messageWaitQueue.waitForMessage(code, id, timeout); }
    uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
 

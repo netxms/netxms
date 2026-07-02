@@ -208,6 +208,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
    m_lastSnmpTrapAuthFailureEventTime = 0;
+   m_agentTrafficBytesSent = 0;
+   m_agentTrafficBytesReceived = 0;
    m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
@@ -345,6 +347,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_snmpTrapStormLastCheckTime = 0;
    m_snmpTrapStormActualDuration = 0;
    m_lastSnmpTrapAuthFailureEventTime = 0;
+   m_agentTrafficBytesSent = 0;
+   m_agentTrafficBytesReceived = 0;
    m_sshKeyId = newNodeData->sshKeyId;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
@@ -9458,6 +9462,14 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          _tcscpy(buffer, _T("-1"));
       }
+   }
+   else if (!wcsicmp(name, L"AgentTraffic.BytesReceived"))
+   {
+      IntegerToString(static_cast<uint64_t>(m_agentTrafficBytesReceived), buffer);
+   }
+   else if (!wcsicmp(name, L"AgentTraffic.BytesSent"))
+   {
+      IntegerToString(static_cast<uint64_t>(m_agentTrafficBytesSent), buffer);
    }
    else if (!_tcsicmp(_T("ICMP.Jitter"), name))
    {

@@ -70,6 +70,40 @@ AgentConnectionEx::~AgentConnectionEx()
 }
 
 /**
+ * Server-wide agent traffic counters
+ */
+VolatileCounter64 g_agentTrafficBytesSent = 0;
+VolatileCounter64 g_agentTrafficBytesReceived = 0;
+
+/**
+ * Update traffic counters for bytes sent to agent
+ */
+void AgentConnectionEx::onBytesSent(size_t numBytes)
+{
+   InterlockedAdd64(&g_agentTrafficBytesSent, numBytes);
+   if (m_nodeId != 0)
+   {
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+      if (node != nullptr)
+         node->updateAgentTrafficCounters(numBytes, 0);
+   }
+}
+
+/**
+ * Update traffic counters for bytes received from agent
+ */
+void AgentConnectionEx::onBytesReceived(size_t numBytes)
+{
+   InterlockedAdd64(&g_agentTrafficBytesReceived, numBytes);
+   if (m_nodeId != 0)
+   {
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+      if (node != nullptr)
+         node->updateAgentTrafficCounters(0, numBytes);
+   }
+}
+
+/**
  * Create communication channel
  */
 shared_ptr<AbstractCommChannel> AgentConnectionEx::createChannel()

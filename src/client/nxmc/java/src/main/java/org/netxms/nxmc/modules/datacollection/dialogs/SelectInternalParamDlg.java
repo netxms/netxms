@@ -147,6 +147,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))
 		{
          list.add(new AgentParameter("AgentStatus", "Status of NetXMS agent", DataType.INT32));
+         list.add(new AgentParameter("AgentTraffic.BytesReceived", "Bytes received from agent since server start", DataType.COUNTER64));
+         list.add(new AgentParameter("AgentTraffic.BytesSent", "Bytes sent to agent since server start", DataType.COUNTER64));
 		}
 
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
@@ -162,6 +164,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.AI.TokensOut(*)", "AI: output tokens for provider {instance}", DataType.COUNTER64));
          list.add(new AgentParameter("Server.AI.TotalRequests", "AI: total API calls", DataType.COUNTER64));
          list.add(new AgentParameter("Server.AI.TotalRequests(*)", "AI: API calls for provider {instance}", DataType.COUNTER64));
+         list.add(new AgentParameter("Server.AgentTraffic.BytesReceived", "Bytes received from agents since server start", DataType.COUNTER64));
+         list.add(new AgentParameter("Server.AgentTraffic.BytesSent", "Bytes sent to agents since server start", DataType.COUNTER64));
          list.add(new AgentParameter("Server.AgentTunnels.Bound.Total", "Number of bound agent tunnels", DataType.UINT32));
          list.add(new AgentParameter("Server.AgentTunnels.Bound.AgentProxy", "Number of bound agent tunnels with enabled agent proxy", DataType.UINT32));
          list.add(new AgentParameter("Server.AgentTunnels.Bound.SnmpProxy", "Number of bound agent tunnels with enabled SNMP proxy", DataType.UINT32));
