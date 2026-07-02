@@ -8479,7 +8479,7 @@ DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, c
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values, const TCHAR *context)
+DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context)
 {
    *values = nullptr;
    char contextUtf8[256];
@@ -8487,23 +8487,23 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version v
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
-   uint32_t oidBin[256];
-   size_t oidLen = SnmpParseOID(oid, oidBin, 256);
-   if (oidLen == 0)
+   uint32_t baseOidBin[256];
+   size_t baseOidLen = SnmpParseOID(baseOid, baseOidBin, 256);
+   if (baseOidLen == 0)
    {
       delete snmp;
       return DCE_NOT_SUPPORTED;
    }
 
    auto oidSuffixes = new StringMap();
-   uint32_t rc = SnmpWalk(snmp, oid,
-      [oidLen, oidSuffixes] (SNMP_Variable *varbind) -> uint32_t
+   uint32_t rc = SnmpWalk(snmp, baseOidBin, baseOidLen,
+      [baseOidLen, oidSuffixes] (SNMP_Variable *varbind) -> uint32_t
       {
          const SNMP_ObjectId& oid = varbind->getName();
-         if (oid.length() <= oidLen)
+         if (oid.length() <= baseOidLen)
             return SNMP_ERR_SUCCESS;
          TCHAR buffer[256];
-         SnmpConvertOIDToText(oid.length() - oidLen, &(oid.value()[oidLen]), buffer, 256);
+         SnmpConvertOIDToText(oid.length() - baseOidLen, &(oid.value()[baseOidLen]), buffer, 256);
 
          const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
 
