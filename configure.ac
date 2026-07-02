@@ -197,10 +197,6 @@ REQUIRE_MQTT="no"
 MQTT_CPPFLAGS=""
 MQTT_LDFLAGS=""
 MQTT_LIBS=""
-PYTHON_SUPPORT="no"
-PYTHON_CPPFLAGS=""
-PYTHON_LDFLAGS=""
-PYTHON_LIBS=""
 LDAP_SUPPORT="no"
 DISABLE_LDAP="no"
 REQUIRE_LDAP="no"
@@ -514,19 +510,6 @@ AC_ARG_WITH(curl,
 		fi
 	fi
 ])
-
-AC_ARG_WITH(python,
-[AS_HELP_STRING(--with-python,build with Python extensions support)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		PYTHON_BASE="$withval"
-		PYTHON_REQUIRED=yes
-	fi
-	COMPONENTS="$COMPONENTS python"
-	PYTHON_SUPPORT=yes
-else
-	PYTHON_SUPPORT=no
-fi ])
 
 AC_ARG_WITH(mongodb,
 [AS_HELP_STRING(--with-mongodb,build MongoDB-dependent components)],
@@ -1086,11 +1069,11 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-libnxsl test-libnxsnmp test-ncd-webhook"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
+	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
 	HDLINK_DIRS="jira redmine"
@@ -1172,12 +1155,6 @@ if test $? = 0; then
 	else
 		SUBAGENT_DIRS="$SUBAGENT_DIRS java"
 	fi
-fi
-
-check_substr "$COMPONENTS" "python"
-if test $? = 0; then
-	MODULES="$MODULES libnxpython"
-	SUBAGENT_DIRS="$SUBAGENT_DIRS python"
 fi
 
 check_substr "$COMPONENTS" "static-agent"
@@ -3978,61 +3955,6 @@ fi
 
 
 #--------------------------------------------------------------------
-# Python
-#--------------------------------------------------------------------
-
-if test "x$PYTHON_SUPPORT" = "xyes"; then
-	PYTHON_VERSIONS="3.8 3.7 3.6m 3.6 3.5m 3.5 3m 3"
-
-	OLD_CPPFLAGS="$CPPFLAGS"
-	OLD_LDFLAGS="$LDFLAGS"
-	OLD_LIBS="$LIBS"
-
-	if test "x$PYTHON_BASE" != "x"; then
-		BIN_PREFIX="$PYTHON_BASE/bin/"
-	fi
-
-	PYTHON_VERSION=""
-	for PV in $PYTHON_VERSIONS; do
-		PY_CONFIG="${BIN_PREFIX}python${PV}-config"
-		"$PY_CONFIG" --prefix >/dev/null
-		if test $? -eq 0; then
-			PYTHON_VERSION="$PV"
-			break
-		fi
-	done
-
-	if test "x$PYTHON_VERSION" != "x"; then
-		if $PY_CONFIG --help | grep embed >/dev/null; then
-			PY_EMBED="--embed"
-		fi
-		PYTHON_CPPFLAGS=`$PY_CONFIG --includes`
-		PYTHON_LDFLAGS=`$PY_CONFIG --ldflags`
-		PYTHON_LIBS=`$PY_CONFIG --libs $PY_EMBED`
-
-		CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
-		LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
-		LIBS="$LIBS $PYTHON_LIBS"
-
-		AC_CHECK_HEADER(Python.h,,[
-			AC_MSG_ERROR([*** Cannot find Python.h - check your libpython installation or disable Python support with --without-python ***])
-		])
-		AC_CHECK_FUNC(Py_Initialize, , [
-			AC_MSG_ERROR([*** Cannot find Py_Initialize function - check your libpython installation or disable Python support with --without-python ***])
-		])
-
-		AC_DEFINE(WITH_PYTHON, 1, Define to 1 if Python is supported)
-	else
-		AC_MSG_ERROR([*** Cannot find Python configuration tool - check your libpython installation or disable Python support with --without-python ***])
-	fi
-
-	CPPFLAGS="$OLD_CPPFLAGS"
-	LDFLAGS="$OLD_LDFLAGS"
-	LIBS="$OLD_LIBS"
-fi
-
-
-#--------------------------------------------------------------------
 # MongoDB
 #--------------------------------------------------------------------
 
@@ -4491,7 +4413,6 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([HAVE_SDBUS], [test "x$HAVE_SDBUS" = "xyes"])
 AM_CONDITIONAL([JAR_BUILD], [test "x$JAR_BUILD" = "xyes"])
 AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
-AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
 AM_CONDITIONAL([RELEASE_BUILD], [test "x$RELEASE_BUILD" = "xyes"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
@@ -4619,9 +4540,6 @@ AC_SUBST(PROTOBUF_CPPFLAGS)
 AC_SUBST(PROTOBUF_LDFLAGS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(PROTOC_FLAGS)
-AC_SUBST(PYTHON_CPPFLAGS)
-AC_SUBST(PYTHON_LDFLAGS)
-AC_SUBST(PYTHON_LIBS)
 AC_SUBST(PNG_LIBS)
 AC_SUBST(SNAPPY_CPPFLAGS)
 AC_SUBST(SNAPPY_LDFLAGS)
@@ -4729,7 +4647,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
-	src/agent/subagents/python/Makefile
 	src/agent/subagents/prometheus/Makefile
 	src/agent/subagents/redis/Makefile
 	src/agent/subagents/rpi/Makefile
@@ -4794,7 +4711,6 @@ AC_CONFIG_FILES([
 	src/libnxjava/java/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
-	src/libnxpython/Makefile
 	src/libnxsl/Makefile
 	src/mobile-agent/Makefile
 	src/mobile-agent/java/Makefile
@@ -5010,22 +4926,6 @@ if test "x${XMPP_SUPPORT}" = "xyes"; then
    echo "XMPP support            : YES"
 else
    echo "XMPP support            : NO"
-fi
-
-if test "x${PYTHON_SUPPORT}" = "xyes"; then
-	echo "Python support          : YES"
-	echo "Python version          : $PYTHON_VERSION"
-else
-	echo "Python support          : NO"
-fi
-if test "x${PYTHON_CPPFLAGS}" != "x"; then
-	echo "Python CPPFLAGS         : ${PYTHON_CPPFLAGS}"
-fi
-if test "x${PYTHON_LDFLAGS}" != "x"; then
-	echo "Python LDFLAGS          : ${PYTHON_LDFLAGS}"
-fi
-if test "x${PYTHON_LIBS}" != "x"; then
-	echo "Python LIBS             : ${PYTHON_LIBS}"
 fi
 
 if test "x${HAVE_LIBJQ}" = "xyes"; then

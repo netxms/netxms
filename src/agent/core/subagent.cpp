@@ -204,9 +204,7 @@ bool LoadSubAgent(const TCHAR *moduleName)
       _tcslcat(fullName, _T(".nsm"), MAX_PATH);
    CheckAlias(fullName);
 
-   // Workaround for Python sub-agent: dlopen it with RTLD_GLOBAL
-   // so that Python C modules can access symbols from libpython
-   HMODULE hModule = DLOpenEx(fullName, _tcsstr(fullName, _T("python.nsm")) != nullptr, errorText);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
    if (hModule != nullptr)

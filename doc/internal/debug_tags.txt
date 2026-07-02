@@ -217,8 +217,6 @@ procexec	Process executor
 
 proxy		Proxy related (in agent log)
 
-python		Python subagent messages
-
 radius		Radius authentication
 reporting	Reporting
 

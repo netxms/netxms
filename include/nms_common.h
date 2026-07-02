@@ -199,7 +199,6 @@
 #define EPOCHFILETIME           (116444736000000000i64)
 
 #define WITH_IPV6               1
-#define WITH_PYTHON             1
 #define WITH_MICROHTTPD         1
 #define WITH_OPENSSL            1
 #define WITH_LDAP               1
