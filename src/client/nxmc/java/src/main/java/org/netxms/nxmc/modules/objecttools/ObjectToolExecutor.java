@@ -55,6 +55,7 @@ import org.netxms.nxmc.modules.objecttools.views.TableToolResults;
 import org.netxms.nxmc.services.ObjectToolHandler;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.SandboxHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -692,7 +693,7 @@ public final class ObjectToolExecutor
                   }
                   else
                   {
-                     process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine });
+                     process = Runtime.getRuntime().exec(SandboxHelper.buildHostShellCommand(commandLine));
                   }
 
                   if (tcpPortForwarder != null)
