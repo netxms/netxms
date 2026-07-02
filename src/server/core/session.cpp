@@ -254,7 +254,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
 /**
  * Destructor
  */
-ClientSession::~ClientSession()
+ClientSession::~ClientSession() noexcept
 {
    // Double-check reference count
    if (m_refCount > 0)

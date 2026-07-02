@@ -1035,7 +1035,7 @@ private:
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
-   virtual ~ClientSession();
+   virtual ~ClientSession() noexcept;
 
    void incRefCount() { InterlockedIncrement(&m_refCount); }
    void decRefCount() { InterlockedDecrement(&m_refCount); }
