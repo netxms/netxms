@@ -253,39 +253,48 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
 
       // Create browser for chat display
       chatBrowser = WidgetHelper.createBrowser(this, SWT.NONE, null);
-      chatBrowser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      chatBrowser.addProgressListener(new ProgressListener() {
-         @Override
-         public void completed(ProgressEvent event)
-         {
-            chatBrowser.execute("window.scrollTo(0, document.body.scrollHeight);");
-         }
-
-         @Override
-         public void changed(ProgressEvent event)
-         {
-         }
-      });
-
-      // Create BrowserFunction for JS-to-Java callback
-      new BrowserFunction(chatBrowser, "javaCallback") {
-         @Override
-         public Object function(Object[] arguments)
-         {
-            if (arguments.length >= 3)
+      if (chatBrowser != null)
+      {
+         chatBrowser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+         chatBrowser.addProgressListener(new ProgressListener() {
+            @Override
+            public void completed(ProgressEvent event)
             {
-               long questionId = ((Number)arguments[0]).longValue();
-               boolean positive = (Boolean)arguments[1];
-               int selectedOption = ((Number)arguments[2]).intValue();
-               handleQuestionResponse(questionId, positive, selectedOption);
+               chatBrowser.execute("window.scrollTo(0, document.body.scrollHeight);");
             }
-            return null;
-         }
-      };
 
-      // Initialize with welcome message
-      addAssistantMessage(i18n.tr("Hello! I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!"));
-      updateBrowserContent();
+            @Override
+            public void changed(ProgressEvent event)
+            {
+            }
+         });
+
+         // Create BrowserFunction for JS-to-Java callback
+         new BrowserFunction(chatBrowser, "javaCallback") {
+            @Override
+            public Object function(Object[] arguments)
+            {
+               if (arguments.length >= 3)
+               {
+                  long questionId = ((Number)arguments[0]).longValue();
+                  boolean positive = (Boolean)arguments[1];
+                  int selectedOption = ((Number)arguments[2]).intValue();
+                  handleQuestionResponse(questionId, positive, selectedOption);
+               }
+               return null;
+            }
+         };
+
+         // Initialize with welcome message
+         addAssistantMessage(i18n.tr("Hello! I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!"));
+         updateBrowserContent();
+      }
+      else
+      {
+         Label errorMessage = new Label(this, SWT.CENTER | SWT.WRAP);
+         errorMessage.setText(i18n.tr("AI assistant is not available because embedded web browser component cannot be created on this system"));
+         errorMessage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+      }
 
       Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -360,6 +369,9 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    public void createChatSession(final boolean focusInput)
    {
+      if (chatBrowser == null)
+         return; // Chat cannot be used without browser widget, input will stay disabled
+
       Job job = new Job(i18n.tr("Creating AI assistant chat"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -658,7 +670,8 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    private void updateBrowserContent()
    {
-      chatBrowser.setText(chatContent.toString());
+      if (chatBrowser != null)
+         chatBrowser.setText(chatContent.toString());
    }
 
    /**
