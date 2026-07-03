@@ -1069,7 +1069,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server ncdrivers agent nxscript nxcproxy mobile-agent"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-ncd-webhook"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -1317,7 +1317,7 @@ if test $? = 0; then
 	fi
 
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxsl server ncdrivers nxscript"
+	MODULES="$MODULES libnxsl server nxscript"
 	TEST_MODULES="$TEST_MODULES test-libnxsl"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music oui templates"
@@ -1423,7 +1423,7 @@ if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
 		MODULES="$MODULES libnxmb client"
 	else
-		MODULES="$MODULES libnxmb client libnxsl libnxlp db nxscript ncdrivers snmp"
+		MODULES="$MODULES libnxmb client libnxsl libnxlp db nxscript snmp"
 		TEST_MODULES="$TEST_MODULES ha test-libnxsl test-libnxsnmp test-ncd-webhook"
 		TOOLS="$TOOLS nxlptest"
 	fi
@@ -4714,33 +4714,33 @@ AC_CONFIG_FILES([
 	src/libnxsl/Makefile
 	src/mobile-agent/Makefile
 	src/mobile-agent/java/Makefile
-	src/ncdrivers/Makefile
-	src/ncdrivers/anysms/Makefile
-	src/ncdrivers/dbtable/Makefile
-	src/ncdrivers/dummy/Makefile
-	src/ncdrivers/gsm/Makefile
-	src/ncdrivers/googlechat/Makefile
-	src/ncdrivers/kannel/Makefile
-	src/ncdrivers/matrix/Makefile
-	src/ncdrivers/mattermost/Makefile
-	src/ncdrivers/mqtt/Makefile
-	src/ncdrivers/msteams/Makefile
-	src/ncdrivers/mymobile/Makefile
-	src/ncdrivers/nexmo/Makefile
-	src/ncdrivers/nxagent/Makefile
-	src/ncdrivers/portech/Makefile
-	src/ncdrivers/shell/Makefile
-	src/ncdrivers/slack/Makefile
-	src/ncdrivers/smseagle/Makefile
-	src/ncdrivers/smtp/Makefile
-	src/ncdrivers/snmptrap/Makefile
-	src/ncdrivers/telegram/Makefile
-	src/ncdrivers/text2reach/Makefile
-	src/ncdrivers/textfile/Makefile
-	src/ncdrivers/twilio/Makefile
-	src/ncdrivers/websms/Makefile
-	src/ncdrivers/webhook/Makefile
-	src/ncdrivers/xmpp/Makefile
+	src/server/ncdrivers/Makefile
+	src/server/ncdrivers/anysms/Makefile
+	src/server/ncdrivers/dbtable/Makefile
+	src/server/ncdrivers/dummy/Makefile
+	src/server/ncdrivers/gsm/Makefile
+	src/server/ncdrivers/googlechat/Makefile
+	src/server/ncdrivers/kannel/Makefile
+	src/server/ncdrivers/matrix/Makefile
+	src/server/ncdrivers/mattermost/Makefile
+	src/server/ncdrivers/mqtt/Makefile
+	src/server/ncdrivers/msteams/Makefile
+	src/server/ncdrivers/mymobile/Makefile
+	src/server/ncdrivers/nexmo/Makefile
+	src/server/ncdrivers/nxagent/Makefile
+	src/server/ncdrivers/portech/Makefile
+	src/server/ncdrivers/shell/Makefile
+	src/server/ncdrivers/slack/Makefile
+	src/server/ncdrivers/smseagle/Makefile
+	src/server/ncdrivers/smtp/Makefile
+	src/server/ncdrivers/snmptrap/Makefile
+	src/server/ncdrivers/telegram/Makefile
+	src/server/ncdrivers/text2reach/Makefile
+	src/server/ncdrivers/textfile/Makefile
+	src/server/ncdrivers/twilio/Makefile
+	src/server/ncdrivers/websms/Makefile
+	src/server/ncdrivers/webhook/Makefile
+	src/server/ncdrivers/xmpp/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile

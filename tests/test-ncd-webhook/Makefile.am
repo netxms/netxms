@@ -10,9 +10,9 @@
 
 bin_PROGRAMS = test-ncd-webhook
 test_ncd_webhook_SOURCES = test-ncd-webhook.cpp \
-	../../src/ncdrivers/webhook/webhook_helpers.cpp
+	../../src/server/ncdrivers/webhook/webhook_helpers.cpp
 test_ncd_webhook_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/build \
-	-I@top_srcdir@/src/ncdrivers/webhook
+	-I@top_srcdir@/src/server/ncdrivers/webhook
 test_ncd_webhook_LDFLAGS = @EXEC_LDFLAGS@
 test_ncd_webhook_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 

@@ -52,6 +52,7 @@ src/server/
 ├── tools/          # Server tools (nxdbmgr, nxadm, etc.)
 ├── webapi/         # REST API implementation
 ├── aitools/        # AI integration tools
+├── ncdrivers/      # Notification channel drivers
 ├── hdlink/         # Help desk integration
 ├── leef/           # LEEF log exporter
 ├── ntcb/           # Network topology builder
@@ -251,4 +252,4 @@ nxlog_debug_tag(_T("session"), level, ...)    # Client sessions
 - [libnxdb](../db/CLAUDE.md) - Database abstraction
 - [libnxsnmp](../snmp/CLAUDE.md) - SNMP protocol
 - [libnxsl](../libnxsl/CLAUDE.md) - NXSL scripting
-- [ncdrivers](../ncdrivers/CLAUDE.md) - Notification channels
+- [ncdrivers](ncdrivers/CLAUDE.md) - Notification channels

@@ -23,7 +23,6 @@ include_HEADERS = \
 	netxms-regex.h \
 	netxms-version.h \
 	netxms-xml.h \
-	ncdrv.h \
 	nms_agent.h \
 	nms_common.h \
 	nms_cscp.h \

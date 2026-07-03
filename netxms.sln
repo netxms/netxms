@@ -283,41 +283,41 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "influxdb", "src\server\pdsd
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ncdrv", "ncdrv", "{90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "anysms", "src\ncdrivers\anysms\anysms.vcxproj", "{FEE82060-82D3-3046-8A87-E5406A700AE1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "anysms", "src\server\ncdrivers\anysms\anysms.vcxproj", "{FEE82060-82D3-3046-8A87-E5406A700AE1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbtable", "src\ncdrivers\dbtable\dbtable.vcxproj", "{22E4D4EF-03E7-4E06-BDD6-78AF5B9C3894}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbtable", "src\server\ncdrivers\dbtable\dbtable.vcxproj", "{22E4D4EF-03E7-4E06-BDD6-78AF5B9C3894}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dummy", "src\ncdrivers\dummy\dummy.vcxproj", "{11AFEF30-2E85-47A2-8234-FE14F7C584A5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dummy", "src\server\ncdrivers\dummy\dummy.vcxproj", "{11AFEF30-2E85-47A2-8234-FE14F7C584A5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kannel", "src\ncdrivers\kannel\kannel.vcxproj", "{9A1E3D13-0E54-4B7E-89C3-E44BA42213E6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kannel", "src\server\ncdrivers\kannel\kannel.vcxproj", "{9A1E3D13-0E54-4B7E-89C3-E44BA42213E6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mymobile", "src\ncdrivers\mymobile\mymobile.vcxproj", "{CF0F3DDF-D6DB-9547-BECC-8D88C6526FF8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mymobile", "src\server\ncdrivers\mymobile\mymobile.vcxproj", "{CF0F3DDF-D6DB-9547-BECC-8D88C6526FF8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nexmo", "src\ncdrivers\nexmo\nexmo.vcxproj", "{A3E45F07-1C34-F545-8FA2-CC02F17BA43C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nexmo", "src\server\ncdrivers\nexmo\nexmo.vcxproj", "{A3E45F07-1C34-F545-8FA2-CC02F17BA43C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxagent", "src\ncdrivers\nxagent\nxagent.vcxproj", "{A2F8F27A-8E23-4DF5-BE32-C3C0BC898CF7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxagent", "src\server\ncdrivers\nxagent\nxagent.vcxproj", "{A2F8F27A-8E23-4DF5-BE32-C3C0BC898CF7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "portech", "src\ncdrivers\portech\portech.vcxproj", "{73BB03CE-54B1-4664-9F55-B6CDCFAD92EB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "portech", "src\server\ncdrivers\portech\portech.vcxproj", "{73BB03CE-54B1-4664-9F55-B6CDCFAD92EB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "slack", "src\ncdrivers\slack\slack.vcxproj", "{F6D95191-677A-4ACC-9B59-A7DFA508AB90}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "slack", "src\server\ncdrivers\slack\slack.vcxproj", "{F6D95191-677A-4ACC-9B59-A7DFA508AB90}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smseagle", "src\ncdrivers\smseagle\smseagle.vcxproj", "{2575E87B-8DD3-B445-9FB5-6061980BBB08}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smseagle", "src\server\ncdrivers\smseagle\smseagle.vcxproj", "{2575E87B-8DD3-B445-9FB5-6061980BBB08}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "text2reach", "src\ncdrivers\text2reach\text2reach.vcxproj", "{097DEE76-B942-4BBF-9173-4878E59D2184}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "text2reach", "src\server\ncdrivers\text2reach\text2reach.vcxproj", "{097DEE76-B942-4BBF-9173-4878E59D2184}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "websms", "src\ncdrivers\websms\websms.vcxproj", "{54812342-F9CE-4CE1-9DBB-2EA421942D8F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "websms", "src\server\ncdrivers\websms\websms.vcxproj", "{54812342-F9CE-4CE1-9DBB-2EA421942D8F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "textfile", "src\ncdrivers\textfile\textfile.vcxproj", "{2B1219CB-C1DA-4F43-1B16-98B88AC85678}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "textfile", "src\server\ncdrivers\textfile\textfile.vcxproj", "{2B1219CB-C1DA-4F43-1B16-98B88AC85678}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gsm", "src\ncdrivers\gsm\gsm.vcxproj", "{5333A856-26E5-4062-A0E7-122E85284CBF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gsm", "src\server\ncdrivers\gsm\gsm.vcxproj", "{5333A856-26E5-4062-A0E7-122E85284CBF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "googlechat", "src\ncdrivers\googlechat\googlechat.vcxproj", "{75D68477-29BD-AF48-A3A3-F67C1CA294EB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "googlechat", "src\server\ncdrivers\googlechat\googlechat.vcxproj", "{75D68477-29BD-AF48-A3A3-F67C1CA294EB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "telegram", "src\ncdrivers\telegram\telegram.vcxproj", "{AE2488DF-13C5-1143-A767-32782818EC7D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "telegram", "src\server\ncdrivers\telegram\telegram.vcxproj", "{AE2488DF-13C5-1143-A767-32782818EC7D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msteams", "src\ncdrivers\msteams\msteams.vcxproj", "{5512C191-3113-8D1C-9B59-17DFA508AB90}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msteams", "src\server\ncdrivers\msteams\msteams.vcxproj", "{5512C191-3113-8D1C-9B59-17DFA508AB90}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "webhook", "src\ncdrivers\webhook\webhook.vcxproj", "{20BF1EA5-4BD0-458F-9033-915C2A577015}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "webhook", "src\server\ncdrivers\webhook\webhook.vcxproj", "{20BF1EA5-4BD0-458F-9033-915C2A577015}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nddload", "src\server\tools\nddload\nddload.vcxproj", "{AF5C73BA-2012-4148-B1B7-0B35C0C7ED18}"
 EndProject
@@ -339,7 +339,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cambium", "src\server\drive
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "saf", "src\server\drivers\saf\saf.vcxproj", "{12D50869-B637-4772-B86C-A45A99B18B14}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smtp", "src\ncdrivers\smtp\smtp.vcxproj", "{46B3AD90-68DA-119C-8D26-28C88AC8561C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smtp", "src\server\ncdrivers\smtp\smtp.vcxproj", "{46B3AD90-68DA-119C-8D26-28C88AC8561C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "westerstrand", "src\server\drivers\westerstrand\westerstrand.vcxproj", "{B797F799-E0E0-4188-8F96-E9B643BE7D84}"
 EndProject
@@ -349,9 +349,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wineventsync", "src\agent\s
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxaevent", "src\agent\tools\nxaevent\nxaevent.vcxproj", "{F73BDD90-C0F0-119C-9004-B87473BB0421}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snmptrap", "src\ncdrivers\snmptrap\snmptrap.vcxproj", "{A17489DF-43CD-1243-A867-317C2818EC11}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snmptrap", "src\server\ncdrivers\snmptrap\snmptrap.vcxproj", "{A17489DF-43CD-1243-A867-317C2818EC11}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell", "src\ncdrivers\shell\shell.vcxproj", "{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell", "src\server\ncdrivers\shell\shell.vcxproj", "{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxdownload", "src\server\tools\nxdownload\nxdownload.vcxproj", "{793EA8FD-BD22-6447-9017-632F1630B62C}"
 EndProject
@@ -369,13 +369,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "otlp", "src\server\otlp\otl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxmc", "src\client\nxmc\nxmc.vcxproj", "{0AB16487-2484-46E1-A137-D9EA7AC5A93B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "twilio", "src\ncdrivers\twilio\twilio.vcxproj", "{1FE11303-3726-204D-A214-DF8CEB0E0A8D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "twilio", "src\server\ncdrivers\twilio\twilio.vcxproj", "{1FE11303-3726-204D-A214-DF8CEB0E0A8D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xmpp", "src\ncdrivers\xmpp\xmpp.vcxproj", "{0391A0B5-F553-314A-8DAD-2E09DCF4FBA0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xmpp", "src\server\ncdrivers\xmpp\xmpp.vcxproj", "{0391A0B5-F553-314A-8DAD-2E09DCF4FBA0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxtftp", "src\agent\tools\nxtftp\nxtftp.vcxproj", "{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqtt", "src\ncdrivers\mqtt\mqtt.vcxproj", "{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqtt", "src\server\ncdrivers\mqtt\mqtt.vcxproj", "{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxweblauncher", "src\client\nxweblauncher\nxweblauncher.vcxproj", "{7D56E2EA-5ADE-4244-AF00-12852452CBE7}"
 EndProject
@@ -405,9 +405,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mds", "src\server\drivers\m
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "siemens", "src\server\drivers\siemens\siemens.vcxproj", "{102EBE71-5CCD-CE4B-8B8C-2B6287219BC9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mattermost", "src\ncdrivers\mattermost\mattermost.vcxproj", "{A155FED1-2DA1-CA47-8CA8-1391A7F6A7FE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mattermost", "src\server\ncdrivers\mattermost\mattermost.vcxproj", "{A155FED1-2DA1-CA47-8CA8-1391A7F6A7FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "matrix", "src\ncdrivers\matrix\matrix.vcxproj", "{FAFE569E-E26D-4CF3-A58D-FEEE28D851F2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "matrix", "src\server\ncdrivers\matrix\matrix.vcxproj", "{FAFE569E-E26D-4CF3-A58D-FEEE28D851F2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxsde", "src\agent\libnxsde\libnxsde.vcxproj", "{86D0233B-300A-584C-9C54-1CA84FAEB108}"
 EndProject

@@ -22,6 +22,7 @@ serverinclude_HEADERS = \
 	entity_mib.h \
 	hdlink.h \
 	local_admin.h \
+	ncdrv.h \
 	nddrv.h \
 	netxms-editline.h \
 	netxms_maps.h \
