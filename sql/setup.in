@@ -594,3 +594,5 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#FromName=NetXMS Server' CONCAT CRLF CONCAT
       '#IsHTML=yes' CONCAT CRLF
    );
+
+INSERT INTO ha_lease (lease_id,format_version,term,holder_guid,holder_incarnation,holder_name,acquired_at,expires_at) VALUES (1,1,0,NULL,0,NULL,0,0);

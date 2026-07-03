@@ -1,0 +1,4 @@
+# LeakSanitizer suppressions for ha-node-sim (ASan builds).
+# libpq registers a custom OpenSSL BIO method once per process and never
+# frees it - a benign global, not a NetXMS leak.
+leak:BIO_meth_new

@@ -88,6 +88,8 @@ freebsd		FreeBSD platform subagent messages
 geolocation	Geolocation (server side)
 gps		GPS subagent
 
+ha.lease	High availability cluster lease management
+
 housekeeper	Housekeeper
 
 image.library	Image library management and SVG sanitization

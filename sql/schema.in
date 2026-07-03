@@ -3540,3 +3540,19 @@ CREATE INDEX idx_conn_history_node ON connection_history(node_id);
 #ifdef DB_TSDB
 SELECT create_hypertable('connection_history', 'event_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
+
+/**
+ * High availability cluster lease (single row, seeded in setup.in)
+ */
+CREATE TABLE ha_lease
+(
+  lease_id integer not null,
+  format_version integer not null,
+  term SQL_INT64 not null,
+  holder_guid varchar(36) null,
+  holder_incarnation SQL_INT64 not null,
+  holder_name varchar(63) null,
+  acquired_at SQL_INT64 not null,
+  expires_at SQL_INT64 not null,
+  PRIMARY KEY(lease_id)
+) TABLE_TYPE;

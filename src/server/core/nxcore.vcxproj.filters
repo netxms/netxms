@@ -213,6 +213,9 @@
     <ClCompile Include="graph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="halease.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hdlink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

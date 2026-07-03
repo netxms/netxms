@@ -298,6 +298,7 @@ compile_commands.json
 /tests/integration/.project
 /tests/integration/.settings/
 /tests/suite/netxms-test-suite
+/tests/ha/ha-node-sim
 /tests/test-libnetxms/test-libnetxms
 /tests/test-libnxdb/test-libnxdb
 /tests/test-libnxsl/test-libnxsl

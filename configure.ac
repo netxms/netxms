@@ -1070,7 +1070,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server ncdrivers agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent test-libnxsl test-libnxsnmp test-ncd-webhook"
+	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-ncd-webhook"
 	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
@@ -1424,7 +1424,7 @@ if test $? = 0; then
 		MODULES="$MODULES libnxmb client"
 	else
 		MODULES="$MODULES libnxmb client libnxsl libnxlp db nxscript ncdrivers snmp"
-		TEST_MODULES="$TEST_MODULES test-libnxsl test-libnxsnmp test-ncd-webhook"
+		TEST_MODULES="$TEST_MODULES ha test-libnxsl test-libnxsnmp test-ncd-webhook"
 		TOOLS="$TOOLS nxlptest"
 	fi
 fi
@@ -4844,6 +4844,7 @@ AC_CONFIG_FILES([
 	tests/config/Makefile
 	tests/include/Makefile
 	tests/suite/Makefile
+	tests/ha/Makefile
 	tests/test-libnetxms/Makefile
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile

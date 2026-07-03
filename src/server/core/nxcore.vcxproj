@@ -507,6 +507,7 @@
     <ClCompile Include="ft.cpp" />
     <ClCompile Include="geo_areas.cpp" />
     <ClCompile Include="graph.cpp" />
+    <ClCompile Include="halease.cpp" />
     <ClCompile Include="hash_index.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hk.cpp" />
@@ -643,6 +644,7 @@
     <ClInclude Include="..\include\asset_management.h" />
     <ClInclude Include="..\include\auth-token.h" />
     <ClInclude Include="..\include\entity_mib.h" />
+    <ClInclude Include="..\include\halease.h" />
     <ClInclude Include="..\include\hdlink.h" />
     <ClInclude Include="..\include\local_admin.h" />
     <ClInclude Include="..\include\nddrv.h" />
