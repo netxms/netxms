@@ -148,7 +148,6 @@ BUILD_AGENT="no"
 BUILD_CLIENT="no"
 BUILD_GUI_CLIENT="yes"
 BUILD_STATIC_AGENT="no"
-BUILD_SDK="no"
 MODULES="libnetxms install"
 TEST_MODULES=""
 AGENT_UNIT_TESTS=""
@@ -337,25 +336,6 @@ AC_ARG_WITH(static-agent,
 	COMPONENTS="$COMPONENTS sqlite ethernetip snmp static-agent sqlite_drv"
 	FORCE_INTERNAL_JANSSON="yes"
 	FORCE_INTERNAL_SQLITE="yes"
-])
-
-AC_ARG_WITH(sdk,
-[AS_HELP_STRING(--with-sdk,build and install files necessary for extension development)],
-[
-	COMPONENTS="$COMPONENTS sqlite sdk"
-	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
-	SERVER_INCLUDE="include"
-	BUILD_SDK="yes"
-])
-
-AC_ARG_WITH(static-sdk,
-[AS_HELP_STRING(--with-static-sdk,build and install files necessary for extension development (static libs only))],
-[
-	COMPONENTS="$COMPONENTS sqlite sdk"
-	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES include"
-	SERVER_INCLUDE="include"
-	BUILD_SDK="yes"
-	STATIC_BUILD="yes"
 ])
 
 AC_ARG_WITH(mdebug,
@@ -1318,7 +1298,7 @@ if test $? = 0; then
 
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl server nxscript"
-	TEST_MODULES="$TEST_MODULES test-libnxsl"
+	TEST_MODULES="$TEST_MODULES ha test-libnxsl test-ncd-webhook"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music oui templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
@@ -1416,17 +1396,6 @@ fi
 check_substr "$COMPONENTS" "xen"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS xen"
-fi
-
-check_substr "$COMPONENTS" "sdk"
-if test $? = 0; then
-	if test "x$STATIC_BUILD" = "xyes"; then
-		MODULES="$MODULES libnxmb client"
-	else
-		MODULES="$MODULES libnxmb client libnxsl libnxlp db nxscript snmp"
-		TEST_MODULES="$TEST_MODULES ha test-libnxsl test-libnxsnmp test-ncd-webhook"
-		TOOLS="$TOOLS nxlptest"
-	fi
 fi
 
 MODULES="$MODULES tools"
@@ -1832,11 +1801,7 @@ if test "x$STATIC_BUILD" = "xyes"; then
 	enable_static=yes
 else
 	enable_shared=yes
-	if test "x$BUILD_SDK" = "xyes"; then
-		enable_static=yes
-	else
-		enable_static=no
-	fi
+	enable_static=no
 fi
 
 if test "x$LTINIT_CC" != "x"; then
@@ -4469,7 +4434,6 @@ AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(AGENT_UNIT_TESTS)
 AC_SUBST(BUILD_SERVER)
-AC_SUBST(BUILD_SDK)
 AC_SUBST(CLIENT_COMPONENTS)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CUSTOM_INCLUDE)
