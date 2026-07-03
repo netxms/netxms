@@ -84,7 +84,8 @@ public class ConditionDciListLabelProvider extends LabelProvider implements ITab
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ConditionData.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.getDciId()).displayName;
+				DciInfo info = dciNameCache.get(dci.getDciId());
+				String name = (info != null) ? info.displayName : null;
 				return (name != null) ? name : i18n.tr("<unresolved>");
 			case ConditionData.COLUMN_FUNCTION:
 			   if (dci.getType() == DataCollectionObject.DCO_TYPE_TABLE)

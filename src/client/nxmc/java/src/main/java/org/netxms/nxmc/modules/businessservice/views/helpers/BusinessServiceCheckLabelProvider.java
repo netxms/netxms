@@ -187,8 +187,9 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       if ((check.getCheckType() != BusinessServiceCheckType.DCI) || (check.getDciId() == 0))
          return "";
 
-      String name = dciNameCache.get(check.getDciId()).displayName;
-      return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
+      DciInfo info = dciNameCache.get(check.getDciId());
+      String name = (info != null) ? info.displayName : null;
+      return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(check.getDciId()) + "]");
    }
 
    /**
