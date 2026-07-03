@@ -89,9 +89,16 @@ public class ToolsPerspective extends Perspective
       {
          if ((e.getRequiredComponentId() == null) || session.isServerComponentRegistered(e.getRequiredComponentId()))
          {
-            View view = e.createView();
-            addMainView(view);
-            logger.debug("Added tools perspective view \"" + view.getName() + "\"");
+            try
+            {
+               View view = e.createView();
+               addMainView(view);
+               logger.debug("Added tools perspective view \"" + view.getName() + "\"");
+            }
+            catch(Throwable t)
+            {
+               logger.error("Cannot add tools perspective view \"" + e.getName() + "\"", t);
+            }
          }
          else
          {
