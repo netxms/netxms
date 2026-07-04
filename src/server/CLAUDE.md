@@ -4,7 +4,7 @@
 
 ## Exporting Functions for Modules
 
-Server core is a shared library. External modules (e.g., `webapi/`, `hdlink/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module **must** be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`). For exported variables, use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol will not be visible to modules and linking will fail at runtime.
+Server core is a shared library. External modules (e.g., `webapi/`, `jira/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module **must** be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`). For exported variables, use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol will not be visible to modules and linking will fail at runtime.
 
 ```cpp
 // In include/nms_core.h or other server header
@@ -53,7 +53,8 @@ src/server/
 ├── webapi/         # REST API implementation
 ├── aitools/        # AI integration tools
 ├── ncdrivers/      # Notification channel drivers
-├── hdlink/         # Help desk integration
+├── jira/           # Jira helpdesk link module
+├── redmine/        # Redmine helpdesk link module
 ├── leef/           # LEEF log exporter
 ├── ntcb/           # Network topology builder
 ├── pdsdrv/         # PDS drivers

@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
-#include <hdlink.h>
 #include <netxms-version.h>
 #include <netxms_mt.h>
 #include <netxmsdb.h>
@@ -1523,10 +1522,6 @@ retry_db_lock:
    LoadNotificationChannelDrivers();
    LoadNotificationChannels();
    LoadEventForwarders();
-
-   // Initialize helpdesk link
-   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef, AddAlarmSystemComment);
-   LoadHelpDeskLink();
 
    InitMappingTables();
 

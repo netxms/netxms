@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libnxsrv.la
 libnxsrv_la_SOURCES = agent.cpp apinfo.cpp arp.cpp console.cpp \
-                      entity_mib.cpp hdlink.cpp hostmib.cpp \
+                      entity_mib.cpp hostmib.cpp \
                       iflist.cpp isc.cpp modbus.cpp ndd.cpp \
                       nobject.cpp nxtool.cpp snmpproxy.cpp \
                       ssh_channel.cpp tools.cpp vlan.cpp xml_to_json.cpp

@@ -1,0 +1,21 @@
+MODULE = redmine
+
+pkglib_LTLIBRARIES = redmine.la
+redmine_la_SOURCES = redmine.cpp
+redmine_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+redmine_la_LDFLAGS = -module -avoid-version
+redmine_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
+if USE_INTERNAL_JANSSON
+redmine_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+redmine_la_LIBADD += -ljansson
+endif
+
+EXTRA_DIST = \
+	redmine.h \
+	redmine.vcxproj redmine.vcxproj.filters
+
+install-exec-hook:
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(MODULE).a $(DESTDIR)$(pkglibdir)/$(MODULE)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(MODULE).a ; fi
+	mv -f $(DESTDIR)$(pkglibdir)/$(MODULE)@SHLIB_SUFFIX@ $(DESTDIR)$(pkglibdir)/$(MODULE).nxm
+	rm -f $(DESTDIR)$(pkglibdir)/$(MODULE).la

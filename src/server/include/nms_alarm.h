@@ -272,7 +272,6 @@ ObjectArray<AlarmComment> NXCORE_EXPORTABLE *GetAlarmComments(uint32_t alarmId);
 
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb);
 
-void LoadHelpDeskLink();
 uint32_t CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
 uint32_t OpenHelpdeskIssue(uint32_t alarmId, GenericClientSession *session, TCHAR *hdref);
 uint32_t AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);

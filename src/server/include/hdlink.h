@@ -1,10 +1,10 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU Lesser General Public License as published by
-** the Free Software Foundation; either version 3 of the License, or
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
@@ -12,7 +12,7 @@
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
 **
-** You should have received a copy of the GNU Lesser General Public License
+** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
@@ -23,52 +23,37 @@
 #ifndef _hdlink_h_
 #define _hdlink_h_
 
-#include <nms_common.h>
-#include <nxsrvapi.h>
+#include <nms_core.h>
 
 /**
- *API version
+ * Base class for helpdesk links
  */
-#define HDLINK_API_VERSION           3
-
-/**
- * Driver header
- */
-#define DECLARE_HDLINK_ENTRY_POINT(name, implClass) \
-extern "C" int __EXPORT hdlinkAPIVersion; \
-extern "C" const TCHAR __EXPORT *hdlinkName; \
-int __EXPORT hdlinkAPIVersion = HDLINK_API_VERSION; \
-const TCHAR __EXPORT *hdlinkName = name; \
-extern "C" HelpDeskLink __EXPORT *hdlinkCreateInstance() { return new implClass; }
-
-/**
- * Base class for device drivers
- */
-class LIBNXSRV_EXPORTABLE HelpDeskLink
+class NXCORE_EXPORTABLE HelpDeskLink
 {
 protected:
-   void onResolveIssue(const TCHAR *hdref);
-   void onCloseIssue(const TCHAR *hdref);
-   void onNewComment(const TCHAR *hdref, const TCHAR *comment);
+   void onResolveIssue(const wchar_t *hdref);
+   void onCloseIssue(const wchar_t *hdref);
+   void onNewComment(const wchar_t *hdref, const wchar_t *comment);
 
 public:
    HelpDeskLink();
    virtual ~HelpDeskLink();
 
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const wchar_t *getName();
 
-   virtual bool init();
    virtual bool checkConnection();
-   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
-   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
-   virtual uint32_t getIssueState(const TCHAR *hdref, bool *open);
-   virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+   virtual uint32_t openIssue(const wchar_t *description, wchar_t *hdref);
+   virtual uint32_t addComment(const wchar_t *hdref, const wchar_t *comment);
+   virtual uint32_t getIssueState(const wchar_t *hdref, bool *open);
+   virtual bool getIssueUrl(const wchar_t *hdref, wchar_t *url, size_t size);
 };
 
 /**
- * Init call for server
+ * Register active helpdesk link (normally called from module's initialization entry point).
+ * Only one link can be active; if a link is already registered, the call is ignored and an error is logged.
+ * Caller retains ownership of the link object, which must remain valid for the lifetime of the server process.
+ * Returns true if link is registered.
  */
-void LIBNXSRV_EXPORTABLE SetHDLinkEntryPoints(uint32_t (*__resolve)(const TCHAR*), uint32_t (*__close)(const TCHAR*), uint32_t (*__newComment)(const TCHAR*, const TCHAR*));
+bool NXCORE_EXPORTABLE RegisterHelpDeskLink(HelpDeskLink *link);
 
-#endif   /* _nddrv_h_ */
+#endif   /* _hdlink_h_ */

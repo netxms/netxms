@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Jira
-** Copyright (C) 2014-2022 Raden Solutions
+** Copyright (C) 2014-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,9 @@
 #include <nms_core.h>
 #include <hdlink.h>
 #include <nxlibcurl.h>
+#include <netxms-webapi.h>
 
-#define JIRA_DEBUG_TAG _T("hdlink.jira")
+#define JIRA_DEBUG_TAG L"hdlink.jira"
 
 #define JIRA_MAX_LOGIN_LEN          128
 #define JIRA_MAX_PASSWORD_LEN       128
@@ -66,14 +67,14 @@ struct Comment
    String issue;
    String text;
 
-   Comment(const TCHAR *_issue, const TCHAR *_text) : issue(_issue), text(_text)
+   Comment(const wchar_t *_issue, const wchar_t *_text) : issue(_issue), text(_text)
    {
       timestamp = time(nullptr);
    }
 };
 
 /**
- * Module class
+ * Jira helpdesk link
  */
 class JiraLink : public HelpDeskLink
 {
@@ -82,8 +83,6 @@ private:
    CURL *m_curl;
    curl_slist *m_headers;
    char m_errorBuffer[CURL_ERROR_SIZE];
-   void *m_webhookHandle;
-   char m_webhookUrl[MAX_PATH];
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    ObjectArray<Comment> m_recentComments;
@@ -104,25 +103,22 @@ public:
    JiraLink();
    virtual ~JiraLink();
 
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const wchar_t *getName() override;
 
-   virtual bool init();
-   virtual bool checkConnection();
-   virtual uint32_t openIssue(const TCHAR *description, TCHAR *hdref);
-   virtual uint32_t addComment(const TCHAR *hdref, const TCHAR *comment);
-   virtual bool getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
+   virtual bool checkConnection() override;
+   virtual uint32_t openIssue(const wchar_t *description, wchar_t *hdref) override;
+   virtual uint32_t addComment(const wchar_t *hdref, const wchar_t *comment) override;
+   virtual bool getIssueUrl(const wchar_t *hdref, wchar_t *url, size_t size) override;
 
-   const char *getWebhookURL() const { return m_webhookUrl; }
+   bool init();
 
-   void onWebhookCommentUpdate(const TCHAR *hdref, const TCHAR *text);
-   void onWebhookIssueClose(const TCHAR *hdref) { onResolveIssue(hdref); }
+   void onWebhookCommentUpdate(const wchar_t *hdref, const wchar_t *text);
+   void onWebhookIssueClose(const wchar_t *hdref) { onResolveIssue(hdref); }
 };
 
 /**
  * Webhook management
  */
-void *CreateWebhook(JiraLink *link, uint16_t port);
-void DestroyWebhook(void *handle);
+void RegisterJiraWebhook(JiraLink *link);
 
 #endif

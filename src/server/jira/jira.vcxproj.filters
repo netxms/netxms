@@ -26,7 +26,7 @@
     <ClInclude Include="jira.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\nxsrvapi.h">
+    <ClInclude Include="..\include\hdlink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

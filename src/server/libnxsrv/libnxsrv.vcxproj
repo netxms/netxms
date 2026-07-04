@@ -398,7 +398,6 @@
     <ClCompile Include="arp.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="entity_mib.cpp" />
-    <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hostmib.cpp" />
     <ClCompile Include="iflist.cpp" />
     <ClCompile Include="isc.cpp" />
@@ -422,7 +421,6 @@
     <ClInclude Include="..\..\..\include\nxcpapi.h" />
     <ClInclude Include="..\..\..\include\nxsnmp.h" />
     <ClInclude Include="..\..\..\include\unicode.h" />
-    <ClInclude Include="..\include\hdlink.h" />
     <ClInclude Include="..\include\nddrv.h" />
     <ClInclude Include="..\include\nxsrvapi.h" />
     <ClInclude Include="libnxsrv.h" />

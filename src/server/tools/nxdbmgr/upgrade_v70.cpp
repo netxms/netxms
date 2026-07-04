@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 70.1 to 70.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='HelpDeskLink'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Jira.Webhook.Path'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Jira.Webhook.Port'"));
+   CHK_EXEC(CreateConfigParam(L"Jira.Webhook.Enable", L"1", L"Enable/disable Jira webhook on the web API listener.", nullptr, 'B', true, true, false));
+   CHK_EXEC(CreateConfigParam(L"Jira.Webhook.Secret", L"", L"Secret used for validation of Jira webhook calls (validation disabled if empty).", nullptr, 'S', true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 70.0 to 70.1
  */
 static bool H_UpgradeFromV0()
@@ -53,6 +67,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1, 70, 2, H_UpgradeFromV1 },
    { 0, 70, 1, H_UpgradeFromV0 },
    { 0, 0,  0, nullptr }
 };

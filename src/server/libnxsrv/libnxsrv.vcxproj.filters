@@ -24,9 +24,6 @@
     <ClCompile Include="apinfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hdlink.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="iflist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -77,9 +74,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\hdlink.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="libnxsrv.h">
       <Filter>Header Files</Filter>
     </ClInclude>

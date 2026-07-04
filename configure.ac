@@ -164,7 +164,6 @@ SERVER_INCLUDE=""
 NXADM_LIBS=""
 NCDRV_MODULES=""
 NCDRV_LTLIBRARIES=""
-HDLINK_DIRS=""
 PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
@@ -1056,7 +1055,6 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
-	HDLINK_DIRS="jira redmine"
 	PDSDRV_DIRS="clickhouse influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
@@ -2282,7 +2280,6 @@ if test "x$DIST_BUILD" != "xyes"; then
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
 		NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel matrix mattermost msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio webhook websms"
-		HDLINK_DIRS="$HDLINK_DIRS redmine"
 	else
 		AC_MSG_ERROR(libcurl is required)
 	fi
@@ -3754,7 +3751,6 @@ if test $? = 0 -o "x$REQUIRE_MICROHTTPD" = "xyes"; then
 	if test "x$MICROHTTPD_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MICROHTTPD, 1, Define to 1 if microhttpd is supported)
 		SERVER_COMPONENTS="webapi $SERVER_COMPONENTS"
-		HDLINK_DIRS="$HDLINK_DIRS jira"
 	else
 		AC_MSG_ERROR([*** libmicrohttpd is required ***])
 	fi
@@ -4416,7 +4412,6 @@ AC_DEFINE_UNQUOTED([CPP_COMPILER_VERSION], "$COMPILER_VERSION", [C++ compiler ve
 #--------------------------------------------------------------------
 
 AGENT_DIRS=`echo $AGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 NCDRV_MODULES=`echo $NCDRV_MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
@@ -4444,7 +4439,6 @@ AC_SUBST(DB2_LDFLAGS)
 AC_SUBST(DB2_LIBS)
 AC_SUBST(EXEC_LDFLAGS)
 AC_SUBST(EXEC_LIBS)
-AC_SUBST(HDLINK_DIRS)
 AC_SUBST(INFORMIX_CPPFLAGS)
 AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
@@ -4750,14 +4744,13 @@ AC_CONFIG_FILES([
 	src/server/drivers/ubnt/Makefile
 	src/server/drivers/westerstrand/Makefile
 	src/server/drivers/zyxel/Makefile
-	src/server/hdlink/Makefile
-	src/server/hdlink/jira/Makefile
-	src/server/hdlink/redmine/Makefile
 	src/server/include/Makefile
 	src/server/docker/Makefile
 	src/server/leef/Makefile
+	src/server/jira/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
+	src/server/redmine/Makefile
 	src/server/ntcb/Makefile
 	src/server/otlp/Makefile
 	src/server/oxidized/Makefile
@@ -4882,7 +4875,6 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	fi
 	echo "Server components       : ${SERVER_COMPONENTS}"
 	echo "Fan-out data drivers    : ${PDSDRV_DIRS}"
-	echo "Helpdesk system drivers : ${HDLINK_DIRS}"
 else
 	echo "Build Server            : NO"
 fi
