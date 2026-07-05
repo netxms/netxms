@@ -422,6 +422,48 @@ void NXCORE_EXPORTABLE RegisterSchedulerTaskHandler(const wchar_t *id, Scheduled
 }
 
 /**
+ * Check if user has rights to schedule tasks with given handler (and, for maintenance tasks, on given object)
+ */
+static uint32_t CheckTaskHandlerAccess(const wchar_t *taskHandlerId, uint32_t userId, uint32_t objectId, uint64_t systemAccessRights)
+{
+   SchedulerCallback *callback = s_callbacks.get(taskHandlerId);
+   if ((callback != nullptr) && ((callback->m_accessRight == 0) || ((callback->m_accessRight & systemAccessRights) != callback->m_accessRight)))
+   {
+      // Access rights set to 0 for system task handlers that could not be scheduled by user
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to schedule task with handler %s by user [%u] failed because of insufficient rights", taskHandlerId, userId);
+      return RCC_ACCESS_DENIED;
+   }
+
+   if (!wcsncmp(taskHandlerId, L"Maintenance.", 12))   // Do additional check on maintenance enter/leave
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      if (object == nullptr)
+         return RCC_INVALID_OBJECT_ID;
+      if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to schedule task with handler %s by user [%u] failed because of insufficient rights on object [%u]", taskHandlerId, userId, objectId);
+         return RCC_ACCESS_DENIED;
+      }
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Check if user has rights to apply given update to existing scheduled task. Handler access is checked
+ * only when the update changes task handler, parameters, or associated object, so tasks with system-only
+ * handlers can still be rescheduled, disabled, or enabled by users authorized to access them.
+ */
+static uint32_t CheckTaskUpdateAccess(const ScheduledTask *task, const wchar_t *taskHandlerId, const wchar_t *persistentData, uint32_t objectId, uint32_t userId, uint64_t systemAccessRights)
+{
+   if (!wcscmp(task->getTaskHandlerId().cstr(), CHECK_NULL_EX(taskHandlerId)) &&
+       !wcscmp(task->getPersistentData().cstr(), CHECK_NULL_EX(persistentData)) &&
+       (task->getObjectId() == objectId))
+      return RCC_SUCCESS;
+   return CheckTaskHandlerAccess(CHECK_NULL_EX(taskHandlerId), userId, objectId, systemAccessRights);
+}
+
+/**
  * Scheduled task creation function
  */
 uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
@@ -430,6 +472,13 @@ uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId,
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
+
+   if (!systemTask)
+   {
+      uint32_t rcc = CheckTaskHandlerAccess(taskHandlerId, owner, objectId, systemRights);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("AddSchedule: Add recurrent task %s, %s, %s"), taskHandlerId, schedule, persistentData);
    auto task = new ScheduledTask(InterlockedIncrement64(&s_taskId), taskHandlerId, schedule,
@@ -496,6 +545,13 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
 
+   if (!systemTask)
+   {
+      uint32_t rcc = CheckTaskHandlerAccess(taskHandlerId, owner, objectId, systemRights);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
+
    nxlog_debug_tag(DEBUG_TAG, 5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), taskHandlerId, nextExecutionTime, persistentData);
    auto task = new ScheduledTask(InterlockedIncrement64(&s_taskId), taskHandlerId, nextExecutionTime,
             make_shared<ScheduledTaskParameters>(key, owner, objectId, persistentData, transientData, comments), systemTask);
@@ -514,7 +570,7 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
  */
 uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
-         uint64_t systemAccessRights, bool disabled)
+         uint64_t systemAccessRights, bool disabled, bool systemTask)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("UpdateRecurrentScheduledTask: task [") UINT64_FMT _T("]: handler=%s, schedule=%s, data=%s"), id, taskHandlerId, schedule, persistentData);
 
@@ -531,6 +587,12 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR
          {
             rcc = RCC_ACCESS_DENIED;
             break;
+         }
+         if (!systemTask)
+         {
+            rcc = CheckTaskUpdateAccess(task, taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+            if (rcc != RCC_SUCCESS)
+               break;
          }
          task->update(taskHandlerId, schedule,
                   make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
@@ -557,6 +619,12 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR
                rcc = RCC_ACCESS_DENIED;
                break;
             }
+            if (!systemTask)
+            {
+               rcc = CheckTaskUpdateAccess(s_oneTimeTasks.get(i), taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+               if (rcc != RCC_SUCCESS)
+                  break;
+            }
             task = s_oneTimeTasks.get(i);
             s_oneTimeTasks.unlink(i);
             task->update(taskHandlerId, schedule,
@@ -576,6 +644,12 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR
             {
                rcc = RCC_ACCESS_DENIED;
                break;
+            }
+            if (!systemTask)
+            {
+               rcc = CheckTaskUpdateAccess(s_completedOneTimeTasks.get(i), taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+               if (rcc != RCC_SUCCESS)
+                  break;
             }
             task = s_completedOneTimeTasks.get(i);
             s_completedOneTimeTasks.unlink(i);
@@ -606,7 +680,7 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR
  */
 uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
-         uint64_t systemAccessRights, bool disabled)
+         uint64_t systemAccessRights, bool disabled, bool systemTask)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("UpdateOneTimeScheduledTask: task [") UINT64_FMT _T("]: handler=%s, time=") INT64_FMT _T(", data=%s"),
             id, taskHandlerId, static_cast<int64_t>(nextExecutionTime), persistentData);
@@ -625,6 +699,12 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
          {
             rcc = RCC_ACCESS_DENIED;
             break;
+         }
+         if (!systemTask)
+         {
+            rcc = CheckTaskUpdateAccess(task, taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+            if (rcc != RCC_SUCCESS)
+               break;
          }
          task->update(taskHandlerId, nextExecutionTime,
                   make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
@@ -645,6 +725,12 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
          {
             rcc = RCC_ACCESS_DENIED;
             break;
+         }
+         if (!systemTask)
+         {
+            rcc = CheckTaskUpdateAccess(task, taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+            if (rcc != RCC_SUCCESS)
+               break;
          }
          task->update(taskHandlerId, nextExecutionTime,
                   make_shared<ScheduledTaskParameters>(task->getTaskKey(), owner, objectId, persistentData, transientData, comments),
@@ -669,6 +755,12 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
             {
                rcc = RCC_ACCESS_DENIED;
                break;
+            }
+            if (!systemTask)
+            {
+               rcc = CheckTaskUpdateAccess(s_recurrentTasks.get(i), taskHandlerId, persistentData, objectId, owner, systemAccessRights);
+               if (rcc != RCC_SUCCESS)
+                  break;
             }
             task = s_recurrentTasks.get(i);
             s_recurrentTasks.unlink(i);
@@ -1188,32 +1280,7 @@ json_t NXCORE_EXPORTABLE *GetSchedulerTaskHandlersAsJson(uint64_t accessRights)
 uint32_t CreateScheduledTaskFromMsg(const NXCPMessage& request, uint32_t owner, uint64_t systemAccessRights)
 {
    TCHAR *taskHandler = request.getFieldAsString(VID_TASK_HANDLER);
-   SchedulerCallback *callback = s_callbacks.get(taskHandler);
-   if ((callback != nullptr) && ((callback->m_accessRight == 0) || ((callback->m_accessRight & systemAccessRights) != callback->m_accessRight)))
-   {
-      // Access rights set to 0 for system task handlers that could not be scheduled by user
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Attempt to create scheduled task with handler %s by user [%u] failed because of insufficient rights"), taskHandler, owner);
-      MemFree(taskHandler);
-      return RCC_ACCESS_DENIED;
-   }
-
    uint32_t objectId = request.getFieldAsInt32(VID_OBJECT_ID);
-   if (!_tcsncmp(taskHandler, _T("Maintenance."), 12))   // Do additional check on maintenance enter/leave
-   {
-      shared_ptr<NetObj> object = FindObjectById(objectId);
-      if (object == nullptr)
-      {
-         MemFree(taskHandler);
-         return RCC_INVALID_OBJECT_ID;
-      }
-      if (!object->checkAccessRights(owner, OBJECT_ACCESS_MAINTENANCE))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Attempt to create scheduled task with handler %s by user [%u] failed because of insufficient rights on object"), taskHandler, owner);
-         MemFree(taskHandler);
-         return RCC_ACCESS_DENIED;
-      }
-   }
-
    TCHAR *persistentData = request.getFieldAsString(VID_PARAMETER);
    TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
    TCHAR *key = request.getFieldAsString(VID_TASK_KEY);

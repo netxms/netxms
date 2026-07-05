@@ -121,7 +121,7 @@ void EnableAlarmSummaryEmails()
    if (task != NULL)
    {
       if (_tcscmp(task->getSchedule(), schedule))
-         UpdateRecurrentScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), nullptr, _T(""), 0, 0, SYSTEM_ACCESS_FULL);
+         UpdateRecurrentScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), nullptr, _T(""), 0, 0, SYSTEM_ACCESS_FULL, false, true);
    }
    else
    {

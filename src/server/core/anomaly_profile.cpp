@@ -800,7 +800,7 @@ void RegenerateAnomalyProfiles(const shared_ptr<ScheduledTaskParameters>& parame
    {
       TCHAR retryData[16];
       _sntprintf(retryData, 16, _T("%d"), retryCount + 1);
-      AddOneTimeScheduledTask(L"System.RegenerateAnomalyProfiles", time(nullptr) + 3600, retryData, nullptr, 0, 0, SYSTEM_ACCESS_FULL);
+      AddOneTimeScheduledTask(L"System.RegenerateAnomalyProfiles", time(nullptr) + 3600, retryData, nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"", nullptr, true);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("RegenerateAnomalyProfiles: scheduled retry %d in 1 hour"), retryCount + 1);
    }
 }
