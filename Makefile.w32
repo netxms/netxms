@@ -103,12 +103,6 @@ endif
 # arm64 import library - see src/db/dbdrv/Makefile.w32.
 DB_DIRS = src/db/dbdrv
 
-# Notification channel drivers are loaded by the server tier only.
-NC_DIRS =
-ifeq ($(BUILD_SERVER),1)
-NC_DIRS = src/server/ncdrivers
-endif
-
 # Standalone command-line tools: the NXSL interpreter, the src/tools utilities,
 # the SNMP CLI utilities, and the EtherNet/IP query tool. Many of these ship
 # with the agent installer (on every architecture), so they are built whenever
@@ -125,13 +119,15 @@ TOOLS_DIRS = \
     src/ethernetip/nxethernetip
 endif
 
-# Server components. Being converted incrementally: libnxsrv (server support
-# library) and the network device drivers are done; core/netxmsd follow later.
+# Server components. The notification channel drivers (ncdrivers) are part of
+# the server tier: nxagent.ncd links libnxsrv, and they may couple more tightly
+# to server core in the future, so they are ordered after libnxsrv and core.
 SERVER_DIRS =
 ifeq ($(BUILD_SERVER),1)
 SERVER_DIRS = \
     src/server/libnxsrv \
     src/server/core \
+    src/server/ncdrivers \
     src/server/netxmsd \
     src/server/tools \
     src/server/webapi \
@@ -150,7 +146,7 @@ SERVER_DIRS = \
 endif
 
 # Complete build order
-ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(NC_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS)
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS)
 
 # Architectures built by the all-arch target
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
@@ -216,7 +212,6 @@ $(CLIENT_DIRS): $(LIBS)
 
 # Drivers depend on libraries
 $(DB_DIRS): $(LIBS)
-$(NC_DIRS): $(LIBS)
 
 # Standalone tools depend on libraries
 $(TOOLS_DIRS): $(LIBS)
