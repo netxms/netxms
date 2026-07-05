@@ -140,6 +140,7 @@
 #define ERR_BAD_SIGNATURE              ((uint32_t)938)
 #define ERR_UNTRUSTED_PACKAGE          ((uint32_t)939)
 #define ERR_DOWNGRADE_NOT_ALLOWED      ((uint32_t)940)
+#define ERR_PROXY_CONNECT_FAILED       ((uint32_t)941)
 
 /**
  * Bulk data reconciliation DCI processing status codes

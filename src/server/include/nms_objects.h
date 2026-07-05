@@ -238,6 +238,7 @@ class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
 {
 protected:
    uint32_t m_nodeId;
+   uint32_t m_proxyNodeId;
    shared_ptr<AgentTunnel> m_tunnel;
    shared_ptr<AgentTunnel> m_proxyTunnel;
    TcpProxyCallback *m_tcpProxyCallback;
@@ -279,6 +280,9 @@ public:
 
    using AgentConnection::setProxy;
    void setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret);
+
+   void setProxyNodeId(uint32_t nodeId) { m_proxyNodeId = nodeId; }
+   uint32_t getProxyNodeId() const { return m_proxyNodeId; }
 
    void setTcpProxyCallback(TcpProxyCallback *callback);
 };
@@ -3852,6 +3856,52 @@ struct NXCORE_EXPORTABLE NetworkPathCheckResult
 };
 
 /**
+ * Zone proxy usage evidence accumulated during node status poll. Records which proxies
+ * were actually used by failed poll attempts so that network path check can evaluate
+ * those proxies instead of re-selecting a proxy at correlation time.
+ */
+struct StatusPollProxyEvidence
+{
+   struct Entry
+   {
+      uint32_t proxyNodeId;
+      bool proxyUnreachable;  // true if communication with proxy agent itself failed
+   };
+
+   Entry entries[4];
+   int count;
+
+   StatusPollProxyEvidence()
+   {
+      count = 0;
+   }
+
+   /**
+    * Record proxy used by failed poll attempt. Multiple records for same proxy are merged.
+    */
+   void record(uint32_t proxyNodeId, bool proxyUnreachable)
+   {
+      if (proxyNodeId == 0)
+         return;
+      for(int i = 0; i < count; i++)
+      {
+         if (entries[i].proxyNodeId == proxyNodeId)
+         {
+            if (proxyUnreachable)
+               entries[i].proxyUnreachable = true;
+            return;
+         }
+      }
+      if (count < static_cast<int>(sizeof(entries) / sizeof(Entry)))
+      {
+         entries[count].proxyNodeId = proxyNodeId;
+         entries[count].proxyUnreachable = proxyUnreachable;
+         count++;
+      }
+   }
+};
+
+/**
  * Container for proxy agent connections
  */
 class ProxyAgentConnection : public ObjectLock<shared_ptr<AgentConnectionEx>>
@@ -4202,8 +4252,8 @@ protected:
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *snmp);
    void checkIfXTable(SNMP_Transport *snmp);
-   NetworkPathCheckResult checkNetworkPath(uint32_t requestId);
-   NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass);
+   NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
+   NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass, const StatusPollProxyEvidence& proxyEvidence);
    NetworkPathCheckResult checkNetworkPathLayer3(uint32_t requestId, bool secondPass);
    NetworkPathCheckResult checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass);
    NetworkPathCheckResult checkNetworkPathLayer2Trace(const shared_ptr<Node>& lastL3Hop, uint32_t lastL3HopIfIndex, uint32_t requestId, bool secondPass);
@@ -4228,7 +4278,7 @@ protected:
    bool getDataFromSmclp(const wchar_t *parameters, StringBuffer *output);
    StringList *getAvailableMetricFromSmclp();
 
-   bool connectToAgent(uint32_t *error = nullptr, uint32_t *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
+   bool connectToAgent(uint32_t *error = nullptr, uint32_t *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false, uint32_t *proxyNodeId = nullptr);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
 
    void updateClusterMembership();
@@ -4585,15 +4635,15 @@ public:
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
-   SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false);
-   SNMP_Transport *createSnmpTransportForPoller() { return createSnmpTransport(0, SNMP_VERSION_DEFAULT, nullptr, nullptr, true); }
+   SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false, uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
+   SNMP_Transport *createSnmpTransportForPoller(uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr) { return createSnmpTransport(0, SNMP_VERSION_DEFAULT, nullptr, nullptr, true, proxyNodeId, proxyConnectionFailed); }
    SNMP_SecurityContext *getSnmpSecurityContext() const;
    SNMP_SecurityContext *getSnmpTrapSecurityContext() const;
    void reportSnmpTrapAuthFailure(TrapCredentialCheckResult reason, const SNMP_PDU& pdu, const InetAddress& sourceAddress);
 
    shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);
 
-   ModbusTransport *createModbusTransport();
+   ModbusTransport *createModbusTransport(uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
 
    InetAddress getEffectiveEtherNetIPAddress() const { return m_eipAddress.isValidUnicast() ? m_eipAddress : m_ipAddress; }
 

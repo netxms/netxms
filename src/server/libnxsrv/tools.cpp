@@ -91,6 +91,7 @@ static struct
    { ERR_BAD_SIGNATURE, _T("File signature verification failed") },
    { ERR_UNTRUSTED_PACKAGE, _T("Package is not trusted") },
    { ERR_DOWNGRADE_NOT_ALLOWED, _T("Package downgrade is not allowed") },
+   { ERR_PROXY_CONNECT_FAILED, _T("Cannot connect to proxy agent") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -148,6 +149,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_UNTRUSTED_PACKAGE;
       case ERR_DOWNGRADE_NOT_ALLOWED:
          return RCC_DOWNGRADE_NOT_ALLOWED;
+      case ERR_PROXY_CONNECT_FAILED:
+         return RCC_ZONE_PROXY_NOT_AVAILABLE;
    }
    return RCC_AGENT_ERROR;
 }

@@ -715,6 +715,7 @@ void PackageDeploymentJob::execute()
          case ERR_IO_FAILURE:
          case ERR_SOCKET_ERROR:
          case ERR_CONNECT_FAILED:
+         case ERR_PROXY_CONNECT_FAILED:
          case ERR_RESOURCE_BUSY:
          case ERR_OUT_OF_RESOURCES:
             transient = true;

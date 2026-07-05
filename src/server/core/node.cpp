@@ -2709,6 +2709,9 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId
    bool resyncDataCollectionConfiguration = false;
    bool forceResolveHostName = false;
 
+   // Proxies used by failed poll attempts, for root cause analysis by network path check
+   StatusPollProxyEvidence proxyEvidence;
+
    int retryCount = 5;
 
 restart_status_poll:
@@ -2742,7 +2745,9 @@ restart_status_poll:
       sendPollerMsg(_T("Checking SNMP agent connectivity\r\n"));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): check SNMP"), m_name);
 
-      SNMP_Transport *pTransport = createSnmpTransportForPoller();
+      uint32_t snmpProxyId;
+      bool snmpProxyConnectionFailed;
+      SNMP_Transport *pTransport = createSnmpTransportForPoller(&snmpProxyId, &snmpProxyConnectionFailed);
       if (pTransport != nullptr)
       {
          SharedString testOid = getCustomAttribute(_T("snmp.testoid"));
@@ -2817,6 +2822,7 @@ restart_status_poll:
                   else
                   {
                      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): cannot acquire proxy connection for SNMP"), m_name);
+                     proxyEvidence.record(proxyNodeId, true);
                   }
                }
                else
@@ -2825,6 +2831,7 @@ restart_status_poll:
                }
             }
 
+            proxyEvidence.record(snmpProxyId, false);
             sendPollerMsg(POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable (poll count %d of %d)"), m_name, m_pollCountSNMP, requiredPolls);
             if (m_state & NSF_SNMP_UNREACHABLE)
@@ -2867,6 +2874,8 @@ restart_status_poll:
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
+         if (snmpProxyConnectionFailed)
+            proxyEvidence.record(snmpProxyId, true);
       }
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
@@ -2934,10 +2943,11 @@ restart_status_poll:
       poller->setStatus(_T("check agent"));
       sendPollerMsg(_T("Checking NetXMS agent connectivity\r\n"));
 
-      uint32_t error, socketError;
+      uint32_t error = ERR_INTERNAL_ERROR, socketError = 0;
       bool newConnection;
+      uint32_t agentProxyId;
       agentLock();
-      if (connectToAgent(&error, &socketError, &newConnection, true))
+      if (connectToAgent(&error, &socketError, &newConnection, true, &agentProxyId))
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_state & NSF_AGENT_UNREACHABLE)
@@ -2975,6 +2985,7 @@ restart_status_poll:
       }
       else
       {
+         proxyEvidence.record(agentProxyId, error == ERR_PROXY_CONNECT_FAILED);
          wchar_t errorText[256];
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=\"%u %s\", socketError=\"%s\". Poll count %d of %d"),
                   m_name, error, AgentErrorCodeToText(error), GetSocketErrorText(socketError, errorText, 256), m_pollCountAgent, requiredPolls);
@@ -3057,11 +3068,13 @@ restart_status_poll:
             else
             {
                status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+               proxyEvidence.record(eipProxy, true);
             }
          }
          else
          {
             status = EIP_Status::callFailure(EIP_CALL_COMM_ERROR);
+            proxyEvidence.record(eipProxy, true);
          }
       }
       else
@@ -3095,6 +3108,7 @@ restart_status_poll:
       }
       else
       {
+         proxyEvidence.record(eipProxy, false);
          String reason = status.failureReason();
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable (%s), poll count %d of %d"),
                   m_name, reason.cstr(), m_pollCountEtherNetIP, requiredPolls);
@@ -3146,7 +3160,9 @@ restart_status_poll:
       sendPollerMsg(_T("Checking Modbus TCP connectivity\r\n"));
 
       ModbusOperationStatus status = MODBUS_STATUS_COMM_FAILURE;
-      ModbusTransport *transport = createModbusTransport();
+      uint32_t modbusProxyId;
+      bool modbusProxyConnectionFailed;
+      ModbusTransport *transport = createModbusTransport(&modbusProxyId, &modbusProxyConnectionFailed);
       if ((transport != nullptr) && ((status = transport->checkConnection()) == MODBUS_STATUS_SUCCESS))
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to device via Modbus TCP"), m_name);
@@ -3168,6 +3184,7 @@ restart_status_poll:
       }
       else
       {
+         proxyEvidence.record(modbusProxyId, modbusProxyConnectionFailed);
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Modbus TCP is unreachable (%s), poll count %d of %d"),
                   m_name, GetModbusStatusText(status), m_pollCountModbus, requiredPolls);
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via Modbus TCP (%s)\r\n"), GetModbusStatusText(status));
@@ -3408,7 +3425,7 @@ restart_status_poll:
             m_state |= DCSF_UNREACHABLE;
             m_downSince = time(nullptr);
             poller->setStatus(_T("check network path"));
-            NetworkPathCheckResult patchCheckResult = checkNetworkPath(rqId);
+            NetworkPathCheckResult patchCheckResult = checkNetworkPath(rqId, proxyEvidence);
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): network path check result: (rootCauseFound=%s, reason=%d, node=%u, iface=%u)"),
                      m_name, BooleanToString(patchCheckResult.rootCauseFound), static_cast<int>(patchCheckResult.reason),
                      patchCheckResult.rootCauseNodeId, patchCheckResult.rootCauseInterfaceId);
@@ -3468,7 +3485,7 @@ restart_status_poll:
          }
          else
          {
-            if ((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId).rootCauseFound)
+            if ((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId, proxyEvidence).rootCauseFound)
             {
                if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
                {
@@ -3985,22 +4002,67 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2Trace(const shared_ptr<Node>&
  *
  * @return true if network path problems found
  */
-NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool secondPass)
+NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool secondPass, const StatusPollProxyEvidence& proxyEvidence)
 {
    if (IsShutdownInProgress())
       return NetworkPathCheckResult();
 
    time_t now = time(nullptr);
 
-   // Check proxy node(s)
+   // Check proxy node(s). Evaluate proxies that were actually used by failed poll attempts,
+   // not the proxy that would be selected now - during proxy flapping the current selection
+   // may differ from the proxy that caused the poll failure.
    if (IsZoningEnabled() && (m_zoneUIN != 0))
    {
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != nullptr) && !zone->isProxyNode(m_id))
       {
-         NetworkPathCheckResult result = checkNetworkPathElement(zone->getAvailableProxyNodeId(this), _T("zone proxy"), true, false, requestId, secondPass);
-         if (result.rootCauseFound)
-            return result;
+         if (proxyEvidence.count > 0)
+         {
+            for(int i = 0; i < proxyEvidence.count; i++)
+            {
+               if (proxyEvidence.entries[i].proxyNodeId == m_id)
+                  continue;
+               NetworkPathCheckResult result = checkNetworkPathElement(proxyEvidence.entries[i].proxyNodeId, _T("zone proxy"), true, false, requestId, secondPass);
+               if (result.rootCauseFound)
+                  return result;
+            }
+
+            // Even if proxy state does not reflect a failure yet, server-side observation of
+            // failed communication with proxy agent during this poll is authoritative
+            for(int i = 0; i < proxyEvidence.count; i++)
+            {
+               if ((proxyEvidence.entries[i].proxyNodeId == m_id) || !proxyEvidence.entries[i].proxyUnreachable)
+                  continue;
+               shared_ptr<NetObj> proxyNode = FindObjectById(proxyEvidence.entries[i].proxyNodeId, OBJECT_NODE);
+               if (proxyNode != nullptr)
+               {
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Node::checkNetworkPathLayer2(%s [%u]): communication with zone proxy %s [%u] failed during status poll",
+                           m_name, m_id, proxyNode->getName(), proxyNode->getId());
+                  sendPollerMsg(POLLER_WARNING _T("   Communication with agent on zone proxy %s failed during status poll\r\n"), proxyNode->getName());
+                  return NetworkPathCheckResult(NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE, proxyNode->getId());
+               }
+            }
+         }
+         else
+         {
+            // No proxied poll attempts recorded - check proxies currently assigned to this node
+            // (read directly to avoid proxy re-selection side effects)
+            uint32_t primaryProxy = getAssignedZoneProxyId(false);
+            if ((primaryProxy != 0) && (primaryProxy != m_id))
+            {
+               NetworkPathCheckResult result = checkNetworkPathElement(primaryProxy, _T("zone proxy"), true, false, requestId, secondPass);
+               if (result.rootCauseFound)
+                  return result;
+            }
+            uint32_t backupProxy = getAssignedZoneProxyId(true);
+            if ((backupProxy != 0) && (backupProxy != m_id) && (backupProxy != primaryProxy))
+            {
+               NetworkPathCheckResult result = checkNetworkPathElement(backupProxy, _T("zone proxy"), true, false, requestId, secondPass);
+               if (result.rootCauseFound)
+                  return result;
+            }
+         }
       }
    }
 
@@ -4254,9 +4316,9 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
  *
  * @return true if network path problems found
  */
-NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
+NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence)
 {
-   NetworkPathCheckResult result = checkNetworkPathLayer2(requestId, false);
+   NetworkPathCheckResult result = checkNetworkPathLayer2(requestId, false, proxyEvidence);
    if (result.rootCauseFound)
       return result;
 
@@ -4266,7 +4328,7 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Node::checkNetworkPath(%s [%u]): will do second pass", m_name, m_id);
 
-   result = checkNetworkPathLayer2(requestId, true);
+   result = checkNetworkPathLayer2(requestId, true, proxyEvidence);
    if (result.rootCauseFound)
       return result;
 
@@ -5841,7 +5903,7 @@ bool Node::confPollAgent()
    if (!pAgentConn->connect(g_serverKey, &rcc))
    {
       //if given port is wrong, try to check all port list
-      if (rcc == ERR_CONNECT_FAILED)
+      if ((rcc == ERR_CONNECT_FAILED) || (rcc == ERR_REMOTE_CONNECT_FAILED))
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPollAgent(%s): NetXMS agent not connected on port %i"), m_name, m_agentPort);
          IntegerArray<uint16_t> knownPorts = GetWellKnownPorts(_T("agent"), m_zoneUIN);
@@ -8007,8 +8069,11 @@ StringMap *Node::getInstanceList(DCObject *dco)
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConnection, bool forceConnect)
+bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConnection, bool forceConnect, uint32_t *proxyNodeId)
 {
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = 0;
+
    if ((g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return false;
 
@@ -8082,6 +8147,10 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
    m_agentConnection->setSharedSecret(m_agentSecret);
    if (tunnel == nullptr)
       setAgentProxy(m_agentConnection.get());
+   else
+      m_agentConnection->setProxyNodeId(0);
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = m_agentConnection->getProxyNodeId();
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_serverKey, error, socketError, g_serverId);
@@ -11951,12 +12020,16 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    }
 
    if (proxyNode == 0)
+   {
+      conn->setProxyNodeId(0);
       return true;
+   }
 
    shared_ptr<Node> node = static_pointer_cast<Node>(g_idxNodeById.get(proxyNode));
    if (node == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::setAgentProxy(%s [%d]): cannot find proxy node [%d]"), m_name, m_id, proxyNode);
+      conn->setProxyNodeId(0);
       return false;
    }
 
@@ -11969,6 +12042,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    {
       conn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_agentSecret);
    }
+   conn->setProxyNodeId(proxyNode);
    return true;
 }
 
@@ -12189,8 +12263,13 @@ uint32_t Node::getEffectiveAgentProxy()
  * If pollerMessageOnFailure is set, an SNMP proxy that is unavailable (missing, down, or with an
  * unreachable agent) is reported via poller messages at the point of failure.
  */
-SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const char *context, const char *community, bool pollerMessageOnFailure)
+SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, const char *context, const char *community, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed)
 {
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = 0;
+   if (proxyConnectionFailed != nullptr)
+      *proxyConnectionFailed = false;
+
    if (community != nullptr)
    {
       // Check community from list
@@ -12227,6 +12306,8 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
 
    SNMP_Transport *transport = nullptr;
    uint32_t snmpProxy = getEffectiveSnmpProxy();
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = snmpProxy;
    if (snmpProxy == 0)
    {
       transport = new SNMP_UDPTransport();
@@ -12245,6 +12326,8 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
          }
          else
          {
+            if (proxyConnectionFailed != nullptr)
+               *proxyConnectionFailed = true;
             if (pollerMessageOnFailure)
             {
                if (proxyNode->isDown())
@@ -12259,6 +12342,8 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
       }
       else
       {
+         if (proxyConnectionFailed != nullptr)
+            *proxyConnectionFailed = true;
          if (pollerMessageOnFailure)
             sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy node [%u] does not exist\r\n"), snmpProxy);
          nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): SNMP proxy node [%u] does not exist", m_name, m_id, snmpProxy);
@@ -15812,8 +15897,13 @@ void Node::updateClusterMembership()
 /**
  * Create MODBUS transport
  */
-ModbusTransport *Node::createModbusTransport()
+ModbusTransport *Node::createModbusTransport(uint32_t *proxyNodeId, bool *proxyConnectionFailed)
 {
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = 0;
+   if (proxyConnectionFailed != nullptr)
+      *proxyConnectionFailed = false;
+
 #if WITH_MODBUS
    if (isPortBlocked(m_modbusTcpPort, true))
    {
@@ -15823,6 +15913,8 @@ ModbusTransport *Node::createModbusTransport()
 
    ModbusTransport *transport = nullptr;
    uint32_t modbusProxy = getEffectiveModbusProxy();
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = modbusProxy;
    if (modbusProxy == 0)
    {
       transport = new ModbusDirectTransport(m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
@@ -15838,6 +15930,14 @@ ModbusTransport *Node::createModbusTransport()
             // Use loopback address if node is MODBUS proxy for itself
             transport = new ModbusProxyTransport(conn, (modbusProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
          }
+         else if (proxyConnectionFailed != nullptr)
+         {
+            *proxyConnectionFailed = true;
+         }
+      }
+      else if (proxyConnectionFailed != nullptr)
+      {
+         *proxyConnectionFailed = true;
       }
    }
    return transport;
