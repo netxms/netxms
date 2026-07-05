@@ -10572,30 +10572,26 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t count = request.getFieldAsUInt32(VID_NUM_ITEMS);
-   uint32_t *nodeList = MemAllocArray<uint32_t>(count);
-   uint32_t *dciList = MemAllocArray<uint32_t>(count);
-   request.getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
-   request.getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
+   IntegerArray<uint32_t> nodeList, dciList;
+   request.getFieldAsInt32Array(VID_NODE_LIST, &nodeList);
+   request.getFieldAsInt32Array(VID_DCI_LIST, &dciList);
 
    uint32_t rcc = RCC_INVALID_ARGUMENT;
-   uint32_t i = 0;
+   int count = std::min(nodeList.size(), dciList.size());
+   int i = 0;
    uint32_t fieldId = VID_DCI_LIST_BASE;
    for(; i < count; i++)
    {
       WCHAR metric[MAX_ITEM_NAME], displayName[MAX_DB_STRING], tag[MAX_DCI_TAG_LENGTH];
-      rcc = resolveDCIName(nodeList[i], dciList[i], metric, displayName, tag);
+      rcc = resolveDCIName(nodeList.get(i), dciList.get(i), metric, displayName, tag);
       if (rcc != RCC_SUCCESS)
          break;
-      response.setField(fieldId++, dciList[i]);
+      response.setField(fieldId++, dciList.get(i));
       response.setField(fieldId++, metric);
       response.setField(fieldId++, displayName);
       response.setField(fieldId++, tag);
    }
-   response.setField(VID_NUM_ITEMS, i);
-
-   MemFree(nodeList);
-   MemFree(dciList);
+   response.setField(VID_NUM_ITEMS, static_cast<uint32_t>(i));
 
    response.setField(VID_RCC, rcc);
    sendMessage(response);
@@ -11571,14 +11567,12 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
             // Export events
             json_t *events = json_array();
-            uint32_t count = request.getFieldAsUInt32(VID_NUM_EVENTS);
-            uint32_t *idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_EVENT_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            IntegerArray<uint32_t> idList;
+            request.getFieldAsInt32Array(VID_EVENT_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               CreateEventTemplateExportRecord(events, idList[i]);
+               CreateEventTemplateExportRecord(events, idList.get(i));
             }
-            MemFree(idList);
             json_object_set_new(root, "events", events);
 
             // Export templates
@@ -11595,24 +11589,22 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
             // Export traps
             json_t *traps = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_TRAPS);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_TRAP_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_TRAP_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               json_t *trap = CreateTrapMappingExportRecord(idList[i]);
+               json_t *trap = CreateTrapMappingExportRecord(idList.get(i));
                if (trap != nullptr)
                {
                   json_array_append_new(traps, trap);
                }
             }
-            MemFree(idList);
             json_object_set_new(root, "traps", traps);
 
             // Export rules using request UUIDs
             json_t *rules = json_array();
             EventProcessingPolicy *epp = GetEventProcessingPolicy();
-            count = request.getFieldAsUInt32(VID_NUM_RULES);
+            uint32_t count = request.getFieldAsUInt32(VID_NUM_RULES);
             if (count > 0)
             {
                uint32_t fieldId = VID_RULE_LIST_BASE;
@@ -11647,83 +11639,71 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
             // Export scripts
             json_t *scripts = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_SCRIPTS);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_SCRIPT_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_SCRIPT_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               json_t *script = CreateScriptExportRecord(idList[i]);
+               json_t *script = CreateScriptExportRecord(idList.get(i));
                if (script != nullptr)
                {
                   json_array_append_new(scripts, script);
                }
             }
-            MemFree(idList);
             json_object_set_new(root, "scripts", scripts);
 
             // Export object tools
             json_t *objectTools = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_TOOLS);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_TOOL_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_TOOL_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               json_t *tool = CreateObjectToolExportRecord(idList[i]);
+               json_t *tool = CreateObjectToolExportRecord(idList.get(i));
                if (tool != nullptr)
                {
                   json_array_append_new(objectTools, tool);
                }
             }
-            MemFree(idList);
             json_object_set_new(root, "objectTools", objectTools);
 
             // Export DCI summary tables
             json_t *dciSummaryTables = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               CreateSummaryTableExportRecord(idList[i], dciSummaryTables);
+               CreateSummaryTableExportRecord(idList.get(i), dciSummaryTables);
             }
-            MemFree(idList);
             json_object_set_new(root, "dciSummaryTables", dciSummaryTables);
 
             // Export mapping tables
             json_t *mappingTables = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_MAPPING_TABLES);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_MAPPING_TABLE_LIST, count, idList);
-            for(uint32_t i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_MAPPING_TABLE_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               CreateMappingTableExportRecord(mappingTables, idList[i]);
+               CreateMappingTableExportRecord(mappingTables, idList.get(i));
             }
-            MemFree(idList);
             json_object_set_new(root, "mappingTables", mappingTables);
 
             // Export actions
             json_t *actions = json_array();
-            count = request.getFieldAsUInt32(VID_NUM_ACTIONS);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_ACTION_LIST, count, idList);
-            for(int i = 0; i < count; i++)
+            idList.clear();
+            request.getFieldAsInt32Array(VID_ACTION_LIST, &idList);
+            for(int i = 0; i < idList.size(); i++)
             {
-               json_t *action = CreateActionExportRecord(idList[i]);
+               json_t *action = CreateActionExportRecord(idList.get(i));
                if (action != nullptr)
                {
                   json_array_append_new(actions, action);
                }
             }
-            MemFree(idList);
             json_object_set_new(root, "actions", actions);
 
             // Export web service definitions
             json_t *webServiceDefinitions = json_array();
-            count = request.getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
-            idList = MemAllocArray<uint32_t>(count);
-            request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, idList);
-            CreateWebServiceDefinitionExportRecord(webServiceDefinitions, count, idList);
-            MemFree(idList);
+            idList.clear();
+            request.getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, &idList);
+            CreateWebServiceDefinitionExportRecord(webServiceDefinitions, idList.size(), idList.getBuffer());
             json_object_set_new(root, "webServiceDefinitions", webServiceDefinitions);
 
             // Export asset management schema

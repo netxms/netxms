@@ -1558,6 +1558,9 @@ void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_
  */
 size_t NXCPMessage::getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const
 {
+   if (buffer == nullptr)
+      return 0;
+
    size_t size = getFieldAsBinary(fieldId, reinterpret_cast<BYTE*>(buffer), numElements * sizeof(uint32_t));
    size /= sizeof(uint32_t);   // Convert bytes to elements
    if (size > numElements)
