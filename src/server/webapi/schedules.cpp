@@ -185,13 +185,19 @@ int H_ScheduledTaskCreate(Context *context)
    }
 
    if (rcc == RCC_ACCESS_DENIED)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, objectId, L"Access denied on creating scheduled task with handler %s", taskHandlerId);
       return 403;
+   }
+   if (rcc == RCC_INVALID_OBJECT_ID)
+      return 404;
    if (rcc != RCC_SUCCESS)
    {
       context->setErrorResponse("Database failure");
       return 500;
    }
 
+   context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Created scheduled task with handler %s", taskHandlerId);
    return 201;
 }
 
@@ -272,7 +278,10 @@ int H_ScheduledTaskUpdate(Context *context)
    }
 
    if (rcc == RCC_ACCESS_DENIED)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, objectId, L"Access denied on updating scheduled task [" UINT64_FMT L"] with handler %s", taskId, taskHandlerId);
       return 403;
+   }
    if (rcc == RCC_INVALID_OBJECT_ID)
       return 404;
    if (rcc != RCC_SUCCESS)
@@ -280,6 +289,8 @@ int H_ScheduledTaskUpdate(Context *context)
       context->setErrorResponse("Database failure");
       return 500;
    }
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Updated scheduled task [" UINT64_FMT L"] with handler %s", taskId, taskHandlerId);
 
    // Return updated task
    json_t *tasks = GetScheduledTasks(context->getUserId(), context->getSystemAccessRights(), FilterTaskById, &taskId);
@@ -312,7 +323,10 @@ int H_ScheduledTaskDelete(Context *context)
 
    uint32_t rcc = DeleteScheduledTask(taskId, context->getUserId(), context->getSystemAccessRights());
    if (rcc == RCC_ACCESS_DENIED)
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting scheduled task [" UINT64_FMT L"]", taskId);
       return 403;
+   }
    if (rcc == RCC_INVALID_OBJECT_ID)
       return 404;
    if (rcc != RCC_SUCCESS)
@@ -321,6 +335,7 @@ int H_ScheduledTaskDelete(Context *context)
       return 500;
    }
 
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Deleted scheduled task [" UINT64_FMT L"]", taskId);
    return 204;
 }
 

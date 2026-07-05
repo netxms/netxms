@@ -5597,7 +5597,9 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: Insufficient access rights
+          description: Insufficient access rights (including missing access right required by the task handler)
+        '404':
+          description: Referenced object not found
         '500':
           description: Database failure
       security:
