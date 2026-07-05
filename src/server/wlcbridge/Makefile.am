@@ -7,8 +7,7 @@ wlcbridge_la_LDFLAGS = -module -avoid-version
 wlcbridge_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
 
 EXTRA_DIST = \
-	wlcbridge.h \
-	wlcbridge.vcxproj wlcbridge.vcxproj.filters
+	wlcbridge.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(MODULE).a $(DESTDIR)$(pkglibdir)/$(MODULE)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(MODULE).a ; fi

@@ -16,5 +16,5 @@ m4macros =
 
 # The following is boilerplate
 m4data_DATA = $(m4macros) 
-EXTRA_DIST = $(m4data_DATA) 
+EXTRA_DIST = $(m4data_DATA)
 

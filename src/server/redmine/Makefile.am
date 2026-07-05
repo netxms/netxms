@@ -12,8 +12,7 @@ redmine_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	redmine.h \
-	redmine.vcxproj redmine.vcxproj.filters
+	redmine.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(MODULE).a $(DESTDIR)$(pkglibdir)/$(MODULE)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(MODULE).a ; fi

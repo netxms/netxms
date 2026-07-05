@@ -12,7 +12,7 @@ else
 aifileops_la_LIBADD += -ljansson
 endif
 
-EXTRA_DIST = aifileops.h aifileops.vcxproj aifileops.vcxproj.filters
+EXTRA_DIST = aifileops.h
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -6,7 +6,6 @@ bind9_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 bind9_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 bind9_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = bind9.vcxproj bind9.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -10,5 +10,3 @@ else
 nxsnmpset_LDADD += -ljansson
 endif
 
-EXTRA_DIST = \
-	nxsnmpset.vcxproj nxsnmpset.vcxproj.filters

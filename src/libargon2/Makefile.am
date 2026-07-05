@@ -21,7 +21,6 @@ libnxargon2_la_LDFLAGS = -no-undefined -export-symbols-regex '^argon2' -version-
 
 EXTRA_DIST = \
 	LICENSE \
-	libargon2.vcxproj libargon2.vcxproj.filters \
 	blake2/blake2.h \
 	blake2/blake2-impl.h \
 	blake2/blamka-round-ref.h \

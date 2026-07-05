@@ -41,7 +41,6 @@ EXTRA_DIST = \
     extension.h \
     localdb.h \
     messages.mc \
-    nxagentd.vcxproj nxagentd.vcxproj.filters \
     nxagentd.h \
     nxagentd.manifest \
     nxagentd.rc \

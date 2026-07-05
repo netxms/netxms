@@ -1,76 +1,65 @@
 # Building NetXMS on Windows with MinGW
 
-This document describes how to build NetXMS on Windows using the MinGW-w64 compiler toolchain and GNU Make.
+This document describes how to build NetXMS on Windows using the llvm-mingw compiler toolchain and GNU Make.
 
 ## Overview
 
-NetXMS can now be built on Windows using a `Makefile.w32`-based build system, which provides:
+The Windows build uses a `Makefile.w32`-based build system driven by `mingw32-make`. This is now the **only** supported way to build NetXMS on Windows — the old MSVC/Visual Studio project files (`.vcxproj`, `.sln`) have been removed. The MinGW build provides:
+
 - Clean separation from Unix builds (no autoconf/automake needed on Windows)
 - Direct control over build options via `config.mingw`
-- Faster builds compared to MSBuild
-- Consistent toolchain across all platforms (GCC/MinGW)
+- A consistent GCC/Clang-compatible toolchain across all platforms
+- Multi-architecture output (x64, x86, arm64) from a single tree
+
+Binaries produced by this build are **not** ABI-compatible with the old MSVC output; all libraries in a build must use the same toolchain.
 
 ## Prerequisites
 
-### 1. MinGW-w64 Toolchain
+### 1. llvm-mingw Toolchain
 
-You need MinGW-w64 (not the older MinGW) for 64-bit support and modern C++11 features.
+The build targets the **llvm-mingw** toolchain (Clang + LLD + libc++), which ships separate per-architecture cross toolchains:
 
-**Recommended: Install via MSYS2**
+| Architecture | Target triple |
+|--------------|---------------|
+| x64 | `x86_64-w64-mingw32` |
+| x86 | `i686-w64-mingw32` |
+| arm64 | `aarch64-w64-mingw32` |
 
-1. Download MSYS2 from: https://www.msys2.org/
-2. Install MSYS2 (e.g., to `C:\msys64`)
-3. Open "MSYS2 MinGW 64-bit" shell
-4. Install the toolchain:
-   ```bash
-   pacman -S mingw-w64-x86_64-gcc
-   pacman -S mingw-w64-x86_64-make
-   pacman -S mingw-w64-x86_64-binutils
-   ```
+1. Download a release from: https://github.com/mstorsjo/llvm-mingw/releases
+2. Extract it (e.g. to `C:\llvm-mingw`)
+3. Add its `bin` directory to your Windows PATH
 
-5. Add MinGW to your Windows PATH:
-   ```
-   C:\msys64\mingw64\bin
-   ```
-
-**Alternative: Standalone MinGW-w64**
-- Download from: https://www.mingw-w64.org/downloads/
-- Choose a build (e.g., x86_64-posix-seh)
-- Add to PATH
+You also need GNU Make as `mingw32-make` (bundled with most MinGW distributions, or install `mingw-w64-x86_64-make` via MSYS2). All build commands in this document use `mingw32-make`.
 
 ### 2. Perl
 
 Required for build tag generation (`tools/updatetag.pl`).
 
-**Option A: Strawberry Perl** (recommended)
-- Download from: https://strawberryperl.com/
-- Install and add to PATH
-
-**Option B: ActivePerl**
-- Download from: https://www.activestate.com/products/perl/
+- **Strawberry Perl** (recommended): https://strawberryperl.com/
+- **ActivePerl**: https://www.activestate.com/products/perl/
 
 ### 3. Required Libraries
 
-NetXMS requires several external libraries. You need to download and build them with MinGW, or download pre-built MinGW versions.
+External libraries must be built for (or downloaded as) llvm-mingw import libraries. Point `config.mingw` at their install locations (see below).
 
 **Mandatory:**
-- **OpenSSL** - Encryption and SSL/TLS support
-- **PCRE** - Regular expression support
-- **zlib** - Compression (usually included with MinGW)
+- **zlib** – compression
+- **OpenSSL** – encryption and SSL/TLS
+- **PCRE** – regular expressions
+- **libexpat** – XML parsing
 
-**Optional (for full functionality):**
-- **cURL** - HTTP/REST features
-- **libssh** - SSH subagent
-- **PostgreSQL client library** - PostgreSQL database driver
-- **MySQL/MariaDB client** - MySQL database driver
-- **libmosquitto** - MQTT subagent
-- **Python development headers** - Python subagent
-- **Java JDK** - Java subagent (JNI headers)
+**Required for the server build (`BUILD_SERVER=1`):**
+- **Protocol Buffers (protobuf)** – used by OTLP and the Prometheus subagent
+- **libmicrohttpd** – embedded HTTP server
 
-**Where to get them:**
-- MSYS2 packages: `pacman -S mingw-w64-x86_64-<package>`
-- Build from source with MinGW
-- Some projects provide pre-built MinGW binaries
+**Optional (per feature):**
+- **cURL** – HTTP/REST features
+- **libssh** – SSH subagent
+- **libmosquitto** – MQTT subagent
+- **Java JDK** – Java subagent (JNI headers)
+- **PostgreSQL / MySQL / MariaDB / Oracle / Informix / DB2 client libraries** – corresponding database drivers
+
+The template expects SDKs under a common root (`C:/SDK-llvm-mingw/<name>`), with per-architecture libraries in `lib/<arch>`. Adjust the paths in `config.mingw` to match your layout.
 
 ## Quick Start
 
@@ -82,46 +71,42 @@ Run the setup script to create your configuration file:
 setup_windows_build.cmd
 ```
 
-This will:
-- Create `config.mingw` from template
-- Check for required tools
-- Open `config.mingw` for editing
+This copies `config.mingw.template` to `config.mingw` and prompts you to edit it.
 
 ### 2. Configure Build
 
 Edit `config.mingw` to match your environment:
 
 ```makefile
-# Set architecture (x86, x64, or arm64)
-ARCH = x64
+# Target architecture (x64, x86, or arm64)
+ARCH ?= x64
 
-# Set SDK paths
-OPENSSL_ROOT = C:/SDK/OpenSSL/x64
-PCRE_ROOT = C:/SDK/PCRE/x64
-PGSQL_ROOT = C:/SDK/PostgreSQL/x64
-# ... etc
+# Components to build
+BUILD_AGENT = 1
+BUILD_CLIENT = 1
+BUILD_SERVER = 0
 
-# Enable/disable features
-WITH_PGSQL = 1
-WITH_MYSQL = 1
-WITH_PYTHON = 1
+# SDK root and per-SDK paths
+SDK_ROOT = C:/SDK-llvm-mingw
+OPENSSL_ROOT = $(SDK_ROOT)/openssl
+PCRE_ROOT = $(SDK_ROOT)/pcre
 # ... etc
 ```
 
-**Important:** Use forward slashes (/) in paths, even on Windows.
+**Important:** Use forward slashes (`/`) in paths, even on Windows.
 
 ### 3. Build
 
-Build everything:
+Build everything with the convenience wrapper:
 
 ```cmd
 build_windows.cmd
 ```
 
-Or use make directly:
+Or invoke `mingw32-make` directly:
 
 ```cmd
-make -f Makefile.w32 -j8
+mingw32-make -f Makefile.w32 -j8
 ```
 
 ### 4. Install
@@ -129,7 +114,7 @@ make -f Makefile.w32 -j8
 Install to the prefix defined in `config.mingw` (default: `C:\NetXMS`):
 
 ```cmd
-make -f Makefile.w32 install
+mingw32-make -f Makefile.w32 install
 ```
 
 ## Build Options
@@ -139,49 +124,64 @@ make -f Makefile.w32 install
 Edit `config.mingw`:
 
 ```makefile
-# Debug build (symbols, no optimization)
-DEBUG = 1
-
-# Release build (optimized, no symbols)
-DEBUG = 0
+DEBUG = 1    # Debug build (symbols, no optimization)
+DEBUG = 0    # Release build (optimized, symbols stripped)
 ```
 
 ### Components
 
-Choose which components to build:
-
 ```makefile
-BUILD_AGENT = 1      # Build agent (nxagentd) and subagents
-BUILD_CLIENT = 1     # Build client libraries and tools
-BUILD_SERVER = 0     # Server components (rarely needed on Windows)
+BUILD_AGENT = 1      # Agent (nxagentd) and subagents
+BUILD_CLIENT = 1     # Client libraries and tools
+BUILD_SERVER = 1     # Server (netxmsd, core, modules, drivers)
 ```
 
-### Database Drivers
+> **Note:** The full server and client tiers are supported for **x64 only**. For `x86` and `arm64` the build forces `BUILD_CLIENT=0`/`BUILD_SERVER=0` and builds the **agent (plus its tools and database drivers) only**, regardless of these settings.
 
-Enable/disable database drivers:
+### Database Drivers
 
 ```makefile
 WITH_SQLITE = 1      # SQLite (bundled)
 WITH_PGSQL = 1       # PostgreSQL
 WITH_MYSQL = 1       # MySQL/MariaDB
 WITH_MSSQL = 1       # Microsoft SQL Server (ODBC)
+WITH_ODBC = 1        # ODBC (Windows built-in)
 WITH_ORACLE = 0      # Oracle
+WITH_INFORMIX = 0    # Informix
+WITH_DB2 = 0         # IBM DB2
 ```
 
 ### Agent Subagents
 
-Enable/disable optional subagents:
-
 ```makefile
-WITH_PYTHON = 1      # Python subagent
 WITH_JAVA = 1        # Java subagent
 WITH_SSH = 1         # SSH subagent
 WITH_MOSQUITTO = 1   # MQTT subagent
 ```
 
+## Multi-Architecture Builds
+
+Build for a single architecture by setting `ARCH` on the command line (no need to edit `config.mingw`):
+
+```cmd
+mingw32-make -f Makefile.w32 ARCH=arm64
+```
+
+Build all architectures in one go:
+
+```cmd
+mingw32-make -f Makefile.w32 all-arch
+```
+
+The set defaults to `x64 x86 arm64` and can be overridden:
+
+```cmd
+mingw32-make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
+```
+
 ## Directory Structure
 
-After building, binaries are organized by architecture and build type:
+Binaries are organized by architecture and build type:
 
 ```
 out/
@@ -189,182 +189,97 @@ out/
 │   ├── Debug/
 │   │   ├── bin/        # Executables and DLLs
 │   │   ├── lib/        # Import libraries (.dll.a)
-│   │   └── obj/        # Object files
+│   │   └── obj/        # Object files (per-component subtree)
 │   └── Release/
 │       ├── bin/
 │       ├── lib/
 │       └── obj/
+├── x86/
+│   └── ...
+└── arm64/
+    └── ...
 ```
+
+Object files are written under `out/<arch>/<type>/obj`, keeping each architecture's build fully independent.
 
 ## Makefile Targets
 
 ```cmd
-# Build everything
-make -f Makefile.w32
-
-# Clean build artifacts
-make -f Makefile.w32 clean
-
-# Install to PREFIX
-make -f Makefile.w32 install
-
-# Show version info
-make -f Makefile.w32 version
-
-# Show help
-make -f Makefile.w32 help
+mingw32-make -f Makefile.w32              # Build everything for ARCH
+mingw32-make -f Makefile.w32 all-arch     # Build all architectures
+mingw32-make -f Makefile.w32 clean        # Remove build artifacts
+mingw32-make -f Makefile.w32 install      # Install to PREFIX
+mingw32-make -f Makefile.w32 version      # Show version info
+mingw32-make -f Makefile.w32 help         # Show help
 ```
 
 ## Troubleshooting
 
-### "gcc not found"
+### "gcc not found" / toolchain not on PATH
 
-Ensure MinGW's `bin` directory is in your PATH:
+Ensure the llvm-mingw `bin` directory is on your PATH:
 
 ```cmd
-set PATH=C:\msys64\mingw64\bin;%PATH%
-```
-
-Verify:
-```cmd
-gcc --version
+set PATH=C:\llvm-mingw\bin;%PATH%
+x86_64-w64-mingw32-gcc --version
 ```
 
 ### "config.mingw not found"
 
-You need to create `config.mingw` from the template:
+Create it from the template:
 
 ```cmd
 copy config.mingw.template config.mingw
-edit config.mingw
 ```
 
 ### Library not found during linking
 
-Update the SDK path in `config.mingw`:
+Update the SDK path in `config.mingw` and verify the per-architecture library files exist, e.g.:
 
-```makefile
-OPENSSL_ROOT = C:/SDK/OpenSSL/x64
-```
+- `C:/SDK-llvm-mingw/openssl/lib/x64/libssl.a` (or `.dll.a`)
+- `C:/SDK-llvm-mingw/openssl/lib/x64/libcrypto.a`
 
-Ensure the library files exist:
-- `C:/SDK/OpenSSL/x64/lib/libssl.a` (or `.dll.a`)
-- `C:/SDK/OpenSSL/x64/lib/libcrypto.a`
+Some vendor SDKs (PostgreSQL, MySQL, Oracle, DB2, ...) ship MSVC-style `*.lib` import libraries. Link those by exact file name, e.g. `-l:libpq.lib` (the `config.mingw` entries for the database drivers already do this).
 
 ### Resource compiler errors
 
-Ensure `windres` is in your PATH (included with MinGW binutils).
+Ensure `windres` (from the llvm-mingw toolchain) is on your PATH.
 
 ### "undefined reference to..."
 
-Missing library dependency. Check that:
-1. The library is built with MinGW (not MSVC)
-2. The library path is in `config.mingw`
-3. The library is listed in the component's `Makefile.w32`
+A missing library dependency. Check that:
+1. The library was built with llvm-mingw (not MSVC)
+2. Its path is set in `config.mingw`
+3. It is listed in the component's `Makefile.w32`
 
 ### Mixing MinGW and MSVC libraries
 
-**Don't do this!** MinGW and MSVC use different C++ ABIs and cannot be mixed. All libraries must be built with the same toolchain.
+**Don't.** MinGW/Clang and MSVC use different C++ ABIs and cannot be mixed. All libraries in a build must use the same toolchain. The Tuxedo subagent is excluded from the Windows build because its SDK is MSVC-only and its headers conflict with the MinGW CRT.
 
-Some vendor libraries (Oracle, Informix) are MSVC-only. These may require:
-- Creating MinGW import libraries with `dlltool`
-- Using C interfaces only (no C++)
-- Keeping the MSVC build for those specific components
+## Relation to the Former MSVC Build
 
-## Advanced Usage
+NetXMS was previously built on Windows with Visual Studio / MSBuild. Those project files (`.vcxproj`, `.vcxproj.filters`, `netxms.sln`) and the associated MSBuild property sheets and `msvc_setenv_*.cmd` scripts have been **removed** — the MinGW build described here is the sole Windows build system. On Unix, the autoconf/automake build (`Makefile.am`) is unaffected.
 
-### Cross-Compilation
+## Component Layout
 
-To build for a different architecture from the template:
+Each buildable component has a `Makefile.w32` alongside its `Makefile.am`. Shared rules live in `build/` and in per-tier `*-common.mk` files:
 
-```makefile
-ARCH = x86
-CROSS_PREFIX = i686-w64-mingw32-
-CC = $(CROSS_PREFIX)gcc
-CXX = $(CROSS_PREFIX)g++
-# ... etc
-```
-
-### Parallel Builds
-
-Use `-j` flag for parallel compilation:
-
-```cmd
-make -f Makefile.w32 -j8
-```
-
-Or set in `config.mingw`:
-```makefile
-MAKEFLAGS = -j8
-```
-
-### Verbose Output
-
-See full compiler commands:
-
-```makefile
-VERBOSE = 1
-```
-
-Or:
-```cmd
-make -f Makefile.w32 VERBOSE=1
-```
-
-### Building Individual Components
-
-Build just one component:
-
-```cmd
-cd src/libnetxms
-make -f Makefile.w32 TOPDIR=../..
-```
-
-## Differences from MSBuild
-
-| Feature | MSBuild | Makefile.w32 |
-|---------|---------|--------------|
-| **IDE** | Visual Studio | Any text editor + command line |
-| **Configuration** | .vcxproj files | config.mingw |
-| **Compiler** | MSVC (cl.exe) | GCC (g++.exe) |
-| **Build speed** | Slower | Faster (parallel make) |
-| **Debugging** | Visual Studio debugger | GDB |
-| **Dependencies** | NuGet, manual SDKs | Manual SDKs |
-
-## Migration from MSBuild
-
-If you're transitioning from the old MSBuild system:
-
-1. Both build systems can coexist (`.vcxproj` files remain)
-2. MinGW binaries are **not** ABI-compatible with MSVC binaries
-3. You must use one toolchain consistently (don't mix)
-4. Most code is platform-agnostic and compiles with both
+| Tier | Common rules file | Module type |
+|------|-------------------|-------------|
+| Agent subagents | `src/agent/subagents/subagent-common.mk` | `.nsm` |
+| Agent tools / console tools | `build/tool-common.mk` | `.exe` |
+| Database drivers | `src/db/dbdrv/driver-common.mk` | `.ddr` |
+| Network device drivers | `src/server/drivers/ndd-common.mk` | `.ndd` |
+| Notification channel drivers | `src/server/ncdrivers/ncdrv-common.mk` | `.ncd` |
+| Server modules | `src/server/module-common.mk` | `.nxm` |
+| PDS drivers | `src/server/pdsdrv/pdsdrv-common.mk` | `.pdsd` |
 
 ## Getting Help
 
-- **Design Document**: See `doc/Windows_MinGW_Build_System_Design.md`
-- **Component Guide**: Each component has a `Makefile.w32` alongside `Makefile.am`
+- **Design Document**: `doc/Windows_MinGW_Build_System_Design.md`
 - **GitHub Issues**: https://github.com/netxms/netxms/issues
-
-## Current Status
-
-**Phase 1: Infrastructure Complete** ✓
-- Configuration system (`config.mingw`)
-- Top-level `Makefile.w32`
-- Common build rules and templates
-- Build scripts
-
-**Phase 2: Core Libraries** (In Progress)
-- [ ] `src/jansson`
-- [ ] `src/libnetxms`
-- [ ] `src/libnxsl`
-- [ ] Additional libraries...
-
-**Phase 3+**: Agent, client, database drivers, subagents (Planned)
-
-Check `doc/Windows_MinGW_Build_System_Design.md` for the complete implementation plan.
 
 ## License
 
-NetXMS is licensed under GNU General Public License version 2.
-See the LICENSE file for details.
+NetXMS is licensed under GNU General Public License version 2. See the LICENSE file for details.
+</content>

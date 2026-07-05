@@ -12,7 +12,6 @@ jira_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	jira.vcxproj jira.vcxproj.filters \
 	jira.h
 
 install-exec-hook:

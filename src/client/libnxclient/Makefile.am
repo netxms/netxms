@@ -8,5 +8,4 @@ libnxclient_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxclient_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxclient.vcxproj libnxclient.vcxproj.filters \
 	libnxclient.h

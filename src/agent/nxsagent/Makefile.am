@@ -11,5 +11,4 @@ nxsagent_LDADD += @SYSTEMD_LIBS@
 endif
 
 EXTRA_DIST = \
-	nxsagent.h \
-	nxsagent.vcxproj nxsagent.vcxproj.filters
+	nxsagent.h

@@ -20,4 +20,3 @@ else
 test_libnetxms_LDADD += -ljansson
 endif
 
-EXTRA_DIST = test-libnetxms.vcxproj test-libnetxms.vcxproj.filters

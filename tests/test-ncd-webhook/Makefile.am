@@ -22,4 +22,3 @@ else
 test_ncd_webhook_LDADD += -ljansson
 endif
 
-EXTRA_DIST = test-ncd-webhook.vcxproj test-ncd-webhook.vcxproj.filters

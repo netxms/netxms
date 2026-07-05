@@ -11,7 +11,7 @@ libnxsl_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXSL_EXPORTS -I@top_srcdir@/buil
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 
-EXTRA_DIST = libnxsl.vcxproj libnxsl.vcxproj.filters libnxsl.h parser.l parser.y parser.tab.hpp windll.cpp
+EXTRA_DIST = libnxsl.h parser.l parser.y parser.tab.hpp windll.cpp
 
 compiler.cpp: parser.tab.hpp
 

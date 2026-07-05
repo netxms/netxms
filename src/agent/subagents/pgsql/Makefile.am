@@ -6,7 +6,7 @@ pgsql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 pgsql_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 pgsql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST = pgsql.vcxproj pgsql.vcxproj.filters pgsql_subagent.h
+EXTRA_DIST = pgsql_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

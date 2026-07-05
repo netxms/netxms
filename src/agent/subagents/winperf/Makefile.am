@@ -9,5 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-    collect.cpp tools.cpp winperf.cpp winperf.h \
-    winperf.vcxproj winperf.vcxproj.filters
+    collect.cpp tools.cpp winperf.cpp winperf.h

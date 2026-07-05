@@ -20,7 +20,6 @@ libnxjansson_la_LIBADD = -lm
 EXTRA_DIST = \
 	hashtable.h \
 	jansson.def \
-	jansson.vcxproj jansson.vcxproj.filters \
 	jansson_private.h \
 	jansson_private_config.h \
 	lookup3.h \

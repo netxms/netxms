@@ -15,6 +15,5 @@ netxmsd_LDADD = \
    @SERVER_LIBS@ @EXEC_LIBS@
 
 EXTRA_DIST = \
-	netxmsd.vcxproj netxmsd.vcxproj.filters \
 	netxmsd.h \
 	winsrv.cpp

@@ -20,4 +20,4 @@ else
 nxlptest_LDADD += -ljansson
 endif
 
-EXTRA_DIST = nxlptest.h nxlptest.vcxproj nxlptest.vcxproj.filters
+EXTRA_DIST = nxlptest.h

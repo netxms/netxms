@@ -9,5 +9,4 @@ libnxlp_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	vss.cpp wevt.cpp \
-	libnxlp.vcxproj libnxlp.vcxproj.filters \
 	libnxlp.h

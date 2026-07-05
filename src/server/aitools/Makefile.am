@@ -7,8 +7,7 @@ aitools_la_LDFLAGS = -module -avoid-version
 aitools_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
 
 EXTRA_DIST = \
-	aitools.h \
-	aitools.vcxproj aitools.vcxproj.filters
+	aitools.h
 
 SUBDIRS = prompts skills
 

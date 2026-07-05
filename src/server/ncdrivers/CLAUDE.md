@@ -272,8 +272,8 @@ A new NC driver must be registered in **all** of the following — easy to miss 
 
 1. **Create directory and files** under `src/server/ncdrivers/mydriver/`:
    - `mydriver.cpp` — implementation
-   - `Makefile.am` — only needs `EXTRA_DIST = mydriver.cpp mydriver.vcxproj mydriver.vcxproj.filters` (the actual build rules live in the parent `src/server/ncdrivers/Makefile.am`)
-   - `mydriver.vcxproj` + `.vcxproj.filters` — copy from a similar driver, swap project name + sources, generate a fresh GUID
+   - `Makefile.am` — only needs `EXTRA_DIST = mydriver.cpp` (the actual build rules live in the parent `src/server/ncdrivers/Makefile.am`)
+   - `Makefile.w32` — Windows/MinGW build; copy from a similar driver and swap `DRIVER` + `DRV_LIBS` (see `webhook/Makefile.w32`, which pulls in `-lnxjansson $(CURL_LIBS)`)
 2. **`src/server/ncdrivers/Makefile.am`**:
    - Add `mydriver.la` to `EXTRA_LTLIBRARIES`
    - Add per-driver block (sources, CPPFLAGS, LDFLAGS, LIBADD) — alphabetical placement. For jansson-using drivers wrap the jansson link inside `if USE_INTERNAL_JANSSON … else … endif` (see `matrix_la_*` or `slack_la_*` as templates).
@@ -282,14 +282,13 @@ A new NC driver must be registered in **all** of the following — easy to miss 
    - Line ~2529 (libcurl-conditional `NCDRV_MODULES` list) — add driver name if it uses libcurl
    - AC_CONFIG_FILES block (~line 5181) — add `src/server/ncdrivers/mydriver/Makefile`
    - `NCDRV_LTLIBRARIES` (line 4890) is auto-derived from `NCDRV_MODULES` via perl — **no manual edit**
-4. **`netxms.sln`** — add a `Project(...)` entry for the new vcxproj plus per-configuration build rows in `GlobalSection(ProjectConfigurationPlatforms)`. Model after the closest existing driver (e.g. `msteams` at sln line 321).
+4. **`src/server/ncdrivers/Makefile.w32`** — add the driver name to the `DRIVERS` list (alphabetical) so the Windows/MinGW build recurses into it.
 5. **`doc/internal/debug_tags.txt`** — add `ncd.mydriver` if you introduce a new debug tag (root CLAUDE.md requirement).
 6. **Implement** the `NCDriver` interface and add `DECLARE_NCD_ENTRY_POINT` macro with a static `NCConfigurationTemplate s_config(needSubject, needRecipient)`.
 7. Run `./init-source-tree && ./configure --with-server` and check that the driver appears in the build summary's NC driver list. `install-exec-hook` in `src/server/ncdrivers/Makefile.am` iterates `$(DRIVERS)` automatically — nothing to edit there.
 8. **(Optional) Unit tests** — extract pure logic (no libcurl) into `mydriver_helpers.{cpp,h}` and add a `tests/test-ncd-mydriver/` target (see `webhook` for the established pattern):
    - `Makefile.am` modelled on `tests/test-libnetxms/Makefile.am` (`bin_PROGRAMS` + `@EXEC_LDFLAGS@`/`@EXEC_LIBS@`), compiling `../../src/server/ncdrivers/mydriver/mydriver_helpers.cpp`; `_CPPFLAGS` must include `-I../include` (for `<testtools.h>`); keep it libcurl-free
    - Wire via `TEST_MODULES` in **both** `configure.ac` blocks (~line 1092 and ~line 1468) and add `tests/test-ncd-mydriver/Makefile` to AC_CONFIG_FILES — **not** a `tests/Makefile.am` `SUBDIRS` edit
-   - Ship `test-ncd-mydriver.vcxproj` + `.vcxproj.filters` and add a `Project(...)` entry + config rows + nested-projects mapping to `netxms.sln`, like every other `test-*` target
    - Register the binary in `tests/suite/netxms-test-suite.in` and `netxms-test-suite.cmd` so the documented test command runs it
 
 ## Build Configuration
@@ -297,7 +296,7 @@ A new NC driver must be registered in **all** of the following — easy to miss 
 `mydriver/Makefile.am` is intentionally minimal — actual build rules live in the parent `src/server/ncdrivers/Makefile.am`:
 
 ```makefile
-EXTRA_DIST = mydriver.cpp mydriver.vcxproj mydriver.vcxproj.filters
+EXTRA_DIST = mydriver.cpp
 ```
 
 Parent `src/server/ncdrivers/Makefile.am` block (for a jansson-using driver):

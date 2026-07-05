@@ -1,2 +1,2 @@
 EXTRA_DIST = \
-	dummy.cpp dummy.vcxproj dummy.vcxproj.filters
+	dummy.cpp

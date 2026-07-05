@@ -10,5 +10,3 @@ else
 nxmibdump_LDADD += -ljansson
 endif
 
-EXTRA_DIST = \
-	nxmibdump.vcxproj nxmibdump.vcxproj.filters

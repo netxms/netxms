@@ -8,5 +8,4 @@ libnxdbmgr_la_LIBADD = \
 	../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxdbmgr.h \
-	libnxdbmgr.vcxproj libnxdbmgr.vcxproj.filters
+	libnxdbmgr.h

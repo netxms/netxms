@@ -17,5 +17,4 @@ endif
 
 
 EXTRA_DIST = \
-	libnxsnmp.vcxproj libnxsnmp.vcxproj.filters \
 	libnxsnmp.h

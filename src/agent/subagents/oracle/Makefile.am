@@ -6,7 +6,7 @@ oracle_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 oracle_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 oracle_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST = oracle.vcxproj oracle.vcxproj.filters oracle_subagent.h
+EXTRA_DIST = oracle_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

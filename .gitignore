@@ -17,10 +17,7 @@
 *.plg
 *.rej
 *.service
-*.suo
 *.res
-*.vcproj.*.user
-*.vcxproj.user
 *~
 .#*
 .*.rej

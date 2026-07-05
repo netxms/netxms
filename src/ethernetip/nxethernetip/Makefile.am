@@ -10,5 +10,3 @@ else
 nxethernetip_LDADD += -ljansson
 endif
 
-EXTRA_DIST = \
-	nxethernetip.vcxproj nxethernetip.vcxproj.filters
