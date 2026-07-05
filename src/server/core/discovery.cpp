@@ -186,7 +186,7 @@ static bool HostIsReachable(DiscoveredAddress *address, bool fullCheck)
       if (!agentConnection->connect(g_serverKey, &rcc))
       {
          // If connection failed, try well-known agent ports
-         if (rcc == ERR_CONNECT_FAILED)
+         if ((rcc == ERR_CONNECT_FAILED) || (rcc == ERR_REMOTE_CONNECT_FAILED))
          {
             IntegerArray<uint16_t> knownPorts = GetWellKnownPorts(L"agent", zoneUIN);
             for (int i = 0; (i < knownPorts.size()) && !IsShutdownInProgress(); i++)

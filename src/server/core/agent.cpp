@@ -39,6 +39,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
          AgentConnection(ipAddr, port, secret, allowCompression)
 {
    m_nodeId = nodeId;
+   m_proxyNodeId = 0;
    m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
@@ -54,6 +55,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunn
          AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel)
 {
    m_nodeId = nodeId;
+   m_proxyNodeId = 0;
    m_tcpProxyCallback = nullptr;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited

@@ -1526,7 +1526,7 @@ uint32_t CommSession::setupProxyConnection(NXCPMessage *request)
    if (m_hProxySocket == INVALID_SOCKET)
    {
       debugPrintf(5, _T("Failed to setup proxy connection to %s:%d"), (const TCHAR *)addr.toString(), port);
-      return ERR_CONNECT_FAILED;
+      return ERR_REMOTE_CONNECT_FAILED;
    }
 
    // Finish proxy connection setup

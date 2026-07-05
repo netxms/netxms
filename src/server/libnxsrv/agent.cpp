@@ -671,6 +671,7 @@ bool AgentConnection::connect(RSA_KEY serverKey, uint32_t *error, uint32_t *sock
    bool success = false;
    bool forceEncryption = false;
    bool secondPass = false;
+   bool proxyResponded = false;
    uint32_t dwError = 0;
 
    if (error != nullptr)
@@ -785,6 +786,10 @@ setup_encryption:
    if (m_useProxy && !secondPass)
    {
       dwError = setupProxyConnection();
+      // Any response from proxy (success or error code relayed for onward connection)
+      // means the proxy itself is reachable; transport level failures do not
+      if ((dwError != ERR_CONNECTION_BROKEN) && (dwError != ERR_REQUEST_TIMEOUT))
+         proxyResponded = true;
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
 		lock();
@@ -839,6 +844,11 @@ setup_encryption:
    dwError = ERR_SUCCESS;
 
 connect_cleanup:
+   if (!success && m_useProxy && !proxyResponded)
+   {
+      debugPrintf(5, _T("Cannot connect to proxy agent (%s)"), AgentErrorCodeToText(dwError));
+      dwError = ERR_PROXY_CONNECT_FAILED;
+   }
    if (!success)
    {
 		if (socketError != nullptr)
