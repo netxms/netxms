@@ -233,10 +233,10 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
          const TCHAR *comments = nullptr, const TCHAR *key = nullptr, bool systemTask = false);
 uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
-         uint64_t systemAccessRights, bool disabled = false);
+         uint64_t systemAccessRights, bool disabled = false, bool systemTask = false);
 uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *taskHandlerId, time_t nextExecutionTime, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, const TCHAR *comments, uint32_t owner, uint32_t objectId,
-         uint64_t systemAccessRights, bool disabled = false);
+         uint64_t systemAccessRights, bool disabled = false, bool systemTask = false);
 uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t taskId, uint32_t userId, uint64_t systemRights);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 int NXCORE_EXPORTABLE DeleteScheduledTasksByObjectId(uint32_t objectId, bool allTasks = false);
