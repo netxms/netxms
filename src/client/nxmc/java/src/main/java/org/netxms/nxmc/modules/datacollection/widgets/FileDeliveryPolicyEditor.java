@@ -148,7 +148,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
-            addElement(null);
+            addRootDirectory();
          }
       };
 
@@ -159,6 +159,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             addDirectory();
          }
       };
+      view.addKeyBinding("M1+N", actionAddDirectory);
 
       actionAddFile = new Action(i18n.tr("Add &file..."), ResourceManager.getImageDescriptor("icons/add_file.png")) {
          @Override
@@ -431,7 +432,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if ((selection.size() != 1) || ((PathElement)selection.getFirstElement()).isFile())
          return;
 
-      addElement((PathElement)selection.getFirstElement());
+      addSubdirectories((PathElement)selection.getFirstElement());
    }
 
    /**
@@ -667,39 +668,87 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    }
 
    /**
-    * Add new element
+    * Add new root directory. The root element name is an absolute base path on the target agent
+    * (e.g. "/opt/netxms/files" or "C:\agent\files"), so it is taken as-is and not split into segments.
     */
-   private void addElement(PathElement parent)
+   private void addRootDirectory()
    {
-      InputDialog dlg = new InputDialog(getShell(), (parent == null) ? i18n.tr("New Root Directory") : i18n.tr("New Directory"), i18n.tr("Enter name for new directory"), "", new IInputValidator() {
+      InputDialog dlg = new InputDialog(getShell(), i18n.tr("New Root Directory"), i18n.tr("Enter name for new directory"), "", new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
             if (newText.isEmpty())
                return i18n.tr("Name cannot be empty");
-            if (parent != null)
-               for (PathElement el : parent.getChildren())
-               {
-                  if(newText.equalsIgnoreCase(el.getName()))
-                     return i18n.tr("Directory with this name already exists");
-               }
             return null;
          }
       });
       if (dlg.open() != Window.OK)
          return;
 
-      PathElement e = new PathElement(parent, dlg.getValue());
-      if (parent == null)
+      rootElements.add(new PathElement(null, dlg.getValue()));
+      fileTree.refresh(true);
+      fireModifyListeners();
+   }
+
+   /**
+    * Add one or more nested subdirectories under given parent. The entered value may be a slash-separated
+    * path (e.g. "a/b/c"); existing directories at each level are reused and only missing ones are created.
+    *
+    * @param parent parent directory to create new subdirectories under
+    */
+   private void addSubdirectories(PathElement parent)
+   {
+      InputDialog dlg = new InputDialog(getShell(), i18n.tr("New Directory"),
+            i18n.tr("Enter name for new directory (use / to create nested folders)"), "", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            PathElement current = parent;
+            boolean inExistingTree = true; // false once we reach a segment that does not exist yet
+            for(String segment : newText.split("/"))
+            {
+               segment = segment.trim();
+               if (segment.isEmpty())
+                  return i18n.tr("Directory name cannot be empty");
+               if (inExistingTree)
+               {
+                  PathElement child = current.findChild(segment);
+                  if (child != null)
+                  {
+                     if (child.isFile())
+                        return String.format(i18n.tr("A file named \"%s\" already exists"), segment);
+                     current = child;
+                  }
+                  else
+                  {
+                     inExistingTree = false; // remaining segments will be newly created
+                  }
+               }
+            }
+            return null;
+         }
+      });
+      if (dlg.open() != Window.OK)
+         return;
+
+      PathElement current = parent;
+      boolean inExistingTree = true;
+      for(String segment : dlg.getValue().split("/"))
       {
-         rootElements.add(e);
-         fileTree.refresh(true);
-      }
-      else
-      {
-         fileTree.refresh();
+         segment = segment.trim();
+         PathElement child = null;
+         if (inExistingTree)
+         {
+            child = current.findChild(segment);
+            if (child == null)
+               inExistingTree = false;
+         }
+         if (child == null)
+            child = new PathElement(current, segment); // constructor links new element into current.children
+         current = child;
       }
 
+      fileTree.refresh(true);
       fireModifyListeners();
    }
 
