@@ -64,6 +64,7 @@ static bool s_hideConsole = true;
 static void InitLogging()
 {
 #ifdef _WIN32
+#if (_WIN32_WINNT >= 0x0600)
    TCHAR path[MAX_PATH], *appDataPath;
    if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appDataPath) == S_OK)
    {
@@ -74,6 +75,12 @@ static void InitLogging()
    {
       _tcscpy(path, _T("C:"));
    }
+#else
+   // Windows XP: SHGetKnownFolderPath is Vista+; use the classic SHGetFolderPath.
+   TCHAR path[MAX_PATH];
+   if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, path) != S_OK)
+      _tcscpy(path, _T("C:"));
+#endif
    _tcscat(path, _T("\\nxsagent"));
    CreateDirectoryTree(path);
 
@@ -575,6 +582,9 @@ int main(int argc, char *argv[])
    }
    nxlog_debug(1, _T("WSAStartup() completed"));
 
+#if (_WIN32_WINNT >= 0x0600)
+   // DPI_AWARENESS_CONTEXT (per-monitor DPI v2) is a Win10 type absent from the
+   // XP toolchain; XP falls through to the classic SetProcessDPIAware below.
    auto __SetProcessDpiAwarenessContext = reinterpret_cast<BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDpiAwarenessContext"));
    if (__SetProcessDpiAwarenessContext != nullptr)
    {
@@ -582,6 +592,7 @@ int main(int argc, char *argv[])
       __SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
    }
    else
+#endif
    {
       auto __SetProcessDPIAware = reinterpret_cast<BOOL(WINAPI *)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
       if (__SetProcessDPIAware != nullptr)

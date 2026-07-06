@@ -34,7 +34,7 @@ DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *path)
 
    // check to see if filename is a directory
    wchar_t pattern[MAX_PATH];
-   wcsncpy_s(pattern, MAX_PATH, path, _TRUNCATE);
+   wcslcpy(pattern, path, MAX_PATH);
    size_t len = wcslen(pattern);
    wchar_t tail = pattern[len - 1];
    if ((tail == L'/') || (tail == L'\\'))
@@ -74,7 +74,7 @@ DIRHANDLEW LIBNETXMS_EXPORTABLE *OpenDirW(const wchar_t *path)
    p->handle = handle;
    p->dirstr.d_ino = 0;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
-   wcsncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
+   wcslcpy(p->dirstr.d_name, fd.cFileName, MAX_PATH);
    p->dirstr.d_namlen = (int)wcslen(p->dirstr.d_name);
    return p;
 }
@@ -100,7 +100,7 @@ DIRENTRYW LIBNETXMS_EXPORTABLE *ReadDirW(DIRHANDLEW *p)
 
    p->dirstr.d_ino++;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
-   wcsncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
+   wcslcpy(p->dirstr.d_name, fd.cFileName, MAX_PATH);
    p->dirstr.d_namlen = (int)wcslen(p->dirstr.d_name);
    return &p->dirstr;
 }

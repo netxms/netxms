@@ -39,12 +39,16 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 # Libraries (in-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS). VSS is
 # accessed entirely through LoadLibrary/GetProcAddress in vss.cpp, so no
 # vssapi import library is linked (it is also absent from the aarch64 sysroot).
+# wevtapi (Windows Event Log API) is Vista+; the XP build stubs out event log
+# monitoring (see wevt.cpp) and must not link it, or the DLL will not load on XP.
 LIBS = -lnetxms \
 	$(PCRE_LIBS) \
 	$(EXPAT_LIBS) \
 	$(WIN_LIBS) \
-	-lwevtapi \
 	-luuid
+ifneq ($(WINXP),1)
+LIBS += -lwevtapi
+endif
 
 # Targets
 .PHONY: all clean install

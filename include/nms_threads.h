@@ -1710,6 +1710,10 @@ public:
    {
 #if defined(_WIN32)
       DeleteCriticalSection(&m_mutex);
+#if (_WIN32_WINNT < 0x0600)
+      // Emulated condition variable (Windows XP) owns a semaphore handle.
+      DeleteConditionVariable(&m_condition);
+#endif
 #else
       pthread_cond_destroy(&m_condition);
       pthread_mutex_destroy(&m_mutex);

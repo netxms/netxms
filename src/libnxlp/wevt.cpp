@@ -22,6 +22,9 @@
 **/
 
 #include "libnxlp.h"
+
+#if (_WIN32_WINNT >= 0x0600)
+
 #include <winevt.h>
 #if __has_include(<winmeta.h>)
 #include <winmeta.h>
@@ -440,3 +443,19 @@ bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
 	}
    return success;
 }
+
+#else   /* _WIN32_WINNT < 0x0600 */
+
+/*
+ * Windows XP stub. The Windows Event Log API (winevt.h / wevtapi:
+ * EvtQuery/EvtSubscribe/...) is Vista+, so event log monitoring is not
+ * available on XP.
+ */
+bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
+{
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Windows event log monitoring is not supported on Windows XP"));
+   setStatus(LPS_EVT_SUBSCRIBE_ERROR);
+   return false;
+}
+
+#endif   /* _WIN32_WINNT >= 0x0600 */

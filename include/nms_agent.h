@@ -1200,6 +1200,12 @@ static inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
+#elif defined(_WIN32) && (_WIN32_WINNT < 0x0600)
+   // Windows XP's system msvcrt.dll produces garbage for the wide-char %f conversion.
+   // Use mingw's own wide formatter, which has correct floating-point support. The
+   // format string contains only a float specifier (no %s), so mingw's C99 %s semantics
+   // (which differ from the MS wide convention) are irrelevant here.
+   __mingw_snwprintf(rbuf, MAX_RESULT_LENGTH, L"%1.*f", digits, value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), digits, value);
 #endif

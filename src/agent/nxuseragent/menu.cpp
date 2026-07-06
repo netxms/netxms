@@ -263,7 +263,11 @@ void MenuItem::execute()
       const TCHAR *file;
       const TCHAR *parameters = NULL;
 
-      // First, attempt to parse command as URL
+      // First, attempt to parse command as URL. ParseURL/PARSEDURL is a
+      // deprecated shlwapi API not declared by the legacy XP toolchain; on XP
+      // the command is always handled below as a file/command (ShellExecute
+      // still opens a URL passed as the file with a NULL verb).
+#if (_WIN32_WINNT >= 0x0600)
       PARSEDURL pu;
       pu.cbSize = sizeof(pu);
       if (ParseURL(command, &pu) == S_OK)
@@ -279,6 +283,7 @@ void MenuItem::execute()
          nxlog_debug(4, _T("URL format detected (%s)"), protocol);
       }
       else
+#endif
       {
          verb = NULL;
          file = fbuffer;

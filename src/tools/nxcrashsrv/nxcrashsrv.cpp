@@ -1,6 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#define _WIN32_WINNT 0x0501
+// Respect the target Windows version selected by the build system (the XP build sets
+// _WIN32_WINNT=0x0501); default to Windows 7 otherwise. This file includes <windows.h>
+// directly rather than nms_common.h, so it must establish the default itself.
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601
+#endif
 
 #include <winsock2.h>
 #include <windows.h>
@@ -253,7 +258,12 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
    }
 
    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_FAIL_CRITICAL_ERRORS);
+#if (_WIN32_WINNT >= 0x0600)
    if (!SymInitializeW(hProcess, nullptr, TRUE))
+#else
+   // Windows XP's dbghelp.dll (5.1) lacks the wide SymInitializeW; use the ANSI form.
+   if (!SymInitialize(hProcess, nullptr, TRUE))
+#endif
    {
       _ftprintf(fp, _T("   Cannot initialize symbol handler (error %u)\n"), GetLastError());
       CloseHandle(hThread);
@@ -298,6 +308,7 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
       DWORD64 address = frame.AddrPC.Offset;
       wstring moduleName = GetModuleForAddress(hProcess, reinterpret_cast<void*>(static_cast<uintptr_t>(address)), modules, moduleCount);
 
+#if (_WIN32_WINNT >= 0x0600)
       BYTE symbolBuffer[sizeof(SYMBOL_INFOW) + 256 * sizeof(WCHAR)];
       SYMBOL_INFOW *symbol = reinterpret_cast<SYMBOL_INFOW*>(symbolBuffer);
       memset(symbol, 0, sizeof(SYMBOL_INFOW));
@@ -328,6 +339,41 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
          _ftprintf(fp, _T("   %2d  %s+0x%I64x  [0x%016I64x]\n"),
             i, moduleName.c_str(), (moduleBase != 0) ? (address - moduleBase) : 0, address);
       }
+#else
+      // Windows XP's dbghelp.dll lacks the wide symbol API (SymFromAddrW /
+      // SymGetLineFromAddrW64) but provides the ANSI equivalents; use them and print
+      // the narrow (char*) names with %hs.
+      BYTE symbolBuffer[sizeof(SYMBOL_INFO) + 256];
+      SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO*>(symbolBuffer);
+      memset(symbol, 0, sizeof(SYMBOL_INFO));
+      symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+      symbol->MaxNameLen = 255;
+
+      DWORD64 displacement = 0;
+      if (SymFromAddr(hProcess, address, &displacement, symbol))
+      {
+         IMAGEHLP_LINE64 line;
+         memset(&line, 0, sizeof(line));
+         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+         DWORD lineDisplacement = 0;
+         if (SymGetLineFromAddr64(hProcess, address, &lineDisplacement, &line))
+         {
+            _ftprintf(fp, _T("   %2d  %s!%hs+0x%I64x  (%hs:%u)  [0x%016I64x]\n"),
+               i, moduleName.c_str(), symbol->Name, displacement, line.FileName, line.LineNumber, address);
+         }
+         else
+         {
+            _ftprintf(fp, _T("   %2d  %s!%hs+0x%I64x  [0x%016I64x]\n"),
+               i, moduleName.c_str(), symbol->Name, displacement, address);
+         }
+      }
+      else
+      {
+         DWORD64 moduleBase = SymGetModuleBase64(hProcess, address);
+         _ftprintf(fp, _T("   %2d  %s+0x%I64x  [0x%016I64x]\n"),
+            i, moduleName.c_str(), (moduleBase != 0) ? (address - moduleBase) : 0, address);
+      }
+#endif
    }
 
    SymCleanup(hProcess);

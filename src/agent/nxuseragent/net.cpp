@@ -51,7 +51,11 @@ void UpdateAddressList()
             InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
             if (addr.isValidUnicast())
             {
+#if (_WIN32_WINNT >= 0x0600)
+               // OnLinkPrefixLength was added to IP_ADAPTER_UNICAST_ADDRESS in
+               // Vista; on XP the address keeps its default (host) mask.
                addr.setMaskBits(pAddr->OnLinkPrefixLength);
+#endif
                s_addressList.add(&addr);
             }
          }

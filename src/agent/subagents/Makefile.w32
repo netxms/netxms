@@ -13,6 +13,31 @@
 #   java       -> JNI headers     (+ MID-tier libnxjava; JVM loaded at runtime)
 # Note: the tuxedo subagent is excluded from the Windows build - the Tuxedo SDK
 # headers (tmenv.h) redefine mode_t/pid_t incompatibly with the mingw CRT.
+#
+# The Windows XP profile (WINXP=1) builds a reduced set: it drops java (no JNI
+# in the XP SDK), prometheus (no protobuf), wineventsync (uses the Vista+ Event
+# Log API - EvtQuery/EvtRender), and the DB-client subagents db2/informix/mysql/
+# oracle/pgsql (no vendor client SDKs). mssql stays (it uses the built-in ODBC).
+ifeq ($(WINXP),1)
+SUBAGENTS = \
+	aifileops \
+	bind9 \
+	dbquery \
+	devemu \
+	filemgr \
+	gps \
+	logwatch \
+	mqtt \
+	mssql \
+	netsvc \
+	ping \
+	sms \
+	ssh \
+	ups \
+	winnt \
+	winperf \
+	wmi
+else
 SUBAGENTS = \
 	aifileops \
 	bind9 \
@@ -39,6 +64,7 @@ SUBAGENTS = \
 	winnt \
 	winperf \
 	wmi
+endif
 
 .PHONY: all clean install $(SUBAGENTS)
 

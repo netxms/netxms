@@ -5375,7 +5375,9 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 
 // Use internally the following quick sort prototype (based on Windows version of qsort_s):
 // void qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
-#if defined(_WIN32)
+// qsort_s() is a security-enhanced CRT function available in msvcrt.dll only on Vista+; on
+// older Windows (e.g. the XP agent build) use the in-tree QSort implementation (qsort.cpp).
+#if defined(_WIN32) && (_WIN32_WINNT >= 0x0600)
 #define QSort qsort_s
 #else
 void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);

@@ -640,7 +640,7 @@ static WCHAR *GetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pBuff
    if ((iRow < result->numRows) && (iRow >= 0) &&
          (iColumn < result->numColumns) && (iColumn >= 0))
    {
-      wcsncpy_s(pBuffer, nBufSize, result->pValues[iRow * result->numColumns + iColumn], _TRUNCATE);
+      wcslcpy(pBuffer, result->pValues[iRow * result->numColumns + iColumn], nBufSize);
       pValue = pBuffer;
    }
    return pValue;

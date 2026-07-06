@@ -117,8 +117,14 @@ bool SetupTrayIcon()
 
    memset(&s_trayIcon, 0, sizeof(NOTIFYICONDATA));
    s_trayIcon.cbSize = sizeof(NOTIFYICONDATA);
+#if (_WIN32_WINNT >= 0x0600)
    s_trayIcon.uVersion = NOTIFYICON_VERSION_4;
    s_trayIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP;
+#else
+   // Notify icon version 4 (and NIF_SHOWTIP) are Vista+; XP uses version 3.
+   s_trayIcon.uVersion = NOTIFYICON_VERSION;
+   s_trayIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+#endif
    s_trayIcon.hWnd = s_hWnd;
    s_trayIcon.uCallbackMessage = NXUA_MSG_TOOLTIP_NOTIFY;
    _tcslcpy(s_trayIcon.szTip, GetTooltipMessage(), sizeof(s_trayIcon.szTip) / sizeof(TCHAR));
@@ -189,12 +195,16 @@ void ShowTrayNotification(const TCHAR *text)
 {
    NOTIFYICONDATA nid;
    nid.cbSize = sizeof(nid);
+#if (_WIN32_WINNT >= 0x0600)
    nid.uVersion = NOTIFYICON_VERSION_4;
+#else
+   nid.uVersion = NOTIFYICON_VERSION;   // version 4 is Vista+
+#endif
    nid.hWnd = s_trayIcon.hWnd;
    nid.uID = s_trayIcon.uID;
    nid.uFlags = NIF_INFO;
    nid.dwInfoFlags = NIIF_INFO;
-   _tcscpy_s(nid.szInfoTitle, _T("NetXMS User Support Application"));
+   _tcslcpy(nid.szInfoTitle, _T("NetXMS User Support Application"), 64);
    _tcslcpy(nid.szInfo, text, 256);
    Shell_NotifyIcon(NIM_MODIFY, &nid);
 }

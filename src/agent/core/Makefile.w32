@@ -62,6 +62,13 @@ SOURCES = \
 	websvc.cpp \
 	wincert.cpp
 
+# cng_engine.cpp uses the Windows CNG API (ncrypt.dll), which is Vista+. Exclude
+# it on the XP build so nxagentd does not import ncrypt.dll and can load on XP;
+# tunnel.cpp gates its matching CNG code paths.
+ifeq ($(WINXP),1)
+SOURCES := $(filter-out cng_engine.cpp,$(SOURCES))
+endif
+
 # Resource file (embeds version info and the compiled message table MSG00001.bin)
 RC_SOURCE = nxagentd.rc
 
@@ -86,7 +93,13 @@ LIBS = -lnxagent -lnxsde -lnxsnmp -lethernetip -lnxdb -lnetxms -lnxjansson \
 	$(SSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(WIN_LIBS) \
-	-lncrypt -lmsi -lntdll
+	-lmsi -lntdll
+
+# ncrypt.dll (CNG) is Vista+; link it only for non-XP builds (cng_engine.cpp is
+# excluded and tunnel.cpp's CNG paths are gated for WINXP).
+ifneq ($(WINXP),1)
+LIBS += -lncrypt
+endif
 
 # Targets
 .PHONY: all clean install

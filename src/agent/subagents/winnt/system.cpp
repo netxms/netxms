@@ -21,7 +21,9 @@
 **/
 
 #include "winnt_subagent.h"
+#if __has_include(<wuapi.h>)   // absent from the legacy mingw32-xp toolchain
 #include <wuapi.h>
+#endif
 #include <netfw.h>
 #include <comdef.h>
 #include <VersionHelpers.h>
@@ -133,8 +135,11 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
          value->addColumn(_T("BINARY"), DCI_DT_STRING, _T("Binary"));
          value->addColumn(_T("DEPENDENCIES"), DCI_DT_STRING, _T("Dependencies"));
 
+#if (_WIN32_WINNT >= 0x0600)
+         // Delayed-autostart and trigger-start service configuration are Vista+.
          SERVICE_DELAYED_AUTO_START_INFO delayedStartInfo;
          auto triggerInfo = static_cast<SERVICE_TRIGGER_INFO*>(alloca(8192));
+#endif
 
          for(DWORD i = 0; i < count; i++)
          {
@@ -180,16 +185,20 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
                if (QueryServiceConfig(hService, cfg, 8192, &bytes))
                {
                   StringBuffer startType;
+#if (_WIN32_WINNT >= 0x0600)
                   DWORD bytesNeeded;
 
                   delayedStartInfo.fDelayedAutostart = FALSE;
                   triggerInfo->cTriggers = 0;
                   QueryServiceConfig2(hService, SERVICE_CONFIG_TRIGGER_INFO, reinterpret_cast<BYTE*>(triggerInfo), 8192, &bytesNeeded);
+#endif
 
                   switch(cfg->dwStartType)
                   {
                      case SERVICE_AUTO_START:
+#if (_WIN32_WINNT >= 0x0600)
                         QueryServiceConfig2(hService, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, reinterpret_cast<BYTE*>(&delayedStartInfo), sizeof(delayedStartInfo), &bytesNeeded);
+#endif
                         startType = _T("Auto");
                         break;
                      case SERVICE_BOOT_START:
@@ -208,6 +217,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
                         startType.append(static_cast<uint32_t>(cfg->dwStartType));
                         break;
                   }
+#if (_WIN32_WINNT >= 0x0600)
                   if (delayedStartInfo.fDelayedAutostart || (triggerInfo->cTriggers > 0))
                   {
                      startType.append(_T(" ("));
@@ -221,6 +231,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
                      }
                      startType.append(_T(")"));
                   }
+#endif
                   value->set(4, startType);
 
                   value->set(5, cfg->lpServiceStartName);
@@ -468,8 +479,9 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
             value->set(0, static_cast<uint32_t>(sessions[i].SessionId));
             value->set(3, (sessions[i].State == WTSActive) ? _T("Active") : _T("Disconnected"));
 
-            WTSINFO *info;
             DWORD bytes;
+#if (_WIN32_WINNT >= 0x0600)
+            WTSINFO *info;
             if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSSessionInfo, reinterpret_cast<LPTSTR*>(&info), &bytes))
             {
                TCHAR userName[256];
@@ -494,6 +506,27 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 
                WTSFreeMemory(info);
             }
+#else
+            // WTSSessionInfo/WTSINFO (connect/logon/idle timestamps) is Vista+.
+            // On XP the user name and station are filled via the basic WTS
+            // queries; the timestamp columns are left empty.
+            LPTSTR wtsDomain = nullptr, wtsUser = nullptr, wtsStation = nullptr;
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSDomainName, &wtsDomain, &bytes) &&
+                WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSUserName, &wtsUser, &bytes))
+            {
+               TCHAR userName[256];
+               _sntprintf(userName, 256, _T("%s\\%s"), wtsDomain, wtsUser);
+               value->set(1, userName);
+            }
+            if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSWinStationName, &wtsStation, &bytes))
+               value->set(2, wtsStation);
+            if (wtsUser != nullptr)
+               WTSFreeMemory(wtsUser);
+            if (wtsDomain != nullptr)
+               WTSFreeMemory(wtsDomain);
+            if (wtsStation != nullptr)
+               WTSFreeMemory(wtsStation);
+#endif
 
             bool addressRetrieved = false;
             WTS_CLIENT_ADDRESS *clientAddress;
@@ -507,6 +540,9 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                addressRetrieved = true;
             }
 
+#if (_WIN32_WINNT >= 0x0600)
+            // WTSClientInfo/WTSCLIENT (client name and remote display geometry)
+            // is Vista+; those columns are left empty on Windows XP.
             WTSCLIENT *client;
             if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSClientInfo, reinterpret_cast<LPTSTR*>(&client), &bytes))
             {
@@ -585,6 +621,7 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
 
                WTSFreeMemory(client);
             }
+#endif
          }
       }
       WTSFreeMemory(sessions);
@@ -772,6 +809,7 @@ static bool ReadSystemUpdateTimeFromRegistry(const TCHAR *type, TCHAR *value)
 */
 static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
 {
+#ifdef NX_HAVE_WUAPI
    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
    if ((hr != S_OK) && (hr != S_FALSE))
    {
@@ -849,6 +887,11 @@ static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
 
    CoUninitialize();
    return success;
+#else
+   // Windows Update Agent COM API (wuapi.h) is unavailable in the XP toolchain;
+   // the caller falls back to the registry path.
+   return false;
+#endif
 }
 
 /**

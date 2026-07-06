@@ -23,6 +23,15 @@
 #include "wmi.h"
 #include <netxms-version.h>
 
+#if (_WIN32_WINNT < 0x0600)
+// The legacy mingw32-xp libwbemuuid.a ships CLSID_WbemLocator but not
+// CLSID_WbemAdministrativeLocator, so define it here for the XP build (its
+// value is stable across Windows versions). DECLSPEC_SELECTANY places it in a
+// COMDAT section so multiple translation units merge without conflict.
+EXTERN_C const DECLSPEC_SELECTANY CLSID CLSID_WbemAdministrativeLocator =
+   { 0xCB8555CC, 0x9128, 0x11D1, { 0xAD, 0x9B, 0x00, 0xC0, 0x4F, 0xD8, 0xFD, 0xFF } };
+#endif
+
 /**
  * Externals
  */

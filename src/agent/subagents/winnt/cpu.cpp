@@ -39,11 +39,20 @@ static win_mutex_t s_lock;
  */
 static uint32_t GetTotalProcessorCount()
 {
+#if (_WIN32_WINNT >= 0x0600)
    uint32_t totalProcessors = 0;
    WORD numGroups = GetActiveProcessorGroupCount();
    for (WORD group = 0; group < numGroups; ++group)
       totalProcessors += GetActiveProcessorCount(group);
    return totalProcessors;
+#else
+   // Windows XP predates processor groups (single group, no
+   // GetActiveProcessorGroupCount/GetActiveProcessorCount) - use the classic
+   // system info, which reports the logical processor count directly.
+   SYSTEM_INFO si;
+   GetSystemInfo(&si);
+   return si.dwNumberOfProcessors;
+#endif
 }
 
 /**

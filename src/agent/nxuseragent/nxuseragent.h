@@ -22,7 +22,11 @@
 #ifndef _nxuseragent_h_
 #define _nxuseragent_h_
 
+// Respect a target version forced on the command line (the XP build passes
+// _WIN32_WINNT=0x0501); otherwise default to Windows 7.
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT                0x0601
+#endif
 #define SECURITY_WIN32
 
 #include <nms_common.h>

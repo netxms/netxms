@@ -850,12 +850,7 @@ static NETXMS_WCHAR *GetField(DBDRV_RESULT hResult, int iRow, int iColumn, NETXM
    NETXMS_WCHAR *pValue = nullptr;
    if ((iRow < result->numRows) && (iRow >= 0) && (iColumn < result->numColumns) && (iColumn >= 0))
    {
-#ifdef _WIN32
-      wcsncpy_s(pBuffer, nBufSize, result->pValues[iRow * result->numColumns + iColumn], _TRUNCATE);
-#else
-      wcsncpy(pBuffer, result->pValues[iRow * result->numColumns + iColumn], nBufSize);
-      pBuffer[nBufSize - 1] = 0;
-#endif
+      wcslcpy(pBuffer, result->pValues[iRow * result->numColumns + iColumn], nBufSize);
       pValue = pBuffer;
    }
    return pValue;

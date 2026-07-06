@@ -24,7 +24,15 @@
 #define _winnt_subagent_h_
 
 #define PSAPI_VERSION 1
+// Keep NTDDI_VERSION consistent with the target _WIN32_WINNT. The XP agent
+// build forces _WIN32_WINNT=0x0501; pairing that with NTDDI_WIN7 leaves the
+// Windows headers inconsistent (Vista+ prototypes visible but their types
+// gated out). NTDDI_VERSION must be set before nms_common.h pulls in windows.h.
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT < 0x0600)
+#define NTDDI_VERSION NTDDI_WINXP
+#else
 #define NTDDI_VERSION NTDDI_WIN7
+#endif
 
 #include <nms_common.h>
 #include <nms_agent.h>

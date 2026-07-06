@@ -27,6 +27,10 @@
 
 #define DEBUG_TAG _T("crypto.cng")
 
+// Defined in wincert.cpp (a pure CRYPT32 helper, kept out of this CNG-only file
+// so it is available to the XP build, which excludes cng_engine.cpp).
+bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id);
+
 static bool s_initialized = false;
 static int s_idxEngineContext = -1;
 static int s_idxCertificateId = -1;
@@ -309,110 +313,6 @@ static int DestroyEngine(ENGINE *e)
 {
    nxlog_debug_tag(DEBUG_TAG, 7, _T("DestroyEngine called for %p"), e);
    return 1;
-}
-
-/**
- * Match specific certificate name attribute
- */
-static inline bool MatchCertificateNameAttribute(PCCERT_CONTEXT context, const TCHAR *selector, const char *attr, const TCHAR *id)
-{
-   size_t l = _tcslen(selector);
-   if (_tcsncmp(id, selector, l))
-      return false;
-
-   TCHAR value[1024];
-   CertGetNameString(context, CERT_NAME_ATTR_TYPE, 0, (void*)attr, value, 1024);
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: %s \"%s\" with \"%s\""), selector, &id[l], value);
-   return _tcsicmp(&id[l], value) == 0;
-}
-
-/**
- * Wrapper for MemAlloc() to use in CRYPT_DECODE_PARA
- */
-static LPVOID WINAPI MemAllocWrapper(size_t size)
-{
-   return MemAlloc(size);
-}
-
-/**
- * Wrapper for MemFree() to use in CRYPT_DECODE_PARA
- */
-static void WINAPI MemFreeWrapper(LPVOID p)
-{
-   return MemFree(p);
-}
-
-/**
- * Match any certificate
- */
-bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
-{
-   if (id == nullptr)
-      return false;
-
-   if (!_tcsnicmp(id, _T("name:"), 5))
-   {
-      TCHAR value[1024];
-      CertGetNameString(context, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, nullptr, value, 1024);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: name: \"%s\" with \"%s\""), &id[5], value);
-      return _tcsicmp(&id[5], value) == 0;
-   }
-
-   if (!_tcsnicmp(id, _T("email:"), 6))
-   {
-      TCHAR value[1024];
-      CertGetNameString(context, CERT_NAME_EMAIL_TYPE, 0, nullptr, value, 1024);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: email: \"%s\" with \"%s\""), &id[6], value);
-      return _tcsicmp(&id[6], value) == 0;
-   }
-
-   if (!_tcsnicmp(id, _T("subject:"), 8))
-   {
-      TCHAR value[1024];
-      DWORD strType = CERT_X500_NAME_STR;
-      CertGetNameString(context, CERT_NAME_RDN_TYPE, 0, &strType, value, 1024);
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%s\""), &id[8], value);
-      return _tcsicmp(&id[8], value) == 0;
-   }
-
-   if (!_tcsnicmp(id, _T("template:"), 9))
-   {
-      PCERT_EXTENSION e = CertFindExtension(szOID_CERTIFICATE_TEMPLATE, context->pCertInfo->cExtension, context->pCertInfo->rgExtension);
-      if (e == nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CertFindExtension failed"));
-         return false;
-      }
-
-      CRYPT_DECODE_PARA dp;
-      dp.cbSize = sizeof(dp);
-      dp.pfnAlloc = MemAllocWrapper;
-      dp.pfnFree = MemFreeWrapper;
-
-      CERT_TEMPLATE_EXT *tmpl = nullptr;
-      DWORD size = 0;
-      if (!CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_CERTIFICATE_TEMPLATE, e->Value.pbData, e->Value.cbData,
-            CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG | CRYPT_DECODE_SHARE_OID_STRING_FLAG, &dp, &tmpl, &size))
-      {
-         TCHAR buffer[1024];
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CryptDecodeObjectEx failed (%s)"),
-            GetSystemErrorText(GetLastError(), buffer, 1024));
-         return false;
-      }
-
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%hs\""), &id[9], tmpl->pszObjId);
-      char *mbid = MBStringFromWideString(&id[9]);
-      bool success = (strcmp(mbid, tmpl->pszObjId) == 0);
-
-      MemFree(mbid);
-      MemFree(tmpl);
-      return success;
-   }
-
-   return
-      MatchCertificateNameAttribute(context, _T("cn:"), szOID_COMMON_NAME, id) ||
-      MatchCertificateNameAttribute(context, _T("org:"), szOID_ORGANIZATION_NAME, id) ||
-      MatchCertificateNameAttribute(context, _T("deviceSerial:"), szOID_DEVICE_SERIAL_NUMBER, id);
 }
 
 /**

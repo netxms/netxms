@@ -38,6 +38,7 @@ struct BiosHeader
  */
 static BYTE *SMBIOS_Reader(size_t *size)
 {
+#if (_WIN32_WINNT >= 0x0600)
    BYTE *buffer = MemAllocArrayNoInit<BYTE>(16384);
    UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
    if (rc > 16384)
@@ -60,4 +61,9 @@ static BYTE *SMBIOS_Reader(size_t *size)
    MemFree(buffer);
 
    return bios;
+#else
+   // GetSystemFirmwareTable() is available only on Windows Vista and later;
+   // SMBIOS data cannot be read on Windows XP.
+   return nullptr;
+#endif
 }

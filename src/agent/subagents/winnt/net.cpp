@@ -227,7 +227,11 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
             if ((pAddr->Address.lpSockaddr->sa_family == AF_INET) || session->isIPv6Aware())
             {
                InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
+#if (_WIN32_WINNT >= 0x0600)
+               // OnLinkPrefixLength was added to IP_ADAPTER_UNICAST_ADDRESS in
+               // Vista; on XP the address keeps its default (host) mask.
                addr.setMaskBits(pAddr->OnLinkPrefixLength);
+#endif
                _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex,
                           addr.toString(ipAddr), addr.getMaskBits(), iface->IfType,
                           iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
@@ -386,7 +390,10 @@ LONG H_NetTCPConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
       }
    }
 
-   // Count IPv6 TCP connections
+#if (_WIN32_WINNT >= 0x0600)
+   // Count IPv6 TCP connections. The IPv6 TCP table (MIB_TCP6TABLE, and
+   // GetExtendedTcpTable for AF_INET6) is Vista+, so IPv6 connections are not
+   // counted on Windows XP.
    if (ipVersion != 4)
    {
       DWORD size = 0;
@@ -404,6 +411,7 @@ LONG H_NetTCPConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
          MemFree(tcp6Table);
       }
    }
+#endif
 
    ret_int(value, count);
    return SYSINFO_RC_SUCCESS;
@@ -436,6 +444,7 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
       if (dwIndex != 0)
       {
 			int metric = CAST_FROM_POINTER(arg, int);
+#if (_WIN32_WINNT >= 0x0600)
 			if ((metric == NETINFO_IF_SPEED) ||
 			    (metric == NETINFO_IF_PACKETS_IN_64) ||
 			    (metric == NETINFO_IF_PACKETS_OUT_64) ||
@@ -483,6 +492,20 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 					iResult = SYSINFO_RC_ERROR;
 				}
 			}
+#else
+			// Windows XP lacks GetIfEntry2/MIB_IF_ROW2 (native 64-bit interface
+			// counters), so the *_64 metrics are reported as unsupported.
+			// NETINFO_IF_SPEED still works via the 32-bit MIB_IFROW handler below.
+			if ((metric == NETINFO_IF_PACKETS_IN_64) ||
+			    (metric == NETINFO_IF_PACKETS_OUT_64) ||
+			    (metric == NETINFO_IF_BYTES_IN_64) ||
+			    (metric == NETINFO_IF_BYTES_OUT_64) ||
+			    (metric == NETINFO_IF_IN_DROPS_64) ||
+			    (metric == NETINFO_IF_OUT_DROPS_64))
+			{
+				iResult = SYSINFO_RC_UNSUPPORTED;
+			}
+#endif
 			else
 			{
 				MIB_IFROW info;

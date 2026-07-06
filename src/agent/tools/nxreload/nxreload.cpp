@@ -23,6 +23,10 @@
 #include <windows.h>
 #include <tchar.h>
 #include <Psapi.h>
+// mingw's strsafe.h renames the classic CRT string functions (e.g. _sntprintf)
+// to non-existent "_instead_use_StringCbPrintf" poison symbols unless this is
+// defined first; the code below still uses _sntprintf.
+#define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 #include <Shlobj.h>
 

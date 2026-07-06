@@ -319,6 +319,7 @@ static bool ReadStorePackagesFromAllUsers(Table *table)
             continue;
          }
 
+#if (_WIN32_WINNT >= 0x0600)
          LSTATUS status = RegLoadAppKeyW(usrClassDat, &hAppKey, KEY_READ, 0, 0);
          if (status != ERROR_SUCCESS)
          {
@@ -346,6 +347,11 @@ static bool ReadStorePackagesFromAllUsers(Table *table)
 
          rootKey = hAppKey;
          path.append(L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
+#else
+         // RegLoadAppKey and per-user Windows Store package hives are Vista+/Win8+;
+         // Windows XP has no Store data, so there is nothing to collect for this user.
+         continue;
+#endif
       }
 
       ReadStorePackagesFromRegistryPath(rootKey, path, userNamePtr, table);

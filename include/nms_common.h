@@ -238,6 +238,10 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+
+// Windows XP compatibility shims (GetTickCount64, condition variables). Inert
+// unless building below Vista (the mingw XP agent profile, _WIN32_WINNT<0x0600).
+#include <mingw/win_xp_compat.h>
 #include <malloc.h>
 #include <dirent.h>
 

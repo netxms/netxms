@@ -538,7 +538,7 @@ bool Tunnel::loadCertificateFromStore()
  */
 bool Tunnel::loadCertificateFromStoreWithPK()
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_WIN32_WINNT >= 0x0600)   // CNG key export (ncrypt.dll) is Vista+
    HCERTSTORE hStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, 0,
          CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | CERT_SYSTEM_STORE_LOCAL_MACHINE, "MY");
    if (hStore == nullptr)
@@ -682,7 +682,7 @@ bool Tunnel::loadCertificateFromStoreWithPK()
  */
 bool Tunnel::loadCertificateFromStoreWithEngine()
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_WIN32_WINNT >= 0x0600)   // CNG OpenSSL engine (ncrypt.dll) is Vista+
    debugPrintf(6, _T("Fallback to OpenSSL engine for signing (will switch to TLS 1.1)"));
 
    s_mutexEngineLoad.lock();

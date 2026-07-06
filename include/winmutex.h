@@ -24,8 +24,20 @@
 #define _winmutex_h_
 
 #include <intrin.h>
+#if !defined(__GNUC__) || defined(__clang__)
+// MSVC and clang provide these compiler-reordering-barrier intrinsics.
 #pragma intrinsic(_WriteBarrier)
 #pragma intrinsic(_ReadWriteBarrier)
+#else
+// mingw GCC has neither the intrinsics nor the #pragma intrinsic form; an
+// atomic signal fence is the equivalent compiler-only reordering barrier.
+#ifndef _WriteBarrier
+#define _WriteBarrier() __atomic_signal_fence(__ATOMIC_SEQ_CST)
+#endif
+#ifndef _ReadWriteBarrier
+#define _ReadWriteBarrier() __atomic_signal_fence(__ATOMIC_SEQ_CST)
+#endif
+#endif
 
 /**
  * Mutex data structure
@@ -63,7 +75,7 @@ static inline bool TryLockMutex(win_mutex_t *m)
 {
    DWORD thisThread = GetCurrentThreadId();
 
-   DWORD owner = InterlockedCompareExchange(&m->owner, thisThread, 0);
+   DWORD owner = InterlockedCompareExchange((volatile LONG*)&m->owner, (LONG)thisThread, 0);
    if ((owner == 0) || (owner == thisThread))
    {
       m->lockCount++;
@@ -73,7 +85,7 @@ static inline bool TryLockMutex(win_mutex_t *m)
    DWORD spinCount = m->spinCount;
    while (spinCount-- > 0)
    {
-      if (InterlockedCompareExchange(&m->owner, thisThread, 0) == 0)
+      if (InterlockedCompareExchange((volatile LONG*)&m->owner, (LONG)thisThread, 0) == 0)
       {
          m->lockCount++;
          return true;

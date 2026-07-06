@@ -12,7 +12,6 @@ SOURCES = \
 	arp.cpp \
 	console.cpp \
 	entity_mib.cpp \
-	hdlink.cpp \
 	hostmib.cpp \
 	iflist.cpp \
 	isc.cpp \

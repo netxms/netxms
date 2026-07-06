@@ -22,6 +22,9 @@
 **/
 
 #include "libnxlp.h"
+
+#if (_WIN32_WINNT >= 0x0600)
+
 #include <vss.h>
 #include <vswriter.h>
 #include <vsbackup.h>
@@ -174,3 +177,32 @@ bool InitVSSWrapper()
    }
    return true;
 }
+
+#else   /* _WIN32_WINNT < 0x0600 */
+
+/*
+ * Windows XP stubs. The VSS file-share-backup snapshot API used above (SetContext
+ * with VSS_CTX_FILE_SHARE_BACKUP, the Vista-era IVssBackupComponents/IVssAsync
+ * interfaces) is not available on XP, so file snapshotting is disabled - the log
+ * parser falls back to reading the file directly.
+ */
+FileSnapshot *CreateFileSnapshot(const TCHAR *path)
+{
+   return nullptr;
+}
+
+void DestroyFileSnapshot(FileSnapshot *snapshot)
+{
+   if (snapshot != nullptr)
+   {
+      MemFree(snapshot->name);
+      MemFree(snapshot);
+   }
+}
+
+bool InitVSSWrapper()
+{
+   return false;
+}
+
+#endif   /* _WIN32_WINNT >= 0x0600 */

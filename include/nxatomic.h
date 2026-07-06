@@ -39,8 +39,11 @@ using std::atomic;
 typedef volatile LONG VolatileCounter;
 typedef volatile LONGLONG VolatileCounter64;
 
-// 64 bit atomics not available on Windows XP, implement them using _InterlockedCompareExchange64
-#if !defined(_WIN64) && (_WIN32_WINNT < 0x0502)
+// 64 bit atomics not available on Windows XP, implement them using _InterlockedCompareExchange64.
+// This is only needed for MSVC - the mingw runtime already provides 32-bit-safe
+// InterlockedIncrement64/Decrement64/Add64 fallbacks, so defining them here under GCC/clang
+// would collide with those declarations.
+#if !defined(_WIN64) && (_WIN32_WINNT < 0x0502) && defined(_MSC_VER)
 
 #pragma intrinsic(_InterlockedCompareExchange64)
 

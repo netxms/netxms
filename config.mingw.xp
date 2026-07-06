@@ -1,0 +1,74 @@
+#
+# NetXMS Windows Build Configuration - Windows XP (x86) agent profile
+#
+# Builds an agent that runs on Windows XP x86, using the legacy GCC toolchain
+# and the reduced XP SDK. Invoke with:
+#
+#   mingw32-make -f Makefile.w32 CONFIG=config.mingw.xp
+#
+# This file layers a thin set of overrides on top of the normal config.mingw.
+#
+# Ordering matters. Variables that config.mingw assigns with '?=' (ARCH,
+# PLATFORM, WINXP) OR that it consumes at parse time (ARCH drives the
+# TARGET_TRIPLE ifeq) must be set BEFORE the include, so config.mingw sees the
+# XP values. Variables config.mingw assigns unconditionally with '=' (SDK_ROOT,
+# TOOLCHAIN_BIN) or that we extend (COMMON_CFLAGS/COMMON_LDFLAGS) are overridden
+# AFTER the include; those are recursive, so re-pointing SDK_ROOT retroactively
+# fixes every derived -I/-L path.
+#
+
+#####################################################################
+# Target: Windows XP, 32-bit (must precede the include)
+#####################################################################
+
+# XP is 32-bit x86. ARCH drives the i686-w64-mingw32 target triple and the
+# per-arch SDK library subdir (lib/x86); PLATFORM keeps the output tree
+# (out/x86-xp) separate from the normal llvm-mingw x86 build (out/x86).
+ARCH     := x86
+PLATFORM := x86-xp
+
+# Enable the reduced XP component set (see Makefile.w32, subagents and dbdrv
+# dispatchers): drops libnxjava/java (no JNI), prometheus (no protobuf),
+# wineventsync (Vista+ Event Log API), and the DB-client subagents/drivers
+# (no PostgreSQL/MySQL/MariaDB/Oracle/Informix/DB2 SDKs in the XP SDK).
+WINXP := 1
+
+include config.mingw
+
+#####################################################################
+# Toolchain and SDK (override after the include)
+#####################################################################
+
+# Legacy mingw-w64 GCC 7.3.0 (i686, SJLJ, libstdc++). Selected by absolute
+# path: the llvm-mingw toolchain exposes the same i686-w64-mingw32-* names, so
+# PATH alone cannot pick this one.
+TOOLCHAIN_BIN := C:/mingw32-xp/bin/
+
+# The mingw32-xp toolchain ships an unprefixed windres.exe (no
+# i686-w64-mingw32- prefix like llvm-mingw). It also lacks the winres.h wrapper
+# the resource scripts include, so add include/mingw (which supplies a shim) to
+# the windres search path.
+WINDRES := $(TOOLCHAIN_BIN)windres --include-dir $(TOPDIR)/include/mingw
+
+# Reduced XP SDK (per-arch lib/x86 layout, same convention as the main SDK).
+SDK_ROOT := C:/SDK-mingw-xp
+
+#####################################################################
+# Windows XP targeting
+#####################################################################
+
+# nms_common.h defaults _WIN32_WINNT to 0x0601 (Windows 7) under an #ifndef
+# guard, so define 0x0501 (XP) on the command line to override it. nxatomic.h
+# already carries a (_WIN32_WINNT < 0x0502) fallback path for the XP-era
+# Interlocked intrinsics.
+COMMON_CFLAGS += -D_WIN32_WINNT=0x0501 -DWINVER=0x0501 -D_WIN32_IE=0x0600
+
+# The XP loader rejects the mingw default 6.x PE subsystem. Stamp the image for
+# Windows 5.1 (both subsystem and OS version) and enable large-address-aware.
+COMMON_LDFLAGS += -Wl,--major-subsystem-version=5 -Wl,--minor-subsystem-version=1 \
+                  -Wl,--major-os-version=5 -Wl,--minor-os-version=1 \
+                  -Wl,--large-address-aware
+
+#####################################################################
+# End of Windows XP profile
+#####################################################################

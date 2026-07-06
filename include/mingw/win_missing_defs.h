@@ -20,7 +20,12 @@
 #include <windows.h>
 #include <winternl.h>
 #include <winsvc.h>
+// wuapi.h (Windows Update Agent) is absent from the legacy mingw32-xp toolchain.
+// Guard it so this header still works there; consumers gate WUA use on NX_HAVE_WUAPI.
+#if __has_include(<wuapi.h>)
 #include <wuapi.h>
+#define NX_HAVE_WUAPI 1
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Full SYSTEM_PROCESS_INFORMATION layout.
@@ -104,7 +109,10 @@ typedef struct _SERVICE_TRIGGER_INFO
 // IAutomaticUpdates but not IAutomaticUpdates2 / IAutomaticUpdatesResults.
 // IAutomaticUpdates2 adds a single method (get_Results) over IAutomaticUpdates,
 // whose method set matches the SDK, so we derive from mingw's IAutomaticUpdates.
+// Defined only when wuapi.h (and thus the base IAutomaticUpdates) is available.
 /////////////////////////////////////////////////////////////////////////////
+
+#ifdef NX_HAVE_WUAPI
 
 #ifndef __IAutomaticUpdatesResults_INTERFACE_DEFINED__
 #define __IAutomaticUpdatesResults_INTERFACE_DEFINED__
@@ -134,6 +142,8 @@ __CRT_UUID_DECL(IAutomaticUpdates2, 0x4A2F5C31, 0xCFD9, 0x410E, 0xB7, 0xFB, 0x29
 // in a COMDAT section so multiple translation units merge without conflict.
 EXTERN_C const DECLSPEC_SELECTANY CLSID CLSID_AutomaticUpdates =
    { 0xBFE18E9C, 0x6D87, 0x4450, { 0xB3, 0x7C, 0xE0, 0x2F, 0x0B, 0x37, 0x38, 0x03 } };
+
+#endif   /* NX_HAVE_WUAPI */
 
 #endif   /* __MINGW32__ */
 

@@ -5,6 +5,9 @@
 
 SUBAGENT = wmi
 SOURCES = acpi.cpp net.cpp sc.cpp wmi.cpp
-SA_LIBS = -lwbemuuid
+# -luuid provides the base COM GUIDs (IID_IUnknown); it must follow -lwbemuuid
+# for GNU ld's ordered static-library resolution. llvm-mingw resolved these
+# without an explicit -luuid, but the mingw GCC/XP toolchain does not.
+SA_LIBS = -lwbemuuid -luuid
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk

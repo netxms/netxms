@@ -183,7 +183,13 @@ LONG H_RegistryValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractC
    AgentGetMetricArgW(cmd, 2, valueName, 256);
    DWORD type, size = 1024;
    BYTE buffer[1024];
+#if (_WIN32_WINNT >= 0x0600)
    status = RegGetValueW(hKey, nullptr, valueName, RRF_RT_ANY, &type, buffer, &size);
+#else
+   // RegGetValueW is Vista+; on Windows XP use RegQueryValueExW (does not expand
+   // REG_EXPAND_SZ, which is handled explicitly by the type switch below).
+   status = RegQueryValueExW(hKey, valueName, nullptr, &type, buffer, &size);
+#endif
    if (status == ERROR_SUCCESS)
    {
       switch (type)

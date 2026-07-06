@@ -5,7 +5,10 @@
 
 SUBAGENT = mqtt
 SOURCES = broker.cpp main.cpp topic.cpp
-SA_LIBS = -lnxsde $(MOSQUITTO_LIBS)
+# topic.cpp uses StructuredDataExtractor (libnxsde), whose inline destructor
+# calls jv_free, so jq must be linked directly (llvm-mingw resolved it via
+# symbol re-export; the mingw GCC/XP toolchain does not).
+SA_LIBS = -lnxsde $(JQ_LIBS) $(MOSQUITTO_LIBS)
 SA_CPPFLAGS = -I$(MOSQUITTO_ROOT)/include
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk

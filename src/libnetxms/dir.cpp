@@ -73,7 +73,7 @@ DIRHANDLEA LIBNETXMS_EXPORTABLE *OpenDirA(const char *path)
    p->handle = handle;
    p->dirstr.d_ino = 0;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
-   strncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
+   strlcpy(p->dirstr.d_name, fd.cFileName, MAX_PATH);
    p->dirstr.d_namlen = (int)strlen(p->dirstr.d_name);
    return p;
 }
@@ -99,7 +99,7 @@ DIRENTRYA LIBNETXMS_EXPORTABLE *ReadDirA(DIRHANDLEA *p)
 
    p->dirstr.d_ino++;
    p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
-   strncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
+   strlcpy(p->dirstr.d_name, fd.cFileName, MAX_PATH);
    p->dirstr.d_namlen = (int)strlen(p->dirstr.d_name);
    return &p->dirstr;
 }

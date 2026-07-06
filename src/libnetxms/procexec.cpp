@@ -142,6 +142,8 @@ ProcessExecutor::~ProcessExecutor()
 
 #ifdef _WIN32
 
+#if (_WIN32_WINNT >= 0x0600)
+
 /**
  * Set explicit list of inherited handles
  */
@@ -177,6 +179,8 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle, uint32_t execu
 
    return true;
 }
+
+#endif   /* _WIN32_WINNT >= 0x0600 */
 
 /**
  * Build process command line
@@ -345,6 +349,7 @@ bool ProcessExecutor::executeWithOutput()
    // Ensure the read handle to the pipe for STDOUT is not inherited.
    SetHandleInformation(stdoutRead, HANDLE_FLAG_INHERIT, 0);
 
+#if (_WIN32_WINNT >= 0x0600)
    STARTUPINFOEX si;
    PROCESS_INFORMATION pi;
 
@@ -354,6 +359,19 @@ bool ProcessExecutor::executeWithOutput()
    si.StartupInfo.hStdOutput = stdoutWrite;
    si.StartupInfo.hStdError = stdoutWrite;
    SetInheritedHandle(&si, &stdoutWrite, m_id);
+#else
+   // Windows XP: PROC_THREAD_ATTRIBUTE_HANDLE_LIST (scoped handle inheritance)
+   // is unavailable. Use a plain STARTUPINFO and inherit all inheritable
+   // handles; the pipe read handle was already marked non-inheritable above.
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = STARTF_USESTDHANDLES;
+   si.hStdOutput = stdoutWrite;
+   si.hStdError = stdoutWrite;
+#endif
 
    bool success = false;
 
@@ -361,8 +379,13 @@ bool ProcessExecutor::executeWithOutput()
    StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
    const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
    TCHAR *envBlock = BuildEnvironmentBlock(m_environment);
-   DWORD creationFlags = EXTENDED_STARTUPINFO_PRESENT | CREATE_SUSPENDED | ((envBlock != nullptr) ? CREATE_UNICODE_ENVIRONMENT : 0);
+   DWORD creationFlags = CREATE_SUSPENDED | ((envBlock != nullptr) ? CREATE_UNICODE_ENVIRONMENT : 0);
+#if (_WIN32_WINNT >= 0x0600)
+   creationFlags |= EXTENDED_STARTUPINFO_PRESENT;
    BOOL created = CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, creationFlags, envBlock, m_workingDirectory, &si.StartupInfo, &pi);
+#else
+   BOOL created = CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, creationFlags, envBlock, m_workingDirectory, &si, &pi);
+#endif
    MemFree(envBlock);
    if (created)
    {
@@ -415,8 +438,10 @@ bool ProcessExecutor::executeWithOutput()
       CloseHandle(stdoutWrite);
    }
 
+#if (_WIN32_WINNT >= 0x0600)
    DeleteProcThreadAttributeList(si.lpAttributeList);
    MemFree(si.lpAttributeList);
+#endif
    return success;
 }
 

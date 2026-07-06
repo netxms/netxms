@@ -95,6 +95,12 @@ SOURCES = \
 	xml.cpp \
 	ztools.cpp
 
+# On Vista+ Windows QSort maps to the CRT qsort_s (see nms_util.h); the XP build lacks
+# qsort_s in msvcrt.dll, so compile the in-tree QSort implementation instead.
+ifeq ($(WINXP),1)
+SOURCES += qsort.cpp
+endif
+
 # Resource file for version info
 RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
 

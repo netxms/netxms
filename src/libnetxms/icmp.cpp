@@ -44,7 +44,19 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
 {
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
-   HANDLE hIcmpFile = (addr.getFamily() == AF_INET) ? IcmpCreateFile() : Icmp6CreateFile();
+   HANDLE hIcmpFile;
+   if (addr.getFamily() == AF_INET)
+   {
+      hIcmpFile = IcmpCreateFile();
+   }
+   else
+   {
+#if (_WIN32_WINNT >= 0x0600)
+      hIcmpFile = Icmp6CreateFile();
+#else
+      return ICMP_API_ERROR;   // ICMPv6 echo API (Icmp6*) is not available on Windows XP
+#endif
+   }
    if (hIcmpFile == INVALID_HANDLE_VALUE)
       return ICMP_API_ERROR;
 
@@ -56,7 +68,12 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
    else
       packetSize -= MIN_PING_SIZE;
 
-   DWORD replySize = packetSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
+   size_t replyStructSize = sizeof(ICMP_ECHO_REPLY);
+#if (_WIN32_WINNT >= 0x0600)
+   if (addr.getFamily() != AF_INET)
+      replyStructSize = sizeof(ICMPV6_ECHO_REPLY);
+#endif
+   DWORD replySize = packetSize + 16 + (DWORD)replyStructSize;
 	char *reply = (char *)alloca(replySize);
 	int retries = numRetries;
 	uint32_t rc = ICMP_API_ERROR;
@@ -71,6 +88,7 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
             opt.Flags = IP_FLAG_DF;
          rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)packetSize, &opt, reply, replySize, timeout);
       }
+#if (_WIN32_WINNT >= 0x0600)
       else
       {
          sockaddr_in6 sa, da;
@@ -90,6 +108,7 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
             opt.Flags = IP_FLAG_DF;
          rc = Icmp6SendEcho2(hIcmpFile, nullptr, nullptr, nullptr, &sa, &da, payload, (WORD)packetSize, &opt, reply, replySize, timeout);
       }
+#endif
 		if (rc != 0)
 		{
          ULONG status;
@@ -104,12 +123,20 @@ uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, 
             status = er->Status;
             rtt = er->RoundTripTime;
          }
+#if (_WIN32_WINNT >= 0x0600)
          else
          {
 			   ICMPV6_ECHO_REPLY *er = (ICMPV6_ECHO_REPLY *)reply;
             status = er->Status;
             rtt = er->RoundTripTime;
          }
+#else
+         else
+         {
+            status = IP_GENERAL_FAILURE;
+            rtt = 0;
+         }
+#endif
 
 			switch(status)
 			{

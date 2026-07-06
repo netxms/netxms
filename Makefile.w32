@@ -8,8 +8,12 @@
 # Use absolute path for TOPDIR so subdirectories can find config
 TOPDIR := $(CURDIR)
 
-# Include user configuration
-include config.mingw
+# Include user configuration. CONFIG selects the config file so alternative
+# build profiles (e.g. the Windows XP agent profile) can supply their own
+# toolchain/SDK/component-set without editing config.mingw:
+#   mingw32-make -f Makefile.w32 CONFIG=config.mingw.xp
+CONFIG ?= config.mingw
+include $(CONFIG)
 
 # Normalize gating flags: inline comments in config.mingw leave trailing
 # whitespace on values (e.g. "1              "), which would break exact-match
@@ -17,6 +21,7 @@ include config.mingw
 BUILD_AGENT := $(strip $(BUILD_AGENT))
 BUILD_CLIENT := $(strip $(BUILD_CLIENT))
 BUILD_SERVER := $(strip $(BUILD_SERVER))
+WINXP := $(strip $(WINXP))
 
 # x86 and arm64 are agent-only targets on Windows. The client and server tiers
 # (and their supporting database/notification drivers and standalone tools) are
@@ -34,6 +39,7 @@ endif
 
 # Export variables for sub-makefiles
 export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD
+export CONFIG WINXP PLATFORM TOOLCHAIN_BIN
 export ARCH DEBUG PREFIX
 export COMMON_CFLAGS COMMON_CXXFLAGS COMMON_LDFLAGS COMMON_LIBDIRS
 export WIN_LIBS SSL_LIBS PCRE_LIBS CURL_LIBS ZLIB_LIBS EXPAT_LIBS JQ_LIBS MODBUS_LIBS LIBSSH_LIBS
@@ -58,15 +64,18 @@ CORE_LIBS = \
     src/libargon2 \
     src/libnetxms
 
-# Mid-level libraries (Tier 2)
+# Mid-level libraries (Tier 2). libnxjava needs JNI headers, which are absent
+# from the Windows XP SDK, so the XP profile drops it (and the java subagent).
 MID_LIBS = \
     src/libnxsl \
     src/libnxlp \
     src/db/libnxdb \
     src/snmp/libnxsnmp \
     src/ethernetip/libethernetip \
-    src/agent/libnxsde \
-    src/libnxjava
+    src/agent/libnxsde
+ifneq ($(WINXP),1)
+MID_LIBS += src/libnxjava
+endif
 
 # All libraries
 LIBS = $(CORE_LIBS) $(MID_LIBS)

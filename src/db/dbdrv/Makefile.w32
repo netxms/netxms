@@ -35,7 +35,12 @@ BASE_DRIVERS = \
 	odbc \
 	sqlite
 
-ifeq ($(ARCH),arm64)
+# The Windows XP SDK ships none of the vendor client libraries, so the XP
+# profile (like arm64) builds only the in-tree sqlite engine and the
+# Windows-native ODBC/MSSQL drivers.
+ifeq ($(WINXP),1)
+DRIVERS = $(BASE_DRIVERS)
+else ifeq ($(ARCH),arm64)
 DRIVERS = $(BASE_DRIVERS)
 else
 DRIVERS = $(SDK_DRIVERS) $(BASE_DRIVERS)

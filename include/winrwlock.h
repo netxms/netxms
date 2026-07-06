@@ -57,6 +57,12 @@ static inline void InitializeRWLock(win_rwlock_t *rwlock)
 static inline void DestroyRWLock(win_rwlock_t *rwlock)
 {
    DeleteCriticalSection(&rwlock->mutex);
+#if (_WIN32_WINNT < 0x0600)
+   // Emulated condition variables (Windows XP) own a semaphore handle that the
+   // real Vista API has no need to release.
+   DeleteConditionVariable(&rwlock->condRead);
+   DeleteConditionVariable(&rwlock->condWrite);
+#endif
 }
 
 /**

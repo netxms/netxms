@@ -201,8 +201,11 @@ bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHA
    }
 
    // Reserve stack space so the exception filter can run even on stack overflow
+   // (SetThreadStackGuarantee is Vista+; on XP the crash filter runs without this guarantee)
+#if (_WIN32_WINNT >= 0x0600)
    ULONG stackGuarantee = 65536;
    SetThreadStackGuarantee(&stackGuarantee);
+#endif
 
    SetUnhandledExceptionFilter(CrashExceptionFilter);
    _set_purecall_handler(CrashPureCallHandler);

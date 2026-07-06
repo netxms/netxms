@@ -283,12 +283,16 @@ static void CommThread()
 {
    nxlog_debug(1, _T("Communication thread started"));
 
-   // Change DPI awareness for this thread (required for corect screenshots)
+   // Change DPI awareness for this thread (required for corect screenshots).
+   // DPI_AWARENESS_CONTEXT (per-monitor DPI v2) is a Win10 type absent from the
+   // XP toolchain, and the API does not exist on XP anyway.
+#if (_WIN32_WINNT >= 0x0600)
    auto __SetThreadDpiAwarenessContext = reinterpret_cast<DPI_AWARENESS_CONTEXT (WINAPI *)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetThreadDpiAwarenessContext"));
    if (__SetThreadDpiAwarenessContext != nullptr)
       __SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
    else
       nxlog_write(NXLOG_WARNING, _T("SetThreadDpiAwarenessContext is not available"));
+#endif
 
    while(!s_stop)
    {

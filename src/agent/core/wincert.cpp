@@ -26,7 +26,113 @@
 
 #define DEBUG_TAG _T("wincert")
 
-bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id);
+/**
+ * Match specific certificate name attribute
+ */
+static inline bool MatchCertificateNameAttribute(PCCERT_CONTEXT context, const TCHAR *selector, const char *attr, const TCHAR *id)
+{
+   size_t l = _tcslen(selector);
+   if (_tcsncmp(id, selector, l))
+      return false;
+
+   TCHAR value[1024];
+   CertGetNameString(context, CERT_NAME_ATTR_TYPE, 0, (void*)attr, value, 1024);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: %s \"%s\" with \"%s\""), selector, &id[l], value);
+   return _tcsicmp(&id[l], value) == 0;
+}
+
+/**
+ * Wrapper for MemAlloc() to use in CRYPT_DECODE_PARA
+ */
+static LPVOID WINAPI MemAllocWrapper(size_t size)
+{
+   return MemAlloc(size);
+}
+
+/**
+ * Wrapper for MemFree() to use in CRYPT_DECODE_PARA
+ */
+static void WINAPI MemFreeWrapper(LPVOID p)
+{
+   return MemFree(p);
+}
+
+/**
+ * Match certificate in Windows certificate store against a selector id
+ * (name:/email:/subject:/template:/cn:/org:/deviceSerial:). This is a pure
+ * CRYPT32 helper (no CNG), used by both the tunnel and the WindowsCertificateStore
+ * metrics; it lives here rather than in cng_engine.cpp so it is available on the
+ * XP build, which excludes the CNG engine.
+ */
+bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
+{
+   if (id == nullptr)
+      return false;
+
+   if (!_tcsnicmp(id, _T("name:"), 5))
+   {
+      TCHAR value[1024];
+      CertGetNameString(context, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, nullptr, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: name: \"%s\" with \"%s\""), &id[5], value);
+      return _tcsicmp(&id[5], value) == 0;
+   }
+
+   if (!_tcsnicmp(id, _T("email:"), 6))
+   {
+      TCHAR value[1024];
+      CertGetNameString(context, CERT_NAME_EMAIL_TYPE, 0, nullptr, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: email: \"%s\" with \"%s\""), &id[6], value);
+      return _tcsicmp(&id[6], value) == 0;
+   }
+
+   if (!_tcsnicmp(id, _T("subject:"), 8))
+   {
+      TCHAR value[1024];
+      DWORD strType = CERT_X500_NAME_STR;
+      CertGetNameString(context, CERT_NAME_RDN_TYPE, 0, &strType, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%s\""), &id[8], value);
+      return _tcsicmp(&id[8], value) == 0;
+   }
+
+   if (!_tcsnicmp(id, _T("template:"), 9))
+   {
+      PCERT_EXTENSION e = CertFindExtension(szOID_CERTIFICATE_TEMPLATE, context->pCertInfo->cExtension, context->pCertInfo->rgExtension);
+      if (e == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CertFindExtension failed"));
+         return false;
+      }
+
+      CRYPT_DECODE_PARA dp;
+      dp.cbSize = sizeof(dp);
+      dp.pfnAlloc = MemAllocWrapper;
+      dp.pfnFree = MemFreeWrapper;
+
+      CERT_TEMPLATE_EXT *tmpl = nullptr;
+      DWORD size = 0;
+      if (!CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_CERTIFICATE_TEMPLATE, e->Value.pbData, e->Value.cbData,
+            CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG | CRYPT_DECODE_SHARE_OID_STRING_FLAG, &dp, &tmpl, &size))
+      {
+         TCHAR buffer[1024];
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CryptDecodeObjectEx failed (%s)"),
+            GetSystemErrorText(GetLastError(), buffer, 1024));
+         return false;
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%hs\""), &id[9], tmpl->pszObjId);
+      char *mbid = MBStringFromWideString(&id[9]);
+      bool success = (strcmp(mbid, tmpl->pszObjId) == 0);
+
+      MemFree(mbid);
+      MemFree(tmpl);
+      return success;
+   }
+
+   return
+      MatchCertificateNameAttribute(context, _T("cn:"), szOID_COMMON_NAME, id) ||
+      MatchCertificateNameAttribute(context, _T("org:"), szOID_ORGANIZATION_NAME, id) ||
+      MatchCertificateNameAttribute(context, _T("deviceSerial:"), szOID_DEVICE_SERIAL_NUMBER, id);
+}
 
 /**
  * Get expiration date for certificate as string
@@ -132,9 +238,12 @@ static bool CertificateHasPrivateKey(PCCERT_CONTEXT context)
       CRYPT_ACQUIRE_SILENT_FLAG | CRYPT_ACQUIRE_CACHE_FLAG, nullptr, &hKey, &keySpec, &callerFree);
    if (success && callerFree)
    {
+#if (_WIN32_WINNT >= 0x0600)
+      // CNG (ncrypt.dll) is Vista+; XP never returns a CERT_NCRYPT_KEY_SPEC key.
       if (keySpec == CERT_NCRYPT_KEY_SPEC)
          NCryptFreeObject(hKey);
       else
+#endif
          CryptReleaseContext(hKey, 0);
    }
    return success ? true : false;
