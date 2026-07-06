@@ -125,46 +125,52 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
          commandLine = command;
       }
 
-      if (SystemUtils.IS_OS_WINDOWS)
-      {
-         commandLine = "CMD.EXE /C START \"NetXMS\" " + commandLine;
-         process = Runtime.getRuntime().exec(commandLine);
-      }
-      else
-      {
-         process = Runtime.getRuntime().exec(SandboxHelper.buildHostShellCommand(commandLine));
-      }
-
-      InputStream in = process.getInputStream();
       try
       {
-         byte[] data = new byte[16384];
-         while(true)
+         if (SystemUtils.IS_OS_WINDOWS)
          {
-            int bytes = in.read(data);
-            if (bytes == -1)
-               break;
-            String s = new String(Arrays.copyOf(data, bytes));
-
-            // The following is a workaround for issue NX-65
-            // Problem is that on Windows XP many system commands
-            // (like ping, tracert, etc.) generates output with lines
-            // ending in 0x0D 0x0D 0x0A
-            if (SystemUtils.IS_OS_WINDOWS)
-               writeOutput(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
-            else
-               writeOutput(s);
+            commandLine = "CMD.EXE /C START \"NetXMS\" " + commandLine;
+            process = Runtime.getRuntime().exec(commandLine);
+         }
+         else
+         {
+            process = Runtime.getRuntime().exec(SandboxHelper.buildHostShellCommand(commandLine));
          }
 
-         writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
-      }
-      catch(IOException e)
-      {
-         logger.error("Exception while running local command", e); //$NON-NLS-1$
+         InputStream in = process.getInputStream();
+         try
+         {
+            byte[] data = new byte[16384];
+            while(true)
+            {
+               int bytes = in.read(data);
+               if (bytes == -1)
+                  break;
+               String s = new String(Arrays.copyOf(data, bytes));
+
+               // The following is a workaround for issue NX-65
+               // Problem is that on Windows XP many system commands
+               // (like ping, tracert, etc.) generates output with lines
+               // ending in 0x0D 0x0D 0x0A
+               if (SystemUtils.IS_OS_WINDOWS)
+                  writeOutput(s.replace("\r\n", " \n")); //$NON-NLS-1$ //$NON-NLS-2$
+               else
+                  writeOutput(s);
+            }
+
+            writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+         }
+         catch(IOException e)
+         {
+            logger.error("Exception while running local command", e); //$NON-NLS-1$
+         }
+         finally
+         {
+            in.close();
+         }
       }
       finally
       {
-         in.close();
          synchronized(mutex)
          {
             processRunning = false;
