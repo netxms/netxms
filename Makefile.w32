@@ -202,7 +202,7 @@ check-config:
 
 build-tag:
 	@echo "Generating build tag..."
-	-$(Q)perl $(TOPDIR)/tools/updatetag.pl
+	$(Q)cd $(TOPDIR)/build && perl updatetag.pl
 
 # Build each subdirectory
 $(ALL_DIRS):
