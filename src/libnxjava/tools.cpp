@@ -61,6 +61,8 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr)
    if (jstr == nullptr)
       return nullptr;
    const jchar *chars = env->GetStringChars(jstr, nullptr);
+   if (chars == nullptr)   // can be null on allocation failure (pending OutOfMemoryError)
+      return nullptr;
    jsize len = env->GetStringLength(jstr);
    TCHAR *str = MemAllocString(len + 1);
 #ifdef UNICODE
@@ -86,6 +88,11 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCH
    if (jstr == nullptr)
       return nullptr;
    const jchar *chars = env->GetStringChars(jstr, nullptr);
+   if (chars == nullptr)   // can be null on allocation failure (pending OutOfMemoryError)
+   {
+      buffer[0] = 0;
+      return buffer;
+   }
    jsize len = env->GetStringLength(jstr);
 #ifdef UNICODE
 #if UNICODE_UCS4
