@@ -37,19 +37,9 @@ endif
 # Each subdirectory will still compile its files in parallel with -j
 .NOTPARALLEL:
 
-# Export variables for sub-makefiles
-export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD
-export CONFIG WINXP PLATFORM TOOLCHAIN_BIN
-export ARCH DEBUG PREFIX
-export COMMON_CFLAGS COMMON_CXXFLAGS COMMON_LDFLAGS COMMON_LIBDIRS
-export WIN_LIBS SSL_LIBS PCRE_LIBS CURL_LIBS ZLIB_LIBS EXPAT_LIBS JQ_LIBS MODBUS_LIBS LIBSSH_LIBS
-export MOSQUITTO_LIBS PROTOBUF_LIBS MICROHTTPD_LIBS SNAPPY_LIBS STROPHE_LIBS
-export PGSQL_LIBS MYSQL_LIBS MARIADB_LIBS ORACLE_LIBS DB2_LIBS INFORMIX_LIBS
-export BUILD_DIR BIN_DIR LIB_DIR OBJ_DIR
-export VERBOSE Q
-export OPENSSL_ROOT PCRE_ROOT ZLIB_ROOT CURL_ROOT EXPAT_ROOT JQ_ROOT MODBUS_ROOT LIBSSH_ROOT
-export MOSQUITTO_ROOT JNI_ROOT PROTOBUF_ROOT MICROHTTPD_ROOT SNAPPY_ROOT LIBSTROPHE_ROOT
-export PGSQL_ROOT MYSQL_ROOT MARIADB_ROOT ORACLE_ROOT DB2_ROOT INFORMIX_ROOT
+# Export variables for sub-makefiles. The list is shared with private-subsystem
+# dispatchers (private/atm/Makefile.w32) that can also run standalone.
+include $(TOPDIR)/build/exports.mk
 
 #####################################################################
 # Build Order
@@ -69,6 +59,7 @@ CORE_LIBS = \
 MID_LIBS = \
     src/libnxsl \
     src/libnxlp \
+    src/libnxmb \
     src/db/libnxdb \
     src/snmp/libnxsnmp \
     src/ethernetip/libethernetip \
@@ -154,8 +145,21 @@ SERVER_DIRS = \
     src/server/drivers
 endif
 
+# Private ATM subsystem (optional). Private repositories live at fixed locations
+# under private/ and are absent from public/OSS builds. The subsystem is built
+# only when its dispatcher is present, so absence is a silent no-op; when
+# present, all ATM-specific component/arch logic lives in its own dispatcher
+# (private/atm/Makefile.w32) rather than being spliced into this file.
+BUILD_ATM ?= 1
+ATM_TOP =
+ifeq ($(strip $(BUILD_ATM)),1)
+ifneq ($(wildcard $(TOPDIR)/private/atm/Makefile.w32),)
+ATM_TOP = private/atm
+endif
+endif
+
 # Complete build order
-ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS)
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(ATM_TOP)
 
 # Architectures built by the all-arch target
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
@@ -227,6 +231,10 @@ $(TOOLS_DIRS): $(LIBS)
 
 # Server depends on libraries
 $(SERVER_DIRS): $(LIBS)
+
+# ATM subsystem links the agent, server and core import libraries, so it is
+# built after every in-tree tier it depends on.
+$(ATM_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
 
 clean:
 	@echo "Cleaning build artifacts..."
