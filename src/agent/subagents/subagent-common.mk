@@ -7,6 +7,9 @@
 #   SOURCES       - list of .cpp / .c source files
 #   SA_LIBS       - libraries in addition to -lnetxms -lnxagent (optional)
 #   SA_CPPFLAGS   - extra compiler flags, e.g. SDK include paths (optional)
+#   SA_RC         - subagent-specific resource script embedding runtime data
+#                   such as parser XML (optional; compiled and linked in
+#                   addition to the version-info resource)
 # then:
 #   include $(TOPDIR)/src/agent/subagents/subagent-common.mk
 #
@@ -19,6 +22,11 @@ TARGET = $(BIN_DIR)/$(SUBAGENT).nsm
 # Resource file for version info
 RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
 RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+
+# Optional subagent-specific resource script (embedded parser XML etc.)
+ifdef SA_RC
+SA_RC_OBJECT = $(OBJDIR)/$(basename $(SA_RC)).res.o
+endif
 
 # Object files (.cpp and .c both map to .o)
 # Objects go to a per-architecture directory so multiple ARCH builds coexist
@@ -37,7 +45,7 @@ LIBS = -lnxagent -lnetxms $(SA_LIBS) $(WIN_LIBS)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) $(RC_OBJECT)
+$(TARGET): $(OBJECTS) $(RC_OBJECT) $(SA_RC_OBJECT)
 	@mkdir -p $(BIN_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -63,8 +71,17 @@ $(RC_OBJECT): $(RC_SOURCE)
 	@echo "  RC      $<"
 	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
+ifdef SA_RC
+# -I. so windres finds resource.h and the referenced data files (parser XML),
+# which are named relative to the subagent directory.
+$(SA_RC_OBJECT): $(SA_RC)
+	@mkdir -p $(dir $@)
+	@echo "  RC      $<"
+	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+endif
+
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(SA_RC_OBJECT) $(TARGET) .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"
