@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
@@ -45,7 +45,8 @@ enum JavaBridgeError
    NXJAVA_NO_ENTRY_POINT = 2,
    NXJAVA_CANNOT_CREATE_JVM = 3,
    NXJAVA_APP_CLASS_NOT_FOUND = 4,
-   NXJAVA_APP_ENTRY_POINT_NOT_FOUND = 5
+   NXJAVA_APP_ENTRY_POINT_NOT_FOUND = 5,
+   NXJAVA_APP_EXECUTION_FAILED = 6
 };
 
 /**
