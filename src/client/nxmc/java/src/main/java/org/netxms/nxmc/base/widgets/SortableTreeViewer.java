@@ -188,6 +188,8 @@ public class SortableTreeViewer extends TreeViewer
          return;
 
       Tree tree = getTree();
+      // Suppress intermediate repaints so per-column resizes coalesce into a single repaint (avoids flicker on Windows)
+      tree.setRedraw(false);
       int count = tree.getColumnCount();
       for(int i = 0; i < count; i++)
       {
@@ -203,6 +205,7 @@ public class SortableTreeViewer extends TreeViewer
             c.setWidth(c.getWidth() + ((i == 0) ? 20 : 4));
          }
       }
+      tree.setRedraw(true);
    }
 
 	/**
