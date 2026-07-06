@@ -37,6 +37,31 @@ static JavaVM *s_javaVM = nullptr;
  */
 typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
 
+#ifdef _WIN32
+
+/**
+ * Get base directory for portable installation (executable directory containing lib\java with Java bridge JAR)
+ */
+static bool GetPortableBaseDirectory(TCHAR *base)
+{
+   DWORD len = GetModuleFileName(nullptr, base, MAX_PATH);
+   if ((len == 0) || (len >= MAX_PATH))   // len == MAX_PATH indicates truncation
+      return false;
+
+   TCHAR *p = _tcsrchr(base, _T('\\'));
+   if (p == nullptr)
+      return false;
+   *p = 0;
+
+   TCHAR marker[MAX_PATH];
+   int rc = _sntprintf(marker, MAX_PATH, _T("%s\\lib\\java\\netxms-java-bridge-") NETXMS_JAR_VERSION _T(".jar"), base);
+   if ((rc < 0) || (rc >= MAX_PATH))   // swprintf returns negative value on truncation
+      return false;   // truncated marker path could falsely match an existing file
+   return _taccess(marker, F_OK) == 0;
+}
+
+#endif
+
 /**
  * Create Java virtual machine
  *
@@ -68,8 +93,23 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    }
 
    TCHAR libdir[MAX_PATH];
+#ifdef _WIN32
+   TCHAR baseDir[MAX_PATH];
+   bool portableLayout = GetPortableBaseDirectory(baseDir);
+   if (portableLayout)
+   {
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 4, _T("JavaBridge: using base directory \"%s\" (from executable path)"), baseDir);
+      _sntprintf(libdir, MAX_PATH, _T("%s\\lib\\java"), baseDir);
+   }
+   else
+   {
+      GetNetXMSDirectory(nxDirLib, libdir);
+      _tcslcat(libdir, FS_PATH_SEPARATOR _T("java"), MAX_PATH);
+   }
+#else
    GetNetXMSDirectory(nxDirLib, libdir);
    _tcslcat(libdir, FS_PATH_SEPARATOR _T("java"), MAX_PATH);
+#endif
 
    StringBuffer classpath(_T("-Djava.class.path="));
    classpath.append(libdir);
@@ -97,7 +137,14 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       classpath.append(usercp);
    }
 
+#ifdef _WIN32
+   if (portableLayout)
+      _sntprintf(libdir, MAX_PATH, _T("%s\\etc"), baseDir);
+   else
+      GetNetXMSDirectory(nxDirEtc, libdir);
+#else
    GetNetXMSDirectory(nxDirEtc, libdir);
+#endif
    classpath.append(JAVA_CLASSPATH_SEPARATOR);
    classpath.append(libdir);
 
@@ -151,7 +198,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    }
    else
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: cannot find JVM entry point (%s)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: cannot find JVM entry point (%s)"), errorText);
       result = NXJAVA_NO_ENTRY_POINT;
    }
 
@@ -204,6 +251,58 @@ void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM()
 }
 
 /**
+ * Log pending Java exception and clear exception state
+ */
+static void LogPendingJavaException(JNIEnv *env)
+{
+   jthrowable exception = env->ExceptionOccurred();
+   if (exception == nullptr)
+      return;
+
+   env->ExceptionClear();
+
+   bool logged = false;
+   jclass throwableClass = env->FindClass("java/lang/Throwable");
+   if (throwableClass != nullptr)
+   {
+      jmethodID toString = env->GetMethodID(throwableClass, "toString", "()Ljava/lang/String;");
+      if (toString != nullptr)
+      {
+         jstring message = static_cast<jstring>(env->CallObjectMethod(exception, toString));
+         if (env->ExceptionCheck())
+         {
+            // toString() itself thrown - discard secondary exception and use fallback message
+            env->ExceptionClear();
+         }
+         else if (message != nullptr)
+         {
+            TCHAR buffer[1024];
+            CStringFromJavaString(env, message, buffer, 1024);
+            if (env->ExceptionCheck())
+            {
+               // string conversion failed (likely OutOfMemoryError) - discard and use fallback message
+               env->ExceptionClear();
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("Java exception: %s"), buffer);
+               logged = true;
+            }
+            env->DeleteLocalRef(message);
+         }
+      }
+      env->DeleteLocalRef(throwableClass);
+   }
+
+   if (!logged)
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("Java exception (unable to obtain description)"));
+
+   // FindClass()/GetMethodID() may leave a pending exception on failure - honor the "clear exception state" contract
+   env->ExceptionClear();
+   env->DeleteLocalRef(exception);
+}
+
+/**
  * Start Java application. This is helper method for starting Java applications
  * from command line wrapper. Application class should contain entry point with
  * the following signature:
@@ -221,12 +320,18 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
 {
    jclass app = env->FindClass(appClass);
    if (app == nullptr)
+   {
+      LogPendingJavaException(env);
       return NXJAVA_APP_CLASS_NOT_FOUND;
+   }
 
    nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application class found"));
    jmethodID appMain = env->GetStaticMethodID(app, "main", "([Ljava/lang/String;)V");
    if (appMain == nullptr)
+   {
+      LogPendingJavaException(env);
       return NXJAVA_APP_ENTRY_POINT_NOT_FOUND;
+   }
 
    nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application main method found"));
    jclass stringClass = env->FindClass("java/lang/String");
@@ -241,7 +346,13 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
       }
    }
    env->CallStaticVoidMethod(app, appMain, jargs);
+   JavaBridgeError result = NXJAVA_SUCCESS;
+   if (env->ExceptionCheck())
+   {
+      LogPendingJavaException(env);
+      result = NXJAVA_APP_EXECUTION_FAILED;
+   }
    env->DeleteLocalRef(jargs);
    nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application main method exited"));
-   return NXJAVA_SUCCESS;
+   return result;
 }

@@ -31,7 +31,8 @@ static const TCHAR *s_errorMessages[] =
    _T("JVM entry point not found"),
    _T("Cannot create JVM"),
    _T("Java application class not found"),
-   _T("Java application entry point not found")
+   _T("Java application entry point not found"),
+   _T("Java application execution failed")
 };
 
 /**
@@ -39,7 +40,7 @@ static const TCHAR *s_errorMessages[] =
  */
 const TCHAR LIBNXJAVA_EXPORTABLE *GetJavaBridgeErrorMessage(JavaBridgeError error)
 {
-   if ((int)error < 0 || (int)error > NXJAVA_APP_ENTRY_POINT_NOT_FOUND)
+   if ((int)error < 0 || (int)error > NXJAVA_APP_EXECUTION_FAILED)
       return _T("Unknown Java bridge error");
    return s_errorMessages[(int)error];
 }
