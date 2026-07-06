@@ -14927,6 +14927,17 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
 }
 
 /**
+ * Set password used for VNC connections
+ */
+void Node::setVncPassword(const TCHAR *password)
+{
+   lockProperties();
+   m_vncPassword = password;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
  * Set SNMP protocol version. Enforces the configured minimum SNMP version and
  * switches the security model to match the version (USM for v3, community-based
  * otherwise).
