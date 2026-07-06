@@ -16,7 +16,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
 			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devbackup.cpp \
 			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \
-			download_task.cpp downtime.cpp ef.cpp eip.cpp entirenet.cpp epp.cpp \
+			download_task.cpp downtime.cpp ef.cpp ef_snmptrap.cpp eip.cpp entirenet.cpp epp.cpp \
 			event_forwarder.cpp events.cpp \
 			evproc.cpp export.cpp fdb.cpp filemonitoring.cpp ft.cpp geo_areas.cpp graph.cpp \
 			ha.cpp halease.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \

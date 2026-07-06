@@ -804,6 +804,7 @@ void LoadEventForwarders()
 {
    // Register built-in drivers (modules register their own drivers during initialization)
    RegisterEventForwarderDriver(L"isc", CreateIscEventForwarderDriver);
+   RegisterEventForwarderDriver(L"snmptrap", CreateSnmpTrapEventForwarderDriver);
 
    int count = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

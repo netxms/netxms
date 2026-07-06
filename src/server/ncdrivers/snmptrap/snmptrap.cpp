@@ -225,6 +225,7 @@ static inline bool ParseOIDArgument(SNMP_ObjectId& id, const Config *config, con
  */
 SNMPTrapDriver *SNMPTrapDriver::createInstance(Config *config)
 {
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("SNMPTrap notification channel driver is deprecated, consider using \"snmptrap\" event forwarder instead"));
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
    SNMPTrapDriver *instance = new SNMPTrapDriver();

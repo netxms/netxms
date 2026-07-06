@@ -1,7 +1,7 @@
 -- **************************************************************************
 -- NETXMS-MIB - MIB file for NetXMS network management system
 --   
--- Copyright (c) 2021-2023 Raden Solutions
+-- Copyright (c) 2021-2026 Raden Solutions
 --   
 -- **************************************************************************
 
@@ -10,7 +10,8 @@ NETXMS-MIB DEFINITIONS ::= BEGIN
 IMPORTS
    MODULE-IDENTITY,
    NOTIFICATION-TYPE,
-   OBJECT-TYPE
+   OBJECT-TYPE,
+   Integer32
       FROM SNMPv2-SMI
    OBJECT-GROUP
       FROM SNMPv2-CONF
@@ -22,7 +23,7 @@ IMPORTS
       FROM RADENSOLUTIONS-SMI;
 
 netxms MODULE-IDENTITY
-   LAST-UPDATED    "202309010000Z"
+   LAST-UPDATED    "202607060000Z"
    ORGANIZATION    "Raden Solutions SIA"
    CONTACT-INFO
       "Raden Solutions SIA
@@ -40,10 +41,14 @@ netxms MODULE-IDENTITY
    REVISION "2"
    DESCRIPTION
       "Added access to collected DCI data."
+   REVISION "3"
+   DESCRIPTION
+      "Added event forwarder notification (nxEventNotification) and extended event objects."
       ::= { radenSolutions 1 }
 
 nxEvent OBJECT-GROUP
-   OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
+   OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData,
+             nxEventCode, nxEventName, nxEventId, nxSourceObjectId, nxEventTags, nxEventParameters }
    STATUS current
    DESCRIPTION "NetXMS event (alert) object."
       ::= { netxms 1 }
@@ -101,6 +106,48 @@ nxAdditionalData OBJECT-TYPE
    DESCRIPTION "Additional data for this event."
       ::= { nxEvent 6 }
 
+nxEventCode OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Code of this event."
+      ::= { nxEvent 7 }
+
+nxEventName OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Name of this event."
+      ::= { nxEvent 8 }
+
+nxEventId OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Unique ID of this event (64 bit unsigned integer in decimal notation)."
+      ::= { nxEvent 9 }
+
+nxSourceObjectId OBJECT-TYPE
+   SYNTAX Integer32
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "ID of source object for this event."
+      ::= { nxEvent 10 }
+
+nxEventTags OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Comma-separated list of tags for this event."
+      ::= { nxEvent 11 }
+
+nxEventParameters OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Parameters of this event as JSON object (parameter name as key; unnamed parameters use keys p1, p2, ...)."
+      ::= { nxEvent 12 }
+
 nxNotifications OBJECT IDENTIFIER ::= { netxms 0 }
 
 nxAlert NOTIFICATION-TYPE
@@ -108,6 +155,13 @@ nxAlert NOTIFICATION-TYPE
    STATUS current
    DESCRIPTION "Generic NetXMS notification generated from event."
    ::= { nxNotifications 1 }
+
+nxEventNotification NOTIFICATION-TYPE
+   OBJECTS { nxSourceNode, nxSourceObjectId, nxSeverity, nxMessage, nxTimestamp,
+             nxEventCode, nxEventName, nxEventId, nxEventTags, nxEventParameters }
+   STATUS current
+   DESCRIPTION "NetXMS event sent by SNMP trap event forwarder."
+   ::= { nxNotifications 2 }
 
 nxServer OBJECT IDENTIFIER ::= { netxms 2 }
 

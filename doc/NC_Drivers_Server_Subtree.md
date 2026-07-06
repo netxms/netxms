@@ -1,6 +1,6 @@
 # Notification Channel Drivers in Server Subtree — Design Document
 
-Status: phases 1 (mechanical move) and 2 (v5 context interface, NXSL special case dissolved) implemented; phase 3 design draft. Tracked as issue #3382.
+Status: all three phases implemented (1: mechanical move; 2: v5 context interface, NXSL special case dissolved; 3: built-in snmptrap event forwarder driver, NC snmptrap driver deprecated). Tracked as issue #3382.
 
 This document assesses moving notification channel (NC) drivers from
 `src/ncdrivers` into the server subtree, giving them access to server objects
@@ -170,19 +170,29 @@ subsystems should nevertheless **not** be merged:
   machine-to-machine, with their own queue/retry semantics.
 
 Users configure them differently and the console surfaces them differently.
-What should be unified is the **driver housing**:
 
-- Today EF drivers are only module-registered
-  (`RegisterEventForwarderDriver`; `isc` built-in, `otlp` via module) — there
-  is no dynamic `.efd` loading. With both interfaces in the server subtree,
-  the directory scan can allow one driver binary to export either or both
-  entry points (`NcdCreateInstance` and/or an EF factory).
-- **`snmptrap`** is the clearest migration candidate: as an NC driver it
-  forces structured trap data through the subject/body text pipe; as an EF
-  driver it can emit proper varbinds from event code, severity, parameters,
-  and tags. Once the EF driver covers it, the NC variant can be deprecated.
-- **`mqtt`** can meaningfully be both: NC driver for plain-text publishes,
-  EF driver for event-as-JSON to a topic.
+An earlier draft of this phase proposed unified **driver housing** — letting
+scanned `.ncd` binaries export an EF factory alongside (or instead of) the NC
+entry point. This was dropped as overengineering: `snmptrap` turned out to be
+the only realistic NC + EF combined driver (`mqtt` gains little from becoming
+an event forwarder), which does not justify a second dynamic-loading
+mechanism. EF drivers remain registration-only
+(`RegisterEventForwarderDriver`; `isc` and `snmptrap` built-in, `otlp` via
+module).
+
+- **`snmptrap`** was the clear migration candidate: as an NC driver it forces
+  structured trap data through the subject/body text pipe. It is now
+  implemented as a built-in EF driver (`core/ef_snmptrap.cpp`, registered as
+  `snmptrap` by `LoadEventForwarders()`) emitting proper varbinds: source
+  object name/ID, severity, message, timestamp, event code/name/ID, tags, and
+  parameters as a JSON object. Trap and varbind OIDs default to the
+  `nxEventNotification` trap defined in `contrib/mibs/NETXMS-MIB.mib`
+  (`.1.3.6.1.4.1.57163.1.0.2`, objects under `nxEvent`) and are individually
+  overridable in the forwarder's JSON configuration; the action's recipient is
+  the trap destination, falling back to `hostname` from the configuration.
+- The **`snmptrap` NC driver** is kept as-is for existing installations but
+  logs a deprecation warning at instantiation; removal is deferred to a
+  future major release.
 
 ## 5. Build system impact
 
@@ -221,8 +231,11 @@ What should be unified is the **driver housing**:
    verify (identical runtime behavior).
 2. **v5 context interface** — add `NotificationContext`, bump API version,
    convert all in-tree drivers, dissolve the NXSL special case.
-3. **Driver housing unification** — allow scanned driver binaries to export
-   EF factories; implement `snmptrap` (and optionally `mqtt`) as event
-   forwarder drivers; deprecate the `snmptrap` NC driver once covered.
+3. **snmptrap event forwarder** — built-in `snmptrap` EF driver in the server
+   core with structured varbinds (see section 4); deprecation warning added
+   to the `snmptrap` NC driver. The originally drafted driver housing
+   unification was dropped as unnecessary.
 
-Phases 1–2 have no database schema or client protocol impact.
+None of the phases have database schema or client protocol impact (the event
+forwarder driver list is dynamic, so the new driver appears in the console
+automatically).

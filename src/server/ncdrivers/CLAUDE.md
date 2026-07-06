@@ -36,7 +36,7 @@ src/server/ncdrivers/
 ├── shell/          # Shell command execution
 ├── dbtable/        # Database table logging
 ├── textfile/       # Text file logging
-├── snmptrap/       # SNMP trap sending
+├── snmptrap/       # SNMP trap sending (deprecated - use "snmptrap" event forwarder driver)
 ├── nxagent/        # Agent notification
 └── dummy/          # Testing driver
 ```
