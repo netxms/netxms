@@ -127,7 +127,7 @@ private:
 public:
    ~XmppDriver();
 
-   virtual int send(const char* recipient, const char* subject, const char* body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static XmppDriver* createInstance(Config* config);
 };
@@ -193,8 +193,10 @@ XmppDriver* XmppDriver::createInstance(Config* config)
 /**
  * Driver send method
  */
-int XmppDriver::send(const char* recipient, const char* subject, const char* body)
+int XmppDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    m_sendQueue.put(new MessageInfo(recipient, body));
    return 0;
 }

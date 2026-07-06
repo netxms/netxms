@@ -34,7 +34,7 @@ class DummyDriver : public NCDriver
 {
 public:
    DummyDriver();
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -48,8 +48,11 @@ DummyDriver::DummyDriver()
 /**
  * Send SMS
  */
-int DummyDriver::send(const char *recipient, const char *subject, const char *body)
+int DummyDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%hs\", subject=\"%hs\", text=\"%hs\""), recipient, subject, body);
    return 0;
 }

@@ -40,7 +40,7 @@ private:
 
 public:
    KannelDriver(Config *config);
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -70,8 +70,10 @@ KannelDriver::KannelDriver(Config *config)
 /**
  * Send SMS
  */
-int KannelDriver::send(const char *recipient, const char *subject, const char *body)
+int KannelDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", text=\"%hs\""), recipient, body);

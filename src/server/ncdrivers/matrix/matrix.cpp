@@ -173,7 +173,7 @@ private:
 public:
    virtual ~MatrixDriver();
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
    virtual bool checkHealth() override;
 
    static MatrixDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
@@ -393,8 +393,11 @@ char *MatrixDriver::getRoomId(const char *recipient)
 /**
  * Send notification
  */
-int MatrixDriver::send(const char *recipient, const char *subject, const char *body)
+int MatrixDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %hs: \"%hs\""), recipient, body);
 
    char *roomId = getRoomId(recipient);

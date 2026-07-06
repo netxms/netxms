@@ -77,7 +77,7 @@ private:
 
 public:
    virtual ~SmtpDriver();
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static SmtpDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
 };
@@ -449,8 +449,11 @@ static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *data)
 /**
  * Driver send method
  */
-int SmtpDriver::send(const char *recipient, const char *subject, const char *body)
+int SmtpDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
 #ifdef CURLPROTO_SMTP
    CURL *curl = curl_easy_init();
    if (curl == nullptr)

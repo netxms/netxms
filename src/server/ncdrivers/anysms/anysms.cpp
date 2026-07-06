@@ -46,7 +46,7 @@ private:
 
 public:
    AnySMSDriver(Config *config);
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -100,8 +100,10 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send SMS
  */
-int AnySMSDriver::send(const char *recipient, const char *subject, const char *body)
+int AnySMSDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    int result = -1;
 
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%hs\", text=\"%hs\""), recipient, body);

@@ -50,7 +50,7 @@ private:
 
 public:
    PortechDriver(Config *config);
-   virtual int send(const char* recipient, const char* subject, const char* body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 
@@ -268,8 +268,10 @@ static bool SendPDU(SocketConnection *conn, const char *recipient, const char *b
 /**
  * Send SMS
  */
-int PortechDriver::send(const char* recipient, const char* subject, const char* body)
+int PortechDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
 	SocketConnection *conn;
    int result = -1;
 

@@ -38,7 +38,7 @@ private:
 
 public:
    TextFileDriver(const TCHAR *fileName);
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -52,8 +52,9 @@ TextFileDriver::TextFileDriver(const TCHAR *fileName)
 /**
  * Driver send method
  */
-int TextFileDriver::send(const char *recipient, const char *subject, const char *body)
+int TextFileDriver::send(const NotificationContext& context)
 {
+   const char *body = context.body;
    int result = -1;
    FILE *f = _tfopen(m_fileName, _T("a"));
    if (f == nullptr)

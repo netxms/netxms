@@ -268,7 +268,6 @@ private:
    uint32_t m_messageCount;
    uint32_t m_failureCount;
    uint32_t m_digestedCount;
-   NXSL_Program *m_nxslScript;   // Compiled NXSL script for built-in NXSL driver
 
    // Throttling members
    TokenBucket *m_channelBucket;
@@ -280,9 +279,6 @@ private:
    int64_t m_lastBucketCleanupTime;
    int64_t m_lastConfigReloadTime;
    ThrottlingConfig m_throttlingConfig;
-
-   int sendNXSL(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body,
-                const Event *event, const shared_ptr<NetObj>& sourceObject);
 
    bool shouldDigest();
    void absorbIntoDigest(NotificationMessage *msg);
@@ -335,8 +331,6 @@ public:
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
    void updateName(const wchar_t *newName) { wcslcpy(m_name, newName, MAX_OBJECT_NAME); }
-   void setNXSLScript(NXSL_Program *script) { m_nxslScript = script; }
-   bool isNXSL() const { return m_nxslScript != nullptr; }
    void saveToDatabase();
    void checkHealth();
 
@@ -351,6 +345,7 @@ struct NCDriverDescriptor
 {
    NCDriver *(*instanceFactory)(Config *, NCDriverStorageManager *);
    const NCConfigurationTemplate *confTemplate;
+   bool xmlConfiguration;  // true if channel configuration should be parsed as XML before passing to driver, false to pass raw text as value of /Configuration
    TCHAR name[MAX_OBJECT_NAME];
 };
 
@@ -561,7 +556,6 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    m_messageCount = 0;
    m_failureCount = 0;
    m_digestedCount = 0;
-   m_nxslScript = nullptr;
 
    // Initialize throttling
    m_throttlingConfig = LoadThrottlingConfig();
@@ -589,7 +583,6 @@ NotificationChannel::~NotificationChannel()
    }
    delete m_driver;
    delete m_storageManager;
-   delete m_nxslScript;
    delete m_channelBucket;
    MemFree(m_configuration);
 }
@@ -678,26 +671,24 @@ void NotificationChannel::workerThread()
       char *subjectUtf8 = UTF8StringFromWideString(notification->getSubject());
       char *bodyUtf8 = UTF8StringFromWideString(notification->getBody());
 
+      NotificationContext context;
+      context.recipient = recipientUtf8;
+      context.subject = subjectUtf8;
+      context.body = bodyUtf8;
+      context.recipientW = notification->getRecipient();
+      context.subjectW = notification->getSubject();
+      context.bodyW = notification->getBody();
+      context.event = notification->getEvent();
+      context.sourceObject = notification->getSourceObject();
+      context.channelName = m_name;
+      context.ruleId = notification->getRuleId();
+
       int retryCount = ConfigReadInt(L"NotificationChannels.MaxRetryCount", 30);
       while (true)
       {
          int result;
          m_driverLock.lock();
-         if (m_nxslScript != nullptr)
-         {
-            // Built-in NXSL driver
-            result = sendNXSL(notification->getRecipient(), notification->getSubject(), notification->getBody(),
-                              notification->getEvent(), notification->getSourceObject());
-         }
-         else if (m_driver != nullptr)
-         {
-            // External driver
-            result = m_driver->send(recipientUtf8, subjectUtf8, bodyUtf8);
-         }
-         else
-         {
-            result = -99;  // no driver
-         }
+         result = (m_driver != nullptr) ? m_driver->send(context) : -99;
          m_driverLock.unlock();
 
          retryCount--;
@@ -749,50 +740,58 @@ void NotificationChannel::workerThread()
 }
 
 /**
- * Send notification using built-in NXSL driver
+ * Built-in driver executing NXSL script for each notification
  */
-int NotificationChannel::sendNXSL(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body,
-                                   const Event *event, const shared_ptr<NetObj>& sourceObject)
+class NXSLDriver : public NCDriver
 {
-   if (m_nxslScript == nullptr)
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script not compiled for channel \"%s\""), m_name);
-      return -1;
-   }
+private:
+   NXSL_Program *m_script;
 
+public:
+   NXSLDriver(NXSL_Program *script) : NCDriver() { m_script = script; }
+   virtual ~NXSLDriver() { delete m_script; }
+
+   virtual int send(const NotificationContext& context) override;
+};
+
+/**
+ * Send notification by executing NXSL script
+ */
+int NXSLDriver::send(const NotificationContext& context)
+{
    NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
-   if (!vm->load(m_nxslScript))
+   if (!vm->load(m_script))
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to load compiled NXSL script into VM for channel \"%s\""), m_name);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Failed to load compiled NXSL script into VM for channel \"%s\"", context.channelName);
       delete vm;
       return -1;
    }
 
    // Set up server context (binds $object, $node if applicable)
-   if (sourceObject != nullptr)
+   if (context.sourceObject != nullptr)
    {
-      SetupServerScriptVM(vm, sourceObject, shared_ptr<DCObjectInfo>());
+      SetupServerScriptVM(vm, context.sourceObject, shared_ptr<DCObjectInfo>());
    }
 
    // Bind $event variable (only if event provided)
-   if (event != nullptr)
+   if (context.event != nullptr)
    {
-      vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, new Event(*event))));
+      vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, new Event(*context.event))));
    }
 
    // Set global variables for the script
-   vm->setGlobalVariable("$RECIPIENT", vm->createValue(recipient));
-   vm->setGlobalVariable("$SUBJECT", vm->createValue(subject));
-   vm->setGlobalVariable("$MESSAGE", vm->createValue(body));
+   vm->setGlobalVariable("$RECIPIENT", vm->createValue(context.recipientW));
+   vm->setGlobalVariable("$SUBJECT", vm->createValue(context.subjectW));
+   vm->setGlobalVariable("$MESSAGE", vm->createValue(context.bodyW));
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Executing NXSL script for channel \"%s\", recipient=\"%s\", subject=\"%s\""),
-      m_name, recipient, subject);
+   nxlog_debug_tag(DEBUG_TAG, 7, L"Executing NXSL script for channel \"%s\", recipient=\"%s\", subject=\"%s\"",
+      context.channelName, context.recipientW, context.subjectW);
 
    // Execute script
    int result;
    if (!vm->run())
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script execution error in channel \"%s\": %s"), m_name, vm->getErrorText());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"NXSL script execution error in channel \"%s\": %s", context.channelName, vm->getErrorText());
       result = -1;
    }
    else
@@ -800,12 +799,12 @@ int NotificationChannel::sendNXSL(const TCHAR *recipient, const TCHAR *subject, 
       NXSL_Value *retVal = vm->getResult();
       if (retVal->isNull())
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NXSL script in channel \"%s\" returned success (null)"), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 6, L"NXSL script in channel \"%s\" returned success (null)", context.channelName);
          result = 0;
       }
       else if (retVal->isFalse())
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("NXSL script in channel \"%s\" returned failure (false)"), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"NXSL script in channel \"%s\" returned failure (false)", context.channelName);
          result = -1;
       }
       else if (retVal->isInteger())
@@ -813,24 +812,51 @@ int NotificationChannel::sendNXSL(const TCHAR *recipient, const TCHAR *subject, 
          int32_t retCode = retVal->getValueAsInt32();
          if (retCode > 0)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("NXSL script in channel \"%s\" returned retry in %d seconds"), m_name, retCode);
+            nxlog_debug_tag(DEBUG_TAG, 5, L"NXSL script in channel \"%s\" returned retry in %d seconds", context.channelName, retCode);
             result = retCode;
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXSL script in channel \"%s\" returned success"), m_name);
+            nxlog_debug_tag(DEBUG_TAG, 6, L"NXSL script in channel \"%s\" returned success", context.channelName);
             result = 0;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NXSL script in channel \"%s\" returned success"), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 6, L"NXSL script in channel \"%s\" returned success", context.channelName);
          result = 0;
       }
    }
 
    delete vm;
    return result;
+}
+
+/**
+ * Create instance of built-in NXSL driver. Configuration is raw NXSL script source
+ * passed by channel code as value of /Configuration.
+ */
+static NCDriver *CreateNXSLDriverInstance(Config *config, NCDriverStorageManager *storageManager)
+{
+   const wchar_t *source = config->getValue(L"/Configuration");
+   if ((source == nullptr) || (source[0] == 0))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"NXSL script not specified for notification channel");
+      return nullptr;
+   }
+
+   NXSL_ServerEnv env;
+   NXSL_CompilationDiagnostic diag;
+   NXSL_Program *script = NXSLCompile(source, &env, &diag);
+   if (script == nullptr)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"NXSL script compilation error for notification channel at line %d: %s",
+         diag.errorLineNumber, diag.errorText.cstr());
+      return nullptr;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"NXSL script for notification channel compiled successfully");
+   return new NXSLDriver(script);
 }
 
 /**
@@ -841,12 +867,7 @@ void NotificationChannel::checkHealth()
    bool status = false;
 
    m_driverLock.lock();
-   if (m_nxslScript != nullptr)
-   {
-      // Built-in NXSL driver - healthy if script is compiled
-      status = true;
-   }
-   else if (m_driver != nullptr)
+   if (m_driver != nullptr)
    {
       status = m_driver->checkHealth();
    }
@@ -1220,66 +1241,38 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
    {
       NCDriverDescriptor *dd = s_driverList.get(driverName);
       NCDriver *driver = nullptr;
-      NXSL_Program *nxslScript = nullptr;
       const NCConfigurationTemplate *confTemplate = nullptr;
       bool success = false;
 
       if (dd != nullptr)
       {
-         if (dd->instanceFactory != nullptr)
+         Config cfg(false);
+         bool configLoaded;
+         if (dd->xmlConfiguration)
          {
-            // External driver - requires XML configuration
-            Config cfg(false);
-            if (cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, nullptr, true, false))
-            {
-               driver = dd->instanceFactory(&cfg, m_storageManager);
-               if (driver != nullptr)
-               {
-                  confTemplate = dd->confTemplate;
-                  success = true;
-               }
-               else
-               {
-                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create driver instance for channel %s using configuration %hs"), m_name, config);
-               }
-            }
-            else
-            {
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse driver configuration for channel %s (original configuration: %hs)"), m_name, config);
-            }
+            configLoaded = cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, nullptr, true, false);
+            if (!configLoaded)
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot parse driver configuration for channel %s (original configuration: %hs)", m_name, config);
          }
          else
          {
-            // Built-in NXSL driver - configuration is raw script text
-#ifdef UNICODE
-            WCHAR *scriptSource = WideStringFromUTF8String(config);
-#else
-            const char *scriptSource = config;
-#endif
-            if ((scriptSource != nullptr) && (scriptSource[0] != 0))
+            // Driver expects raw configuration text (e.g. NXSL script source)
+            wchar_t *text = WideStringFromUTF8String(config);
+            configLoaded = cfg.setValue(L"/Configuration", (text != nullptr) ? text : L"");
+            MemFree(text);
+         }
+         if (configLoaded)
+         {
+            driver = dd->instanceFactory(&cfg, m_storageManager);
+            if (driver != nullptr)
             {
-               NXSL_ServerEnv env;
-               NXSL_CompilationDiagnostic diag;
-               nxslScript = NXSLCompile(scriptSource, &env, &diag);
-               if (nxslScript != nullptr)
-               {
-                  confTemplate = dd->confTemplate;
-                  success = true;
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("NXSL script for channel \"%s\" compiled successfully"), m_name);
-               }
-               else
-               {
-                  nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script compilation error for channel \"%s\" at line %d: %s"),
-                     m_name, diag.errorLineNumber, diag.errorText.cstr());
-               }
+               confTemplate = dd->confTemplate;
+               success = true;
             }
             else
             {
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script not specified for channel %s"), m_name);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot create driver instance for channel %s using configuration %hs", m_name, config);
             }
-#ifdef UNICODE
-            MemFree(scriptSource);
-#endif
          }
       }
 
@@ -1289,14 +1282,12 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
       }
       else
       {
-         setError(_T("Driver not initialized"));
+         setError(L"Driver not initialized");
       }
 
       m_driverLock.lock();
       delete m_driver;
       m_driver = driver;
-      delete m_nxslScript;
-      m_nxslScript = nxslScript;
       m_driverLock.unlock();
 
       m_confTemplate = confTemplate;
@@ -1451,91 +1442,55 @@ static shared_ptr<NotificationChannel> CreateNotificationChannelObject(const wch
 {
    NCDriverDescriptor *dd = s_driverList.get(driverName);
    NCDriver *driver = nullptr;
-   NXSL_Program *nxslScript = nullptr;
    NCDriverServerStorageManager *storageManager = new NCDriverServerStorageManager(name);
    const NCConfigurationTemplate *confTemplate = nullptr;
    StringBuffer errorMessage;
    if (dd != nullptr)
    {
-      if (dd->instanceFactory != nullptr)
+      Config config(false);
+      bool configLoaded;
+      if (dd->xmlConfiguration)
       {
-         // External driver - requires XML configuration
-         Config config(false);
-         if (config.loadConfigFromMemory(configuration, strlen(configuration), driverName, NULL, true, false))
+         configLoaded = config.loadConfigFromMemory(configuration, strlen(configuration), driverName, nullptr, true, false);
+         if (!configLoaded)
          {
-            driver = dd->instanceFactory(&config, storageManager);
-            if (driver != nullptr)
-            {
-               confTemplate = dd->confTemplate;
-            }
-            else
-            {
-               errorMessage.append(_T("Unable to create instance of driver "));
-               errorMessage.append(driverName);
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create instance of driver %s"), driverName);
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
-            }
-         }
-         else
-         {
-            errorMessage.append(_T("Cannot parse configuration for channel "));
+            errorMessage.append(L"Cannot parse configuration for channel ");
             errorMessage.append(name);
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse configuration for channel %s"), name);
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("   Configuration: %hs"), configuration);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot parse configuration for channel %s", name);
+            nxlog_debug_tag(DEBUG_TAG, 1, L"   Configuration: %hs", configuration);
          }
       }
       else
       {
-         // Built-in NXSL driver - configuration is raw script text
-#ifdef UNICODE
-         WCHAR *scriptSource = WideStringFromUTF8String(configuration);
-#else
-         const char *scriptSource = configuration;
-#endif
-         if ((scriptSource != nullptr) && (scriptSource[0] != 0))
+         // Driver expects raw configuration text (e.g. NXSL script source)
+         wchar_t *text = WideStringFromUTF8String(configuration);
+         configLoaded = config.setValue(L"/Configuration", (text != nullptr) ? text : L"");
+         MemFree(text);
+      }
+      if (configLoaded)
+      {
+         driver = dd->instanceFactory(&config, storageManager);
+         if (driver != nullptr)
          {
-            NXSL_ServerEnv env;
-            NXSL_CompilationDiagnostic diag;
-            nxslScript = NXSLCompile(scriptSource, &env, &diag);
-            if (nxslScript != nullptr)
-            {
-               confTemplate = dd->confTemplate;
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("NXSL script for channel \"%s\" compiled successfully"), name);
-            }
-            else
-            {
-               errorMessage.append(_T("Script compilation error at line "));
-               errorMessage.append(diag.errorLineNumber);
-               errorMessage.append(_T(": "));
-               errorMessage.append(diag.errorText);
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script compilation error for channel \"%s\" at line %d: %s"),
-                  name, diag.errorLineNumber, diag.errorText.cstr());
-            }
+            confTemplate = dd->confTemplate;
          }
          else
          {
-            errorMessage.append(_T("NXSL script not specified for channel "));
-            errorMessage.append(name);
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("NXSL script not specified for channel %s"), name);
+            errorMessage.append(L"Unable to create instance of driver ");
+            errorMessage.append(driverName);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to create instance of driver %s", driverName);
+            nxlog_debug_tag(DEBUG_TAG, 1, L"   Configuration: %hs", configuration);
          }
-#ifdef UNICODE
-         MemFree(scriptSource);
-#endif
       }
    }
    else
    {
-      errorMessage.append(_T("Cannot find driver "));
+      errorMessage.append(L"Cannot find driver ");
       errorMessage.append(driverName);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot find notification channel driver %s"), driverName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot find notification channel driver %s", driverName);
    }
 
-   shared_ptr<NotificationChannel> nc = make_shared<NotificationChannel>(driver, storageManager, name, description, driverName, configuration, confTemplate, errorMessage);
-   if (nxslScript != nullptr)
-   {
-      nc->setNXSLScript(nxslScript);
-   }
-   return nc;
+   return make_shared<NotificationChannel>(driver, storageManager, name, description, driverName, configuration, confTemplate, errorMessage);
 }
 
 /**
@@ -1905,6 +1860,7 @@ static void LoadDriver(const TCHAR *file)
             NCDriverDescriptor *ncDriverDescriptor = new NCDriverDescriptor();
             ncDriverDescriptor->instanceFactory = InstanceFactory;
             ncDriverDescriptor->confTemplate = GetConfigTemplate();
+            ncDriverDescriptor->xmlConfiguration = true;
             TCHAR *tmp = WideStringFromMBString(*name);
             _tcslcpy(ncDriverDescriptor->name, tmp, MAX_OBJECT_NAME);
             MemFree(tmp);
@@ -1966,8 +1922,9 @@ void LoadNotificationChannelDrivers()
 
    // Register built-in NXSL driver
    NCDriverDescriptor *nxslDriver = new NCDriverDescriptor();
-   nxslDriver->instanceFactory = nullptr;  // Special handling - no external factory
+   nxslDriver->instanceFactory = CreateNXSLDriverInstance;
    nxslDriver->confTemplate = &s_nxslConfigTemplate;
+   nxslDriver->xmlConfiguration = false;   // configuration is raw NXSL script source
    wcscpy(nxslDriver->name, L"NXSL");
    s_driverList.set(nxslDriver->name, nxslDriver);
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Built-in NXSL notification channel driver registered"));

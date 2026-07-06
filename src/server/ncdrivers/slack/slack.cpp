@@ -38,7 +38,7 @@ private:
 
 public:
    SlackDriver(Config *config);
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -63,8 +63,10 @@ SlackDriver::SlackDriver(Config *config)
 /**
  * Send SMS
  */
-int SlackDriver::send(const char *recipient, const char *subject, const char *body)
+int SlackDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    int result = 0;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%hs\", text=\"%hs\""), recipient, body);

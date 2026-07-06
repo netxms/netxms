@@ -57,7 +57,7 @@ private:
    SNMPTrapDriver();
 
 public:
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static SNMPTrapDriver *createInstance(Config *config);
 };
@@ -98,8 +98,11 @@ static inline SNMP_Variable *CreateVarbind(const SNMP_ObjectId& name, uint32_t t
  *    severity    - event severity (integer in range 0..4)
  *    timestamp   - original even timestamp as UNIX time
  */
-int SNMPTrapDriver::send(const char *recipient, const char *subject, const char *body)
+int SNMPTrapDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%hs\", subject=\"%hs\", text=\"%hs\""), recipient, subject, body);
 
    SNMP_PDU pdu(m_useInformRequest ? SNMP_INFORM_REQUEST : SNMP_TRAP, m_version, m_trapId, static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));

@@ -27,10 +27,13 @@
 #include <nxconfig.h>
 #include <functional>
 
+class Event;
+class NetObj;
+
 /**
  * API version
  */
-#define NCDRV_API_VERSION           4
+#define NCDRV_API_VERSION           5
 
 /**
  * Notification channel status
@@ -78,7 +81,39 @@ public:
 };
 
 /**
- * Notification Channel Driver base class. All strings passed to send() are UTF-8.
+ * Notification sending context. Message text is provided both as UTF-8 and as original wide character
+ * strings. Event context is optional - drivers must handle absence of event and source object
+ * (test sends, digest messages, and notifications carrying only an event code have neither).
+ */
+struct NotificationContext
+{
+   const char *recipient;           // Recipient (UTF-8)
+   const char *subject;             // Subject (UTF-8)
+   const char *body;                // Message body (UTF-8)
+   const wchar_t *recipientW;       // Recipient (wide string original)
+   const wchar_t *subjectW;         // Subject (wide string original)
+   const wchar_t *bodyW;            // Message body (wide string original)
+   const Event *event;              // Event that triggered the notification (can be nullptr)
+   shared_ptr<NetObj> sourceObject; // Source object of the event (can be nullptr)
+   const wchar_t *channelName;      // Name of the notification channel
+   uuid ruleId;                     // ID of the EPP rule that generated the notification (can be null UUID)
+
+   NotificationContext()
+   {
+      recipient = nullptr;
+      subject = nullptr;
+      body = nullptr;
+      recipientW = nullptr;
+      subjectW = nullptr;
+      bodyW = nullptr;
+      event = nullptr;
+      channelName = nullptr;
+   }
+};
+
+/**
+ * Notification Channel Driver base class. Return value of send(): 0 = success,
+ * positive value = retry after that number of seconds, negative value = permanent failure.
  */
 class NCDriver
 {
@@ -88,7 +123,7 @@ protected:
 public:
    virtual ~NCDriver() { }
 
-   virtual int send(const char *recipient, const char *subject, const char *body) = 0;
+   virtual int send(const NotificationContext& context) = 0;
 
    virtual bool checkHealth() { return true; }
 };

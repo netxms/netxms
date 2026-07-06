@@ -54,7 +54,7 @@ private:
    }
 
 public:
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static TwilioDriver *createInstance(Config *config);
 };
@@ -152,8 +152,10 @@ static char *EscapeStringForXMLUtf8(const char *s)
 /**
  * Send notification
  */
-int TwilioDriver::send(const char *recipient, const char *subject, const char *body)
+int TwilioDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {

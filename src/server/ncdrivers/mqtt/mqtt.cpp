@@ -54,7 +54,7 @@ public:
    MQTTDriver(Config *config);
    virtual ~MQTTDriver();
 
-   virtual int send(const char* recipient, const char* subject, const char* body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -130,8 +130,10 @@ bool MQTTDriver::checkHandle()
 /**
  * Send notification
  */
-int MQTTDriver::send(const char* recipient, const char* subject, const char* body)
+int MQTTDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    if (!checkHandle())
       return -1;
 

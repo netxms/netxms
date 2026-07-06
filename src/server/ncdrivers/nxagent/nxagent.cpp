@@ -39,7 +39,7 @@ private:
 public:
    NXAgentDriver(Config *config);
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -71,8 +71,10 @@ NXAgentDriver::NXAgentDriver(Config *config)
 /**
  * Send SMS
  */
-int NXAgentDriver::send(const char *recipient, const char *subject, const char *body)
+int NXAgentDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    int result = -1;
 
    WCHAR *wideRecipient = WideStringFromUTF8String(recipient);

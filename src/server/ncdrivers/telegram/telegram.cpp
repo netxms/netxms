@@ -224,7 +224,7 @@ private:
 public:
    virtual ~TelegramDriver();
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    virtual bool checkHealth() override;
 
@@ -1008,8 +1008,11 @@ void TelegramDriver::processUpdate(json_t *data)
 /**
  * Send notification
  */
-int TelegramDriver::send(const char *recipient, const char *subject, const char *body)
+int TelegramDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    int result = -1;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %hs: \"%hs\""), recipient, body);

@@ -41,7 +41,7 @@ private:
    GoogleChatDriver() { }
 
 public:
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static GoogleChatDriver *createInstance(Config *config);
 };
@@ -79,8 +79,11 @@ static inline void AppendText(ByteStream& request, const char *text)
 /**
  * Send notification
  */
-int GoogleChatDriver::send(const char *recipient, const char *subject, const char *body)
+int GoogleChatDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    char *jsubject = EscapeStringForJSONUtf8(subject);
    char *jbody = EscapeStringForJSONUtf8(body);
 

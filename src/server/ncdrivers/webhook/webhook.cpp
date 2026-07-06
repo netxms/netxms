@@ -92,7 +92,7 @@ public:
          curl_slist_free_all(m_headers);
    }
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static WebhookDriver *createInstance(Config *config);
 };
@@ -334,8 +334,11 @@ static char *JsonValueToUtf8(json_t *node)
  * Returns 0 on success, 10 to request a retry (retryable HTTP code, or
  * success code with a JSON-path value mismatch), and -1 on hard failure.
  */
-int WebhookDriver::send(const char *recipient, const char *subject, const char *body)
+int WebhookDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    // Reload template from disk on every send so edits take effect without
    // restarting the channel (sends are infrequent; the read is cheap).
    char *tpl = LoadFileAsUTF8String(m_templateFile);

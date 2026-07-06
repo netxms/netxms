@@ -73,7 +73,7 @@ private:
    ShellDriver(const TCHAR *command) : m_command(command) { }
 
 public:
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    static ShellDriver *createInstance(Config *config);
 };
@@ -95,8 +95,11 @@ ShellDriver *ShellDriver::createInstance(Config *config)
 /**
  * Driver send method
  */
-int ShellDriver::send(const char *recipient, const char *subject, const char *body)
+int ShellDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    WCHAR *wideRecipient = WideStringFromUTF8String(recipient);
    WCHAR *wideSubject = WideStringFromUTF8String(subject);
    WCHAR *wideBody = WideStringFromUTF8String(body);

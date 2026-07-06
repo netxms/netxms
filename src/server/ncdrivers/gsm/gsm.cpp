@@ -48,7 +48,7 @@ private:
 public:
 	GSMDriver(Config *config);
 
-   virtual int send(const char* recipient, const char* subject, const char* body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -281,8 +281,10 @@ cleanup:
 /**
  * Send SMS
  */
-int GSMDriver::send(const char* recipient, const char* subject, const char* body)
+int GSMDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
 	if ((recipient == NULL) || (body == NULL))
       return -1;
 

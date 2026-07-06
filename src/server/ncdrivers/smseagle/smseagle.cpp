@@ -49,7 +49,7 @@ private:
 public:
    SMSEagleDriver(Config *config);
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 /**
@@ -120,8 +120,10 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
 /**
  * Send SMS
  */
-int SMSEagleDriver::send(const char *recipient, const char *subject, const char *body)
+int SMSEagleDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone/group=\"%hs\", body=\"%hs\""), recipient, body);
 
    CURL *curl = curl_easy_init();

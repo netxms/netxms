@@ -48,7 +48,7 @@ private:
 public:
    static DBTableDriver *createFromConfig(Config *config);
    virtual ~DBTableDriver();
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 
 
@@ -152,8 +152,10 @@ static char *TruncateText(const char *s, uint32_t maxChars)
 /**
  * Send message
  */
-int DBTableDriver::send(const char *recipient, const char *subject, const char *body)
+int DBTableDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *body = context.body;
    int result = -1;
 
 	if (m_dbh == NULL)

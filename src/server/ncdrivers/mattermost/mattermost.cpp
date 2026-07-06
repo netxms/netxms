@@ -72,7 +72,7 @@ public:
       MemFree(m_footer);
    }
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 
    virtual bool checkHealth() override;
 
@@ -154,8 +154,11 @@ static inline void AppendText(ByteStream& request, const char *text)
 /**
  * Send notification
  */
-int MattermostDriver::send(const char *recipient, const char *subject, const char *body)
+int MattermostDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
    // Attempt to lookup channel alias (channel mappings are stored as wide strings)
    TCHAR *key = TStringFromUTF8String(recipient);
    const TCHAR *alias = m_channels.get(key);
