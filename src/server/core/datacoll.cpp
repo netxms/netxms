@@ -714,6 +714,30 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 #define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
 
 /**
+ * Throttle V5 data migration if needed. Returns false if shutdown time has arrived and migration process should be aborted.
+ */
+static bool ThrottleV5DataMigration()
+{
+   size_t throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
+   size_t throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
+
+   size_t qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
+   if (qsize < throttlingHighWatermark)
+      return true;
+
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration paused (queue size %d, high watermark %d, low watermark %d)"),
+      static_cast<int>(qsize), static_cast<int>(throttlingHighWatermark), static_cast<int>(throttlingLowWatermark));
+   while((qsize >= throttlingLowWatermark) && !IsShutdownInProgress())
+   {
+      if (SleepAndCheckForShutdown(30))
+         break;
+      qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
+   }
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration resumed (queue size %d)"), static_cast<int>(qsize));
+   return !IsShutdownInProgress();
+}
+
+/**
  * Target number of rows to copy per v5 migration chunk. Chunking is done on item_id boundaries
  * (using the item_id-leading index that v5 per-object tables always carry), so a chunk always
  * contains complete DCIs and may slightly exceed this value when a single DCI holds more rows than
@@ -803,6 +827,10 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
          target->deleteV5DataTable(hdb, tdata, L"migration complete");
          return true;
       }
+
+      if (!ThrottleV5DataMigration())
+         break;
+
       lastItem = boundaryItem;
    }
    return false;
