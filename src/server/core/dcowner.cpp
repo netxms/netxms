@@ -1138,7 +1138,7 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
       }
 
       // Handle DCTables (data collection tables)
-      json_t *dctablesArray = json_object_get(dataCollectionObj, "dctables");
+      json_t *dctablesArray = json_object_get(dataCollectionObj, "dcTables");
       if (json_is_array(dctablesArray))
       {
          size_t index;
