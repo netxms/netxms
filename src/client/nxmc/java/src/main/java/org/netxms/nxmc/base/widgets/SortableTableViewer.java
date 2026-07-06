@@ -279,6 +279,8 @@ public class SortableTableViewer extends TableViewer
 	      return;
 
 	   Table table = getTable();
+	   // Suppress intermediate repaints so per-column resizes coalesce into a single repaint (avoids flicker on Windows)
+	   table.setRedraw(false);
 	   int count = table.getColumnCount();
 	   for(int i = 0; i < count; i++)
       {
@@ -293,6 +295,7 @@ public class SortableTableViewer extends TableViewer
             c.setWidth(c.getWidth() + 4);
          }
       }
+	   table.setRedraw(true);
 	   if (!Registry.IS_WEB_CLIENT)
 	      getControl().redraw(); // Fixes display glitch on Windows
 	}

@@ -238,8 +238,7 @@ public abstract class BaseTableValueViewer extends Composite
          currentData.addAll(table);
          viewer.refresh();
       }
-
-      viewer.packColumns(false);
+      // No explicit packColumns() here: setInput()/refresh() above already schedule a debounced column pack
    }
 
    /**
