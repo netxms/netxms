@@ -3223,6 +3223,26 @@ NXSL_METHOD_DEFINITION(Node, setVendor)
 }
 
 /**
+ * Node::setVNCPassword(password) method.
+ * Sets password used for VNC connections.
+ */
+NXSL_METHOD_DEFINITION(Node, setVNCPassword)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setVncPassword(argv[0]->getValueAsCString());
+   *result = vm->createValue(true);
+   return 0;
+}
+
+/**
  * Node::isPortBlocked(port, protocol) method
  */
 NXSL_METHOD_DEFINITION(Node, isPortBlocked)
@@ -3388,6 +3408,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, setSNMPVersion, 1);
    NXSL_REGISTER_METHOD(Node, setSerialNumber, 1);
    NXSL_REGISTER_METHOD(Node, setVendor, 1);
+   NXSL_REGISTER_METHOD(Node, setVNCPassword, 1);
    NXSL_REGISTER_METHOD(Node, traceL2Path, 1);
    NXSL_REGISTER_METHOD(Node, traceRoute, 1);
 }

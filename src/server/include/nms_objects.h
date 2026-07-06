@@ -4505,6 +4505,7 @@ public:
    void setSnmpCommunity(const char *community);
    void setSnmpUSMCredentials(const char *userName, const char *authPassword, const char *privPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod privMethod);
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
+   void setVncPassword(const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
    void changeZone(UINT32 newZone);
    void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
