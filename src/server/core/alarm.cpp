@@ -827,6 +827,9 @@ static void AlarmDbWriterThread()
       if (rq == INVALID_POINTER_VALUE)
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       bool success = false;

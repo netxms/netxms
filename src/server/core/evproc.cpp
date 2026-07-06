@@ -169,6 +169,9 @@ static void EventLogger()
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       if (!IsEventWriteAllowed(event))
       {
          delete event;
@@ -342,6 +345,9 @@ static void SerialEventProcessor()
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       if ((g_flags & AF_EVENT_STORM_DETECTED) && (event->getCode() != EVENT_EVENT_STORM_DETECTED))
       {
          delete event;
@@ -412,6 +418,9 @@ void EventProcessingThread::run(int id)
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       int64_t waitTime = GetCurrentTimeMs() - event->getQueueTime();
       UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, waitTime);
       if (static_cast<uint32_t>(waitTime) > maxWaitTime)
@@ -469,6 +478,9 @@ static void ParallelEventProcessor()
       Event *event = g_eventQueue.getOrBlock(10000);
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
 
       time_t now;
       if (event != nullptr)

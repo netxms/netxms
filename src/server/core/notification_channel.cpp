@@ -606,6 +606,9 @@ void NotificationChannel::workerThread()
       if (notification == INVALID_POINTER_VALUE)
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       // Check for pending digests and periodic maintenance on every iteration
       reloadThrottlingConfig();
       checkAndSendDigests();

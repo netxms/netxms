@@ -25,5 +25,6 @@
 #define _nxcore_h_
 
 #include <nms_core.h>
+#include <nxcore_ha.h>
 
 #endif   /* _nxcore_h_ */

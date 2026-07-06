@@ -450,6 +450,8 @@ static void ItemPoller()
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(watchdogId);
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
       nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: wakeup"));
 
       int64_t startTime = GetCurrentTimeMs();

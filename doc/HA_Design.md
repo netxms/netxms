@@ -88,11 +88,22 @@ Seed row: `term=0, holder_guid=NULL, holder_incarnation=0, acquired_at=0, expire
 ### 2.2 Identity
 
 - **Node GUID**: generated once, persisted in the local data directory
-  (`<datadir>/node.guid`). Never stored in the shared DB config.
+  (`<datadir>/ha-node.guid`). Never stored in the shared DB config.
 - **Process incarnation**: random 64-bit value generated at every process
   start. Distinguishes a restarted process from a paused-and-resumed one.
 - **Cluster identity** (`g_serverId`) is unrelated to lease identity: it
   comes from shared DB metadata and is identical on both nodes by design.
+
+On first successful start a node **binds itself to the cluster identity** by
+persisting the database's server ID in `<datadir>/ha-cluster.id`; on every
+subsequent start a mismatch aborts startup. Without this, a node
+misconfigured to point at another cluster's database would join that
+cluster's lease competition (the shared `CLUSTER` instance lock cannot tell
+members of different clusters apart) — the lease would still guarantee a
+single active per database, but the wrong box could win it while the node's
+own cluster silently loses redundancy. Deliberate re-homing (database
+migration or restore under a new server ID) is done by removing the binding
+file.
 
 ### 2.3 Database time
 

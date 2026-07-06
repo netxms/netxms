@@ -318,6 +318,9 @@ static void DBWriteThread()
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 		if (rq->bindCount == 0)
@@ -359,6 +362,9 @@ static void IDataWriteThread(IDataWriter *writer)
 		DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
 
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
@@ -441,6 +447,9 @@ static void IDataWriteThread(IDataWriter *writer)
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
 	}
 }
 
@@ -460,6 +469,9 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
 
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
@@ -514,6 +526,9 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
    }
 }
 
@@ -558,6 +573,9 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       query.append(queryBase);
       int count = 0;
       while(true)
@@ -600,6 +618,9 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
    }
 
    statementQueue->put(INVALID_POINTER_VALUE);
@@ -744,6 +765,9 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       bool idataLock;
       if (g_flags & AF_DBWRITER_HK_INTERLOCK)
       {
@@ -799,6 +823,9 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
    }
 }
 
@@ -922,6 +949,8 @@ static void RawDataWriteThread()
    nxlog_debug_tag(DEBUG_TAG, 1, L"Raw DCI data flush interval is %d seconds (%d writer%s)", flushInterval, (writerPool != nullptr) ? numWriters : 1, (numWriters > 1) ? _T("s") : _T(""));
    while(!SleepAndCheckForShutdown(flushInterval))
    {
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
       SaveRawData(maxRecords, writerPool);
 	}
    SaveRawData(maxRecords, writerPool);

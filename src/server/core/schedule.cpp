@@ -1352,6 +1352,9 @@ static void AdHocScheduler()
       if (g_flags & AF_SHUTDOWN)
          break;
 
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
+
       sleepTime = 3600;
 
       s_oneTimeTaskLock.lock();
@@ -1403,6 +1406,8 @@ static void RecurrentScheduler()
    do
    {
       WatchdogNotify(watchdogId);
+      if (HACheckFence())
+         break;   // node fenced - no further role-sensitive work
       time_t now = time(nullptr);
       struct tm currLocal;
 #if HAVE_LOCALTIME_R

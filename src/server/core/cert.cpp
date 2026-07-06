@@ -543,6 +543,28 @@ void InitCertificates()
 }
 
 /**
+ * Re-read certificate action log record ID from the database. Called during
+ * cluster activation: the value seeded at passive startup is stale by however
+ * long this node was standing by.
+ */
+void ReseedCertificateActionLogRecordId()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM certificate_action_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         int32_t id = DBGetFieldLong(hResult, 0, 0);
+         if (id > s_logRecordId)
+            s_logRecordId = id;
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Load certificate
  */
 static bool LoadCertificate(RSA_KEY *serverKey, const TCHAR *certificatePath, const TCHAR *certificateKeyPath, char *certificatePassword, X509 **certificate, EVP_PKEY **certificateKey, const TCHAR *certType)

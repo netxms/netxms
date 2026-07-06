@@ -329,6 +329,23 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
 }
 
 /**
+ * Persist threshold state change synchronously, bypassing the lazy SQL writer.
+ * The state must be durable before the corresponding activation/deactivation
+ * event becomes externally observable - otherwise a server failing right after
+ * posting the event produces a duplicate activation after restart or HA
+ * failover (doc/HA_Design.md). State transitions are rare relative to poll
+ * volume, so the synchronous write is affordable.
+ */
+static void SaveThresholdStateChange(uint32_t thresholdId, bool isReached)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%u"), isReached ? 1 : 0, thresholdId);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DBQuery(hdb, query);
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Check threshold
  * Method will return the following codes:
  *    THRESHOLD_REACHED - when item's value match the threshold condition while previous check doesn't
@@ -343,10 +360,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          return ThresholdCheckResult::ALREADY_INACTIVE;
 
       m_isReached = false;
-      // Update threshold status in database
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=0 WHERE threshold_id=%u"), m_id);
-      QueueSQLRequest(query);
+      SaveThresholdStateChange(m_id, false);
       return ThresholdCheckResult::DEACTIVATED;
    }
 
@@ -699,10 +713,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    m_isReached = match;
    if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
-      // Update threshold status in database
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%u"), (int)m_isReached, m_id);
-      QueueSQLRequest(query);
+      SaveThresholdStateChange(m_id, m_isReached);
    }
    return result;
 }
@@ -759,10 +770,7 @@ ThresholdCheckResult Threshold::checkError(uint32_t errorCount)
    m_isReached = match;
    if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
-      // Update threshold status in database
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"), m_isReached, m_id);
-      QueueSQLRequest(query);
+      SaveThresholdStateChange(m_id, m_isReached);
    }
    return result;
 }

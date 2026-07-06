@@ -581,6 +581,47 @@ static void ExecuteScriptFromConsole(ServerConsole *console, const wchar_t *scri
 }
 
 /**
+ * Handler for console command "ha"
+ */
+static void HandleHACommand(ServerConsole *console, const wchar_t *args)
+{
+   if (!HAIsClusterMode())
+   {
+      ConsoleWrite(console, L"Server is not running in cluster mode\n\n");
+      return;
+   }
+
+   wchar_t subcommand[256];
+   args = ExtractWord(args, subcommand);
+
+   if (IsCommand(L"STATUS", subcommand, 2))
+   {
+      static const wchar_t *stateNames[] = { L"INITIALIZING", L"STANDBY", L"ACTIVE", L"FENCED", L"STOPPED" };
+      HALeaseManager *manager = HAGetLeaseManager();
+      HALeaseStatus status = manager->getStatus();
+      wchar_t guidText[64];
+      ConsolePrintf(console, L"Role ............... : %s\n", stateNames[static_cast<int>(status.state)]);
+      ConsolePrintf(console, L"Node GUID .......... : %s\n", manager->getNodeGuid().toString(guidText));
+      ConsolePrintf(console, L"Process incarnation  : " UINT64X_FMT(L"016") L"\n", manager->getIncarnation());
+      ConsolePrintf(console, L"Lease term ......... : " INT64_FMTW L"\n", status.term);
+      ConsolePrintf(console, L"Lease holder ....... : %s (%s)\n", status.holderName, status.holderGuid.toString(guidText));
+      ConsolePrintf(console, L"Remaining validity . : " INT64_FMTW L" seconds\n", status.remainingValidity);
+      ConsolePrintf(console, L"Fenced ............. : %s\n\n", HAIsFenced() ? L"yes" : L"no");
+   }
+   else if (IsCommand(L"SWITCHOVER", subcommand, 2))
+   {
+      if (HAInitiateSwitchover())
+         ConsoleWrite(console, L"Graceful switchover initiated; this node will restart into standby\n\n");
+      else
+         ConsoleWrite(console, L"ERROR: this node is not active\n\n");
+   }
+   else
+   {
+      ConsoleWrite(console, L"Valid subcommands: STATUS, SWITCHOVER\n\n");
+   }
+}
+
+/**
  * Process command entered from command line in standalone mode
  * Return CMD_EXIT_CLOSE_SESSION if command was "exit" and CMD_EXIT_SHUTDOWN if command was "down"
  */
@@ -900,6 +941,10 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
    else if (IsCommand(_T("DUMP"), szBuffer, 4))
    {
       DumpProcess(console);
+   }
+   else if (IsCommand(_T("HA"), szBuffer, 2))
+   {
+      HandleHACommand(console, pArg);
    }
    else if (IsCommand(_T("GET"), szBuffer, 3))
    {
@@ -2174,6 +2219,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   down                              - Shutdown NetXMS server\n")
             _T("   exec <script> [<params>]          - Executes NXSL script from script library\n")
             _T("   exit                              - Exit from remote session\n")
+            _T("   ha status|switchover              - HA cluster status / graceful switchover\n")
             _T("   kill <session>                    - Kill client session\n")
             _T("   get <variable>                    - Get value of server configuration variable\n")
             _T("   help                              - Display this help\n")

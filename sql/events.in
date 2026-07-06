@@ -2131,6 +2131,16 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated on server startup when one or more background (online) database upgrade procedures are still pending.' CONCAT CRLF CONCAT
 		'Run "nxdbmgr background-upgrade" to complete the upgrade.'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_HA_NODE_ACTIVATED, 'SYS_HA_NODE_ACTIVATED', 'a4f162c9-4e09-4716-9ae8-4a4a2ab59d80',
+		EVENT_SEVERITY_NORMAL, 1,
+		'HA cluster node %1 activated (lease term %2)',
+		'Generated when a cluster node wins the HA lease and completes server activation.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) nodeName - Cluster node name' CONCAT CRLF CONCAT
+		'   2) term - Lease term'
+	);
 
 /*
 ** SNMP traps

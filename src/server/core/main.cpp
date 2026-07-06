@@ -27,6 +27,7 @@
 #include <netxmsdb.h>
 #include <nms_objects.h>
 #include <nxcore_2fa.h>
+#include <nxcore_ha.h>
 #include <nxcore_logs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
@@ -250,6 +251,17 @@ static ObjectArray<LicenseProblem> s_licenseProblems(0, 16, Ownership::True);
 static Mutex s_licenseProblemsLock;
 static uint32_t s_licenseProblemId = 1;
 static Condition s_initCompletedCondition(true);
+static bool s_activationStarted = false;
+static int s_serverExitCode = 0;
+
+/**
+ * Set process exit code used by the shutdown path (cluster switchover sets
+ * NETXMSD_EXIT_RESTART_STANDBY to request restart into standby)
+ */
+void NXCORE_EXPORTABLE SetServerExitCode(int exitCode)
+{
+   s_serverExitCode = exitCode;
+}
 
 #ifndef _WIN32
 static pthread_t m_signalHandlerThread;
@@ -475,7 +487,10 @@ retry:
 
       nxlog_debug_tag(L"db.lock", 6, L"Double lock first phase succeeded");
 
-      GetLocalIPAddress().toString(buffer);
+      if (HAIsClusterMode())
+         wcscpy(buffer, L"CLUSTER");
+      else
+         GetLocalIPAddress().toString(buffer);
       ConfigWriteStr(L"DBLockStatus", buffer, true, false);
       GetSysInfoStr(buffer, sizeof(buffer));
       ConfigWriteStr(L"DBLockInfo", buffer, true, false);
@@ -483,7 +498,18 @@ retry:
       ConfigWriteInt(L"DBLockFlag", 0, true, false, false);
       success = true;
    }
+   else if (HAIsClusterMode() && !wcscmp(buffer, L"CLUSTER"))
+   {
+      // Cluster members share the instance lock; the HA lease arbitrates
+      // between them, and the lock only rejects non-member instances
+      nxlog_debug_tag(L"db.lock", 4, L"Database lock is held by the cluster");
+      success = true;
+   }
    else if (!wcsncmp(buffer, L"NXDBMGR", 7))
+   {
+      wcslcpy(lockInfo, buffer, 256);
+   }
+   else if (!wcscmp(buffer, L"CLUSTER"))
    {
       wcslcpy(lockInfo, buffer, 256);
    }
@@ -501,6 +527,8 @@ retry:
  */
 void NXCORE_EXPORTABLE UnlockDatabase()
 {
+   if (HAIsClusterMode())
+      return;  // the lock is shared by all cluster members; only nxdbmgr removes it
    ConfigWriteStr(L"DBLockStatus", L"UNLOCKED", false);
    ConfigWriteStr(L"DBLockInfo", L"", false);
    ConfigWriteULong(L"DBLockPID", 0, false);
@@ -1341,6 +1369,10 @@ bool NXCORE_EXPORTABLE Initialize()
    }
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
+   // Read cluster configuration (affects database lock semantics)
+   if (!HAReadConfiguration())
+      return false;
+
    // Initialize locks
 retry_db_lock:
    InetAddress addr;
@@ -1373,6 +1405,10 @@ retry_db_lock:
       else if (!_tcsncmp(buffer, _T("NXDBMGR"), 7))
       {
          nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by database manager"));
+      }
+      else if (!wcscmp(buffer, L"CLUSTER"))
+      {
+         nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is locked by a NetXMS HA cluster and this server is not configured as a cluster member"));
       }
 		else
       {
@@ -1456,14 +1492,40 @@ retry_db_lock:
    // Initialize watchdog
    WatchdogInit();
 
-   // Start database _T("lazy") write thread
-   StartDBWriter();
-
    // Load modules
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
    InitializeCloudConnectors();
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Passive initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
+
+   // In cluster mode park here as standby; activation (phase 2 of startup)
+   // is executed by the cluster controller when this node wins the lease
+   if (HAIsClusterMode())
+   {
+      if (!HAStartController())
+         return false;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server is running in cluster standby mode"));
+      return true;
+   }
+
+   return ActivateServer();
+}
+
+/**
+ * Activate server (phase 2 of startup): everything beyond passive bring-up.
+ * Called at the end of Initialize() in standalone mode, or from the cluster
+ * controller's activation thread when this node wins the lease.
+ */
+bool ActivateServer()
+{
+   int64_t activationStartTime = GetCurrentTimeMs();
+   s_activationStarted = true;
+
+   // Start database "lazy" write threads
+   StartDBWriter();
+
    InitAIAssistant();
 
    // Load users and authentication methods
@@ -1550,7 +1612,7 @@ retry_db_lock:
    InitClientListeners();
 
    // Create syncer thread pool
-   maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
+   int maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
    if (maxSize > 1)
    {
       if (g_dbSyntax != DB_SYNTAX_MYSQL)
@@ -1698,7 +1760,7 @@ retry_db_lock:
    }
 
    RegenerateMaintenanceModeEvents();
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server activation completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - activationStartTime));
    return true;
 }
 
@@ -1712,6 +1774,30 @@ static const TCHAR *s_shutdownReasonText[] = { _T("due to unknown reason"), _T("
  */
 void NXCORE_EXPORTABLE Shutdown()
 {
+   // Passive cluster standby: almost nothing is running - stop the cluster
+   // controller and the few whitelisted passive threads and exit
+   if (!s_activationStarted)
+   {
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s (standby mode)"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
+      InterlockedOr64(&g_flags, AF_SHUTDOWN);
+      InitiateProcessShutdown();
+      HAShutdownController();
+      WatchdogShutdown();
+      DBConnectionPoolShutdown();
+      DBUnloadDriver(g_dbDriver);
+      nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete"));
+      nxlog_close();
+#ifndef _WIN32
+      _tremove(g_szPIDFile);
+#endif
+#ifdef _WIN32
+      if (!(g_flags & AF_DAEMON))
+         ExitProcess(s_serverExitCode);
+#else
+      exit(s_serverExitCode);
+#endif
+   }
+
    // Notify clients
    NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
@@ -1817,6 +1903,10 @@ void NXCORE_EXPORTABLE Shutdown()
 
    SaveCurrentFreeId();
 
+   // All queues are drained and writers stopped - release the cluster lease
+   // so the peer can promote immediately instead of waiting out the expiry
+   HAShutdownController();
+
 	// Remove database lock
 	UnlockDatabase();
 
@@ -1838,9 +1928,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	// Terminate process
 #ifdef _WIN32
 	if (!(g_flags & AF_DAEMON))
-		ExitProcess(0);
+		ExitProcess(s_serverExitCode);
 #else
-	exit(0);
+	exit(s_serverExitCode);
 #endif
 }
 

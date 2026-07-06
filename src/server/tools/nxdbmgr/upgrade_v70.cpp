@@ -21,6 +21,23 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 70.2 to 70.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_HA_NODE_ACTIVATED, _T("SYS_HA_NODE_ACTIVATED"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("a4f162c9-4e09-4716-9ae8-4a4a2ab59d80"),
+      _T("HA cluster node %1 activated (lease term %2)"),
+      _T("Generated when a cluster node wins the HA lease and completes server activation.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeName - Cluster node name\r\n")
+      _T("   2) term - Lease term")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
 
 /**
  * Upgrade from 70.1 to 70.2
@@ -67,6 +84,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2, 70, 3, H_UpgradeFromV2 },
    { 1, 70, 2, H_UpgradeFromV1 },
    { 0, 70, 1, H_UpgradeFromV0 },
    { 0, 0,  0, nullptr }
