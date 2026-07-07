@@ -261,6 +261,12 @@ int H_UserSetPassword(Context *context)
       oldPassword = json_string_value(oldPassField);
    }
 
+   if (isSelf && (oldPassword == nullptr))
+   {
+      context->setErrorResponse("Missing \"oldPassword\" field");
+      return 400;
+   }
+
    uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, isSelf);
 
    if (rcc == RCC_SUCCESS)
