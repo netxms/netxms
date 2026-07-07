@@ -60,6 +60,9 @@ void UnlockDatabase();
 bool ExecSQLBatch(const char *pszFile, bool showOutput);
 bool ValidateDatabase(bool allowLock = false);
 
+bool SeedStockImages();
+const char *FindStockImageData(const wchar_t *guid);
+
 bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor);
 bool SetMinorSchemaVersion(int32_t nextMinor);
 INT32 GetSchemaLevelForMajorVersion(int32_t major);

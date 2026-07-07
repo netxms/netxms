@@ -178,6 +178,9 @@ int InitDatabase(const char *initFile, const TCHAR *password)
    if (!ExecSQLBatch(initFile, false))
       goto init_failed;
 
+   if (!SeedStockImages())
+      goto init_failed;
+
    // Generate GUID for user "system"
    _sntprintf(query, 256, _T("UPDATE users SET guid='%s' WHERE id=0"), uuid::generate().toString().cstr());
    if (!SQLQuery(query))

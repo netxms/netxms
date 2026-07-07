@@ -33,7 +33,6 @@ BEGIN TRANSACTION;
 #include "policy.in"
 #include "traps.in"
 #include "scripts.in"
-#include "images.in"
 #include "country_codes.in"
 #include "currency_codes.in"
 #include "devdb.in"
