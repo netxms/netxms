@@ -9,9 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 # Stock image binaries are no longer installed to the filesystem; their
-# base64-encoded contents are embedded in sql/images.in and seeded into the
-# images table at database initialization. The PNG files in this directory are
-# the source for tools/regen_images_in.py.
+# base64-encoded contents are embedded in src/server/tools/nxdbmgr/stock_images.cpp
+# and seeded into the images table at database initialization. The PNG files in
+# this directory are the source for tools/regen_stock_images.py.
 EXTRA_DIST = \
 	092e4b35-4e7c-42df-b9b7-d5805bfac64e \
 	1ddb76a3-a05f-4a42-acda-22021768feaf \
