@@ -243,13 +243,13 @@ public class LocalCommandResults extends AbstractCommandResultView
 				finally
 				{
 					in.close();
-					closeOutputStream();
 				}
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
+				closeOutputStream();
 				synchronized(mutex)
 				{
                if (tcpPortForwarder != null)
