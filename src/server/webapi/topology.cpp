@@ -25,31 +25,36 @@
 #include <nms_topo.h>
 
 /**
- * Serialize NetworkMapObjectList to JSON
+ * Serialize NetworkMapObjectList to JSON. Only objects the caller has READ access to are included;
+ * links referencing a filtered-out object are dropped so that no metadata of inaccessible objects leaks.
  */
-static json_t *TopologyToJson(const NetworkMapObjectList& topology)
+static json_t *TopologyToJson(const NetworkMapObjectList& topology, uint32_t userId)
 {
    json_t *output = json_object();
 
-   // Objects - include summary for each referenced object
+   // Objects - include summary for each referenced object the caller is allowed to read
    json_t *objects = json_array();
+   IntegerArray<uint32_t> accessibleObjects;
    const IntegerArray<uint32_t>& objectList = topology.getObjects();
    for (int i = 0; i < objectList.size(); i++)
    {
       shared_ptr<NetObj> object = FindObjectById(objectList.get(i));
-      if (object != nullptr)
+      if ((object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
+         accessibleObjects.add(object->getId());
          json_array_append_new(objects, CreateObjectSummary(*object));
       }
    }
    json_object_set_new(output, "objects", objects);
 
-   // Links
+   // Links - skip any link that references an object the caller cannot read
    json_t *links = json_array();
    const ObjectArray<ObjLink>& linkList = topology.getLinks();
    for (int i = 0; i < linkList.size(); i++)
    {
       ObjLink *l = linkList.get(i);
+      if (!accessibleObjects.contains(l->object1) || !accessibleObjects.contains(l->object2))
+         continue;
       json_t *link = json_object();
       json_object_set_new(link, "object1", json_integer(l->object1));
       json_object_set_new(link, "object2", json_integer(l->object2));
@@ -100,7 +105,7 @@ int H_TopologyL2(Context *context)
       return 500;
    }
 
-   json_t *output = TopologyToJson(*topology);
+   json_t *output = TopologyToJson(*topology, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -131,7 +136,7 @@ int H_TopologyIP(Context *context)
    int radius = context->getQueryParameterAsInt32("radius", 0);
 
    unique_ptr<NetworkMapObjectList> topology = BuildIPTopology(static_pointer_cast<Node>(object), nullptr, radius, true);
-   json_t *output = TopologyToJson(*topology);
+   json_t *output = TopologyToJson(*topology, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -166,7 +171,7 @@ int H_TopologyOSPF(Context *context)
       return 500;
    }
 
-   json_t *output = TopologyToJson(*topology);
+   json_t *output = TopologyToJson(*topology, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -201,7 +206,7 @@ int H_TopologyInternal(Context *context)
       return 500;
    }
 
-   json_t *output = TopologyToJson(*topology);
+   json_t *output = TopologyToJson(*topology, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
