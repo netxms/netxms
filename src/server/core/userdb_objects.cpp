@@ -829,6 +829,9 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool User::validatePassword(const wchar_t *password)
 {
+   if (password == nullptr)
+      return false;
+
    if (m_password.hashType == PWD_HASH_DISABLED)
       return false;
 

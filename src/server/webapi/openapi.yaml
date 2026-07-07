@@ -5012,9 +5012,10 @@ paths:
       operationId: setUserPassword
       summary: Set user password
       description: |
-        Set or change a user's password. If `oldPassword` is provided, it is treated as a
-        self-change (user changing their own password). If `oldPassword` is omitted, it is
-        treated as an administrative password reset.
+        Set or change a user's password. The operation is treated as a self-change when the
+        target user-id is the currently authenticated user, and as an administrative reset
+        otherwise. When self-changing, `oldPassword` is required so the current password can be
+        verified; for an administrative reset `oldPassword` is not required.
 
         Users can change their own password without MANAGE_USERS access right.
         Administrative password reset requires MANAGE_USERS access right.
@@ -5035,7 +5036,7 @@ paths:
         '200':
           description: Password changed successfully
         '400':
-          description: Missing newPassword, weak password, or recently used password
+          description: Missing newPassword, missing oldPassword on self-change, weak password, or recently used password
         '401':
           description: Unauthorized
         '403':

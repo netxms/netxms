@@ -269,6 +269,12 @@ int H_UserSetPassword(Context *context)
 #endif
    }
 
+   if (isSelf && (oldPassword == nullptr))
+   {
+      context->setErrorResponse("Missing \"oldPassword\" field");
+      return 400;
+   }
+
    uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, isSelf);
    MemFree(newPassword);
    MemFree(oldPassword);
