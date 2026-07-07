@@ -262,12 +262,25 @@ var STATUS_WARNING = 1;
 var STATUS_CRITICAL = 4;
 
 // Color-coded warning triangle (billboard) on the right rail, aligned to the
-// device row, so abnormal devices are visible at a glance without selection.
+// device row, so abnormal devices are visible at a glance without selection. The
+// marker floats at the end(s) of the rack the device actually faces: front (+Z)
+// for a FRONT device, rear (-Z) for a REAR device, and both ends for a full-depth
+// FILL device so it is visible from either vantage.
 function addStatusMarker(u, data)
 {
-   var s = makeTriangleSprite(u.statusColor);
-   s.position.set(RACK_W / 2 + 0.05, unitCenterY(u, data), RACK_D / 2);
-   rackGroup.add(s);
+   var x = RACK_W / 2 + 0.05;
+   var y = unitCenterY(u, data);
+   var zs = [];
+   if (u.side !== "REAR")
+      zs.push(RACK_D / 2);
+   if (u.side !== "FRONT")
+      zs.push(-RACK_D / 2);
+   for (var i = 0; i < zs.length; i++)
+   {
+      var s = makeTriangleSprite(u.statusColor);
+      s.position.set(x, y, zs[i]);
+      rackGroup.add(s);
+   }
 }
 
 // Warning-triangle marker based on the Lucide "triangle-alert" icon. The icon is
