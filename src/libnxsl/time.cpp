@@ -76,6 +76,45 @@ struct DateTime
 #endif
       }
    }
+
+   /**
+    * Normalize broken-down time after direct field changes: recompute timestamp
+    * via mktime()/timegm() and regenerate the broken-down time from it, so
+    * out-of-range fields roll over (day = 50 -> next month, etc.).
+    */
+   void normalize()
+   {
+      if (valid)
+         return;
+
+      // Fold out-of-range month into year: the fallback timegm() used where the
+      // platform lacks a native one rejects tm_mon outside [0..11]. Compute the
+      // year adjustment in 64-bit and clamp so script-controlled tm_year/tm_mon
+      // cannot overflow the signed int fields. The upper bound leaves room for the
+      // getter's tm_year + 1900, which would otherwise overflow to a garbage year
+      // when a native timegm() lets a huge tm_year round-trip intact. Out-of-range
+      // years are rejected by timegm()/mktime() and yield a defined fallback result.
+      if ((data.tm_mon < 0) || (data.tm_mon > 11))
+      {
+         int64_t year = static_cast<int64_t>(data.tm_year) + data.tm_mon / 12;
+         int month = data.tm_mon % 12;
+         if (month < 0)
+         {
+            month += 12;
+            year--;
+         }
+         if (year > INT_MAX - 1900)
+            year = INT_MAX - 1900;
+         else if (year < INT_MIN)
+            year = INT_MIN;
+         data.tm_year = static_cast<int>(year);
+         data.tm_mon = month;
+      }
+
+      timestamp = utc ? timegm(&data) : mktime(&data);
+      valid = true;
+      updateFromTimestamp();
+   }
 };
 
 /**
@@ -110,6 +149,8 @@ NXSL_METHOD_DEFINITION(DateTime, format)
       return NXSL_ERR_NOT_STRING;
    }
 
+   dt->normalize();
+
    TCHAR buffer[512];
    _tcsftime(buffer, 512, f, &dt->data);
    *result = vm->createValue(buffer);
@@ -136,7 +177,17 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
       return value;
 
    NXSL_VM *vm = object->vm();
-   struct tm *st = (attr.value[0] != '?') ? &(static_cast<DateTime*>(object->getData())->data) : nullptr;
+   struct tm *st;
+   if (attr.value[0] != '?')
+   {
+      auto dt = static_cast<DateTime*>(object->getData());
+      dt->normalize();
+      st = &dt->data;
+   }
+   else
+   {
+      st = nullptr;
+   }
    if (compareAttributeName(attr, "second") || compareAttributeName(attr, "sec") || compareAttributeName(attr, "tm_sec"))
    {
       value = vm->createValue(st->tm_sec);
@@ -159,7 +210,10 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (compareAttributeName(attr, "year") || compareAttributeName(attr, "tm_year"))
    {
-      value = vm->createValue(st->tm_year + 1900);
+      // Keep the common int32 type; widen to int64 only when tm_year + 1900 would
+      // overflow a signed 32-bit int (reachable when gmtime yields tm_year near INT_MAX).
+      int64_t year = static_cast<int64_t>(st->tm_year) + 1900;
+      value = ((year >= INT_MIN) && (year <= INT_MAX)) ? vm->createValue(static_cast<int32_t>(year)) : vm->createValue(year);
    }
    else if (compareAttributeName(attr, "dayOfYear") || compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
@@ -179,13 +233,7 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (compareAttributeName(attr, "timestamp"))
    {
-      auto dt = static_cast<DateTime*>(object->getData());
-      if (!dt->valid)
-      {
-         dt->timestamp = dt->utc ? timegm(st) : mktime(st);
-         dt->valid = true;
-      }
-      value = vm->createValue(static_cast<int64_t>(dt->timestamp));
+      value = vm->createValue(static_cast<int64_t>(static_cast<DateTime*>(object->getData())->timestamp));
    }
    return value;
 }
@@ -247,11 +295,7 @@ bool NXSL_DateTimeClass::setAttr(NXSL_Object *object, const NXSL_Identifier& att
    {
       if (value->isTrue() != dt->utc)
       {
-         if (!dt->valid)
-         {
-            dt->timestamp = dt->utc ? timegm(st) : mktime(st);
-            dt->valid = true;
-         }
+         dt->normalize();
          dt->utc = value->isTrue();
          dt->updateFromTimestamp();
       }
@@ -283,6 +327,7 @@ void NXSL_DateTimeClass::onObjectDelete(NXSL_Object *object)
 void NXSL_DateTimeClass::toString(StringBuffer *sb, NXSL_Object *object)
 {
    auto dt = static_cast<DateTime*>(object->getData());
+   dt->normalize();
    TCHAR buffer[512];
    _tcsftime(buffer, 512, dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal, &dt->data);
    sb->append(buffer);
