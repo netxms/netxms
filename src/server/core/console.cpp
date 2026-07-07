@@ -609,6 +609,11 @@ static void HandleHACommand(ServerConsole *console, const wchar_t *args)
       ConsolePrintf(console, L"Remaining validity . : " INT64_FMTW L" seconds\n", status.remainingValidity);
       ConsolePrintf(console, L"Peer channel ....... : %s\n", HAChannelIsPeerConnected() ? L"connected" : L"not connected");
       ConsolePrintf(console, L"Peer watermark ..... : " INT64_FMTW L" (journal head " INT64_FMTW L")\n", HAChannelGetPeerWatermark(), HAJournalGetHead());
+      if (status.state == HALeaseState::STANDBY)
+      {
+         ConsolePrintf(console, L"Applied watermark .. : " INT64_FMTW L"\n", HAChannelGetAppliedWatermark());
+         ConsolePrintf(console, L"Warm state ......... : %s\n", HASyncIsDirty() ? L"INCONSISTENT (will rebuild before activation)" : L"in sync");
+      }
       ConsolePrintf(console, L"Fenced ............. : %s\n\n", HAIsFenced() ? L"yes" : L"no");
    }
    else if (IsCommand(L"SWITCHOVER", subcommand, 2))

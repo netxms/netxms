@@ -1631,6 +1631,9 @@ public:
    virtual void postLoad();
    virtual void cleanup();
 
+   void detachForClusterSync(bool markDeleted);
+   bool resyncCommonDataForClusterSync(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
+
    void setId(uint32_t dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
    void setName(const TCHAR *name) { lockProperties(); _tcslcpy(m_name, name, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
@@ -6424,6 +6427,7 @@ uint32_t DeleteObjectQuery(uint32_t queryId);
 json_t NXCORE_EXPORTABLE *GetObjectQueriesList();
 
 bool LoadObjects();
+void ActivateObjectStore();
 void DumpObjects(ServerConsole *console, const TCHAR *filter);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
@@ -6498,6 +6502,7 @@ extern shared_ptr<ServiceRoot> NXCORE_EXPORTABLE g_infrastructureServiceRoot;
 extern shared_ptr<TemplateRoot> NXCORE_EXPORTABLE g_templateRoot;
 extern shared_ptr<NetworkMapRoot> NXCORE_EXPORTABLE g_mapRoot;
 extern shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
+extern shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 extern shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 extern uint32_t NXCORE_EXPORTABLE g_dwMgmtNode;

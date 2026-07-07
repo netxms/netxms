@@ -76,10 +76,30 @@ static bool s_secretLoaded = false;
 static std::atomic<bool> s_shutdown(false);
 
 /**
- * Journal apply handler (registered by the object/alarm sync layer; null =
- * no warm state to update, applying is a no-op)
+ * Journal apply handler (registered by the warm state sync layer via
+ * HAChannelSetupSync; null = no warm state to update, applying is a no-op)
  */
-static std::function<void(const HAJournalEntry&)> s_applyHandler = nullptr;
+static std::function<void(const std::vector<HAJournalEntry>&)> s_applyHandler = nullptr;
+
+/**
+ * Applier starting watermark: journal head captured before the warm state
+ * load began, so every change the load could have missed gets re-applied
+ * (application is idempotent). -1 = not set, fall back to the persisted
+ * watermark.
+ */
+static int64_t s_initialWatermark = -1;
+
+/**
+ * Contiguous applied watermark of this node (exposed for status display and
+ * for the activation-time final replay)
+ */
+static std::atomic<int64_t> s_appliedWatermark(0);
+
+/**
+ * Set when the applier thread must stop before the activation-time final
+ * replay takes over journal application
+ */
+static std::atomic<bool> s_applierQuiesce(false);
 
 /**
  * Journal head hint received from the active node (0 = no hint)
@@ -612,15 +632,17 @@ static void ApplierThread()
 {
    ThreadSetName("HAApplier");
 
-   int64_t watermark = HAJournalReadWatermark();
+   int64_t watermark = (s_initialWatermark >= 0) ? s_initialWatermark : HAJournalReadWatermark();
+   s_appliedWatermark = watermark;
    int64_t pendingGapSeq = 0;
    time_t pendingGapTime = 0;
    nxlog_debug_tag(DEBUG_TAG, 2, L"Journal applier started (watermark " INT64_FMTW L")", watermark);
+   HAJournalSaveWatermark(watermark);   // supersede the previous incarnation's persisted value
 
-   while(!s_shutdown.load())
+   while(!s_shutdown.load() && !s_applierQuiesce.load())
    {
       s_applierWakeup.wait((s_headHint.load() > watermark) ? 1000 : 5000);
-      if (s_shutdown.load())
+      if (s_shutdown.load() || s_applierQuiesce.load())
          break;
 
       // Only a standby maintains warm state; the active is the journal writer
@@ -628,10 +650,17 @@ static void ApplierThread()
       if ((manager == nullptr) || (manager->getState() != HALeaseState::STANDBY))
          continue;
 
+      // A watermark below the age-based truncation point cannot be
+      // reconciled by replay - the warm state is unrebuildable in place
+      if (HAJournalGetTruncationPoint() > watermark)
+         HASyncSetDirty(L"change journal truncated past this node's watermark");
+
+      // Collect the contiguous committed prefix above the watermark
       int64_t newWatermark = watermark;
       bool blocked = false;
+      std::vector<HAJournalEntry> batch;
       HAJournalReplay(watermark,
-         [&newWatermark, &blocked, &pendingGapSeq, &pendingGapTime] (const HAJournalEntry& entry) -> void
+         [&newWatermark, &blocked, &pendingGapSeq, &pendingGapTime, &batch] (const HAJournalEntry& entry) -> void
          {
             if (blocked)
                return;
@@ -653,14 +682,17 @@ static void ApplierThread()
                nxlog_debug_tag(DEBUG_TAG, 4, L"Journal gap at " INT64_FMTW L" aged out (rolled back transaction)", pendingGapSeq);
                pendingGapSeq = 0;
             }
-            if (s_applyHandler != nullptr)
-               s_applyHandler(entry);
+            batch.push_back(entry);
             newWatermark = entry.seq;
          });
+
+      if (!batch.empty() && (s_applyHandler != nullptr))
+         s_applyHandler(batch);
 
       if (newWatermark > watermark)
       {
          watermark = newWatermark;
+         s_appliedWatermark = watermark;
          if (pendingGapSeq <= watermark)
             pendingGapSeq = 0;
          HAJournalSaveWatermark(watermark);
@@ -693,12 +725,58 @@ void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_
 }
 
 /**
- * Register handler applied to each journal entry on the standby (object and
- * alarm sync layers). Must be set before HAChannelStart.
+ * Register the journal batch apply handler and the applier's starting
+ * watermark (journal head captured before the warm state load began). Must
+ * be called before HAChannelStart.
  */
-void NXCORE_EXPORTABLE HAChannelSetApplyHandler(std::function<void(const HAJournalEntry&)> handler)
+void HAChannelSetupSync(std::function<void(const std::vector<HAJournalEntry>&)> handler, int64_t initialWatermark)
 {
    s_applyHandler = handler;
+   s_initialWatermark = initialWatermark;
+}
+
+/**
+ * Stop the live applier and replay the remaining journal tail (activation
+ * path, called after this node wins the lease). The old active's writes have
+ * quiesced at this point, so gaps in the sequence are rolled-back
+ * transactions and are skipped without waiting. Returns false if the warm
+ * state cannot be trusted (the caller must restart into a fresh standby).
+ */
+bool HAChannelFinalizeSync()
+{
+   s_applierQuiesce = true;
+   s_applierWakeup.set();
+   ThreadJoin(s_applierThread);
+   s_applierThread = INVALID_THREAD_HANDLE;
+
+   int64_t watermark = s_appliedWatermark.load();
+   if (HAJournalGetTruncationPoint() > watermark)
+      HASyncSetDirty(L"change journal truncated past this node's watermark");
+   if (HASyncIsDirty())
+      return false;
+
+   std::vector<HAJournalEntry> batch;
+   watermark = HAJournalReplay(watermark,
+      [&batch] (const HAJournalEntry& entry) -> void
+      {
+         batch.push_back(entry);
+      });
+   if (!batch.empty() && (s_applyHandler != nullptr))
+      s_applyHandler(batch);
+   s_appliedWatermark = watermark;
+   HAJournalSaveWatermark(watermark);
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Journal synchronization finalized at activation (%d entries replayed, watermark " INT64_FMTW L")",
+         static_cast<int>(batch.size()), watermark);
+   return !HASyncIsDirty();
+}
+
+/**
+ * Get this node's contiguous applied journal watermark
+ */
+int64_t HAChannelGetAppliedWatermark()
+{
+   return s_appliedWatermark.load();
 }
 
 /**

@@ -3095,10 +3095,89 @@ bool InitAlarmManager()
          return _CONTINUE;
       });
 
+   return true;
+}
+
+/**
+ * Activate alarm manager (phase 2 of startup): start worker threads. In
+ * cluster mode InitAlarmManager() runs during passive bring-up while this
+ * function runs at activation; the state change log record ID is re-seeded
+ * here because it is stale by however long the node was standing by.
+ */
+void ActivateAlarmManager()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM alarm_state_changes"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         int64_t recordId = DBGetFieldInt64(hResult, 0, 0);
+         if (recordId > s_stateChangeLogRecordId)
+            s_stateChangeLogRecordId = recordId;
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
    s_alarmDbWriterThread = ThreadCreateEx(AlarmDbWriterThread);
    s_watchdogThread = ThreadCreateEx(WatchdogThread);
    s_rootCauseUpdateThread = ThreadCreateEx(RootCauseUpdateThread);
-   return true;
+}
+
+/**
+ * Synchronize single alarm from database (cluster standby journal apply).
+ * Reloads the alarm row and upserts it into the in-memory alarm list; a
+ * missing or terminated row removes the alarm from the list.
+ */
+void SyncAlarmFromDatabase(uint32_t alarmId)
+{
+   Alarm *reloaded = nullptr;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT ") ALARM_LOAD_COLUMN_LIST _T(" FROM alarms WHERE alarm_state<>3 AND alarm_id=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            reloaded = new Alarm(hdb, hResult, 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   s_alarmList.lock();
+   Alarm *existing = s_alarmList.find(alarmId);
+   if (existing != nullptr)
+   {
+      UpdateObjectOnAlarmResolve(existing->getSourceObject(), alarmId, reloaded == nullptr);
+      s_alarmList.remove(existing);
+   }
+   if (reloaded != nullptr)
+   {
+      s_alarmList.add(reloaded);
+      if (reloaded->getState() != ALARM_STATE_RESOLVED)
+         UpdateObjectOnAlarmUpdate(reloaded->getSourceObject(), reloaded, true);
+      if (reloaded->getParentAlarmId() != 0)
+      {
+         Alarm *parent = s_alarmList.find(reloaded->getParentAlarmId());
+         if (parent != nullptr)
+            parent->addSubordinateAlarm(reloaded->getAlarmId());
+      }
+      s_alarmList.forEach(
+         [reloaded] (Alarm *curr) -> EnumerationCallbackResult
+         {
+            if (curr->getParentAlarmId() == reloaded->getAlarmId())
+               reloaded->addSubordinateAlarm(curr->getAlarmId());
+            return _CONTINUE;
+         });
+   }
+   s_alarmList.unlock();
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("SyncAlarmFromDatabase: alarm [%u] %s"), alarmId,
+         (reloaded != nullptr) ? _T("reloaded") : ((existing != nullptr) ? _T("removed") : _T("not present")));
 }
 
 /**

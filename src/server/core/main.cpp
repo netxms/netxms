@@ -1508,6 +1508,31 @@ retry_db_lock:
    // (per-request gating: ClientSession::processRequest and RouteRequest).
    if (HAIsClusterMode())
    {
+      // Warm standby state: load alarms and objects - exactly the two entity
+      // types the change journal covers, so the journal applier keeps them
+      // current while this node stands by and activation skips the load cost.
+      // Everything else (users, categories, geo areas, SSH keys, ...) loads
+      // at activation and is therefore always fresh. The journal head is
+      // captured before the load starts: changes committed during the load
+      // are (re-)applied by the applier, which is idempotent.
+      int64_t journalHead = HAJournalQueryHead();
+      if (journalHead < 0)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Cannot read cluster change journal head"));
+         return false;
+      }
+      if (!InitAlarmManager())
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load alarms from database"));
+         return false;
+      }
+      LoadNetworkDeviceDrivers();
+      ObjectsInit();
+      if (!LoadObjects())
+         return false;
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Warm standby state loaded (change journal watermark ") INT64_FMT _T(")"), journalHead);
+      HAChannelSetupSync(HASyncApplyJournalBatch, journalHead);
+
       InitClientListeners();
       s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
       StartWebAPIListener();
@@ -1553,23 +1578,31 @@ bool ActivateServer()
    if (!InitEventSubsystem())
       return false;
 
-   // Initialize alarms
+   // Initialize alarms (in cluster mode the alarm list is loaded during
+   // passive bring-up and kept current by the change journal applier)
    LoadAlarmCategories();
-   if (!InitAlarmManager())
+   if (!HAIsClusterMode() && !InitAlarmManager())
       return false;
+   ActivateAlarmManager();
 
    // Initialize incidents
    if (!InitIncidentManager())
       return false;
 
-   // Initialize objects infrastructure and load objects from database
+   // Initialize objects infrastructure and load objects from database (in
+   // cluster mode objects are loaded during passive bring-up and kept
+   // current by the change journal applier)
    LoadGeoAreas();
-   LoadNetworkDeviceDrivers();
-   ObjectsInit();
    LoadObjectCategories();
    LoadSshKeys();
-   if (!LoadObjects())
-      return false;
+   if (!HAIsClusterMode())
+   {
+      LoadNetworkDeviceDrivers();
+      ObjectsInit();
+      if (!LoadObjects())
+         return false;
+   }
+   ActivateObjectStore();
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
    // Check if management node object presented in database

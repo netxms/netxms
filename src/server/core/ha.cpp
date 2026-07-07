@@ -228,6 +228,17 @@ static void ActivationThread(int64_t term)
    }
    ReseedCertificateActionLogRecordId();
 
+   // Stop the live journal applier and replay the remaining tail against the
+   // warm state (mandatory reconcile - the old active's writes have quiesced).
+   // If the warm state cannot be trusted the only safe path is a fresh start:
+   // the restarted process re-warms from the current database state and wins
+   // the lease again.
+   if (!HAChannelFinalizeSync())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Warm state cannot be reconciled with the change journal; restarting to rebuild from database");
+      _exit(NETXMSD_EXIT_RESTART_STANDBY);
+   }
+
    // Seed change journal sequence from the journal head and enable journal
    // writes for this node (it is about to become the writing active)
    if (!HAJournalInit())
@@ -392,6 +403,21 @@ void HAShutdownController()
 
    if (s_leaseManager->getState() == HALeaseState::ACTIVE)
    {
+      // Bounded wait for the peer to apply the journal up to the head
+      // (doc/HA_Design.md 5.3 step 3) so the new active starts with fully
+      // reconciled warm state; on timeout proceed anyway - the peer replays
+      // the remainder at activation.
+      int64_t head = HAJournalGetHead();
+      if ((head > 0) && HAChannelIsPeerConnected() && (HAChannelGetPeerWatermark() < head))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, L"Waiting for peer to reach journal head " INT64_FMTW, head);
+         for(int i = 0; (i < 300) && (HAChannelGetPeerWatermark() < head) && HAChannelIsPeerConnected(); i++)
+            ThreadSleepMs(100);
+         if (HAChannelGetPeerWatermark() < head)
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer did not reach journal head " INT64_FMTW L" within handover wait (peer watermark " INT64_FMTW L"); peer will reconcile by replay",
+                  head, HAChannelGetPeerWatermark());
+      }
+
       HAChannelNotifyDemotion();   // peer polls for acquisition immediately instead of on its next cycle
       nxlog_debug_tag(DEBUG_TAG, 2, L"Releasing cluster lease");
       s_leaseManager->requestRelease();

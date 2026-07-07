@@ -337,6 +337,46 @@ Because journal entries commit out of order (seq allocated before commit,
 transactions overlap), the watermark advances only over a contiguous prefix.
 Gaps are resolved by the next channel message or by replay.
 
+Implementation (`hasync.cpp`, applied in batches per applier round):
+
+- **Warm state** = the two journaled entity types, loaded during passive
+  bring-up: the alarm list (`InitAlarmManager`) and the object model
+  (`LoadObjects`). Everything else — users, alarm categories, geo areas,
+  object categories, SSH keys — loads at activation and is therefore always
+  fresh; only what the journal can keep current is loaded early. The applier
+  starts from the journal head captured *before* the warm load began; entries
+  committed during the load are re-applied (application is idempotent).
+- **Object change** = replace the in-memory instance with a fresh
+  `loadFromDatabase()`, batch-ordered by the same class order `LoadObjects()`
+  uses. Relations are rebuilt the way startup builds them: the object's own
+  load path establishes child-owned relations (interface→node, node→subnet,
+  ...); parent-owned relations (container members, cluster members, template
+  targets) are re-linked from their database tables so a brand-new object
+  gets its parents even when the parent's journal entry landed in an earlier
+  round; child-owned relations of unchanged children are grafted from the
+  replaced instance's reference lists (a removed relation always journals
+  both endpoints, so a stale graft is corrected when the owning side's entry
+  applies). `postLoad()` and inherited-access-cache invalidation run after
+  all links exist.
+- **Built-in roots** (referenced through global pointers) refresh in place:
+  common properties reload, custom attributes reconcile through the
+  setter/deleter API (propagates inheritable changes to children), ACL
+  rebuild + subtree cache invalidation, member list diff against
+  `container_members`. Runs after the swap pass so new members resolve.
+- **Object tombstone** = detach from the object graph and drop from indexes,
+  with none of `deleteObject()`'s side effects — those already happened on
+  the active, and every object they mutated arrives through its own journal
+  entry.
+- **Alarm entry** = reload the alarm row (`SyncAlarmFromDatabase`); a missing
+  or terminated row removes the alarm from the in-memory list.
+- **Dirty state**: an apply failure, a journal truncation past the node's
+  watermark, or an entry for a module-provided object class (not supported by
+  live sync) marks the warm state inconsistent (`nxadm ha status` /
+  `/v1/ha/status` show it). A dirty standby refuses to activate from its warm
+  state: the activation path exits with `NETXMSD_EXIT_RESTART_STANDBY` and
+  the fresh process rebuilds from the database — failover degrades to the
+  cost of a full load instead of running on a corrupted model.
+
 ### 3.4 Replay
 
 `SELECT seq, entity_type, change_type, entity_id, entity_class FROM
@@ -349,7 +389,10 @@ ha_change_journal WHERE seq > ? ORDER BY seq` — executed:
 - after a **channel reconnect**, to fill the gap accumulated while dirty.
 
 Replay applies each entry the same way a live channel message would:
-reload entity from DB / apply tombstone.
+reload entity from DB / apply tombstone. At activation the live applier is
+stopped first (`HAChannelFinalizeSync`), then the tail above the watermark is
+replayed synchronously; sequence gaps are rolled-back transactions at that
+point (the journal is quiesced) and are skipped without the 60 s grace.
 
 ### 3.5 Peer channel (implementation)
 
@@ -459,6 +502,8 @@ their required split: section 7.1.
    objects.
 3. Wait for the peer's watermark to reach the journal head (bounded wait,
    default 30 s; on timeout proceed anyway — the peer will replay).
+   Implemented in `HAShutdownController` after the drains, before the lease
+   release; skipped when no peer channel is connected.
 4. Release the lease (section 2.4) and send the handover notification.
 5. Restart into standby.
 
@@ -610,9 +655,9 @@ peer channel, restricted-role client/tunnel/WebAPI listeners.
 
 | Function | Passive part | Activate part |
 |---|---|---|
-| `InitAlarmManager` (alarm.cpp:3020) | load alarm list, seed `s_stateChangeLogRecordId` | `AlarmDbWriterThread`, `WatchdogThread` (expires alarms → events), `RootCauseUpdateThread` |
-| `LoadObjects` (objects.cpp:1422) | object load, module load hooks | `CacheLoadingThread`, `ApplyTemplateThread`, conditional fix-up writes (custom-attribute prune, asset/link repair, comment-macro expansion) — all mutate objects |
-| `InitUsers` / `LoadUsers` | load users/groups | `AccountStatusUpdater` (60 s timer: modifies accounts, writes audit log); first-run "Everyone"/system-account creation |
+| `InitAlarmManager` (alarm.cpp:3020) — **split done** (`ActivateAlarmManager`) | load alarm list, seed `s_stateChangeLogRecordId` | `AlarmDbWriterThread`, `WatchdogThread` (expires alarms → events), `RootCauseUpdateThread`; re-seeds `s_stateChangeLogRecordId` |
+| `LoadObjects` (objects.cpp:1422) — **split done** (`ActivateObjectStore`) | object load, module load hooks | `CacheLoadingThread`, `ApplyTemplateThread`, conditional fix-up writes (custom-attribute prune, asset/link repair, comment-macro expansion) — all mutate objects |
+| `InitUsers` / `LoadUsers` — **resolved: stays activation-time.** User changes are not journaled, so a passive load would go stale by failover time; the tables are small enough that a fresh load at activation is the correct trade (same reasoning keeps alarm categories, geo areas, object categories and SSH keys at activation). | — | — |
 | `LoadNotificationChannels` | channel configuration load, seed `s_notificationId` | per-channel worker threads (send externally!) + driver health check thread |
 | `LoadEventForwarders` | forwarder configuration load | per-forwarder worker threads + health check thread |
 | `InitAIAssistant` | function/component registration | `AI-TASKS` pool + `AITaskSchedulerThread` |

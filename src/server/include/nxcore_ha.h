@@ -99,6 +99,7 @@ bool HAJournalInit();
 bool NXCORE_EXPORTABLE HAJournalAppend(DB_HANDLE hdb, HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
 void NXCORE_EXPORTABLE HAJournalAppendAsync(HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
 int64_t NXCORE_EXPORTABLE HAJournalGetHead();
+int64_t HAJournalQueryHead();
 void NXCORE_EXPORTABLE HAJournalSaveWatermark(int64_t seq);
 int64_t NXCORE_EXPORTABLE HAJournalReadWatermark();
 int64_t NXCORE_EXPORTABLE HAJournalGetTruncationPoint();
@@ -114,9 +115,19 @@ void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_
 bool HAChannelStart();
 void HAChannelShutdown();
 void HAChannelNotifyDemotion();
-void NXCORE_EXPORTABLE HAChannelSetApplyHandler(std::function<void(const HAJournalEntry&)> handler);
+void HAChannelSetupSync(std::function<void(const std::vector<HAJournalEntry>&)> handler, int64_t initialWatermark);
+bool HAChannelFinalizeSync();
 bool NXCORE_EXPORTABLE HAChannelIsPeerConnected();
 int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark();
+int64_t HAChannelGetAppliedWatermark();
+
+/**
+ * Warm standby state synchronization: journal entry application to the
+ * in-memory object model and alarm list (hasync.cpp)
+ */
+void HASyncApplyJournalBatch(const std::vector<HAJournalEntry>& entries);
+void HASyncSetDirty(const wchar_t *reason);
+bool HASyncIsDirty();
 
 /**
  * Phase 2 of server startup (activation): everything beyond passive

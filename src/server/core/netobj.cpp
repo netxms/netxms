@@ -1146,6 +1146,110 @@ void NetObj::destroy()
 }
 
 /**
+ * Detach object from the object graph (cluster standby journal apply): remove
+ * all parent and child references in both directions, without any of the
+ * database, event or notification side effects of deleteObject() - on the
+ * standby those effects already happened on the active node and every object
+ * they mutated arrives through its own journal entry. Caller is responsible
+ * for removing the object from indexes.
+ */
+void NetObj::detachForClusterSync(bool markDeleted)
+{
+   writeLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+      getChildList().get(i)->deleteParentReference(m_id);
+   clearChildList();
+   unlockChildList();
+
+   writeLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+      getParentList().get(i)->deleteChildReference(m_id);
+   clearParentList();
+   unlockParentList();
+
+   if (markDeleted)
+   {
+      lockProperties();
+      m_isDeleted = true;
+      unlockProperties();
+   }
+}
+
+/**
+ * Refresh common object data from the database in place (cluster standby
+ * journal apply for built-in root objects, which cannot be replaced by a
+ * fresh instance because they are referenced through global pointers).
+ * Custom attributes are reconciled through the setter/deleter API so
+ * inheritable attribute changes propagate to linked child objects; access
+ * list is rebuilt and the inherited access cache of the whole subtree is
+ * invalidated.
+ */
+bool NetObj::resyncCommonDataForClusterSync(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
+{
+   // Reconcile custom attributes (roots have no parents, so every attribute
+   // in memory is the object's own)
+   DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_CUSTOM_ATTRIBUTES,
+         _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
+   if (hStmt == nullptr)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+      return false;
+
+   StringMap databaseValues;
+   StringList deletedAttributes;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      wchar_t *name = DBGetField(hResult, i, 0, nullptr, 0);
+      if (name != nullptr)
+         databaseValues.setPreallocated(name, DBGetField(hResult, i, 1, nullptr, 0));
+   }
+   forEachCustomAttribute(
+      [&databaseValues, &deletedAttributes] (const TCHAR *name, const CustomAttribute *attribute) -> EnumerationCallbackResult
+      {
+         if (!databaseValues.contains(name))
+            deletedAttributes.add(name);
+         return _CONTINUE;
+      });
+   for(int i = 0; i < deletedAttributes.size(); i++)
+      deleteCustomAttribute(deletedAttributes.get(i));
+   for(int i = 0; i < count; i++)
+   {
+      wchar_t name[128];
+      DBGetField(hResult, i, 0, name, 128);
+      wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+      uint32_t flags = DBGetFieldULong(hResult, i, 2);
+      setCustomAttribute(name, SharedString(CHECK_NULL_EX(value)), (flags & CAF_INHERITABLE) ? StateChange::SET : StateChange::CLEAR);
+      MemFree(value);
+   }
+   DBFreeResult(hResult);
+
+   // Reset list-valued members that loadCommonProperties() appends to
+   lockProperties();
+   m_dashboards.clear();
+   m_urls.clear();
+   delete m_responsibleUsers;
+   m_responsibleUsers = nullptr;
+   delete m_trustedObjects;
+   m_trustedObjects = nullptr;
+   delete m_portStopList;
+   m_portStopList = nullptr;
+   unlockProperties();
+
+   if (!loadCommonProperties(hdb, preparedStatements, true))
+      return false;
+
+   // Rebuild access list and drop cached inherited rights in the subtree
+   m_accessList.deleteAll();
+   if (!loadACLFromDB(hdb, preparedStatements))
+      return false;
+   clearInheritedAccessCache();
+   return true;
+}
+
+/**
  * Get most critical additional status from any object specific function or component. Default implementation always return STATUS_UNKNOWN.
  */
 int NetObj::getAdditionalMostCriticalStatus(StringBuffer *explanation)

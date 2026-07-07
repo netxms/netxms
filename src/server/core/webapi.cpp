@@ -537,6 +537,11 @@ static int H_HaStatus(Context *context)
       json_object_set_new(response, "activeNode", json_string_t(status.holderName));
       json_object_set_new(response, "activeNodeAddress", json_string_t(status.holderAddress));
       json_object_set_new(response, "leaseRemainingValidity", json_integer(status.remainingValidity));
+      if (status.state == HALeaseState::STANDBY)
+      {
+         json_object_set_new(response, "appliedWatermark", json_integer(HAChannelGetAppliedWatermark()));
+         json_object_set_new(response, "warmStateConsistent", json_boolean(!HASyncIsDirty()));
+      }
    }
    else
    {

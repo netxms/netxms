@@ -1663,10 +1663,6 @@ bool LoadObjects()
    LoadObjectsFromTable<Circuit>(_T("circuit"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CIRCUIT));
    g_idxCircuitById.setStartupMode(false);
 
-   // Start cache loading thread.
-   // All data collection targets must be loaded at this point.
-   ThreadCreate(CacheLoadingThread);
-
    LoadObjectsFromTable<Asset>(_T("asset"), hdb, preparedStatements, _T("assets"));
    g_idxAssetById.setStartupMode(false);
    LoadObjectsFromTable<AssetGroup>(_T("asset group"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
@@ -1705,20 +1701,6 @@ bool LoadObjects()
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());
 
-   // Allow objects to change it's modification flag
-   g_modificationsLocked = false;
-
-   // Prune custom attributes if required
-   if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
-   {
-      g_idxObjectById.forEach(
-         [] (NetObj *object) -> EnumerationCallbackResult
-         {
-            object->pruneCustomAttributes();
-            return _CONTINUE;
-         });
-      DBQuery(mainDB, _T("DELETE FROM metadata WHERE var_name='PruneCustomAttributes'"));
-   }
    DBConnectionPoolReleaseConnection(mainDB);
 
    if (cachedb != nullptr)
@@ -1741,6 +1723,37 @@ bool LoadObjects()
 		      return _CONTINUE;
 		   });
    }
+
+   return true;
+}
+
+/**
+ * Activate object store (phase 2 of startup): everything beyond the read-only
+ * object load - maintenance threads, DCI value caching and conditional fix-up
+ * writes. In cluster mode LoadObjects() runs during passive bring-up while
+ * this function runs at activation; in standalone mode they run back-to-back.
+ */
+void ActivateObjectStore()
+{
+   // Allow objects to change their modification flag
+   g_modificationsLocked = false;
+
+   // Prune custom attributes if required
+   if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
+   {
+      g_idxObjectById.forEach(
+         [] (NetObj *object) -> EnumerationCallbackResult
+         {
+            object->pruneCustomAttributes();
+            return _CONTINUE;
+         });
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DBQuery(hdb, _T("DELETE FROM metadata WHERE var_name='PruneCustomAttributes'"));
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
+   // Start DCI value cache loading thread
+   ThreadCreate(CacheLoadingThread);
 
    // Start template update applying thread
    s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread);
@@ -1806,8 +1819,6 @@ bool LoadObjects()
             static_cast<Node*>(object)->updateConfigBackupStatus();
          return _CONTINUE;
       });
-
-   return true;
 }
 
 /**

@@ -231,7 +231,9 @@ static inline const char *AlarmSeverityTextFromCode(int code)
  * Functions
  */
 bool InitAlarmManager();
+void ActivateAlarmManager();
 void ShutdownAlarmManager();
+void SyncAlarmFromDatabase(uint32_t alarmId);
 
 void SendAlarmsToClient(uint32_t requestId, ClientSession *session);
 

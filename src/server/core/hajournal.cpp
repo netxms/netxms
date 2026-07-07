@@ -49,6 +49,25 @@ static std::atomic<int64_t> s_sequence(0);
 static std::atomic<bool> s_writerActive(false);
 
 /**
+ * Read current journal head (max committed sequence number) from the
+ * database. Returns -1 on query failure.
+ */
+int64_t HAJournalQueryHead()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT max(seq) FROM ha_change_journal");
+   if (hResult == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return -1;
+   }
+   int64_t head = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+   return head;
+}
+
+/**
  * Initialize journal writer: seed the sequence counter from the journal head
  * in the database. Part of the activation-time ID allocator rebase - the same
  * max()-idempotent pattern as InitIdTable().
@@ -58,17 +77,12 @@ bool HAJournalInit()
    if (!HAIsClusterMode())
       return true;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, L"SELECT max(seq) FROM ha_change_journal");
-   if (hResult == nullptr)
+   int64_t head = HAJournalQueryHead();
+   if (head < 0)
    {
-      DBConnectionPoolReleaseConnection(hdb);
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot read change journal head");
       return false;
    }
-   int64_t head = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-   DBFreeResult(hResult);
-   DBConnectionPoolReleaseConnection(hdb);
 
    int64_t current = s_sequence.load();
    while((current < head) && !s_sequence.compare_exchange_weak(current, head))
