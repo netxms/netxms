@@ -30,7 +30,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class SandboxHelper
 {
-   private static final String DOCUMENTATION_URL = "https://go.netxms.org/flatpak";
+   private static final String DOCUMENTATION_URL = "https://go.netxms.com/flatpak-sandbox";
 
    private static final boolean flatpak = new File("/.flatpak-info").exists();
    private static final boolean hostAccessAvailable;
@@ -165,6 +165,40 @@ public final class SandboxHelper
    }
 
    /**
+    * Check whether host command execution is blocked because the client runs inside a restricted Flatpak sandbox (Flatpak without
+    * the "org.freedesktop.Flatpak" talk-name permission). The condition is static and known at startup, so callers can pre-check
+    * it instead of attempting execution and handling the resulting error.
+    *
+    * @return {@code true} if the client runs in a restricted Flatpak sandbox without host command execution permission
+    */
+   public static boolean isHostCommandExecutionBlocked()
+   {
+      return flatpak && !hostAccessAvailable;
+   }
+
+   /**
+    * Build the {@code flatpak override} command that unlocks host command execution for this application. Uses the resolved Flatpak
+    * application ID, falling back to the literal {@code <application-id>} placeholder when it is unknown.
+    *
+    * @return the {@code flatpak override --user --talk-name=org.freedesktop.Flatpak <appId>} command line
+    */
+   public static String getHostAccessOverrideCommand()
+   {
+      return "flatpak override --user --talk-name=org.freedesktop.Flatpak " +
+            (((applicationId != null) && !applicationId.isEmpty()) ? applicationId : "<application-id>");
+   }
+
+   /**
+    * Get the documentation URL describing the restricted Flatpak sandbox and how to enable host command execution.
+    *
+    * @return documentation URL
+    */
+   public static String getDocumentationUrl()
+   {
+      return DOCUMENTATION_URL;
+   }
+
+   /**
     * Build argument vector for running a shell command line on the host machine. When the client runs inside a Flatpak sandbox the
     * command is routed to the host via flatpak-spawn so that it can reach host tools (terminal emulators, ssh, etc.); otherwise it is
     * executed directly. Host command execution requires the "org.freedesktop.Flatpak" talk-name permission. The Flathub build ships
@@ -183,9 +217,9 @@ public final class SandboxHelper
          I18n i18n = LocalizationHelper.getI18n(SandboxHelper.class);
          throw new IOException(i18n.tr(
                "Cannot execute command on host machine: this Flatpak build runs in a restricted sandbox. " +
-               "To enable host command execution, run:\nflatpak override --user --talk-name=org.freedesktop.Flatpak {0}\n" +
+               "To enable host command execution, run:\n{0}\n" +
                "and restart the application. See {1} for details.",
-               ((applicationId != null) && !applicationId.isEmpty()) ? applicationId : "<application-id>", DOCUMENTATION_URL));
+               getHostAccessOverrideCommand(), getDocumentationUrl()));
       }
       return flatpak
             ? new String[] { "flatpak-spawn", "--host", "/bin/sh", "-c", commandLine }

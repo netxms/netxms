@@ -1,5 +1,10 @@
 # Flathub Restricted Sandbox Detection in nxmc
 
+> **Follow-up:** the terse error message this plan surfaced (the WIP "warning message
+> should be shown differently" note) was replaced with a proper modal dialog — see
+> `docs/plans/completed/20260707-flatpak-host-command-blocked-dialog.md`. That follow-up
+> also corrected the documentation redirect to `https://go.netxms.com/flatpak-sandbox`.
+
 ## Overview
 
 Commit a146aecbcbc added Flatpak support: local command and SSH-in-terminal object tools

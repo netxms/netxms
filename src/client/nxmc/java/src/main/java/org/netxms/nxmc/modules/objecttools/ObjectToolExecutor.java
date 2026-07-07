@@ -46,6 +46,7 @@ import org.netxms.nxmc.modules.filemanager.views.AgentFileViewer;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.dialogs.InputFieldEntryDialog;
 import org.netxms.nxmc.modules.objects.views.SSHCommandResults;
+import org.netxms.nxmc.modules.objecttools.dialogs.HostCommandBlockedDialog;
 import org.netxms.nxmc.modules.objecttools.views.AgentActionResults;
 import org.netxms.nxmc.modules.objecttools.views.LocalCommandResults;
 import org.netxms.nxmc.modules.objecttools.views.MultiNodeCommandExecutor;
@@ -121,6 +122,13 @@ public final class ObjectToolExecutor
     */
    public static void execute(final Set<ObjectContext> allObjects, Set<ObjectContext> nodes, final ObjectTool tool, final ViewPlacement viewPlacement)
    {
+      // In a restricted Flatpak sandbox host command execution is blocked; show an actionable dialog instead of failing deep in the execution path
+      if ((tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) && SandboxHelper.isHostCommandExecutionBlocked())
+      {
+         new HostCommandBlockedDialog(Registry.getMainWindowShell()).open();
+         return;
+      }
+
       // Filter allowed and applicable nodes for execution
       I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       final Set<ObjectContext> objects = new HashSet<ObjectContext>();
