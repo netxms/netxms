@@ -143,6 +143,7 @@ void StartPackageDeploymentManager();
 void StopPackageDeploymentManager();
 
 bool InitWebAPI();
+void StartWebAPIListener();
 void StartWebAPI();
 void ShutdownWebAPI();
 
@@ -1501,9 +1502,15 @@ retry_db_lock:
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Passive initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
 
    // In cluster mode park here as standby; activation (phase 2 of startup)
-   // is executed by the cluster controller when this node wins the lease
+   // is executed by the cluster controller when this node wins the lease.
+   // Client and web API listeners are started before parking so a standby
+   // node answers with an explicit redirect instead of a connection timeout
+   // (per-request gating: ClientSession::processRequest and RouteRequest).
    if (HAIsClusterMode())
    {
+      InitClientListeners();
+      s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
+      StartWebAPIListener();
       if (!HAStartController())
          return false;
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server is running in cluster standby mode"));
@@ -1609,7 +1616,8 @@ bool ActivateServer()
    if (importMode > 0)
       ImportLocalConfiguration(importMode == 2);
 
-   InitClientListeners();
+   if (!HAIsClusterMode())   // in cluster mode client listeners are started during passive bring-up
+      InitClientListeners();
 
    // Create syncer thread pool
    int maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
@@ -1721,9 +1729,10 @@ bool ActivateServer()
    // Schedule checks of user authentication tokens
    AddUniqueRecurrentScheduledTask(_T("System.CheckUserAuthTokens"), _T("0 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Check for expired user authentication tokens"), nullptr, true);
 
-   // Start listeners
+   // Start listeners (client listener runs since passive bring-up in cluster mode)
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread);
-   s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
+   if (s_clientListenerThread == INVALID_THREAD_HANDLE)
+      s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
@@ -1781,6 +1790,8 @@ void NXCORE_EXPORTABLE Shutdown()
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_SHUTDOWN, _T("NetXMS Server stopped %s (standby mode)"), s_shutdownReasonText[static_cast<int>(s_shutdownReason)]);
       InterlockedOr64(&g_flags, AF_SHUTDOWN);
       InitiateProcessShutdown();
+      ShutdownWebAPI();
+      ThreadJoin(s_clientListenerThread);
       HAShutdownController();
       WatchdogShutdown();
       DBConnectionPoolShutdown();

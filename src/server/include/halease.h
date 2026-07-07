@@ -51,6 +51,7 @@ struct HALeaseStatus
    int64_t term;                 // current term as last observed in the database
    uuid holderGuid;
    wchar_t holderName[64];
+   wchar_t holderAddress[256];   // client-reachable address published by the lease holder (may be empty)
    int64_t remainingValidity;    // seconds until expiry as computed by the database; negative if expired
    time_t lastUpdate;            // local time of last successful lease table read
 };
@@ -68,6 +69,7 @@ class HALeaseManager
 private:
    uuid m_nodeGuid;
    wchar_t m_nodeName[64];
+   wchar_t m_nodeAddress[256];
    uint64_t m_incarnation;
    uint32_t m_refreshInterval;   // seconds
    uint32_t m_validity;          // seconds
@@ -108,7 +110,7 @@ private:
    void refresh();
    void doRelease();
    void fence(const wchar_t *reason);
-   void updateStatus(int64_t term, const uuid& holderGuid, const wchar_t *holderName, int64_t remainingValidity);
+   void updateStatus(int64_t term, const uuid& holderGuid, const wchar_t *holderName, const wchar_t *holderAddress, int64_t remainingValidity);
 
 public:
    HALeaseManager(const uuid& nodeGuid, const wchar_t *nodeName, std::function<DB_HANDLE()> connector,
@@ -128,6 +130,13 @@ public:
     * an orderly restart into standby.
     */
    void setFenceHandler(std::function<void(const wchar_t*)> handler) { m_fenceHandler = handler; }
+
+   /**
+    * Set client-reachable address of this node, published in the lease record when
+    * this node becomes the holder (standby nodes read it to redirect clients and
+    * agents to the active node). Call before start().
+    */
+   void setNodeAddress(const wchar_t *address) { wcslcpy(m_nodeAddress, CHECK_NULL_EX_W(address), 256); }
 
    bool start();
    void stop();

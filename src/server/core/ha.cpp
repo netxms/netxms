@@ -36,6 +36,7 @@ void ReseedCertificateActionLogRecordId();
  */
 static uint32_t s_clusterMode = 0;
 static wchar_t s_nodeName[64] = L"";
+static wchar_t s_nodeAddress[256] = L"";     // this node's address as reachable by clients/agents; published in the lease when active
 static wchar_t s_peerAddress[256] = L"";     // reserved for the phase 2 cluster channel
 static uint32_t s_leaseRefreshInterval = 5;
 static uint32_t s_leaseValidity = 20;
@@ -49,6 +50,7 @@ static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
    { L"FenceMargin", CT_LONG, 0, 0, 0, 0, &s_fenceMargin, nullptr },
    { L"LeaseRefreshInterval", CT_LONG, 0, 0, 0, 0, &s_leaseRefreshInterval, nullptr },
    { L"LeaseValidity", CT_LONG, 0, 0, 0, 0, &s_leaseValidity, nullptr },
+   { L"NodeAddress", CT_STRING, 0, 0, 256, 0, s_nodeAddress, nullptr },
    { L"NodeName", CT_STRING, 0, 0, 64, 0, s_nodeName, nullptr },
    { L"OnDemoteCommand", CT_STRING, 0, 0, MAX_PATH, 0, s_onDemoteCommand, nullptr },
    { L"OnPromoteCommand", CT_STRING, 0, 0, MAX_PATH, 0, s_onPromoteCommand, nullptr },
@@ -95,6 +97,8 @@ bool HAReadConfiguration()
 
    if (s_nodeName[0] == 0)
       GetLocalHostName(s_nodeName, 64, false);
+   if (s_nodeAddress[0] == 0)
+      GetLocalHostName(s_nodeAddress, 256, true);
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Cluster mode enabled (node name %s, lease refresh %u s, validity %u s, fence margin %u s)",
          s_nodeName, s_leaseRefreshInterval, s_leaseValidity, s_fenceMargin);
@@ -138,6 +142,24 @@ bool NXCORE_EXPORTABLE HACheckFence()
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager()
 {
    return s_leaseManager;
+}
+
+/**
+ * Get client-reachable address of the current lease holder as published in the
+ * lease record (used by standby nodes to redirect clients and agents). Buffer
+ * is set to empty string if unknown.
+ */
+void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size)
+{
+   if (s_leaseManager != nullptr)
+   {
+      HALeaseStatus status = s_leaseManager->getStatus();
+      wcslcpy(buffer, status.holderAddress, size);
+   }
+   else
+   {
+      buffer[0] = 0;
+   }
 }
 
 /**
@@ -286,6 +308,8 @@ bool HAStartController()
          return DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
       },
       s_leaseRefreshInterval, s_leaseValidity, s_fenceMargin);
+
+   s_leaseManager->setNodeAddress(s_nodeAddress);
 
    s_leaseManager->setPromotionHandler(
       [] (int64_t term) -> void

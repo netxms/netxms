@@ -594,4 +594,4 @@ INSERT INTO notification_channels (name,driver_name,description,configuration) V
       '#IsHTML=yes' CONCAT CRLF
    );
 
-INSERT INTO ha_lease (lease_id,format_version,term,holder_guid,holder_incarnation,holder_name,acquired_at,expires_at) VALUES (1,1,0,NULL,0,NULL,0,0);
+INSERT INTO ha_lease (lease_id,format_version,term,holder_guid,holder_incarnation,holder_name,holder_address,acquired_at,expires_at) VALUES (1,1,0,NULL,0,NULL,NULL,0,0);

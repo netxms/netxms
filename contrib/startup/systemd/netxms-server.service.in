@@ -7,7 +7,11 @@ Type=simple
 Environment="NETXMSD_CONFIG=/etc/netxmsd.conf"
 EnvironmentFile=-/etc/default/netxmsd
 ExecStart=~BINDIR~/netxmsd -S $NETXMSD_OPTIONS --config $NETXMSD_CONFIG
+# Restart=always is required for HA cluster mode: role demotion (fencing,
+# graceful switchover) exits with code 94 and relies on the service manager
+# to restart the process, which then comes up in standby role
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

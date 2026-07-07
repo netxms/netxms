@@ -3552,6 +3552,7 @@ CREATE TABLE ha_lease
   holder_guid varchar(36) null,
   holder_incarnation SQL_INT64 not null,
   holder_name varchar(63) null,
+  holder_address varchar(255) null,
   acquired_at SQL_INT64 not null,
   expires_at SQL_INT64 not null,
   PRIMARY KEY(lease_id)

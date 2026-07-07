@@ -225,6 +225,7 @@ public final class RCC
    public static final int ZONE_PROXY_NOT_AVAILABLE = 190;
    public static final int UNTRUSTED_PACKAGE = 191;
    public static final int DOWNGRADE_NOT_ALLOWED = 192;
+   public static final int SERVER_IS_STANDBY = 193;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

@@ -36,6 +36,7 @@ struct Route
    RouteHandler handlers[5];
    MHD_UpgradeHandler upgradeHandler;
    bool auth;
+   bool availableOnStandby;
    bool acceptJson;
    bool acceptProtobuf;
    bool acceptImage;
@@ -96,6 +97,7 @@ void RouteBuilder::build()
       memcpy(s_root->handlers, m_handlers, sizeof(m_handlers));
       s_root->upgradeHandler = m_upgradeHandler;
       s_root->auth = m_auth;
+      s_root->availableOnStandby = m_availableOnStandby;
       s_root->acceptJson = m_acceptJson;
       s_root->acceptProtobuf = m_acceptProtobuf;
       s_root->acceptImage = m_acceptImage;
@@ -150,6 +152,7 @@ void RouteBuilder::build()
    memcpy(r->handlers, m_handlers, sizeof(m_handlers));
    r->upgradeHandler = m_upgradeHandler;
    r->auth = m_auth;
+   r->availableOnStandby = m_availableOnStandby;
    r->acceptJson = m_acceptJson;
    r->acceptProtobuf = m_acceptProtobuf;
    r->acceptImage = m_acceptImage;
@@ -224,6 +227,16 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
    if (handler == nullptr)
    {
       *responseCode = 405; // method not allowed
+      return nullptr;
+   }
+
+   // A cluster node in standby role serves only routes explicitly marked as
+   // available in standby (HA status/health); user database is not loaded
+   // before activation, so authentication is not possible anyway
+   if (!curr->availableOnStandby && HAIsClusterMode() && !(g_flags & AF_SERVER_INITIALIZED))
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Request rejected: server is in standby role");
+      *responseCode = 503;  // Service Unavailable
       return nullptr;
    }
 

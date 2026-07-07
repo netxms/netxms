@@ -1743,6 +1743,7 @@ __PACK_END__
 #define VID_RECONCILIATION_RATE     ((uint32_t)996)
 #define VID_RECONCILIATION_ACTIVE   ((uint32_t)997)
 #define VID_RECONCILIATION_LAST_REPORT ((uint32_t)998)
+#define VID_ACTIVE_SERVER_ADDRESS   ((uint32_t)999)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

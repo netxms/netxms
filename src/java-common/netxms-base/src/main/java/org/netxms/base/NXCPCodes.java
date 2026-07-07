@@ -1552,6 +1552,7 @@ public class NXCPCodes
    public static final long VID_RECONCILIATION_RATE = 996;
    public static final long VID_RECONCILIATION_ACTIVE = 997;
    public static final long VID_RECONCILIATION_LAST_REPORT = 998;
+   public static final long VID_ACTIVE_SERVER_ADDRESS = 999;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

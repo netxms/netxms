@@ -60,6 +60,7 @@ HALeaseManager::HALeaseManager(const uuid& nodeGuid, const wchar_t *nodeName, st
       m_shutdown(false), m_statusLock(MutexType::FAST), m_wakeupCondition(false), m_watchdogWakeup(false)
 {
    wcslcpy(m_nodeName, nodeName, 64);
+   m_nodeAddress[0] = 0;
    do
    {
       GenerateRandomBytes(reinterpret_cast<BYTE*>(&m_incarnation), sizeof(m_incarnation));
@@ -189,7 +190,7 @@ void HALeaseManager::disconnect()
  */
 bool HALeaseManager::buildQueries()
 {
-   StringBuffer sb(L"UPDATE ha_lease SET term=term+1,holder_guid=?,holder_incarnation=?,holder_name=?,acquired_at=");
+   StringBuffer sb(L"UPDATE ha_lease SET term=term+1,holder_guid=?,holder_incarnation=?,holder_name=?,holder_address=?,acquired_at=");
    sb.append(m_dbTimeExpression);
    sb.append(L",expires_at=");
    sb.append(m_dbTimeExpression);
@@ -210,7 +211,7 @@ bool HALeaseManager::buildQueries()
 
    sb = L"SELECT term,holder_guid,holder_incarnation,holder_name,expires_at-(";
    sb.append(m_dbTimeExpression);
-   sb.append(L") FROM ha_lease WHERE lease_id=1");
+   sb.append(L"),holder_address FROM ha_lease WHERE lease_id=1");
    m_pollQuery = sb;
 
    return true;
@@ -219,13 +220,14 @@ bool HALeaseManager::buildQueries()
 /**
  * Update cached status snapshot
  */
-void HALeaseManager::updateStatus(int64_t term, const uuid& holderGuid, const wchar_t *holderName, int64_t remainingValidity)
+void HALeaseManager::updateStatus(int64_t term, const uuid& holderGuid, const wchar_t *holderName, const wchar_t *holderAddress, int64_t remainingValidity)
 {
    LockGuard lockGuard(m_statusLock);
    m_status.state = getState();
    m_status.term = term;
    m_status.holderGuid = holderGuid;
    wcslcpy(m_status.holderName, CHECK_NULL_EX_W(holderName), 64);
+   wcslcpy(m_status.holderAddress, CHECK_NULL_EX_W(holderAddress), 256);
    m_status.remainingValidity = remainingValidity;
    m_status.lastUpdate = time(nullptr);
 }
@@ -267,9 +269,11 @@ int64_t HALeaseManager::poll()
    wchar_t holderName[64];
    DBGetField(hResult, 0, 3, holderName, 64);
    int64_t remainingValidity = DBGetFieldInt64(hResult, 0, 4);
+   wchar_t holderAddress[256];
+   DBGetField(hResult, 0, 5, holderAddress, 256);
    DBFreeResult(hResult);
 
-   updateStatus(term, holderGuid, holderName, remainingValidity);
+   updateStatus(term, holderGuid, holderName, holderAddress, remainingValidity);
    return remainingValidity;
 }
 
@@ -294,6 +298,7 @@ void HALeaseManager::tryAcquire()
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_incarnation));
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_nodeName, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_nodeAddress, DB_BIND_STATIC);
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    if (!success)
@@ -322,9 +327,11 @@ void HALeaseManager::tryAcquire()
    wchar_t holderName[64];
    DBGetField(hResult, 0, 3, holderName, 64);
    int64_t remainingValidity = DBGetFieldInt64(hResult, 0, 4);
+   wchar_t holderAddress[256];
+   DBGetField(hResult, 0, 5, holderAddress, 256);
    DBFreeResult(hResult);
 
-   updateStatus(term, holderGuid, holderName, remainingValidity);
+   updateStatus(term, holderGuid, holderName, holderAddress, remainingValidity);
 
    if (holderGuid.equals(m_nodeGuid) && (holderIncarnation == static_cast<int64_t>(m_incarnation)))
    {
@@ -388,9 +395,11 @@ void HALeaseManager::refresh()
    wchar_t holderName[64];
    DBGetField(hResult, 0, 3, holderName, 64);
    int64_t remainingValidity = DBGetFieldInt64(hResult, 0, 4);
+   wchar_t holderAddress[256];
+   DBGetField(hResult, 0, 5, holderAddress, 256);
    DBFreeResult(hResult);
 
-   updateStatus(term, holderGuid, holderName, remainingValidity);
+   updateStatus(term, holderGuid, holderName, holderAddress, remainingValidity);
 
    if (holderGuid.equals(m_nodeGuid) && (holderIncarnation == static_cast<int64_t>(m_incarnation)) && (term == m_term.load()))
    {

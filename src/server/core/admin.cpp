@@ -164,12 +164,23 @@ static void ProcessingThread(SOCKET sock)
          g_dbPasswordReady.set();
          response.setField(VID_RCC, RCC_SUCCESS);
       }
-      else if (g_flags & AF_SERVER_INITIALIZED)
+      else if ((g_flags & AF_SERVER_INITIALIZED) || HAIsClusterMode())
       {
          if (!isInitialized)
          {
-            requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
-            isInitialized = true;
+            if (g_flags & AF_SERVER_INITIALIZED)
+            {
+               requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
+               isInitialized = true;
+            }
+            else
+            {
+               // Cluster node in standby role: authentication is not possible
+               // (user database is loaded at activation), and the interface is
+               // loopback-only; console access is needed for HA operations.
+               // Re-evaluated on activation (isInitialized stays false).
+               requireAuthentication = false;
+            }
          }
 
          if (request->getCode() == CMD_ADM_REQUEST)

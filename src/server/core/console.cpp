@@ -605,6 +605,7 @@ static void HandleHACommand(ServerConsole *console, const wchar_t *args)
       ConsolePrintf(console, L"Process incarnation  : " UINT64X_FMT(L"016") L"\n", manager->getIncarnation());
       ConsolePrintf(console, L"Lease term ......... : " INT64_FMTW L"\n", status.term);
       ConsolePrintf(console, L"Lease holder ....... : %s (%s)\n", status.holderName, status.holderGuid.toString(guidText));
+      ConsolePrintf(console, L"Holder address ..... : %s\n", status.holderAddress);
       ConsolePrintf(console, L"Remaining validity . : " INT64_FMTW L" seconds\n", status.remainingValidity);
       ConsolePrintf(console, L"Fenced ............. : %s\n\n", HAIsFenced() ? L"yes" : L"no");
    }

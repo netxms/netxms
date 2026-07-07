@@ -52,6 +52,7 @@ bool NXCORE_EXPORTABLE HAIsFenced();
 bool NXCORE_EXPORTABLE HACheckFence();
 bool NXCORE_EXPORTABLE HAInitiateSwitchover();
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager();
+void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size);
 
 /**
  * Set process exit code used by the shutdown path (switchover sets

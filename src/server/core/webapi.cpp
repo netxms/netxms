@@ -502,6 +502,52 @@ static int H_Root(Context *context)
 }
 
 /**
+ * Handler for /v1/ha/status. Available in standby role - intended as health
+ * endpoint for load balancers and operators (all other routes answer 503 on
+ * a standby node).
+ */
+static int H_HaStatus(Context *context)
+{
+   json_t *response = json_object();
+   bool ready = (g_flags & AF_SERVER_INITIALIZED) != 0;
+   json_object_set_new(response, "clusterMode", json_boolean(HAIsClusterMode()));
+   json_object_set_new(response, "ready", json_boolean(ready));
+   HALeaseManager *manager = HAGetLeaseManager();
+   if (manager != nullptr)
+   {
+      HALeaseStatus status = manager->getStatus();
+      const char *role;
+      switch(status.state)
+      {
+         case HALeaseState::ACTIVE:
+            role = "active";
+            break;
+         case HALeaseState::FENCED:
+            role = "fenced";
+            break;
+         case HALeaseState::STOPPED:
+            role = "stopped";
+            break;
+         default:
+            role = "standby";
+            break;
+      }
+      json_object_set_new(response, "role", json_string(role));
+      json_object_set_new(response, "term", json_integer(status.term));
+      json_object_set_new(response, "activeNode", json_string_t(status.holderName));
+      json_object_set_new(response, "activeNodeAddress", json_string_t(status.holderAddress));
+      json_object_set_new(response, "leaseRemainingValidity", json_integer(status.remainingValidity));
+   }
+   else
+   {
+      json_object_set_new(response, "role", json_string(ready ? "active" : "starting"));
+   }
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
  * Initialize web API
  */
 bool InitWebAPI()
@@ -540,6 +586,12 @@ bool InitWebAPI()
    RouteBuilder("")
       .GET(H_Root)
       .noauth()
+      .availableOnStandby()
+      .build();
+   RouteBuilder("v1/ha/status")
+      .GET(H_HaStatus)
+      .noauth()
+      .availableOnStandby()
       .build();
    RouteBuilder("v1/login")
       .POST(H_Login)
@@ -556,11 +608,13 @@ bool InitWebAPI()
 }
 
 /**
- * Start web API
+ * Start web API listener. In cluster mode called during passive bring-up so
+ * the standby node can answer health requests; idempotent, so the second
+ * call from the activation path is a no-op.
  */
-void StartWebAPI()
+void StartWebAPIListener()
 {
-   if (!s_webApiEnabled)
+   if (!s_webApiEnabled || (s_daemon != nullptr))
       return;
 
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 2, _T("Starting web API server"));
@@ -596,10 +650,21 @@ void StartWebAPI()
    else
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_WEBAPI, _T("Web API initialization failed (MicroHTTPD initialization error)"));
 
+   StartReproxy(s_listenerPort, s_listenerAddr);
+}
+
+/**
+ * Start web API (activation phase)
+ */
+void StartWebAPI()
+{
+   if (!s_webApiEnabled)
+      return;
+
+   StartWebAPIListener();
+
    RegisterSchedulerTaskHandler(_T("WebAPI.CheckPendingLoginRequests"), CheckPendingLoginRequests, 0); //No access right because it will be used only by server
    AddUniqueRecurrentScheduledTask(_T("WebAPI.CheckPendingLoginRequests"), _T("*/2 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Check for expired login requests"), nullptr, true);
-
-   StartReproxy(s_listenerPort, s_listenerAddr);
 }
 
 /**

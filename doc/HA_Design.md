@@ -77,6 +77,7 @@ CREATE TABLE ha_lease
    holder_guid varchar(36) null,       -- node GUID, null when never held
    holder_incarnation $SQL:INT64 not null, -- random 64-bit per process start
    holder_name varchar(63) null,       -- informational (hostname)
+   holder_address varchar(255) null,   -- client-reachable address of the holder
    acquired_at $SQL:INT64 not null,    -- DB epoch seconds at acquisition
    expires_at $SQL:INT64 not null,     -- DB epoch seconds; 0 = released
    PRIMARY KEY(lease_id)
@@ -84,6 +85,11 @@ CREATE TABLE ha_lease
 ```
 
 Seed row: `term=0, holder_guid=NULL, holder_incarnation=0, acquired_at=0, expires_at=0`.
+
+`holder_address` is written at acquisition from the `[CLUSTER] NodeAddress`
+configuration option (default: local FQDN) and is purely informational for
+the lease algorithm — standby nodes read it to tell redirected clients where
+the active node is (section 5.5).
 
 ### 2.2 Identity
 
@@ -254,6 +260,13 @@ rejected. The `PeerNode` / `PeerNodeIsRunning()` stale-lock heuristic in
 `main.cpp` is retired; the lease provides a strictly stronger version of the
 same guarantee.
 
+`UnlockDatabase` is a no-op for cluster members — only `nxdbmgr unlock`
+clears the `CLUSTER` lock, and when it does it also offers to clear a held
+(possibly stale) lease: holder fields nulled, `expires_at=0`, **term
+preserved** (same state as a graceful release), so a starting node acquires
+immediately instead of waiting out the validity window after whole-cluster
+maintenance.
+
 ## 3. Change journal
 
 Purpose: make the peer channel pure acceleration. Correctness of the
@@ -407,6 +420,54 @@ up in PASSIVE. Rationale: in-place teardown of a running server is
 equivalent to the shutdown path anyway; one bulletproof code path beats a
 half-stopped state machine. The installer/service templates must configure
 automatic restart for cluster deployments.
+
+Deployment requirements:
+
+- **systemd**: the stock unit (`contrib/startup/systemd/netxms-server.service`)
+  sets `Restart=always` with `RestartSec=5`, which covers exit code 94.
+  Custom units must at minimum set `RestartForceExitStatus=94` (and must not
+  list 94 in `SuccessExitStatus`). `RestartSec` of a few seconds prevents a
+  tight restart loop on a node that keeps fencing (e.g. persistent DB
+  connectivity flap).
+- **Windows**: service recovery options must be set to "Restart the Service"
+  for first/second/subsequent failures (the installer configures this for
+  cluster deployments).
+
+### 5.5 Standby-role listeners (redirection)
+
+A standby node answers instead of timing out. Listeners started during
+passive bring-up, each with a per-request role gate (`cluster mode && !(g_flags
+& AF_SERVER_INITIALIZED)`):
+
+- **Client listener** (port 4701): started before parking (the
+  `WaitForServerStartupCompletion` barrier is skipped in cluster mode).
+  `ClientSession::processRequest` serves protocol negotiation
+  (`CMD_GET_SERVER_INFO`, `CMD_REQUEST_ENCRYPTION`) normally and answers
+  everything else — including login — with `RCC_SERVER_IS_STANDBY` plus
+  `VID_ACTIVE_SERVER_ADDRESS` (the lease's `holder_address`), so clients can
+  redirect (client-side auto-redirect is phase 3).
+- **Web API listener**: the HTTP daemon starts during passive bring-up
+  (`StartWebAPIListener`); the recurrent login-cleanup task stays
+  activation-time. The router answers 503 for every route not explicitly
+  marked `availableOnStandby()`. Marked routes: `/` (version info) and
+  `GET /v1/ha/status` (unauthenticated health endpoint reporting
+  `clusterMode`, `role`, `ready`, `term`, `activeNode`, `activeNodeAddress`,
+  `leaseRemainingValidity`) — intended for load-balancer health checks.
+- **Local admin interface** (nxadm, loopback-only): available on standby
+  *without authentication* — the user database loads at activation, so
+  authentication is impossible on a standby node, and HA operations
+  (`ha status`) must be reachable. Trust model matches the existing
+  unauthenticated `CMD_SET_DB_PASSWORD` handling on the same interface;
+  normal `Server.Security.RestrictLocalConsoleAccess` rules resume once the
+  node activates.
+- **Agent tunnels**: listener stays activation-only. Agents maintain
+  independent tunnels to every configured server and retry failed ones every
+  `TunnelKeepaliveInterval` (30 s default); connection-refused on the standby
+  *is* the redirect mechanism. Tunnel setup also hard-depends on loaded
+  objects (certificate-to-node mapping), so a standby cannot serve it
+  anyway.
+- **Mobile device listener**: activation-only (same reasoning, negligible
+  reconnect cost).
 
 ## 6. Validation plan (phase 0 acceptance)
 

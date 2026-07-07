@@ -265,7 +265,7 @@ class Context:
 
     def reset_db(self):
         self.psql("UPDATE ha_lease SET holder_guid=NULL, holder_incarnation=0,"
-                  " holder_name=NULL, acquired_at=0, expires_at=0 WHERE lease_id=1")
+                  " holder_name=NULL, holder_address=NULL, acquired_at=0, expires_at=0 WHERE lease_id=1")
         self.psql("DROP TABLE IF EXISTS ha_sim_writes")
         self.psql("DROP TABLE IF EXISTS ha_sim_alloc")
 

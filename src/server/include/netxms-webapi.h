@@ -118,6 +118,7 @@ class NXCORE_EXPORTABLE RouteBuilder
 private:
    const char *m_path;
    bool m_auth;
+   bool m_availableOnStandby;
    bool m_acceptJson;
    bool m_acceptProtobuf;
    bool m_acceptImage;
@@ -130,6 +131,7 @@ public:
    {
       m_path = path;
       m_auth = true;
+      m_availableOnStandby = false;
       m_acceptJson = true;
       m_acceptProtobuf = false;
       m_acceptImage = false;
@@ -170,6 +172,16 @@ public:
    RouteBuilder& noauth()
    {
       m_auth = false;
+      return *this;
+   }
+
+   /**
+    * Make route available on a cluster node in standby role (before server
+    * activation). All other routes are answered with 503 while in standby.
+    */
+   RouteBuilder& availableOnStandby()
+   {
+      m_availableOnStandby = true;
       return *this;
    }
 

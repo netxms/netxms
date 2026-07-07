@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.3 to 70.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE ha_lease ADD holder_address varchar(255)"));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 70.2 to 70.3
  */
 static bool H_UpgradeFromV2()
@@ -84,6 +94,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3, 70, 4, H_UpgradeFromV3 },
    { 2, 70, 3, H_UpgradeFromV2 },
    { 1, 70, 2, H_UpgradeFromV1 },
    { 0, 70, 1, H_UpgradeFromV0 },

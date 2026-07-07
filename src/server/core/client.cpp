@@ -225,7 +225,11 @@ void ClientListenerThread()
    if (!listener.initialize())
       return;
 
-   WaitForServerStartupCompletion();
+   // In cluster mode the listener serves the standby role as well (sessions are
+   // gated per-request in ClientSession::processRequest until activation), so
+   // clients get an explicit "standby" answer instead of a connection timeout
+   if (!HAIsClusterMode())
+      WaitForServerStartupCompletion();
 
    listener.mainLoop();
    listener.shutdown();

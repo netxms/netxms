@@ -1010,6 +1010,25 @@ void ClientSession::processRequest(NXCPMessage *request)
       return;
    }
 
+   // A cluster node in standby role serves protocol negotiation only; any
+   // other request (including login) is answered with RCC_SERVER_IS_STANDBY
+   // and the active node's address so the client can redirect
+   if (HAIsClusterMode() && !(g_flags & AF_SERVER_INITIALIZED) &&
+       (code != CMD_GET_SERVER_INFO) &&
+       (code != CMD_REQUEST_ENCRYPTION))
+   {
+      debugPrintf(6, _T("Cannot process request: server is in standby role"));
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+      response.setField(VID_RCC, RCC_SERVER_IS_STANDBY);
+      wchar_t activeServerAddress[256];
+      HAGetActiveServerAddress(activeServerAddress, 256);
+      response.setField(VID_ACTIVE_SERVER_ADDRESS, activeServerAddress);
+      sendMessage(response);
+      delete request;
+      decRefCount();
+      return;
+   }
+
    switch(code)
    {
       case CMD_LOGIN:

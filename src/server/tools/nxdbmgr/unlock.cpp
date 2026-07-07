@@ -23,6 +23,37 @@
 #include "nxdbmgr.h"
 
 /**
+ * Clear HA cluster lease if one is recorded. Clearing keeps the monotonic
+ * term (next acquisition increments it) and only expires the lease - the
+ * same state a graceful release leaves behind - so a surviving cluster node
+ * can acquire immediately instead of waiting out the validity window.
+ */
+static void ClearClusterLease()
+{
+   DB_RESULT hResult = SQLSelect(L"SELECT term,holder_name,expires_at FROM ha_lease WHERE lease_id=1");
+   if (hResult == nullptr)
+      return;
+
+   bool leaseHeld = false;
+   wchar_t holderName[64] = L"";
+   if (DBGetNumRows(hResult) > 0)
+   {
+      leaseHeld = (DBGetFieldInt64(hResult, 0, 2) > 0);
+      DBGetField(hResult, 0, 1, holderName, 64);
+   }
+   DBFreeResult(hResult);
+
+   if (!leaseHeld)
+      return;
+
+   if (GetYesNo(L"HA cluster lease is held by node %s and may be stale\nDo you wish to clear the lease?", holderName))
+   {
+      if (SQLQuery(L"UPDATE ha_lease SET holder_guid=NULL,holder_incarnation=0,holder_name=NULL,acquired_at=0,expires_at=0 WHERE lease_id=1"))
+         WriteToTerminal(L"HA cluster lease cleared\n");
+   }
+}
+
+/**
  * Unlock database
  */
 void UnlockDatabase()
@@ -43,6 +74,8 @@ void UnlockDatabase()
          {
             WriteToTerminal(L"Database lock removed\n");
          }
+         if (!wcscmp(lockStatus, L"CLUSTER"))
+            ClearClusterLease();
       }
    }
    else
