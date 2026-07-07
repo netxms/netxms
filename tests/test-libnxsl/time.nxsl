@@ -1,5 +1,6 @@
 t = new DateTime(1689937200, true);
 assert(t.year == 2023);
+assert(typeof(t.year) == "int32");	// representable years stay int32, like sibling fields
 assert(t.month == 6);	// 6 = July
 assert(t.day == 21);
 assert(t.hour == 11);
@@ -36,5 +37,73 @@ assert(t.minute == 0);
 assert(t.second == 0);
 
 assert(new DateTime(1689937200, true).timestamp == new DateTime(1689937200, false).timestamp);
+
+// Lazy normalization of broken-down time (issue #3388).
+// All cases below use UTC objects so rollover is timezone-independent and works
+// with the fallback timegm() (day/hour rollover is linear there; month is pre-folded).
+
+// Day overflow: 2023-07-21 11:00:00 UTC, day = 50 -> 2023-08-19 (July has 31 days)
+d = new DateTime(1689937200, true);
+d.day = 50;
+assert(d.year == 2023);
+assert(d.month == 7);	// 7 = August
+assert(d.day == 19);
+assert(d.timestamp == 1692442800);
+assert(d.format('%Y-%m-%d') == '2023-08-19');	// strftime %m is 1-based
+
+// Month overflow: 2023-07-21 UTC, month = 20 -> 2024-09-21 (20 = 12 + 8).
+// Regression for the UB path where an out-of-range tm_mon reached _tcsftime().
+d = new DateTime(1689937200, true);
+d.month = 20;
+assert(d.year == 2024);
+assert(d.month == 8);	// 8 = September
+assert(d.day == 21);
+assert(d.format('%Y-%m-%d') == '2024-09-21');
+assert(string(d) != '');
+
+// format() as the first access must normalize on its own: no attribute read
+// precedes it here, so this exercises format()'s normalize() call directly and
+// guards the UB path where an out-of-range tm_mon would reach _tcsftime().
+d = new DateTime(1689937200, true);
+d.month = 20;
+assert(d.format('%Y-%m-%d') == '2024-09-21');
+
+// Backward rollover: day = 0 -> last day of previous month
+d = new DateTime(1689937200, true);
+d.day = 0;
+assert(d.year == 2023);
+assert(d.month == 5);	// 5 = June
+assert(d.day == 30);
+
+// Backward rollover: month = -1 -> December of previous year
+d = new DateTime(1689937200, true);
+d.month = -1;
+assert(d.year == 2022);
+assert(d.month == 11);	// 11 = December
+assert(d.day == 21);
+
+// Dependent fields (dayOfWeek/dayOfYear) are recomputed after normalization,
+// read directly rather than through the timestamp branch.
+d = new DateTime(1689937200, true);
+d.day = 50;	// -> 2023-08-19, a Saturday
+assert(d.dayOfWeek == 6);	// Saturday
+assert(d.dayOfYear == 230);	// 0-based, Jan 1 = 0
+
+// Extreme value must not crash or produce garbage. timegm() may reject it and
+// return -1; normalization then yields a defined 1969-12-31 result. Either way
+// string() is non-empty (native-timegm platforms only, per plan).
+d = new DateTime(1689937200, true);
+d.year = 0xfffffff;
+assert(string(d) != '');
+
+// Combined near-INT_MAX year and huge month must not overflow the signed
+// tm_year/tm_mon fields during the month fold, nor the getter's tm_year + 1900.
+// Defined output, no crash; year stays positive (native timegm round-trips the
+// clamped year, fallback timegm rejects it and yields a 1969 result).
+d = new DateTime(1689937200, true);
+d.year = 2147483647;
+d.month = 22812;
+assert(string(d) != '');
+assert(d.year > 0);
 
 return 0;

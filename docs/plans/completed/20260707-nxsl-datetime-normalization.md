@@ -146,16 +146,16 @@ Call sites:
 **Files:**
 - Modify: `src/libnxsl/time.cpp`
 
-- [ ] add `normalize()` method to `DateTime` struct (month/year pre-fold, timestamp
+- [x] add `normalize()` method to `DateTime` struct (month/year pre-fold, timestamp
       computation via `timegm`/`mktime` per `utc`, `valid = true`,
       `updateFromTimestamp()`)
-- [ ] `getAttr()`: call `normalize()` when `st != nullptr`; simplify `timestamp`
+- [x] `getAttr()`: call `normalize()` when `st != nullptr`; simplify `timestamp`
       branch to return `dt->timestamp`
-- [ ] `format` method: call `dt->normalize()` before `_tcsftime()`
-- [ ] `toString()`: call `dt->normalize()` before `_tcsftime()`
-- [ ] `isUTC` setter in `setAttr()`: replace inline compute-if-invalid block with
+- [x] `format` method: call `dt->normalize()` before `_tcsftime()`
+- [x] `toString()`: call `dt->normalize()` before `_tcsftime()`
+- [x] `isUTC` setter in `setAttr()`: replace inline compute-if-invalid block with
       `normalize()`
-- [ ] build libnxsl and test binary; run existing tests — `time.nxsl` must still pass
+- [x] build libnxsl and test binary; run existing tests — `time.nxsl` must still pass
       (test gate for this task is the existing suite; new tests land in Task 2)
 
 ### Task 2: Extend time.nxsl with normalization tests
@@ -163,40 +163,48 @@ Call sites:
 **Files:**
 - Modify: `tests/test-libnxsl/time.nxsl`
 
-- [ ] day overflow (UTC): from a known timestamp set `day = 50`, assert rolled
+- [x] day overflow (UTC): from a known timestamp set `day = 50`, assert rolled
       `month`/`day`, exact `timestamp`, and pinned `format('%Y-%m-%d')` string
       (remember: `%m` is 1-based, `.month` is 0-based)
-- [ ] month overflow (UTC): from 2023-07-21 UTC set `month = 20`, assert
+- [x] month overflow (UTC): from 2023-07-21 UTC set `month = 20`, assert
       `year == 2024`, `month == 8`, and pinned `format('%Y-%m-%d')` starting
       `2024-09` plus non-empty `string(t)` (regression for the UB path)
-- [ ] backward rollover (UTC): `day = 0` → last day of previous month; `month = -1`
+- [x] backward rollover (UTC): `day = 0` → last day of previous month; `month = -1`
       → December of previous year
-- [ ] dependent-field refresh: after a field write, assert `dayOfWeek`/`dayOfYear`
+- [x] dependent-field refresh: after a field write, assert `dayOfWeek`/`dayOfYear`
       match the normalized date when read directly (not via `timestamp`)
-- [ ] batch-set semantics still hold: existing `isDST = -1; month = 0;` block
+- [x] batch-set semantics still hold: existing `isDST = -1; month = 0;` block
       unchanged and passing
-- [ ] extreme value: `year = 0xfffffff` (as integer) → `string(t)` is non-empty,
+- [x] extreme value: `year = 0xfffffff` (as integer) → `string(t)` is non-empty,
       no crash/garbage (validated only on native-`timegm` platforms; the fallback
       `timegm` has a pre-existing weakness with huge years — skip/soften this case
       in the optional Windows verification)
-- [ ] run: build and execute `test-libnxsl` with the absolute script directory path
+- [x] run: build and execute `test-libnxsl` with the absolute script directory path
       (`./test-libnxsl /Users/alk/Development/netxms/netxms-master/tests/test-libnxsl`)
       — all scripts pass
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] all four reproduction cases from issue #3388 produce normalized, well-formed
-      output (verify with `nxscript` or the test suite)
-- [ ] out-of-range month never reaches `_tcsftime` un-normalized on any output path
-      (getAttr / format / toString reviewed)
-- [ ] full test suite for libnxsl passes; run broader `tests/suite` if built
-- [ ] cross-check completed changes against this plan
+- [x] all four reproduction cases from issue #3388 produce normalized, well-formed
+      output (verify with `nxscript` or the test suite) — ran the issue's repro
+      script via `nxscript`: `year = 0xfffffff` yields a defined non-empty string,
+      `day = 50` rolls to Aug 19 2023, `month = 20` rolls to Sep 2024 and formats
+      as "September" (no empty/garbage)
+- [x] out-of-range month never reaches `_tcsftime` un-normalized on any output path
+      (getAttr / format / toString reviewed) — getAttr (time.cpp:173), format method
+      (time.cpp:141), toString (time.cpp:316) all call `normalize()` first, which
+      pre-folds month into [0..11] and regenerates `data` via `updateFromTimestamp()`
+- [x] full test suite for libnxsl passes; run broader `tests/suite` if built —
+      27/27 `test-libnxsl` scripts pass incl. `time.nxsl`; `tests/suite` not built
+- [x] cross-check completed changes against this plan — implementation matches the
+      Solution Overview call-site-by-call-site
 
 ### Task 4: [Final] Update documentation
 
-- [ ] comment on issue #3388: fix summary + out-of-scope observations
-      (`F_mktime` ignoring `utc`, fallback `timegm` divergence)
-- [ ] move this plan to `docs/plans/completed/`
+- [x] comment on issue #3388: fix summary + out-of-scope observations
+      (`F_mktime` ignoring `utc`, fallback `timegm` divergence) — posted:
+      https://github.com/netxms/netxms/issues/3388#issuecomment-4905072507
+- [x] move this plan to `docs/plans/completed/`
 
 ## Post-Completion
 

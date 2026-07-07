@@ -47,6 +47,9 @@ static time_t sub_mkgmt(struct tm *_tm)
 		return (time_t) -1;
 	if (_tm->tm_year < EPOCH_YEAR - TM_YEAR_BASE)
 		return (time_t) -1;
+	/* reject years that would overflow signed int when adding TM_YEAR_BASE below */
+	if (_tm->tm_year > INT_MAX - TM_YEAR_BASE)
+		return (time_t) -1;
 
 	y = _tm->tm_year + TM_YEAR_BASE - (_tm->tm_mon < 2);
 	nleapdays = y / 4 - y / 100 + y / 400 -
@@ -71,7 +74,11 @@ time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm)
 	/* save value in case *_tm is overwritten by gmtime() */
 	sec = _tm->tm_sec;
 
+	/* gmtime() returns NULL for time_t values outside its supported range
+	   (notably on Windows for far-future years); bail out defensively */
 	tm2 = gmtime(&t);
+	if (tm2 == nullptr)
+		return (time_t) -1;
 	if ((t2 = sub_mkgmt(tm2)) == (time_t) -1)
 		return (time_t) -1;
 
@@ -94,17 +101,19 @@ time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm)
 		 * Do the second guess, assuming (a) and (b) are almost equal.
 		 */
 		t += t - t2;
-		tm2 = gmtime(&t);
 
 		/*
 		 * Either (a) or (b), may include one or two extra
 		 * leap seconds.  Try t, t + 2, t - 2, t + 1, and t - 1.
+		 * gmtime() may return NULL for time_t values outside its
+		 * supported range (notably near the maximum on Windows);
+		 * treat a NULL result as "not found".
 		 */
-		if (tm2->tm_sec == sec
-		    || (t += 2, tm2 = gmtime(&t), tm2->tm_sec == sec)
-		    || (t -= 4, tm2 = gmtime(&t), tm2->tm_sec == sec)
-		    || (t += 3, tm2 = gmtime(&t), tm2->tm_sec == sec)
-		    || (t -= 2, tm2 = gmtime(&t), tm2->tm_sec == sec))
+		if (((tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
+		    || (t += 2, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
+		    || (t -= 4, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
+		    || (t += 3, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
+		    || (t -= 2, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec))
 			;	/* found */
 		else {
 			/*
