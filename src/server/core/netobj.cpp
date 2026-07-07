@@ -511,7 +511,15 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveTrustedObjects(hdb);
 
-   return success ? saveModuleData(hdb) : false;
+   if (success)
+      success = saveModuleData(hdb);
+
+   // HA change journal entry rides in the same transaction as the save
+   // (no-op outside cluster mode); failure to journal fails the save
+   if (success)
+      success = HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::CHANGE, m_id, getObjectClass());
+
+   return success;
 }
 
 /**
@@ -642,6 +650,11 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 
    if (success && isEventSource)
       success = executeQueryOnObject(hdb, _T("DELETE FROM downtime_log WHERE object_id=?"));
+
+   // HA change journal tombstone rides in the same transaction as the delete
+   // (no-op outside cluster mode); deletions do not go through the save path
+   if (success)
+      success = HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::DELETE, m_id, getObjectClass());
 
    return success;
 }

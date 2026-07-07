@@ -607,6 +607,8 @@ static void HandleHACommand(ServerConsole *console, const wchar_t *args)
       ConsolePrintf(console, L"Lease holder ....... : %s (%s)\n", status.holderName, status.holderGuid.toString(guidText));
       ConsolePrintf(console, L"Holder address ..... : %s\n", status.holderAddress);
       ConsolePrintf(console, L"Remaining validity . : " INT64_FMTW L" seconds\n", status.remainingValidity);
+      ConsolePrintf(console, L"Peer channel ....... : %s\n", HAChannelIsPeerConnected() ? L"connected" : L"not connected");
+      ConsolePrintf(console, L"Peer watermark ..... : " INT64_FMTW L" (journal head " INT64_FMTW L")\n", HAChannelGetPeerWatermark(), HAJournalGetHead());
       ConsolePrintf(console, L"Fenced ............. : %s\n\n", HAIsFenced() ? L"yes" : L"no");
    }
    else if (IsCommand(L"SWITCHOVER", subcommand, 2))

@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.4 to 70.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ha_change_journal ("
+      L"  seq $SQL:INT64 not null,"
+      L"  entity_type char(1) not null,"
+      L"  change_type char(1) not null,"
+      L"  entity_id integer not null,"
+      L"  entity_class integer not null,"
+      L"  created_at $SQL:INT64 not null,"
+      L"  PRIMARY KEY(seq))"));
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ha_sync_state ("
+      L"  node_guid varchar(36) not null,"
+      L"  applied_seq $SQL:INT64 not null,"
+      L"  updated_at $SQL:INT64 not null,"
+      L"  PRIMARY KEY(node_guid))"));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 70.3 to 70.4
  */
 static bool H_UpgradeFromV3()
@@ -94,6 +118,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4, 70, 5, H_UpgradeFromV4 },
    { 3, 70, 4, H_UpgradeFromV3 },
    { 2, 70, 3, H_UpgradeFromV2 },
    { 1, 70, 2, H_UpgradeFromV1 },

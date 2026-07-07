@@ -41,13 +41,18 @@ static wchar_t s_peerAddress[256] = L"";     // reserved for the phase 2 cluster
 static uint32_t s_leaseRefreshInterval = 5;
 static uint32_t s_leaseValidity = 20;
 static uint32_t s_fenceMargin = 3;
+static uint32_t s_journalRetentionTime = 86400;   // seconds
+static uint32_t s_channelPort = 4704;
+static uint32_t s_peerPort = 0;      // 0 = same as ChannelPort
 static wchar_t s_onPromoteCommand[MAX_PATH] = L"";
 static wchar_t s_onDemoteCommand[MAX_PATH] = L"";
 
 static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
 {
+   { L"ChannelPort", CT_LONG, 0, 0, 0, 0, &s_channelPort, nullptr },
    { L"ClusterMode", CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &s_clusterMode, nullptr },
    { L"FenceMargin", CT_LONG, 0, 0, 0, 0, &s_fenceMargin, nullptr },
+   { L"JournalRetentionTime", CT_LONG, 0, 0, 0, 0, &s_journalRetentionTime, nullptr },
    { L"LeaseRefreshInterval", CT_LONG, 0, 0, 0, 0, &s_leaseRefreshInterval, nullptr },
    { L"LeaseValidity", CT_LONG, 0, 0, 0, 0, &s_leaseValidity, nullptr },
    { L"NodeAddress", CT_STRING, 0, 0, 256, 0, s_nodeAddress, nullptr },
@@ -55,6 +60,7 @@ static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
    { L"OnDemoteCommand", CT_STRING, 0, 0, MAX_PATH, 0, s_onDemoteCommand, nullptr },
    { L"OnPromoteCommand", CT_STRING, 0, 0, MAX_PATH, 0, s_onPromoteCommand, nullptr },
    { L"PeerAddress", CT_STRING, 0, 0, 256, 0, s_peerAddress, nullptr },
+   { L"PeerPort", CT_LONG, 0, 0, 0, 0, &s_peerPort, nullptr },
    { L"", CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
@@ -137,6 +143,14 @@ bool NXCORE_EXPORTABLE HACheckFence()
 }
 
 /**
+ * Get retention time for change journal entries (seconds)
+ */
+uint32_t NXCORE_EXPORTABLE HAGetJournalRetentionTime()
+{
+   return s_journalRetentionTime;
+}
+
+/**
  * Get lease manager (for status display); can be null when not in cluster mode
  */
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager()
@@ -213,6 +227,14 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
    ReseedCertificateActionLogRecordId();
+
+   // Seed change journal sequence from the journal head and enable journal
+   // writes for this node (it is about to become the writing active)
+   if (!HAJournalInit())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Change journal initialization failed at activation; restarting into standby");
+      _exit(NETXMSD_EXIT_RESTART_STANDBY);
+   }
 
    RunHookCommand(s_onPromoteCommand, 0);
 
@@ -330,6 +352,11 @@ bool HAStartController()
    if (!s_leaseManager->start())
       return false;
 
+   HAChannelConfigure(s_peerAddress, static_cast<uint16_t>(s_channelPort),
+         static_cast<uint16_t>((s_peerPort != 0) ? s_peerPort : s_channelPort));
+   if (!HAChannelStart())
+      return false;
+
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Cluster controller started (node %s, GUID %s)", s_nodeName, nodeGuid.toString().cstr());
    return true;
 }
@@ -365,12 +392,14 @@ void HAShutdownController()
 
    if (s_leaseManager->getState() == HALeaseState::ACTIVE)
    {
+      HAChannelNotifyDemotion();   // peer polls for acquisition immediately instead of on its next cycle
       nxlog_debug_tag(DEBUG_TAG, 2, L"Releasing cluster lease");
       s_leaseManager->requestRelease();
       for(int i = 0; (i < 50) && (s_leaseManager->getState() == HALeaseState::ACTIVE); i++)
          ThreadSleepMs(100);
    }
 
+   HAChannelShutdown();
    s_leaseManager->stop();
    delete_and_null(s_leaseManager);
    nxlog_debug_tag(DEBUG_TAG, 2, L"Cluster controller stopped");

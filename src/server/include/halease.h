@@ -31,6 +31,12 @@
 #include <atomic>
 
 /**
+ * Get expression for "epoch seconds now" evaluated on the database server
+ * (nullptr for syntaxes not supported in cluster mode)
+ */
+const wchar_t *HAGetDbTimeExpression(int syntax);
+
+/**
  * HA lease manager state
  */
 enum class HALeaseState
@@ -91,6 +97,7 @@ private:
    std::atomic<int64_t> m_term;           // term held by this node; valid while ACTIVE
    std::atomic<bool> m_releaseRequested;
    std::atomic<bool> m_shutdown;
+   std::atomic<int> m_fastPollCycles;     // poll at 250 ms while > 0 (handover expected)
 
    Mutex m_statusLock;
    HALeaseStatus m_status;
@@ -140,6 +147,17 @@ public:
 
    bool start();
    void stop();
+
+   /**
+    * Wake the manager thread for an immediate poll/acquisition attempt and
+    * keep polling fast for a short window (peer channel handover
+    * notification; the lease stays authoritative)
+    */
+   void wakeup()
+   {
+      m_fastPollCycles = 20;
+      m_wakeupCondition.set();
+   }
 
    /**
     * Request graceful lease release (switchover, after drain). Executed asynchronously

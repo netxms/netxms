@@ -27,9 +27,11 @@
 /**
  * Get expression for "epoch seconds now" evaluated on the database server.
  * Returns nullptr for syntaxes not supported in cluster mode (an embedded
- * per-process database cannot be a shared arbiter).
+ * per-process database cannot be a shared arbiter). Shared by the lease
+ * manager and the HA change journal - all HA timestamps and expiry
+ * comparisons are computed in database server time.
  */
-static const wchar_t *GetDbTimeExpression(int syntax)
+const wchar_t *HAGetDbTimeExpression(int syntax)
 {
    switch(syntax)
    {
@@ -57,7 +59,7 @@ static const wchar_t *GetDbTimeExpression(int syntax)
 HALeaseManager::HALeaseManager(const uuid& nodeGuid, const wchar_t *nodeName, std::function<DB_HANDLE()> connector,
       uint32_t refreshInterval, uint32_t validity, uint32_t fenceMargin) : m_nodeGuid(nodeGuid), m_connector(connector),
       m_state(static_cast<int>(HALeaseState::INIT)), m_fenceDeadline(0), m_term(0), m_releaseRequested(false),
-      m_shutdown(false), m_statusLock(MutexType::FAST), m_wakeupCondition(false), m_watchdogWakeup(false)
+      m_shutdown(false), m_fastPollCycles(0), m_statusLock(MutexType::FAST), m_wakeupCondition(false), m_watchdogWakeup(false)
 {
    wcslcpy(m_nodeName, nodeName, 64);
    m_nodeAddress[0] = 0;
@@ -150,7 +152,7 @@ bool HALeaseManager::connect()
    }
 
    m_dbSyntax = DBGetSyntax(m_hdb);
-   m_dbTimeExpression = GetDbTimeExpression(m_dbSyntax);
+   m_dbTimeExpression = HAGetDbTimeExpression(m_dbSyntax);
    if (m_dbTimeExpression == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Database syntax %d is not supported in cluster mode", m_dbSyntax);
@@ -515,7 +517,17 @@ void HALeaseManager::mainLoop()
          {
             int64_t remainingValidity = poll();
             if ((remainingValidity != INT64_MIN) && (remainingValidity <= 0) && !m_shutdown.load())
+            {
+               m_fastPollCycles = 0;
                tryAcquire();
+            }
+            else if (m_fastPollCycles.load() > 0)
+            {
+               // Handover announced by the peer: poll fast until the lease
+               // becomes acquirable or the window decays
+               m_fastPollCycles--;
+               waitTime = 250;
+            }
             break;
          }
          case HALeaseState::ACTIVE:

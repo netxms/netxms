@@ -62,6 +62,63 @@ void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size);
 void NXCORE_EXPORTABLE SetServerExitCode(int exitCode);
 
 /**
+ * HA change journal entity type (stored as char(1) digit)
+ */
+enum class HAJournalEntityType
+{
+   OBJECT = 0,
+   ALARM = 1
+};
+
+/**
+ * HA change journal change type (stored as char(1) digit)
+ */
+enum class HAJournalChangeType
+{
+   CHANGE = 0,
+   DELETE = 1
+};
+
+/**
+ * HA change journal entry (as read by replay)
+ */
+struct HAJournalEntry
+{
+   int64_t seq;
+   HAJournalEntityType entityType;
+   HAJournalChangeType changeType;
+   uint32_t entityId;
+   int entityClass;
+};
+
+/**
+ * HA change journal (doc/HA_Design.md section 3). Writes are no-ops outside
+ * cluster mode and before HAJournalInit() runs at activation.
+ */
+bool HAJournalInit();
+bool NXCORE_EXPORTABLE HAJournalAppend(DB_HANDLE hdb, HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
+void NXCORE_EXPORTABLE HAJournalAppendAsync(HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
+int64_t NXCORE_EXPORTABLE HAJournalGetHead();
+void NXCORE_EXPORTABLE HAJournalSaveWatermark(int64_t seq);
+int64_t NXCORE_EXPORTABLE HAJournalReadWatermark();
+int64_t NXCORE_EXPORTABLE HAJournalGetTruncationPoint();
+int64_t NXCORE_EXPORTABLE HAJournalReplay(int64_t watermark, std::function<void(const HAJournalEntry&)> handler);
+void HAJournalPrune(DB_HANDLE hdb);
+uint32_t NXCORE_EXPORTABLE HAGetJournalRetentionTime();
+
+/**
+ * HA cluster peer channel (TLS link between nodes; pure acceleration for
+ * journal-based synchronization) and standby-side journal applier.
+ */
+void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_t peerPort);
+bool HAChannelStart();
+void HAChannelShutdown();
+void HAChannelNotifyDemotion();
+void NXCORE_EXPORTABLE HAChannelSetApplyHandler(std::function<void(const HAJournalEntry&)> handler);
+bool NXCORE_EXPORTABLE HAChannelIsPeerConnected();
+int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark();
+
+/**
  * Phase 2 of server startup (activation): everything beyond passive
  * bring-up. Called directly in standalone mode, or by the HA controller
  * when this node wins the cluster lease.

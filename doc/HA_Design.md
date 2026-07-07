@@ -307,8 +307,21 @@ CREATE TABLE ha_sync_state
   through the save path — `Syncer` deletes are a separate code path, hence
   explicit tombstones).
 - Alarm changes journal `entity_type='1'` on every alarm create / state
-  change / terminate, alongside the alarm's own DB write.
-- Journal append checks the fence flag like any role-sensitive write.
+  change / terminate, alongside the alarm's own DB write (the alarm DB
+  writer wraps both in one transaction). Individual alarm deletions journal
+  a tombstone through the same serialized lazy SQL writer queue;
+  delete-alarms-of-deleted-object is covered by the object's own tombstone.
+- Journal append checks the fence flag like any role-sensitive write, and a
+  failed append fails the enclosing save transaction — an entity change
+  never commits without its journal entry.
+- **Not journaled**: `saveRuntimeData()` writes (object status/state written
+  outside the modified-flag path). A standby's warm copy may carry stale
+  runtime status for objects with no other changes; this self-heals after
+  activation through normal polling and event processing, and the journal
+  volume saved is substantial on large installs.
+- Implementation: `hajournal.cpp`; append hooks at the end of the base
+  `NetObj::saveToDatabase` / `NetObj::deleteFromDatabase` (single choke
+  points inside the caller's transaction) and in the alarm DB writer thread.
 
 ### 3.3 Applying (standby node)
 
@@ -338,7 +351,46 @@ ha_change_journal WHERE seq > ? ORDER BY seq` — executed:
 Replay applies each entry the same way a live channel message would:
 reload entity from DB / apply tombstone.
 
-### 3.5 Pruning
+### 3.5 Peer channel (implementation)
+
+`hachannel.cpp`. TLS over TCP; NXCP message framing with a private command
+namespace (0x1001+, never visible outside the cluster interconnect, so not
+part of the client-facing NXCP command space or its Java mirror).
+
+- **Roles**: both nodes listen on `[CLUSTER] ChannelPort` (default 4704);
+  only a **standby** dials `PeerAddress`:`PeerPort` (`PeerPort` defaults to
+  `ChannelPort`; distinct values support NAT and single-host testing). The
+  active never dials. A HELLO carrying the node's own GUID is rejected
+  ("connected to self" — misconfigured PeerAddress).
+- **Authentication**: mutual HMAC-SHA256 challenge-response inside TLS,
+  keyed with a cluster secret auto-generated into DB metadata
+  (`HAClusterSecret`) on first start — access to the shared database is the
+  cluster's actual trust anchor, so the secret derives from it. A node that
+  loses the concurrent-bootstrap race fails one handshake and re-reads.
+  HELLO also carries the server ID; a different cluster's node is rejected.
+- **Messages**: HELLO / AUTH / KEEPALIVE (5 s) / CHANGE_NOTIFY (coalesced
+  journal-head hint, at most 1/s) / WATERMARK (standby ack; the active
+  exposes it for the switchover wait) / DEMOTED (handover).
+- **Handover acceleration**: DEMOTED is sent just before the lease release;
+  the standby's lease manager wakes and polls at 250 ms for a short window
+  (`HALeaseManager::wakeup()`), giving sub-second release-to-acquire
+  (measured 254 ms) instead of waiting out a refresh interval. A crashed
+  active gets no acceleration - promotion waits for lease expiry, keeping
+  the lease authoritative (measured: channel closure detected instantly,
+  promotion still at V + R).
+- **Applier** (standby): notification hints and a periodic timer trigger
+  incremental catch-up via `HAJournalReplay` (committed rows only, so a
+  pre-commit hint is harmless). The watermark advances over a contiguous
+  prefix; a missing sequence number (transaction still in flight or rolled
+  back) blocks advancement for a 60 s grace, then is treated as rolled
+  back. Residual: a transaction that commits its journal row *later* than
+  the grace window can be skipped by the live applier; it is still covered
+  at activation (replay runs against a quiesced journal) unless the
+  watermark had already been persisted past it — same class of residual
+  window as section 1.3, revisit if real workloads show >60 s save
+  transactions.
+
+### 3.6 Pruning
 
 Housekeeper on the active node deletes `ha_change_journal WHERE seq <=
 min(applied_seq of all rows in ha_sync_state whose node is a current cluster

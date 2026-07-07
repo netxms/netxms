@@ -446,6 +446,11 @@ static void HouseKeeper()
       if (!DeleteExpiredLogRecords(_T("connection history"), _T("connection_history"), _T("event_timestamp"), _T("ConnectionHistory.RetentionTime"), hdb, cycleStartTime))
          break;
 
+      // Prune applied HA change journal entries (no-op outside cluster mode)
+      HAJournalPrune(hdb);
+      if (!ThrottleHousekeeper())
+         break;
+
 		// Remove outdated audit log records
 		int32_t retentionTime = ConfigReadULong(_T("AuditLog.RetentionTime"), 90);
 		if (retentionTime > 0)

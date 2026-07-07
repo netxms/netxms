@@ -832,6 +832,9 @@ static void AlarmDbWriterThread()
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
+      // Alarm write and its HA journal entry commit atomically
+      DBBegin(hdb);
+
       bool success = false;
       if (rq->type == ALARM_DB_INSERT)
       {
@@ -937,11 +940,16 @@ static void AlarmDbWriterThread()
       }
 
       if (success)
+         success = HAJournalAppend(hdb, HAJournalEntityType::ALARM, HAJournalChangeType::CHANGE, rq->alarmId, 0);
+
+      if (success)
       {
+         DBCommit(hdb);
          FreeAlarmDbWriteRequest(rq);
       }
       else
       {
+         DBRollback(hdb);
          nxlog_debug_tag(DEBUG_TAG, 6, L"Failed to write alarm %u to database", rq->alarmId);
          s_alarmDbWriterQueue.insert(rq); // put request back to queue for retry
       }
@@ -2149,6 +2157,11 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
 
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_state_changes WHERE alarm_id=%u"), alarmId);
       QueueSQLRequest(szQuery);
+
+      // HA journal tombstone follows the delete on the same serialized SQL
+      // writer queue (object-cleanup deletions are covered by the object's
+      // own tombstone)
+      HAJournalAppendAsync(HAJournalEntityType::ALARM, HAJournalChangeType::DELETE, alarmId, 0);
 
       UpdateObjectOnAlarmResolve(objectId, alarmId, true);
    }
