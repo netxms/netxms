@@ -364,6 +364,7 @@
     <ClCompile Include="nxdbmgr.cpp" />
     <ClCompile Include="resetadmin.cpp" />
     <ClCompile Include="resetmonitoring.cpp" />
+    <ClCompile Include="stock_images.cpp" />
     <ClCompile Include="tables.cpp" />
     <ClCompile Include="tdata_convert.cpp" />
     <ClCompile Include="unlock.cpp" />
