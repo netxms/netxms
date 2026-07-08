@@ -54,6 +54,12 @@ struct ActionList
 static ObjectArray<ExternalSubagent> s_subagents;
 
 /**
+ * Component activation tokens (latest per component), kept for replay to external subagents connecting after token delivery
+ */
+static ObjectArray<AgentComponentToken> s_componentTokens(0, 8, Ownership::True);
+static Mutex s_componentTokensLock(MutexType::FAST);
+
+/**
  * Constructor
  */
 ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
@@ -158,6 +164,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
    nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): connection established"), m_name);
 
    syncPolicies();
+   sendCachedComponentTokens();
 
    PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 	while(!(g_dwFlags & AF_SHUTDOWN))
@@ -752,6 +759,24 @@ void ExternalSubagent::notifyOnComponentToken(const AgentComponentToken *token)
 }
 
 /**
+ * Send cached component activation tokens to subagent (tokens could have been received while subagent was not connected)
+ */
+void ExternalSubagent::sendCachedComponentTokens()
+{
+   time_t now = time(nullptr);
+   LockGuard lockGuard(s_componentTokensLock);
+   for(int i = 0; i < s_componentTokens.size(); i++)
+   {
+      AgentComponentToken *token = s_componentTokens.get(i);
+      if (static_cast<time_t>(ntohq(token->expirationTime)) >= now)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending cached component activation token for \"%hs\" to external subagent %s"), token->component, m_name);
+         notifyOnComponentToken(token);
+      }
+   }
+}
+
+/**
  * Add external subagent from config.
  * Each line in config should be in form 
  * name:user
@@ -1043,6 +1068,15 @@ void NotifyExtSubagentsOnPolicyInstall(uuid *guid)
  */
 void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token)
 {
+   s_componentTokensLock.lock();
+   int i;
+   for(i = 0; (i < s_componentTokens.size()) && strncmp(s_componentTokens.get(i)->component, token->component, sizeof(token->component)); i++);
+   if (i < s_componentTokens.size())
+      memcpy(s_componentTokens.get(i), token, sizeof(AgentComponentToken));
+   else
+      s_componentTokens.add(new AgentComponentToken(*token));
+   s_componentTokensLock.unlock();
+
    for(int i = 0; i < s_subagents.size(); i++)
    {
       if (s_subagents.get(i)->isConnected())

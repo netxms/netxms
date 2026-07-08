@@ -281,6 +281,7 @@ public:
    void syncPolicies();
    void notifyOnPolicyInstall(const uuid& guid);
    void notifyOnComponentToken(const AgentComponentToken *token);
+   void sendCachedComponentTokens();
 };
 
 /**
