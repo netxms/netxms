@@ -197,6 +197,20 @@ static bool RunHookCommand(const wchar_t *command, uint32_t waitTime)
 }
 
 /**
+ * Run demote hook command at most once per process incarnation. Every path
+ * out of the ACTIVE role ends the process, but more than one of them can
+ * pass through here (e.g. graceful switchover runs the hook up front to
+ * drop the virtual IP before the drains, then the common shutdown path
+ * ends at HAShutdownController).
+ */
+static void RunDemoteHook()
+{
+   static std::atomic<bool> executed(false);
+   if (!executed.exchange(true))
+      RunHookCommand(s_onDemoteCommand, 10000);
+}
+
+/**
  * Server activation thread (runs the full phase 2 startup after this node
  * wins the cluster lease)
  */
@@ -355,7 +369,7 @@ bool HAStartController()
       {
          s_fenced = true;
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Node fenced (%s); restarting into standby", reason);
-         RunHookCommand(s_onDemoteCommand, 10000);
+         RunDemoteHook();
          nxlog_close();
          _exit(NETXMSD_EXIT_RESTART_STANDBY);
       });
@@ -384,7 +398,7 @@ bool NXCORE_EXPORTABLE HAInitiateSwitchover()
       return false;
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Graceful switchover initiated");
-   RunHookCommand(s_onDemoteCommand, 10000);
+   RunDemoteHook();
    SetServerExitCode(NETXMSD_EXIT_RESTART_STANDBY);
    InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
    return true;
@@ -403,6 +417,11 @@ void HAShutdownController()
 
    if (s_leaseManager->getState() == HALeaseState::ACTIVE)
    {
+      // This node is leaving the ACTIVE role - release resources claimed by
+      // the promote hook (e.g. virtual IP address) so the peer can take them
+      // over. No-op if the hook already ran (fence, switchover).
+      RunDemoteHook();
+
       // Bounded wait for the peer to apply the journal up to the head
       // (doc/HA_Design.md 5.3 step 3) so the new active starts with fully
       // reconciled warm state; on timeout proceed anyway - the peer replays

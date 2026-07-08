@@ -334,6 +334,9 @@ public class NXCSession
    private String clientLanguage = "en";
    private boolean ignoreProtocolVersion = false;
    private boolean reconnectEnabled = false;
+   private int[] requiredComponentVersions = null;
+   private int standbyRedirects = 0;
+   private volatile boolean connectionRestartPending = false;
 
    // Information about logged in user
    private int sessionId;
@@ -865,6 +868,11 @@ public class NXCSession
             }
             catch(IOException e)
             {
+               if (connectionRestartPending)
+               {
+                  logger.info("Network receiver thread stopped for connection restart");
+                  return; // Stop this thread without normal cleanup
+               }
                if (!disconnected)
                {
                   logger.debug("Receiver error", e);
@@ -903,6 +911,12 @@ public class NXCSession
                receiverStopCause = new NXCPException(NXCPException.FATAL_PROTOCOL_ERROR);
                break;
             }
+         }
+
+         if (connectionRestartPending)
+         {
+            logger.info("Network receiver thread stopped for connection restart");
+            return; // Stop this thread without normal cleanup
          }
 
          synchronized(tcpProxies)
@@ -2321,6 +2335,7 @@ public class NXCSession
          throw new IllegalStateException("Session already disconnected and cannot be reused");
 
       encryptionContext = null;
+      requiredComponentVersions = componentVersions;
       logger.info("Connecting to " + connAddress + ":" + connPort);
       try
       {
@@ -2332,66 +2347,7 @@ public class NXCSession
          new NotificationProcessor();
          new BackgroundUserSync();
 
-         // get server information
-         logger.debug("Connection established, retrieving server info");
-         NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
-         sendMessage(request);
-         NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
-
-         protocolVersion = new ProtocolVersion(response);
-         if (!ignoreProtocolVersion)
-         {
-            if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) || ((componentVersions != null)
-                  && !validateProtocolVersions(componentVersions)))
-            {
-               logger.warn("Connection failed (" + protocolVersion.toString() + ")");
-               throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
-            }
-         }
-         else
-         {
-            logger.info("Protocol version ignored");
-         }
-
-         serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
-         serverBuild = response.getFieldAsString(NXCPCodes.VID_SERVER_BUILD);
-         serverId = response.getFieldAsInt64(NXCPCodes.VID_SERVER_ID);
-         serverTimeZone = response.getFieldAsString(NXCPCodes.VID_TIMEZONE);
-         serverTime = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
-         serverTimeRecvTime = System.currentTimeMillis();
-         serverChallenge = response.getFieldAsBinary(NXCPCodes.VID_CHALLENGE);
-
-         tileServerURL = response.getFieldAsString(NXCPCodes.VID_TILE_SERVER_URL);
-         if (tileServerURL == null)
-         {
-            tileServerURL = "http://tile.openstreetmap.org/";
-         }
-
-         dateFormat = response.getFieldAsString(NXCPCodes.VID_DATE_FORMAT);
-         if ((dateFormat == null) || (dateFormat.length() == 0))
-            dateFormat = "dd.MM.yyyy";
-
-         timeFormat = response.getFieldAsString(NXCPCodes.VID_TIME_FORMAT);
-         if ((timeFormat == null) || (timeFormat.length() == 0))
-            timeFormat = "HH:mm:ss";
-
-         shortTimeFormat = response.getFieldAsString(NXCPCodes.VID_SHORT_TIME_FORMAT);
-         if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0))
-            shortTimeFormat = "HH:mm";
-
-         int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_COMPONENTS);
-         long fieldId = NXCPCodes.VID_COMPONENT_LIST_BASE;
-         for(int i = 0; i < count; i++)
-            serverComponents.add(response.getFieldAsString(fieldId++));
-
-         // Setup encryption
-         request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
-         request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
-         sendMessage(request);
-         waitForRCC(request.getMessageId());
-
-         logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
-         logger.info("Server time zone is " + serverTimeZone);
+         setupSession();
          connected = true;
       }
       catch(UnknownHostException e)
@@ -2403,6 +2359,141 @@ public class NXCSession
          if (!connected)
             disconnect(SessionNotification.USER_DISCONNECT);
       }
+   }
+
+   /**
+    * Session setup on a newly established connection: retrieve server information,
+    * validate protocol versions, and set up encryption.
+    *
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private void setupSession() throws IOException, NXCException
+   {
+      logger.debug("Connection established, retrieving server info");
+      NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
+      sendMessage(request);
+      NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
+
+      protocolVersion = new ProtocolVersion(response);
+      if (!ignoreProtocolVersion)
+      {
+         if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) || ((requiredComponentVersions != null)
+               && !validateProtocolVersions(requiredComponentVersions)))
+         {
+            logger.warn("Connection failed (" + protocolVersion.toString() + ")");
+            throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
+         }
+      }
+      else
+      {
+         logger.info("Protocol version ignored");
+      }
+
+      serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
+      serverBuild = response.getFieldAsString(NXCPCodes.VID_SERVER_BUILD);
+      serverId = response.getFieldAsInt64(NXCPCodes.VID_SERVER_ID);
+      serverTimeZone = response.getFieldAsString(NXCPCodes.VID_TIMEZONE);
+      serverTime = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
+      serverTimeRecvTime = System.currentTimeMillis();
+      serverChallenge = response.getFieldAsBinary(NXCPCodes.VID_CHALLENGE);
+
+      tileServerURL = response.getFieldAsString(NXCPCodes.VID_TILE_SERVER_URL);
+      if (tileServerURL == null)
+      {
+         tileServerURL = "http://tile.openstreetmap.org/";
+      }
+
+      dateFormat = response.getFieldAsString(NXCPCodes.VID_DATE_FORMAT);
+      if ((dateFormat == null) || (dateFormat.length() == 0))
+         dateFormat = "dd.MM.yyyy";
+
+      timeFormat = response.getFieldAsString(NXCPCodes.VID_TIME_FORMAT);
+      if ((timeFormat == null) || (timeFormat.length() == 0))
+         timeFormat = "HH:mm:ss";
+
+      shortTimeFormat = response.getFieldAsString(NXCPCodes.VID_SHORT_TIME_FORMAT);
+      if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0))
+         shortTimeFormat = "HH:mm";
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_COMPONENTS);
+      long fieldId = NXCPCodes.VID_COMPONENT_LIST_BASE;
+      serverComponents.clear();
+      for(int i = 0; i < count; i++)
+         serverComponents.add(response.getFieldAsString(fieldId++));
+
+      // Setup encryption
+      request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
+      request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+      sendMessage(request);
+      waitForRCC(request.getMessageId());
+
+      logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
+      logger.info("Server time zone is " + serverTimeZone);
+   }
+
+   /**
+    * Restart connection on a different server address (used to follow a redirect
+    * from a standby cluster node to the active one). Tears down the current socket
+    * and receiver thread, connects to the given address on the same port, and
+    * re-runs session setup. Login state is not restored - the caller is expected
+    * to retry authentication on the new connection.
+    *
+    * @param address server address to connect to
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private void restartConnection(String address) throws IOException, NXCException
+   {
+      connectionRestartPending = true;
+      try
+      {
+         socket.shutdownInput();
+         socket.shutdownOutput();
+      }
+      catch(IOException e)
+      {
+      }
+      try
+      {
+         socket.close();
+      }
+      catch(IOException e)
+      {
+      }
+
+      if (recvThread != null)
+      {
+         while(recvThread.isAlive())
+         {
+            try
+            {
+               recvThread.join();
+            }
+            catch(InterruptedException e)
+            {
+            }
+         }
+         recvThread = null;
+      }
+      connectionRestartPending = false;
+
+      encryptionContext = null;
+      allowCompression = false;
+      connAddress = address;
+
+      logger.info("Connecting to " + connAddress + ":" + connPort);
+      try
+      {
+         socket = new Socket();
+         socket.connect(new InetSocketAddress(connAddress, connPort), connectTimeout);
+      }
+      catch(UnknownHostException e)
+      {
+         throw new NXCException(RCC.CANNOT_RESOLVE_HOSTNAME, e.getMessage(), null, e);
+      }
+      recvThread = new ReceiverThread();
+      setupSession();
    }
 
    /**
@@ -2605,12 +2696,30 @@ public class NXCSession
          throw new NXCException(rcc, minVersion);
       }
 
+      if (rcc == RCC.SERVER_IS_STANDBY)
+      {
+         String activeServerAddress = response.getFieldAsString(NXCPCodes.VID_ACTIVE_SERVER_ADDRESS);
+         if ((activeServerAddress != null) && !activeServerAddress.isEmpty() && !activeServerAddress.equalsIgnoreCase(connAddress) && (standbyRedirects < 2))
+         {
+            standbyRedirects++;
+            logger.info("Server at " + connAddress + " is a standby cluster node, redirecting to active node at " + activeServerAddress);
+            restartConnection(activeServerAddress);
+            login(authType, login, password, certificate, signature, twoFactorAuthenticationCallback);
+            return;
+         }
+         standbyRedirects = 0;
+         logger.error("Login failed - server is a standby cluster node" +
+               (((activeServerAddress != null) && !activeServerAddress.isEmpty()) ? " (active node at " + activeServerAddress + ")" : ""));
+         throw new NXCException(rcc, activeServerAddress);
+      }
+
       if (rcc != RCC.SUCCESS)
       {
          logger.error("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
 
+      standbyRedirects = 0;
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       sessionId = response.getFieldAsInt32(NXCPCodes.VID_SESSION_ID);
       authenticationToken = response.getFieldAsString(NXCPCodes.VID_AUTH_TOKEN);

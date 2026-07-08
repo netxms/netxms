@@ -263,9 +263,23 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
       _T("Agent access denied"),
       _T("TCP proxy function is disabled"),
       _T("Invalid task ID"),
-      _T("Invalid chat ID")
+      _T("Invalid chat ID"),
+      _T("Invalid incident ID"),
+      _T("Incident is closed"),
+      _T("Alarm already linked to an incident"),
+      _T("Invalid incident state"),
+      _T("Comment is required"),
+      _T("Invalid message ID"),
+      _T("EPP rule conflict"),
+      _T("Two-factor authentication setup is mandatory"),
+      _T("Template exclusion group conflict"),
+      _T("RADIUS access challenge received"),
+      _T("Zone proxy is not accessible"),
+      _T("Package is not trusted"),
+      _T("Package downgrade is not allowed"),
+      _T("Server is a standby cluster node")
    };
-	return (error <= RCC_INVALID_CHAT_ID) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_SERVER_IS_STANDBY) ? errorText[error] : _T("No message for this error");
 }
 
 #ifdef _WIN32

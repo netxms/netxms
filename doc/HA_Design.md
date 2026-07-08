@@ -541,8 +541,18 @@ passive bring-up, each with a per-request role gate (`cluster mode && !(g_flags
   `ClientSession::processRequest` serves protocol negotiation
   (`CMD_GET_SERVER_INFO`, `CMD_REQUEST_ENCRYPTION`) normally and answers
   everything else — including login — with `RCC_SERVER_IS_STANDBY` plus
-  `VID_ACTIVE_SERVER_ADDRESS` (the lease's `holder_address`), so clients can
-  redirect (client-side auto-redirect is phase 3).
+  `VID_ACTIVE_SERVER_ADDRESS` (the lease's `holder_address`). The Java client
+  library follows the redirect transparently: on `RCC_SERVER_IS_STANDBY`
+  during login, `NXCSession` restarts the connection against the advertised
+  address (same port), re-runs protocol negotiation and encryption setup, and
+  retries the login — capped at two hops with a self-address guard, so a
+  vacant lease or a stale holder address fails cleanly instead of looping.
+  Every `NXCSession` consumer (management console, nxshell, web service
+  proxy, MCP server, reporting server) inherits the behavior; the console's
+  connection-loss reconnect path re-logins through the same code, so a
+  session broken by failover also follows the new active node (subject to
+  the re-issued authentication token being accepted there — if not, the
+  user is returned to the login dialog).
 - **Web API listener**: the HTTP daemon starts during passive bring-up
   (`StartWebAPIListener`); the recurrent login-cleanup task stays
   activation-time. The router answers 503 for every route not explicitly
@@ -565,6 +575,37 @@ passive bring-up, each with a per-request role gate (`cluster mode && !(g_flags
   anyway.
 - **Mobile device listener**: activation-only (same reasoning, negligible
   reconnect cost).
+
+### 5.6 Role-change hooks (virtual IP)
+
+`[CLUSTER] OnPromoteCommand` and `OnDemoteCommand` run an external command
+at role transitions, primarily for managing a floating virtual IP (or a
+load-balancer/DNS update) for traffic that cannot follow the NXCP redirect:
+syslog, SNMP trap, and OTLP *senders* target a fixed address and have no
+redirect mechanism — a VIP is the only way to keep them working across
+failover. Clients, agents, and the web API work without one.
+
+Semantics:
+
+- **OnPromoteCommand** runs in the activation thread after the journal is
+  initialized, immediately before `ActivateServer()` — the VIP comes up
+  just before the node starts serving as active. Fire-and-forget (activation
+  is not delayed by a slow script).
+- **OnDemoteCommand** runs on *every* path out of the ACTIVE role, at most
+  once per process incarnation (`RunDemoteHook`): on fencing (before the
+  process exits), at the start of a graceful switchover (before the drains,
+  so new client traffic stops arriving at the demoting node), and from
+  `HAShutdownController` on a plain clean shutdown of the active node —
+  without this last call a normal service stop would leave the VIP assigned
+  to a stopped server. The hook is given up to 10 seconds to complete.
+- Hooks configured on a node that never held the active role never run.
+  A standby node's clean shutdown runs no hooks.
+
+The commands run as the netxmsd process user; VIP manipulation typically
+needs elevated rights (e.g. `sudo ip addr add`, with a matching sudoers
+entry, or a helper with CAP_NET_ADMIN). Scripts must be idempotent — the
+demote hook can run when the promote hook's changes were already reverted
+(node fenced before the VIP moved) and must not fail in that case.
 
 ## 6. Validation plan (phase 0 acceptance)
 
