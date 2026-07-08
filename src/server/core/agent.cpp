@@ -41,6 +41,8 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
    m_nodeId = nodeId;
    m_proxyNodeId = 0;
    m_tcpProxyCallback = nullptr;
+   m_trapAckScheduled = false;
+   m_lastSentTrapAckId = 0;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -57,6 +59,8 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunn
    m_nodeId = nodeId;
    m_proxyNodeId = 0;
    m_tcpProxyCallback = nullptr;
+   m_trapAckScheduled = false;
+   m_lastSentTrapAckId = 0;
 
    // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
    m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
@@ -183,6 +187,11 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
             eventBuilder.params(*pMsg, VID_EVENT_ARG_BASE, VID_EVENT_ARG_NAMES_BASE, VID_NUM_ARGS);
             eventBuilder.post();
 		   }
+
+		   // Acknowledge processed trap so agent can release it from its retransmission buffer.
+		   // Cumulative acknowledgement is coalesced on a timer and reports node's high water mark trap ID.
+		   if (isTrapAckSupported() && (trapId != 0))
+		      scheduleTrapAcknowledgement();
       }
       else
       {
@@ -192,6 +201,52 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    else
    {
       debugPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), getIpAddr().toString(szBuffer));
+   }
+}
+
+/**
+ * Trap acknowledgement coalescing interval (milliseconds)
+ */
+#define TRAP_ACK_INTERVAL 5000
+
+/**
+ * Schedule sending of cumulative trap acknowledgement. Multiple traps received within
+ * one interval are covered by a single acknowledgement message.
+ */
+void AgentConnectionEx::scheduleTrapAcknowledgement()
+{
+   m_trapAckLock.lock();
+   bool schedule = !m_trapAckScheduled;
+   m_trapAckScheduled = true;
+   m_trapAckLock.unlock();
+   if (schedule)
+      ThreadPoolScheduleRelative(g_agentConnectionThreadPool, TRAP_ACK_INTERVAL, self(), &AgentConnectionEx::sendTrapAcknowledgement);
+}
+
+/**
+ * Send cumulative trap acknowledgement to agent. Acknowledged trap ID is the node's
+ * high water mark, so agent can release all traps with lower or equal ID.
+ */
+void AgentConnectionEx::sendTrapAcknowledgement()
+{
+   m_trapAckLock.lock();
+   m_trapAckScheduled = false;
+   m_trapAckLock.unlock();
+
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (node == nullptr)
+      return;
+
+   uint64_t highWaterMark = node->getLastAgentTrapId();
+   if (highWaterMark == m_lastSentTrapAckId)
+      return;  // Nothing new to acknowledge
+
+   NXCPMessage msg(CMD_TRAP_ACK, 0, getProtocolVersion());
+   msg.setField(VID_TRAP_ID, highWaterMark);
+   if (sendMessage(&msg))
+   {
+      m_lastSentTrapAckId = highWaterMark;
+      debugPrintf(6, _T("AgentConnectionEx::sendTrapAcknowledgement(): acknowledged traps up to ID ") UINT64_FMT, highWaterMark);
    }
 }
 

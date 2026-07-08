@@ -355,6 +355,7 @@ private:
    bool m_proxyConnection;
    bool m_acceptData;
    bool m_acceptTraps;
+   bool m_serverAcksTraps;
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
@@ -438,6 +439,7 @@ public:
    bool isUpgradeServer() const { return m_upgradeServer; }
    virtual bool canAcceptData() override { return m_acceptData; }
    virtual bool canAcceptTraps() override { return m_acceptTraps; }
+   bool serverAcksTraps() const { return m_serverAcksTraps; }
    virtual bool canAcceptFileUpdates() override { return m_acceptFileUpdates; }
    virtual bool isBulkReconciliationSupported() override { return m_bulkReconciliationSupported; }
    virtual bool isIPv6Aware() override { return m_ipv6Aware; }

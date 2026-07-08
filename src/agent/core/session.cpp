@@ -36,6 +36,8 @@ uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(const shared_ptr<CommSession>& session);
+void ProcessTrapAcknowledgement(uint64_t serverId, uint64_t highWaterMarkId);
+void FlushPendingNotifications(uint64_t serverId);
 void SetLocalSystemTime(int64_t newTime);
 uint32_t InstallSoftwarePackage(CommSession *session, const char *packageType, const TCHAR *packageFile, const TCHAR *command);
 void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token);
@@ -116,6 +118,7 @@ CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const I
    m_pendingUpgradeRequestId = 0;
    m_proxyConnection = false;
    m_acceptTraps = false;
+   m_serverAcksTraps = false;
    m_acceptData = false;
    m_acceptFileUpdates = false;
    m_stopCommandProcessing = false;
@@ -360,6 +363,10 @@ void CommSession::readThread()
                case CMD_REQUEST_COMPLETED:
                   m_responseQueue->put(msg);
                   break;
+               case CMD_TRAP_ACK:
+                  ProcessTrapAcknowledgement(m_serverId, msg->getFieldAsUInt64(VID_TRAP_ID));
+                  delete msg;
+                  break;
                case CMD_REQUEST_SESSION_KEY:
                   if (m_encryptionContext == nullptr)
                   {
@@ -493,6 +500,11 @@ void CommSession::readThread()
    ThreadJoin(m_tcpProxyReadThread);
 
    debugPrintf(4, _T("Session with %s closed"), m_serverAddr.toString().cstr());
+
+   // Persist traps that were sent to this server but not yet acknowledged, so they are
+   // resynchronized (and deduplicated server-side) after reconnect instead of being lost.
+   if (m_acceptTraps && m_serverAcksTraps)
+      FlushPendingNotifications(m_serverId);
 
    UnregisterSession(m_id);
    m_channel->close();
@@ -676,8 +688,10 @@ void CommSession::processCommand(NXCPMessage *request)
             break;
          case CMD_ENABLE_AGENT_TRAPS:
             m_acceptTraps = true;
+            m_serverAcksTraps = request->getFieldAsBoolean(VID_TRAP_ACK_SUPPORTED);
             RegisterSessionForNotifications(self());
             response.setField(VID_RCC, ERR_SUCCESS);
+            response.setField(VID_TRAP_ACK_SUPPORTED, true);  // Indicate that agent supports trap acknowledgements
             break;
          case CMD_ENABLE_FILE_UPDATES:
             if (m_masterServer)

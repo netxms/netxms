@@ -28,6 +28,12 @@
 #define SYNC_DATA_SIZE_TEXT   _T("1000")
 
 /**
+ * Maximum number of unacknowledged traps held in memory per server before oldest
+ * entries are spilled to local database (backpressure safety valve)
+ */
+#define MAX_PENDING_TRAPS     100000
+
+/**
  * Offline data expiration time (in days)
  */
 extern uint32_t g_dcOfflineExpirationTime;
@@ -48,6 +54,19 @@ enum class SyncStatus
 };
 
 /**
+ * Trap sent to server but not yet acknowledged. Held so it can be re-delivered
+ * (and deduplicated server-side) if the connection is lost before acknowledgement.
+ */
+struct PendingTrap
+{
+   uint64_t trapId;
+   NXCP_MESSAGE *data;   // serialized message, owned
+
+   PendingTrap(uint64_t id, NXCP_MESSAGE *serializedData) : trapId(id), data(serializedData) { }
+   ~PendingTrap() { MemFree(data); }
+};
+
+/**
  * Server synchronization status
  */
 struct ServerRegistration
@@ -55,6 +74,14 @@ struct ServerRegistration
    uint64_t serverId;
    uint32_t recordId;
    SyncStatus status;
+   ObjectArray<PendingTrap> pendingTraps;   // unacknowledged traps, ordered by ascending trap ID
+
+   ServerRegistration() : pendingTraps(64, 64, Ownership::True)
+   {
+      serverId = 0;
+      recordId = 0;
+      status = SyncStatus::ONLINE;
+   }
 };
 
 /**
@@ -62,6 +89,34 @@ struct ServerRegistration
  */
 static ObjectArray<ServerRegistration> s_serverSyncStatus(16, 16, Ownership::True);
 static Mutex s_serverSyncStatusLock;
+
+/**
+ * Save serialized notification message to local database for later synchronization.
+ * Does not take ownership of rawMessage.
+ */
+static bool SaveNotificationToDatabase(DB_HANDLE hdb, uint64_t serverId, uint32_t recordId, const NXCP_MESSAGE *rawMessage)
+{
+   char *base64Encoded = nullptr;
+   base64_encode_alloc(reinterpret_cast<const char*>(rawMessage), ntohl(rawMessage->size), &base64Encoded);
+   if (base64Encoded == nullptr)
+      return false;
+
+   bool success = false;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO notification_data (server_id,id,serialized_data) VALUES (?,?,?)"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, serverId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, recordId);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, base64Encoded, DB_BIND_DYNAMIC);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      MemFree(base64Encoded);
+   }
+   return success;
+}
 
 /**
  * Process notifications - external subagent
@@ -105,14 +160,14 @@ static void MasterNotificationProcessor()
       nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationProcessor: new message received"));
 
       uint64_t targetServerId = msg->getFieldAsUInt64(VID_SERVER_ID);
-
-      DB_STATEMENT hStmt = nullptr;
+      uint64_t trapId = msg->getFieldAsUInt64(VID_TRAP_ID);
 
       s_serverSyncStatusLock.lock();
       nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationProcessor: Server count: %d"), s_serverSyncStatus.size());
       for(int i = 0; i < s_serverSyncStatus.size(); i++)
       {
          bool sent = false;
+         bool held = false;   // true if delivered live and retained in pending buffer awaiting acknowledgement
          ServerRegistration *server = s_serverSyncStatus.get(i);
          if ((targetServerId != 0) && (server->serverId != targetServerId))
             continue;
@@ -125,10 +180,26 @@ static void MasterNotificationProcessor()
                if ((session->getServerId() == server->serverId) && session->canAcceptTraps())
                {
                   sent = session->sendMessage(msg);
+                  if (sent && session->serverAcksTraps())
+                  {
+                     // Retain a copy until server acknowledges; flushed to database on disconnect if still unacknowledged
+                     server->pendingTraps.add(new PendingTrap(trapId, msg->serialize(true)));
+                     held = true;
+                  }
                   break;
                }
             }
             g_sessionLock.unlock();
+         }
+
+         // Backpressure safety valve: spill oldest unacknowledged trap to database if buffer grows too large
+         if (held && (server->pendingTraps.size() > MAX_PENDING_TRAPS))
+         {
+            DB_HANDLE hdb = GetLocalDatabaseHandle();
+            if (hdb != nullptr)
+               SaveNotificationToDatabase(hdb, server->serverId, server->recordId++, server->pendingTraps.get(0)->data);
+            server->pendingTraps.remove(0);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("NotificationProcessor: pending trap buffer overflow for server ") UINT64X_FMT(_T("016")) _T(", oldest trap spilled to database"), server->serverId);
          }
 
          if (!sent)
@@ -136,24 +207,13 @@ static void MasterNotificationProcessor()
             DB_HANDLE hdb = GetLocalDatabaseHandle();
             if (hdb != nullptr)
             {
-               if (hStmt == nullptr)
+               NXCP_MESSAGE *rawMessage = msg->serialize(true);
+               if (SaveNotificationToDatabase(hdb, server->serverId, server->recordId++, rawMessage))
                {
-                  hStmt = DBPrepare(hdb, _T("INSERT INTO notification_data (server_id,id,serialized_data) VALUES (?,?,?)"), true);
-               }
-               if (hStmt != nullptr)
-               {
-                  NXCP_MESSAGE *rawMessage = msg->serialize(true);
-                  char *base64Encoded = nullptr;
-                  base64_encode_alloc(reinterpret_cast<char*>(rawMessage), ntohl(rawMessage->size), &base64Encoded);
-                  MemFree(rawMessage);
-
-                  DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, server->serverId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, server->recordId++);
-                  DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, base64Encoded, DB_BIND_DYNAMIC);
-                  DBExecute(hStmt);
                   server->status = SyncStatus::SYNCHRONIZING;
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationSender: Notification message saved to database"));
                }
+               MemFree(rawMessage);
             }
          }
          else
@@ -162,7 +222,6 @@ static void MasterNotificationProcessor()
          }
       }
       s_serverSyncStatusLock.unlock();
-      DBFreeStatement(hStmt);
 
       delete msg;
    }
@@ -386,6 +445,68 @@ void RegisterSessionForNotifications(const shared_ptr<CommSession>& session)
       TCHAR key[64];
       _sntprintf(key, 64, _T("NSync-") UINT64X_FMT(_T("016")), session->getServerId());
       ThreadPoolExecuteSerialized(g_commThreadPool, key, NotificationSync, session);
+   }
+   s_serverSyncStatusLock.unlock();
+}
+
+/**
+ * Process cumulative trap acknowledgement from server. Releases all pending traps with
+ * ID lower than or equal to the high water mark reported by the server.
+ */
+void ProcessTrapAcknowledgement(uint64_t serverId, uint64_t highWaterMarkId)
+{
+   if (highWaterMarkId == 0)
+      return;
+
+   s_serverSyncStatusLock.lock();
+   for(int i = 0; i < s_serverSyncStatus.size(); i++)
+   {
+      ServerRegistration *server = s_serverSyncStatus.get(i);
+      if (server->serverId != serverId)
+         continue;
+
+      int removed = 0;
+      while(!server->pendingTraps.isEmpty() && (server->pendingTraps.get(0)->trapId <= highWaterMarkId))
+      {
+         server->pendingTraps.remove(0);   // owned entry is destroyed, releasing serialized message
+         removed++;
+      }
+      if (removed > 0)
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ProcessTrapAcknowledgement: released %d acknowledged trap(s) for server ") UINT64X_FMT(_T("016")) _T(" (high water mark ") UINT64_FMT _T(")"), removed, serverId, highWaterMarkId);
+      break;
+   }
+   s_serverSyncStatusLock.unlock();
+}
+
+/**
+ * Persist traps that were delivered to a server but not yet acknowledged. Called when the
+ * session is closing so that unacknowledged traps are resynchronized after reconnect
+ * (server-side deduplication drops any that were actually processed).
+ */
+void FlushPendingNotifications(uint64_t serverId)
+{
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+
+   s_serverSyncStatusLock.lock();
+   for(int i = 0; i < s_serverSyncStatus.size(); i++)
+   {
+      ServerRegistration *server = s_serverSyncStatus.get(i);
+      if (server->serverId != serverId)
+         continue;
+
+      int count = server->pendingTraps.size();
+      if (count > 0)
+      {
+         if (hdb != nullptr)
+         {
+            for(int j = 0; j < count; j++)
+               SaveNotificationToDatabase(hdb, serverId, server->recordId++, server->pendingTraps.get(j)->data);
+            server->status = SyncStatus::SYNCHRONIZING;
+         }
+         server->pendingTraps.clear();
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FlushPendingNotifications: %d unacknowledged trap(s) persisted for server ") UINT64X_FMT(_T("016")), count, serverId);
+      }
+      break;
    }
    s_serverSyncStatusLock.unlock();
 }

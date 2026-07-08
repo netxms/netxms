@@ -1196,6 +1196,7 @@ private:
    std::function<void (NXCPMessage*)> m_sendToClientMessageCallback;
 	bool m_fileUploadInProgress;
 	bool m_fileUpdateConnection;
+	bool m_agentSupportsTrapAck;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
 	SSHChannelCallbackIndex m_sshChannelHandlers;
@@ -1268,6 +1269,7 @@ public:
 	bool isMasterServer() const { return m_masterServer; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 	bool isFileUpdateConnection() const { return m_fileUpdateConnection; }
+	bool isTrapAckSupported() const { return m_agentSupportsTrapAck; }
 
    bool sendMessage(NXCPMessage *msg);
    void postMessage(NXCPMessage *msg);

@@ -548,6 +548,7 @@ public class NXCPCodes
    public static final int CMD_GET_OTLP_METRICS = 0x0212;
    public static final int CMD_GET_RECONCILIATION_STATUS = 0x0213;
    public static final int CMD_REGISTER_SUBAGENT = 0x0214;
+   public static final int CMD_TRAP_ACK = 0x0215;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1553,6 +1554,7 @@ public class NXCPCodes
    public static final long VID_RECONCILIATION_ACTIVE = 997;
    public static final long VID_RECONCILIATION_LAST_REPORT = 998;
    public static final long VID_ACTIVE_SERVER_ADDRESS = 999;
+   public static final long VID_TRAP_ACK_SUPPORTED = 1000;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

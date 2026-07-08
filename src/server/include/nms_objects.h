@@ -243,6 +243,12 @@ protected:
    shared_ptr<AgentTunnel> m_proxyTunnel;
    TcpProxyCallback *m_tcpProxyCallback;
    int64_t m_dbWriterQueueThreshold;
+   Mutex m_trapAckLock;
+   bool m_trapAckScheduled;
+   uint64_t m_lastSentTrapAckId;
+
+   void scheduleTrapAcknowledgement();
+   void sendTrapAcknowledgement();
 
    virtual shared_ptr<AbstractCommChannel> createChannel() override;
    virtual void onTrap(NXCPMessage *msg) override;
@@ -4582,6 +4588,7 @@ public:
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    bool checkAgentTrapId(uint64_t id);
+   uint64_t getLastAgentTrapId() const { return m_lastAgentTrapId; }
    bool checkSNMPTrapId(uint32_t id);
    bool checkSyslogMessageId(uint64_t id);
    bool checkWindowsEventId(uint64_t id);

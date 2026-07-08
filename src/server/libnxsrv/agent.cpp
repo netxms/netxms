@@ -538,6 +538,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_fileDownloadSucceeded = false;
 	m_fileUploadInProgress = false;
    m_fileUpdateConnection = false;
+   m_agentSupportsTrapAck = false;
    m_downloadRequestId = 0;
    m_downloadActivityTimestamp = 0;
    m_downloadInactivityTimeout = 300;
@@ -2750,9 +2751,19 @@ uint32_t AgentConnection::setupProxyConnection()
 uint32_t AgentConnection::enableTraps()
 {
    NXCPMessage request(CMD_ENABLE_AGENT_TRAPS, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_TRAP_ACK_SUPPORTED, true);  // Indicate that server acknowledges received traps
    if (!sendMessage(&request))
       return ERR_CONNECTION_BROKEN;
-   return waitForRCC(request.getId(), m_commandTimeout);
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+      m_agentSupportsTrapAck = response->getFieldAsBoolean(VID_TRAP_ACK_SUPPORTED);
+   delete response;
+   return rcc;
 }
 
 /**

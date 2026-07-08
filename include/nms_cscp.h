@@ -730,6 +730,7 @@ __PACK_END__
 #define CMD_GET_OTLP_METRICS              0x0212
 #define CMD_GET_RECONCILIATION_STATUS     0x0213
 #define CMD_REGISTER_SUBAGENT             0x0214
+#define CMD_TRAP_ACK                      0x0215
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1744,6 +1745,7 @@ __PACK_END__
 #define VID_RECONCILIATION_ACTIVE   ((uint32_t)997)
 #define VID_RECONCILIATION_LAST_REPORT ((uint32_t)998)
 #define VID_ACTIVE_SERVER_ADDRESS   ((uint32_t)999)
+#define VID_TRAP_ACK_SUPPORTED      ((uint32_t)1000)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
