@@ -107,6 +107,16 @@ public interface BrandingProvider
       return null;
    }
 
+   /**
+    * Get foreground (text/icon) color for selected item in perspective switcher.
+    *
+    * @return selection foreground color for perspective switcher or null to use default
+    */
+   default RGB getPerspectiveSwitcherSelectionForeground()
+   {
+      return null;
+   }
+
 	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)
 	 * 

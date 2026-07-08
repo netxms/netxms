@@ -207,6 +207,22 @@ public final class BrandingManager
       return ThemeEngine.getBackgroundColorDefinition("Window.PerspectiveSwitcher.Selection");
    }
 
+   /**
+    * Get perspective switcher selection (active item) foreground.
+    *
+    * @return perspective switcher selection foreground
+    */
+   public static RGB getPerspectiveSwitcherSelectionForeground()
+   {
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getPerspectiveSwitcherSelectionForeground();
+         if (color != null)
+            return color;
+      }
+      return ThemeEngine.getForegroundColorDefinition("Window.PerspectiveSwitcher.Selection");
+   }
+
 	/**
 	 * Get default perspective ID.
 	 * 

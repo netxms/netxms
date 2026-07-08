@@ -111,7 +111,7 @@ public class PerspectiveSwitcher extends Composite
       backgroundColor = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherBackground());
       foregroundColor = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher");
       selectionBackground = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherSelectionBackground());
-      selectionForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.Selection");
+      selectionForeground = new Color(getDisplay(), BrandingManager.getPerspectiveSwitcherSelectionForeground());
       hoverBackground = ThemeEngine.getBackgroundColor("Window.PerspectiveSwitcher.Hover");
       sectionHeaderForeground = ThemeEngine.getForegroundColor("Window.PerspectiveSwitcher.SectionHeader");
       itemFont = FontTools.createAdjustedFont(getFont(), -1);
@@ -133,6 +133,7 @@ public class PerspectiveSwitcher extends Composite
          toggleFont.dispose();
          backgroundColor.dispose();
          selectionBackground.dispose();
+         selectionForeground.dispose();
       });
    }
 

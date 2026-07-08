@@ -1941,27 +1941,38 @@ Browser {
 
 ScrollBar {
   border: none;
-  background-color: #f3f3f4;
-  /* border-radius: 3px 3px 3px 3px; */
-  width: 15px;
+  background-color: transparent;
+  width: 11px;
   background-image: none;
+  opacity: 0;
+}
+
+/* Fade in only while the mouse is over the scrolled area (or during scrolling).
+   The "active" state is toggled by RWT's ScrollBarsActivator; ScrollBar applies
+   a 250ms opacity transition, so this cross-fades smoothly. */
+ScrollBar:active {
+  opacity: 1;
 }
 
 ScrollBar-Thumb {
-  background-color: transparent;
-  border: 1px solid #b4b4b4;
-  border-radius: 0px;
+  background-color: rgba( 128, 128, 128, 0.45 );
+  border: none;
+  border-radius: 5px;
   background-image: none;
-  min-height: 20px;
+  min-height: 30px;
+}
+
+ScrollBar-Thumb:hover {
+  background-color: rgba( 128, 128, 128, 0.65 );
 }
 
 ScrollBar-Thumb:pressed {
-  border: 1px solid #999999;
+  background-color: rgba( 128, 128, 128, 0.85 );
 }
 
 ScrollBar-UpButton, ScrollBar-DownButton {
   background-color: transparent;
-  border: 1px solid #b4b4b4;
+  border: none;
   cursor: default;
 }
 
@@ -1983,106 +1994,15 @@ ScrollBar-DownButton[VERTICAL] {
   /* border-radius: 3px 3px 0px 0px; */
 }
 
-/* Icons */
+/* Icons - flat scrollbar has no thumb grip or arrow glyphs */
 
-ScrollBar-Thumb-Icon[VERTICAL] {
-  background-image: url( themes/light.resources/scrollbar/v-knob.png );
-}
-
-ScrollBar-Thumb-Icon[HORIZONTAL] {
-  background-image: url( themes/light.resources/scrollbar/h-knob.png );
-}
-
-ScrollBar-UpButton-Icon[VERTICAL] {
-  background-image: url( themes/light.resources/spinner/down.png );
-}
-
-ScrollBar-UpButton-Icon[VERTICAL]:hover {
-  background-image: url( themes/light.resources/spinner/down-hover.png );
-}
-
-ScrollBar-UpButton-Icon[HORIZONTAL] {
-  background-image: url( themes/light.resources/scrollbar/right.png );
-}
-
-ScrollBar-UpButton-Icon[HORIZONTAL]:hover {
-  background-image: url( themes/light.resources/scrollbar/right-hover.png );
-}
-
-ScrollBar-DownButton-Icon[VERTICAL] {
-  background-image: url( themes/light.resources/spinner/up.png );
-}
-
-ScrollBar-DownButton-Icon[VERTICAL]:hover {
-  background-image: url( themes/light.resources/spinner/up-hover.png );
-}
-
+ScrollBar-Thumb-Icon[VERTICAL],
+ScrollBar-Thumb-Icon[HORIZONTAL],
+ScrollBar-UpButton-Icon[VERTICAL],
+ScrollBar-UpButton-Icon[HORIZONTAL],
+ScrollBar-DownButton-Icon[VERTICAL],
 ScrollBar-DownButton-Icon[HORIZONTAL] {
-  background-image: url( themes/light.resources/scrollbar/left.png );
-}
-
-ScrollBar-DownButton-Icon[HORIZONTAL]:hover {
-  background-image: url( themes/light.resources/scrollbar/left-hover.png );
-}
-
-/* Gradients */
-
-ScrollBar-Thumb[VERTICAL], ScrollBar-UpButton[VERTICAL], ScrollBar-DownButton[VERTICAL] {
-  background-image: gradient(
-    linear, left top, right top,
-    from( #ffffff ),
-    color-stop( 38%, #f0f0f0 ),
-    color-stop( 62%, #e0e0e0 ),
-    to( #ffffff )
-  );
-}
-
-ScrollBar-Thumb[VERTICAL]:hover, ScrollBar-UpButton[VERTICAL]:hover, ScrollBar-DownButton[VERTICAL]:hover {
-  background-image: gradient(
-    linear, left top, right top,
-    from( #ffffff ),
-    color-stop( 42%, #f0f0f0 ),
-    color-stop( 58%, #e0e0e0 ),
-    to( #cccccc )
-  );
-}
-
-ScrollBar-Thumb[VERTICAL]:pressed, ScrollBar-UpButton[VERTICAL]:pressed, ScrollBar-DownButton[VERTICAL]:pressed {
-  background-image: gradient(
-    linear, left top, right top,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
-}
-
-ScrollBar-Thumb[HORIZONTAL], ScrollBar-UpButton[HORIZONTAL], ScrollBar-DownButton[HORIZONTAL] {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 38%, #f0f0f0 ),
-    color-stop( 62%, #e0e0e0 ),
-    to( #ffffff )
-  );
-}
-
-ScrollBar-Thumb[HORIZONTAL]:hover, ScrollBar-UpButton[HORIZONTAL]:hover, ScrollBar-DownButton[HORIZONTAL]:hover{
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #ffffff ),
-    color-stop( 42%, #f0f0f0 ),
-    color-stop( 58%, #e0e0e0 ),
-    to( #cccccc )
-  );
-}
-
-ScrollBar-Thumb[HORIZONTAL]:pressed, ScrollBar-UpButton[HORIZONTAL]:pressed, ScrollBar-DownButton[HORIZONTAL]:pressed {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
+  background-image: none;
 }
 
 /* Shell */
