@@ -1033,11 +1033,12 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     */
    private void restartAgent(long nodeId)
    {
+      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Restarting agent"), null, objectMessageArea, getWindow().getShell().getDisplay()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            Registry.getSession().executeAction(nodeId, "Agent.Restart", null);
+            session.executeAction(nodeId, "Agent.Restart", null);
             runInUIThread(() -> objectMessageArea.addMessage(MessageArea.SUCCESS, i18n.tr("Agent restart command successfully sent")));
          }
 
