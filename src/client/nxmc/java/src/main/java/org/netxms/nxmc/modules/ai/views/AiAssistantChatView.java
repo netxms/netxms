@@ -48,7 +48,7 @@ public class AiAssistantChatView extends View
     */
    public AiAssistantChatView()
    {
-      super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant"), SharedIcons.AI_ASSISTANT, "tools.ai-assistant", false);
+      super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant"), SharedIcons.AI_ASSISTANT, "ai.ai-assistant", false);
       boundIncidentId = 0;
    }
 
@@ -60,7 +60,7 @@ public class AiAssistantChatView extends View
    public AiAssistantChatView(long incidentId)
    {
       super(LocalizationHelper.getI18n(AiAssistantChatView.class).tr("AI Assistant - Incident #{0}", incidentId),
-            SharedIcons.AI_ASSISTANT, "tools.ai-assistant." + incidentId, false);
+            SharedIcons.AI_ASSISTANT, "ai.ai-assistant." + incidentId, false);
       boundIncidentId = incidentId;
    }
 

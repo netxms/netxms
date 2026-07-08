@@ -38,6 +38,7 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.views.ToolsPerspective;
+import org.netxms.nxmc.modules.ai.AiPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
 import org.netxms.nxmc.modules.assetmanagement.AssetsPerspective;
@@ -394,6 +395,7 @@ public final class Registry
       perspectives.add(new ReportingPerspective());
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
+      perspectives.add(new AiPerspective());
 
       ServiceLoader<PerspectiveDescriptor> loader = ServiceLoader.load(PerspectiveDescriptor.class, Registry.class.getClassLoader());
       for(PerspectiveDescriptor p : loader)

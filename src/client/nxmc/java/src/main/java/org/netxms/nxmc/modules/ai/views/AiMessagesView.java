@@ -59,7 +59,7 @@ public class AiMessagesView extends View implements AiMessageActionHandler
    {
       super(LocalizationHelper.getI18n(AiMessagesView.class).tr("AI Messages"),
             ResourceManager.getImageDescriptor("icons/tool-views/ai-messages.png"),
-            "tools.ai-messages", true);
+            "ai.ai-messages", true);
       session = Registry.getSession();
    }
 

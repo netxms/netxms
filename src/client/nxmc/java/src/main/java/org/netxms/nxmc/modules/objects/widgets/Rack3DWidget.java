@@ -90,7 +90,6 @@ public class Rack3DWidget extends Composite implements ImageUpdateListener
    private static final String BG_COLOR_MARKER = "__BG_COLOR__";
 
    private final Rack rack;
-   private final View view;
    private final Browser browser;
    private final Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
    private final List<BrowserFunction> browserFunctions = new ArrayList<BrowserFunction>(2);
@@ -108,7 +107,6 @@ public class Rack3DWidget extends Composite implements ImageUpdateListener
    {
       super(parent, style);
       this.rack = rack;
-      this.view = view;
 
       setLayout(new FillLayout());
       browser = new Browser(this, SWT.NONE);
@@ -398,10 +396,10 @@ public class Rack3DWidget extends Composite implements ImageUpdateListener
             case '\r':
                sb.append("\\r");
                break;
-            case ' ': // line separator - breaks JS string literals
+            case '\u2028': // line separator - breaks JS string literals
                sb.append("\\u2028");
                break;
-            case ' ': // paragraph separator - breaks JS string literals
+            case '\u2029': // paragraph separator - breaks JS string literals
                sb.append("\\u2029");
                break;
             default:
@@ -437,6 +435,7 @@ public class Rack3DWidget extends Composite implements ImageUpdateListener
     * Scene description passed to the JS layer as JSON. Field names are part of the
     * Java/JS contract and are consumed verbatim in rack3d.html.
     */
+   @SuppressWarnings("unused")
    private static class Scene
    {
       int height;
@@ -450,6 +449,7 @@ public class Rack3DWidget extends Composite implements ImageUpdateListener
    /**
     * Single rack-mounted element (active device or passive element) in the scene.
     */
+   @SuppressWarnings("unused")
    private static class Unit
    {
       long id;          // object id for active devices; passive-element id for passive (see passive flag)
