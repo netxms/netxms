@@ -627,6 +627,7 @@ protected:
 
    bool transform(ItemValue &value, int64_t elapsedTime);
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
+   uint32_t calculateRequiredCacheSize(const NetObj& owner) const;
    void updateCacheSizeInternal(bool allowLoad);
    void clearCache();
    void clearInterfaceUtilization();
@@ -720,6 +721,7 @@ public:
 	uint64_t getCacheMemoryUsage() const;
 
    bool processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
+   void feedValueFromPeer(Timestamp timestamp, const wchar_t *rawValue, const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected);
 
    virtual void processNewError(bool noInstance, Timestamp timestamp) override;
    virtual void saveStateBeforeMaintenance() override;

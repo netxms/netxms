@@ -111,7 +111,7 @@ uint32_t NXCORE_EXPORTABLE HAGetJournalRetentionTime();
  * HA cluster peer channel (TLS link between nodes; pure acceleration for
  * journal-based synchronization) and standby-side journal applier.
  */
-void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_t peerPort);
+void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_t peerPort, bool dataFeedEnabled);
 bool HAChannelStart();
 void HAChannelShutdown();
 void HAChannelNotifyDemotion();
@@ -120,6 +120,29 @@ bool HAChannelFinalizeSync();
 bool NXCORE_EXPORTABLE HAChannelIsPeerConnected();
 int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark();
 int64_t HAChannelGetAppliedWatermark();
+
+/**
+ * Data collection feed statistics (both directions; a node only populates
+ * the side matching its role)
+ */
+struct HADataFeedStats
+{
+   bool enabled;
+   uint64_t valuesSent;        // active side: values sent to the peer
+   uint64_t valuesDropped;     // active side: values dropped (backpressure or no peer)
+   uint64_t valuesApplied;     // standby side: values applied to warm state
+   uint64_t valuesDiscarded;   // standby side: values with no matching DCI
+};
+
+/**
+ * Data collection feed: batched replication of collected DCI values to the
+ * standby for cache pre-warming and delta-calculation state freshness. Pure
+ * optimization - fire-and-forget, activation never depends on it (the
+ * background cache loader covers whatever the feed did not).
+ */
+void HAChannelFeedDataValue(uint32_t ownerId, uint32_t dciId, Timestamp timestamp, const wchar_t *rawValue,
+      const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected);
+HADataFeedStats HAChannelGetDataFeedStats();
 
 /**
  * Warm standby state synchronization: journal entry application to the

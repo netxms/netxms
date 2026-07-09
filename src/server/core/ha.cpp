@@ -44,6 +44,7 @@ static uint32_t s_fenceMargin = 3;
 static uint32_t s_journalRetentionTime = 86400;   // seconds
 static uint32_t s_channelPort = 4704;
 static uint32_t s_peerPort = 0;      // 0 = same as ChannelPort
+static uint32_t s_enableDataCollectionFeed = 1;
 static wchar_t s_onPromoteCommand[MAX_PATH] = L"";
 static wchar_t s_onDemoteCommand[MAX_PATH] = L"";
 
@@ -51,6 +52,7 @@ static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
 {
    { L"ChannelPort", CT_LONG, 0, 0, 0, 0, &s_channelPort, nullptr },
    { L"ClusterMode", CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &s_clusterMode, nullptr },
+   { L"EnableDataCollectionFeed", CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &s_enableDataCollectionFeed, nullptr },
    { L"FenceMargin", CT_LONG, 0, 0, 0, 0, &s_fenceMargin, nullptr },
    { L"JournalRetentionTime", CT_LONG, 0, 0, 0, 0, &s_journalRetentionTime, nullptr },
    { L"LeaseRefreshInterval", CT_LONG, 0, 0, 0, 0, &s_leaseRefreshInterval, nullptr },
@@ -378,7 +380,7 @@ bool HAStartController()
       return false;
 
    HAChannelConfigure(s_peerAddress, static_cast<uint16_t>(s_channelPort),
-         static_cast<uint16_t>((s_peerPort != 0) ? s_peerPort : s_channelPort));
+         static_cast<uint16_t>((s_peerPort != 0) ? s_peerPort : s_channelPort), s_enableDataCollectionFeed != 0);
    if (!HAChannelStart())
       return false;
 

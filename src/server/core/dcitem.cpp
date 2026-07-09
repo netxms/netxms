@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_ha.h>
 #include <netxms_mt.h>
 #include <cmath>
 
@@ -1300,12 +1301,14 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    }
 
    // Then check if user wants to collect all values or only changed values
+   bool storedInDb = false;
    if (shouldSave && (!isStoreChangesOnly() || (m_cacheLoaded && (m_cacheSize > 0) && wcscmp(pValue->getString(), m_ppValueCache[0]->getString()))))
    {
       // Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
       {
          QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+         storedInDb = true;
 
          // If aggregation is active and this sample pre-dates our rollup watermark,
          // push the watermark back so the next rollup pass re-aggregates the affected bucket.
@@ -1323,6 +1326,11 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
          lock();
       }
    }
+
+   // Feed the value to the standby cluster node (raw value keeps delta-calculation
+   // state fresh across failover; stored values pre-warm the standby's value cache).
+   // No-op outside cluster mode or when the feed is disabled or the peer is down.
+   HAChannelFeedDataValue(owner->getId(), m_id, timestamp, originalValue, pValue->getString(), storedInDb, m_anomalyDetected);
 
    // Check thresholds
    Timestamp now = Timestamp::now();
@@ -1439,6 +1447,68 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    unlock();
 
    return true;
+}
+
+/**
+ * Apply a value collected by the active cluster node to this standby node's
+ * in-memory state (HA data collection feed). Mirrors the memory effects of
+ * processNewValue without transformation, threshold processing or storage -
+ * the value already went through all of that on the active node. The raw
+ * value keeps delta-calculation state fresh for failover; stored values
+ * pre-warm the value cache so activation does not need to reload it from
+ * the database.
+ */
+void DCItem::feedValueFromPeer(Timestamp timestamp, const wchar_t *rawValue, const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected)
+{
+   lock();
+
+   if (timestamp > m_prevValueTimeStamp)
+   {
+      m_prevRawValue = ItemValue(rawValue, timestamp, false);
+      m_prevValueTimeStamp = timestamp;
+      m_lastPollTime = timestamp;
+      m_anomalyDetected = anomalyDetected;
+   }
+
+   // The required cache size is normally calculated by the activation-time
+   // cache loading pass and is still 0 on a standby - calculate it on first
+   // use (cheap when the item does not qualify for caching)
+   if (storedInDb && !m_cacheLoaded && (m_requiredCacheSize == 0))
+   {
+      auto owner = m_owner.lock();
+      if (owner != nullptr)
+         m_requiredCacheSize = calculateRequiredCacheSize(*owner);
+   }
+
+   // Insert stored values at the cache head, mirroring what a cache reload
+   // from the history table would produce. The cache grows towards the
+   // required size (the passive loader queue is not serviced on a standby)
+   // and is marked loaded once fully populated, so reloadCache() at
+   // activation skips the database read.
+   if (storedInDb && (m_requiredCacheSize > 0) &&
+       ((m_cacheSize == 0) || (timestamp > m_ppValueCache[0]->getTimeStamp())))
+   {
+      if (m_cacheSize < m_requiredCacheSize)
+      {
+         m_ppValueCache = MemReallocArray(m_ppValueCache, m_cacheSize + 1);
+         memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue*) * m_cacheSize);
+         m_cacheSize++;
+      }
+      else
+      {
+         delete m_ppValueCache[m_cacheSize - 1];
+         memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue*) * (m_cacheSize - 1));
+      }
+      m_ppValueCache[0] = new ItemValue(transformedValue, timestamp, false);
+      m_lastValueTimestamp = timestamp;
+      if ((m_cacheSize == m_requiredCacheSize) && !m_cacheLoaded)
+      {
+         m_cacheLoaded = true;
+         nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 7, _T("Cache for DCI %s [%u] fully populated from cluster data feed"), m_name.cstr(), m_id);
+      }
+   }
+
+   unlock();
 }
 
 /**
@@ -1965,6 +2035,37 @@ void DCItem::changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOw
 }
 
 /**
+ * Calculate required cache size depending on thresholds and conditions.
+ * Minimum cache size is 1 for data collection targets (so GetLastValue can
+ * work) and always 0 for templates and instance discovery source items.
+ * Caller must hold the item lock.
+ */
+uint32_t DCItem::calculateRequiredCacheSize(const NetObj& owner) const
+{
+   if (!((owner.isDataCollectionTarget() && (owner.getObjectClass() != OBJECT_CLUSTER)) ||
+         ((owner.getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) ||
+       (m_instanceDiscoveryMethod != IDM_NONE))
+      return 0;
+
+   uint32_t requiredSize = 1;
+
+   for(int i = 0; i < getThresholdCount(); i++)
+      if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
+         requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
+
+   unique_ptr<SharedObjectArray<NetObj>> conditions = g_idxConditionById.getObjects();
+   for(int i = 0; i < conditions->size(); i++)
+   {
+      ConditionObject *c = static_cast<ConditionObject*>(conditions->get(i));
+      uint32_t size = c->getCacheSizeForDCI(m_id);
+      if (size > requiredSize)
+         requiredSize = size;
+   }
+
+   return requiredSize;
+}
+
+/**
  * Update required cache size depending on thresholds
  */
 void DCItem::updateCacheSizeInternal(bool allowLoad)
@@ -1978,34 +2079,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
       return;
    }
 
-   // Minimum cache size is 1 for nodes (so GetLastValue can work)
-   // and it is always 0 for templates
-   if (((owner->isDataCollectionTarget() && (owner->getObjectClass() != OBJECT_CLUSTER)) ||
-        ((owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
-       (m_instanceDiscoveryMethod == IDM_NONE))
-   {
-      uint32_t requiredSize = 1;
-
-      // Calculate required cache size
-      for(int i = 0; i < getThresholdCount(); i++)
-         if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
-            requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
-
-		unique_ptr<SharedObjectArray<NetObj>> conditions = g_idxConditionById.getObjects();
-		for(int i = 0; i < conditions->size(); i++)
-      {
-		   ConditionObject *c = static_cast<ConditionObject*>(conditions->get(i));
-			uint32_t size = c->getCacheSizeForDCI(m_id);
-         if (size > requiredSize)
-            requiredSize = size;
-      }
-
-		m_requiredCacheSize = requiredSize;
-   }
-   else
-   {
-      m_requiredCacheSize = 0;
-   }
+   m_requiredCacheSize = calculateRequiredCacheSize(*owner);
 
    nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
             m_name.cstr(), owner->getName(), owner->getId(), m_requiredCacheSize, m_cacheSize);

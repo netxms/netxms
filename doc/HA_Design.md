@@ -443,6 +443,54 @@ journal **truncated** (a flag row / metadata entry); a standby whose
 watermark predates the truncation point must discard its warm state and
 rebuild by restarting into a fresh standby.
 
+### 3.7 Data collection feed (phase 4)
+
+The active node replicates every processed DCI value to the standby over the
+peer channel (`HA_CMD_DCI_DATA`, batched up to 1000 values per message,
+flushed by the sender thread once per second). Each entry carries the owner
+and DCI IDs, the timestamp, the raw and transformed value strings, and flags
+(stored-in-history, anomaly-detected). The hook is in
+`DCItem::processNewValue`, so the feed sees exactly the values the DB writer
+absorbs.
+
+The feed is **fire-and-forget** and entirely outside the correctness
+machinery: no sequence numbers, no acks, no journal interaction. Any form of
+backpressure (no authenticated peer, pending-batch queue full) drops values
+with a counter. Correctness never depends on it — the background cache
+loader at activation covers whatever the feed did not.
+
+The standby applies each entry to its warm DCI instances
+(`DCItem::feedValueFromPeer`, memory only — no transformation, thresholds,
+events, or storage):
+
+- **Raw value** (every entry): refreshes the previous raw value / timestamp
+  and the anomaly flag. Without the feed these are as stale as the standby's
+  start, because they load from the lazily-written `raw_dci_values` table
+  and nothing re-reads it at activation — the first post-failover delta of a
+  delta-calculation DCI would be computed against a base as old as the
+  standby's uptime. With the feed the staleness bound is one flush interval,
+  better than a plain restart.
+- **Cache value** (entries flagged stored-in-history): inserted at the cache
+  head, growing the cache towards its required size (the standby does not
+  service the cache loader queue); once full the cache is marked loaded, so
+  `reloadCache()` at activation returns without touching the database.
+  Feeding only *stored* values keeps the standby cache restart-equivalent:
+  identical to what a reload from the history table would produce (values
+  skipped by sample-save-interval, store-changes-only, or no-retention never
+  reach the history table either).
+
+Values are discarded on the standby when no matching DCI exists (feed racing
+object sync or a delete) or when the timestamp is not newer than the cache
+head. Object sync's fresh-instance swap discards fed caches for objects
+whose configuration changes; the feed re-warms them going forward (accepted
+trade-off). Table DCIs are not fed (single last value, no multi-sample
+cache).
+
+Enabled by default; `EnableDataCollectionFeed = no` in `[CLUSTER]` turns it
+off for installs that want a lean interconnect. `nxadm ha status` ("Data
+feed" line) and `GET /v1/ha/status` (`dataCollectionFeed` object) expose
+sent/dropped (active side) and applied/discarded (standby side) counters.
+
 ## 4. ID allocator rebase
 
 All in-memory ID allocators are seeded from DB maxima once and incremented

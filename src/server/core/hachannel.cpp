@@ -50,6 +50,19 @@
 #define HA_CMD_CHANGE_NOTIFY  0x1004   // VID_SEQUENCE_NUMBER = journal head hint
 #define HA_CMD_WATERMARK      0x1005   // VID_SEQUENCE_NUMBER = peer applied watermark
 #define HA_CMD_DEMOTED        0x1006   // active is releasing the lease (handover)
+#define HA_CMD_DCI_DATA       0x1007   // VID_NUM_ELEMENTS + repeating groups (data collection feed)
+
+/**
+ * Data collection feed batching limits
+ */
+#define DATA_FEED_BATCH_SIZE     1000  // values per message
+#define DATA_FEED_MAX_PENDING    10    // finalized messages queued for the sender thread
+
+/**
+ * Data collection feed flags (per-value)
+ */
+#define DATA_FEED_FLAG_STORED    0x01  // value was written to the history table (goes into the value cache)
+#define DATA_FEED_FLAG_ANOMALY   0x02  // anomaly detector flagged this value
 
 /**
  * Cluster secret (HMAC key) storage
@@ -115,6 +128,25 @@ static std::atomic<int64_t> s_peerWatermark(0);
  * Applier wakeup
  */
 static Condition s_applierWakeup(false);
+
+/**
+ * Data collection feed state. The feed is fire-and-forget: values are batched
+ * into an NXCP message under a fast lock; full batches queue for the sender
+ * thread, which also flushes the current partial batch once per second. Any
+ * form of backpressure (no authenticated peer, pending queue full) drops
+ * values - the feed is pure cache pre-warming, never correctness.
+ */
+static bool s_dataFeedEnabled = false;               // [CLUSTER] EnableDataCollectionFeed
+static std::atomic<bool> s_dataFeedActive(false);    // enabled && this node active && peer connected (maintained by sender thread)
+static Mutex s_dataFeedLock(MutexType::FAST);
+static NXCPMessage *s_dataFeedMessage = nullptr;     // current partial batch
+static uint32_t s_dataFeedCount = 0;                 // values in current partial batch
+static uint32_t s_dataFeedFieldId = 0;
+static std::vector<NXCPMessage*> s_dataFeedPending;  // finalized batches awaiting the sender thread
+static std::atomic<uint64_t> s_dataFeedValuesSent(0);
+static std::atomic<uint64_t> s_dataFeedValuesDropped(0);
+static std::atomic<uint64_t> s_dataFeedValuesApplied(0);
+static std::atomic<uint64_t> s_dataFeedValuesDiscarded(0);
 
 /**
  * Load (or bootstrap) the cluster secret from database metadata. If two nodes
@@ -410,6 +442,43 @@ void HAChannelSession::processMessage(NXCPMessage *msg)
       case HA_CMD_WATERMARK:
          s_peerWatermark = msg->getFieldAsInt64(VID_SEQUENCE_NUMBER);
          break;
+      case HA_CMD_DCI_DATA:
+      {
+         // Only a standby maintains warm state; drop batches that arrive
+         // around a role change (the values are already in this node's
+         // caches or will be reloaded from the database)
+         HALeaseManager *manager = HAGetLeaseManager();
+         if ((manager == nullptr) || (manager->getState() != HALeaseState::STANDBY))
+            break;
+         int count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
+         uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < count; i++, fieldId += 10)
+         {
+            uint32_t ownerId = msg->getFieldAsUInt32(fieldId);
+            uint32_t dciId = msg->getFieldAsUInt32(fieldId + 1);
+            bool applied = false;
+            shared_ptr<NetObj> object = FindObjectById(ownerId);
+            if ((object != nullptr) && object->isDataCollectionTarget())
+            {
+               shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object.get())->getDCObjectById(dciId, 0, true);
+               if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
+               {
+                  wchar_t rawValue[MAX_DB_STRING], transformedValue[MAX_DB_STRING];
+                  msg->getFieldAsString(fieldId + 3, rawValue, MAX_DB_STRING);
+                  msg->getFieldAsString(fieldId + 4, transformedValue, MAX_DB_STRING);
+                  uint16_t flags = msg->getFieldAsUInt16(fieldId + 5);
+                  static_cast<DCItem*>(dci.get())->feedValueFromPeer(Timestamp::fromMilliseconds(msg->getFieldAsInt64(fieldId + 2)),
+                        rawValue, transformedValue, (flags & DATA_FEED_FLAG_STORED) != 0, (flags & DATA_FEED_FLAG_ANOMALY) != 0);
+                  applied = true;
+               }
+            }
+            if (applied)
+               s_dataFeedValuesApplied++;
+            else
+               s_dataFeedValuesDiscarded++;
+         }
+         break;
+      }
       case HA_CMD_DEMOTED:
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Peer node announced demotion");
@@ -436,6 +505,41 @@ static void SendToPeer(const NXCPMessage& msg)
       s_inboundSession->sendMessage(msg);
    if ((s_outboundSession != nullptr) && s_outboundSession->isAuthenticated())
       s_outboundSession->sendMessage(msg);
+}
+
+/**
+ * Flush the data collection feed: finalize the current partial batch and
+ * dispatch everything queued. Called by the sender thread once per cycle;
+ * without an authenticated peer the batches are dropped (the feed never
+ * buffers across an outage - the cache loader covers the gap at activation).
+ */
+static void FlushDataFeed(bool peerConnected)
+{
+   std::vector<NXCPMessage*> batch;
+   s_dataFeedLock.lock();
+   if (s_dataFeedMessage != nullptr)
+   {
+      s_dataFeedMessage->setField(VID_NUM_ELEMENTS, s_dataFeedCount);
+      s_dataFeedPending.push_back(s_dataFeedMessage);
+      s_dataFeedMessage = nullptr;
+   }
+   batch.swap(s_dataFeedPending);
+   s_dataFeedLock.unlock();
+
+   for(NXCPMessage *msg : batch)
+   {
+      uint32_t count = msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
+      if (peerConnected)
+      {
+         SendToPeer(*msg);
+         s_dataFeedValuesSent += count;
+      }
+      else
+      {
+         s_dataFeedValuesDropped += count;
+      }
+      delete msg;
+   }
 }
 
 /**
@@ -600,6 +704,12 @@ static void SenderThread()
       if (s_shutdown.load())
          break;
 
+      // Maintain data collection feed state and flush the accumulated batch
+      bool peerConnected = HAChannelIsPeerConnected();
+      HALeaseManager *manager = HAGetLeaseManager();
+      s_dataFeedActive = s_dataFeedEnabled && peerConnected && (manager != nullptr) && (manager->getState() == HALeaseState::ACTIVE);
+      FlushDataFeed(peerConnected);
+
       int64_t head = HAJournalGetHead();
       if (head > lastSentHead)
       {
@@ -717,11 +827,72 @@ static THREAD s_applierThread = INVALID_THREAD_HANDLE;
 /**
  * Set channel configuration (called by HAStartController before start)
  */
-void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_t peerPort)
+void HAChannelConfigure(const wchar_t *peerAddress, uint16_t listenPort, uint16_t peerPort, bool dataFeedEnabled)
 {
    wcslcpy(s_peerAddress, peerAddress, 256);
    s_channelPort = listenPort;
    s_peerPort = peerPort;
+   s_dataFeedEnabled = dataFeedEnabled;
+}
+
+/**
+ * Feed a collected DCI value to the standby node (called by the data
+ * collector for every processed value while this node is active). Values are
+ * batched; a full batch queues for the sender thread, which also flushes
+ * partial batches once per second.
+ */
+void HAChannelFeedDataValue(uint32_t ownerId, uint32_t dciId, Timestamp timestamp, const wchar_t *rawValue,
+      const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected)
+{
+   if (!s_dataFeedActive.load(std::memory_order_relaxed))
+      return;
+
+#ifdef _WITH_ENCRYPTION
+   LockGuard lockGuard(s_dataFeedLock);
+   if (s_dataFeedMessage == nullptr)
+   {
+      s_dataFeedMessage = new NXCPMessage(HA_CMD_DCI_DATA, 0, 5);
+      s_dataFeedCount = 0;
+      s_dataFeedFieldId = VID_ELEMENT_LIST_BASE;
+   }
+   s_dataFeedMessage->setField(s_dataFeedFieldId, ownerId);
+   s_dataFeedMessage->setField(s_dataFeedFieldId + 1, dciId);
+   s_dataFeedMessage->setField(s_dataFeedFieldId + 2, timestamp.asMilliseconds());
+   s_dataFeedMessage->setField(s_dataFeedFieldId + 3, rawValue);
+   s_dataFeedMessage->setField(s_dataFeedFieldId + 4, transformedValue);
+   s_dataFeedMessage->setField(s_dataFeedFieldId + 5,
+         static_cast<uint16_t>((storedInDb ? DATA_FEED_FLAG_STORED : 0) | (anomalyDetected ? DATA_FEED_FLAG_ANOMALY : 0)));
+   s_dataFeedCount++;
+   s_dataFeedFieldId += 10;
+   if (s_dataFeedCount >= DATA_FEED_BATCH_SIZE)
+   {
+      s_dataFeedMessage->setField(VID_NUM_ELEMENTS, s_dataFeedCount);
+      if (s_dataFeedPending.size() < DATA_FEED_MAX_PENDING)
+      {
+         s_dataFeedPending.push_back(s_dataFeedMessage);
+      }
+      else
+      {
+         s_dataFeedValuesDropped += s_dataFeedCount;
+         delete s_dataFeedMessage;
+      }
+      s_dataFeedMessage = nullptr;
+   }
+#endif
+}
+
+/**
+ * Get data collection feed statistics
+ */
+HADataFeedStats HAChannelGetDataFeedStats()
+{
+   HADataFeedStats stats;
+   stats.enabled = s_dataFeedEnabled;
+   stats.valuesSent = s_dataFeedValuesSent.load();
+   stats.valuesDropped = s_dataFeedValuesDropped.load();
+   stats.valuesApplied = s_dataFeedValuesApplied.load();
+   stats.valuesDiscarded = s_dataFeedValuesDiscarded.load();
+   return stats;
 }
 
 /**
@@ -844,8 +1015,15 @@ int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark()
 void HAChannelShutdown()
 {
    s_shutdown = true;
+   s_dataFeedActive = false;
    s_applierWakeup.set();
 #ifdef _WITH_ENCRYPTION
+   s_dataFeedLock.lock();
+   delete_and_null(s_dataFeedMessage);
+   for(NXCPMessage *msg : s_dataFeedPending)
+      delete msg;
+   s_dataFeedPending.clear();
+   s_dataFeedLock.unlock();
    s_sessionLock.lock();
    if (s_inboundSession != nullptr)
       s_inboundSession->stop();

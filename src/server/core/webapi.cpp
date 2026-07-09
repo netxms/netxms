@@ -542,6 +542,17 @@ static int H_HaStatus(Context *context)
          json_object_set_new(response, "appliedWatermark", json_integer(HAChannelGetAppliedWatermark()));
          json_object_set_new(response, "warmStateConsistent", json_boolean(!HASyncIsDirty()));
       }
+      HADataFeedStats feedStats = HAChannelGetDataFeedStats();
+      json_t *dataFeed = json_object();
+      json_object_set_new(dataFeed, "enabled", json_boolean(feedStats.enabled));
+      if (feedStats.enabled)
+      {
+         json_object_set_new(dataFeed, "valuesSent", json_integer(feedStats.valuesSent));
+         json_object_set_new(dataFeed, "valuesDropped", json_integer(feedStats.valuesDropped));
+         json_object_set_new(dataFeed, "valuesApplied", json_integer(feedStats.valuesApplied));
+         json_object_set_new(dataFeed, "valuesDiscarded", json_integer(feedStats.valuesDiscarded));
+      }
+      json_object_set_new(response, "dataCollectionFeed", dataFeed);
    }
    else
    {
