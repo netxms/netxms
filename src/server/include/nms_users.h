@@ -354,12 +354,6 @@ struct PasswordHash
    char encoded[ARGON2_ENCODED_LENGTH];
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<Config>>;
-template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<shared_ptr<Config>>;
-template class NXCORE_TEMPLATE_EXPORTABLE SharedStringObjectMap<Config>;
-#endif
-
 /**
  * User object
  */

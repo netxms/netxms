@@ -654,7 +654,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
    // HA change journal tombstone rides in the same transaction as the delete
    // (no-op outside cluster mode); deletions do not go through the save path
    if (success)
-      success = HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::DELETE, m_id, getObjectClass());
+      success = HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::REMOVE, m_id, getObjectClass());
 
    return success;
 }

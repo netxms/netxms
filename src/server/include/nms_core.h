@@ -33,12 +33,6 @@
 #define NXCORE_EXPORTABLE_VAR(v)  __IMPORT_VAR(v)
 #endif
 
-#ifdef NXCORE_TEMPLATE_EXPORTS
-#define NXCORE_TEMPLATE_EXPORTABLE __EXPORT
-#else
-#define NXCORE_TEMPLATE_EXPORTABLE __IMPORT
-#endif
-
 #define LIBNXCL_NO_DECLARATIONS  1
 
 #include <nms_common.h>
@@ -515,18 +509,6 @@ public:
    virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, const wchar_t *oldValue, const wchar_t *newValue, char valueType, const wchar_t *format, ...) const = 0;
    virtual void writeAuditLogWithValues(const wchar_t *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const wchar_t *format, ...) const = 0;
 };
-
-// Explicit instantiation of template classes
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_TEMPLATE_EXPORTABLE HashMap<uint32_t, NXSL_VM>;
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TcpProxy>;
-template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
-template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<ProcessExecutor>>;
-template class NXCORE_TEMPLATE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
-template class NXCORE_TEMPLATE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
-#endif
 
 /**
  * Forward declaration for syslog message class

@@ -331,12 +331,6 @@ enum DciAggregationFunction
    DCI_HAGG_MINMAX = 3    // Avg, min, and max in a single response (band graphs)
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DataCollectionOwner>;
-template class NXCORE_TEMPLATE_EXPORTABLE weak_ptr<DCObject>;
-template class NXCORE_TEMPLATE_EXPORTABLE StringContainer<6>;
-#endif
-
 /**
  * Generic data collection object
  */
@@ -896,11 +890,6 @@ public:
    void resetClearMatchCount() { m_clearMatchCount = 0; }
    void setActive() { m_active = true; }
 };
-
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<DCTableConditionGroup>;
-template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<DCTableThresholdInstance>;
-#endif
 
 class DCTable;
 

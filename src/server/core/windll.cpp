@@ -20,14 +20,7 @@
 **
 **/
 
-#define NXCORE_TEMPLATE_EXPORTS /* this will cause template instantiation in following header files */
-
 #include "nxcore.h"
-#include <netxms_maps.h>
-#include <nms_objects.h>
-#include <nms_events.h>
-#include <nms_users.h>
-#include <netxms_mt.h>
 
 /**
  *DLL Entry point

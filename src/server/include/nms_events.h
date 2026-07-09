@@ -135,11 +135,6 @@ struct EventProcessingThreadStats
 class EventBuilder;
 class EPRule;
 
-#ifdef _MSC_VER
-class Event;
-template class NXCORE_TEMPLATE_EXPORTABLE std::function<void(Event*)>;
-#endif
-
 /**
  * Single effect produced by an EPP rule while processing an event.
  * Fields not relevant to a given effect type keep their defaults and are omitted from JSON.
@@ -719,11 +714,6 @@ public:
    uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<TimeFrame>;
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ActionExecutionConfiguration>;
-#endif
-
 /**
  * Event policy rule
  */
@@ -927,12 +917,6 @@ public:
       msg->setField(baseId + 7, m_description);
    }
 };
-
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<EPRule>;
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<EPRule>>;
-template class NXCORE_TEMPLATE_EXPORTABLE SharedObjectArray<EPRule>;
-#endif
 
 /**
  * Information about a rule deleted by client (for optimistic concurrency)

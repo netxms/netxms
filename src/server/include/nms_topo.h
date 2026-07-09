@@ -28,10 +28,6 @@ class Node;
 class Interface;
 class NetworkMap;
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetObj>;
-#endif
-
 /**
  * LLDP local port info
  */
@@ -151,10 +147,6 @@ public:
    void fillMessage(NXCPMessage *msg);
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<ForwardingDatabase>;
-#endif
-
 /**
  * Link layer neighbor information
  */
@@ -178,10 +170,6 @@ struct LL_NEIGHBOR_INFO
    LinkLayerProtocol protocol; // Protocol used to obtain information
    bool isCached;              // true if this is cached information
 };
-
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE StructArray<LL_NEIGHBOR_INFO>;
-#endif
 
 /**
  * link layer neighbors
@@ -262,10 +250,6 @@ public:
       return copy;
    }
 };
-
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
-#endif
 
 //
 // VRRP information

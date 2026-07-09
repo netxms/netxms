@@ -2161,7 +2161,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
       // HA journal tombstone follows the delete on the same serialized SQL
       // writer queue (object-cleanup deletions are covered by the object's
       // own tombstone)
-      HAJournalAppendAsync(HAJournalEntityType::ALARM, HAJournalChangeType::DELETE, alarmId, 0);
+      HAJournalAppendAsync(HAJournalEntityType::ALARM, HAJournalChangeType::REMOVE, alarmId, 0);
 
       UpdateObjectOnAlarmResolve(objectId, alarmId, true);
    }

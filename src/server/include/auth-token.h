@@ -188,8 +188,4 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    }
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<AuthenticationTokenDescriptor>;
-#endif
-
 #endif /* _auth_token_h_ */

@@ -45,10 +45,6 @@ public:
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE StringObjectMap<MappingTableElement>;
-#endif
-
 /**
  * Mapping table
  */

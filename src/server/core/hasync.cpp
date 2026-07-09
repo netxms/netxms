@@ -339,7 +339,7 @@ static void ApplyObjectChanges(std::vector<HAJournalEntry>& entries)
    std::vector<HAJournalEntry> changes;
    for(auto& p : latest)
    {
-      if (p.second.changeType == HAJournalChangeType::DELETE)
+      if (p.second.changeType == HAJournalChangeType::REMOVE)
          ApplyObjectTombstone(p.second.entityId);
       else
          changes.push_back(p.second);

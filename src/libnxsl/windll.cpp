@@ -20,8 +20,6 @@
 ** File: windll.cpp
 **/
 
-#define LIBNXSL_TEMPLATE_EXPORTS  /* this will cause template instantiation in following header files */
-
 #include "libnxsl.h"
 
 /**

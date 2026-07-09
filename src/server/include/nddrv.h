@@ -195,11 +195,6 @@ struct DeviceViewElement
    const TCHAR *commands;  // drawing commands, can be null
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<DeviceViewElement>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<DeviceViewImage>;
-#endif
-
 /**
  * Device view
  */
@@ -269,10 +264,6 @@ struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 
    json_t *toJson() const;
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<RadioInterfaceInfo>;
-#endif
 
 /**
  * Wireless access point information
@@ -368,10 +359,6 @@ struct BridgePort
    uint32_t ifIndex;
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<BridgePort>;
-#endif
-
 /**
  * FDB entry
  */
@@ -384,10 +371,6 @@ struct ForwardingDatabaseEntry
    uint16_t vlanId;     // VLAN ID
    uint16_t type;       // Entry type
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ForwardingDatabaseEntry>;
-#endif
 
 /**
  * Base class for driver data
@@ -447,10 +430,6 @@ struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
    void getUsedPerc(TCHAR *buffer, size_t len) const;
    bool getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const;
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<HostMibStorageEntry>;
-#endif
 
 /**
  * Host MIB support for drivers

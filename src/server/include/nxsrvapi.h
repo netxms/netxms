@@ -32,12 +32,6 @@
 #define LIBNXSRV_EXPORTABLE_VAR(v) __IMPORT_VAR(v)
 #endif
 
-#ifdef LIBNXSRV_TEMPLATE_EXPORTS
-#define LIBNXSRV_TEMPLATE_EXPORTABLE __EXPORT
-#else
-#define LIBNXSRV_TEMPLATE_EXPORTABLE __IMPORT
-#endif
-
 #include <nxcpapi.h>
 #include <nms_util.h>
 #include <nms_agent.h>
@@ -276,11 +270,6 @@ struct ArpEntry
    ArpEntry(const InetAddress& _ipAddr, const MacAddress& _macAddr, uint32_t _ifIndex) : ipAddr(_ipAddr), macAddr(_macAddr) { ifIndex = _ifIndex; }
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<ArpEntry>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE HashMap<InetAddress, ArpEntry>;
-#endif
-
 /**
  * ARP cache structure used by discovery functions and AgentConnection class
  */
@@ -304,10 +293,6 @@ public:
 
    void dumpToLog() const;
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<ArpCache>;
-#endif
 
 /**
  * Interface physical location
@@ -416,10 +401,6 @@ public:
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectArray<InterfaceInfo>;
-#endif
-
 /**
  * Interface list used by discovery functions and AgentConnection class
  */
@@ -469,10 +450,6 @@ struct VlanPortInfo
    InterfacePhysicalLocation location;
    bool tagged;
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<VlanPortInfo>;
-#endif
 
 /**
  * Vlan information
@@ -600,15 +577,6 @@ struct LIBNXSRV_EXPORTABLE CustomAttribute
 
    json_t *toJson(const TCHAR *name) const;
 };
-
-#ifdef _MSC_VER
-class NObject;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<NObject>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<NObject>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE ObjectMemoryPool<shared_ptr<NObject>>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE SharedObjectArray<NObject>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StringObjectMap<CustomAttribute>;
-#endif
 
 /**
  * Base class for all monitoring objects
@@ -814,10 +782,6 @@ struct ROUTE
    RoutingProtocol protocol;
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE StructArray<ROUTE>;
-#endif
-
 /**
  * Routing table
  */
@@ -852,10 +816,6 @@ public:
          });
    }
 };
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<RoutingTable>;
-#endif
 
 /**
  * Information about policies installed on agent
@@ -1117,14 +1077,6 @@ struct LIBNXSRV_EXPORTABLE UserSession
  */
 class AgentConnectionReceiver;
 
-#ifdef _MSC_VER
-class AgentConnection;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE weak_ptr<AgentConnection>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(NXCPMessage*)>;
-template class LIBNXSRV_TEMPLATE_EXPORTABLE std::function<void(size_t)>;
-#endif
-
 /**
  * SSH channel data callback type
  */
@@ -1367,10 +1319,6 @@ public:
    uint32_t cancelFileDownload();
 };
 
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<AgentConnection>;
-#endif
-
 /**
  * Proxy SNMP transport
  */
@@ -1535,10 +1483,6 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
 };
 
 class SSHInteractiveChannel;
-
-#ifdef _MSC_VER
-template class LIBNXSRV_TEMPLATE_EXPORTABLE shared_ptr<SSHInteractiveChannel>;
-#endif
 
 /**
  * Interactive SSH channel with server-side parsing

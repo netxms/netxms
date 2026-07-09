@@ -87,10 +87,6 @@ struct NXCORE_EXPORTABLE ObjLink
    }
  };
 
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE ObjectArray<ObjLink>;
-#endif
-
 /**
  * Connected object list
  */
@@ -160,10 +156,6 @@ public:
 
 	void dumpToLog() const;
 };
-
-#ifdef _MSC_VER
-template class NXCORE_TEMPLATE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
-#endif
 
 /**
  * Map element types

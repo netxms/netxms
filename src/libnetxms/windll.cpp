@@ -21,13 +21,7 @@
 **
 **/
 
-#define LIBNETXMS_TEMPLATE_EXPORTS /* this will cause template instantiation in following header files */
-
 #include "libnetxms.h"
-#include <nxcpapi.h>
-#include <gauge_helpers.h>
-#include <nxtask.h>
-#include <nxconfig.h>
 
 /**
  * DLL Entry point

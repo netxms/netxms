@@ -21,10 +21,7 @@
 **
 **/
 
-#define LIBNXSRV_TEMPLATE_EXPORTS /* this will cause template instantiation in following header files */
-
 #include "libnxsrv.h"
-#include <nddrv.h>
 
 /**
  * DLL Entry point

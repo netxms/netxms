@@ -84,7 +84,7 @@ enum class HAJournalEntityType
 enum class HAJournalChangeType
 {
    CHANGE = 0,
-   DELETE = 1
+   REMOVE = 1
 };
 
 /**
