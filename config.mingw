@@ -70,6 +70,12 @@ AR = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ar
 RANLIB = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ranlib
 WINDRES = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)windres
 STRIP = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)strip
+
+# Microsoft Message Compiler (mc.exe) - regenerates the message table resource
+# (messages.h + MSG00001.bin) from a .mc source. llvm-mingw ships no windmc, so
+# the native SDK tool is used; it is staged under the SDK root (see below) for a
+# single-root layout, and its output is architecture-neutral (one tool per ARCH).
+WINMC = $(SDK_ROOT)/WinSDKTools/mc.exe
 LD = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ld
 
 # Parser generators for libnxsl and nxmibc. These run on the build host (they

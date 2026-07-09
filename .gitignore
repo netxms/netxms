@@ -138,6 +138,7 @@ compile_commands.json
 /src/agent/core/MSG00001.bin
 /src/agent/core/messages.c
 /src/agent/core/messages.h
+/src/agent/core/messages.rc
 /src/agent/core/nxagentd
 /src/agent/core/static_subagents.cpp
 /src/agent/install/Output
@@ -247,6 +248,7 @@ compile_commands.json
 /src/server/libnxsrv/*.bin
 /src/server/libnxsrv/messages.c
 /src/server/libnxsrv/messages.h
+/src/server/libnxsrv/messages.rc
 /src/server/netxmsd/netxmsd
 /src/server/nxreportd/java/.classpath
 /src/server/nxreportd/java/.project

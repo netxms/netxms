@@ -26,11 +26,23 @@ SOURCES = \
 	windll.cpp \
 	xml_to_json.cpp
 
-RC_SOURCE = $(TOPDIR)/build/netxms-build-tag.rc
+# libnxsrv.rc embeds the build tag (via #include <netxms-build-tag.rc>) and the
+# compiled message table MSG00001.bin, which supplies the Windows Event Log format
+# string for event ID 1000 (MSG_GENERIC = "%1") used by nxlog_write().
+RC_SOURCE = libnxsrv.rc
 # Objects go to a per-architecture directory so multiple ARCH builds coexist
 OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
 OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
-RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
+RC_OBJECT = $(OBJDIR)/libnxsrv.res.o
+
+# Message catalog. mc.exe regenerates messages.h + MSG00001.bin from messages.mc
+# in one run. Both are generated (gitignored) into the source directory: messages.h
+# for any C++ consumer, MSG00001.bin embedded as an RT_MESSAGETABLE resource by
+# libnxsrv.rc. This step was previously a Visual Studio custom build rule and was
+# lost in the MinGW conversion.
+MSG_SOURCE = messages.mc
+MSG_HEADER = messages.h
+MSG_BIN = MSG00001.bin
 
 CXXFLAGS = $(COMMON_CXXFLAGS) -DLIBNXSRV_EXPORTS -I$(TOPDIR)/src/server/include
 
@@ -60,13 +72,21 @@ $(OBJDIR)/%.o: %.cpp
 	@echo "  CXX     $<"
 	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(RC_OBJECT): $(RC_SOURCE)
+# messages.h drives the mc.exe run; MSG00001.bin is emitted by the same run.
+$(MSG_HEADER): $(MSG_SOURCE)
+	@echo "  MC      $<"
+	$(Q)$(WINMC) -h . -r . $<
+
+$(MSG_BIN): $(MSG_HEADER) ;
+
+# The resource embeds MSG00001.bin; -I. lets windres find it and resource.h.
+$(RC_OBJECT): $(RC_SOURCE) $(MSG_BIN)
 	@mkdir -p $(dir $@)
 	@echo "  RC      $<"
-	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
+	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) $(MSG_HEADER) $(MSG_BIN) messages.rc .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"
