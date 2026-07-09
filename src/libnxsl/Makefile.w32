@@ -10,7 +10,8 @@ TARGET = $(BIN_DIR)/libnxsl.dll
 IMPLIB = $(LIB_DIR)/libnxsl.dll.a
 
 # Source files (Windows build)
-# Note: lex.parser.cpp and parser.tab.cpp are pre-generated from parser.l and parser.y
+# Note: lex.parser.cpp and parser.tab.cpp are generated from parser.l and
+# parser.y by the flex/bison rules at the bottom of this file.
 SOURCES = \
 	array.cpp \
 	bytestream.cpp \
@@ -89,8 +90,30 @@ $(RC_OBJECT): $(RC_SOURCE)
 	@echo "  RC      $<"
 	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
+# Flex/bison generated sources. These are .gitignore'd, so regenerate them here
+# rather than relying on a prior autotools build having produced them.
+GENERATED_SOURCES = lex.parser.cpp parser.tab.cpp parser.tab.hpp parser.output
+
+parser.tab.cpp: parser.y
+	@echo "  BISON   $<"
+	$(Q)$(YACC) -b parser -o parser.tab.cpp -d -t -v parser.y
+
+# Header is produced together with parser.tab.cpp (bison -d); this empty rule
+# just records the dependency so a missing header triggers the bison run.
+parser.tab.hpp: parser.tab.cpp
+
+# Flags match the old MSVC build (USE8BIT, NOUNISTD, BATCH, FAST). --nounistd
+# keeps flex from emitting #include <unistd.h> in the Windows scanner.
+lex.parser.cpp: parser.l parser.tab.hpp
+	@echo "  FLEX    $<"
+	$(Q)$(LEX) -8 --nounistd -B -f -olex.parser.cpp parser.l
+
+# compiler.cpp and lexer.cpp #include parser.tab.hpp, so no object may compile
+# until the header has been generated (matters for parallel builds).
+$(OBJECTS): | parser.tab.hpp
+
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(IMPLIB) $(GENERATED_SOURCES) .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"
