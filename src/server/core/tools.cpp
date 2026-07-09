@@ -754,7 +754,7 @@ void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, cons
 
    nxlog_write_tag(NXLOG_WARNING, L"config", L"%s", description);
 
-   EventBuilder(EVENT_CONFIGURATION_ERROR, g_dwMgmtNode)
+   EventBuilder(EVENT_CONFIGURATION_ERROR, GetServerEventSourceId())
          .param(L"subsystem", L"EPP")
          .param(L"tag", L"invalid-object-id")
          .param(L"description", description)

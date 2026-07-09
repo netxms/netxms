@@ -161,6 +161,126 @@ HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager()
 }
 
 /**
+ * Get this node's name ([CLUSTER] NodeName, default local hostname)
+ */
+const wchar_t *HAGetLocalNodeName()
+{
+   return s_nodeName;
+}
+
+/**
+ * Get this node's client-reachable address ([CLUSTER] NodeAddress)
+ */
+const wchar_t *HAGetLocalNodeAddress()
+{
+   return s_nodeAddress;
+}
+
+/**
+ * Ensure cluster member node is bound to the given cluster object. Nodes can
+ * only be member of one cluster; a node already placed into a different
+ * cluster by the operator is left alone.
+ */
+static void EnsureClusterMembership(const shared_ptr<Cluster>& cluster, const shared_ptr<Node>& node)
+{
+   shared_ptr<Cluster> current = node->getCluster();
+   if (current == nullptr)
+   {
+      if (static_cast<Cluster&>(*cluster).addNode(node))
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Node %s [%u] registered as member of server cluster object %s [%u]",
+               node->getName(), node->getId(), cluster->getName(), cluster->getId());
+      else
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Cannot register node %s [%u] as member of server cluster object %s [%u] (zone mismatch)",
+               node->getName(), node->getId(), cluster->getName(), cluster->getId());
+   }
+   else if (current->getId() != cluster->getId())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Node %s [%u] is a member of another cluster %s [%u], not registering in server cluster object",
+            node->getName(), node->getId(), current->getName(), current->getId());
+   }
+}
+
+/**
+ * Maintain the object model representation of the server cluster: a cluster
+ * object (identified by the HAClusterObjectId metadata entry, so the operator
+ * can rename it freely) with node objects for both members. Runs on the
+ * active node at activation (after CheckForMgmtNode) and from the poll
+ * manager's periodic check; the peer's member node can only be registered
+ * once the peer channel has delivered its identity.
+ */
+void HAUpdateServerClusterObject()
+{
+   if (!HAIsClusterMode())
+      return;
+
+   // Serialize concurrent runs (activation path vs. HELLO-triggered update)
+   static Mutex updateLock(MutexType::FAST);
+   LockGuard lockGuard(updateLock);
+
+   shared_ptr<NetObj> object = FindObjectById(MetaDataReadInt32(L"HAClusterObjectId", 0), OBJECT_CLUSTER);
+   if (object == nullptr)
+   {
+      object = make_shared<Cluster>(L"NetXMS Server Cluster", 0);
+      NetObjInsert(object, true, false);
+      object->setComments(L"NetXMS server high availability cluster (created automatically by server process)");
+      NetObj::linkObjects(g_infrastructureServiceRoot, object);
+      object->publish();
+      MetaDataWriteInt32(L"HAClusterObjectId", object->getId());
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Created server cluster object %s [%u]", object->getName(), object->getId());
+   }
+   shared_ptr<Cluster> cluster = static_pointer_cast<Cluster>(object);
+   g_serverClusterObjectId = cluster->getId();
+
+   // This node's host
+   shared_ptr<NetObj> localNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+   if (localNode != nullptr)
+      EnsureClusterMembership(cluster, static_pointer_cast<Node>(localNode));
+
+   // Peer node's host (identity learned over the peer channel). Check
+   // existing members before the address-based lookup: the IP index cannot
+   // find nodes by loopback address (single-host test clusters), and the
+   // peer's announced address may not match any indexed interface address.
+   wchar_t peerName[64], peerAddress[256];
+   if (HAChannelGetPeerNodeInfo(peerName, 64, peerAddress, 256))
+   {
+      unique_ptr<SharedObjectArray<NetObj>> members = cluster->getChildren(OBJECT_NODE);
+      for(int i = 0; i < members->size(); i++)
+      {
+         Node *member = static_cast<Node*>(members->get(i));
+         if (!wcsicmp(member->getName(), peerName) || !wcsicmp(member->getPrimaryHostName().cstr(), peerAddress))
+            return;   // peer's host already registered
+      }
+
+      InetAddress addr = InetAddress::resolveHostName(peerAddress);
+      if (addr.isValidUnicast() || addr.isLoopback())   // loopback supports single-host test clusters, same as the channel dialer
+      {
+         shared_ptr<Node> peerNode = FindNodeByIP(0, addr);
+         if (peerNode != nullptr)
+         {
+            EnsureClusterMembership(cluster, peerNode);
+         }
+         else
+         {
+            NewNodeData newNodeData(addr);
+            wcslcpy(newNodeData.name, peerName, MAX_OBJECT_NAME);
+            newNodeData.cluster = cluster;
+            peerNode = PollNewNode(&newNodeData);
+            if (peerNode != nullptr)
+            {
+               peerNode->setComments(L"NetXMS server cluster node (created automatically by server process)");
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Created node object %s [%u] for cluster peer at %s",
+                     peerNode->getName(), peerNode->getId(), peerAddress);
+            }
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot resolve cluster peer address %s, peer member node not registered", peerAddress);
+      }
+   }
+}
+
+/**
  * Get client-reachable address of the current lease holder as published in the
  * lease record (used by standby nodes to redirect clients and agents). Buffer
  * is set to empty string if unknown.
@@ -271,7 +391,7 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
-   EventBuilder(EVENT_HA_NODE_ACTIVATED, g_dwMgmtNode)
+   EventBuilder(EVENT_HA_NODE_ACTIVATED, GetServerEventSourceId())
       .param(L"nodeName", s_nodeName)
       .param(L"term", term)
       .post();

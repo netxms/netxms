@@ -2854,7 +2854,7 @@ void NetObj::prepareForDeletion()
 {
    executeHookScript(L"ObjectDelete");
 
-   EventBuilder(getDeleteEventCode(), g_dwMgmtNode)
+   EventBuilder(getDeleteEventCode(), GetServerEventSourceId())
       .param(L"objectId", m_id, EventBuilder::OBJECT_ID_FORMAT)
       .param(L"objectName", m_name)
       .param(L"objectClassName", getObjectClassName())
@@ -4468,7 +4468,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
          wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
          ResolveUserId(user->userId, userName, true);
          nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, user->userId, user->tag, m_name, m_id);
-         EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, g_dwMgmtNode)
+         EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, GetServerEventSourceId())
             .param(L"userId", user->userId, EventBuilder::OBJECT_ID_FORMAT)
             .param(L"userName", userName)
             .param(L"tag", user->tag)
@@ -4486,7 +4486,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
          wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
          ResolveUserId(user->userId, userName, true);
          nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag=\"%s\" removed from object %s [%u]", userName, user->userId, user->tag, m_name, m_id);
-         EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, g_dwMgmtNode)
+         EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, GetServerEventSourceId())
             .param(L"userId", user->userId, EventBuilder::OBJECT_ID_FORMAT)
             .param(L"userName", userName)
             .param(L"tag", user->tag)
@@ -4516,7 +4516,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
             wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
             ResolveUserId(oldUser->userId, userName, true);
             nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag=\"%s\" removed from object %s [%u]", userName, oldUser->userId, oldUser->tag, m_name, m_id);
-            EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, g_dwMgmtNode)
+            EventBuilder(EVENT_RESPONSIBLE_USER_REMOVED, GetServerEventSourceId())
                .param(L"userId", oldUser->userId, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"userName", userName)
                .param(L"tag", oldUser->tag)
@@ -4551,7 +4551,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
             wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
             ResolveUserId(newUser->userId, userName, true);
             nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"New responsible user %s [%u] tag=%s on object %s [%u]", userName, newUser->userId, newUser->tag, m_name, m_id);
-            EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, g_dwMgmtNode)
+            EventBuilder(EVENT_RESPONSIBLE_USER_ADDED, GetServerEventSourceId())
                .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"userName", userName)
                .param(L"tag", newUser->tag)
@@ -4565,7 +4565,7 @@ void NetObj::setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers,
             wchar_t userName[MAX_USER_NAME], operatorName[MAX_USER_NAME];
             ResolveUserId(newUser->userId, userName, true);
             nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"Responsible user %s [%u] tag changed \"%s\" -> \"%s\" on object %s [%u]", userName, newUser->userId, prevTag, newUser->tag, m_name, m_id);
-            EventBuilder(EVENT_RESPONSIBLE_USER_MODIFIED, g_dwMgmtNode)
+            EventBuilder(EVENT_RESPONSIBLE_USER_MODIFIED, GetServerEventSourceId())
                .param(L"userId", newUser->userId, EventBuilder::OBJECT_ID_FORMAT)
                .param(L"userName", userName)
                .param(L"tag", newUser->tag)

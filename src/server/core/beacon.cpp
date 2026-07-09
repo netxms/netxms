@@ -84,14 +84,14 @@ void BeaconPoller()
 		{
 			// All beacons are lost, consider NetXMS server network conectivity loss
 			InterlockedOr64(&g_flags, AF_NO_NETWORK_CONNECTIVITY);
-		 	EventBuilder(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode)
+		 	EventBuilder(EVENT_NETWORK_CONNECTION_LOST, GetServerEventSourceId())
 				.param(L"numberOfBeacons", hostList.size())
 				.post();
 		}
       else if ((i < hostList.size()) && (g_flags & AF_NO_NETWORK_CONNECTIVITY))
 		{
 			InterlockedAnd64(&g_flags, ~AF_NO_NETWORK_CONNECTIVITY);
-			EventBuilder(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode)
+			EventBuilder(EVENT_NETWORK_CONNECTION_RESTORED, GetServerEventSourceId())
 				.param(L"numberOfBeacons", hostList.size())
 				.post();
 		}

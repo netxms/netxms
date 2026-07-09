@@ -47,6 +47,7 @@ shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 uint32_t NXCORE_EXPORTABLE g_dwMgmtNode = 0;
+uint32_t NXCORE_EXPORTABLE g_serverClusterObjectId = 0;
 wchar_t NXCORE_EXPORTABLE g_mgmtAgentAddress[128] = L"";
 
 ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue(256, Ownership::True);
@@ -391,7 +392,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
                if (newObject)
                {
                   InetAddress addr = static_cast<Subnet&>(*object).getIpAddress();
-                  EventBuilder(EVENT_SUBNET_ADDED, g_dwMgmtNode)
+                  EventBuilder(EVENT_SUBNET_ADDED, GetServerEventSourceId())
                      .param(_T("subnetObjectId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
                      .param(_T("subnetName"), object->getName())
                      .param(_T("ipAddress"), addr)

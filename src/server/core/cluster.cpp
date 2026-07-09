@@ -1136,7 +1136,7 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          if (addNode(static_pointer_cast<Node>(node)))
          {
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
-            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+            EventBuilder(EVENT_CLUSTER_AUTOADD, GetServerEventSourceId())
                .param(_T("nodeId"), node->getId(), EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), node->getName())
                .param(_T("clusterId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
@@ -1157,7 +1157,7 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
 
          removeNode(static_pointer_cast<Node>(node));
-         EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
+         EventBuilder(EVENT_CLUSTER_AUTOREMOVE, GetServerEventSourceId())
             .param(_T("nodeId"), node->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), node->getName())
             .param(_T("clusterId"), m_id, EventBuilder::OBJECT_ID_FORMAT)

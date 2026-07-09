@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxcore_discovery.h>
+#include <nxcore_ha.h>
 #include <gauge_helpers.h>
 #include <agent_tunnel.h>
 #include <ncdrv.h>
@@ -618,6 +619,50 @@ DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t 
       else
          rc = DCE_COLLECTION_ERROR;
 #endif
+   }
+   else if (!wcsnicmp(name, L"Server.HA.", 10))
+   {
+      if (HAIsClusterMode())
+      {
+         if (!wcsicmp(name, L"Server.HA.DataFeed.ValuesApplied"))
+         {
+            ret_uint64(buffer, HAChannelGetDataFeedStats().valuesApplied);
+         }
+         else if (!wcsicmp(name, L"Server.HA.DataFeed.ValuesDiscarded"))
+         {
+            ret_uint64(buffer, HAChannelGetDataFeedStats().valuesDiscarded);
+         }
+         else if (!wcsicmp(name, L"Server.HA.DataFeed.ValuesDropped"))
+         {
+            ret_uint64(buffer, HAChannelGetDataFeedStats().valuesDropped);
+         }
+         else if (!wcsicmp(name, L"Server.HA.DataFeed.ValuesSent"))
+         {
+            ret_uint64(buffer, HAChannelGetDataFeedStats().valuesSent);
+         }
+         else if (!wcsicmp(name, L"Server.HA.LeaseTerm"))
+         {
+            HALeaseManager *manager = HAGetLeaseManager();
+            ret_int64(buffer, (manager != nullptr) ? manager->getStatus().term : 0);
+         }
+         else if (!wcsicmp(name, L"Server.HA.PeerChannelConnected"))
+         {
+            ret_boolean(buffer, HAChannelIsPeerConnected());
+         }
+         else if (!wcsicmp(name, L"Server.HA.PeerWatermarkLag"))
+         {
+            int64_t lag = HAJournalGetHead() - HAChannelGetPeerWatermark();
+            ret_int64(buffer, (lag > 0) ? lag : 0);
+         }
+         else
+         {
+            rc = DCE_NOT_SUPPORTED;
+         }
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
    }
    else if (!wcsicmp(name, L"Server.Heap.Active"))
    {

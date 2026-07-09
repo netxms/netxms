@@ -415,7 +415,7 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            EventBuilder(m_deactivationEventCode, (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject)
+            EventBuilder(m_deactivationEventCode, (m_sourceObject == 0) ? GetServerEventSourceId() : m_sourceObject)
                .param(_T("conditionObjectId"), m_id)
                .param(_T("conditionObjectName"), m_name)
                .param(_T("previousConditionStatus"), iOldStatus)
@@ -447,7 +447,7 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            EventBuilder(m_activationEventCode, (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject)
+            EventBuilder(m_activationEventCode, (m_sourceObject == 0) ? GetServerEventSourceId() : m_sourceObject)
                .param(_T("conditionObjectId"), m_id)
                .param(_T("conditionObjectName"), m_name)
                .param(_T("previousConditionStatus"), iOldStatus)

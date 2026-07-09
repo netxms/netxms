@@ -655,6 +655,51 @@ entry, or a helper with CAP_NET_ADMIN). Scripts must be idempotent — the
 demote hook can run when the promote hook's changes were already reverted
 (node fenced before the VIP moved) and must not fail in that case.
 
+### 5.7 Object model representation (cluster object)
+
+The management node concept (`CheckForMgmtNode`, `g_dwMgmtNode`) identifies
+"this server's own host node" by matching local interface addresses, so in
+cluster mode it degrades into "whichever host is currently active": the
+`NC_IS_LOCAL_MGMT` flag flips between the two host nodes on every failover
+(journaled — the standby stays consistent). That per-host semantics is kept
+unchanged; the cluster itself is represented one level above:
+
+- **Auto-created cluster object.** On the active node,
+  `HAUpdateServerClusterObject()` maintains a `Cluster` object for the HA
+  pair, identified by the `HAClusterObjectId` metadata entry (so the
+  operator can rename it freely). Created under the infrastructure service
+  root on first activation; both hosts' node objects are registered as
+  members. The peer's identity (node name + `NodeAddress`) travels in the
+  channel HELLO; the peer's host node is found by address or created via the
+  normal new-node path. Runs at activation, from the poll manager's 10-minute
+  check, and immediately when a peer HELLO arrives on a running active. A
+  node the operator placed into a different cluster object is left alone.
+- **Stable event source.** Server-generated events (housekeeper, DB writer
+  overflow, event storms, license problems, notification channel state, LDAP
+  sync errors, auto-bind events, `SYS_HA_NODE_ACTIVATED`, ...) are sourced
+  from `GetServerEventSourceId()`: the cluster object in cluster mode, the
+  management node otherwise. One object, one alarm/event stream, regardless
+  of which member is active; standalone installs see no behavior change.
+  Functional uses of the management node (default proxy selection, syslog
+  loopback binding, NXSL `GetServerNode()`) keep the per-host semantics.
+- **Redundancy loss is alarmable through standard means**: the standby's
+  host is a regular agent-monitored member node; member down → cluster
+  status degraded.
+- **VIP as cluster resource (operator-configured).** Adding the virtual IP
+  as a resource on the auto-created cluster object makes NetXMS track its
+  owner through normal cluster status polls and emit
+  `EVENT_CLUSTER_RESOURCE_MOVED` on failover — a queryable audit trail.
+  Nothing is auto-configured; the VIP itself is managed by the role-change
+  hooks (section 5.6).
+- **`Server.HA.*` internal metrics** (management node, cluster mode only):
+  `PeerChannelConnected`, `PeerWatermarkLag` (journal head minus peer
+  watermark), `LeaseTerm`, `DataFeed.ValuesSent` / `ValuesDropped` /
+  `ValuesApplied` / `ValuesDiscarded`. These make peer/channel health
+  thresholdable — previously "standby is dead" was invisible to data
+  collection. `Internal` DCIs always describe the polling server, so on the
+  management node they describe the current active — the intended service
+  view.
+
 ## 6. Validation plan (phase 0 acceptance)
 
 Executed by the `tests/ha/` harness against two `ha-node-sim` instances

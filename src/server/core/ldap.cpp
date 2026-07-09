@@ -1027,7 +1027,7 @@ uint32_t LDAPConnection::login(bool isSync)
    {
       if (isSync)
       {
-         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+         EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
             .paramObjectId(_T("userId"), 0)
             .param(_T("userGuid"), _T(""))
 #ifdef _WIN32
@@ -1046,7 +1046,7 @@ uint32_t LDAPConnection::login(bool isSync)
    {
       if (isSync)
       {
-         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+         EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
             .paramObjectId(_T("userId"), 0)
             .param(_T("userGuid"), _T(""))
 #ifdef _WIN32
@@ -1080,7 +1080,7 @@ uint32_t LDAPConnection::login(bool isSync)
       TCHAR description[MAX_USER_DESCR];
       _sntprintf(description, MAX_USER_DESCR, _T("Cannot login to LDAP server (%s)"), errorString.cstr());
 
-      EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+      EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
          .paramObjectId(_T("userId"), 0)
          .param(_T("userGuid"), _T(""))
 #ifdef _WIN32

@@ -1176,7 +1176,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
    if ((object != nullptr) && object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
-      EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+      EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
          .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("userGuid"), object->getGuid())
          .param(_T("userLdapDn"), object->getDN())
@@ -1205,7 +1205,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
             {
                user->setName(userName);
                _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
-               EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+               EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
                   .param(_T("userId"), user->getId(), EventBuilder::OBJECT_ID_FORMAT)
                   .param(_T("userGuid"), user->getGuid())
                   .param(_T("userLdapDn"), user->getDN())
@@ -1274,7 +1274,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
       {
          _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
          nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPUser(): %s"), description);
-         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+         EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
             .param(_T("userId"), user->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("userGuid"), user->getGuid())
             .param(_T("userLdapDn"), user->getDN())
@@ -1428,7 +1428,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
    if ((object != nullptr) && !object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
-      EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+      EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
          .param(_T("userId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("userGuid"), object->getGuid())
          .param(_T("userLdapDn"), object->getDN())
@@ -1457,7 +1457,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
             {
                group->setName(groupName);
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
-               EventBuilder(EVENT_LDAP_SYNC_ERROR, g_dwMgmtNode)
+               EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
                   .param(_T("userId"), group->getId(), EventBuilder::OBJECT_ID_FORMAT)
                   .param(_T("userGuid"), group->getGuid())
                   .param(_T("userLdapDn"), group->getDN())
@@ -1511,7 +1511,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
       {
          _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
          nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
-         EventBuilder(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode)
+         EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
             .param(_T("userId"), group->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("userGuid"), group->getGuid())
             .param(_T("userLdapDn"), group->getDN())

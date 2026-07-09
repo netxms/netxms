@@ -53,6 +53,14 @@ bool NXCORE_EXPORTABLE HACheckFence();
 bool NXCORE_EXPORTABLE HAInitiateSwitchover();
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager();
 void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size);
+const wchar_t *HAGetLocalNodeName();
+const wchar_t *HAGetLocalNodeAddress();
+
+/**
+ * Object model representation of the server cluster: auto-created cluster
+ * object with node objects for both members (active side maintenance)
+ */
+void HAUpdateServerClusterObject();
 
 /**
  * Set process exit code used by the shutdown path (switchover sets
@@ -120,6 +128,7 @@ bool HAChannelFinalizeSync();
 bool NXCORE_EXPORTABLE HAChannelIsPeerConnected();
 int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark();
 int64_t HAChannelGetAppliedWatermark();
+bool HAChannelGetPeerNodeInfo(wchar_t *name, size_t nameSize, wchar_t *address, size_t addressSize);
 
 /**
  * Data collection feed statistics (both directions; a node only populates

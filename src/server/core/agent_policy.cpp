@@ -911,7 +911,7 @@ void FileDeliveryPolicy::validate()
          nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files->get(i)->path);
          TCHAR description[MAX_PATH] = _T("Missing policy file ");
          _tcslcat(description, localFile, MAX_PATH);
-         EventBuilder(EVENT_POLICY_VALIDATION_ERROR, g_dwMgmtNode)
+         EventBuilder(EVENT_POLICY_VALIDATION_ERROR, GetServerEventSourceId())
             .param(_T("templateName"), GetObjectName(m_ownerId, _T("UNKNOWN")))
             .param(_T("templateId"), m_ownerId)
             .param(_T("policyName"), m_name)

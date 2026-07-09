@@ -4908,7 +4908,7 @@ struct DeleteDuplicateNodeData
  */
 static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
-   EventBuilder(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode)
+   EventBuilder(EVENT_DUPLICATE_NODE_DELETED, GetServerEventSourceId())
       .param(_T("originalNodeObjectId"), data->originalNode->getId())
       .param(_T("originalNodeName"), data->originalNode->getName())
       .param(_T("originalNodePrimaryHostName"), data->originalNode->getPrimaryHostName().cstr())
@@ -15875,7 +15875,7 @@ void Node::updateClusterMembership()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): binding node %s [%u] to cluster %s [%u]"),
                       m_name, m_id, cluster->getName(), cluster->getId());
             linkObjects(cluster->self(), self());
-            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+            EventBuilder(EVENT_CLUSTER_AUTOADD, GetServerEventSourceId())
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
                .param(_T("clusterId"), cluster->getId(), EventBuilder::OBJECT_ID_FORMAT)
@@ -15892,7 +15892,7 @@ void Node::updateClusterMembership()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): removing node %s [%u] from cluster %s [%u]"),
                       m_name, m_id, cluster->getName(), cluster->getId());
             unlinkObjects(cluster, this);
-            EventBuilder(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode)
+            EventBuilder(EVENT_CLUSTER_AUTOREMOVE, GetServerEventSourceId())
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
                .param(_T("clusterId"), cluster->getId(), EventBuilder::OBJECT_ID_FORMAT)

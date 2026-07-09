@@ -411,7 +411,7 @@ static void HouseKeeper()
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Housekeeper run started");
       s_running = true;
       time_t cycleStartTime = time(nullptr);
-      PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode);
+      PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, GetServerEventSourceId());
 
       s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
       s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
@@ -656,7 +656,7 @@ static void HouseKeeper()
 
       uint32_t elapsedTime = static_cast<uint32_t>(time(nullptr) - cycleStartTime);
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Housekeeper run completed (elapsed time %u seconds)"), elapsedTime);
-      EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode)
+      EventBuilder(EVENT_HOUSEKEEPER_COMPLETED, GetServerEventSourceId())
          .param(_T("elapsedTime"), elapsedTime)
          .post();
 

@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_ha.h>
 
 #define DEBUG_TAG_POLL_MANAGER   _T("poll.manager")
 
@@ -390,6 +391,7 @@ void PollManager(Condition *startCondition)
       {
          counter = 0;
          CheckForMgmtNode();
+         HAUpdateServerClusterObject();   // no-op outside cluster mode
       }
 
       // Walk through objects and queue them for status

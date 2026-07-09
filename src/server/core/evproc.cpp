@@ -77,7 +77,7 @@ static void EventStormDetector()
 			{
 			   InterlockedOr64(&g_flags, AF_EVENT_STORM_DETECTED);
 				nxlog_debug_tag(DEBUG_TAG, 2, L"Event storm detected: threshold=" INT64_FMT L" eventsPerSecond=" INT64_FMT, eventsPerSecond, numEvents);
-            EventBuilder(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode)
+            EventBuilder(EVENT_EVENT_STORM_DETECTED, GetServerEventSourceId())
                .param(L"eps", numEvents)
                .param(L"duration", duration)
                .param(L"threshold", eventsPerSecond)
@@ -89,7 +89,7 @@ static void EventStormDetector()
 			actualDuration = 0;
 			InterlockedAnd64(&g_flags, ~AF_EVENT_STORM_DETECTED);
 		   nxlog_debug_tag(DEBUG_TAG, 2, L"Event storm condition cleared");
-         EventBuilder(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode)
+         EventBuilder(EVENT_EVENT_STORM_ENDED, GetServerEventSourceId())
             .param(L"eps", numEvents)
             .param(L"duration", duration)
             .param(L"threshold", eventsPerSecond)

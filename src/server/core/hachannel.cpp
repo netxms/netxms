@@ -84,6 +84,14 @@ static BYTE s_secret[CLUSTER_SECRET_LENGTH];
 static bool s_secretLoaded = false;
 
 /**
+ * Peer node identity as announced in the channel HELLO (used to register the
+ * peer's host as a member of the server cluster object)
+ */
+static Mutex s_peerInfoLock(MutexType::FAST);
+static wchar_t s_peerNodeName[64] = L"";
+static wchar_t s_peerNodeAddress[256] = L"";
+
+/**
  * Shutdown flag
  */
 static std::atomic<bool> s_shutdown(false);
@@ -290,6 +298,8 @@ void HAChannelSession::start()
       hello.setField(VID_GUID, manager->getNodeGuid());
    hello.setField(VID_SERVER_ID, g_serverId);
    hello.setField(VID_CHALLENGE, m_challenge, CLUSTER_SECRET_LENGTH);
+   hello.setField(VID_HOSTNAME, HAGetLocalNodeName());
+   hello.setField(VID_PRIMARY_NAME, HAGetLocalNodeAddress());
    sendMessage(hello);
 }
 
@@ -404,6 +414,12 @@ void HAChannelSession::processMessage(NXCPMessage *msg)
             stop();
             break;
          }
+         s_peerInfoLock.lock();
+         if (msg->getFieldAsString(VID_HOSTNAME, s_peerNodeName, 64) == nullptr)
+            s_peerNodeName[0] = 0;
+         if (msg->getFieldAsString(VID_PRIMARY_NAME, s_peerNodeAddress, 256) == nullptr)
+            s_peerNodeAddress[0] = 0;
+         s_peerInfoLock.unlock();
          BYTE peerChallenge[CLUSTER_SECRET_LENGTH];
          msg->getFieldAsBinary(VID_CHALLENGE, peerChallenge, CLUSTER_SECRET_LENGTH);
          BYTE signature[SHA256_DIGEST_SIZE];
@@ -411,6 +427,12 @@ void HAChannelSession::processMessage(NXCPMessage *msg)
          NXCPMessage response(HA_CMD_AUTH, 0, 5);
          response.setField(VID_SIGNATURE, signature, SHA256_DIGEST_SIZE);
          sendMessage(response);
+
+         // Register the peer's host in the server cluster object without
+         // waiting for the poll manager's periodic check (only the active
+         // node with a fully started object model may create objects)
+         if (((g_flags & AF_SERVER_INITIALIZED) != 0) && (manager != nullptr) && (manager->getState() == HALeaseState::ACTIVE))
+            ThreadPoolExecute(g_mainThreadPool, HAUpdateServerClusterObject);
          break;
       }
       case HA_CMD_AUTH:
@@ -1007,6 +1029,20 @@ bool NXCORE_EXPORTABLE HAChannelIsPeerConnected()
 int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark()
 {
    return s_peerWatermark.load();
+}
+
+/**
+ * Get peer node identity as announced in the channel HELLO. Returns false
+ * when the peer has not connected yet in this process incarnation.
+ */
+bool HAChannelGetPeerNodeInfo(wchar_t *name, size_t nameSize, wchar_t *address, size_t addressSize)
+{
+   LockGuard lockGuard(s_peerInfoLock);
+   if (s_peerNodeAddress[0] == 0)
+      return false;
+   wcslcpy(name, s_peerNodeName, nameSize);
+   wcslcpy(address, s_peerNodeAddress, addressSize);
+   return true;
 }
 
 /**

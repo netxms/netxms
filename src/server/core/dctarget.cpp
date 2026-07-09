@@ -2489,7 +2489,7 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
                templateObject->getId(), templateObject->getName(), m_id, m_name);
    unlinkObjects(templateObject, this);
    templateObject->queueRemoveFromTarget(m_id, true);
-   EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode)
+   EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, GetServerEventSourceId())
       .param(_T("nodeId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
       .param(_T("nodeName"), templateObject->getName())
       .param(_T("templateId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
@@ -2585,7 +2585,7 @@ void DataCollectionTarget::applyTemplates()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): applying template \"%s\" [%u] to object \"%s\" [%u]"),
                   templateObject->getName(), templateObject->getId(), m_name, m_id);
             templateObject->applyToTarget(self());
-            EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode)
+            EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, GetServerEventSourceId())
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
                .param(_T("templateId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
@@ -2656,7 +2656,7 @@ void DataCollectionTarget::updateContainerMembership()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
                       m_name, m_id, className, container->getName(), container->getId());
             linkObjects(container->self(), self());
-            EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
+            EventBuilder(EVENT_CONTAINER_AUTOBIND, GetServerEventSourceId())
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
                .param(_T("containerId"), container->getId(), EventBuilder::OBJECT_ID_FORMAT)
@@ -2674,7 +2674,7 @@ void DataCollectionTarget::updateContainerMembership()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object \"%s\" [%u] from %s \"%s\" [%u]"),
                       m_name, m_id, className, container->getName(), container->getId());
             unlinkObjects(container, this);
-            EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
+            EventBuilder(EVENT_CONTAINER_AUTOUNBIND, GetServerEventSourceId())
                .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), m_name)
                .param(_T("containerId"), container->getId(), EventBuilder::OBJECT_ID_FORMAT)

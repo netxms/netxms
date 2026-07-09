@@ -186,7 +186,7 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): binding object \"%s\" [%u] to collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
          linkObjects(self(), object);
-         EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
+         EventBuilder(EVENT_CONTAINER_AUTOBIND, GetServerEventSourceId())
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())
             .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
@@ -199,7 +199,7 @@ void Collector::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Collector::autobindPoll(): removing object \"%s\" [%u] from collector \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
          unlinkObjects(this, object.get());
-         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode)
+         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, GetServerEventSourceId())
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())
             .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)

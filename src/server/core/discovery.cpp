@@ -1019,7 +1019,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
             shared_ptr<Interface> iface = curr->findInterfaceByIP(ipAddr);
             if ((iface != nullptr) && macAddr.isValid() && iface->getMacAddress().isValid() && !iface->getMacAddress().equals(macAddr))
             {
-               EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode)
+               EventBuilder(EVENT_DUPLICATE_IP_ADDRESS, GetServerEventSourceId())
                   .param(_T("ipAddress"), ipAddr)
                   .param(_T("knownNodeId"), curr->getId())
                   .param(_T("knownNodeName"), curr->getName())

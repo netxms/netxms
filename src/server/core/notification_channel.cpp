@@ -717,7 +717,7 @@ void NotificationChannel::workerThread()
             }
             m_failureCount++;
 
-            EventBuilder(EVENT_NOTIFICATION_FAILURE, g_dwMgmtNode)
+            EventBuilder(EVENT_NOTIFICATION_FAILURE, GetServerEventSourceId())
                .param(L"notificationChannelName", m_name)
                .param(L"recipientAddress", notification->getRecipient())
                .param(L"notificationSubject", notification->getSubject())
@@ -875,7 +875,7 @@ void NotificationChannel::checkHealth()
 
    if (status != m_healthCheckStatus)
    {
-      EventBuilder(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, g_dwMgmtNode)
+      EventBuilder(status ? EVENT_NOTIFICATION_CHANNEL_UP : EVENT_NOTIFICATION_CHANNEL_DOWN, GetServerEventSourceId())
          .param(_T("channelName"), m_name)
          .param(_T("channelDriverName"), m_driverName)
          .post();
@@ -1084,7 +1084,7 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
             L"Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped",
             m_name, static_cast<uint32_t>(m_notificationQueue.size()), maxQueueSize);
-         EventBuilder(EVENT_NC_QUEUE_OVERFLOW, g_dwMgmtNode)
+         EventBuilder(EVENT_NC_QUEUE_OVERFLOW, GetServerEventSourceId())
             .param(L"channelName", m_name)
             .param(L"queueSize", static_cast<uint32_t>(m_notificationQueue.size()))
             .param(L"maxQueueSize", maxQueueSize)
@@ -1130,7 +1130,7 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
             L"Notification channel \"%s\" queue size exceeds threshold (size=%u, max=%u), new messages will be dropped",
             m_name, static_cast<uint32_t>(m_notificationQueue.size()), maxQueueSize);
-         EventBuilder(EVENT_NC_QUEUE_OVERFLOW, g_dwMgmtNode)
+         EventBuilder(EVENT_NC_QUEUE_OVERFLOW, GetServerEventSourceId())
             .param(L"channelName", m_name)
             .param(L"queueSize", static_cast<uint32_t>(m_notificationQueue.size()))
             .param(L"maxQueueSize", maxQueueSize)

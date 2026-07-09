@@ -6513,7 +6513,18 @@ extern shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 extern shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 extern uint32_t NXCORE_EXPORTABLE g_dwMgmtNode;
+extern uint32_t NXCORE_EXPORTABLE g_serverClusterObjectId;
 extern wchar_t NXCORE_EXPORTABLE g_mgmtAgentAddress[];
+
+/**
+ * Source object for server-generated events: the server cluster object when
+ * running in cluster mode (stable across failovers), the local management
+ * node otherwise.
+ */
+inline uint32_t GetServerEventSourceId()
+{
+   return (g_serverClusterObjectId != 0) ? g_serverClusterObjectId : g_dwMgmtNode;
+}
 extern bool g_modificationsLocked;
 extern ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue;
 

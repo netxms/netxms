@@ -269,7 +269,7 @@ struct ServerActionExecutionContext
       WriteServerActionExecutionLog(eventId, eventCode, action->id, action->name, action->channelName, recipient, subject, data, ruleGuid, ruleDescription, success);
       if (!success && (action->type != ServerActionType::NOTIFICATION))
       {
-         EventBuilder(EVENT_ACTION_EXECUTION_FAILURE, g_dwMgmtNode)
+         EventBuilder(EVENT_ACTION_EXECUTION_FAILURE, GetServerEventSourceId())
             .param(L"actionName", action->name)
             .paramUtf8String(L"actionType", ServerActionTypeDescription(action->type))
             .param(L"actionData", data.cstr())

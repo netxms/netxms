@@ -176,7 +176,7 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          sendPollerMsg(_T("   Binding interface %s\r\n"), iface->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): binding interface \"%s\" [%u] to circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
          linkObjects(self(), iface);
-         EventBuilder(EVENT_CIRCUIT_AUTOBIND, g_dwMgmtNode)
+         EventBuilder(EVENT_CIRCUIT_AUTOBIND, GetServerEventSourceId())
             .param(_T("interfaceId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("interfaceName"), iface->getName())
             .param(_T("circuitId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
@@ -191,7 +191,7 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          sendPollerMsg(_T("   Removing interface %s\r\n"), iface->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): removing interface \"%s\" [%u] from circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
          unlinkObjects(this, iface.get());
-         EventBuilder(EVENT_CIRCUIT_AUTOUNBIND, g_dwMgmtNode)
+         EventBuilder(EVENT_CIRCUIT_AUTOUNBIND, GetServerEventSourceId())
             .param(_T("interfaceId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("interfaceName"), iface->getName())
             .param(_T("circuitId"), m_id, EventBuilder::OBJECT_ID_FORMAT)

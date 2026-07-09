@@ -100,7 +100,7 @@ static void ReportScriptErrorInternal(const TCHAR *context, const NetObj *object
       if (count == 1000)
       {
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Too many script errors - script error reporting temporarily disabled"));
-         PostSystemEvent(EVENT_TOO_MANY_SCRIPT_ERRORS, g_dwMgmtNode);
+         PostSystemEvent(EVENT_TOO_MANY_SCRIPT_ERRORS, GetServerEventSourceId());
       }
       return;
    }
@@ -111,7 +111,7 @@ static void ReportScriptErrorInternal(const TCHAR *context, const NetObj *object
    nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Script error (object=%s objectId=%u dciId=%u context=%s name=%s): %s"),
          (object != nullptr) ? object->getName() : _T("NONE"), (object != nullptr) ? object->getId() : 0, dciId, context, name, errorText);
 
-   EventBuilder(EVENT_SCRIPT_ERROR, g_dwMgmtNode)
+   EventBuilder(EVENT_SCRIPT_ERROR, GetServerEventSourceId())
       .dci(dciId)
       .param(_T("scriptName"), name)
       .param(_T("errorText"), errorText)

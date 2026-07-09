@@ -903,7 +903,7 @@ static void SyslogParserCallback(const LogParserCallbackData& data)
    {
       StringMap pmap;
       data.captureGroups->addAllToMap(&pmap);
-      EventBuilder(data.eventCode, (node != nullptr) ? node->getId() : g_dwMgmtNode)
+      EventBuilder(data.eventCode, (node != nullptr) ? node->getId() : GetServerEventSourceId())
          .origin(EventOrigin::SYSLOG)
          .originTimestamp(data.logRecordTimestamp)
          .tag(data.eventTag)

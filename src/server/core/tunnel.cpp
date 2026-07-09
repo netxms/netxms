@@ -1439,7 +1439,7 @@ static inline void ReportError(const TCHAR *debugPrefix, const InetAddress& orig
    va_end(args);
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): %s"), debugPrefix, text);
-   EventBuilder(EVENT_TUNNEL_SETUP_ERROR, g_dwMgmtNode)
+   EventBuilder(EVENT_TUNNEL_SETUP_ERROR, GetServerEventSourceId())
       .param(_T("ipAddress"), origin)
       .param(_T("error"), text)
       .post();
@@ -2082,7 +2082,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             t->shutdown();
             break;
          case GENERATE_EVENT:
-            EventBuilder(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode)
+            EventBuilder(EVENT_UNBOUND_TUNNEL, GetServerEventSourceId())
                .param(_T("tunnelId"), t->getId())
                .param(_T("ipAddress"), t->getAddress())
                .param(_T("systemName"), t->getSystemName())

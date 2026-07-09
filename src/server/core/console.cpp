@@ -602,6 +602,11 @@ static void HandleHACommand(ServerConsole *console, const wchar_t *args)
       wchar_t guidText[64];
       ConsolePrintf(console, L"Role ............... : %s\n", stateNames[static_cast<int>(status.state)]);
       ConsolePrintf(console, L"Node GUID .......... : %s\n", manager->getNodeGuid().toString(guidText));
+      if (g_serverClusterObjectId != 0)
+      {
+         shared_ptr<NetObj> clusterObject = FindObjectById(g_serverClusterObjectId, OBJECT_CLUSTER);
+         ConsolePrintf(console, L"Cluster object ..... : %s [%u]\n", (clusterObject != nullptr) ? clusterObject->getName() : L"(deleted)", g_serverClusterObjectId);
+      }
       ConsolePrintf(console, L"Process incarnation  : " UINT64X_FMT(L"016") L"\n", manager->getIncarnation());
       ConsolePrintf(console, L"Lease term ......... : " INT64_FMTW L"\n", status.term);
       ConsolePrintf(console, L"Lease holder ....... : %s (%s)\n", status.holderName, status.holderGuid.toString(guidText));

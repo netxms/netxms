@@ -324,7 +324,7 @@ uint32_t NXCORE_EXPORTABLE RegisterLicenseProblem(const TCHAR *component, const 
    auto p = new LicenseProblem(s_licenseProblemId++, component, type, description);
    s_licenseProblems.add(p);
    s_licenseProblemsLock.unlock();
-   EventBuilder(EVENT_LICENSE_PROBLEM, g_dwMgmtNode)
+   EventBuilder(EVENT_LICENSE_PROBLEM, GetServerEventSourceId())
       .param(_T("description"), description)
       .post();
    return p->id;
@@ -947,18 +947,18 @@ static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2,
 	switch(event)
 	{
 		case DBEVENT_CONNECTION_LOST:
-			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode);
+			PostSystemEvent(EVENT_DB_CONNECTION_LOST, GetServerEventSourceId());
 			InterlockedOr64(&g_flags, AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
 			break;
 		case DBEVENT_CONNECTION_RESTORED:
-			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode);
+			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, GetServerEventSourceId());
 			InterlockedAnd64(&g_flags, ~AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
 		   CalculateMD5Hash(arg1, wcslen(arg1) * sizeof(WCHAR), queryHash);
-		   EventBuilder(EVENT_DB_QUERY_FAILED, g_dwMgmtNode)
+		   EventBuilder(EVENT_DB_QUERY_FAILED, GetServerEventSourceId())
 		      .param(_T("query"), arg1)
 		      .param(_T("message"), arg2)
 		      .param(_T("connectionLost"), connLost ? 1 : 0)
@@ -1612,6 +1612,7 @@ bool ActivateServer()
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
       return false;
    }
+   HAUpdateServerClusterObject();   // no-op outside cluster mode
 
    // Initialize and load event actions
    if (!LoadActions())
@@ -1789,7 +1790,7 @@ bool ActivateServer()
 
    g_flags |= AF_SERVER_INITIALIZED;
    s_initCompletedCondition.set();
-   PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode);
+   PostSystemEvent(EVENT_SERVER_STARTED, GetServerEventSourceId());
 
    // Warn if background (online) database upgrades are still pending
    wchar_t pendingUpgrades[MAX_DB_STRING];
@@ -1798,7 +1799,7 @@ bool ActivateServer()
    if (pendingUpgrades[0] != 0)
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, L"Background database upgrade(s) pending - run \"nxdbmgr background-upgrade\" to complete");
-      PostSystemEvent(EVENT_PENDING_DATABASE_UPGRADE, g_dwMgmtNode);
+      PostSystemEvent(EVENT_PENDING_DATABASE_UPGRADE, GetServerEventSourceId());
    }
 
    RegenerateMaintenanceModeEvents();
