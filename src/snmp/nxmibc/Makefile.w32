@@ -2,8 +2,8 @@
 # Makefile.w32 - nxmibc (SNMP MIB compiler) for Windows/MinGW
 # Part of NetXMS project
 #
-# The lexer/parser sources (lex.parser.cpp, parser.tab.cpp) are pre-generated
-# and committed, so no lex/yacc step is needed for the Windows build.
+# The lexer/parser sources (lex.parser.cpp, parser.tab.cpp) are generated from
+# parser.l and parser.y by the flex/bison rules below.
 #
 
 TOOL = nxmibc
@@ -14,4 +14,26 @@ SOURCES = \
 	parser.tab.cpp
 TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
 
+# Flex/bison generated sources. These are .gitignore'd, so regenerate them here
+# rather than relying on a prior autotools build having produced them. Listed in
+# GENERATED_SOURCES so tool-common.mk's clean rule removes them.
+GENERATED_SOURCES = lex.parser.cpp parser.tab.cpp parser.tab.hpp parser.output
+
 include $(TOPDIR)/build/tool-common.mk
+
+# Commands mirror src/snmp/nxmibc/Makefile.am (parser prefix "mp").
+parser.tab.cpp: parser.y
+	@echo "  BISON   $<"
+	$(Q)$(YACC) -b parser -o parser.tab.cpp -d -p mp -t -v parser.y
+
+# Header is produced together with parser.tab.cpp (bison -d); this empty rule
+# just records the dependency so a missing header triggers the bison run.
+parser.tab.hpp: parser.tab.cpp
+
+lex.parser.cpp: parser.l parser.tab.hpp
+	@echo "  FLEX    $<"
+	$(Q)$(LEX) -Pmp -B -f -olex.parser.cpp parser.l
+
+# lex.parser.cpp #includes parser.tab.hpp, so no object may compile until the
+# header has been generated (matters for parallel builds).
+$(OBJECTS): | parser.tab.hpp

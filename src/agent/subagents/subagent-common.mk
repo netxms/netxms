@@ -10,6 +10,9 @@
 #   SA_RC         - subagent-specific resource script embedding runtime data
 #                   such as parser XML (optional; compiled and linked in
 #                   addition to the version-info resource)
+#   GENERATED_SOURCES - files produced by an in-tree generator (flex/bison, etc.)
+#                   that 'clean' should also remove (optional). The rules that
+#                   produce them go in the subagent's own Makefile.w32.
 # then:
 #   include $(TOPDIR)/src/agent/subagents/subagent-common.mk
 #
@@ -81,7 +84,7 @@ $(SA_RC_OBJECT): $(SA_RC)
 endif
 
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(SA_RC_OBJECT) $(TARGET) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(SA_RC_OBJECT) $(TARGET) $(GENERATED_SOURCES) .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"

@@ -8,7 +8,14 @@
 # instead of re-including config.mingw.
 #
 
-export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD
+# Parser generators (flex/bison). These are host tools used to regenerate the
+# lexer/parser sources for libnxsl and nxmibc, so they are not cross-prefixed.
+# Defaulted here (rather than only in config.mingw.template) so existing
+# config.mingw files that predate these variables still build.
+LEX ?= flex
+YACC ?= bison
+
+export TOPDIR CC CXX AR RANLIB WINDRES STRIP LD LEX YACC
 export CONFIG WINXP PLATFORM TOOLCHAIN_BIN
 export ARCH DEBUG PREFIX
 export BUILD_AGENT BUILD_CLIENT BUILD_SERVER

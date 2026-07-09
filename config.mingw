@@ -72,6 +72,13 @@ WINDRES = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)windres
 STRIP = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)strip
 LD = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ld
 
+# Parser generators for libnxsl and nxmibc. These run on the build host (they
+# regenerate the committed-out flex/bison sources), so they are NOT prefixed
+# with the cross-compilation toolchain. Provide full paths here if flex/bison
+# are not on PATH.
+LEX = flex
+YACC = bison
+
 #####################################################################
 # Installation
 #####################################################################

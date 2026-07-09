@@ -9,6 +9,9 @@
 #   TOOL_LIBS     - libraries to link (in addition to $(WIN_LIBS)), e.g. -lnetxms
 #   TOOL_CPPFLAGS - extra compiler flags (optional)
 #   TOOL_LDFLAGS  - extra linker flags, e.g. -municode for a _tmain entry (optional)
+#   GENERATED_SOURCES - files produced by an in-tree generator (flex/bison, etc.)
+#                   that 'clean' should also remove (optional). The rules that
+#                   produce them go in the tool's own Makefile.w32.
 # then:
 #   include $(TOPDIR)/build/tool-common.mk
 #
@@ -57,7 +60,7 @@ $(RC_OBJECT): $(RC_SOURCE)
 	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(GENERATED_SOURCES) .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"
