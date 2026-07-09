@@ -343,7 +343,6 @@ venv/
 .nxadm_history
 
 # Windows MinGW Build System
-/config.mingw
 /out/
 *.dll
 *.dll.a

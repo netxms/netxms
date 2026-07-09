@@ -21,7 +21,12 @@ UNICODE = 1
 # Components to build
 BUILD_AGENT = 1              # Build agent components (nxagentd, subagents)
 BUILD_CLIENT = 1             # Build client libraries and tools
-BUILD_SERVER = 0             # Server components
+BUILD_SERVER = 1             # Server components
+
+# Windows XP profile flag. 0 for the normal llvm-mingw build; the Windows XP
+# profile (config.mingw.xp) sets it to 1 to select the reduced, XP-compatible
+# component set (no JNI/protobuf/DB-client SDKs, no Vista+ subagents).
+WINXP ?= 0
 
 #####################################################################
 # Target Architecture
@@ -52,13 +57,20 @@ endif
 
 TOOLCHAIN_PREFIX = $(TARGET_TRIPLE)-
 
-CC = $(TOOLCHAIN_PREFIX)gcc
-CXX = $(TOOLCHAIN_PREFIX)g++
-AR = $(TOOLCHAIN_PREFIX)ar
-RANLIB = $(TOOLCHAIN_PREFIX)ranlib
-WINDRES = $(TOOLCHAIN_PREFIX)windres
-STRIP = $(TOOLCHAIN_PREFIX)strip
-LD = $(TOOLCHAIN_PREFIX)ld
+# Absolute directory of the toolchain binaries (with trailing slash). Empty by
+# default so the tools are resolved via PATH (the llvm-mingw case). The Windows
+# XP profile (config.mingw.xp) sets this to select the legacy GCC toolchain by
+# absolute path - both toolchains expose the same i686-w64-mingw32-* names, so
+# PATH alone cannot disambiguate them.
+TOOLCHAIN_BIN =
+
+CC = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)gcc
+CXX = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)g++
+AR = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ar
+RANLIB = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ranlib
+WINDRES = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)windres
+STRIP = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)strip
+LD = $(TOOLCHAIN_BIN)$(TOOLCHAIN_PREFIX)ld
 
 #####################################################################
 # Installation
@@ -91,8 +103,14 @@ CURL_ROOT = $(SDK_ROOT)/curl
 # libexpat (required for XML parsing)
 EXPAT_ROOT = $(SDK_ROOT)/expat
 
+# jq (JSON query library; enabled unconditionally for Windows builds via nms_common.h)
+JQ_ROOT = $(SDK_ROOT)/jq
+
+# libmodbus (Modbus protocol support; enabled unconditionally for Windows builds via nms_common.h)
+MODBUS_ROOT = $(SDK_ROOT)/libmodbus
+
 # libssh (optional, for SSH subagent)
-LIBSSH_ROOT = $(SDK_ROOT)/libssh/$(ARCH)
+LIBSSH_ROOT = $(SDK_ROOT)/libssh
 
 # PostgreSQL client library (optional, for pgsql database driver)
 PGSQL_ROOT = $(SDK_ROOT)/PostgreSQL/$(ARCH)
@@ -102,14 +120,20 @@ MYSQL_ROOT = $(SDK_ROOT)/mysql/$(ARCH)
 MARIADB_ROOT = $(SDK_ROOT)/MariaDB/$(ARCH)
 
 # libmosquitto (optional, for MQTT subagent)
-MOSQUITTO_ROOT = $(SDK_ROOT)/libmosquitto/$(ARCH)
+MOSQUITTO_ROOT = $(SDK_ROOT)/libmosquitto
 
-# Python (optional, for Python subagent)
-PYTHON_ROOT = C:/Program Files/Python37
+# libstrophe (optional, for the XMPP notification channel driver)
+LIBSTROPHE_ROOT = $(SDK_ROOT)/libstrophe
 
-# Java JDK (optional, for Java subagent)
-# Note: Use forward slashes
-JAVA_HOME = C:/Program Files/Java/jdk1.8.0_144
+# Protocol Buffers and libmicrohttpd (required; used by the Prometheus subagent
+# and by the server build). snappy is required for the Prometheus subagent.
+PROTOBUF_ROOT = $(SDK_ROOT)/protobuf
+MICROHTTPD_ROOT = $(SDK_ROOT)/libmicrohttpd
+SNAPPY_ROOT = $(SDK_ROOT)/snappy
+
+# JNI headers (Java subagent / libnxjava). The JVM is loaded at runtime via
+# LoadLibrary, so only headers are needed - no JVM import library to link.
+JNI_ROOT = $(SDK_ROOT)/JNI
 
 # Oracle Instant Client (optional, for Oracle database driver)
 ORACLE_ROOT = $(SDK_ROOT)/Oracle/instantclient_12_1.$(ARCH)
@@ -123,8 +147,18 @@ INFORMIX_ROOT = $(SDK_ROOT)/Informix/$(ARCH)
 # IBM DB2 SDK (optional, for DB2 database driver)
 DB2_ROOT = $(SDK_ROOT)/DB2/$(ARCH)
 
-# Oracle Tuxedo SDK (optional, for Tuxedo subagent)
-TUXEDO_ROOT = C:/Oracle/tuxedo12.2.2.0.0_VS2015
+# Note: the Tuxedo subagent is excluded from the Windows build (SDK headers
+# clash with the mingw CRT), so no Tuxedo SDK path is needed here.
+
+# ATM subsystem SDKs (private/atm). All under the common SDK root, standard
+# $(SDK_ROOT)/<name> layout (include/, per-arch lib/$(ARCH)). These ship
+# MSVC-style import libs linked via -l:<file>.lib (like the DB client SDKs).
+# The CEN/XFS SDK is x86-only (stdcall-decorated), so its consumers build x86.
+XFS_ROOT = $(SDK_ROOT)/XFS
+IRISGUARD_ROOT = $(SDK_ROOT)/IrisGuard
+DSVCAP_ROOT = $(SDK_ROOT)/DSVCAP
+OPENH264_ROOT = $(SDK_ROOT)/OpenH264
+MP4V2_ROOT = $(SDK_ROOT)/mp4v2
 
 # IBM MQ SDK (optional, for MQ features)
 MQ_ROOT = $(SDK_ROOT)/IBM-MQ
@@ -148,7 +182,6 @@ WITH_DB2 = 0                 # IBM DB2
 WITH_ODBC = 1                # ODBC (uses Windows built-in)
 
 # Agent subagents
-WITH_PYTHON = 1              # Python subagent
 WITH_JAVA = 1                # Java subagent
 WITH_SSH = 1                 # SSH subagent
 WITH_MOSQUITTO = 1           # MQTT subagent
@@ -166,7 +199,9 @@ COMMON_LIBDIRS = -L$(LIB_DIR) \
                  -L$(PCRE_ROOT)/lib/$(ARCH) \
                  -L$(ZLIB_ROOT)/lib/$(ARCH) \
                  -L$(CURL_ROOT)/lib/$(ARCH) \
-                 -L$(EXPAT_ROOT)/lib/$(ARCH)
+                 -L$(EXPAT_ROOT)/lib/$(ARCH) \
+                 -L$(JQ_ROOT)/lib/$(ARCH) \
+                 -L$(MODBUS_ROOT)/lib/$(ARCH)
 
 #####################################################################
 # Common Compiler Flags
@@ -184,7 +219,10 @@ COMMON_CFLAGS = -DUNICODE \
                 -I$(PCRE_ROOT)/include \
                 -I$(ZLIB_ROOT)/include \
                 -I$(CURL_ROOT)/include \
-                -I$(EXPAT_ROOT)/include
+                -I$(EXPAT_ROOT)/include \
+                -I$(JQ_ROOT)/include \
+                -I$(MODBUS_ROOT)/include \
+                -I$(MODBUS_ROOT)/include/modbus
 
 # Note: architecture is selected by the target-triple toolchain above
 # (llvm-mingw uses separate per-arch toolchains), so no -m32/-m64 flag
@@ -237,7 +275,6 @@ WIN_LIBS = -lws2_32 \
            -lshell32 \
            -lole32 \
            -loleaut32 \
-           -lsensapi \
            -lversion \
            -lshlwapi \
            -lcrypt32 \
@@ -262,12 +299,70 @@ ZLIB_LIBS = -lz
 # XML parsing library
 EXPAT_LIBS = -lexpat
 
+# jq JSON query library (with its oniguruma regex dependency)
+JQ_LIBS = -ljq -lonig
+
+# libmodbus (NetXMS-packaged import library name)
+MODBUS_LIBS = -lnxmodbus
+
+# libssh (SSH subagent); -L embedded so only consumers pull in the path
+LIBSSH_LIBS = -L$(LIBSSH_ROOT)/lib/$(ARCH) -lssh
+
+# libmosquitto (MQTT subagent)
+MOSQUITTO_LIBS = -L$(MOSQUITTO_ROOT)/lib/$(ARCH) -lmosquitto
+
+# libstrophe (XMPP notification channel driver)
+STROPHE_LIBS = -L$(LIBSTROPHE_ROOT)/lib/$(ARCH) -lstrophe
+
+# Protocol Buffers / libmicrohttpd / snappy (Prometheus subagent)
+PROTOBUF_LIBS = -L$(PROTOBUF_ROOT)/lib/$(ARCH) -lprotobuf
+MICROHTTPD_LIBS = -L$(MICROHTTPD_ROOT)/lib/$(ARCH) -lmicrohttpd
+SNAPPY_LIBS = -L$(SNAPPY_ROOT)/lib/$(ARCH) -lsnappy
+
+# Database client libraries. These SDKs ship MSVC-style import libs (*.lib),
+# which ld.lld links directly via -l:<file>.lib. The ODBC/MSSQL drivers use the
+# ODBC library from the mingw-w64 runtime; the sqlite driver uses the in-tree
+# nxsqlite engine, so neither needs an entry here.
+PGSQL_LIBS = -L$(PGSQL_ROOT)/lib -l:libpq.lib
+MYSQL_LIBS = -L$(MYSQL_ROOT)/lib -l:libmysql.lib
+MARIADB_LIBS = -L$(MARIADB_ROOT)/lib -l:libmariadb.lib
+ORACLE_LIBS = -L$(ORACLE_ROOT)/sdk/lib/msvc -l:oci.lib
+INFORMIX_LIBS = -L$(INFORMIX_ROOT)/lib -l:iclit09b.lib
+
+# The DB2 SDK ships both the 32-bit CLI import lib (db2cli.lib) and, in the x64
+# tree, the 64-bit one (db2cli64.lib). Pick the one matching the target arch.
+ifeq ($(ARCH),x64)
+DB2_LIBS = -L$(DB2_ROOT)/lib -l:db2cli64.lib
+else
+DB2_LIBS = -L$(DB2_ROOT)/lib -l:db2cli.lib
+endif
+
+# ATM subsystem SDK import libs (private/atm). MSVC-style *.lib linked via
+# -l:<file>.lib. These vendor SDKs are x86-only. Their on-disk layouts differ:
+# XFS ships a single flat lib dir; IrisGuard keeps its import lib in the SDK
+# root; DSVCAP/OpenH264/mp4v2 use the standard per-arch lib/$(ARCH). irisguard
+# declares the EyeBank entry point inline, so it needs no vendor include path.
+XFS_LIBS = -L$(XFS_ROOT)/lib -l:msxfs.lib
+XFS_CPPFLAGS = -I$(XFS_ROOT)/include
+IRISGUARD_LIBS = -L$(IRISGUARD_ROOT) -l:EyeBank_API_Wrapper.lib
+IRISGUARD_CPPFLAGS =
+DSVCAP_LIBS = -L$(DSVCAP_ROOT)/lib/$(ARCH) -ldsvcap
+DSVCAP_CPPFLAGS = -I$(DSVCAP_ROOT)/include
+OPENH264_LIBS = -L$(OPENH264_ROOT)/lib/$(ARCH) -lopenh264
+OPENH264_CPPFLAGS = -I$(OPENH264_ROOT)/include
+MP4V2_LIBS = -L$(MP4V2_ROOT)/lib/$(ARCH) -lmp4v2
+MP4V2_CPPFLAGS = -I$(MP4V2_ROOT)/include
+
 #####################################################################
 # Build Output Directories
 #####################################################################
 
-# Build artifacts go into architecture-specific directories
-BUILD_DIR = $(TOPDIR)/out/$(ARCH)/$(BUILD_TYPE)
+# Build artifacts go into platform-specific directories. PLATFORM defaults to
+# ARCH (so output stays at out/x64, out/x86, out/arm64); a build profile that
+# reuses an existing ARCH with a different toolchain/SDK - like the Windows XP
+# profile (out/x86-xp) - overrides PLATFORM to keep its output tree separate.
+PLATFORM ?= $(ARCH)
+BUILD_DIR = $(TOPDIR)/out/$(PLATFORM)/$(BUILD_TYPE)
 BIN_DIR = $(BUILD_DIR)/bin
 LIB_DIR = $(BUILD_DIR)/lib
 OBJ_DIR = $(BUILD_DIR)/obj
