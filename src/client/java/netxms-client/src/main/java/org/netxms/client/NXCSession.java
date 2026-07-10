@@ -2339,13 +2339,16 @@ public class NXCSession
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
          protocolVersion = new ProtocolVersion(response);
+         serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
+         serverBuild = response.getFieldAsString(NXCPCodes.VID_SERVER_BUILD);
+
          if (!ignoreProtocolVersion)
          {
             if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) || ((componentVersions != null)
                   && !validateProtocolVersions(componentVersions)))
             {
                logger.warn("Connection failed (" + protocolVersion.toString() + ")");
-               throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
+               throw new ProtocolVersionException(protocolVersion, serverVersion, serverBuild);
             }
          }
          else
@@ -2353,8 +2356,6 @@ public class NXCSession
             logger.info("Protocol version ignored");
          }
 
-         serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
-         serverBuild = response.getFieldAsString(NXCPCodes.VID_SERVER_BUILD);
          serverId = response.getFieldAsInt64(NXCPCodes.VID_SERVER_ID);
          serverTimeZone = response.getFieldAsString(NXCPCodes.VID_TIMEZONE);
          serverTime = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;

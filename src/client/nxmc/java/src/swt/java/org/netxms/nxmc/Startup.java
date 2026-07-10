@@ -48,6 +48,7 @@ import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersionException;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
@@ -58,6 +59,7 @@ import org.netxms.client.services.ServiceManager;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
+import org.netxms.nxmc.base.dialogs.ProtocolVersionMismatchDialog;
 import org.netxms.nxmc.base.dialogs.ReconnectDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
 import org.netxms.nxmc.base.login.LoginCredentials;
@@ -320,7 +322,7 @@ public class Startup
 
    /**
     * Open application window(s)
-    * 
+    *
     * @param session client session
     * @param args command line arguments
     */
@@ -348,7 +350,7 @@ public class Startup
       List<View> fullScreenViews = new ArrayList<>();
       if (dashboardName != null)
       {
-         Dashboard dashboard = getObjectById(dashboardName, Dashboard.class); 
+         Dashboard dashboard = getObjectById(dashboardName, Dashboard.class);
          if (dashboard != null)
             fullScreenViews.add(new AdHocDashboardView(0, dashboard, null));
       }
@@ -400,14 +402,14 @@ public class Startup
       Memento popOutViews = ps.getAsMemento(PreferenceStore.serverProperty("PopOutViews"));
       List<String> views = popOutViews.getAsStringList("PopOutViews.Views");
       for (String id : views)
-      {         
+      {
          Memento viewConfig = popOutViews.getAsMemento(id + ".state");
          View v = null;
          try
          {
             Class<?> widgetClass = Class.forName(viewConfig.getAsString("class"));
             Constructor<?> c = widgetClass.getDeclaredConstructor();
-            c.setAccessible(true);         
+            c.setAccessible(true);
             v = (View)c.newInstance();
             if (v != null)
             {
@@ -420,12 +422,12 @@ public class Startup
             PopOutViewWindow.open(new NonRestorableView(e, v.getFullName() != null ? v.getFullName() : id));
             logger.error("Cannot instantiate saved pop out view", e);
          }
-      }     
+      }
    }
 
    /**
     * Get object by ID
-    * 
+    *
     * @param objectId numeric object ID or object name
     * @param objectClass object class
     */
@@ -611,7 +613,10 @@ public class Startup
                logger.error("Login job failed", cause);
                if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
                {
-                  MessageDialog.openError(null, i18n.tr("Connection Error"), cause.getLocalizedMessage());
+                  if (cause instanceof ProtocolVersionException)
+                     new ProtocolVersionMismatchDialog(null, (ProtocolVersionException)cause).open();
+                  else
+                     MessageDialog.openError(null, i18n.tr("Connection Error"), cause.getLocalizedMessage());
                }
             }
          }
@@ -776,7 +781,7 @@ public class Startup
 
    /**
     * Process session disconnect
-    * 
+    *
     * @param reason reason of disconnect
     * @param display current display
     */
