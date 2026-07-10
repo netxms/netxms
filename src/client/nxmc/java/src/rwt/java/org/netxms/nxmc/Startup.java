@@ -54,6 +54,7 @@ import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersionException;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
@@ -62,6 +63,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.base.UIElementFilter;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
+import org.netxms.nxmc.base.dialogs.ProtocolVersionMismatchDialog;
 import org.netxms.nxmc.base.login.LoginCredentials;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
@@ -369,7 +371,7 @@ public class Startup implements EntryPoint, StartupParameters
 
    /**
     * Get object by ID
-    * 
+    *
     * @param objectId numeric object ID or object name
     * @param objectClass object class
     */
@@ -470,7 +472,10 @@ public class Startup implements EntryPoint, StartupParameters
             logger.error("Login job failed", cause);
             if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
             {
-               loginDialog.setErrorMessage(cause.getLocalizedMessage());
+               if (cause instanceof ProtocolVersionException)
+                  new ProtocolVersionMismatchDialog(null, (ProtocolVersionException)cause).open();
+               else
+                  loginDialog.setErrorMessage(cause.getLocalizedMessage());
             }
          }
          catch(Exception e)
@@ -625,7 +630,7 @@ public class Startup implements EntryPoint, StartupParameters
 
    /**
     * Process session disconnect
-    * 
+    *
     * @param reason reason of disconnect
     * @param display current display
     */
