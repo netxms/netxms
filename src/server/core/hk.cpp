@@ -433,6 +433,8 @@ static void HouseKeeper()
          break;
       if (!DeleteExpiredLogRecords(_T("server action execution log"), _T("server_action_execution_log"), _T("action_timestamp"), _T("ActionExecutionLog.RetentionTime"), hdb, cycleStartTime))
          break;
+      if (!DeleteExpiredLogRecords(_T("AI task execution log"), _T("ai_task_execution_log"), _T("execution_timestamp"), _T("AITaskExecutionLog.RetentionTime"), hdb, cycleStartTime))
+         break;
       if (!DeleteExpiredLogRecords(_T("notification log"), _T("notification_log"), _T("notification_timestamp"), _T("NotificationLog.RetentionTime"), hdb, cycleStartTime))
          break;
       if (!DeleteExpiredLogRecords(_T("maintenance journal"), _T("maintenance_journal"), _T("creation_time"), _T("MaintenanceJournal.RetentionTime"), hdb, cycleStartTime))

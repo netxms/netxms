@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.31 to 62.32
+ */
+static bool H_UpgradeFromV31()
+{
+   CHK_EXEC(CreateConfigParam(L"AITaskExecutionLog.RetentionTime", L"90",
+      L"Retention time in days for the records in AI task execution log. All records older than specified will be deleted by housekeeping process.",
+      L"days", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 62.30 to 62.31
  */
 static bool H_UpgradeFromV30()
@@ -1176,6 +1188,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 31, 62, 32, H_UpgradeFromV31 },
    { 30, 62, 31, H_UpgradeFromV30 },
    { 29, 62, 30, H_UpgradeFromV29 },
    { 28, 62, 29, H_UpgradeFromV28 },
