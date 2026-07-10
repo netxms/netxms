@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.5 to 70.6
+ */
+static bool H_UpgradeFromV5()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 32)
+   {
+      CHK_EXEC(CreateConfigParam(L"AITaskExecutionLog.RetentionTime", L"90",
+         L"Retention time in days for the records in AI task execution log. All records older than specified will be deleted by housekeeping process.",
+         L"days", 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 32));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 70.4 to 70.5
  */
 static bool H_UpgradeFromV4()
@@ -118,6 +134,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5, 70, 6, H_UpgradeFromV5 },
    { 4, 70, 5, H_UpgradeFromV4 },
    { 3, 70, 4, H_UpgradeFromV3 },
    { 2, 70, 3, H_UpgradeFromV2 },

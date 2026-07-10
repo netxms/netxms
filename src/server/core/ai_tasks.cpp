@@ -125,6 +125,14 @@ void InitAITasks()
 }
 
 /**
+ * Get last used log record ID
+ */
+int64_t GetLastAITaskLogRecordId()
+{
+   return static_cast<int64_t>(s_logRecordId);
+}
+
+/**
  * Register AI task
  */
 uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime)

@@ -34,6 +34,7 @@ uint64_t GetNextSyslogId();
 uint64_t GetNextWinEventId();
 uint64_t GetNextOtelLogId();
 uint64_t GetLastAssetChangeLogId();
+int64_t GetLastAITaskLogRecordId();
 void LoadLastEventId(DB_HANDLE hdb);
 
 /**
@@ -561,4 +562,5 @@ void SaveCurrentFreeId()
    ConfigWriteInt64(_T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
    ConfigWriteInt64(_T("LastNotificationId"), GetLastNotificationId(), true, false, true);
    ConfigWriteUInt64(_T("LastAssetChangeLogRecordId"), GetLastAssetChangeLogId(), true, false, true);
+   ConfigWriteInt64(_T("AITask.LastLogRecordId"), GetLastAITaskLogRecordId(), true, false, true);
 }
