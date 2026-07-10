@@ -359,3 +359,5 @@ venv/
 .ralphex/progress/
 
  **/.claude/settings.local.json
+
+nxmc.logfile_IS_UNDEFINED
