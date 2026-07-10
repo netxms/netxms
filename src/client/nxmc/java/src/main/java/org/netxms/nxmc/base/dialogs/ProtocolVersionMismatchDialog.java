@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.ProtocolVersionException;
+import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
@@ -42,8 +43,8 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog shown when server and client use incompatible versions of communication protocol. Presents both product versions and links
- * to the release directory containing a client matching the server.
+ * Dialog shown when server and client use incompatible versions of communication protocol. Presents both product versions and, unless
+ * disabled by branding, links to the release directory containing a client matching the server.
  */
 public class ProtocolVersionMismatchDialog extends Dialog
 {
@@ -122,7 +123,7 @@ public class ProtocolVersionMismatchDialog extends Dialog
       createVersionLabels(versionArea, i18n.tr("Client:"), VersionInfo.version());
 
       String releaseBranch = getReleaseBranch(serverVersion);
-      if (releaseBranch != null)
+      if ((releaseBranch != null) && BrandingManager.isClientDownloadLinkEnabled())
       {
          final String releaseUrl = getReleaseUrl(releaseBranch);
          Link link = new Link(dialogArea, SWT.NONE);
@@ -143,7 +144,9 @@ public class ProtocolVersionMismatchDialog extends Dialog
       else
       {
          Label prose = new Label(dialogArea, SWT.WRAP);
-         prose.setText(i18n.tr("Server and client must have the same major and minor version."));
+         prose.setText(Registry.IS_WEB_CLIENT ?
+               i18n.tr("Server and client must have the same major and minor version. The deployed web client does not match the server.") :
+               i18n.tr("Server and client must have the same major and minor version."));
          GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
          gd.widthHint = 480;
          prose.setLayoutData(gd);
