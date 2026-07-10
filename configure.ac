@@ -150,7 +150,7 @@ BUILD_GUI_CLIENT="yes"
 BUILD_STATIC_AGENT="no"
 MODULES="libnetxms install"
 TEST_MODULES=""
-AGENT_UNIT_TESTS=""
+AGENT_UNIT_TESTS="entsoe"
 TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -1050,7 +1050,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-ncd-webhook"
-	AGENT_UNIT_TESTS="linux-cpu-usage-collector"
+	AGENT_UNIT_TESTS="entsoe linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
@@ -4583,6 +4583,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/devemu/Makefile
 	src/agent/subagents/ds18x20/Makefile
+	src/agent/subagents/entsoe/Makefile
 	src/agent/subagents/fbdev/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
@@ -4797,6 +4798,7 @@ AC_CONFIG_FILES([
 	tests/Makefile
 	tests/agent/Makefile
 	tests/agent/unit/Makefile
+	tests/agent/unit/entsoe/Makefile
 	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile
 	tests/include/Makefile

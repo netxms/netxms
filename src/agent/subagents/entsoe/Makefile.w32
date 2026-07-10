@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - entsoe subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = entsoe
+SOURCES = main.cpp adapter.cpp catalog.cpp factors.cpp zone.cpp
+SA_LIBS = $(CURL_LIBS) $(SSL_LIBS)
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

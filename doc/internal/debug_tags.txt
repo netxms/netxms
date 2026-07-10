@@ -67,6 +67,8 @@ dload		Debug output of dynamic library loading functions
 
 docker		Docker cloud connector
 
+entsoe		ENTSO-E Transparency Platform subagent
+
 event.*		Event related messages
 event.corr	Event correlation
 event.forwarder	Event forwarding framework (server side)

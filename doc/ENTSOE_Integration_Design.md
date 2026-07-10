@@ -1,6 +1,7 @@
 # ENTSO-E Transparency Platform Integration — Design Document
 
-Status: design draft — tracked by issue #3397
+Status: implemented — tracked by issue #3397. Subagent at
+`src/agent/subagents/entsoe/`; unit tests at `tests/agent/unit/entsoe/`.
 
 This document describes a new agent subagent, **`entsoe`**, that ingests
 electricity-grid data from the ENTSO-E Transparency Platform
