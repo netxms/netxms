@@ -169,6 +169,8 @@ nxsl.ssh	NXSL SSH session operations
 
 nxcp.streamcomp	NXCP stream compression
 
+openmeteo	Open-Meteo weather subagent
+
 otel.log	OpenTelemetry log processing (server side)
 otlp		OTLP receiver module
 otlp.export	OTLP event forwarder (events exported as OTLP logs)
