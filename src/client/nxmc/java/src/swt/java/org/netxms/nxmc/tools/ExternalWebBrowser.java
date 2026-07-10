@@ -63,13 +63,13 @@ public class ExternalWebBrowser
       if (Util.isWindows())
       {
          Program.launch(url);
-      } 
+      }
       else if (Util.isMac())
       {
-         try 
+         try
          {
-            Runtime.getRuntime().exec("/usr/bin/open '" + url + "'");
-         } 
+            Runtime.getRuntime().exec(new String[] { "/usr/bin/open", url });
+         }
          catch (IOException e)
          {
             logger.error("Exception while starting external browser", e);
@@ -79,7 +79,7 @@ public class ExternalWebBrowser
       {
          try
          {
-            Runtime.getRuntime().exec("xdg-open " + urlEncode(url));
+            Runtime.getRuntime().exec(new String[] { "xdg-open", url });
          }
          catch(IOException e)
          {
@@ -89,29 +89,9 @@ public class ExternalWebBrowser
    }
 
    /**
-    * This method encodes the URL removing spaces and replacing them with <code>"%20"</code>.
-    */
-   private static String urlEncode(String url)
-   {
-      StringBuilder sb = new StringBuilder(url.length());
-      for(char c : url.toCharArray())
-      {
-         if (c == ' ')
-         {
-            sb.append("%20");
-         }
-         else
-         {
-            sb.append(c);
-         }
-      }
-      return sb.toString();
-   }
-
-   /**
     * Get local address that can be used for connecting to this client. It is always 127.0.0.1 for desktop client but can be
     * different for web client.
-    * 
+    *
     * @param display current display
     * @return local address that can be used for connecting to this client
     */
