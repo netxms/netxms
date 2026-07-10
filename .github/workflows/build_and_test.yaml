@@ -2,6 +2,9 @@ name: Build and run basic unit tests
 
 on:
   push:
+    branches:
+      - master
+      - stable-*
   pull_request:
 
 concurrency:
