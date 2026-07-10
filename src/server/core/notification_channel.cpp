@@ -770,7 +770,18 @@ int NXSLDriver::send(const NotificationContext& context)
    // Set up server context (binds $object, $node if applicable)
    if (context.sourceObject != nullptr)
    {
-      SetupServerScriptVM(vm, context.sourceObject, shared_ptr<DCObjectInfo>());
+      shared_ptr<DCObjectInfo> dci;
+      if ((context.event != nullptr) && context.sourceObject->isDataCollectionTarget())
+      {
+         uint32_t dciId = context.event->getDciId();
+         if (dciId != 0)
+         {
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*context.sourceObject).getDCObjectById(dciId, 0);
+            if (dcObject != nullptr)
+               dci = dcObject->createDescriptor();
+         }
+      }
+      SetupServerScriptVM(vm, context.sourceObject, dci);
    }
 
    // Bind $event variable (only if event provided)
