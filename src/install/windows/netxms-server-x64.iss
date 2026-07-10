@@ -128,6 +128,7 @@ Source: "..\..\..\out\x64\Release\bin\bind9.nsm"; DestDir: "{app}\bin"; Flags: i
 Source: "..\..\..\out\x64\Release\bin\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server

@@ -15,7 +15,11 @@
 LEX ?= flex
 YACC ?= bison
 
-export TOPDIR CC CXX AR RANLIB WINDRES WINMC STRIP LD LEX YACC
+# protoc for protobuf code generation (Prometheus subagent, otlp module).
+# Defaulted here so config.mingw files predating the variable still build.
+PROTOC ?= $(PROTOBUF_ROOT)/bin/x64/protoc.exe
+
+export TOPDIR CC CXX AR RANLIB WINDRES WINMC STRIP LD LEX YACC PROTOC
 export CONFIG WINXP PLATFORM TOOLCHAIN_BIN
 export ARCH DEBUG PREFIX
 export BUILD_AGENT BUILD_CLIENT BUILD_SERVER

@@ -2,10 +2,32 @@
 # Makefile.w32 - prometheus subagent for Windows/MinGW
 # Part of NetXMS project
 #
+# Uses Protocol Buffers: the *.pb.cc/*.pb.h under generated/ are produced from
+# the bundled *.proto files by protoc (rules below) and compiled in.
+#
 
 SUBAGENT = prometheus
 SOURCES = handler.cpp main.cpp parser.cpp printer.cpp receiver.cpp scraper.cpp generated/remote.pb.cc generated/types.pb.cc
 SA_LIBS = -lnxsde $(CURL_LIBS) $(PROTOBUF_LIBS) $(MICROHTTPD_LIBS) $(SNAPPY_LIBS)
 SA_CPPFLAGS = -Igenerated -I$(PROTOBUF_ROOT)/include -I$(MICROHTTPD_ROOT)/include -I$(SNAPPY_ROOT)/include
 
+# Files produced by protoc; listed so 'clean' removes them.
+GENERATED_SOURCES = generated/remote.pb.cc generated/remote.pb.h generated/types.pb.cc generated/types.pb.h
+
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk
+
+# Keep the generated sources on disk. Without this GNU make treats them as
+# intermediate files in the .proto -> .pb.cc -> .o chain and deletes them after
+# each build, forcing protoc and a full recompile to rerun on every build.
+.SECONDARY: $(GENERATED_SOURCES)
+
+# Generate the protobuf C++ sources from the .proto definitions. protoc emits
+# the .pb.cc and .pb.h together, so both targets share a single recipe.
+generated/%.pb.cc generated/%.pb.h: %.proto
+	@mkdir -p generated
+	@echo "  PROTOC  $<"
+	$(Q)$(PROTOC) --cpp_out=generated --proto_path=. $<
+
+# Every translation unit includes prometheus.h, which pulls in the generated
+# headers, so protoc must run before anything compiles (order-only prereq).
+$(OBJECTS): | generated/remote.pb.h generated/types.pb.h

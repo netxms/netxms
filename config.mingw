@@ -144,6 +144,11 @@ PROTOBUF_ROOT = $(SDK_ROOT)/protobuf
 MICROHTTPD_ROOT = $(SDK_ROOT)/libmicrohttpd
 SNAPPY_ROOT = $(SDK_ROOT)/snappy
 
+# protoc compiler - generates C++ sources from .proto definitions (Prometheus
+# subagent, otlp server module). It runs on the build host, so the x64 binary
+# is used regardless of the target ARCH; protoc output is portable C++.
+PROTOC = $(PROTOBUF_ROOT)/bin/x64/protoc.exe
+
 # JNI headers (Java subagent / libnxjava). The JVM is loaded at runtime via
 # LoadLibrary, so only headers are needed - no JVM import library to link.
 JNI_ROOT = $(SDK_ROOT)/JNI

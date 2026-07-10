@@ -27,6 +27,7 @@ Source: "..\..\..\out\arm64\Release\bin\bind9.nsm"; DestDir: "{app}\bin"; Flags:
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

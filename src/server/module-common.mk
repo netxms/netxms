@@ -7,6 +7,9 @@
 #   SOURCES       - list of .cpp source files (often $(wildcard *.cpp))
 #   MOD_LIBS      - libraries in addition to the base core set (optional)
 #   MOD_CPPFLAGS  - extra compiler flags (optional)
+#   GENERATED_SOURCES - files produced by an in-tree generator (protoc, etc.)
+#                   that 'clean' should also remove (optional). The rules that
+#                   produce them go in the module's own Makefile.w32.
 # then:
 #   include $(TOPDIR)/src/server/module-common.mk
 #
@@ -66,7 +69,7 @@ $(RC_OBJECT): $(RC_SOURCE)
 	$(Q)$(WINDRES) -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(GENERATED_SOURCES) .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"

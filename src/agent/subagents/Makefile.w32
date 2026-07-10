@@ -44,6 +44,7 @@ SUBAGENTS = \
 	db2 \
 	dbquery \
 	devemu \
+	entsoe \
 	filemgr \
 	gps \
 	informix \

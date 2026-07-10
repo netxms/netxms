@@ -2,12 +2,41 @@
 # Makefile.w32 - otlp (OpenTelemetry protocol module) for Windows/MinGW
 # Part of NetXMS project
 #
-# Uses Protocol Buffers: the generated *.pb.cc under generated/ are compiled in.
+# Uses Protocol Buffers: the *.pb.cc/*.pb.h under generated/ are produced from
+# the bundled *.proto files by protoc (rules below) and compiled in.
 #
 
 MODULE = otlp
-SOURCES = $(wildcard *.cpp) $(wildcard generated/*.pb.cc)
+
+# Protobuf sources generated from the .proto definitions.
+PROTO_CC = generated/common.pb.cc generated/resource.pb.cc generated/metrics.pb.cc \
+           generated/metrics_service.pb.cc generated/logs.pb.cc generated/logs_service.pb.cc
+PROTO_H = $(PROTO_CC:.cc=.h)
+
+SOURCES = $(wildcard *.cpp) $(PROTO_CC)
 MOD_CPPFLAGS = -I$(PROTOBUF_ROOT)/include -Igenerated
 MOD_LIBS = -lnxdb -lnxjansson $(MICROHTTPD_LIBS) $(PROTOBUF_LIBS) $(PCRE_LIBS) $(CURL_LIBS)
 
+# Files produced by protoc; listed so 'clean' removes them.
+GENERATED_SOURCES = $(PROTO_CC) $(PROTO_H)
+
 include $(TOPDIR)/src/server/module-common.mk
+
+# Keep the generated sources on disk. Without this GNU make treats them as
+# intermediate files in the .proto -> .pb.cc -> .o chain and deletes them after
+# each build, forcing protoc and a full recompile to rerun on every build.
+.SECONDARY: $(GENERATED_SOURCES)
+
+# Generate the protobuf C++ sources from the .proto definitions. protoc emits
+# the .pb.cc and .pb.h together, so both targets share a single recipe. The
+# proto_path lets the cross-file imports (logs.proto -> common.proto etc.)
+# resolve.
+generated/%.pb.cc generated/%.pb.h: %.proto
+	@mkdir -p generated
+	@echo "  PROTOC  $<"
+	$(Q)$(PROTOC) --cpp_out=generated --proto_path=. $<
+
+# Several translation units include the generated headers, which also include
+# one another via the proto imports, so protoc must run before anything
+# compiles (order-only prereq).
+$(OBJECTS): | $(PROTO_H)
