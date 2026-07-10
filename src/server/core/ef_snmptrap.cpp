@@ -59,6 +59,7 @@ private:
    char m_authName[128];
    char m_authPassword[128];
    char m_privPassword[128];
+   char m_codepage[16];
    bool m_useInformRequest;
    time_t m_startTime;
    SNMP_ObjectId m_trapId;
@@ -105,6 +106,7 @@ SnmpTrapEventForwarderDriver::SnmpTrapEventForwarderDriver() :
    strcpy(m_authName, "public");
    m_authPassword[0] = 0;
    m_privPassword[0] = 0;
+   m_codepage[0] = 0;
    m_useInformRequest = false;
    m_startTime = time(nullptr);
 }
@@ -112,10 +114,10 @@ SnmpTrapEventForwarderDriver::SnmpTrapEventForwarderDriver() :
 /**
  * Create varbind with given value
  */
-static inline SNMP_Variable *CreateVarbind(const SNMP_ObjectId& name, uint32_t type, const wchar_t *value)
+static inline SNMP_Variable *CreateVarbind(const SNMP_ObjectId& name, uint32_t type, const wchar_t *value, const char *codepage)
 {
    auto v = new SNMP_Variable(name);
-   v->setValueFromString(type, value);
+   v->setValueFromString(type, value, codepage);
    return v;
 }
 
@@ -132,25 +134,27 @@ bool SnmpTrapEventForwarderDriver::forward(const Event& event, const TCHAR *reci
       return false;
    }
 
-   SNMP_PDU pdu(m_useInformRequest ? SNMP_INFORM_REQUEST : SNMP_TRAP, m_version, m_trapId,
-      static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));
+   SNMP_PDU pdu(m_useInformRequest ? SNMP_INFORM_REQUEST : SNMP_TRAP, m_version, m_trapId, static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));
+
+   // Use configured codepage for encoding text fields; if not set, fall back to server default SNMP codepage
+   const char *codepage = (m_codepage[0] != 0) ? m_codepage : ((g_snmpCodepage[0] != 0) ? g_snmpCodepage : nullptr);
 
    wchar_t buffer[64];
    if (source != nullptr)
    {
-      pdu.bindVariable(CreateVarbind(m_sourceNameFieldId, ASN_OCTET_STRING, source->getName()));
-      pdu.bindVariable(CreateVarbind(m_sourceObjectIdFieldId, ASN_INTEGER, IntegerToString(source->getId(), buffer)));
+      pdu.bindVariable(CreateVarbind(m_sourceNameFieldId, ASN_OCTET_STRING, source->getName(), codepage));
+      pdu.bindVariable(CreateVarbind(m_sourceObjectIdFieldId, ASN_INTEGER, IntegerToString(source->getId(), buffer), codepage));
    }
-   pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, IntegerToString(event.getSeverity(), buffer)));
-   pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, event.getMessage()));
-   pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, IntegerToString(static_cast<uint64_t>(event.getTimestamp()), buffer)));
-   pdu.bindVariable(CreateVarbind(m_eventCodeFieldId, ASN_INTEGER, IntegerToString(event.getCode(), buffer)));
-   pdu.bindVariable(CreateVarbind(m_eventNameFieldId, ASN_OCTET_STRING, event.getName()));
-   pdu.bindVariable(CreateVarbind(m_eventIdFieldId, ASN_OCTET_STRING, IntegerToString(event.getId(), buffer)));
+   pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, IntegerToString(event.getSeverity(), buffer), codepage));
+   pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, event.getMessage(), codepage));
+   pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, IntegerToString(static_cast<uint64_t>(event.getTimestamp()), buffer), codepage));
+   pdu.bindVariable(CreateVarbind(m_eventCodeFieldId, ASN_INTEGER, IntegerToString(event.getCode(), buffer), codepage));
+   pdu.bindVariable(CreateVarbind(m_eventNameFieldId, ASN_OCTET_STRING, event.getName(), codepage));
+   pdu.bindVariable(CreateVarbind(m_eventIdFieldId, ASN_OCTET_STRING, IntegerToString(event.getId(), buffer), codepage));
 
    StringBuffer tags = event.getTagsAsList();
    if (!tags.isEmpty())
-      pdu.bindVariable(CreateVarbind(m_tagsFieldId, ASN_OCTET_STRING, tags.cstr()));
+      pdu.bindVariable(CreateVarbind(m_tagsFieldId, ASN_OCTET_STRING, tags.cstr(), codepage));
 
    if (event.getParametersCount() > 0)
    {
@@ -177,7 +181,7 @@ bool SnmpTrapEventForwarderDriver::forward(const Event& event, const TCHAR *reci
       if (text != nullptr)
       {
          wchar_t *wtext = WideStringFromUTF8String(text);
-         pdu.bindVariable(CreateVarbind(m_parametersFieldId, ASN_OCTET_STRING, wtext));
+         pdu.bindVariable(CreateVarbind(m_parametersFieldId, ASN_OCTET_STRING, wtext, codepage));
          MemFree(wtext);
          MemFree(text);
       }
@@ -239,7 +243,11 @@ SnmpTrapEventForwarderDriver *SnmpTrapEventForwarderDriver::createInstance(json_
 
    driver->m_port = static_cast<uint16_t>(json_object_get_int32(config, "port", 162));
 
-   char *s = json_object_get_string_a(config, "version", "2c");
+   char *s = json_object_get_string_a(config, "codepage", "");
+   strlcpy(driver->m_codepage, s, sizeof(driver->m_codepage));
+   MemFree(s);
+
+   s = json_object_get_string_a(config, "version", "2c");
    if (!strcmp(s, "1"))
       driver->m_version = SNMP_VERSION_1;
    else if (!strcmp(s, "2") || !stricmp(s, "2c"))
