@@ -34,6 +34,7 @@ Source: "..\..\..\out\x86\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ig
 Source: "..\..\..\out\x86\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86\Release\bin\openmeteo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

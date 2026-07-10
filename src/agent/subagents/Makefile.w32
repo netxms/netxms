@@ -54,6 +54,7 @@ SUBAGENTS = \
 	mssql \
 	mysql \
 	netsvc \
+	openmeteo \
 	oracle \
 	pgsql \
 	ping \
