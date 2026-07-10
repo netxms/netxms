@@ -56,7 +56,7 @@ public final class BrandingManager
 
 	/**
 	 * Get product name.
-	 * 
+	 *
 	 * @return product name or default product name if no branding provider defines one.
 	 */
    public static String getProductName()
@@ -72,7 +72,7 @@ public final class BrandingManager
 
    /**
     * Get prefix for window icon resources.
-    * 
+    *
     * @return prefix for window icon resources
     */
    public static String getWindowIconResourcePrefix()
@@ -88,7 +88,7 @@ public final class BrandingManager
 
    /**
     * Get product name for management client.
-    * 
+    *
     * @return product name or default product name if no branding provider defines one.
     */
    public static String getClientProductName()
@@ -225,7 +225,7 @@ public final class BrandingManager
 
 	/**
 	 * Get default perspective ID.
-	 * 
+	 *
 	 * @return default perspective ID or null if no branding provider defines one.
 	 */
    public static String getDefaultPerspective()
@@ -241,7 +241,7 @@ public final class BrandingManager
 
 	/**
     * Create "About" dialog.
-    * 
+    *
     * @param parentShell parent shell for dialog
     * @return custom "About" dialog or default one if no branding provider defines one.
     */
@@ -298,6 +298,22 @@ public final class BrandingManager
       for(BrandingProvider p : providers)
       {
          Boolean enabled = p.isWelcomePageEnabled();
+         if (enabled != null)
+            return enabled;
+      }
+      return true;
+   }
+
+   /**
+    * Control if link to client download page is shown in protocol version mismatch dialog.
+    *
+    * @return true if download link is enabled
+    */
+   public static boolean isClientDownloadLinkEnabled()
+   {
+      for(BrandingProvider p : providers)
+      {
+         Boolean enabled = p.isClientDownloadLinkEnabled();
          if (enabled != null)
             return enabled;
       }
