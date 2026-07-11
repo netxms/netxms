@@ -19683,22 +19683,16 @@ void ClientSession::updatePeerInterface(const NXCPMessage& request)
    {
       if (localInterface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && peerInterface->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
-         shared_ptr<Node> peerParent = peerInterface->getParentNode();
-         shared_ptr<Node> ifParent = localInterface->getParentNode();
-
-         if ((localInterface->getPeerInterfaceId() != 0) && (localInterface->getPeerInterfaceId() != peerInterface->getId()))
+         if (LinkInterfaces(localInterface.get(), peerInterface.get()))
          {
-            ClearPeer(localInterface->getPeerInterfaceId());
+            response.setField(VID_RCC, RCC_SUCCESS);
+            writeAuditLog(AUDIT_OBJECTS, true, localInterface->getId(), _T("Peer interface set to %s [%u]"), peerInterface->getName(), peerInterface->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, peerInterface->getId(), _T("Peer interface set to %s [%u]"), localInterface->getName(), localInterface->getId());
          }
-         if ((peerInterface->getPeerInterfaceId() != 0) && (peerInterface->getPeerInterfaceId() != localInterface->getId()))
+         else
          {
-            ClearPeer(peerInterface->getPeerInterfaceId());
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
          }
-         localInterface->setPeer(peerParent.get(), peerInterface.get(), LinkLayerProtocol::LL_PROTO_MANUAL, false);
-         peerInterface->setPeer(ifParent.get(), localInterface.get(), LinkLayerProtocol::LL_PROTO_MANUAL, false);
-         response.setField(VID_RCC, RCC_SUCCESS);
-         writeAuditLog(AUDIT_OBJECTS, false, localInterface->getId(), _T("Peer interface updated to %s [%d] interface"), peerInterface->getName(), peerInterface->getId());
-         writeAuditLog(AUDIT_OBJECTS, false, peerInterface->getId(), _T("Peer interface updated to %s [%d] interface"), peerInterface->getName(), peerInterface->getId());
       }
       else
       {
@@ -19741,7 +19735,7 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
             ClearPeer(iface->getPeerInterfaceId());
             ClearPeer(iface->getId());
          }
-         writeAuditLog(AUDIT_OBJECTS, false, iface->getId(), _T("Interface peer information cleared"));
+         writeAuditLog(AUDIT_OBJECTS, true, iface->getId(), _T("Interface peer information cleared"));
       }
       else
       {

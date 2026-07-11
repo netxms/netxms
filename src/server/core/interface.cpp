@@ -1421,6 +1421,105 @@ uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg, ClientSess
 }
 
 /**
+ * Modify interface object from JSON document - stage 1 (called under property lock).
+ * Mirrors modifyFromMessageInternal for the WebAPI JSON path.
+ */
+uint32_t Interface::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   // MAC address (only allowed for manually created interfaces)
+   json_t *value = json_object_get(json, "macAddress");
+   if (value != nullptr)
+   {
+      if (!isManuallyCreated())
+         return RCC_INCOMPATIBLE_OPERATION;
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      m_macAddress = MacAddress::parse(json_string_value(value));
+   }
+
+   // Number of required polls
+   if (!json_object_update_integer(json, "requiredPollCount", &m_requiredPollCount))
+      return RCC_INVALID_ARGUMENT;
+
+   // Expected interface state
+   value = json_object_get(json, "expectedState");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      setExpectedStateInternal(static_cast<int>(json_integer_value(value)));
+   }
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
+ * Modify interface object from JSON document - stage 2 (called outside property lock).
+ * Handles the "peer" field: an integer peer interface ID establishes a manual
+ * bidirectional link; null or 0 clears any existing peer. Establishing a link
+ * requires MODIFY access on the peer interface (the local interface was already
+ * checked by the caller).
+ */
+uint32_t Interface::modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session)
+{
+   json_t *value = json_object_get(json, "peer");
+   if (value != nullptr)
+   {
+      if (json_is_null(value) || (json_is_integer(value) && (json_integer_value(value) == 0)))
+      {
+         // Clear existing peer on both sides
+         if (m_peerInterfaceId != 0)
+         {
+            ClearPeer(m_peerInterfaceId);
+            ClearPeer(m_id);
+         }
+      }
+      else if (json_is_integer(value))
+      {
+         shared_ptr<Interface> peerInterface = static_pointer_cast<Interface>(FindObjectById(static_cast<uint32_t>(json_integer_value(value)), OBJECT_INTERFACE));
+         if ((peerInterface == nullptr) || (peerInterface.get() == this))
+            return RCC_INVALID_OBJECT_ID;
+         if ((session != nullptr) && !peerInterface->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY))
+            return RCC_ACCESS_DENIED;
+         if (!LinkInterfaces(this, peerInterface.get()))
+            return RCC_INVALID_OBJECT_ID;
+      }
+      else
+      {
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   return super::modifyFromJSONInternalStage2(json, session);
+}
+
+/**
+ * Establish a manual bidirectional peer link between two interfaces. Any
+ * pre-existing conflicting peer on either side is cleared first. Both
+ * interfaces must have parent nodes; access rights are the caller's
+ * responsibility.
+ */
+bool LinkInterfaces(Interface *iface1, Interface *iface2)
+{
+   if (iface1 == iface2)
+      return false;
+
+   shared_ptr<Node> parent1 = iface1->getParentNode();
+   shared_ptr<Node> parent2 = iface2->getParentNode();
+   if ((parent1 == nullptr) || (parent2 == nullptr))
+      return false;
+
+   if ((iface1->getPeerInterfaceId() != 0) && (iface1->getPeerInterfaceId() != iface2->getId()))
+      ClearPeer(iface1->getPeerInterfaceId());
+   if ((iface2->getPeerInterfaceId() != 0) && (iface2->getPeerInterfaceId() != iface1->getId()))
+      ClearPeer(iface2->getPeerInterfaceId());
+
+   iface1->setPeer(parent2.get(), iface2, LL_PROTO_MANUAL, false);
+   iface2->setPeer(parent1.get(), iface1, LL_PROTO_MANUAL, false);
+   return true;
+}
+
+/**
  * Set expected state for interface
  */
 void Interface::setExpectedStateInternal(int state)
