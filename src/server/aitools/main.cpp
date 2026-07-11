@@ -228,15 +228,20 @@ static void CreateAssistantFunctionList()
    RegisterAIAssistantFunction(
       "operational-status",
       "Composite triage view of what is currently broken in the monitored infrastructure: down/critical nodes, "
-      "active alarms grouped by source object, and recent critical events — all in a single call. "
+      "active alarms grouped by source object, recent critical events, and DCIs with detected anomalies — all in a single call. "
       "Use this when the operator asks 'what's broken', 'anything on fire', 'how does it look', or starts "
       "shift/incident triage. Defaults exclude objects in maintenance mode and administratively unmanaged objects. "
+      "With the 'since' parameter the view becomes a delta: only nodes that went down, alarms created or changed, "
+      "and events raised since that time are reported (anomalies always reflect current state) — use this for "
+      "periodic re-checks to see what changed since the previous check. "
       "To act on a specific alarm afterwards, use the alarm-management skill with the alarm IDs returned by this tool.",
       {
          { "detail", "response detail level: 'summary' (counts plus a few representative samples per section) or 'full' (per-section structured list, capped). Default: 'summary'" },
          { "min_severity", "minimum severity to include: 'critical', 'major', 'minor', 'warning'. Default: 'major' (i.e. critical + major)" },
          { "scope", "optional name or ID of an object (container, zone, single device) to limit the view to that subtree. Default: whole infrastructure visible to user" },
-         { "event_window_minutes", "time window for the 'recent events' section, in minutes. Clamped to [5, 1440]. Default: 60" },
+         { "since", "optional timestamp; report only changes at or after this time (delta mode). Also sets the start of the 'recent events' window, overriding event_window_minutes" },
+         { "event_window_minutes", "time window for the 'recent events' section, in minutes. Clamped to [5, 1440]. Default: 60. Ignored when 'since' is set" },
+         { "dci_tag", "optional glob pattern; limit the DCI anomalies section to DCIs whose user tag matches the pattern" },
          { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false" }
       },
       F_OperationalStatus);

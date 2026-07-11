@@ -30,6 +30,7 @@
 #define FULL_CAP_DOWN_NODES   20
 #define FULL_CAP_ALARM_GROUPS 30
 #define FULL_CAP_EVENTS       20
+#define FULL_CAP_ANOMALIES    30
 #define EVENT_FETCH_HARD_CAP 500
 #define SCOPE_INLINE_LIMIT  1000
 
@@ -157,17 +158,27 @@ static bool IsNodeInScope(NetObj *node, uint32_t userId, const NetObj *scope, bo
 
 /**
  * Collect down/critical nodes. Returns true total before capping.
+ * When since is set (> 0), only nodes that went down at or after that time are included
+ * (nodes without a known down-since timestamp are excluded because newness cannot be established).
  */
-static int CollectDownNodes(uint32_t userId, const NetObj *scope, bool includeQuiet, int cap, bool fullDetail,
+static int CollectDownNodes(uint32_t userId, const NetObj *scope, bool includeQuiet, time_t since, int cap, bool fullDetail,
    json_t *output, bool *truncated)
 {
    unique_ptr<SharedObjectArray<NetObj>> matched = g_idxNodeById.getObjects(
-      [userId, scope, includeQuiet] (NetObj *o) -> bool
+      [userId, scope, includeQuiet, since] (NetObj *o) -> bool
       {
          if (!IsNodeInScope(o, userId, scope, includeQuiet))
             return false;
          Node *node = static_cast<Node*>(o);
-         return (node->getStatus() == STATUS_CRITICAL) || node->isDown();
+         if ((node->getStatus() != STATUS_CRITICAL) && !node->isDown())
+            return false;
+         if (since > 0)
+         {
+            time_t downSince = node->getDownSince();
+            if ((downSince == 0) || (downSince < since))
+               return false;
+         }
+         return true;
       });
 
    std::vector<DownNodeEntry> entries;
@@ -273,10 +284,11 @@ struct AlarmGroup
 /**
  * Collect active alarms grouped by source object. Returns true source-group count before capping.
  * Sets criticalCount/majorCount to true totals of matching alarms (not groups), and affectedSources
- * to distinct source count.
+ * to distinct source count. When since is set (> 0), only alarms created or changed at or after
+ * that time are included.
  */
 static int CollectAlarmGroups(uint32_t userId, const NetObj *scope, int minSeverity, bool includeQuiet,
-   int cap, bool fullDetail, json_t *output, bool *truncated,
+   time_t since, int cap, bool fullDetail, json_t *output, bool *truncated,
    int *criticalCount, int *majorCount, int *affectedSources)
 {
    uint64_t systemRights = GetEffectiveSystemRights(userId);
@@ -297,6 +309,9 @@ static int CollectAlarmGroups(uint32_t userId, const NetObj *scope, int minSever
 
       int severity = alarm->getCurrentSeverity();
       if (severity < minSeverity)
+         continue;
+
+      if ((since > 0) && (alarm->getLastChangeTime() < since))
          continue;
 
       shared_ptr<NetObj> source = FindObjectById(alarm->getSourceObject());
@@ -435,7 +450,7 @@ static bool CollectScopeEventSourceIds(const NetObj *scope, uint32_t userId, Int
 /**
  * Collect recent events from event_log. Returns true total fetched (already access-filtered).
  */
-static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeverity, int windowMinutes,
+static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeverity, time_t windowStart,
    int cap, bool fullDetail, json_t *output, bool *truncated)
 {
    uint64_t systemRights = GetEffectiveSystemRights(userId);
@@ -445,8 +460,6 @@ static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeve
       return 0;
    }
 
-   time_t now = time(nullptr);
-   time_t windowStart = now - static_cast<time_t>(windowMinutes) * 60;
    int fetchLimit = std::min(cap * 4, EVENT_FETCH_HARD_CAP);
 
    StringBuffer query;
@@ -589,7 +602,95 @@ static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeve
 }
 
 /**
- * Composite triage view: down nodes + grouped alarms + recent critical events.
+ * Collect DCIs with currently detected anomalies across data collection targets in scope.
+ * Returns true total before capping. Optional glob pattern filters DCIs by user tag.
+ */
+static int CollectAnomalies(uint32_t userId, const NetObj *scope, bool includeQuiet, const wchar_t *tagPattern,
+   int cap, bool fullDetail, json_t *output, bool *truncated)
+{
+   unique_ptr<SharedObjectArray<NetObj>> targets = g_idxObjectById.getObjects(
+      [userId, scope, includeQuiet] (NetObj *o) -> bool
+      {
+         return o->isDataCollectionTarget() && IsNodeInScope(o, userId, scope, includeQuiet);
+      });
+
+   int total = 0;
+   int emitted = 0;
+   for(int i = 0; i < targets->size(); i++)
+   {
+      DataCollectionTarget *target = static_cast<DataCollectionTarget*>(targets->get(i));
+      SharedObjectArray<DCObject> anomalies = target->getDCObjectsByFilter(
+         [] (DCObject *dco) -> bool
+         {
+            if (dco->getType() != DCO_TYPE_ITEM)
+               return false;
+            DCItem *dci = static_cast<DCItem*>(dco);
+            return dci->isAnomalyDetected() || dci->isAnomalyDetectedAI();
+         }, userId);
+
+      for(int j = 0; j < anomalies.size(); j++)
+      {
+         DCItem *dci = static_cast<DCItem*>(anomalies.get(j));
+
+         SharedString userTag = dci->getUserTag();
+         if ((tagPattern != nullptr) && !MatchString(tagPattern, CHECK_NULL_EX(userTag.cstr()), false))
+            continue;
+
+         total++;
+         if (emitted >= cap)
+            continue;
+
+         json_t *entry = json_object();
+         json_t *object = json_object();
+         json_object_set_new(object, "id", json_integer(target->getId()));
+         json_object_set_new(object, "name", json_string_w(target->getName()));
+         json_object_set_new(object, "class", json_string_w(target->getObjectClassName()));
+         json_object_set_new(entry, "object", object);
+         json_object_set_new(entry, "dci_id", json_integer(dci->getId()));
+         json_object_set_new(entry, "name", json_string_t(dci->getName().cstr()));
+         json_object_set_new(entry, "description", json_string_t(dci->getDescription().cstr()));
+         if (!userTag.isEmpty())
+            json_object_set_new(entry, "tag", json_string_t(userTag.cstr()));
+
+         const char *detectedBy;
+         if (dci->isAnomalyDetected() && dci->isAnomalyDetectedAI())
+            detectedBy = "both";
+         else if (dci->isAnomalyDetectedAI())
+            detectedBy = "ai";
+         else
+            detectedBy = "statistical";
+         json_object_set_new(entry, "detected_by", json_string(detectedBy));
+
+         ItemValue *lastValue = dci->getInternalLastValue();
+         if (lastValue != nullptr)
+         {
+            json_object_set_new(entry, "last_value", json_string_w(lastValue->getString()));
+            delete lastValue;
+         }
+         if (!dci->getLastValueTimestamp().isNull())
+            json_object_set_new(entry, "last_value_timestamp", dci->getLastValueTimestamp().asJson());
+
+         if (fullDetail)
+         {
+            SharedString instance = dci->getInstanceName();
+            if (!instance.isEmpty())
+               json_object_set_new(entry, "instance", json_string_t(instance.cstr()));
+            SharedString unitName = dci->getUnitName();
+            if (!unitName.isEmpty())
+               json_object_set_new(entry, "unit", json_string_t(unitName.cstr()));
+         }
+
+         json_array_append_new(output, entry);
+         emitted++;
+      }
+   }
+
+   *truncated = (total > emitted);
+   return total;
+}
+
+/**
+ * Composite triage view: down nodes + grouped alarms + recent critical events + DCI anomalies.
  */
 std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
 {
@@ -606,6 +707,25 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
 
    bool includeQuiet = json_object_get_boolean(arguments, "include_quiet", false);
 
+   time_t since = 0;
+   const char *sinceStr = json_object_get_string_utf8(arguments, "since", nullptr);
+   if ((sinceStr != nullptr) && (*sinceStr != 0))
+   {
+      since = ParseTimestamp(sinceStr);
+      if (since == 0)
+         return std::string("Error: invalid \"since\" timestamp");
+   }
+
+   wchar_t tagPattern[256];
+   bool tagPatternSet = false;
+   const char *tagPatternStr = json_object_get_string_utf8(arguments, "dci_tag", nullptr);
+   if ((tagPatternStr != nullptr) && (*tagPatternStr != 0))
+   {
+      utf8_to_wchar(tagPatternStr, -1, tagPattern, 256);
+      tagPattern[255] = 0;
+      tagPatternSet = true;
+   }
+
    shared_ptr<NetObj> scope = FindObjectByNameOrId(arguments, "scope");
    if ((scope != nullptr) && !scope->checkAccessRights(userId, OBJECT_ACCESS_READ))
       return std::string("Access denied");
@@ -613,22 +733,29 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
    int downCap = fullDetail ? FULL_CAP_DOWN_NODES : SUMMARY_CAP;
    int groupCap = fullDetail ? FULL_CAP_ALARM_GROUPS : SUMMARY_CAP;
    int eventCap = fullDetail ? FULL_CAP_EVENTS : SUMMARY_CAP;
+   int anomalyCap = fullDetail ? FULL_CAP_ANOMALIES : SUMMARY_CAP;
 
    json_t *downNodes = json_array();
    bool downTruncated = false;
-   int totalDown = CollectDownNodes(userId, scope.get(), includeQuiet, downCap, fullDetail, downNodes, &downTruncated);
+   int totalDown = CollectDownNodes(userId, scope.get(), includeQuiet, since, downCap, fullDetail, downNodes, &downTruncated);
 
    json_t *alarmGroups = json_array();
    bool alarmTruncated = false;
    int criticalCount = 0, majorCount = 0, affectedSources = 0;
    /* totalGroups intentionally unused beyond truncation flag */
-   CollectAlarmGroups(userId, scope.get(), minSeverity, includeQuiet, groupCap, fullDetail,
+   CollectAlarmGroups(userId, scope.get(), minSeverity, includeQuiet, since, groupCap, fullDetail,
       alarmGroups, &alarmTruncated, &criticalCount, &majorCount, &affectedSources);
 
    json_t *recentEvents = json_array();
    bool eventsTruncated = false;
-   int totalEvents = CollectRecentEvents(userId, scope.get(), SEVERITY_CRITICAL, windowMinutes,
+   time_t eventWindowStart = (since > 0) ? since : time(nullptr) - static_cast<time_t>(windowMinutes) * 60;
+   int totalEvents = CollectRecentEvents(userId, scope.get(), SEVERITY_CRITICAL, eventWindowStart,
       eventCap, fullDetail, recentEvents, &eventsTruncated);
+
+   json_t *anomalies = json_array();
+   bool anomaliesTruncated = false;
+   int totalAnomalies = CollectAnomalies(userId, scope.get(), includeQuiet, tagPatternSet ? tagPattern : nullptr,
+      anomalyCap, fullDetail, anomalies, &anomaliesTruncated);
 
    json_t *output = json_object();
    json_object_set_new(output, "generated_at", json_time_string(time(nullptr)));
@@ -650,7 +777,12 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
    json_t *filters = json_object();
    json_object_set_new(filters, "detail", json_string(fullDetail ? "full" : "summary"));
    json_object_set_new(filters, "min_severity", json_string(MinSeverityToString(minSeverity)));
-   json_object_set_new(filters, "event_window_minutes", json_integer(windowMinutes));
+   if (since > 0)
+      json_object_set_new(filters, "since", json_time_string(since));
+   else
+      json_object_set_new(filters, "event_window_minutes", json_integer(windowMinutes));
+   if (tagPatternSet)
+      json_object_set_new(filters, "dci_tag", json_string(tagPatternStr));
    json_object_set_new(filters, "include_quiet", json_boolean(includeQuiet));
    json_object_set_new(output, "filters", filters);
 
@@ -660,16 +792,19 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
    json_object_set_new(headline, "major_alarms", json_integer(majorCount));
    json_object_set_new(headline, "recent_critical_events", json_integer(totalEvents));
    json_object_set_new(headline, "affected_sources", json_integer(affectedSources));
+   json_object_set_new(headline, "dci_anomalies", json_integer(totalAnomalies));
    json_object_set_new(output, "headline", headline);
 
    json_object_set_new(output, "down_nodes", downNodes);
    json_object_set_new(output, "alarm_groups", alarmGroups);
    json_object_set_new(output, "recent_events", recentEvents);
+   json_object_set_new(output, "dci_anomalies", anomalies);
 
    json_t *truncated = json_object();
    json_object_set_new(truncated, "down_nodes", json_boolean(downTruncated));
    json_object_set_new(truncated, "alarm_groups", json_boolean(alarmTruncated));
    json_object_set_new(truncated, "recent_events", json_boolean(eventsTruncated));
+   json_object_set_new(truncated, "dci_anomalies", json_boolean(anomaliesTruncated));
    json_object_set_new(output, "truncated", truncated);
 
    return JsonToString(output);
