@@ -4151,22 +4151,7 @@ NXSL_METHOD_DEFINITION(Interface, setPeer)
       return 0;
    }
 
-   shared_ptr<Node> peerParent = peerInterface->getParentNode();
-   shared_ptr<Node> localParent = localInterface->getParentNode();
-   if ((peerParent == nullptr) || (localParent == nullptr))
-   {
-      *result = vm->createValue(false);
-      return 0;
-   }
-
-   if ((localInterface->getPeerInterfaceId() != 0) && (localInterface->getPeerInterfaceId() != peerInterface->getId()))
-      ClearPeer(localInterface->getPeerInterfaceId());
-   if ((peerInterface->getPeerInterfaceId() != 0) && (peerInterface->getPeerInterfaceId() != localInterface->getId()))
-      ClearPeer(peerInterface->getPeerInterfaceId());
-
-   localInterface->setPeer(peerParent.get(), peerInterface.get(), LL_PROTO_MANUAL, false);
-   peerInterface->setPeer(localParent.get(), localInterface, LL_PROTO_MANUAL, false);
-   *result = vm->createValue(true);
+   *result = vm->createValue(LinkInterfaces(localInterface, peerInterface.get()));
    return 0;
 }
 

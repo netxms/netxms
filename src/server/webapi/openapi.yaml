@@ -2705,6 +2705,26 @@ paths:
                   type: integer
                   nullable: true
                   description: ID of the object opened on drill-down. `null` or `0` clears the link.
+                macAddress:
+                  type: string
+                  description: >-
+                    Interface only. MAC address in any accepted textual notation. Allowed
+                    only for manually created interfaces; rejected otherwise.
+                requiredPollCount:
+                  type: integer
+                  description: Interface only. Number of consecutive polls required to change status.
+                expectedState:
+                  type: integer
+                  description: >-
+                    Interface only. Expected interface state (0 = UP, 1 = DOWN, 2 = IGNORE).
+                peer:
+                  type: integer
+                  nullable: true
+                  description: >-
+                    Interface only. ID of the peer interface to link to. Establishes a manual
+                    bidirectional peer link (any previous peer on either side is cleared) and
+                    requires modify access on the peer interface. `null` or `0` clears the
+                    current peer.
       responses:
         '200':
           description: Object updated; full updated object returned.
@@ -2717,7 +2737,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to the object
+          description: User does not have modify access to the object (or to the peer interface)
         '404':
           description: Object with given ID does not exist
       security:

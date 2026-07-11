@@ -2472,6 +2472,8 @@ protected:
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session) override;
 
    void setExpectedStateInternal(int state);
    void clearPeerData();
@@ -6261,6 +6263,15 @@ static inline void ClearPeer(uint32_t objectId)
          static_cast<AccessPoint&>(*object).clearPeer();
    }
 }
+
+/**
+ * Establish a manual bidirectional peer link between two interfaces. Any
+ * pre-existing conflicting peer on either side is cleared first. Both
+ * interfaces must have parent nodes; access rights are the caller's
+ * responsibility. Returns false if the link cannot be made (same interface
+ * or an interface without a parent node).
+ */
+bool LinkInterfaces(Interface *iface1, Interface *iface2);
 
 /**
  * Functions
