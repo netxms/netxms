@@ -2974,7 +2974,7 @@ paths:
                 expectedState:
                   type: integer
                   description: >-
-                    Interface only. Expected interface state (0 = UP, 1 = DOWN, 2 = IGNORE).
+                    Interface only. Expected interface state (0 = UP, 1 = DOWN, 2 = IGNORE, 3 = AUTO).
                 peer:
                   type: integer
                   nullable: true
