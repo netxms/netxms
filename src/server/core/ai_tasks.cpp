@@ -369,7 +369,10 @@ void AITask::execute()
    char *response = chat.sendRequest(prompt.c_str());
    if (response != nullptr)
    {
-      json_t *json = json_loads(response, 0, nullptr);
+      // Models may wrap the JSON object into a markdown code fence or prepend prose despite instructions,
+      // so parse from the first '{' and ignore trailing text
+      const char *jsonStart = strchr(response, '{');
+      json_t *json = (jsonStart != nullptr) ? json_loads(jsonStart, JSON_DISABLE_EOF_CHECK, nullptr) : nullptr;
       if (json != nullptr)
       {
          json_t *completed = json_object_get(json, "completed");
