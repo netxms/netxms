@@ -327,6 +327,18 @@ public:
 };
 
 /**
+ * NXSL "AIOperator" class
+ */
+class NXSL_AIOperatorClass : public NXSL_Class
+{
+public:
+   NXSL_AIOperatorClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "Alarm" class
  */
 class NXSL_AlarmClass : public NXSL_Class
@@ -832,6 +844,7 @@ bool NXCORE_EXPORTABLE ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray
  * Global variables
  */
 extern NXSL_AccessPointClass g_nxslAccessPointClass;
+extern NXSL_AIOperatorClass g_nxslAIOperatorClass;
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 extern NXSL_AssetClass g_nxslAssetClass;

@@ -219,6 +219,20 @@ public:
    int64_t getTokensUsedToday() const { return m_tokensUsed; }
    uint32_t getObservationRetentionDays() const { return m_observationRetentionDays; }
    uint32_t getObservationMaxRecords() const { return m_observationMaxRecords; }
+   uint32_t getMinInterval() const { return m_minInterval; }
+   uint32_t getMaxInterval() const { return m_maxInterval; }
+   uint32_t getDailyTokenBudget() const { return m_dailyTokenBudget; }
+   int getConsecutiveFailures() const { return m_consecutiveFailures; }
+   time_t getCreationTime() const { return m_creationTime; }
+   time_t getModificationTime() const { return m_modificationTime; }
+   String getDescription() const { return GetAttributeWithLock<String>(m_description, m_mutex); }
+   std::string getScopeFilter() const { return GetAttributeWithLock(m_scopeFilter, m_mutex); }
+   std::string getModelSlot() const { LockGuard lockGuard(m_mutex); return std::string(m_modelSlot); }
+   std::string getPersonaPrompt() const { return GetAttributeWithLock(m_personaPrompt, m_mutex); }
+   String getCurrentFocus() const { LockGuard lockGuard(m_mutex); return String(m_currentFocus); }
+   std::string getWatchList() const { return GetAttributeWithLock(m_watchList, m_mutex); }
+   std::string getMemento() const { return GetAttributeWithLock(m_memento, m_mutex); }
+   String getLastExplanation() const { return GetAttributeWithLock<String>(m_lastExplanation, m_mutex); }
 
    uint32_t modifyFromJSON(json_t *config);
    void setEnabled(bool enabled);
@@ -264,6 +278,11 @@ uint32_t NXCORE_EXPORTABLE ResetAIOperatorInstanceMemento(uint32_t instanceId);
  * Get AI operator instance by ID
  */
 shared_ptr<AIOperatorInstance> NXCORE_EXPORTABLE GetAIOperatorInstance(uint32_t instanceId);
+
+/**
+ * Get all AI operator instances
+ */
+unique_ptr<SharedObjectArray<AIOperatorInstance>> NXCORE_EXPORTABLE GetAIOperatorInstances();
 
 /**
  * Get all AI operator instances as JSON array (caller must call json_decref on result)

@@ -2531,6 +2531,53 @@ static int F_QueryAIAssistant(int argc, NXSL_Value **argv, NXSL_Value **result, 
 }
 
 /**
+ * Get AI operator instance by ID
+ * Syntax:
+ *    GetAIOperator(id)
+ * where:
+ *     id - AI operator instance ID
+ * Return value:
+ *     AIOperator object or null if instance does not exist or access is denied
+ */
+static int F_GetAIOperator(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if (vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(argv[0]->getValueAsUInt32());
+      *result = (instance != nullptr) ?
+         vm->createValue(vm->createObject(&g_nxslAIOperatorClass, new shared_ptr<AIOperatorInstance>(instance))) : vm->createValue();
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Get all AI operator instances
+ * Syntax:
+ *    GetAIOperators()
+ * Return value:
+ *     array of AIOperator objects (empty if access is denied)
+ */
+static int F_GetAIOperators(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   NXSL_Array *array = new NXSL_Array(vm);
+   if (vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      unique_ptr<SharedObjectArray<AIOperatorInstance>> instances = GetAIOperatorInstances();
+      for(int i = 0; i < instances->size(); i++)
+         array->append(vm->createValue(vm->createObject(&g_nxslAIOperatorClass, new shared_ptr<AIOperatorInstance>(instances->getShared(i)))));
+   }
+   *result = vm->createValue(array);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Register AI task
  * Syntax:
  *    RegisterAITask(taskDescription, prompt)
@@ -2597,6 +2644,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "FindObject", F_FindObject, -1 },
    { "FindObjectByGUID", F_FindObjectByGUID, -1 },
    { "FindVendorByMACAddress", F_FindVendorByMACAddress, 1 },
+   { "GetAIOperator", F_GetAIOperator, 1 },
+   { "GetAIOperators", F_GetAIOperators, 0 },
    { "GetAllNodes", F_GetAllNodes, -1 },
    { "GetAvailablePackages", F_GetAvailablePackages, -1 },
    { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },

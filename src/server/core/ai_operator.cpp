@@ -747,6 +747,23 @@ shared_ptr<AIOperatorInstance> NXCORE_EXPORTABLE GetAIOperatorInstance(uint32_t 
 }
 
 /**
+ * Get all AI operator instances
+ */
+unique_ptr<SharedObjectArray<AIOperatorInstance>> NXCORE_EXPORTABLE GetAIOperatorInstances()
+{
+   auto instances = make_unique<SharedObjectArray<AIOperatorInstance>>();
+   s_instancesLock.lock();
+   s_instances.forEach(
+      [&instances] (const uint32_t& key, const shared_ptr<AIOperatorInstance>& instance) -> EnumerationCallbackResult
+      {
+         instances->add(instance);
+         return _CONTINUE;
+      });
+   s_instancesLock.unlock();
+   return instances;
+}
+
+/**
  * Get all AI operator instances as JSON array
  */
 json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson()

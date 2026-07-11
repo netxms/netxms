@@ -6630,6 +6630,128 @@ NXSL_METHOD_DEFINITION(Alarm, unlinkFromHelpdesk)
 }
 
 /**
+ * NXSL class AIOperator: constructor
+ */
+NXSL_AIOperatorClass::NXSL_AIOperatorClass() : NXSL_Class()
+{
+   setName(_T("AIOperator"));
+}
+
+/**
+ * NXSL class AIOperator: object destruction handler
+ */
+void NXSL_AIOperatorClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<shared_ptr<AIOperatorInstance>*>(object->getData());
+}
+
+/**
+ * NXSL class AIOperator: get attribute
+ */
+NXSL_Value *NXSL_AIOperatorClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   const AIOperatorInstance *instance = SharedObjectFromData<AIOperatorInstance>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("consecutiveFailures"))
+   {
+      value = vm->createValue(instance->getConsecutiveFailures());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("creationTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(instance->getCreationTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("currentFocus"))
+   {
+      value = vm->createValue(instance->getCurrentFocus());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("dailyTokenBudget"))
+   {
+      value = vm->createValue(instance->getDailyTokenBudget());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("description"))
+   {
+      value = vm->createValue(instance->getDescription());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("enabled"))
+   {
+      value = vm->createValue(instance->isEnabled());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("executing"))
+   {
+      value = vm->createValue(instance->isExecuting());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      value = vm->createValue(instance->getId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("iteration"))
+   {
+      value = vm->createValue(instance->getIteration());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastExecutionTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(instance->getLastExecutionTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastExplanation"))
+   {
+      value = vm->createValue(instance->getLastExplanation());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("maxInterval"))
+   {
+      value = vm->createValue(instance->getMaxInterval());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("memento"))
+   {
+      value = vm->createValue(instance->getMemento().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("minInterval"))
+   {
+      value = vm->createValue(instance->getMinInterval());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modelSlot"))
+   {
+      value = vm->createValue(instance->getModelSlot().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modificationTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(instance->getModificationTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(instance->getName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nextExecutionTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(instance->getNextExecutionTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ownerUserId"))
+   {
+      value = vm->createValue(instance->getOwnerUserId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("personaPrompt"))
+   {
+      value = vm->createValue(instance->getPersonaPrompt().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("scopeFilter"))
+   {
+      value = vm->createValue(instance->getScopeFilter().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("tokensUsedToday"))
+   {
+      value = vm->createValue(instance->getTokensUsedToday());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("watchList"))
+   {
+      value = vm->createValue(instance->getWatchList().c_str());
+   }
+   return value;
+}
+
+/**
  * NXSL class Alarm: constructor
  */
 NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
@@ -9801,6 +9923,7 @@ void NXSL_SSHSessionClass::onObjectDelete(NXSL_Object *object)
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
+NXSL_AIOperatorClass g_nxslAIOperatorClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 NXSL_AssetClass g_nxslAssetClass;
