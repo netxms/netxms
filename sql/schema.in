@@ -3445,6 +3445,103 @@ SELECT create_hypertable('ai_task_execution_log', 'execution_timestamp', chunk_t
 #endif
 
 /**
+ * AI operator instances
+ */
+CREATE TABLE ai_operator_instances
+(
+   id integer not null,
+   name varchar(63) not null,
+   description varchar(255) null,
+   owner_user_id integer not null,
+   enabled char(1) not null,
+   scope_filter SQL_TEXT null,
+   model_slot varchar(63) null,
+   min_interval integer not null,
+   max_interval integer not null,
+   daily_token_budget integer not null,
+   tokens_used SQL_INT64 not null,
+   usage_day integer not null,
+   persona_prompt SQL_TEXT null,
+   current_focus varchar(255) null,
+   watch_list SQL_TEXT null,
+   memento SQL_TEXT null,
+   observation_retention_days integer not null,
+   observation_max_records integer not null,
+   last_execution_time integer not null,
+   next_execution_time integer not null,
+   iteration integer not null,
+   created integer not null,
+   modified integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * AI operator observations
+ */
+CREATE TABLE ai_operator_observations
+(
+   id SQL_INT64 not null,
+#ifdef DB_TSDB
+   observation_timestamp timestamptz not null,
+#else
+   observation_timestamp integer not null,
+#endif
+   instance_id integer not null,
+   severity integer not null,
+   title varchar(255) null,
+   body SQL_TEXT null,
+   object_id integer not null,
+   refs SQL_TEXT null,
+   state char(1) not null, // 0=new, 1=acknowledged, 2=dismissed
+#ifdef DB_TSDB
+   PRIMARY KEY(id,observation_timestamp)
+#else
+   PRIMARY KEY(id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_op_obs_timestamp ON ai_operator_observations(observation_timestamp);
+CREATE INDEX idx_ai_op_obs_instance_id ON ai_operator_observations(instance_id);
+CREATE INDEX idx_ai_op_obs_object_id ON ai_operator_observations(object_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('ai_operator_observations', 'observation_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+
+/**
+ * AI operator execution log
+ */
+CREATE TABLE ai_operator_execution_log
+(
+   record_id SQL_INT64 not null,
+#ifdef DB_TSDB
+   execution_timestamp timestamptz not null,
+#else
+   execution_timestamp integer not null,
+#endif
+   instance_id integer not null,
+   instance_name varchar(63) null,
+   status char(1) not null, // C=completed, F=failed, S=skipped
+   iteration integer not null,
+   duration_ms integer not null,
+   input_tokens integer not null,
+   output_tokens integer not null,
+   explanation SQL_TEXT null,
+#ifdef DB_TSDB
+   PRIMARY KEY(record_id,execution_timestamp)
+#else
+   PRIMARY KEY(record_id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_op_exec_log_timestamp ON ai_operator_execution_log(execution_timestamp);
+CREATE INDEX idx_ai_op_exec_log_instance_id ON ai_operator_execution_log(instance_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('ai_operator_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+
+/**
  * AI agent messages
  */
 CREATE TABLE ai_messages

@@ -24,6 +24,10 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','0',1,0,'C','Action to be taken when unbound agent tunnel idle timeout expires.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AI.MaxBackgroundIterations','64','64',1,0,'I','Maximum number of LLM tool-call iterations for background AI assistant requests (event processing, scheduled tasks, incident analysis) before the request is stopped.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AI.MaxInteractiveIterations','30','30',1,0,'I','Maximum number of LLM tool-call iterations for interactive AI assistant chats before the user is asked whether to continue.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperator.Enabled','1','1',1,0,'B','Enable/disable AI operator subsystem (global kill switch for all operator instances).','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorExecutionLog.RetentionTime','90','90',1,0,'I','Retention time in days for the records in AI operator execution log. All records older than specified will be deleted by housekeeping process.','days');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorObservations.MaxRecordsPerInstance','1000','1000',1,0,'I','Default maximum number of retained observations per AI operator instance. Can be overridden per operator instance.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorObservations.RetentionTime','90','90',1,0,'I','Default retention time in days for AI operator observations. All records older than specified will be deleted by housekeeping process. Can be overridden per operator instance.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AITaskExecutionLog.RetentionTime','90','90',1,0,'I','Retention time in days for the records in AI task execution log. All records older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Alarms.DeleteAlarmsOfDeletedObject','1','1',1,0,'B','Enable/disable automatic alarm removal of an object when it is deleted.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Alarms.EnableTimedAck','1','1',1,1,'B','Enable/disable ability to acknowledge an alarm for a specific time.','');
@@ -351,6 +355,8 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.RetentionTime','90','90',1,0,'I','Retention time in days for stored syslog messages. All messages older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.BaseSize','32','32',1,1,'I','Base size for agent connector thread pool','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.MaxSize','256','256',1,1,'I','Maximum size for agent connector thread pool','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AIOperator.BaseSize','4','4',1,1,'I','Base size for AI operator thread pool.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AIOperator.MaxSize','16','16',1,1,'I','Maximum size for AI operator thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AITasks.BaseSize','4','4',1,1,'I','Base size for AI tasks thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AITasks.MaxSize','16','16',1,1,'I','Maximum size for AI tasks thread pool.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.DataCollector.BaseSize','10','10',1,1,'I','Base size for data collector thread pool.','');
@@ -528,6 +534,20 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
           );
 
 /**
+ * AI operator user
+ */
+INSERT INTO users (id,name,password,system_access,flags,full_name,
+                   description,grace_logins,auth_method,guid,
+                   cert_mapping_method,cert_mapping_data,
+                   auth_failures,last_passwd_change,min_passwd_length,
+                   disabled_until,last_login,created,tfa_grace_logins)
+   VALUES (3,'ai-operator',
+           '$$', /* No password */
+           9007199254740992,84,'','AI operator account',5,0,  /* System access: USE_AI_ASSISTANT; flags: UF_DISABLED | UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES */
+           '6da524c3-1fbd-420d-b8d7-3be28db46bed',0,'',0,0,0,0,0,0,5
+          );
+
+/**
  * Special "Everyone" user group
  */
 INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
@@ -539,7 +559,7 @@ INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description
  * Default "Admins" group
  */
 INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
-   VALUES (1073741825, 'Admins', 288230376151711743, '*', 0, 'Default administrative group',
+   VALUES (1073741825, 'Admins', 576460752303423487, '*', 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 
@@ -552,6 +572,12 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,201326591
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,201326591);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,201326591);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,201326591);
+
+/**
+ * Read access to network and infrastructure root objects for AI operator user
+ */
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,3,17);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,3,17);
 
 /*
 ** Default community string

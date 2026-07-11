@@ -2141,6 +2141,31 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) nodeName - Cluster node name' CONCAT CRLF CONCAT
 		'   2) term - Lease term'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_AI_OPERATOR_OBSERVATION, 'SYS_AI_OPERATOR_OBSERVATION', 'dac53e32-6d7b-48fc-967d-2b8472af88da',
+		EVENT_SEVERITY_NORMAL, 1,
+		'AI operator %2 observation (severity %4): %5',
+		'Generated when an AI operator instance records an observation.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) instanceId - AI operator instance ID' CONCAT CRLF CONCAT
+		'   2) instanceName - AI operator instance name' CONCAT CRLF CONCAT
+		'   3) observationId - Observation ID' CONCAT CRLF CONCAT
+		'   4) severity - Observation severity' CONCAT CRLF CONCAT
+		'   5) title - Observation title'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_AI_OPERATOR_FAILURE, 'SYS_AI_OPERATOR_FAILURE', 'dab20532-cd84-466d-ad31-e3f04d4903f4',
+		EVENT_SEVERITY_MAJOR, 1,
+		'AI operator %2 disabled after %3 consecutive failures',
+		'Generated when an AI operator instance is disabled after a series of consecutive execution failures.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) instanceId - AI operator instance ID' CONCAT CRLF CONCAT
+		'   2) instanceName - AI operator instance name' CONCAT CRLF CONCAT
+		'   3) failureCount - Number of consecutive failures' CONCAT CRLF CONCAT
+		'   4) lastError - Last error message'
+	);
 
 /*
 ** SNMP traps

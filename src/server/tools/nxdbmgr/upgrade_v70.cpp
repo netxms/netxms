@@ -24,6 +24,190 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.6 to 70.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ai_operator_instances ("
+      L"   id integer not null,"
+      L"   name varchar(63) not null,"
+      L"   description varchar(255) null,"
+      L"   owner_user_id integer not null,"
+      L"   enabled char(1) not null,"
+      L"   scope_filter $SQL:TEXT null,"
+      L"   model_slot varchar(63) null,"
+      L"   min_interval integer not null,"
+      L"   max_interval integer not null,"
+      L"   daily_token_budget integer not null,"
+      L"   tokens_used $SQL:INT64 not null,"
+      L"   usage_day integer not null,"
+      L"   persona_prompt $SQL:TEXT null,"
+      L"   current_focus varchar(255) null,"
+      L"   watch_list $SQL:TEXT null,"
+      L"   memento $SQL:TEXT null,"
+      L"   observation_retention_days integer not null,"
+      L"   observation_max_records integer not null,"
+      L"   last_execution_time integer not null,"
+      L"   next_execution_time integer not null,"
+      L"   iteration integer not null,"
+      L"   created integer not null,"
+      L"   modified integer not null,"
+      L"   PRIMARY KEY(id))"));
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_operator_observations ("
+         L"   id $SQL:INT64 not null,"
+         L"   observation_timestamp timestamptz not null,"
+         L"   instance_id integer not null,"
+         L"   severity integer not null,"
+         L"   title varchar(255) null,"
+         L"   body $SQL:TEXT null,"
+         L"   object_id integer not null,"
+         L"   refs $SQL:TEXT null,"
+         L"   state char(1) not null,"
+         L"   PRIMARY KEY(id,observation_timestamp))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('ai_operator_observations', 'observation_timestamp', chunk_time_interval => interval '86400 seconds')"));
+
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_operator_execution_log ("
+         L"   record_id $SQL:INT64 not null,"
+         L"   execution_timestamp timestamptz not null,"
+         L"   instance_id integer not null,"
+         L"   instance_name varchar(63) null,"
+         L"   status char(1) not null,"
+         L"   iteration integer not null,"
+         L"   duration_ms integer not null,"
+         L"   input_tokens integer not null,"
+         L"   output_tokens integer not null,"
+         L"   explanation $SQL:TEXT null,"
+         L"   PRIMARY KEY(record_id,execution_timestamp))"));
+      CHK_EXEC(SQLQuery(L"SELECT create_hypertable('ai_operator_execution_log', 'execution_timestamp', chunk_time_interval => interval '86400 seconds')"));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_operator_observations ("
+         L"   id $SQL:INT64 not null,"
+         L"   observation_timestamp integer not null,"
+         L"   instance_id integer not null,"
+         L"   severity integer not null,"
+         L"   title varchar(255) null,"
+         L"   body $SQL:TEXT null,"
+         L"   object_id integer not null,"
+         L"   refs $SQL:TEXT null,"
+         L"   state char(1) not null,"
+         L"   PRIMARY KEY(id))"));
+
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE ai_operator_execution_log ("
+         L"   record_id $SQL:INT64 not null,"
+         L"   execution_timestamp integer not null,"
+         L"   instance_id integer not null,"
+         L"   instance_name varchar(63) null,"
+         L"   status char(1) not null,"
+         L"   iteration integer not null,"
+         L"   duration_ms integer not null,"
+         L"   input_tokens integer not null,"
+         L"   output_tokens integer not null,"
+         L"   explanation $SQL:TEXT null,"
+         L"   PRIMARY KEY(record_id))"));
+   }
+
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_obs_timestamp ON ai_operator_observations(observation_timestamp)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_obs_instance_id ON ai_operator_observations(instance_id)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_obs_object_id ON ai_operator_observations(object_id)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_exec_log_timestamp ON ai_operator_execution_log(execution_timestamp)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_exec_log_instance_id ON ai_operator_execution_log(instance_id)"));
+
+   // Create AI operator account with read access to network and infrastructure root objects.
+   // ID cannot be fixed on upgraded systems - allocate next free one; server code resolves this account by name.
+   DB_RESULT hResult = DBSelect(g_dbHandle, L"SELECT max(id) FROM users");
+   if (hResult != nullptr)
+   {
+      uint32_t userId = DBGetFieldLong(hResult, 0, 0) + 1;
+      DBFreeResult(hResult);
+
+      TCHAR query[1024];
+      _sntprintf(query, 1024,
+         L"INSERT INTO users "
+         L"(id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid,cert_mapping_method,"
+         L"cert_mapping_data,auth_failures,last_passwd_change,min_passwd_length,disabled_until,last_login,created,tfa_grace_logins) "
+         L"VALUES (%u,'ai-operator','$$'," UINT64_FMT L",84,'','AI operator account',5,0,'%s',0,'',0,0,0,0,0,0,5)",
+         userId, SYSTEM_ACCESS_USE_AI_ASSISTANT, uuid::generate().toString().cstr());
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 1024, L"INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,%u,%d)",
+         userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, L"INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,%u,%d)",
+         userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS);
+      CHK_EXEC(SQLQuery(query));
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   // Add SYSTEM_ACCESS_MANAGE_AI_OPERATORS (bit 58 = 0x400000000000000 = 288230376151711744) to Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+288230376151711744 WHERE id=1073741825 AND BITAND(system_access, 288230376151711744)=0"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+288230376151711744 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(288230376151711744 AS bigint))=0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+288230376151711744 WHERE id=1073741825 AND (system_access & 288230376151711744)=0"));
+   }
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AI_OPERATOR_OBSERVATION, _T("SYS_AI_OPERATOR_OBSERVATION"),
+      EVENT_SEVERITY_NORMAL, EF_LOG, _T("dac53e32-6d7b-48fc-967d-2b8472af88da"),
+      _T("AI operator %2 observation (severity %4): %5"),
+      _T("Generated when an AI operator instance records an observation.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) instanceId - AI operator instance ID\r\n")
+      _T("   2) instanceName - AI operator instance name\r\n")
+      _T("   3) observationId - Observation ID\r\n")
+      _T("   4) severity - Observation severity\r\n")
+      _T("   5) title - Observation title")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AI_OPERATOR_FAILURE, _T("SYS_AI_OPERATOR_FAILURE"),
+      EVENT_SEVERITY_MAJOR, EF_LOG, _T("dab20532-cd84-466d-ad31-e3f04d4903f4"),
+      _T("AI operator %2 disabled after %3 consecutive failures"),
+      _T("Generated when an AI operator instance is disabled after a series of consecutive execution failures.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) instanceId - AI operator instance ID\r\n")
+      _T("   2) instanceName - AI operator instance name\r\n")
+      _T("   3) failureCount - Number of consecutive failures\r\n")
+      _T("   4) lastError - Last error message")));
+
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Enabled", L"1",
+      L"Enable/disable AI operator subsystem (global kill switch for all operator instances).",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperatorObservations.RetentionTime", L"90",
+      L"Default retention time in days for AI operator observations. All records older than specified will be deleted by housekeeping process. Can be overridden per operator instance.",
+      L"days", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperatorObservations.MaxRecordsPerInstance", L"1000",
+      L"Default maximum number of retained observations per AI operator instance. Can be overridden per operator instance.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperatorExecutionLog.RetentionTime", L"90",
+      L"Retention time in days for the records in AI operator execution log. All records older than specified will be deleted by housekeeping process.",
+      L"days", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AIOperator.BaseSize", L"4",
+      L"Base size for AI operator thread pool.", nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AIOperator.MaxSize", L"16",
+      L"Maximum size for AI operator thread pool.", nullptr, 'I', true, true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 70.5 to 70.6
  */
 static bool H_UpgradeFromV5()
@@ -134,6 +318,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6, 70, 7, H_UpgradeFromV6 },
    { 5, 70, 6, H_UpgradeFromV5 },
    { 4, 70, 5, H_UpgradeFromV4 },
    { 3, 70, 4, H_UpgradeFromV3 },

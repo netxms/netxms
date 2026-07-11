@@ -225,6 +225,8 @@
 #define EVENT_SNMP_TRAP_AUTH_FAILURE                170
 #define EVENT_PENDING_DATABASE_UPGRADE              171
 #define EVENT_HA_NODE_ACTIVATED                     172
+#define EVENT_AI_OPERATOR_OBSERVATION               173
+#define EVENT_AI_OPERATOR_FAILURE                   174
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

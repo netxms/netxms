@@ -87,6 +87,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, i18n.tr("Manage two-factor authentication methods")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, i18n.tr("Configure server actions")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, i18n.tr("Manage agent configurations")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_OPERATORS, i18n.tr("Manage AI operators")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_SKILLS, i18n.tr("Manage AI skills and functions")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_TASKS, i18n.tr("Manage AI tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));

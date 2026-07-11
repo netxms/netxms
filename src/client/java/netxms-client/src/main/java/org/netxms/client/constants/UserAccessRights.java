@@ -82,6 +82,7 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_VIEW_NOTIFICATION_LOG   = 0x80000000000000L;
    public static final long SYSTEM_ACCESS_VIEW_ACTION_LOG         = 0x100000000000000L;
    public static final long SYSTEM_ACCESS_SCAN_NETWORK            = 0x200000000000000L;
+   public static final long SYSTEM_ACCESS_MANAGE_AI_OPERATORS     = 0x400000000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ             = 0x00000001;
