@@ -56,6 +56,14 @@ int H_AiChatSendMessage(Context *context);
 int H_AiCharPollQuestion(Context *context);
 int H_AiDisabledItemCreate(Context *context);
 int H_AiDisabledItemDelete(Context *context);
+int H_AiObservations(Context *context);
+int H_AiObservationStateUpdate(Context *context);
+int H_AiOperators(Context *context);
+int H_AiOperatorCreate(Context *context);
+int H_AiOperatorDelete(Context *context);
+int H_AiOperatorDetails(Context *context);
+int H_AiOperatorResetMemento(Context *context);
+int H_AiOperatorUpdate(Context *context);
 int H_AiSavedPrompts(Context *context);
 int H_AiSavedPromptDetails(Context *context);
 int H_AiSavedPromptCreate(Context *context);
@@ -302,6 +310,24 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/ai/disabled-items/:item-type/:item-name")
       .DELETE(H_AiDisabledItemDelete)
+      .build();
+   RouteBuilder("v1/ai/observations")
+      .GET(H_AiObservations)
+      .build();
+   RouteBuilder("v1/ai/observations/:observation-id/state")
+      .PUT(H_AiObservationStateUpdate)
+      .build();
+   RouteBuilder("v1/ai/operators")
+      .GET(H_AiOperators)
+      .POST(H_AiOperatorCreate)
+      .build();
+   RouteBuilder("v1/ai/operators/:operator-id")
+      .GET(H_AiOperatorDetails)
+      .PATCH(H_AiOperatorUpdate)
+      .DELETE(H_AiOperatorDelete)
+      .build();
+   RouteBuilder("v1/ai/operators/:operator-id/reset-memento")
+      .POST(H_AiOperatorResetMemento)
       .build();
    RouteBuilder("v1/ai/saved-prompts")
       .GET(H_AiSavedPrompts)

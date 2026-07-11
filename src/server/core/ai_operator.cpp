@@ -591,6 +591,39 @@ json_t *AIOperatorInstance::toJson() const
 }
 
 /**
+ * Fill NXCP message with AI operator instance data
+ */
+void AIOperatorInstance::fillMessage(NXCPMessage *msg, uint32_t baseId) const
+{
+   LockGuard lockGuard(m_mutex);
+   msg->setField(baseId, m_id);
+   msg->setField(baseId + 1, m_name);
+   msg->setField(baseId + 2, m_description);
+   msg->setField(baseId + 3, m_ownerUserId);
+   msg->setField(baseId + 4, m_enabled);
+   msg->setField(baseId + 5, m_executing);
+   msg->setFieldFromUtf8String(baseId + 6, m_scopeFilter.c_str());
+   msg->setFieldFromUtf8String(baseId + 7, m_modelSlot);
+   msg->setField(baseId + 8, m_minInterval);
+   msg->setField(baseId + 9, m_maxInterval);
+   msg->setField(baseId + 10, m_dailyTokenBudget);
+   msg->setField(baseId + 11, m_tokensUsed);
+   msg->setFieldFromUtf8String(baseId + 12, m_personaPrompt.c_str());
+   msg->setField(baseId + 13, m_currentFocus);
+   msg->setFieldFromUtf8String(baseId + 14, m_watchList.c_str());
+   msg->setFieldFromUtf8String(baseId + 15, m_memento.c_str());
+   msg->setField(baseId + 16, m_observationRetentionDays);
+   msg->setField(baseId + 17, m_observationMaxRecords);
+   msg->setFieldFromTime(baseId + 18, m_lastExecutionTime);
+   msg->setFieldFromTime(baseId + 19, m_nextExecutionTime);
+   msg->setField(baseId + 20, m_iteration);
+   msg->setField(baseId + 21, static_cast<int32_t>(m_consecutiveFailures));
+   msg->setField(baseId + 22, m_lastExplanation);
+   msg->setFieldFromTime(baseId + 23, m_creationTime);
+   msg->setFieldFromTime(baseId + 24, m_modificationTime);
+}
+
+/**
  * Create AI operator instance from JSON configuration
  */
 uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t ownerUserId, uint32_t *instanceId)
@@ -708,6 +741,26 @@ json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson()
       });
    s_instancesLock.unlock();
    return output;
+}
+
+/**
+ * Fill NXCP message with all AI operator instances
+ */
+void FillAIOperatorListMessage(NXCPMessage *msg)
+{
+   uint32_t count = 0;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   s_instancesLock.lock();
+   s_instances.forEach(
+      [msg, &count, &fieldId] (const uint32_t& key, const shared_ptr<AIOperatorInstance>& instance) -> EnumerationCallbackResult
+      {
+         instance->fillMessage(msg, fieldId);
+         fieldId += 30;
+         count++;
+         return _CONTINUE;
+      });
+   s_instancesLock.unlock();
+   msg->setField(VID_NUM_ELEMENTS, count);
 }
 
 /**

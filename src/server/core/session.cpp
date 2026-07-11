@@ -2189,6 +2189,21 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_AI_MESSAGE:
          deleteAIMessage(*request);
          break;
+      case CMD_GET_AI_OPERATORS:
+         getAiOperators(*request);
+         break;
+      case CMD_MODIFY_AI_OPERATOR:
+         modifyAiOperator(*request);
+         break;
+      case CMD_DELETE_AI_OPERATOR:
+         deleteAiOperator(*request);
+         break;
+      case CMD_RESET_AI_OPERATOR:
+         resetAiOperator(*request);
+         break;
+      case CMD_SET_AI_OBSERVATION_STATE:
+         setAiObservationState(*request);
+         break;
       case CMD_GET_CLOUD_CONNECTOR_NAMES:
          getCloudConnectorNames(*request);
          break;
@@ -20337,6 +20352,198 @@ void ClientSession::deleteAIMessage(const NXCPMessage& request)
    uint32_t rcc = DeleteAIMessage(messageId, m_userId);
 
    response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Get AI operator instances
+ *
+ * Called by:
+ * CMD_GET_AI_OPERATORS
+ */
+void ClientSession::getAiOperators(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      FillAIOperatorListMessage(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Create or modify AI operator instance
+ *
+ * Called by:
+ * CMD_MODIFY_AI_OPERATOR
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID (0 to create new instance)
+ * VID_NAME             Instance name (optional on modify)
+ * VID_DESCRIPTION      Description (optional)
+ * VID_ENABLED          Enable flag (optional)
+ * VID_FILTER           Scope filter (optional)
+ * VID_AI_MODEL_SLOT    Model slot name (optional)
+ * VID_MIN_INTERVAL     Minimum execution interval in seconds (optional)
+ * VID_MAX_INTERVAL     Maximum execution interval in seconds (optional)
+ * VID_AI_TOKEN_BUDGET  Daily LLM token budget, 0 = unlimited (optional)
+ * VID_PROMPT           Persona prompt (optional)
+ * VID_RETENTION_TIME   Observation retention days, 0 = server default (optional)
+ * VID_MAX_RECORDS      Observation record cap, 0 = server default (optional)
+ *
+ * Return values:
+ * VID_RCC              Request completion code
+ * VID_AI_OPERATOR_ID   Instance ID (on success)
+ */
+void ClientSession::modifyAiOperator(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      json_t *config = json_object();
+
+      static const struct { uint32_t fieldId; const char *tag; } stringFields[] =
+      {
+         { VID_NAME, "name" },
+         { VID_DESCRIPTION, "description" },
+         { VID_FILTER, "scopeFilter" },
+         { VID_AI_MODEL_SLOT, "modelSlot" },
+         { VID_PROMPT, "personaPrompt" },
+         { 0, nullptr }
+      };
+      for(int i = 0; stringFields[i].tag != nullptr; i++)
+      {
+         if (request.isFieldExist(stringFields[i].fieldId))
+         {
+            char *value = request.getFieldAsUtf8String(stringFields[i].fieldId);
+            json_object_set_new(config, stringFields[i].tag, json_string(CHECK_NULL_EX_A(value)));
+            MemFree(value);
+         }
+      }
+
+      if (request.isFieldExist(VID_ENABLED))
+         json_object_set_new(config, "enabled", json_boolean(request.getFieldAsBoolean(VID_ENABLED)));
+      if (request.isFieldExist(VID_MIN_INTERVAL))
+         json_object_set_new(config, "minInterval", json_integer(request.getFieldAsUInt32(VID_MIN_INTERVAL)));
+      if (request.isFieldExist(VID_MAX_INTERVAL))
+         json_object_set_new(config, "maxInterval", json_integer(request.getFieldAsUInt32(VID_MAX_INTERVAL)));
+      if (request.isFieldExist(VID_AI_TOKEN_BUDGET))
+         json_object_set_new(config, "dailyTokenBudget", json_integer(request.getFieldAsUInt32(VID_AI_TOKEN_BUDGET)));
+      if (request.isFieldExist(VID_RETENTION_TIME))
+         json_object_set_new(config, "observationRetentionDays", json_integer(request.getFieldAsUInt32(VID_RETENTION_TIME)));
+      if (request.isFieldExist(VID_MAX_RECORDS))
+         json_object_set_new(config, "observationMaxRecords", json_integer(request.getFieldAsUInt32(VID_MAX_RECORDS)));
+
+      uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
+      bool create = (instanceId == 0);
+      uint32_t rcc = create ? CreateAIOperatorInstance(config, m_userId, &instanceId) : ModifyAIOperatorInstance(instanceId, config);
+      json_decref(config);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_AI_OPERATOR_ID, instanceId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] %s", instanceId, create ? L"created" : L"modified");
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing AI operator instance");
+   }
+   sendMessage(response);
+}
+
+/**
+ * Delete AI operator instance
+ *
+ * Called by:
+ * CMD_DELETE_AI_OPERATOR
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID
+ */
+void ClientSession::deleteAiOperator(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      uint32_t rcc = DeleteAIOperatorInstance(instanceId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] deleted", instanceId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting AI operator instance [%u]", instanceId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Reset AI operator instance accumulated state (memento, focus, watch list, iteration counter)
+ *
+ * Called by:
+ * CMD_RESET_AI_OPERATOR
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID
+ */
+void ClientSession::resetAiOperator(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      uint32_t rcc = ResetAIOperatorInstanceMemento(instanceId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] accumulated state reset", instanceId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on resetting AI operator instance [%u]", instanceId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Set AI operator observation state (acknowledge/dismiss)
+ *
+ * Called by:
+ * CMD_SET_AI_OBSERVATION_STATE
+ *
+ * Expected input parameters:
+ * VID_AI_OBSERVATION_ID   Observation ID
+ * VID_STATE               New state (0=new, 1=acknowledged, 2=dismissed)
+ */
+void ClientSession::setAiObservationState(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   {
+      int state = request.getFieldAsInt32(VID_STATE);
+      if ((state >= 0) && (state <= 2))
+      {
+         uint32_t rcc = UpdateAIOperatorObservationState(request.getFieldAsInt64(VID_AI_OBSERVATION_ID), static_cast<AIObservationState>(state));
+         response.setField(VID_RCC, rcc);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
    sendMessage(response);
 }
 

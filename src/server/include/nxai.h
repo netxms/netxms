@@ -227,6 +227,7 @@ public:
    void deleteFromDatabase();
 
    json_t *toJson() const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 };
 
 /**
@@ -268,6 +269,11 @@ shared_ptr<AIOperatorInstance> NXCORE_EXPORTABLE GetAIOperatorInstance(uint32_t 
  * Get all AI operator instances as JSON array (caller must call json_decref on result)
  */
 json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson();
+
+/**
+ * Fill NXCP message with all AI operator instances
+ */
+void FillAIOperatorListMessage(NXCPMessage *msg);
 
 /**
  * Update AI operator observation state (acknowledge/dismiss)

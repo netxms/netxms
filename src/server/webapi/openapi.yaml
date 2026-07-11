@@ -792,6 +792,264 @@ paths:
         - BearerAuth: []
       tags:
         - AI Management
+  /v1/ai/observations:
+    get:
+      operationId: listAiObservations
+      summary: Query AI operator observations
+      description: >-
+        Retrieve observations recorded by AI operator instances, most recent
+        first. Requires the "view event log" system access right.
+      parameters:
+        - name: instance
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Limit to observations of the given operator instance
+        - name: object
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Limit to observations related to the given object
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [new, acknowledged, dismissed]
+          description: Limit to observations in the given state
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            Only observations recorded at or after the given time (UNIX
+            timestamp, ISO 8601, or relative like -1h)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+          description: Maximum number of records to return (0 = unlimited)
+      responses:
+        '200':
+          description: List of observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiObservation'
+        '400':
+          description: Invalid query parameters
+        '403':
+          description: Insufficient access rights
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/observations/{observation-id}/state:
+    put:
+      operationId: setAiObservationState
+      summary: Set observation state
+      description: >-
+        Acknowledge or dismiss an AI operator observation (or return it to the
+        "new" state). Requires the "view event log" system access right.
+      parameters:
+        - name: observation-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - state
+              properties:
+                state:
+                  type: string
+                  enum: [new, acknowledged, dismissed]
+                  description: New observation state
+      responses:
+        '204':
+          description: State updated
+        '400':
+          description: Invalid observation ID or state
+        '403':
+          description: Insufficient access rights
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/operators:
+    get:
+      operationId: listAiOperators
+      summary: List AI operator instances
+      description: >-
+        Retrieve all AI operator instances (perpetual adaptive monitoring
+        loops). Requires the "manage AI operators" system access right.
+      responses:
+        '200':
+          description: List of AI operator instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiOperator'
+        '403':
+          description: Insufficient access rights
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    post:
+      operationId: createAiOperator
+      summary: Create AI operator instance
+      description: >-
+        Create a new AI operator instance. New instances are enabled by default
+        unless explicitly created as disabled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiOperatorConfig'
+      responses:
+        '201':
+          description: Instance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperator'
+        '400':
+          description: Missing or invalid fields
+        '403':
+          description: Insufficient access rights
+        '500':
+          description: Internal server error
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/operators/{operator-id}:
+    get:
+      operationId: getAiOperator
+      summary: Get AI operator instance details
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: AI operator instance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperator'
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    patch:
+      operationId: updateAiOperator
+      summary: Modify AI operator instance
+      description: >-
+        Partially update an AI operator instance; only the fields present in
+        the request body are changed.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiOperatorConfig'
+      responses:
+        '200':
+          description: Updated instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperator'
+        '400':
+          description: Invalid configuration
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    delete:
+      operationId: deleteAiOperator
+      summary: Delete AI operator instance
+      description: Delete an AI operator instance and all its observations.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Instance deleted
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/operators/{operator-id}/reset-memento:
+    post:
+      operationId: resetAiOperatorMemento
+      summary: Reset AI operator accumulated state
+      description: >-
+        Clear the instance's accumulated adaptive state (memento, current
+        focus, watch list, and iteration counter). The next execution starts
+        from a clean slate.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: State reset
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
   /v1/ai/saved-prompts:
     get:
       operationId: listAiSavedPrompts
@@ -8548,6 +8806,168 @@ paths:
         - Two-Factor Authentication
 components:
   schemas:
+    AiObservation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique observation identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Time the observation was recorded
+        instanceId:
+          type: integer
+          description: ID of the AI operator instance that recorded the observation
+        severity:
+          type: integer
+          description: Severity (0=normal, 1=warning, 2=minor, 3=major, 4=critical)
+        title:
+          type: string
+          nullable: true
+          description: Short observation title
+        body:
+          type: string
+          nullable: true
+          description: Detailed observation text
+        objectId:
+          type: integer
+          description: ID of the related object (0 if not related to a specific object)
+        references:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: References supporting the observation (event IDs, alarm IDs, DCI names, etc.)
+        state:
+          type: string
+          enum: [new, acknowledged, dismissed]
+          description: Observation triage state
+    AiOperator:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique instance identifier
+        name:
+          type: string
+          description: Instance name
+        description:
+          type: string
+          description: Instance description
+        ownerUserId:
+          type: integer
+          description: ID of the user who created the instance
+        enabled:
+          type: boolean
+          description: True if the instance is enabled
+        executing:
+          type: boolean
+          description: True if an iteration is currently running
+        scopeFilter:
+          type: string
+          description: Attention scope filter (object names or IDs)
+        modelSlot:
+          type: string
+          description: AI model slot used for executions (empty = default)
+        minInterval:
+          type: integer
+          description: Minimum interval between executions in seconds
+        maxInterval:
+          type: integer
+          description: Maximum interval between executions in seconds
+        dailyTokenBudget:
+          type: integer
+          description: Daily LLM token budget (0 = unlimited)
+        tokensUsedToday:
+          type: integer
+          format: int64
+          description: LLM tokens used within the current usage day (UTC)
+        personaPrompt:
+          type: string
+          description: Additional persona instructions appended to the system prompt
+        currentFocus:
+          type: string
+          description: Current focus set by the operator itself
+        watchList:
+          type: string
+          description: Watch list maintained by the operator itself
+        memento:
+          type: string
+          description: State carried between iterations by the operator itself
+        observationRetentionDays:
+          type: integer
+          description: Observation retention override in days (0 = server default)
+        observationMaxRecords:
+          type: integer
+          description: Observation record cap override (0 = server default)
+        lastExecutionTime:
+          type: string
+          format: date-time
+          description: Time of the last completed execution
+        nextExecutionTime:
+          type: string
+          format: date-time
+          description: Scheduled time of the next execution
+        iteration:
+          type: integer
+          description: Number of completed iterations
+        consecutiveFailures:
+          type: integer
+          description: Consecutive failed executions (resets on success and restart)
+        lastExplanation:
+          type: string
+          description: Explanation returned by the last execution
+        created:
+          type: string
+          format: date-time
+          description: Instance creation time
+        modified:
+          type: string
+          format: date-time
+          description: Last configuration change time
+    AiOperatorConfig:
+      type: object
+      description: >-
+        AI operator instance configuration. All fields are optional on update;
+        "name" is required on creation. Adaptive state fields (currentFocus,
+        watchList, memento) are managed by the operator itself and cannot be
+        set through this schema — use the reset-memento endpoint to clear them.
+      properties:
+        name:
+          type: string
+          description: Instance name (required on creation)
+        description:
+          type: string
+          description: Instance description
+        enabled:
+          type: boolean
+          description: Enable or disable the instance
+        scopeFilter:
+          type: string
+          description: Attention scope filter
+        modelSlot:
+          type: string
+          description: AI model slot to use (empty = default)
+        minInterval:
+          type: integer
+          description: Minimum interval between executions in seconds (floor 60)
+        maxInterval:
+          type: integer
+          description: Maximum interval between executions in seconds (must be >= minInterval)
+        dailyTokenBudget:
+          type: integer
+          description: Daily LLM token budget (0 = unlimited)
+        personaPrompt:
+          type: string
+          description: Additional persona instructions
+        observationRetentionDays:
+          type: integer
+          description: Observation retention override in days (0 = server default)
+        observationMaxRecords:
+          type: integer
+          description: Observation record cap override (0 = server default)
     AiSavedPrompt:
       type: object
       properties:

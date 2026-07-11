@@ -79,12 +79,14 @@ import org.netxms.client.ai.AiAssistantSkill;
 import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiMessage;
+import org.netxms.client.ai.AiOperator;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AiMessageStatus;
+import org.netxms.client.constants.AiObservationState;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.BackgroundTaskState;
 import org.netxms.client.constants.DataCollectionObjectStatus;
@@ -16954,6 +16956,93 @@ public class NXCSession
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_MESSAGE);
       msg.setFieldUInt32(NXCPCodes.VID_AI_MESSAGE_ID, messageId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of AI operator instances.
+    *
+    * @return list of AI operator instances
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AiOperator> getAiOperators() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_OPERATORS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiOperator> operators = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         operators.add(new AiOperator(response, fieldId));
+         fieldId += 30;
+      }
+      return operators;
+   }
+
+   /**
+    * Create or modify AI operator instance. Instance with ID 0 will be created on the server.
+    *
+    * @param operator AI operator instance configuration
+    * @return instance ID (assigned by server for new instances)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyAiOperator(AiOperator operator) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_AI_OPERATOR);
+      operator.fillMessage(msg);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_AI_OPERATOR_ID);
+   }
+
+   /**
+    * Delete AI operator instance (also deletes its observations).
+    *
+    * @param operatorId instance ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAiOperator(int operatorId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_OPERATOR);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Reset AI operator instance accumulated state (memento, current focus, watch list, and iteration counter).
+    *
+    * @param operatorId instance ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void resetAiOperator(int operatorId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESET_AI_OPERATOR);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Set AI operator observation state (acknowledge/dismiss).
+    *
+    * @param observationId observation ID
+    * @param state new observation state
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setAiObservationState(long observationId, AiObservationState state) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_AI_OBSERVATION_STATE);
+      msg.setFieldInt64(NXCPCodes.VID_AI_OBSERVATION_ID, observationId);
+      msg.setFieldInt32(NXCPCodes.VID_STATE, state.getValue());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

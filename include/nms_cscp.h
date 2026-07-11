@@ -731,6 +731,11 @@ __PACK_END__
 #define CMD_GET_RECONCILIATION_STATUS     0x0213
 #define CMD_REGISTER_SUBAGENT             0x0214
 #define CMD_TRAP_ACK                      0x0215
+#define CMD_GET_AI_OPERATORS              0x0216
+#define CMD_MODIFY_AI_OPERATOR            0x0217
+#define CMD_DELETE_AI_OPERATOR            0x0218
+#define CMD_RESET_AI_OPERATOR             0x0219
+#define CMD_SET_AI_OBSERVATION_STATE      0x021A
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1746,6 +1751,12 @@ __PACK_END__
 #define VID_RECONCILIATION_LAST_REPORT ((uint32_t)998)
 #define VID_ACTIVE_SERVER_ADDRESS   ((uint32_t)999)
 #define VID_TRAP_ACK_SUPPORTED      ((uint32_t)1000)
+#define VID_AI_OPERATOR_ID          ((uint32_t)1001)
+#define VID_AI_OBSERVATION_ID       ((uint32_t)1002)
+#define VID_MIN_INTERVAL            ((uint32_t)1003)
+#define VID_MAX_INTERVAL            ((uint32_t)1004)
+#define VID_AI_MODEL_SLOT           ((uint32_t)1005)
+#define VID_AI_TOKEN_BUDGET         ((uint32_t)1006)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

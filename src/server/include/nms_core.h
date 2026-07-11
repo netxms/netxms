@@ -994,6 +994,11 @@ private:
    void getAIMessages(const NXCPMessage& request);
    void setAIMessageStatus(const NXCPMessage& request);
    void deleteAIMessage(const NXCPMessage& request);
+   void getAiOperators(const NXCPMessage& request);
+   void modifyAiOperator(const NXCPMessage& request);
+   void deleteAiOperator(const NXCPMessage& request);
+   void resetAiOperator(const NXCPMessage& request);
+   void setAiObservationState(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);

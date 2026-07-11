@@ -549,6 +549,11 @@ public class NXCPCodes
    public static final int CMD_GET_RECONCILIATION_STATUS = 0x0213;
    public static final int CMD_REGISTER_SUBAGENT = 0x0214;
    public static final int CMD_TRAP_ACK = 0x0215;
+   public static final int CMD_GET_AI_OPERATORS = 0x0216;
+   public static final int CMD_MODIFY_AI_OPERATOR = 0x0217;
+   public static final int CMD_DELETE_AI_OPERATOR = 0x0218;
+   public static final int CMD_RESET_AI_OPERATOR = 0x0219;
+   public static final int CMD_SET_AI_OBSERVATION_STATE = 0x021A;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -713,6 +718,7 @@ public class NXCPCodes
 	public static final long VID_ZONING_ENABLED = 148;
 	public static final long VID_ICMP_PROXY = 149;
 	public static final long VID_IP_ADDRESS_COUNT = 150;
+   public static final long VID_ENABLED = 151;
 	public static final long VID_REMOVE_DCI = 152;
 	public static final long VID_TEMPLATE_ID = 153;
 	public static final long VID_PUBLIC_KEY = 154;
@@ -1555,6 +1561,12 @@ public class NXCPCodes
    public static final long VID_RECONCILIATION_LAST_REPORT = 998;
    public static final long VID_ACTIVE_SERVER_ADDRESS = 999;
    public static final long VID_TRAP_ACK_SUPPORTED = 1000;
+   public static final long VID_AI_OPERATOR_ID = 1001;
+   public static final long VID_AI_OBSERVATION_ID = 1002;
+   public static final long VID_MIN_INTERVAL = 1003;
+   public static final long VID_MAX_INTERVAL = 1004;
+   public static final long VID_AI_MODEL_SLOT = 1005;
+   public static final long VID_AI_TOKEN_BUDGET = 1006;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
