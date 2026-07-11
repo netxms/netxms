@@ -61,6 +61,8 @@ public class DashboardElementConfigFactory
       {
          switch(element.getType())
          {
+            case DashboardElement.AI_OBSERVATION_MONITOR:
+               return XMLTools.createFromXml(AiObservationMonitorConfig.class, element.getData());
             case DashboardElement.ALARM_VIEWER:
                return XMLTools.createFromXml(AlarmViewerConfig.class, element.getData());
             case DashboardElement.AVAILABLITY_CHART:
@@ -146,6 +148,8 @@ public class DashboardElementConfigFactory
       {
          switch(element.getType())
          {
+            case DashboardElement.AI_OBSERVATION_MONITOR:
+               return new Gson().fromJson(element.getData(), AiObservationMonitorConfig.class);
             case DashboardElement.ALARM_VIEWER:
                return new Gson().fromJson(element.getData(), AlarmViewerConfig.class);
             case DashboardElement.AVAILABLITY_CHART:

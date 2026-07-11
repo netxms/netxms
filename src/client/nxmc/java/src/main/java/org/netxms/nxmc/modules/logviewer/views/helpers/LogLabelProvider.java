@@ -57,6 +57,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
    private final String[] CONNECTION_EVENT_TEXTS = getConnectionEventTexts(i18n);
    private final String[] DEPLOYMENT_STATUS_TEXTS = getDeploymentStatusTexts(i18n);
    private static final String[] AI_TASK_STATUS_CHARS = { "S", "R", "C", "F", "U" };
+   private final String[] OBSERVATION_STATE_TEXTS = { i18n.tr("New"), i18n.tr("Acknowledged"), i18n.tr("Dismissed") };
 
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -314,6 +315,23 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
             }
          case LogColumn.LC_AI_TASK_STATUS:
             return getAiTaskStatusText(value);
+         case LogColumn.LC_AI_OP_EXEC_STATUS:
+            if ("C".equals(value))
+               return i18n.tr("Completed");
+            if ("F".equals(value))
+               return i18n.tr("Failed");
+            if ("S".equals(value))
+               return i18n.tr("Skipped");
+            return value;
+         case LogColumn.LC_OBSERVATION_STATE:
+            try
+            {
+               return OBSERVATION_STATE_TEXTS[Integer.parseInt(value)];
+            }
+            catch(Exception e)
+            {
+               return value;
+            }
 			default:
 				return value;
 		}

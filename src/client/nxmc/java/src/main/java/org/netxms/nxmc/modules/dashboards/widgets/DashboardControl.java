@@ -205,6 +205,9 @@ public class DashboardControl extends Composite
          case DashboardElement.DIAL_CHART:
             w = new GaugeElement(this, e, view);
          	break;
+         case DashboardElement.AI_OBSERVATION_MONITOR:
+            w = new AiObservationMonitorElement(this, e, view);
+            break;
          case DashboardElement.EVENT_MONITOR:
             w = new EventMonitorElement(this, e, view);
             break;

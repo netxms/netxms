@@ -88,6 +88,7 @@ public class ElementCreationMenuManager extends MenuManager
 
       /* monitors */
       MenuManager monitorsMenu = new MenuManager(i18n.tr("M&onitors"));
+      addTypeToSelectionMenu(monitorsMenu, i18n.tr("&AI observation monitor"), DashboardElement.AI_OBSERVATION_MONITOR);
       addTypeToSelectionMenu(monitorsMenu, i18n.tr("&Event monitor"), DashboardElement.EVENT_MONITOR);
       addTypeToSelectionMenu(monitorsMenu, i18n.tr("&File monitor"), DashboardElement.FILE_MONITOR);
       addTypeToSelectionMenu(monitorsMenu, i18n.tr("SNMP &trap monitor"), DashboardElement.SNMP_TRAP_MONITOR);

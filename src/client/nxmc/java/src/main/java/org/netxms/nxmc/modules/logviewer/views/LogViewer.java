@@ -400,6 +400,16 @@ public class LogViewer extends ViewWithContext
 		viewer.getControl().setMenu(menu);
 	}
 
+   /**
+    * Get handle of currently open log.
+    *
+    * @return handle of currently open log or null
+    */
+   protected Log getLogHandle()
+   {
+      return logHandle;
+   }
+
 	/**
 	 * Fill context menu
 	 *

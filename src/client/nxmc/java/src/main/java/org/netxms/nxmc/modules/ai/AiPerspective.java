@@ -23,6 +23,7 @@ import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.ai.views.AiAssistantChatView;
 import org.netxms.nxmc.modules.ai.views.AiMessagesView;
+import org.netxms.nxmc.modules.ai.views.AiObservationLogViewer;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -75,5 +76,6 @@ public class AiPerspective extends Perspective
    {
       addMainView(new AiAssistantChatView());
       addMainView(new AiMessagesView());
+      addMainView(new AiObservationLogViewer(i18n.tr("Observations"), ".ai"));
    }
 }

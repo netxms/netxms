@@ -48,6 +48,8 @@ public class LogColumn
    public static final int LC_MAC_ADDRESS       = 19;
    public static final int LC_CONNECTION_EVENT  = 20;
    public static final int LC_TIMESTAMP_MS      = 21;
+   public static final int LC_AI_OP_EXEC_STATUS = 22;
+   public static final int LC_OBSERVATION_STATE = 23;
 
    public static final int LCF_TSDB_TIMESTAMPTZ = 0x0001;   /* Column is of timestamptz data type in TimescaleDB */
    public static final int LCF_CHAR_COLUMN      = 0x0002;   /* Column is of char type */

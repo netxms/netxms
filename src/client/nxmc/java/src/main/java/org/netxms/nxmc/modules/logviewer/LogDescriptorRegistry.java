@@ -30,6 +30,8 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.views.AiObservationLogViewer;
+import org.netxms.nxmc.modules.logviewer.views.LogViewer;
 import org.netxms.nxmc.services.LogDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +66,14 @@ public final class LogDescriptorRegistry
     */
    private LogDescriptorRegistry(NXCSession session)
    {
+      descriptors.add(new LogDescriptor("AIOperatorExecutionLog", i18n.tr("AI Operator Executions"), null, null));
+      descriptors.add(new LogDescriptor("AIOperatorObservations", i18n.tr("AI Operator Observations"), i18n.tr("AI operator observations"), "object_id") {
+         @Override
+         public LogViewer createView()
+         {
+            return new AiObservationLogViewer(viewTitle, "");
+         }
+      });
       descriptors.add(new LogDescriptor("AlarmLog", i18n.tr("Alarms"), null, "source_object_id") {
          @Override
          public boolean isApplicableForObject(AbstractObject object)

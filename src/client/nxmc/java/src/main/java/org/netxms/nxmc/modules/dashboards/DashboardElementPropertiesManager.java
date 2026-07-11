@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.propertypages.AbstractChart;
+import org.netxms.nxmc.modules.dashboards.propertypages.AiObservationMonitor;
 import org.netxms.nxmc.modules.dashboards.propertypages.AlarmViewer;
 import org.netxms.nxmc.modules.dashboards.propertypages.AvailabilityChart;
 import org.netxms.nxmc.modules.dashboards.propertypages.DashboardElementPropertyPage;
@@ -77,6 +78,7 @@ public class DashboardElementPropertiesManager
    static
    {
       pageClasses.add(AbstractChart.class);
+      pageClasses.add(AiObservationMonitor.class);
       pageClasses.add(AlarmViewer.class);
       pageClasses.add(AvailabilityChart.class);
       pageClasses.add(DataSources.class);
