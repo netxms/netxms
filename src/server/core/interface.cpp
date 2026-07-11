@@ -1447,7 +1447,10 @@ uint32_t Interface::modifyFromJSONInternal(json_t *json, GenericClientSession *s
    {
       if (!json_is_integer(value))
          return RCC_INVALID_ARGUMENT;
-      setExpectedStateInternal(static_cast<int>(json_integer_value(value)));
+      int state = static_cast<int>(json_integer_value(value));
+      if ((state < IF_EXPECTED_STATE_UP) || (state > IF_EXPECTED_STATE_AUTO))
+         return RCC_INVALID_ARGUMENT;
+      setExpectedStateInternal(state);
    }
 
    return super::modifyFromJSONInternal(json, session);
