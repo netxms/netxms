@@ -8,6 +8,7 @@ agent.policy	Agent policies (server side)
 agent.tunnel	Agent tunnels
 
 ai.assistant	AI assistant core (including prompt injection guard)
+ai.operator	AI operator instances (perpetual monitoring loops)
 ai.prov.*	AI/LLM provider communication (openai, anthropic, mistral, ollama)
 
 aix		AIX platform subagent messages

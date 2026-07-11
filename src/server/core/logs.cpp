@@ -28,6 +28,40 @@
  */
 static NXCORE_LOG s_logs[] =
 {
+   { L"AIOperatorExecutionLog", L"ai_operator_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      "AI operator execution log. Tracks AI operator instance executions (monitoring iterations) including instance name, "
+      "status (completed, failed, skipped), iteration number, duration, token usage, and explanation of results or errors.",
+      {
+         { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"execution_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"instance_id", L"Instance", LC_INTEGER, 0 },
+         { L"instance_name", L"Instance Name", LC_TEXT, 0 },
+         { L"status", L"Status", LC_AI_OP_EXEC_STATUS, LCF_CHAR_COLUMN },
+         { L"iteration", L"Iteration", LC_INTEGER, 0 },
+         { L"duration_ms", L"Duration (ms)", LC_INTEGER, 0 },
+         { L"input_tokens", L"Input Tokens", LC_INTEGER, 0 },
+         { L"output_tokens", L"Output Tokens", LC_INTEGER, 0 },
+         { L"explanation", L"Explanation", LC_TEXT_DETAILS, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
+   { L"AIOperatorObservations", L"ai_operator_observations", L"id", L"object_id", SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      "AI operator observations. Persistent stream of notable findings recorded by AI operator instances "
+      "(anomalies, degradations, recoveries, trends) with severity, related object, supporting references, "
+      "and review state (new, acknowledged, dismissed).",
+      {
+         { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"observation_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { L"instance_id", L"Instance", LC_INTEGER, 0 },
+         { L"severity", L"Severity", LC_SEVERITY, 0 },
+         { L"title", L"Title", LC_TEXT, 0 },
+         { L"body", L"Details", LC_TEXT_DETAILS, 0 },
+         { L"object_id", L"Object", LC_OBJECT_ID, LCF_ANY_OBJECT_CLASS },
+         { L"refs", L"References", LC_TEXT_DETAILS, 0 },
+         { L"state", L"State", LC_OBSERVATION_STATE, LCF_CHAR_COLUMN },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
    { L"AITaskLog", L"ai_task_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       "AI task execution log. Tracks AI assistant task executions including task descriptions, user, status "
       "(pending, running, completed, failed), iteration count, and explanations of results or errors.",

@@ -36,6 +36,21 @@ extern VolatileCounter64 g_aiTotalOutputTokens;
 extern VolatileCounter64 g_aiFailedRequests;
 
 /**
+ * Per-thread token usage collector
+ */
+static thread_local LLMTokenUsage *s_tokenUsageCollector = nullptr;
+
+/**
+ * Set LLM token usage collector for calling thread
+ */
+LLMTokenUsage NXCORE_EXPORTABLE *SetLLMTokenUsageCollector(LLMTokenUsage *collector)
+{
+   LLMTokenUsage *previous = s_tokenUsageCollector;
+   s_tokenUsageCollector = collector;
+   return previous;
+}
+
+/**
  * LLMProvider constructor
  */
 LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config), m_totalRequests(0), m_totalInputTokens(0), m_totalOutputTokens(0), m_failedRequests(0)
@@ -60,6 +75,11 @@ void LLMProvider::recordUsage(int64_t inputTokens, int64_t outputTokens)
    InterlockedIncrement64(&g_aiTotalRequests);
    InterlockedAdd64(&g_aiTotalInputTokens, inputTokens);
    InterlockedAdd64(&g_aiTotalOutputTokens, outputTokens);
+   if (s_tokenUsageCollector != nullptr)
+   {
+      s_tokenUsageCollector->inputTokens += inputTokens;
+      s_tokenUsageCollector->outputTokens += outputTokens;
+   }
 }
 
 /**

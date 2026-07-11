@@ -189,6 +189,9 @@ static bool H_UpgradeFromV6()
    CHK_EXEC(CreateConfigParam(L"AIOperator.Enabled", L"1",
       L"Enable/disable AI operator subsystem (global kill switch for all operator instances).",
       nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperator.MaxConsecutiveFailures", L"3",
+      L"Number of consecutive execution failures after which an AI operator instance is automatically disabled.",
+      nullptr, 'I', true, false, false, false));
    CHK_EXEC(CreateConfigParam(L"AIOperatorObservations.RetentionTime", L"90",
       L"Default retention time in days for AI operator observations. All records older than specified will be deleted by housekeeping process. Can be overridden per operator instance.",
       L"days", 'I', true, false, false, false));

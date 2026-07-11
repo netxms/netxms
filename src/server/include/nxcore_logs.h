@@ -52,6 +52,8 @@
 #define LC_MAC_ADDRESS        19
 #define LC_CONNECTION_EVENT   20
 #define LC_TIMESTAMP_MS       21
+#define LC_AI_OP_EXEC_STATUS  22
+#define LC_OBSERVATION_STATE  23
 
 /**
  * Column filter types

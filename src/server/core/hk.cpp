@@ -40,6 +40,11 @@ void CleanupExpiredTrustedDevices(DB_HANDLE hdb);
 void ProcessStorageClassMigrations();
 
 /**
+ * Housekeeping for AI operator observations
+ */
+void CleanAIOperatorObservations(DB_HANDLE hdb, time_t cycleStartTime);
+
+/**
  * Housekeeper wakeup condition
  */
 static Condition s_wakeupCondition(false);
@@ -434,6 +439,11 @@ static void HouseKeeper()
       if (!DeleteExpiredLogRecords(_T("server action execution log"), _T("server_action_execution_log"), _T("action_timestamp"), _T("ActionExecutionLog.RetentionTime"), hdb, cycleStartTime))
          break;
       if (!DeleteExpiredLogRecords(_T("AI task execution log"), _T("ai_task_execution_log"), _T("execution_timestamp"), _T("AITaskExecutionLog.RetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("AI operator execution log"), _T("ai_operator_execution_log"), _T("execution_timestamp"), _T("AIOperatorExecutionLog.RetentionTime"), hdb, cycleStartTime))
+         break;
+      CleanAIOperatorObservations(hdb, cycleStartTime);
+      if (!ThrottleHousekeeper())
          break;
       if (!DeleteExpiredLogRecords(_T("notification log"), _T("notification_log"), _T("notification_timestamp"), _T("NotificationLog.RetentionTime"), hdb, cycleStartTime))
          break;

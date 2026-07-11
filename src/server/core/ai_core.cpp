@@ -2960,6 +2960,7 @@ bool InitAIAssistant()
 
    InitAITasks();
    InitializeAIMessageManager();
+   InitAIOperators();
    s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
          ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
          ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));

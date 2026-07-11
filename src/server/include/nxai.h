@@ -148,6 +148,142 @@ public:
    void setNextExecutionTime(time_t t);
 };
 
+#define AI_OPERATOR_COMPONENT   L"AI-OPERATOR"
+
+/**
+ * AI operator observation state
+ */
+enum class AIObservationState
+{
+   NEW = 0,
+   ACKNOWLEDGED = 1,
+   DISMISSED = 2
+};
+
+/**
+ * AI operator instance - perpetual adaptive monitoring loop
+ */
+class NXCORE_EXPORTABLE AIOperatorInstance
+{
+private:
+   uint32_t m_id;
+   mutable Mutex m_mutex;
+   wchar_t m_name[64];
+   MutableString m_description;
+   uint32_t m_ownerUserId;
+   bool m_enabled;
+   std::string m_scopeFilter;
+   char m_modelSlot[64];
+   uint32_t m_minInterval;    // Minimum interval between executions in seconds
+   uint32_t m_maxInterval;    // Maximum interval between executions in seconds
+   uint32_t m_dailyTokenBudget;  // Daily LLM token budget (0 = unlimited)
+   int64_t m_tokensUsed;         // Tokens used within current usage day
+   uint32_t m_usageDay;          // Day number (UTC) the usage counter applies to
+   std::string m_personaPrompt;
+   wchar_t m_currentFocus[256];
+   std::string m_watchList;
+   std::string m_memento;
+   uint32_t m_observationRetentionDays;  // 0 = server default
+   uint32_t m_observationMaxRecords;     // 0 = server default
+   time_t m_lastExecutionTime;
+   time_t m_nextExecutionTime;
+   uint32_t m_iteration;
+   time_t m_creationTime;
+   time_t m_modificationTime;
+
+   // Runtime state (not persisted)
+   bool m_executing;
+   int m_consecutiveFailures;
+   StringBuffer m_lastExplanation;
+
+   bool processResponse(const char *response, time_t now);
+   void handleFailure(const char *error, time_t now);
+   void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens);
+   void saveToDatabase() const;   // must be called with instance lock held
+
+public:
+   AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId);
+   AIOperatorInstance(DB_RESULT hResult, int row);
+
+   void execute();
+
+   uint32_t getId() const { return m_id; }
+   const wchar_t *getName() const { return m_name; }
+   uint32_t getOwnerUserId() const { return m_ownerUserId; }
+   bool isEnabled() const { return m_enabled; }
+   bool isExecuting() const { return m_executing; }
+   void setExecuting() { m_executing = true; }
+   time_t getNextExecutionTime() const { return m_nextExecutionTime; }
+   time_t getLastExecutionTime() const { return m_lastExecutionTime; }
+   uint32_t getIteration() const { return m_iteration; }
+   int64_t getTokensUsedToday() const { return m_tokensUsed; }
+   uint32_t getObservationRetentionDays() const { return m_observationRetentionDays; }
+   uint32_t getObservationMaxRecords() const { return m_observationMaxRecords; }
+
+   uint32_t modifyFromJSON(json_t *config);
+   void setEnabled(bool enabled);
+   void resetMemento();
+
+   void deleteFromDatabase();
+
+   json_t *toJson() const;
+};
+
+/**
+ * Initialize AI operator subsystem
+ */
+void InitAIOperators();
+
+/**
+ * Create AI operator instance from JSON configuration. Instance ID is returned via instanceId.
+ */
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t ownerUserId, uint32_t *instanceId);
+
+/**
+ * Modify AI operator instance from JSON configuration
+ */
+uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config);
+
+/**
+ * Delete AI operator instance (also deletes its observations)
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIOperatorInstance(uint32_t instanceId);
+
+/**
+ * Enable or disable AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE SetAIOperatorInstanceEnabled(uint32_t instanceId, bool enabled);
+
+/**
+ * Reset AI operator instance accumulated state (memento, focus, watch list, iteration counter)
+ */
+uint32_t NXCORE_EXPORTABLE ResetAIOperatorInstanceMemento(uint32_t instanceId);
+
+/**
+ * Get AI operator instance by ID
+ */
+shared_ptr<AIOperatorInstance> NXCORE_EXPORTABLE GetAIOperatorInstance(uint32_t instanceId);
+
+/**
+ * Get all AI operator instances as JSON array (caller must call json_decref on result)
+ */
+json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson();
+
+/**
+ * Update AI operator observation state (acknowledge/dismiss)
+ */
+uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state);
+
+/**
+ * Housekeeping for AI operator observations (retention time and per-instance record cap)
+ */
+void CleanAIOperatorObservations(DB_HANDLE hdb, time_t cycleStartTime);
+
+/**
+ * Print AI operator instances to server console
+ */
+void ShowAIOperators(ServerConsole *console);
+
 #undef ERROR
 
 /**

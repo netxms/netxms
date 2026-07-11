@@ -68,6 +68,28 @@ struct NXCORE_EXPORTABLE LLMProviderConfig
 };
 
 /**
+ * LLM token usage accumulator
+ */
+struct LLMTokenUsage
+{
+   int64_t inputTokens;
+   int64_t outputTokens;
+
+   LLMTokenUsage()
+   {
+      inputTokens = 0;
+      outputTokens = 0;
+   }
+};
+
+/**
+ * Set LLM token usage collector for calling thread. All token usage recorded by providers on this
+ * thread will be accumulated into given collector until it is replaced or removed (set to nullptr).
+ * Returns previously set collector so that nested scopes can restore it.
+ */
+LLMTokenUsage NXCORE_EXPORTABLE *SetLLMTokenUsageCollector(LLMTokenUsage *collector);
+
+/**
  * LLM provider abstract base class
  */
 class NXCORE_EXPORTABLE LLMProvider
