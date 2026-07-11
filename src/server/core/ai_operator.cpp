@@ -459,55 +459,72 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
 {
    LockGuard lockGuard(m_mutex);
 
-   json_t *name = json_object_get(config, "name");
-   if (name != nullptr)
+   // Validate and stage every field into locals first, then commit only after all checks pass,
+   // so a rejected request never leaves the live instance partially modified.
+   bool updateName = false;
+   wchar_t name[64];
+   json_t *jname = json_object_get(config, "name");
+   if (jname != nullptr)
    {
-      if (!json_is_string(name) || (*json_string_value(name) == 0))
+      if (!json_is_string(jname) || (*json_string_value(jname) == 0))
          return RCC_INVALID_ARGUMENT;
-      utf8_to_wchar(json_string_value(name), -1, m_name, 64);
-      m_name[63] = 0;
+      utf8_to_wchar(json_string_value(jname), -1, name, 64);
+      name[63] = 0;
+      updateName = true;
    }
 
    json_t *description = json_object_get(config, "description");
-   if (description != nullptr)
-   {
-      if (!json_is_string(description) && !json_is_null(description))
-         return RCC_INVALID_ARGUMENT;
-      m_description = String(json_is_string(description) ? json_string_value(description) : "", "utf8");
-   }
-
-   json_t *scopeFilter = json_object_get(config, "scopeFilter");
-   if (scopeFilter != nullptr)
-   {
-      if (!json_is_string(scopeFilter) && !json_is_null(scopeFilter))
-         return RCC_INVALID_ARGUMENT;
-      m_scopeFilter = json_is_string(scopeFilter) ? json_string_value(scopeFilter) : "";
-   }
-
-   json_t *personaPrompt = json_object_get(config, "personaPrompt");
-   if (personaPrompt != nullptr)
-   {
-      if (!json_is_string(personaPrompt) && !json_is_null(personaPrompt))
-         return RCC_INVALID_ARGUMENT;
-      m_personaPrompt = json_is_string(personaPrompt) ? json_string_value(personaPrompt) : "";
-   }
-
-   if (!json_object_update_string_utf8(config, "modelSlot", m_modelSlot, 64) ||
-       !json_object_update_integer(config, "minInterval", &m_minInterval) ||
-       !json_object_update_integer(config, "maxInterval", &m_maxInterval) ||
-       !json_object_update_integer(config, "dailyTokenBudget", &m_dailyTokenBudget) ||
-       !json_object_update_integer(config, "observationRetentionDays", &m_observationRetentionDays) ||
-       !json_object_update_integer(config, "observationMaxRecords", &m_observationMaxRecords))
+   if ((description != nullptr) && !json_is_string(description) && !json_is_null(description))
       return RCC_INVALID_ARGUMENT;
 
-   if (m_minInterval < 60)
-      m_minInterval = 60;
-   if (m_maxInterval < m_minInterval)
+   json_t *scopeFilter = json_object_get(config, "scopeFilter");
+   if ((scopeFilter != nullptr) && !json_is_string(scopeFilter) && !json_is_null(scopeFilter))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *personaPrompt = json_object_get(config, "personaPrompt");
+   if ((personaPrompt != nullptr) && !json_is_string(personaPrompt) && !json_is_null(personaPrompt))
+      return RCC_INVALID_ARGUMENT;
+
+   char modelSlot[64];
+   memcpy(modelSlot, m_modelSlot, sizeof(modelSlot));
+   uint32_t minInterval = m_minInterval;
+   uint32_t maxInterval = m_maxInterval;
+   uint32_t dailyTokenBudget = m_dailyTokenBudget;
+   uint32_t observationRetentionDays = m_observationRetentionDays;
+   uint32_t observationMaxRecords = m_observationMaxRecords;
+   if (!json_object_update_string_utf8(config, "modelSlot", modelSlot, 64) ||
+       !json_object_update_integer(config, "minInterval", &minInterval) ||
+       !json_object_update_integer(config, "maxInterval", &maxInterval) ||
+       !json_object_update_integer(config, "dailyTokenBudget", &dailyTokenBudget) ||
+       !json_object_update_integer(config, "observationRetentionDays", &observationRetentionDays) ||
+       !json_object_update_integer(config, "observationMaxRecords", &observationMaxRecords))
+      return RCC_INVALID_ARGUMENT;
+
+   if (minInterval < 60)
+      minInterval = 60;
+   if (maxInterval < minInterval)
       return RCC_INVALID_ARGUMENT;
 
    bool enabled = m_enabled;
    if (!json_object_update_boolean(config, "enabled", &enabled))
       return RCC_INVALID_ARGUMENT;
+
+   // All checks passed - commit staged values to the live instance
+   if (updateName)
+      wcscpy(m_name, name);
+   if (description != nullptr)
+      m_description = String(json_is_string(description) ? json_string_value(description) : "", "utf8");
+   if (scopeFilter != nullptr)
+      m_scopeFilter = json_is_string(scopeFilter) ? json_string_value(scopeFilter) : "";
+   if (personaPrompt != nullptr)
+      m_personaPrompt = json_is_string(personaPrompt) ? json_string_value(personaPrompt) : "";
+   memcpy(m_modelSlot, modelSlot, sizeof(m_modelSlot));
+   m_minInterval = minInterval;
+   m_maxInterval = maxInterval;
+   m_dailyTokenBudget = dailyTokenBudget;
+   m_observationRetentionDays = observationRetentionDays;
+   m_observationMaxRecords = observationMaxRecords;
+
    if (enabled != m_enabled)
    {
       m_enabled = enabled;
