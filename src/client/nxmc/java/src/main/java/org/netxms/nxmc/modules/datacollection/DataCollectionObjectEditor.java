@@ -58,6 +58,7 @@ public class DataCollectionObjectEditor
 	{
 		this.object = object;
       this.view = view;
+      this.sourceNode = object.getSourceNode();
 		timer = new Runnable() {
 			@Override
 			public void run()

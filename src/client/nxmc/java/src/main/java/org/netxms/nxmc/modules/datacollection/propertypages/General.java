@@ -26,6 +26,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -206,6 +208,13 @@ public class General extends AbstractDCIPropertyPage
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
       sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP);
+      sourceNode.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.setSourceNode(sourceNode.getObjectId());
+         }
+      });
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
