@@ -41,7 +41,7 @@ CodeLookupElement g_dciOriginNames[] =
    { DS_WEB_SERVICE, L"websvc" }, { DS_PUSH_AGENT, L"push" }, { DS_WINPERF, L"winperf" },
    { DS_SMCLP, L"smclp" }, { DS_SCRIPT, L"script" }, { DS_SSH, L"ssh" }, { DS_MQTT, L"mqtt" },
    { DS_DEVICE_DRIVER, L"driver" }, { DS_MODBUS, L"modbus" }, { DS_ETHERNET_IP, L"ethernetip" },
-   { DS_CLOUD_CONNECTOR, L"cloud" }, { DS_OTLP, L"otlp" }, { 0, nullptr }
+   { DS_CLOUD_CONNECTOR, L"cloud" }, { DS_OTLP, L"otlp" }, { DS_TRAFFIC_OBSERVER, L"trafficobserver" }, { 0, nullptr }
 };
 CodeLookupElement g_dciStatusNames[] =
 {
@@ -2243,8 +2243,8 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp" };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_OTLP)) ? names[dataProvider] : L"unknown";
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp", L"trafficobserver" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_TRAFFIC_OBSERVER)) ? names[dataProvider] : L"unknown";
 }
 
 /**

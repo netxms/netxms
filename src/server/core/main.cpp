@@ -111,6 +111,7 @@ void StartSnmpTrapReceiver();
 void StopSnmpTrapReceiver();
 void InitializeDeviceBackupInterface();
 void InitializeCloudConnectors();
+void InitializeTrafficConnectors();
 void LoadWellKnownPortList();
 bool InitAIAssistant();
 void ShutdownAIMessageManager();
@@ -132,6 +133,7 @@ void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& parameters);
 void RegenerateAnomalyProfiles(const shared_ptr<ScheduledTaskParameters>& parameters);
 void HourlyDataAggregationRollup(const shared_ptr<ScheduledTaskParameters>& parameters);
 void DailyDataAggregationRollup(const shared_ptr<ScheduledTaskParameters>& parameters);
+void SyncTrafficObserverConfig(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1498,6 +1500,7 @@ retry_db_lock:
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
    InitializeCloudConnectors();
+   InitializeTrafficConnectors();
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Passive initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
 
@@ -1604,6 +1607,9 @@ bool ActivateServer()
    }
    ActivateObjectStore();
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
+
+   // Load observation point host records for traffic observer subsystem
+   LoadObservationPointHosts();
 
    // Check if management node object presented in database
    CheckForMgmtNode();
@@ -1729,6 +1735,7 @@ bool ActivateServer()
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(INCIDENT_CREATE_TASK_ID, CreateIncidentFromAlarmTask, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(L"Traffic.ConfigSync", SyncTrafficObserverConfig, SYSTEM_ACCESS_USER_SCHEDULED_TASKS);
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
@@ -1762,6 +1769,10 @@ bool ActivateServer()
 
    // Schedule checks of user authentication tokens
    AddUniqueRecurrentScheduledTask(_T("System.CheckUserAuthTokens"), _T("0 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Check for expired user authentication tokens"), nullptr, true);
+
+   // Schedule configuration sync dispatcher for traffic observers (per-observer intervals are checked by the handler)
+   if (IsComponentRegistered(L"TRAFFIC"))
+      AddUniqueRecurrentScheduledTask(L"Traffic.ConfigSync", L"* * * * *", L"", nullptr, 0, 0, SYSTEM_ACCESS_FULL, L"Synchronize configuration to traffic analyzers", nullptr, true);
 
    // Start listeners (client listener runs since passive bring-up in cluster mode)
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread);

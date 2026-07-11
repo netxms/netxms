@@ -85,6 +85,8 @@ static int GetClassLoadRank(int objectClass)
       case OBJECT_SENSOR: return 6;
       case OBJECT_CLOUDDOMAIN: return 7;
       case OBJECT_RESOURCE: return 8;
+      case OBJECT_TRAFFICOBSERVER: return 9;
+      case OBJECT_OBSERVATIONPOINT: return 10;
       case OBJECT_NODE: return 9;
       case OBJECT_WIRELESSDOMAIN: return 10;
       case OBJECT_ACCESSPOINT: return 11;
@@ -127,6 +129,8 @@ static shared_ptr<NetObj> CreateObjectInstance(int objectClass)
       case OBJECT_SENSOR: return make_shared<Sensor>();
       case OBJECT_CLOUDDOMAIN: return make_shared<CloudDomain>();
       case OBJECT_RESOURCE: return make_shared<Resource>();
+      case OBJECT_TRAFFICOBSERVER: return make_shared<TrafficObserver>();
+      case OBJECT_OBSERVATIONPOINT: return make_shared<ObservationPoint>();
       case OBJECT_NODE: return make_shared<Node>();
       case OBJECT_WIRELESSDOMAIN: return make_shared<WirelessDomain>();
       case OBJECT_ACCESSPOINT: return make_shared<AccessPoint>();

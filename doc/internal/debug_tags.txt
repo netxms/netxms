@@ -165,6 +165,8 @@ npe.tsre	Time series regression engine
 ntcb		NTCB module
 ntcb.session	NTCB module sessions
 
+ntopng		ntopng traffic connector
+
 nxsagent	Session agent (nxsagent)
 
 nxsl.security	NXSL security context access validation
@@ -263,6 +265,10 @@ syslog		Syslog server related messages
 
 threads.*	Thread related
 threads.pool	Thread pool related
+
+traffic.connector	Traffic connector registration and interface calls
+traffic.poll	Traffic observer polls and observation point discovery
+traffic.sync	Configuration sync to traffic analyzers (host aliases)
 
 topology.*	Topology related
 topology.arp	ARP topology

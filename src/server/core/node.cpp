@@ -9226,7 +9226,11 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(name, _T("Hardware.Components")))
+   if (!_tcsicmp(name, _T("Traffic.ObservationPoints")))
+   {
+      rc = GetNodeObservationPointsTable(this, result);
+   }
+   else if (!_tcsicmp(name, _T("Hardware.Components")))
    {
       lockProperties();
       if (m_hardwareComponents != nullptr)
@@ -9981,6 +9985,10 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PATH_CHECK_NODE_ID, m_pathCheckResult.rootCauseNodeId);
    msg->setField(VID_PATH_CHECK_INTERFACE_ID, m_pathCheckResult.rootCauseInterfaceId);
    msg->setFieldFromTime(VID_DECOMMISSION_TIME, m_decommissionTime);
+
+   IntegerArray<uint32_t> observationPoints;
+   GetObservationPointIdsForNode(m_id, &observationPoints);
+   msg->setFieldFromInt32Array(VID_OBSERVATION_POINTS, &observationPoints);
 
    if (m_snmpTrapSecurity != nullptr)
    {

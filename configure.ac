@@ -4749,6 +4749,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/zyxel/Makefile
 	src/server/include/Makefile
 	src/server/docker/Makefile
+	src/server/ntopng/Makefile
 	src/server/leef/Makefile
 	src/server/jira/Makefile
 	src/server/libnxsrv/Makefile

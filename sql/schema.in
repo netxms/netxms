@@ -3680,3 +3680,56 @@ CREATE TABLE ha_sync_state
   updated_at SQL_INT64 not null,
   PRIMARY KEY(node_guid)
 ) TABLE_TYPE;
+
+/**
+ * Traffic observers
+ */
+CREATE TABLE traffic_observers
+(
+   id integer not null,
+   connector_name varchar(63) not null,
+   credentials varchar(4000) null,
+   zone_uin integer not null,
+   node_id integer not null,
+   removal_policy smallint not null,
+   grace_period integer not null,
+   sync_config varchar(4000) null,
+   last_discovery_status smallint not null,
+   last_discovery_time integer not null,
+   last_discovery_msg varchar(4000) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Traffic observation points
+ */
+CREATE TABLE observation_points
+(
+   id integer not null,
+   observer_id integer not null,
+   external_id varchar(127) not null,
+   point_type varchar(31) null,
+   in_scope char(1) not null,
+   zone_uin integer not null,
+   sampling_rate integer not null,
+   local_networks varchar(4000) null,
+   state smallint not null,
+   provider_state varchar(255) null,
+   last_discovery_time integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Hosts observed by observation points
+ */
+CREATE TABLE observation_point_hosts
+(
+   point_id integer not null,
+   host_key varchar(127) not null,
+   ip_addr varchar(48) not null,
+   vlan integer not null,
+   node_id integer not null,
+   first_seen integer not null,
+   last_seen integer not null,
+   PRIMARY KEY(point_id,host_key)
+) TABLE_TYPE;

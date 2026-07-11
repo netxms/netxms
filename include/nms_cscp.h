@@ -737,6 +737,9 @@ __PACK_END__
 #define CMD_RESET_AI_OPERATOR             0x0219
 #define CMD_SET_AI_OBSERVATION_STATE      0x021A
 #define CMD_RESTORE_DEVICE_CONFIG         0x021B
+#define CMD_GET_TRAFFIC_CONNECTOR_NAMES   0x021C
+#define CMD_GET_TRAFFIC_METRIC_DEFS       0x021D
+#define CMD_QUERY_TRAFFIC_DATA            0x021E
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1760,6 +1763,16 @@ __PACK_END__
 #define VID_AI_TOKEN_BUDGET         ((uint32_t)1006)
 #define VID_FAILURE_REASON          ((uint32_t)1007)
 #define VID_USE_STARTUP_CONFIG      ((uint32_t)1008)
+#define VID_SYNC_CONFIG             ((uint32_t)1009)
+#define VID_IN_SCOPE                ((uint32_t)1010)
+#define VID_LOCAL_NETWORKS          ((uint32_t)1011)
+#define VID_BACKEND_PRODUCT         ((uint32_t)1012)
+#define VID_BACKEND_EDITION         ((uint32_t)1013)
+#define VID_CONNECTION_STATE        ((uint32_t)1014)
+#define VID_TRAFFIC_OBSERVER_ID     ((uint32_t)1015)
+#define VID_SAMPLING_RATE           ((uint32_t)1016)
+#define VID_TRAFFIC_QUERY_TYPE      ((uint32_t)1017)
+#define VID_OBSERVATION_POINTS      ((uint32_t)1018)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
@@ -2050,5 +2063,6 @@ __PACK_END__
 #define VID_COMMENT_LIST_BASE       ((uint32_t)0x62000000)
 #define VID_ACTIVITY_LIST_BASE      ((uint32_t)0x61000000)
 #define VID_OTLP_METRIC_LIST_BASE   ((uint32_t)0x64000000)
+#define VID_TRAFFIC_METRIC_LIST_BASE ((uint32_t)0x66000000)
 
 #endif   /* _nms_cscp_h_ */

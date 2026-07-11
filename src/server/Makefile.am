@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd aitools docker jira leef ntcb oxidized redmine tools drivers ncdrivers pdsdrv wcc wlcbridge @SERVER_COMPONENTS@
+SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd aitools docker jira leef ntcb ntopng oxidized redmine tools drivers ncdrivers pdsdrv wcc wlcbridge @SERVER_COMPONENTS@

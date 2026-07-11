@@ -66,6 +66,7 @@ import org.netxms.nxmc.modules.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpMetricDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectTrafficMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSmclpDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
@@ -194,6 +195,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("EtherNet/IP"));
       origin.add(i18n.tr("Cloud Connector"));
       origin.add(i18n.tr("OTLP"));
+      origin.add(i18n.tr("Traffic Observer"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -529,6 +531,7 @@ public class General extends AbstractDCIPropertyPage
             (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
 		      (dataOrigin == DataOrigin.SCRIPT) ||
             (dataOrigin == DataOrigin.OTLP) ||
+            (dataOrigin == DataOrigin.TRAFFIC_OBSERVER) ||
 		      (dataOrigin == DataOrigin.SMCLP));
 	}
 
@@ -804,6 +807,9 @@ public class General extends AbstractDCIPropertyPage
             case OTLP:
                if (!isTable)
                   dlg = new SelectOtlpMetricDlg(getShell(), (sourceNode.getObjectId() != 0) ? sourceNode.getObjectId() : dco.getNodeId());
+               break;
+            case TRAFFIC_OBSERVER:
+               dlg = new SelectTrafficMetricDlg(getShell(), (sourceNode.getObjectId() != 0) ? sourceNode.getObjectId() : dco.getNodeId(), isTable);
                break;
             default:
                dlg = null;

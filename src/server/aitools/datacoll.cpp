@@ -159,6 +159,7 @@ static const char *OriginToString(int origin)
       case DS_ETHERNET_IP: return "ethernetIp";
       case DS_CLOUD_CONNECTOR: return "cloudConnector";
       case DS_OTLP: return "otlp";
+      case DS_TRAFFIC_OBSERVER: return "trafficObserver";
       default: return "unknown";
    }
 }

@@ -48,6 +48,8 @@ class EventReference;
 class NetworkMap;
 class ImportContext;
 struct ResourceDescriptor;
+struct ObservationPointDescriptor;
+struct TrafficBackendInfo;
 
 /**
  * Global variables used by inline methods
@@ -933,6 +935,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_PORT_STOP_LIST       0x40000000
 #define MODIFY_CLOUD_DOMAIN_PROPERTIES 0x80000000
 #define MODIFY_RESOURCE_PROPERTIES  0x80000000
+#define MODIFY_TRAFFIC_OBSERVER_PROPERTIES 0x80000000
+#define MODIFY_OBSERVATION_POINT_PROPERTIES 0x80000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -3632,6 +3636,192 @@ public:
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
 };
+
+/**
+ * Traffic observer class - represents one external traffic analysis instance
+ */
+class NXCORE_EXPORTABLE TrafficObserver : public DataCollectionTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+protected:
+   SharedString m_connectorName;
+   char *m_credentials;
+   json_t *m_parsedCredentials;
+   int32_t m_zoneUIN;            // >= 0 = specific zone for host matching, -1 = match in all zones
+   uint32_t m_linkedNodeId;      // node representing the analyzer itself (0 = not linked)
+   int16_t m_removalPolicy;
+   uint32_t m_gracePeriod;
+   char *m_syncConfig;
+   int16_t m_lastDiscoveryStatus;
+   time_t m_lastDiscoveryTime;
+   std::string m_lastDiscoveryMessage;
+   int16_t m_connectionState;    // runtime state, not persisted
+   std::string m_backendProduct;
+   std::string m_backendVersion;
+   std::string m_backendEdition;
+   uint64_t m_capabilities;
+   time_t m_aliasSyncLastRun;    // host alias sync status - runtime state, not persisted
+   uint32_t m_aliasSyncRecords;
+   uint32_t m_aliasSyncErrors;
+
+   void parseCredentials();
+   void updateConnectionState(int16_t newState, const wchar_t *details);
+   bool isHostAliasSyncEnabled(uint32_t *interval) const;
+   void syncHostAliases();
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   TrafficObserver();
+   TrafficObserver(const wchar_t *name, const NXCPMessage& request);
+   TrafficObserver(const wchar_t *name, json_t *json);
+   virtual ~TrafficObserver();
+
+   shared_ptr<TrafficObserver> self() { return static_pointer_cast<TrafficObserver>(NObject::self()); }
+   shared_ptr<const TrafficObserver> self() const { return static_pointer_cast<const TrafficObserver>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_TRAFFICOBSERVER; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual void prepareForDeletion() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
+   SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
+   json_t *getCredentials() const
+   {
+      lockProperties();
+      json_t *credentials = (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
+      unlockProperties();
+      return credentials;
+   }
+   uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
+   int16_t getRemovalPolicy() const { return m_removalPolicy; }
+   uint32_t getGracePeriod() const { return m_gracePeriod; }
+   int16_t getLastDiscoveryStatus() const { return m_lastDiscoveryStatus; }
+   time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
+   int16_t getConnectionState() const { return m_connectionState; }
+   uint64_t getCapabilities() const { return m_capabilities; }
+   std::string getBackendProduct() const { return GetAttributeWithLock(m_backendProduct, m_mutexProperties); }
+   std::string getBackendVersion() const { return GetAttributeWithLock(m_backendVersion, m_mutexProperties); }
+   std::string getBackendEdition() const { return GetAttributeWithLock(m_backendEdition, m_mutexProperties); }
+
+   DataCollectionError getMetricFromConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
+
+   void runConfigSync(bool force);
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+};
+
+/**
+ * Observation point class - represents one monitored interface / observation point of a traffic observer
+ */
+class NXCORE_EXPORTABLE ObservationPoint : public DataCollectionTarget
+{
+private:
+   typedef DataCollectionTarget super;
+
+protected:
+   uint32_t m_observerId;
+   std::string m_externalId;     // connector-side point identity (UTF-8)
+   std::string m_pointType;
+   bool m_inScope;
+   int32_t m_zoneUIN;            // -1 = inherit from observer, >= 0 = explicit zone
+   uint32_t m_samplingRate;      // 0 = unknown, 1 = unsampled, N = 1:N sampling
+   std::string m_localNetworks;  // comma-separated CIDR list as reported by the analyzer
+   int16_t m_state;
+   std::string m_providerState;
+   time_t m_lastDiscoveryTime;
+   weak_ptr<TrafficObserver> m_owner;
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
+public:
+   ObservationPoint();
+   virtual ~ObservationPoint();
+
+   shared_ptr<ObservationPoint> self() { return static_pointer_cast<ObservationPoint>(NObject::self()); }
+   shared_ptr<const ObservationPoint> self() const { return static_pointer_cast<const ObservationPoint>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_OBSERVATIONPOINT; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual void postLoad() override;
+   virtual void prepareForDeletion() override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
+
+   uint32_t getObserverId() const { return m_observerId; }
+   std::string getExternalId() const { return GetAttributeWithLock(m_externalId, m_mutexProperties); }
+   std::string getPointType() const { return GetAttributeWithLock(m_pointType, m_mutexProperties); }
+   bool isInScope() const { return m_inScope; }
+   virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
+   int32_t getEffectiveZoneUIN() const;
+   uint32_t getSamplingRate() const { return m_samplingRate; }
+   std::string getLocalNetworks() const { return GetAttributeWithLock(m_localNetworks, m_mutexProperties); }
+   int16_t getState() const { return m_state; }
+   std::string getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
+   time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
+
+   void updateFromDiscovery(const ObservationPointDescriptor *desc, uint32_t observerId);
+   void updateState(int16_t newState, const char *providerState);
+   void setOwner(const shared_ptr<TrafficObserver>& observer) { m_owner = observer; }
+   shared_ptr<TrafficObserver> getOwner() const { return m_owner.lock(); }
+
+   DataCollectionError getMetricFromConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
+   DataCollectionError getTableFromConnector(const wchar_t *metric, shared_ptr<Table> *table);
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+};
+
+/**
+ * Observation-point-to-node host match record (populated by the host matching pass)
+ */
+struct ObservationPointHostRecord
+{
+   uint32_t pointId;
+   char hostKey[128];
+   InetAddress ipAddr;
+   int32_t vlan;
+   uint32_t nodeId;
+   time_t firstSeen;
+   time_t lastSeen;
+};
+
+/**
+ * Traffic observer host record index and host-level data serving
+ */
+void LoadObservationPointHosts();
+void RunObservationPointHostMatching(ObservationPoint *point);
+void DropObservationPointHosts(uint32_t pointId);
+void AgeObservationPointHosts(DB_HANDLE hdb, time_t cycleStartTime);
+unique_ptr<ObjectArray<ObservationPointHostRecord>> GetObservationPointHostsForNode(uint32_t nodeId);
+unique_ptr<ObjectArray<ObservationPointHostRecord>> GetObservationPointMatchedHosts(uint32_t pointId);
+void GetObservationPointIdsForNode(uint32_t nodeId, IntegerArray<uint32_t> *pointIds);
+bool NXCORE_EXPORTABLE IsNodeObserved(uint32_t nodeId);
+uint32_t GetObservationPointActiveHosts(ObservationPoint *point, shared_ptr<Table> *table);
+DataCollectionError GetObservationPointHostMetric(Node *node, const wchar_t *name, wchar_t *buffer, size_t size);
+DataCollectionError GetObservationPointHostTable(Node *node, const wchar_t *name, shared_ptr<Table> *table);
+DataCollectionError GetNodeObservationPointsTable(Node *node, shared_ptr<Table> *table);
 
 class Subnet;
 struct ProxyInfo;
@@ -6468,6 +6658,8 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxBusinessServicesById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCloudDomainById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxResourceById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxTrafficObserverById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxObservationPointById;
 
 // User agent messages
 extern Mutex g_userAgentNotificationListMutex;

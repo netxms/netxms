@@ -146,6 +146,8 @@
 #define OBJECT_SENSOR                37
 #define OBJECT_CLOUDDOMAIN           38
 #define OBJECT_RESOURCE              39
+#define OBJECT_TRAFFICOBSERVER       40
+#define OBJECT_OBSERVATIONPOINT      41
 
 /** Base value for custom object classes */
 #define OBJECT_CUSTOM                10000
@@ -1142,6 +1144,7 @@ enum HistoricalDataType
 #define DS_ETHERNET_IP        12
 #define DS_CLOUD_CONNECTOR    13
 #define DS_OTLP               14
+#define DS_TRAFFIC_OBSERVER   15
 
 /**
  * Resource state
@@ -1154,6 +1157,26 @@ enum HistoricalDataType
 #define RESOURCE_STATE_CREATING      5
 #define RESOURCE_STATE_DELETING      6
 #define RESOURCE_STATE_UNREACHABLE   7
+
+/**
+ * Observation point state
+ */
+#define OBSERVATION_POINT_STATE_UNKNOWN    0
+#define OBSERVATION_POINT_STATE_ACTIVE     1
+#define OBSERVATION_POINT_STATE_INACTIVE   2
+
+/**
+ * Traffic observer connection state
+ */
+#define TRAFFIC_OBSERVER_STATE_UNKNOWN      0
+#define TRAFFIC_OBSERVER_STATE_CONNECTED    1
+#define TRAFFIC_OBSERVER_STATE_UNREACHABLE  2
+#define TRAFFIC_OBSERVER_STATE_AUTH_FAILURE 3
+
+/**
+ * Traffic data query types (CMD_QUERY_TRAFFIC_DATA)
+ */
+#define TRAFFIC_QUERY_ACTIVE_HOSTS          1
 
 /**
  * Metric aggregation types

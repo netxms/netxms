@@ -3764,6 +3764,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(is_bit_set(node->getCapabilities(), NC_IS_SMCLP));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isObserved"))
+   {
+      value = vm->createValue(IsNodeObserved(node->getId()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isSNMP"))
    {
       value = vm->createValue(node->isSNMPSupported());
@@ -3843,6 +3847,23 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeType"))
    {
       value = vm->createValue(static_cast<int32_t>(node->getType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("observationPoints"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      unique_ptr<ObjectArray<ObservationPointHostRecord>> records = GetObservationPointHostsForNode(node->getId());
+      HashSet<uint32_t> seen;
+      for (int i = 0; i < records->size(); i++)
+      {
+         uint32_t pid = records->get(i)->pointId;
+         if (seen.contains(pid))
+            continue;
+         seen.put(pid);
+         shared_ptr<NetObj> point = FindObjectById(pid, OBJECT_OBSERVATIONPOINT);
+         if (point != nullptr)
+            array->append(point->createNXSLObject(vm));
+      }
+      value = vm->createValue(array);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfAreas"))
    {
@@ -7628,6 +7649,155 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    return value;
 }
 
+
+/**
+ * NXSL class TrafficObserver: constructor
+ */
+NXSL_TrafficObserverClass::NXSL_TrafficObserverClass() : NXSL_DCTargetClass()
+{
+   setName(L"TrafficObserver");
+}
+
+/**
+ * Implementation of "TrafficObserver" class: get attribute
+ */
+NXSL_Value *NXSL_TrafficObserverClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto observer = SharedObjectFromData<TrafficObserver>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("capabilities"))
+   {
+      value = vm->createValue(observer->getCapabilities());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectionState"))
+   {
+      value = vm->createValue(observer->getConnectionState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
+   {
+      value = vm->createValue(observer->getConnectorName());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("edition"))
+   {
+      value = vm->createValue(observer->getBackendEdition().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gracePeriod"))
+   {
+      value = vm->createValue(observer->getGracePeriod());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryStatus"))
+   {
+      value = vm->createValue(observer->getLastDiscoveryStatus());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(observer->getLastDiscoveryTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedNode"))
+   {
+      shared_ptr<NetObj> node = FindObjectById(observer->getLinkedNodeId(), OBJECT_NODE);
+      value = (node != nullptr) ? node->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("points"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      unique_ptr<SharedObjectArray<NetObj>> points = observer->getChildren(OBJECT_OBSERVATIONPOINT);
+      for(int i = 0; i < points->size(); i++)
+         array->append(points->getShared(i)->createNXSLObject(vm));
+      value = vm->createValue(array);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("product"))
+   {
+      value = vm->createValue(observer->getBackendProduct().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("removalPolicy"))
+   {
+      value = vm->createValue(observer->getRemovalPolicy());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("version"))
+   {
+      value = vm->createValue(observer->getBackendVersion().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneUIN"))
+   {
+      value = vm->createValue(observer->getZoneUIN());
+   }
+
+   return value;
+}
+
+/**
+ * NXSL class ObservationPoint: constructor
+ */
+NXSL_ObservationPointClass::NXSL_ObservationPointClass() : NXSL_DCTargetClass()
+{
+   setName(L"ObservationPoint");
+}
+
+/**
+ * Implementation of "ObservationPoint" class: get attribute
+ */
+NXSL_Value *NXSL_ObservationPointClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto point = SharedObjectFromData<ObservationPoint>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("effectiveZoneUIN"))
+   {
+      value = vm->createValue(point->getEffectiveZoneUIN());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("externalId"))
+   {
+      value = vm->createValue(point->getExternalId().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("inScope"))
+   {
+      value = vm->createValue(point->isInScope());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastDiscoveryTime"))
+   {
+      value = vm->createValue(static_cast<int64_t>(point->getLastDiscoveryTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("localNetworks"))
+   {
+      value = vm->createValue(point->getLocalNetworks().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("observer"))
+   {
+      shared_ptr<TrafficObserver> observer = point->getOwner();
+      value = (observer != nullptr) ? observer->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("providerState"))
+   {
+      value = vm->createValue(point->getProviderState().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("samplingRate"))
+   {
+      value = vm->createValue(point->getSamplingRate());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
+   {
+      value = vm->createValue(point->getState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(point->getPointType().c_str());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneUIN"))
+   {
+      value = vm->createValue(point->getZoneUIN());
+   }
+
+   return value;
+}
+
 /**
  * SNMPTransport::get() method
  */
@@ -9962,6 +10132,8 @@ NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_CloudDomainClass g_nxslCloudDomainClass;
 NXSL_ResourceClass g_nxslResourceClass;
+NXSL_TrafficObserverClass g_nxslTrafficObserverClass;
+NXSL_ObservationPointClass g_nxslObservationPointClass;
 NXSL_ServiceRootClass g_nxslServiceRootClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

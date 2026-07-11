@@ -201,6 +201,8 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
       classFilter.add(AbstractObject.OBJECT_TEMPLATE);
       classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_TRAFFICOBSERVER);
+      classFilter.add(AbstractObject.OBJECT_OBSERVATIONPOINT);
       return classFilter;
    }
 
@@ -228,6 +230,8 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SENSOR);
       classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
       classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_TRAFFICOBSERVER);
+      classFilter.add(AbstractObject.OBJECT_OBSERVATIONPOINT);
       return classFilter;
    }
 

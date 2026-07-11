@@ -244,6 +244,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected String lastConfigBackupJobMessage;
    protected boolean dataReconciliationActive;
    protected Date decommissionTime;
+   protected long[] observationPointIds;
 
 	/**
 	 * Create new node object.
@@ -384,6 +385,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 
       long decommissionTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_DECOMMISSION_TIME);
       decommissionTime = (decommissionTimeSeconds > 0) ? new Date(decommissionTimeSeconds * 1000) : null;
+
+      observationPointIds = msg.getFieldAsUInt32Array(NXCPCodes.VID_OBSERVATION_POINTS);
 
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1729,5 +1732,25 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public boolean isDataReconciliationActive()
    {
       return dataReconciliationActive;
+   }
+
+   /**
+    * Get IDs of observation points that currently observe this node's traffic.
+    *
+    * @return observation point object IDs (empty array if node is not observed)
+    */
+   public long[] getObservationPointIds()
+   {
+      return (observationPointIds != null) ? observationPointIds : new long[0];
+   }
+
+   /**
+    * Check if this node's traffic is observed by at least one observation point.
+    *
+    * @return true if node is observed
+    */
+   public boolean hasObservationPoints()
+   {
+      return (observationPointIds != null) && (observationPointIds.length > 0);
    }
 }

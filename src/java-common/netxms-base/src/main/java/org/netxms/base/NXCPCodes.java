@@ -555,6 +555,9 @@ public class NXCPCodes
    public static final int CMD_RESET_AI_OPERATOR = 0x0219;
    public static final int CMD_SET_AI_OBSERVATION_STATE = 0x021A;
    public static final int CMD_RESTORE_DEVICE_CONFIG = 0x021B;
+   public static final int CMD_GET_TRAFFIC_CONNECTOR_NAMES = 0x021C;
+   public static final int CMD_GET_TRAFFIC_METRIC_DEFS = 0x021D;
+   public static final int CMD_QUERY_TRAFFIC_DATA = 0x021E;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1570,6 +1573,16 @@ public class NXCPCodes
    public static final long VID_AI_TOKEN_BUDGET = 1006;
    public static final long VID_FAILURE_REASON = 1007;
    public static final long VID_USE_STARTUP_CONFIG = 1008;
+   public static final long VID_SYNC_CONFIG = 1009;
+   public static final long VID_IN_SCOPE = 1010;
+   public static final long VID_LOCAL_NETWORKS = 1011;
+   public static final long VID_BACKEND_PRODUCT = 1012;
+   public static final long VID_BACKEND_EDITION = 1013;
+   public static final long VID_CONNECTION_STATE = 1014;
+   public static final long VID_TRAFFIC_OBSERVER_ID = 1015;
+   public static final long VID_SAMPLING_RATE = 1016;
+   public static final long VID_TRAFFIC_QUERY_TYPE = 1017;
+   public static final long VID_OBSERVATION_POINTS = 1018;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
@@ -1711,4 +1724,5 @@ public class NXCPCodes
    public static final long VID_ACTIVITY_LIST_BASE = 0x61000000L;
    public static final long VID_COMMENT_LIST_BASE = 0x62000000L;
    public static final long VID_OTLP_METRIC_LIST_BASE = 0x64000000L;
+   public static final long VID_TRAFFIC_METRIC_LIST_BASE = 0x66000000L;
 }

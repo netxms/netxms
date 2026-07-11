@@ -100,6 +100,7 @@ import org.netxms.client.constants.IncidentState;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TrafficDataQueryType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DCOStatusHolder;
@@ -189,12 +190,14 @@ import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.ObservationPoint;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.TrafficObserver;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
@@ -1707,6 +1710,12 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_RESOURCE:
             object = new Resource(msg, this);
+            break;
+         case AbstractObject.OBJECT_TRAFFICOBSERVER:
+            object = new TrafficObserver(msg, this);
+            break;
+         case AbstractObject.OBJECT_OBSERVATIONPOINT:
+            object = new ObservationPoint(msg, this);
             break;
          case AbstractObject.OBJECT_SERVICEROOT:
             object = new ServiceRoot(msg, this);
@@ -7115,6 +7124,27 @@ public class NXCSession
    }
 
    /**
+    * Query live active host list of an observation point. The result is served from the
+    * traffic connector's cache (refreshed per its TTL) and includes matched node references
+    * where the server's host matching pass linked a host to a monitored node.
+    *
+    * @param pointObjectId observation point object ID
+    * @return active host table
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Table getActiveTrafficHosts(long pointObjectId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_TRAFFIC_DATA);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, pointObjectId);
+      msg.setFieldInt16(NXCPCodes.VID_TRAFFIC_QUERY_TYPE, TrafficDataQueryType.ACTIVE_HOSTS);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new Table(response);
+   }
+
+   /**
     * Hook method to allow adding of custom object creation data to NXCP message. Default implementation does nothing.
     *
     * @param data object creation data passed to createObject
@@ -7239,6 +7269,12 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
             msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
             msg.setField(NXCPCodes.VID_DISCOVERY_FILTER, data.getDiscoveryFilter());
+            msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
+            msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
+            break;
+         case AbstractObject.OBJECT_TRAFFICOBSERVER:
+            msg.setField(NXCPCodes.VID_CONNECTOR_NAME, data.getConnectorName());
+            msg.setField(NXCPCodes.VID_CLOUD_CREDENTIALS, data.getCredentials());
             msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
             msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
             break;
@@ -8250,8 +8286,17 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_REMOVAL_POLICY, data.getRemovalPolicy());
       if (data.getGracePeriod() != null)
          msg.setFieldInt32(NXCPCodes.VID_GRACE_PERIOD, data.getGracePeriod());
-      if (data.getCloudLinkedNodeId() != null)
-         msg.setFieldUInt32(NXCPCodes.VID_LINKED_NODE_ID, data.getCloudLinkedNodeId());
+      if (data.getLinkedNodeId() != null)
+         msg.setFieldUInt32(NXCPCodes.VID_LINKED_NODE_ID, data.getLinkedNodeId());
+
+      if (data.getSyncConfig() != null)
+         msg.setField(NXCPCodes.VID_SYNC_CONFIG, data.getSyncConfig());
+
+      if (data.getInScope() != null)
+         msg.setField(NXCPCodes.VID_IN_SCOPE, data.getInScope());
+
+      if (data.getZoneUIN() != null)
+         msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, data.getZoneUIN());
 
       modifyCustomObject(data, userData, msg);
 
@@ -17163,5 +17208,48 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
+   }
+
+   /**
+    * Get names of registered traffic connectors.
+    *
+    * @return list of traffic connector names
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> getTrafficConnectorNames() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TRAFFIC_CONNECTOR_NAMES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
+   }
+
+   /**
+    * Get traffic observer metric definitions for the DCI editor metric picker. The server
+    * resolves the metric level and connector from the target object class (traffic observer,
+    * observation point, or node/template) and filters by the observer's capability set.
+    *
+    * @param objectId ID of the DCI target object
+    * @return list of available traffic metric definitions (may be empty)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<TrafficMetric> getTrafficMetricDefinitions(long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TRAFFIC_METRIC_DEFS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<TrafficMetric> list = new ArrayList<TrafficMetric>(count);
+      long fieldId = NXCPCodes.VID_TRAFFIC_METRIC_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         list.add(new TrafficMetric(response, fieldId));
+         fieldId += 10;
+      }
+      return list;
    }
 }

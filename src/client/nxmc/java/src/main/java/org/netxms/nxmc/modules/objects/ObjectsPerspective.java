@@ -153,6 +153,9 @@ import org.netxms.nxmc.modules.objects.views.elements.Comments;
 import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
+import org.netxms.nxmc.modules.traffic.views.NodeTrafficView;
+import org.netxms.nxmc.modules.traffic.views.ObservationPointView;
+import org.netxms.nxmc.modules.traffic.views.TrafficObserverView;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -292,6 +295,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new WirelessStations());
 
       NXCSession session = Registry.getSession();
+
+      if (session.isServerComponentRegistered("TRAFFIC"))
+      {
+         addMainView(new TrafficObserverView());
+         addMainView(new ObservationPointView());
+         addMainView(new NodeTrafficView());
+      }
 
       ServiceLoader<ObjectViewDescriptor> viewLoader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
       for(ObjectViewDescriptor v : viewLoader)

@@ -546,6 +546,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("NETWORKMAPROOT", vm->createValue(OBJECT_NETWORKMAPROOT));
    vm->addConstant("NETWORKSERVICE", vm->createValue(OBJECT_NETWORKSERVICE));
    vm->addConstant("NODE", vm->createValue(OBJECT_NODE));
+   vm->addConstant("OBSERVATIONPOINT", vm->createValue(OBJECT_OBSERVATIONPOINT));
    vm->addConstant("RACK", vm->createValue(OBJECT_RACK));
    vm->addConstant("RESOURCE", vm->createValue(OBJECT_RESOURCE));
    vm->addConstant("SENSOR", vm->createValue(OBJECT_SENSOR));
@@ -554,6 +555,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("TEMPLATE", vm->createValue(OBJECT_TEMPLATE));
    vm->addConstant("TEMPLATEGROUP", vm->createValue(OBJECT_TEMPLATEGROUP));
    vm->addConstant("TEMPLATEROOT", vm->createValue(OBJECT_TEMPLATEROOT));
+   vm->addConstant("TRAFFICOBSERVER", vm->createValue(OBJECT_TRAFFICOBSERVER));
    vm->addConstant("VPNCONNECTOR", vm->createValue(OBJECT_VPNCONNECTOR));
    vm->addConstant("WIRELESSDOMAIN", vm->createValue(OBJECT_WIRELESSDOMAIN));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));

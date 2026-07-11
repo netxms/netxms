@@ -88,6 +88,8 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_WIRELESSDOMAIN, ResourceManager.getImage(display, "icons/objects/wireless-domain.png"));
       images.put(AbstractObject.OBJECT_CLOUDDOMAIN, ResourceManager.getImage(display, "icons/objects/cloud-domain.png"));
       images.put(AbstractObject.OBJECT_RESOURCE, ResourceManager.getImage(display, "icons/objects/resource.png"));
+      images.put(AbstractObject.OBJECT_TRAFFICOBSERVER, ResourceManager.getImage(display, "icons/objects/traffic-observer.png"));
+      images.put(AbstractObject.OBJECT_OBSERVATIONPOINT, ResourceManager.getImage(display, "icons/objects/observation-point.png"));
       images.put(AbstractObject.OBJECT_ZONE, ResourceManager.getImage(display, "icons/objects/zone.gif"));
 
       display.disposeExec(() -> {

@@ -27,14 +27,14 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netmap_content.cpp \
 			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
 			netsrv.cpp network_cred.cpp node.cpp notification_channel.cpp \
-			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
+			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp observation_point.cpp \
 			object_queries.cpp objects.cpp objtools.cpp ospf.cpp otellog.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp svg.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \
-			tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp \
+			tools.cpp topology_builder.cpp tracert.cpp traffic_connector.cpp traffic_hosts.cpp traffic_observer.cpp tunnel.cpp \
 			ua_notification_item.cpp uniroot.cpp userdb.cpp userdb_objects.cpp \
 			vnc.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			webapi.cpp webapi_auth.cpp webapi_context.cpp webapi_router.cpp webapi_tls.cpp \

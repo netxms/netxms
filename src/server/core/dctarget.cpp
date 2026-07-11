@@ -1331,6 +1331,26 @@ uint32_t DataCollectionTarget::getMetricForClient(int origin, uint32_t userId, c
          if (checkAccessRights(userId, OBJECT_ACCESS_READ))
             rc = getMetricFromWebService(name, buffer, size);
          break;
+      case DS_TRAFFIC_OBSERVER:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+         {
+            switch(getObjectClass())
+            {
+               case OBJECT_TRAFFICOBSERVER:
+                  rc = static_cast<TrafficObserver*>(this)->getMetricFromConnector(name, buffer, size);
+                  break;
+               case OBJECT_OBSERVATIONPOINT:
+                  rc = static_cast<ObservationPoint*>(this)->getMetricFromConnector(name, buffer, size);
+                  break;
+               case OBJECT_NODE:
+                  rc = GetObservationPointHostMetric(static_cast<Node*>(this), name, buffer, size);
+                  break;
+               default:
+                  rc = DCE_NOT_SUPPORTED;
+                  break;
+            }
+         }
+         break;
       default:
          return RCC_INCOMPATIBLE_OPERATION;
    }
@@ -1370,6 +1390,23 @@ uint32_t DataCollectionTarget::getTableForClient(int origin, uint32_t userId, co
       case DS_SCRIPT:
          if (checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
             rc = getTableFromScript(name, table, this, shared_ptr<DCObjectInfo>());
+         break;
+      case DS_TRAFFIC_OBSERVER:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+         {
+            switch(getObjectClass())
+            {
+               case OBJECT_OBSERVATIONPOINT:
+                  rc = static_cast<ObservationPoint*>(this)->getTableFromConnector(name, table);
+                  break;
+               case OBJECT_NODE:
+                  rc = GetObservationPointHostTable(static_cast<Node*>(this), name, table);
+                  break;
+               default:
+                  rc = DCE_NOT_SUPPORTED;
+                  break;
+            }
+         }
          break;
       default:
          return RCC_INCOMPATIBLE_OPERATION;

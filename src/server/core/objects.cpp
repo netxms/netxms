@@ -70,6 +70,8 @@ ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
 ObjectIndex g_idxCloudDomainById;
 ObjectIndex g_idxResourceById;
+ObjectIndex g_idxTrafficObserverById;
+ObjectIndex g_idxObservationPointById;
 ObjectIndex g_idxAssetById;
 ObjectIndex g_idxCollectorById;
 ObjectIndex g_idxCircuitById;
@@ -442,6 +444,12 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          case OBJECT_RESOURCE:
             g_idxResourceById.put(object->getId(), object);
             break;
+         case OBJECT_TRAFFICOBSERVER:
+            g_idxTrafficObserverById.put(object->getId(), object);
+            break;
+         case OBJECT_OBSERVATIONPOINT:
+            g_idxObservationPointById.put(object->getId(), object);
+            break;
          default:
 				{
 					bool processed = false;
@@ -629,6 +637,12 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
       case OBJECT_RESOURCE:
          g_idxResourceById.remove(object.getId());
+         break;
+      case OBJECT_TRAFFICOBSERVER:
+         g_idxTrafficObserverById.remove(object.getId());
+         break;
+      case OBJECT_OBSERVATIONPOINT:
+         g_idxObservationPointById.remove(object.getId());
          break;
       default:
 			{
@@ -1130,6 +1144,10 @@ static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
          return &g_idxCloudDomainById;
       case OBJECT_RESOURCE:
          return &g_idxResourceById;
+      case OBJECT_TRAFFICOBSERVER:
+         return &g_idxTrafficObserverById;
+      case OBJECT_OBSERVATIONPOINT:
+         return &g_idxObservationPointById;
       case OBJECT_SUBNET:
          return &g_idxSubnetById;
       case OBJECT_ZONE:
@@ -1527,6 +1545,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("cloud_domains"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("resources"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("traffic_observers"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("observation_points"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("resource_tags"), _T("resource_id,tag_key"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("assets"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("asset_properties"), _T("asset_id,attr_name"), _T("*"), intColumns);
@@ -1637,6 +1657,10 @@ bool LoadObjects()
    g_idxCloudDomainById.setStartupMode(false);
    LoadObjectsFromTable<Resource>(_T("resource"), hdb, preparedStatements, _T("resources"));
    g_idxResourceById.setStartupMode(false);
+   LoadObjectsFromTable<TrafficObserver>(_T("traffic observer"), hdb, preparedStatements, _T("traffic_observers"));
+   g_idxTrafficObserverById.setStartupMode(false);
+   LoadObjectsFromTable<ObservationPoint>(_T("observation point"), hdb, preparedStatements, _T("observation_points"));
+   g_idxObservationPointById.setStartupMode(false);
 
    LoadObjectsFromTable<Node>(_T("node"), hdb, preparedStatements, _T("nodes"), nullptr,
       IsZoningEnabled() ?
@@ -2110,7 +2134,8 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_SUBNET) ||
              (childClass == OBJECT_WIRELESSDOMAIN) ||
              (childClass == OBJECT_CLOUDDOMAIN) ||
-             (childClass == OBJECT_RESOURCE))
+             (childClass == OBJECT_RESOURCE) ||
+             (childClass == OBJECT_TRAFFICOBSERVER))
             return true;
          break;
       case OBJECT_CIRCUIT:
@@ -2141,7 +2166,9 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_CLOUDDOMAIN) ||
-             (childClass == OBJECT_RESOURCE))
+             (childClass == OBJECT_RESOURCE) ||
+             (childClass == OBJECT_TRAFFICOBSERVER) ||
+             (childClass == OBJECT_OBSERVATIONPOINT))
             return true;
          break;
       case OBJECT_NETWORKMAPROOT:
@@ -2188,6 +2215,10 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
       case OBJECT_RESOURCE:
          if (childClass == OBJECT_RESOURCE)
+            return true;
+         break;
+      case OBJECT_TRAFFICOBSERVER:
+         if (childClass == OBJECT_OBSERVATIONPOINT)
             return true;
          break;
       case OBJECT_ZONE:
@@ -3008,6 +3039,10 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
          break;
       case OBJECT_CLOUDDOMAIN:
          object = make_shared<CloudDomain>(objectName, json);
+         NetObjInsert(object, true, false);
+         break;
+      case OBJECT_TRAFFICOBSERVER:
+         object = make_shared<TrafficObserver>(objectName, json);
          NetObjInsert(object, true, false);
          break;
       case OBJECT_NETWORKMAP:

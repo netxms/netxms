@@ -2816,6 +2816,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("DataSource::SMCLP", DS_SMCLP);
       NXSL_ENV_CONSTANT("DataSource::SNMP", DS_SNMP_AGENT);
       NXSL_ENV_CONSTANT("DataSource::SSH", DS_SSH);
+      NXSL_ENV_CONSTANT("DataSource::TRAFFIC_OBSERVER", DS_TRAFFIC_OBSERVER);
       NXSL_ENV_CONSTANT("DataSource::WEB_SERVICE", DS_WEB_SERVICE);
       NXSL_ENV_CONSTANT("DataSource::WINPERF", DS_WINPERF);
 

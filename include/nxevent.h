@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -230,6 +230,10 @@
 #define EVENT_DEVICE_CONFIG_RESTORE_STARTED         175
 #define EVENT_DEVICE_CONFIG_RESTORE_COMPLETED       176
 #define EVENT_DEVICE_CONFIG_RESTORE_FAILED          177
+#define EVENT_TRAFFIC_OBSERVER_UNREACHABLE          178
+#define EVENT_TRAFFIC_OBSERVER_RECOVERED            179
+#define EVENT_OBSERVATION_POINT_STATE_CHANGED       180
+#define EVENT_TRAFFIC_SYNC_FAILED                   181
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

@@ -463,6 +463,11 @@ static void HouseKeeper()
       if (!ThrottleHousekeeper())
          break;
 
+      // Age out stale observation point host records
+      AgeObservationPointHosts(hdb, cycleStartTime);
+      if (!ThrottleHousekeeper())
+         break;
+
 		// Remove outdated audit log records
 		int32_t retentionTime = ConfigReadULong(_T("AuditLog.RetentionTime"), 90);
 		if (retentionTime > 0)

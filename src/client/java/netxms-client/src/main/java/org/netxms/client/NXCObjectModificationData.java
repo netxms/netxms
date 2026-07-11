@@ -221,7 +221,10 @@ public class NXCObjectModificationData
    private String discoveryFilter;
    private Integer removalPolicy;
    private Integer gracePeriod;
-   private Long cloudLinkedNodeId;
+   private Long linkedNodeId;
+   private String syncConfig;
+   private Boolean inScope;
+   private Integer zoneUIN;
 
    /**
     * Constructor for creating modification data for given object
@@ -2839,18 +2842,66 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the cloudLinkedNodeId
+    * @return ID of node linked to the object (cloud resource or traffic observer)
     */
-   public Long getCloudLinkedNodeId()
+   public Long getLinkedNodeId()
    {
-      return cloudLinkedNodeId;
+      return linkedNodeId;
    }
 
    /**
-    * @param cloudLinkedNodeId the cloudLinkedNodeId to set
+    * @param linkedNodeId ID of node linked to the object (cloud resource or traffic observer; 0 = not linked)
     */
-   public void setCloudLinkedNodeId(long cloudLinkedNodeId)
+   public void setLinkedNodeId(long linkedNodeId)
    {
-      this.cloudLinkedNodeId = cloudLinkedNodeId;
+      this.linkedNodeId = linkedNodeId;
+   }
+
+   /**
+    * @return the syncConfig
+    */
+   public String getSyncConfig()
+   {
+      return syncConfig;
+   }
+
+   /**
+    * @param syncConfig the syncConfig to set
+    */
+   public void setSyncConfig(String syncConfig)
+   {
+      this.syncConfig = syncConfig;
+   }
+
+   /**
+    * @return the inScope flag
+    */
+   public Boolean getInScope()
+   {
+      return inScope;
+   }
+
+   /**
+    * @param inScope the inScope flag to set
+    */
+   public void setInScope(boolean inScope)
+   {
+      this.inScope = inScope;
+   }
+
+   /**
+    * @return the zoneUIN
+    */
+   public Integer getZoneUIN()
+   {
+      return zoneUIN;
+   }
+
+   /**
+    * @param zoneUIN the zoneUIN to set
+    */
+   public void setZoneUIN(int zoneUIN)
+   {
+      this.zoneUIN = zoneUIN;
    }
 }

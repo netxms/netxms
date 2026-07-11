@@ -219,6 +219,23 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar
                *error = DCE_NOT_SUPPORTED;
             }
             break;
+         case DS_TRAFFIC_OBSERVER:
+            switch(dcTarget->getObjectClass())
+            {
+               case OBJECT_TRAFFICOBSERVER:
+                  *error = static_cast<TrafficObserver*>(dcTarget)->getMetricFromConnector(dci.getName(), buffer, MAX_RESULT_LENGTH);
+                  break;
+               case OBJECT_OBSERVATIONPOINT:
+                  *error = static_cast<ObservationPoint*>(dcTarget)->getMetricFromConnector(dci.getName(), buffer, MAX_RESULT_LENGTH);
+                  break;
+               case OBJECT_NODE:
+                  *error = GetObservationPointHostMetric(static_cast<Node*>(dcTarget), dci.getName(), buffer, MAX_RESULT_LENGTH);
+                  break;
+               default:
+                  *error = DCE_NOT_SUPPORTED;
+                  break;
+            }
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;
@@ -273,6 +290,20 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, const DCTa
             break;
          case DS_SCRIPT:
             *error = dcTarget->getTableFromScript(table.getName(), &result, static_cast<DataCollectionTarget*>(table.getOwner().get()), table.createDescriptor());
+            break;
+         case DS_TRAFFIC_OBSERVER:
+            switch(dcTarget->getObjectClass())
+            {
+               case OBJECT_OBSERVATIONPOINT:
+                  *error = static_cast<ObservationPoint*>(dcTarget)->getTableFromConnector(table.getName(), &result);
+                  break;
+               case OBJECT_NODE:
+                  *error = GetObservationPointHostTable(static_cast<Node*>(dcTarget), table.getName(), &result);
+                  break;
+               default:
+                  *error = DCE_NOT_SUPPORTED;
+                  break;
+            }
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;

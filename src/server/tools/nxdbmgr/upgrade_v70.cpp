@@ -24,6 +24,94 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.10 to 70.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE traffic_observers ("
+      L"   id integer not null,"
+      L"   connector_name varchar(63) not null,"
+      L"   credentials varchar(4000) null,"
+      L"   zone_uin integer not null,"
+      L"   node_id integer not null,"
+      L"   removal_policy smallint not null,"
+      L"   grace_period integer not null,"
+      L"   sync_config varchar(4000) null,"
+      L"   last_discovery_status smallint not null,"
+      L"   last_discovery_time integer not null,"
+      L"   last_discovery_msg varchar(4000) null,"
+      L"   PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE observation_points ("
+      L"   id integer not null,"
+      L"   observer_id integer not null,"
+      L"   external_id varchar(127) not null,"
+      L"   point_type varchar(31) null,"
+      L"   in_scope char(1) not null,"
+      L"   zone_uin integer not null,"
+      L"   sampling_rate integer not null,"
+      L"   local_networks varchar(4000) null,"
+      L"   state smallint not null,"
+      L"   provider_state varchar(255) null,"
+      L"   last_discovery_time integer not null,"
+      L"   PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE observation_point_hosts ("
+      L"   point_id integer not null,"
+      L"   host_key varchar(127) not null,"
+      L"   ip_addr varchar(48) not null,"
+      L"   vlan integer not null,"
+      L"   node_id integer not null,"
+      L"   first_seen integer not null,"
+      L"   last_seen integer not null,"
+      L"   PRIMARY KEY(point_id,host_key))"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_TRAFFIC_OBSERVER_UNREACHABLE, L"SYS_TRAFFIC_OBSERVER_UNREACHABLE",
+      EVENT_SEVERITY_MAJOR, EF_LOG, L"e82bba3d-973c-42c6-83ed-056e6184270c",
+      L"Traffic analyzer API unreachable (%2)",
+      L"Generated when traffic analyzer API becomes unreachable or authentication fails.\r\n"
+      L"Parameters:\r\n"
+      L"   1) connectorName - Traffic connector name\r\n"
+      L"   2) reason - Failure reason\r\n"
+      L"   3) details - Error details"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_TRAFFIC_OBSERVER_RECOVERED, L"SYS_TRAFFIC_OBSERVER_RECOVERED",
+      EVENT_SEVERITY_NORMAL, EF_LOG, L"3fb646b4-d974-4789-84b1-370977dbe47d",
+      L"Traffic analyzer API connectivity restored",
+      L"Generated when connectivity to traffic analyzer API is restored.\r\n"
+      L"Parameters:\r\n"
+      L"   1) connectorName - Traffic connector name"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_OBSERVATION_POINT_STATE_CHANGED, L"SYS_OBSERVATION_POINT_STATE_CHANGED",
+      EVENT_SEVERITY_WARNING, EF_LOG, L"23e82743-a154-4397-a35a-0b571de1e4a0",
+      L"Observation point state changed from %2 to %3",
+      L"Generated when observation point state changes.\r\n"
+      L"Parameters:\r\n"
+      L"   1) externalId - Connector-side point identifier\r\n"
+      L"   2) oldState - Previous state code\r\n"
+      L"   3) newState - New state code\r\n"
+      L"   4) providerState - Raw analyzer-side state"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_TRAFFIC_SYNC_FAILED, L"SYS_TRAFFIC_SYNC_FAILED",
+      EVENT_SEVERITY_MINOR, EF_LOG, L"63faf883-caf2-4628-a4b2-a215cdd04d36",
+      L"Configuration sync surface %1 failed: %2",
+      L"Generated when a configuration sync surface fails to push data to the traffic analyzer.\r\n"
+      L"Parameters:\r\n"
+      L"   1) surface - Sync surface name\r\n"
+      L"   2) error - Error message"));
+
+   CHK_EXEC(CreateConfigParam(L"TrafficObserver.HostRetentionTime", L"7",
+      L"Retention time in days for observation point host match records. Records not refreshed within this period will be deleted by housekeeping process.",
+      L"days", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 70.9 to 70.10
  */
 static bool H_UpgradeFromV9()
@@ -402,17 +490,18 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 9, 70, 10, H_UpgradeFromV9 },
-   { 8, 70, 9, H_UpgradeFromV8 },
-   { 7, 70, 8, H_UpgradeFromV7 },
-   { 6, 70, 7, H_UpgradeFromV6 },
-   { 5, 70, 6, H_UpgradeFromV5 },
-   { 4, 70, 5, H_UpgradeFromV4 },
-   { 3, 70, 4, H_UpgradeFromV3 },
-   { 2, 70, 3, H_UpgradeFromV2 },
-   { 1, 70, 2, H_UpgradeFromV1 },
-   { 0, 70, 1, H_UpgradeFromV0 },
-   { 0, 0,  0, nullptr }
+   { 10, 70, 11, H_UpgradeFromV10 },
+   { 9,  70, 10, H_UpgradeFromV9  },
+   { 8,  70, 9,  H_UpgradeFromV8  },
+   { 7,  70, 8,  H_UpgradeFromV7  },
+   { 6,  70, 7,  H_UpgradeFromV6  },
+   { 5,  70, 6,  H_UpgradeFromV5  },
+   { 4,  70, 5,  H_UpgradeFromV4  },
+   { 3,  70, 4,  H_UpgradeFromV3  },
+   { 2,  70, 3,  H_UpgradeFromV2  },
+   { 1,  70, 2,  H_UpgradeFromV1  },
+   { 0,  70, 1,  H_UpgradeFromV0  },
+   { 0,  0,  0,  nullptr }
 };
 
 /**

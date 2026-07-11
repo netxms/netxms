@@ -68,6 +68,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
       list.add(new AgentTable("Topology.SwitchForwardingDatabase", "Switch forwarding database", topologyInstanceColumns));
       list.add(new AgentTable("Topology.WirelessStations", "Wireless stations table", topologyInstanceColumns));
 
+      list.add(new AgentTable("Traffic.ObservationPoints", "Traffic observation points", new String[] { "INSTANCE" }));
+
       if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
       {
          list.add(new AgentTable("Server.AI.Providers", "AI providers", new String[] { "NAME" }));

@@ -2207,6 +2207,48 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   5) userName - Name of user who initiated the restore' CONCAT CRLF CONCAT
 		'   6) errorMessage - Error message'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TRAFFIC_OBSERVER_UNREACHABLE, 'SYS_TRAFFIC_OBSERVER_UNREACHABLE', 'e82bba3d-973c-42c6-83ed-056e6184270c',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Traffic analyzer API unreachable (%2)',
+		'Generated when traffic analyzer API becomes unreachable or authentication fails.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) connectorName - Traffic connector name' CONCAT CRLF CONCAT
+		'   2) reason - Failure reason' CONCAT CRLF CONCAT
+		'   3) details - Error details'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TRAFFIC_OBSERVER_RECOVERED, 'SYS_TRAFFIC_OBSERVER_RECOVERED', '3fb646b4-d974-4789-84b1-370977dbe47d',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Traffic analyzer API connectivity restored',
+		'Generated when connectivity to traffic analyzer API is restored.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) connectorName - Traffic connector name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_OBSERVATION_POINT_STATE_CHANGED, 'SYS_OBSERVATION_POINT_STATE_CHANGED', '23e82743-a154-4397-a35a-0b571de1e4a0',
+		EVENT_SEVERITY_WARNING, 1,
+		'Observation point state changed from %2 to %3',
+		'Generated when observation point state changes.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) externalId - Connector-side point identifier' CONCAT CRLF CONCAT
+		'   2) oldState - Previous state code' CONCAT CRLF CONCAT
+		'   3) newState - New state code' CONCAT CRLF CONCAT
+		'   4) providerState - Raw analyzer-side state'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TRAFFIC_SYNC_FAILED, 'SYS_TRAFFIC_SYNC_FAILED', '63faf883-caf2-4628-a4b2-a215cdd04d36',
+		EVENT_SEVERITY_MINOR, 1,
+		'Configuration sync surface %1 failed: %2',
+		'Generated when a configuration sync surface fails to push data to the traffic analyzer.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) surface - Sync surface name' CONCAT CRLF CONCAT
+		'   2) error - Error message'
+	);
 
 /*
 ** SNMP traps

@@ -268,6 +268,28 @@ public:
 };
 
 /**
+ * NXSL "TrafficObserver" class
+ */
+class NXSL_TrafficObserverClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_TrafficObserverClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "ObservationPoint" class
+ */
+class NXSL_ObservationPointClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_ObservationPointClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "Asset" class
  */
 class NXSL_AssetClass : public NXSL_NetObjClass
@@ -882,6 +904,8 @@ extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_CloudDomainClass g_nxslCloudDomainClass;
 extern NXSL_ResourceClass g_nxslResourceClass;
+extern NXSL_TrafficObserverClass g_nxslTrafficObserverClass;
+extern NXSL_ObservationPointClass g_nxslObservationPointClass;
 extern NXSL_ServiceRootClass g_nxslServiceRootClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

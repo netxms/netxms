@@ -58,6 +58,7 @@ import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServiceProt
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateCloudDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateTrafficObserverDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
@@ -108,6 +109,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateTemplate;
    private Action actionCreateTemplateGroup;
    private Action actionCreateVpnConnector;
+   private Action actionCreateTrafficObserver;
    private Action actionCreateWirelessDomain;
    private Action actionCreateZone;
 
@@ -154,6 +156,8 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
+      if (Registry.getSession().isServerComponentRegistered("TRAFFIC"))
+         addAction(this, actionCreateTrafficObserver, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateWirelessDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateZone, (AbstractObject o) -> (o instanceof EntireNetwork) && Registry.getSession().isZoningEnabled());
    }
@@ -644,6 +648,38 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateTemplate = new GenericObjectCreationAction(i18n.tr("&Template..."), AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template"));
       actionCreateTemplateGroup = new GenericObjectCreationAction(i18n.tr("Template &group..."), AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
+      actionCreateTrafficObserver = new Action(i18n.tr("&Traffic observer...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateTrafficObserverDialog dlg = new CreateTrafficObserverDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating traffic observer"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_TRAFFICOBSERVER, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setConnectorName(dlg.getConnectorName());
+                  cd.setCredentials(dlg.getCredentials());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create traffic observer object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
       actionCreateWirelessDomain = new GenericObjectCreationAction(i18n.tr("&Wireless domain..."), AbstractObject.OBJECT_WIRELESSDOMAIN, i18n.tr("Wireless Domain"));
 
       actionCreateZone = new Action(i18n.tr("&Zone...")) {

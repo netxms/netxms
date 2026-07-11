@@ -139,6 +139,7 @@ SERVER_DIRS = \
     src/server/redmine \
     src/server/oxidized \
     src/server/ntcb \
+    src/server/ntopng \
     src/server/docker \
     src/server/otlp \
     src/server/pdsdrv \
