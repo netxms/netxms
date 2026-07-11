@@ -32,7 +32,7 @@ static bool H_UpgradeFromV31()
    CHK_EXEC(CreateConfigParam(L"AITaskExecutionLog.RetentionTime", L"90",
       L"Retention time in days for the records in AI task execution log. All records older than specified will be deleted by housekeeping process.",
       L"days", 'I', true, false, false, false));
-   CHK_EXEC(SetMinorSchemaVersion(6));
+   CHK_EXEC(SetMinorSchemaVersion(32));
    return true;
 }
 
