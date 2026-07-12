@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.7 to 70.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.JobHistorySize", L"1000",
+      L"Maximum number of most recent completed package deployment jobs returned to clients from the deployment history.",
+      L"jobs", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 70.6 to 70.7
  */
 static bool H_UpgradeFromV6()
@@ -321,6 +333,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7, 70, 8, H_UpgradeFromV7 },
    { 6, 70, 7, H_UpgradeFromV6 },
    { 5, 70, 6, H_UpgradeFromV5 },
    { 4, 70, 5, H_UpgradeFromV4 },

@@ -843,9 +843,13 @@ void StartPackageDeploymentManager()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb,
+   // Load only active jobs (scheduled or pending). Terminal jobs (completed/failed/cancelled) are not re-queued and are
+   // served to clients directly from the database on demand, so there is no need to keep them resident for the server's lifetime.
+   wchar_t query[1024];
+   nx_swprintf(query, 1024,
       L"SELECT id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description FROM package_deployment_jobs j "
-      L"LEFT OUTER JOIN agent_pkg p ON p.pkg_id=j.pkg_id");
+      L"LEFT OUTER JOIN agent_pkg p ON p.pkg_id=j.pkg_id WHERE j.status IN (%d,%d)", PKG_JOB_SCHEDULED, PKG_JOB_PENDING);
+   DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -853,15 +857,9 @@ void StartPackageDeploymentManager()
       {
          auto job = make_shared<PackageDeploymentJob>(hResult, i);
          s_jobs.put(job->getId(), job);
-         if (job->getStatus() == PKG_JOB_SCHEDULED)
-         {
-            s_jobQueue.push(job);
-         }
-         else if (job->getStatus() == PKG_JOB_PENDING)
-         {
+         if (job->getStatus() == PKG_JOB_PENDING)
             job->setStatus(PKG_JOB_SCHEDULED);
-            s_jobQueue.push(job);
-         }
+         s_jobQueue.push(job);
       }
       DBFreeResult(hResult);
    }
@@ -882,35 +880,115 @@ void StopPackageDeploymentManager()
 }
 
 /**
- * Get package deployment jobs
+ * Check if user has read access to given deployment job
+ */
+static bool CheckJobReadAccess(const PackageDeploymentJob& job, uint32_t userId)
+{
+   if (userId == 0)
+      return true;
+   shared_ptr<NetObj> node = FindObjectById(job.getNodeId());
+   return (node != nullptr) && node->checkAccessRights(userId, OBJECT_ACCESS_READ);
+}
+
+/**
+ * Build query for retrieving most recent terminal (completed/failed/cancelled) jobs from database, limited to given number of rows
+ */
+static StringBuffer BuildJobHistoryQuery(int limit)
+{
+   StringBuffer query;
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         query.appendFormattedString(L"SELECT TOP %d ", limit);
+         break;
+      case DB_SYNTAX_INFORMIX:
+         query.appendFormattedString(L"SELECT FIRST %d ", limit);
+         break;
+      case DB_SYNTAX_ORACLE:
+         query.append(L"SELECT * FROM (SELECT ");
+         break;
+      default:
+         query.append(L"SELECT ");
+         break;
+   }
+
+   query.appendFormattedString(
+      L"id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description "
+      L"FROM package_deployment_jobs j LEFT OUTER JOIN agent_pkg p ON p.pkg_id=j.pkg_id WHERE j.status IN (%d,%d,%d) ORDER BY j.completion_time DESC",
+      PKG_JOB_COMPLETED, PKG_JOB_FAILED, PKG_JOB_CANCELLED);
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
+         query.appendFormattedString(L" LIMIT %d", limit);
+         break;
+      case DB_SYNTAX_ORACLE:
+         query.appendFormattedString(L") WHERE ROWNUM<=%d", limit);
+         break;
+      case DB_SYNTAX_DB2:
+         query.appendFormattedString(L" FETCH FIRST %d ROWS ONLY", limit);
+         break;
+   }
+   return query;
+}
+
+/**
+ * Get package deployment jobs. Active jobs (and jobs completed during current server session) are served from the in-memory
+ * index; older terminal jobs are read from the database on demand, limited by PackageDeployment.JobHistorySize.
  */
 void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId)
 {
-   LockGuard lockGuard(s_jobLock);
-
    uint32_t count = 0;
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   s_jobs.forEach(
-      [&count, &fieldId, msg, userId] (PackageDeploymentJob *job) -> EnumerationCallbackResult
-      {
-         if (userId == 0)
+   HashSet<uint32_t> residentJobs;
+
+   // Jobs currently held in memory (active jobs and jobs completed during current server session)
+   {
+      LockGuard lockGuard(s_jobLock);
+      s_jobs.forEach(
+         [&count, &fieldId, &residentJobs, msg, userId] (PackageDeploymentJob *job) -> EnumerationCallbackResult
          {
-            job->fillMessage(msg, fieldId);
-            count++;
-            fieldId += 50;
-         }
-         else
-         {
-            shared_ptr<NetObj> node = FindObjectById(job->getNodeId());
-            if ((node != nullptr) && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            residentJobs.put(job->getId());
+            if (CheckJobReadAccess(*job, userId))
             {
                job->fillMessage(msg, fieldId);
                count++;
                fieldId += 50;
             }
+            return _CONTINUE;
+         });
+   }
+
+   // Historical terminal jobs from database (most recent first), excluding those already served from memory
+   int historySize = ConfigReadInt(L"PackageDeployment.JobHistorySize", 1000);
+   if (historySize > 0)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      StringBuffer query = BuildJobHistoryQuery(historySize);
+      DB_RESULT hResult = DBSelect(hdb, query.cstr());
+      if (hResult != nullptr)
+      {
+         int rows = DBGetNumRows(hResult);
+         for(int i = 0; i < rows; i++)
+         {
+            if (residentJobs.contains(DBGetFieldUInt32(hResult, i, 0)))
+               continue;
+            PackageDeploymentJob job(hResult, i);
+            if (CheckJobReadAccess(job, userId))
+            {
+               job.fillMessage(msg, fieldId);
+               count++;
+               fieldId += 50;
+            }
          }
-         return _CONTINUE;
-      });
+         DBFreeResult(hResult);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+
    msg->setField(VID_NUM_ELEMENTS, count);
 }
 
@@ -945,30 +1023,28 @@ uint32_t CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *n
  */
 void RemoveExpiredPackageDeploymentJobs(DB_HANDLE hdb)
 {
-   LockGuard lockGuard(s_jobLock);
-
-   time_t now = time(nullptr);
    time_t retentionTime = ConfigReadInt(L"PackageDeployment.JobRetentionTime", 7) * 86400;
+   int64_t cutoff = static_cast<int64_t>(time(nullptr) - retentionTime);
 
-   std::vector<PackageDeploymentJob*> deleteList;
+   // Delete expired terminal jobs from database (covers historical jobs that are not kept in memory)
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"DELETE FROM package_deployment_jobs WHERE status IN (%d,%d,%d) AND completion_time<" INT64_FMT,
+      PKG_JOB_COMPLETED, PKG_JOB_FAILED, PKG_JOB_CANCELLED, cutoff);
+   if (DBQuery(hdb, query))
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Expired package deployment jobs removed from database");
+
+   // Drop expired terminal jobs from the in-memory index
+   LockGuard lockGuard(s_jobLock);
+   std::vector<uint32_t> deleteList;
    s_jobs.forEach(
-      [&deleteList, now, retentionTime] (PackageDeploymentJob *job) -> EnumerationCallbackResult
+      [&deleteList, cutoff] (PackageDeploymentJob *job) -> EnumerationCallbackResult
       {
-         if (((job->getStatus() == PKG_JOB_COMPLETED) || (job->getStatus() == PKG_JOB_FAILED) || (job->getStatus() == PKG_JOB_CANCELLED)) && (now - job->getExecutionTime() > retentionTime))
-            deleteList.push_back(job);
+         if (((job->getStatus() == PKG_JOB_COMPLETED) || (job->getStatus() == PKG_JOB_FAILED) || (job->getStatus() == PKG_JOB_CANCELLED)) && (static_cast<int64_t>(job->getCompletionTime()) < cutoff))
+            deleteList.push_back(job->getId());
          return _CONTINUE;
       });
-   if (!deleteList.empty())
-   {
-      DBBegin(hdb);
-      for(PackageDeploymentJob *job : deleteList)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, L"Completed package deployment job [%u] (package [%u] \"%s\") removed", job->getId(), job->getPackageId(), job->getPackageFile());
-         if (ExecuteQueryOnObject(hdb, job->getId(), L"DELETE FROM package_deployment_jobs WHERE id=?"))
-            s_jobs.remove(job->getId());
-      }
-      DBCommit(hdb);
-   }
+   for(uint32_t id : deleteList)
+      s_jobs.remove(id);
 }
 
 /**
