@@ -21,7 +21,9 @@ package org.netxms.nxmc.modules.filemanager.views;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -561,17 +563,25 @@ public class AgentFileManager extends ObjectView
    @Override
    public void refresh()
    {
-      viewer.setInput(new ArrayList<AgentFile>(0));
+      final Set<String> expandedPaths = new HashSet<String>();
+      for(Object o : viewer.getExpandedElements())
+         expandedPaths.add(((AgentFile)o).getFullName());
+
       new Job(i18n.tr("Get server file list"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<AgentFile> files = session.listAgentFiles(null, "/", getObjectId());
+            final List<AgentFile> expandedFiles = new ArrayList<AgentFile>();
+            if (!expandedPaths.isEmpty())
+               loadExpandedDirectories(files, expandedPaths, expandedFiles);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   viewer.setInput(files);
+                  if (!expandedFiles.isEmpty())
+                     viewer.setExpandedElements(expandedFiles.toArray());
                }
             });
          }
@@ -582,6 +592,33 @@ public class AgentFileManager extends ObjectView
             return i18n.tr("Cannot get file store content");
          }
       }.start();
+   }
+
+   /**
+    * Load children for directories that were expanded before refresh so that expansion state can be restored. Should be called
+    * from background job.
+    *
+    * @param files files on current level
+    * @param expandedPaths full names of directories that were expanded before refresh
+    * @param expandedFiles list where directory objects to be expanded after refresh are collected
+    */
+   private void loadExpandedDirectories(List<AgentFile> files, Set<String> expandedPaths, List<AgentFile> expandedFiles)
+   {
+      for(AgentFile f : files)
+      {
+         if (!f.isDirectory() || !expandedPaths.contains(f.getFullName()))
+            continue;
+         try
+         {
+            f.setChildren(session.listAgentFiles(f, f.getFullName(), getObjectId()));
+         }
+         catch(Exception e)
+         {
+            continue; // Directory that cannot be read will be left collapsed
+         }
+         expandedFiles.add(f);
+         loadExpandedDirectories(f.getChildren(), expandedPaths, expandedFiles);
+      }
    }
 
    /**
@@ -1159,6 +1196,7 @@ public class AgentFileManager extends ObjectView
       if(object == null)
          return;
 
+      viewer.setInput(new ArrayList<AgentFile>(0)); // Discard content so that expansion state of previous node is not reused
       refresh();
       String os = ((Node)session.findObjectById(getObjectId())).getSystemDescription(); //$NON-NLS-1$
       if (os.contains("Windows"))
