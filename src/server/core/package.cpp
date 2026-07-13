@@ -414,12 +414,13 @@ void PackageDeploymentJob::setCompletedStatus(PackageDeploymentStatus status, co
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_errorMessage, DB_BIND_STATIC);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_packageId);
       DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_packageType, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_packageName, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_platform, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_packageFile, DB_BIND_STATIC, 255);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_command, DB_BIND_STATIC, 255);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_packageName, DB_BIND_STATIC);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
+      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_platform, DB_BIND_STATIC);
+      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_packageFile, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_command, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+      DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
 
