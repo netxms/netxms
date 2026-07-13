@@ -308,9 +308,10 @@ static void DeleteOldFilePositions()
 }
 
 /**
- * Save absence detection state for all parsers to local database
+ * Save absence detection state for all parsers to local database.
+ * Caller must hold s_parserLock.
  */
-static void SaveAbsenceState()
+static void SaveAbsenceStateUnlocked()
 {
    DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
    if (hdb == nullptr)
@@ -324,7 +325,6 @@ static void SaveAbsenceState()
       return;
 
    int count = 0;
-   s_parserLock.lock();
    for (int i = 0; i < s_parsers.size(); i++)
    {
       s_parsers.get(i)->forEachAbsenceState(
@@ -339,10 +339,19 @@ static void SaveAbsenceState()
             count++;
          });
    }
-   s_parserLock.unlock();
 
    DBFreeStatement(hStmt);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Saved %d absence state entries to local database"), count);
+}
+
+/**
+ * Save absence detection state for all parsers to local database
+ */
+static void SaveAbsenceState()
+{
+   s_parserLock.lock();
+   SaveAbsenceStateUnlocked();
+   s_parserLock.unlock();
 }
 
 /**
@@ -927,7 +936,7 @@ static void OnAgentNotify(UINT32 code, void *data)
 
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
       SaveParserPosition(p);
-      SaveAbsenceState();
+      SaveAbsenceStateUnlocked();
       p->stop();
       s_parsers.remove(i);
       i--;
