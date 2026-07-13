@@ -79,7 +79,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
 {
    m_id = id;
 
-   if (!loadCommonProperties(hdb, preparedStatements))
+   if (!loadCommonProperties(hdb, preparedStatements, id == BUILTIN_OID_ZONE0))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone_guid FROM zones WHERE id=?"));
@@ -101,7 +101,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          }
          else
          {
-            nxlog_debug(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
+            nxlog_debug(4, _T("Cannot load zone object %u - missing record in \"zones\" table"), m_id);
          }
       }
       else
