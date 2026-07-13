@@ -20530,9 +20530,18 @@ void ClientSession::setAiObservationState(const NXCPMessage& request)
    int state = request.getFieldAsInt32(VID_STATE);
    if ((state >= 0) && (state <= 2))
    {
+      int64_t observationId = request.getFieldAsInt64(VID_AI_OBSERVATION_ID);
+      AIObservationState newState = static_cast<AIObservationState>(state);
+
       // Access control (per-object, or AI operator management right for server-level observations)
       // is enforced inside UpdateAIOperatorObservationState()
-      uint32_t rcc = UpdateAIOperatorObservationState(request.getFieldAsInt64(VID_AI_OBSERVATION_ID), static_cast<AIObservationState>(state), m_userId);
+      uint32_t objectId = 0;
+      uint32_t rcc = UpdateAIOperatorObservationState(observationId, newState, m_userId, &objectId);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_OBJECTS, true, objectId, L"AI operator observation [" INT64_FMT L"] state changed to %s", observationId,
+            (newState == AIObservationState::ACKNOWLEDGED) ? L"acknowledged" : ((newState == AIObservationState::DISMISSED) ? L"dismissed" : L"new"));
+      else if (rcc == RCC_ACCESS_DENIED)
+         writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on changing state of AI operator observation [" INT64_FMT L"]", observationId);
       response.setField(VID_RCC, rcc);
    }
    else

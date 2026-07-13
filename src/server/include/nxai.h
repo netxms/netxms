@@ -297,7 +297,7 @@ void FillAIOperatorListMessage(NXCPMessage *msg);
 /**
  * Update AI operator observation state (acknowledge/dismiss)
  */
-uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state, uint32_t userId, uint32_t *sourceObjectId = nullptr);
 
 /**
  * Housekeeping for AI operator observations (retention time and per-instance record cap)

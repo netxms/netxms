@@ -853,7 +853,7 @@ static int64_t RecordObservation(AIOperatorInstance *instance, int severity, con
  * same right used for acknowledging alarms). Server-level observations (object_id = 0) require the AI
  * operator management right instead.
  */
-uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state, uint32_t userId, uint32_t *sourceObjectId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -885,6 +885,9 @@ uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationI
       DBConnectionPoolReleaseConnection(hdb);
       return RCC_NO_SUCH_RECORD;
    }
+
+   if (sourceObjectId != nullptr)
+      *sourceObjectId = objectId;
 
    bool authorized;
    if (objectId != 0)

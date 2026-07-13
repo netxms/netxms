@@ -364,12 +364,15 @@ int H_AiObservationStateUpdate(Context *context)
       return 400;
    }
 
-   uint32_t rcc = UpdateAIOperatorObservationState(observationId, newState, context->getUserId());
+   uint32_t objectId = 0;
+   uint32_t rcc = UpdateAIOperatorObservationState(observationId, newState, context->getUserId(), &objectId);
    switch(rcc)
    {
       case RCC_SUCCESS:
+         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"AI operator observation [" INT64_FMT L"] state changed to %hs", observationId, state);
          return 204;
       case RCC_ACCESS_DENIED:
+         context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on changing state of AI operator observation [" INT64_FMT L"]", observationId);
          return 403;
       case RCC_NO_SUCH_RECORD:
          context->setErrorResponse("Observation not found");
