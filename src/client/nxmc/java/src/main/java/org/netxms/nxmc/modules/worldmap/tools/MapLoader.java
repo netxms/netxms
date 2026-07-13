@@ -25,6 +25,9 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -61,7 +64,8 @@ public class MapLoader
 	private Display display;
 	private NXCSession session;
 	private ExecutorService workers;
-	private Image missingTile = null; 
+	private String tileServerCacheKey = null;
+	private Image missingTile = null;
 	private Image loadingTile = null; 
 	private Image borderTile = null;
 
@@ -232,6 +236,45 @@ public class MapLoader
 	}
 
 	/**
+	 * Get cache key for current tile server. Tile cache is partitioned by tile server URL so that switching servers
+	 * does not reuse stale tiles cached from a different server (see issue #3400). Tile server URL is fixed for the
+	 * lifetime of the session, so the key is computed once on first use and reused afterwards.
+	 *
+	 * @return cache key derived from current tile server URL
+	 */
+   private synchronized String getTileServerCacheKey()
+   {
+      if (tileServerCacheKey != null)
+         return tileServerCacheKey;
+
+      String tileServerURL = session.getTileServerURL();
+      if ((tileServerURL == null) || tileServerURL.isEmpty())
+      {
+         tileServerCacheKey = "default"; //$NON-NLS-1$
+         return tileServerCacheKey;
+      }
+
+      try
+      {
+         MessageDigest md = MessageDigest.getInstance("MD5"); //$NON-NLS-1$
+         byte[] hash = md.digest(tileServerURL.getBytes(StandardCharsets.UTF_8));
+         StringBuilder sb = new StringBuilder(hash.length * 2);
+         for(byte b : hash)
+         {
+            sb.append(Character.forDigit((b >> 4) & 0xF, 16));
+            sb.append(Character.forDigit(b & 0xF, 16));
+         }
+         tileServerCacheKey = sb.toString();
+      }
+      catch(NoSuchAlgorithmException e)
+      {
+         logger.warn("Cannot compute tile server cache key", e);
+         tileServerCacheKey = "default"; //$NON-NLS-1$
+      }
+      return tileServerCacheKey;
+   }
+
+	/**
 	 * @param zoom
 	 * @param x
 	 * @param y
@@ -241,6 +284,8 @@ public class MapLoader
 	{
       StringBuilder sb = new StringBuilder("MapTiles"); //$NON-NLS-1$
 		sb.append(File.separatorChar);
+      sb.append(getTileServerCacheKey());
+      sb.append(File.separatorChar);
 		sb.append(zoom);
 		sb.append(File.separatorChar);
 		sb.append(x);
