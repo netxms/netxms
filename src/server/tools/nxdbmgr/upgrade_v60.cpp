@@ -25,6 +25,50 @@
 #include <netxms-xml.h>
 
 /**
+ * Upgrade from 60.37 to 60.38
+ */
+static bool H_UpgradeFromV37()
+{
+   // Earlier 6.0 upgrade procedures wrote Oracle idata table creation command with a typo in
+   // primary key definition ("tdata_timestamp" instead of "idata_timestamp"), so idata tables
+   // could not be created for data collection targets added after that upgrade (issue #3411).
+   // DDL is issued directly instead of via CreateIDataTable() - on 6.2 and later that function
+   // generates the statement in code (issue #3204), and historical upgrade paths must keep the
+   // metadata-driven schema of their era.
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      static const wchar_t *idataCreationCommand =
+            L"CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,idata_timestamp))";
+
+      CHK_EXEC(DBMgrMetaDataWriteStr(L"IDataTableCreationCommand", idataCreationCommand));
+
+      if (!DBMgrMetaDataReadInt32(L"SingeTablePerfData", 0))
+      {
+         IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+         for(int i = 0; i < targets.size(); i++)
+         {
+            uint32_t objectId = targets.get(i);
+            wchar_t table[64];
+            nx_swprintf(table, 64, L"idata_%u", objectId);
+
+            // Only a definite "table found" answer may skip creation - a failed existence
+            // check must not silently leave a missing table behind
+            if (DBIsTableExist(g_dbHandle, table) == DBIsTableExist_Found)
+               continue;
+
+            wchar_t query[256];
+            nx_swprintf(query, 256, idataCreationCommand, objectId);
+            WriteToTerminalEx(L"Creating missing table \x1b[1m%s\x1b[0m...\n", table);
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(38));
+   return true;
+}
+
+/**
  * Upgrade from 60.36 to 60.37
  */
 static bool H_UpgradeFromV36()
@@ -139,7 +183,7 @@ static bool H_UpgradeFromV30()
 
    if (g_dbSyntax == DB_SYNTAX_ORACLE)
    {
-      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,tdata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
+      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,idata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
    }
    else
    {
@@ -1459,7 +1503,7 @@ static bool H_UpgradeFromV13()
          CHK_EXEC(SQLQuery(query));
       }
 
-      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,tdata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
+      CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp number(20) not null,idata_value varchar2(255 char) null,raw_value varchar2(255 char) null, PRIMARY KEY(item_id,idata_timestamp))' WHERE var_name='IDataTableCreationCommand'"));
    }
 
    CHK_EXEC(SetMinorSchemaVersion(14));
@@ -2015,6 +2059,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 37, 60, 38, H_UpgradeFromV37 },
    { 36, 60, 37, H_UpgradeFromV36 },
    { 35, 60, 36, H_UpgradeFromV35 },
    { 34, 60, 35, H_UpgradeFromV34 },
