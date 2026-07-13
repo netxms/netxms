@@ -47,6 +47,7 @@
 bool HAReadConfiguration();
 bool NXCORE_EXPORTABLE HAIsClusterMode();
 bool HAStartController();
+void HAWaitForActivation();
 void HAShutdownController();
 bool NXCORE_EXPORTABLE HAIsFenced();
 bool NXCORE_EXPORTABLE HACheckFence();

@@ -73,6 +73,17 @@ static HALeaseManager *s_leaseManager = nullptr;
 static std::atomic<bool> s_fenced(false);
 
 /**
+ * Activation coordination. The activation thread runs the full phase 2 startup
+ * (including ID table rebase and DB writer start) on its own pooled database
+ * connections; shutdown must wait for it to finish before tearing down the
+ * connection pool, and must not let a promotion start a new activation once
+ * shutdown has begun.
+ */
+static Mutex s_activationLock(MutexType::FAST);
+static THREAD s_activationThread = INVALID_THREAD_HANDLE;
+static bool s_shutdownStarted = false;
+
+/**
  * Read cluster configuration. Called before database lock acquisition -
  * lock semantics depend on cluster mode.
  */
@@ -398,6 +409,47 @@ static void ActivationThread(int64_t term)
 }
 
 /**
+ * Start the activation thread in response to winning the cluster lease. Skips
+ * activation if shutdown has already begun (the process is exiting from
+ * standby); otherwise records the thread handle so shutdown can wait for it.
+ */
+static void StartActivation(int64_t term)
+{
+   LockGuard lockGuard(s_activationLock);
+   if (s_shutdownStarted)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Ignoring cluster promotion (term " INT64_FMTW L"): server shutdown in progress", term);
+      return;
+   }
+   s_activationThread = ThreadCreateEx(ActivationThread, term);
+}
+
+/**
+ * Block any further activation and wait for an activation already in progress
+ * to complete. Called at the very start of shutdown, before the passive/active
+ * branch is chosen and before the database connection pool is torn down: a
+ * promotion that fires as the server is stopping must not run queries on a
+ * connection pool that shutdown is about to destroy (would crash inside libpq),
+ * and an activation that does complete must be reflected by s_activationStarted
+ * so the full active shutdown path runs.
+ */
+void HAWaitForActivation()
+{
+   THREAD thread;
+   {
+      LockGuard lockGuard(s_activationLock);
+      s_shutdownStarted = true;
+      thread = s_activationThread;
+      s_activationThread = INVALID_THREAD_HANDLE;
+   }
+   if (thread != INVALID_THREAD_HANDLE)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Waiting for cluster activation to complete before shutdown");
+      ThreadJoin(thread);
+   }
+}
+
+/**
  * Start cluster controller (end of passive bring-up)
  */
 bool HAStartController()
@@ -483,7 +535,7 @@ bool HAStartController()
    s_leaseManager->setPromotionHandler(
       [] (int64_t term) -> void
       {
-         ThreadCreateEx(ActivationThread, term);
+         StartActivation(term);
       });
 
    s_leaseManager->setFenceHandler(

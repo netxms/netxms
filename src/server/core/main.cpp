@@ -1817,6 +1817,14 @@ static const TCHAR *s_shutdownReasonText[] = { _T("due to unknown reason"), _T("
  */
 void NXCORE_EXPORTABLE Shutdown()
 {
+   // Resolve any in-flight cluster activation before choosing the shutdown
+   // path: block a promotion that has not started yet and wait for one already
+   // running to finish. This keeps the activation thread (which runs queries on
+   // pooled DB connections) from racing the connection pool teardown below, and
+   // ensures s_activationStarted reflects this node's final role so the correct
+   // branch is taken.
+   HAWaitForActivation();
+
    // Passive cluster standby: almost nothing is running - stop the cluster
    // controller and the few whitelisted passive threads and exit
    if (!s_activationStarted)
