@@ -25,11 +25,28 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.33 to 70.0
+ * Upgrade from 62.34 to 70.0
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.33 to 62.34
  */
 static bool H_UpgradeFromV33()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE package_deployment_jobs ADD retry_count integer"));
+   CHK_EXEC(SQLQuery(L"UPDATE package_deployment_jobs SET retry_count=0"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"package_deployment_jobs", L"retry_count"));
+
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.MaxRetryCount", L"16",
+      L"Maximum number of automatic retry attempts for a failed package deployment (for example when target node is offline) before the job is marked as permanently failed.",
+      L"attempts", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(34));
    return true;
 }
 
@@ -1209,7 +1226,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 33, 70,  0, H_UpgradeFromV33 },
+   { 34, 70,  0, H_UpgradeFromV34 },
+   { 33, 62, 34, H_UpgradeFromV33 },
    { 32, 62, 33, H_UpgradeFromV32 },
    { 31, 62, 32, H_UpgradeFromV31 },
    { 30, 62, 31, H_UpgradeFromV30 },

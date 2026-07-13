@@ -27,6 +27,12 @@
 #define DEBUG_TAG _T("packages")
 
 /**
+ * Retry backoff parameters for failed deployments
+ */
+#define PKG_RETRY_BASE_INTERVAL   300    // 5 minutes
+#define PKG_RETRY_MAX_INTERVAL    3600   // 1 hour
+
+/**
  * Check if package with specific parameters already installed
  */
 bool IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform)
@@ -297,7 +303,7 @@ uint32_t UninstallPackage(uint32_t packageId)
 /**
  * Create job object from database record.
  * Expected column order: id,pkg_id,node_id,user_id,creation_time,execution_time,completion_time,
- * status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description
+ * status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description,retry_count
  */
 PackageDeploymentJob::PackageDeploymentJob(DB_RESULT hResult, int row) : m_packageFile(DBGetFieldAsString(hResult, row, 13)),
          m_command(DBGetFieldAsString(hResult, row, 14)), m_description(DBGetFieldAsString(hResult, row, 15))
@@ -315,6 +321,7 @@ PackageDeploymentJob::PackageDeploymentJob(DB_RESULT hResult, int row) : m_packa
    DBGetField(hResult, row, 10, m_packageName, MAX_OBJECT_NAME);
    DBGetField(hResult, row, 11, m_platform, MAX_PLATFORM_NAME_LEN);
    DBGetField(hResult, row, 12, m_version, 32);
+   m_retryCount = DBGetFieldInt32(hResult, row, 16);
 }
 
 /**
@@ -324,7 +331,7 @@ bool PackageDeploymentJob::createDatabaseRecord()
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO package_deployment_jobs (id,pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status) VALUES (?,?,?,?,?,?,0,?)");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO package_deployment_jobs (id,pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,retry_count) VALUES (?,?,?,?,?,?,0,?,?)");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -334,6 +341,7 @@ bool PackageDeploymentJob::createDatabaseRecord()
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_executionTime));
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_status);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_retryCount);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -425,19 +433,40 @@ void PackageDeploymentJob::setCompletedStatus(PackageDeploymentStatus status, co
  */
 void PackageDeploymentJob::markAsFailed(const wchar_t *errorMessage, bool reschedule)
 {
-   setCompletedStatus(PKG_JOB_FAILED, errorMessage);
    if (reschedule)
    {
-      auto job = make_shared<PackageDeploymentJob>(this, time(nullptr) + 600); // Reschedule for 10 minutes later
-      if (job->createDatabaseRecord())
+      int maxRetryCount = ConfigReadInt(L"PackageDeployment.MaxRetryCount", 16);
+      if (m_retryCount < maxRetryCount)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::markAsFailed: scheduled retry for deployment of package [%u] on node \"%s\" [%u]"), m_packageId, GetObjectName(m_nodeId, nullptr), m_nodeId);
-         RegisterPackageDeploymentJob(job);
+         setCompletedStatus(PKG_JOB_FAILED, errorMessage);
+
+         // Reschedule with exponential backoff (5 minutes base, doubling on each retry, capped at 1 hour)
+         uint32_t delay = (m_retryCount >= 20) ? PKG_RETRY_MAX_INTERVAL : std::min(static_cast<uint32_t>(PKG_RETRY_BASE_INTERVAL) << m_retryCount, static_cast<uint32_t>(PKG_RETRY_MAX_INTERVAL));
+         auto job = make_shared<PackageDeploymentJob>(this, time(nullptr) + delay, m_retryCount + 1);
+         if (job->createDatabaseRecord())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"PackageDeploymentJob::markAsFailed: scheduled retry %d of %d in %u seconds for deployment of package [%u] on node \"%s\" [%u]",
+               m_retryCount + 1, maxRetryCount, delay, m_packageId, GetObjectName(m_nodeId, nullptr), m_nodeId);
+            RegisterPackageDeploymentJob(job);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"PackageDeploymentJob::markAsFailed: cannot create database record for deployment job [%u] on node \"%s\" [%u]", job->getId(), GetObjectName(m_nodeId, nullptr), m_nodeId);
+         }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::markAsFailed: cannot create database record for deployment job [%u] on node \"%s\" [%u]"), job->getId(), GetObjectName(m_nodeId, nullptr), m_nodeId);
+         // Retry limit reached - fail permanently
+         wchar_t reason[256];
+         nx_swprintf(reason, 256, L"%s (retry limit of %d reached)", errorMessage, maxRetryCount);
+         setCompletedStatus(PKG_JOB_FAILED, reason);
+         nxlog_debug_tag(DEBUG_TAG, 4, L"PackageDeploymentJob::markAsFailed: retry limit of %d reached for deployment of package [%u] on node \"%s\" [%u], giving up",
+            maxRetryCount, m_packageId, GetObjectName(m_nodeId, nullptr), m_nodeId);
       }
+   }
+   else
+   {
+      setCompletedStatus(PKG_JOB_FAILED, errorMessage);
    }
 }
 
@@ -847,7 +876,7 @@ void StartPackageDeploymentManager()
    // served to clients directly from the database on demand, so there is no need to keep them resident for the server's lifetime.
    wchar_t query[1024];
    nx_swprintf(query, 1024,
-      L"SELECT id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description FROM package_deployment_jobs j "
+      L"SELECT id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description,retry_count FROM package_deployment_jobs j "
       L"LEFT OUTER JOIN agent_pkg p ON p.pkg_id=j.pkg_id WHERE j.status IN (%d,%d)", PKG_JOB_SCHEDULED, PKG_JOB_PENDING);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)

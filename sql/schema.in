@@ -2061,6 +2061,7 @@ CREATE TABLE package_deployment_jobs
   execution_time integer not null,
   completion_time integer not null,
   status integer not null,
+  retry_count integer not null,
   failure_reason varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;

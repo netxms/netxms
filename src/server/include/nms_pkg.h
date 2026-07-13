@@ -63,6 +63,7 @@ private:
    uint32_t m_nodeId;
    uint32_t m_userId;
    PackageDeploymentStatus m_status;
+   int m_retryCount;
    time_t m_creationTime;
    time_t m_executionTime;
    time_t m_completionTime;
@@ -86,6 +87,7 @@ public:
       m_nodeId = nodeId;
       m_userId = userId;
       m_status = PKG_JOB_SCHEDULED;
+      m_retryCount = 0;
       m_creationTime = time(nullptr);
       m_executionTime = executionTime;
       m_completionTime = 0;
@@ -96,12 +98,13 @@ public:
       wcslcpy(m_version, package.version, 32);
       m_errorMessage[0] = 0;
    }
-   PackageDeploymentJob(const PackageDeploymentJob *src, time_t executionTime) : m_packageFile(src->m_packageFile), m_command(src->m_command), m_description(src->m_description)
+   PackageDeploymentJob(const PackageDeploymentJob *src, time_t executionTime, int retryCount) : m_packageFile(src->m_packageFile), m_command(src->m_command), m_description(src->m_description)
    {
       m_id = CreateUniqueId(IDG_PACKAGE_DEPLOYMENT_JOB);
       m_nodeId = src->m_nodeId;
       m_userId = src->m_userId;
       m_status = PKG_JOB_SCHEDULED;
+      m_retryCount = retryCount;
       m_creationTime = time(nullptr);
       m_executionTime = executionTime;
       m_completionTime = 0;
