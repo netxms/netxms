@@ -741,6 +741,9 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb, DB_STATEMENT *preparedStatement
          }
 			else if (ignoreEmptyResults)
 			{
+			   // Mark object as modified so common properties are saved
+            InterlockedOr(&m_modified, MODIFY_COMMON_PROPERTIES);
+            m_timestamp = time(nullptr);
 			   success = true;
 			}
          DBFreeResult(hResult);
