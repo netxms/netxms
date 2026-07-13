@@ -25,11 +25,23 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.32 to 70.0
+ * Upgrade from 62.33 to 70.0
+ */
+static bool H_UpgradeFromV33()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.32 to 62.33
  */
 static bool H_UpgradeFromV32()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateConfigParam(L"PackageDeployment.JobHistorySize", L"1000",
+      L"Maximum number of most recent completed package deployment jobs returned to clients from the deployment history.",
+      L"jobs", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(33));
    return true;
 }
 
@@ -1197,7 +1209,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 32, 70,  0, H_UpgradeFromV32 },
+   { 33, 70,  0, H_UpgradeFromV33 },
+   { 32, 62, 33, H_UpgradeFromV32 },
    { 31, 62, 32, H_UpgradeFromV31 },
    { 30, 62, 31, H_UpgradeFromV30 },
    { 29, 62, 30, H_UpgradeFromV29 },

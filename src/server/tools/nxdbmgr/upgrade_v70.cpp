@@ -28,9 +28,13 @@
  */
 static bool H_UpgradeFromV7()
 {
-   CHK_EXEC(CreateConfigParam(L"PackageDeployment.JobHistorySize", L"1000",
-      L"Maximum number of most recent completed package deployment jobs returned to clients from the deployment history.",
-      L"jobs", 'I', true, false, false, false));
+   if (GetSchemaLevelForMajorVersion(62) < 33)
+   {
+      CHK_EXEC(CreateConfigParam(L"PackageDeployment.JobHistorySize", L"1000",
+         L"Maximum number of most recent completed package deployment jobs returned to clients from the deployment history.",
+         L"jobs", 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 33));
+   }
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
 }
