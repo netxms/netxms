@@ -20527,22 +20527,17 @@ void ClientSession::resetAiOperator(const NXCPMessage& request)
 void ClientSession::setAiObservationState(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSystemAccessRights(SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   int state = request.getFieldAsInt32(VID_STATE);
+   if ((state >= 0) && (state <= 2))
    {
-      int state = request.getFieldAsInt32(VID_STATE);
-      if ((state >= 0) && (state <= 2))
-      {
-         uint32_t rcc = UpdateAIOperatorObservationState(request.getFieldAsInt64(VID_AI_OBSERVATION_ID), static_cast<AIObservationState>(state));
-         response.setField(VID_RCC, rcc);
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      }
+      // Access control (per-object, or AI operator management right for server-level observations)
+      // is enforced inside UpdateAIOperatorObservationState()
+      uint32_t rcc = UpdateAIOperatorObservationState(request.getFieldAsInt64(VID_AI_OBSERVATION_ID), static_cast<AIObservationState>(state), m_userId);
+      response.setField(VID_RCC, rcc);
    }
    else
    {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
    sendMessage(response);
 }

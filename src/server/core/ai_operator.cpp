@@ -848,13 +848,61 @@ static int64_t RecordObservation(AIOperatorInstance *instance, int severity, con
 }
 
 /**
- * Update AI operator observation state (acknowledge/dismiss)
+ * Update AI operator observation state (acknowledge/dismiss). Changing an observation's state is a write
+ * operation, so it is gated on access to the observation's source object (OBJECT_ACCESS_UPDATE_ALARMS,
+ * same right used for acknowledging alarms). Server-level observations (object_id = 0) require the AI
+ * operator management right instead.
  */
-uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state)
+uint32_t NXCORE_EXPORTABLE UpdateAIOperatorObservationState(int64_t observationId, AIObservationState state, uint32_t userId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Resolve the observation's source object for the access control check
+   uint32_t objectId = 0;
    uint32_t rcc = RCC_DB_FAILURE;
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE ai_operator_observations SET state=? WHERE id=?");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT object_id FROM ai_operator_observations WHERE id=?");
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, observationId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+   bool found = (DBGetNumRows(hResult) > 0);
+   if (found)
+      objectId = DBGetFieldUInt32(hResult, 0, 0);
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   if (!found)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_NO_SUCH_RECORD;
+   }
+
+   bool authorized;
+   if (objectId != 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      authorized = (object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_UPDATE_ALARMS);
+   }
+   else
+   {
+      authorized = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_OPERATORS) != 0;
+   }
+   if (!authorized)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_ACCESS_DENIED;
+   }
+
+   hStmt = DBPrepare(hdb, L"UPDATE ai_operator_observations SET state=? WHERE id=?");
    if (hStmt != nullptr)
    {
       wchar_t stateText[2] = { static_cast<wchar_t>('0' + static_cast<int>(state)), 0 };

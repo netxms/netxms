@@ -859,7 +859,9 @@ paths:
       summary: Set observation state
       description: >-
         Acknowledge or dismiss an AI operator observation (or return it to the
-        "new" state). Requires the "view event log" system access right.
+        "new" state). Requires "update alarms" access to the observation's source
+        object; server-level observations require the "manage AI operators" system
+        access right.
       parameters:
         - name: observation-id
           in: path
@@ -887,6 +889,8 @@ paths:
           description: Invalid observation ID or state
         '403':
           description: Insufficient access rights
+        '404':
+          description: Observation not found
         '500':
           description: Database failure
       security:

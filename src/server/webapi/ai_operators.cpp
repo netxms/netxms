@@ -335,9 +335,6 @@ int H_AiObservations(Context *context)
  */
 int H_AiObservationStateUpdate(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_VIEW_EVENT_LOG))
-      return 403;
-
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
    {
@@ -367,12 +364,18 @@ int H_AiObservationStateUpdate(Context *context)
       return 400;
    }
 
-   uint32_t rcc = UpdateAIOperatorObservationState(observationId, newState);
-   if (rcc != RCC_SUCCESS)
+   uint32_t rcc = UpdateAIOperatorObservationState(observationId, newState, context->getUserId());
+   switch(rcc)
    {
-      context->setErrorResponse("Database failure");
-      return 500;
+      case RCC_SUCCESS:
+         return 204;
+      case RCC_ACCESS_DENIED:
+         return 403;
+      case RCC_NO_SUCH_RECORD:
+         context->setErrorResponse("Observation not found");
+         return 404;
+      default:
+         context->setErrorResponse("Database failure");
+         return 500;
    }
-
-   return 204;
 }
