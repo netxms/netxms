@@ -943,7 +943,7 @@ static StringBuffer BuildJobHistoryQuery(int limit)
    }
 
    query.appendFormattedString(
-      L"id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description "
+      L"id,j.pkg_id,node_id,user_id,creation_time,execution_time,completion_time,status,failure_reason,pkg_type,pkg_name,platform,version,pkg_file,command,description,retry_count "
       L"FROM package_deployment_jobs j LEFT OUTER JOIN agent_pkg p ON p.pkg_id=j.pkg_id WHERE j.status IN (%d,%d,%d) ORDER BY j.completion_time DESC",
       PKG_JOB_COMPLETED, PKG_JOB_FAILED, PKG_JOB_CANCELLED);
 
