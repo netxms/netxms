@@ -30,8 +30,15 @@
 #include <atomic>
 using std::atomic;
 
-#ifdef __sun
+// On Solaris, use the libc atomic_*() primitives only for the native Sun Studio
+// compiler. GCC and Clang (both define __GNUC__) are routed to the __atomic/__sync
+// builtin path below, which provides full-barrier SEQ_CST semantics. The libc
+// atomic_*_nv() functions do not imply memory ordering (see atomic_ops(3C)) and on
+// SPARC TSO allow Store->Load reordering, which breaks lock-free reader/writer
+// handshakes (e.g. the double-buffered server object indexes).
+#if defined(__sun) && !defined(__GNUC__)
 #include <sys/atomic.h>
+#include <mbarrier.h>
 #endif
 
 #ifdef _WIN32
@@ -81,7 +88,13 @@ FORCEINLINE LONGLONG InterlockedAdd64(LONGLONG volatile *v, LONGLONG a)
 
 #else
 
-#if defined(__sun)
+#if defined(__sun) && !defined(__GNUC__)
+
+// Native Sun Studio on Solaris. The libc atomic_*() primitives are atomic but do not
+// imply any memory ordering (atomic_ops(3C)), so each read-modify-write is wrapped in
+// full hardware read/write barriers to give the SEQ_CST semantics that the Windows and
+// GCC/Clang paths provide. Without this, the Store->Load reordering permitted by SPARC
+// TSO breaks the lock-free reader/writer handshake in the server object indexes.
 
 typedef volatile int32_t VolatileCounter;
 typedef volatile int64_t VolatileCounter64;
@@ -91,7 +104,10 @@ typedef volatile int64_t VolatileCounter64;
  */
 static inline int32_t InterlockedIncrement(VolatileCounter *v)
 {
-   return (int32_t)atomic_inc_32_nv((volatile uint32_t *)v);
+   __machine_rw_barrier();
+   int32_t r = (int32_t)atomic_inc_32_nv((volatile uint32_t *)v);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -99,7 +115,10 @@ static inline int32_t InterlockedIncrement(VolatileCounter *v)
  */
 static inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
-   return atomic_dec_32_nv((volatile uint32_t *)v);
+   __machine_rw_barrier();
+   int32_t r = (int32_t)atomic_dec_32_nv((volatile uint32_t *)v);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -107,7 +126,10 @@ static inline int32_t InterlockedDecrement(VolatileCounter *v)
  */
 static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
 {
-   return (int32_t)atomic_add_32_nv((volatile uint32_t *)v, a);
+   __machine_rw_barrier();
+   int32_t r = (int32_t)atomic_add_32_nv((volatile uint32_t *)v, a);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -115,7 +137,10 @@ static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
  */
 static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
 {
-   return atomic_cas_32((volatile uint32_t *)target, (uint32_t)comparand, (uint32_t)exchange);
+   __machine_rw_barrier();
+   int32_t r = (int32_t)atomic_cas_32((volatile uint32_t *)target, (uint32_t)comparand, (uint32_t)exchange);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -123,7 +148,10 @@ static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_
  */
 static inline int64_t InterlockedCompareExchange(VolatileCounter64 *target, int64_t exchange, int64_t comparand)
 {
-   return atomic_cas_64((volatile uint64_t *)target, (uint64_t)comparand, (uint64_t)exchange);
+   __machine_rw_barrier();
+   int64_t r = (int64_t)atomic_cas_64((volatile uint64_t *)target, (uint64_t)comparand, (uint64_t)exchange);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -131,7 +159,10 @@ static inline int64_t InterlockedCompareExchange(VolatileCounter64 *target, int6
  */
 static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 {
-   return (int64_t)atomic_inc_64_nv((volatile uint64_t *)v);
+   __machine_rw_barrier();
+   int64_t r = (int64_t)atomic_inc_64_nv((volatile uint64_t *)v);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -139,7 +170,10 @@ static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
  */
 static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
-   return (int64_t)atomic_dec_64_nv((volatile uint64_t *)v);
+   __machine_rw_barrier();
+   int64_t r = (int64_t)atomic_dec_64_nv((volatile uint64_t *)v);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -147,7 +181,10 @@ static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
  */
 static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
 {
-   return (int64_t)atomic_add_64_nv((volatile uint64_t *)v, a);
+   __machine_rw_barrier();
+   int64_t r = (int64_t)atomic_add_64_nv((volatile uint64_t *)v, a);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -155,7 +192,10 @@ static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
  */
 static inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 {
-   return atomic_swap_ptr(target, value);
+   __machine_rw_barrier();
+   void *r = atomic_swap_ptr(target, value);
+   __machine_rw_barrier();
+   return r;
 }
 
 /**
@@ -163,7 +203,9 @@ static inline void *InterlockedExchangePointer(void *volatile *target, void *val
  */
 static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
 {
+   __machine_rw_barrier();
    atomic_or_32((volatile uint32_t *)target, bits);
+   __machine_rw_barrier();
 }
 
 /**
@@ -171,7 +213,9 @@ static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
  */
 static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
 {
+   __machine_rw_barrier();
    atomic_and_32((volatile uint32_t *)target, bits);
+   __machine_rw_barrier();
 }
 
 /**
@@ -179,7 +223,9 @@ static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
  */
 static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
 {
+   __machine_rw_barrier();
    atomic_or_64((volatile uint64_t *)target, bits);
+   __machine_rw_barrier();
 }
 
 /**
@@ -187,10 +233,12 @@ static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
  */
 static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
 {
+   __machine_rw_barrier();
    atomic_and_64((volatile uint64_t *)target, bits);
+   __machine_rw_barrier();
 }
 
-#else /* not Solaris */
+#else /* Solaris with GCC/Clang, or other platforms - use compiler atomic builtins */
 
 typedef volatile int32_t VolatileCounter;
 typedef volatile int64_t VolatileCounter64;
@@ -399,7 +447,7 @@ static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
 #endif
 }
 
-#endif   /* __sun */
+#endif   /* __sun && !__GNUC__ */
 
 #endif   /* _WIN32 */
 
