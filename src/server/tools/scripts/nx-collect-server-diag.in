@@ -194,9 +194,9 @@ collect_server_stats() {
       exit 5
    elif [ $NXADM_RC -ne 0 ]; then
       echo "failed"
-      echo "ERROR: cannot connect to server (nxadm exit code $NXADM_RC)"
-      rm -rf $LOG_DIR
-      exit $NXADM_RC
+      echo "WARNING: cannot connect to server (nxadm exit code $NXADM_RC), server statistics will not be collected. Server may be down or shutting down." 1>&2
+      echo "cannot connect to server (nxadm exit code $NXADM_RC)" >> $NXADM_LOG
+      return
    fi
    #show dbcp
    print_header "show dbcp:"  
