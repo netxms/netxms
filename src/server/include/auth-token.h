@@ -186,6 +186,25 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       msg->setFieldFromTime(baseId + 6, expirationTime);
       msg->setField(baseId + 7, service);
    }
+
+   /**
+    * Serialize to JSON. The clear-text token value is included only when it is
+    * available (i.e. immediately after the token was issued).
+    */
+   json_t *toJson() const
+   {
+      json_t *root = json_object();
+      json_object_set_new(root, "id", json_integer(tokenId));
+      json_object_set_new(root, "userId", json_integer(userId));
+      json_object_set_new(root, "persistent", json_boolean(persistent));
+      json_object_set_new(root, "service", json_boolean(service));
+      json_object_set_new(root, "description", json_string_t(description.cstr()));
+      json_object_set_new(root, "issuingTime", json_integer(static_cast<json_int_t>(issuingTime)));
+      json_object_set_new(root, "expirationTime", json_integer(static_cast<json_int_t>(expirationTime)));
+      if (validClearText)
+         json_object_set_new(root, "value", json_string_t(token.toString().cstr()));
+      return root;
+   }
 };
 
 #ifdef _WIN32

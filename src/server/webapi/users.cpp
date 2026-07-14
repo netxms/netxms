@@ -295,6 +295,118 @@ int H_UserSetPassword(Context *context)
 }
 
 /**
+ * Check whether the caller may view or manage authentication tokens of the given
+ * user. Allowed for the user themselves or holders of the "manage users" right.
+ */
+static bool CheckTokenAccess(Context *context, uint32_t userId)
+{
+   return (context->getUserId() == userId) || context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS);
+}
+
+/**
+ * Handler for GET /v1/users/:user-id/tokens
+ * Returns the user's active authentication tokens. Clear-text token values are
+ * never returned here (only at creation time).
+ */
+int H_UserTokens(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckTokenAccess(context, userId))
+      return 403;
+
+   json_t *output = AuthenticationTokensToJson(userId);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for POST /v1/users/:user-id/tokens
+ * Issues a new authentication token for the user. Body:
+ * { "validFor": <seconds>, "persistent": bool, "description": "..." }.
+ * The clear-text token value is returned only in this response.
+ */
+int H_UserTokenCreate(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckTokenAccess(context, userId))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if ((request == nullptr) || !json_is_object(request))
+   {
+      context->setErrorResponse("Request body must be a JSON object");
+      return 400;
+   }
+
+   json_t *jsonValidFor = json_object_get(request, "validFor");
+   if (!json_is_integer(jsonValidFor) || (json_integer_value(jsonValidFor) <= 0))
+   {
+      context->setErrorResponse("Field \"validFor\" is required and must be a positive number of seconds");
+      return 400;
+   }
+   uint32_t validFor = static_cast<uint32_t>(json_integer_value(jsonValidFor));
+
+   bool persistent = json_object_get_boolean(request, "persistent", true);
+   wchar_t *description = json_object_get_string_t(request, "description", L"");
+
+   shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validFor,
+      persistent ? AuthenticationTokenType::PERSISTENT : AuthenticationTokenType::EPHEMERAL, description);
+   MemFree(description);
+   if (token == nullptr)
+   {
+      context->setErrorResponse("Cannot issue token for this user");
+      return 404;
+   }
+
+   context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Issued %s authentication token [%u] for user [%u]",
+      persistent ? L"persistent" : L"ephemeral", token->tokenId, userId);
+
+   json_t *output = token->toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 201;
+}
+
+/**
+ * Handler for DELETE /v1/users/:user-id/tokens/:token-id
+ * Revokes an authentication token belonging to the user.
+ */
+int H_UserTokenDelete(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckTokenAccess(context, userId))
+      return 403;
+
+   uint32_t tokenId = context->getPlaceholderValueAsUInt32(L"token-id");
+   if (tokenId == 0)
+      return 400;
+
+   // Scope revocation to the target user's own tokens; a token belonging to a
+   // different user is reported as not found within this collection.
+   if (RevokeAuthenticationToken(tokenId, userId) != RCC_SUCCESS)
+      return 404;
+
+   context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Revoked authentication token [%u] of user [%u]", tokenId, userId);
+   return 204;
+}
+
+/**
  * Handler for GET /v1/user-groups
  */
 int H_UserGroups(Context *context)
