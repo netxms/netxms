@@ -2474,6 +2474,87 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
 }
 
 /**
+ * Get list of actions supported by agent
+ */
+uint32_t AgentConnection::getActionList(ObjectArray<AgentActionDefinition> **actionList)
+{
+   *actionList = nullptr;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_ACTION_LIST, requestId, m_nProtocolVersion);
+
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   debugPrintf(6, _T("AgentConnection::getActionList(): RCC=%u"), rcc);
+   if (rcc == ERR_SUCCESS)
+   {
+      uint32_t count = response->getFieldAsUInt32(VID_NUM_ACTIONS);
+      ObjectArray<AgentActionDefinition> *list = new ObjectArray<AgentActionDefinition>(count, 16, Ownership::True);
+      for(uint32_t i = 0, fieldId = VID_ACTION_LIST_BASE; i < count; i++)
+      {
+         list->add(new AgentActionDefinition(*response, fieldId));
+         fieldId += 4;
+      }
+      *actionList = list;
+      debugPrintf(6, _T("AgentConnection::getActionList(): %u actions received from agent"), count);
+   }
+   delete response;
+
+   // Older agents do not handle CMD_GET_ACTION_LIST on the server session - fall back to Agent.ActionList list metric
+   if (rcc == ERR_UNKNOWN_COMMAND)
+   {
+      StringList *list = nullptr;
+      rcc = getList(_T("Agent.ActionList"), &list);
+      if (rcc == ERR_SUCCESS)
+      {
+         ObjectArray<AgentActionDefinition> *actions = new ObjectArray<AgentActionDefinition>(list->size(), 16, Ownership::True);
+         for(int i = 0; i < list->size(); i++)
+         {
+            // Each entry has format: name type "command"
+            const wchar_t *entry = list->get(i);
+            const wchar_t *p1 = wcschr(entry, L' ');
+            if (p1 == nullptr)
+               continue;
+            const wchar_t *p2 = wcschr(p1 + 1, L' ');
+
+            String name(entry, p1 - entry);
+            bool isExternal = (p2 != nullptr) ? !wcsncmp(p1 + 1, _T("external"), p2 - (p1 + 1)) : false;
+
+            const wchar_t *cmdText = _T("");
+            size_t cmdLen = 0;
+            if (p2 != nullptr)
+            {
+               cmdText = p2 + 1;
+               cmdLen = wcslen(cmdText);
+               if ((cmdLen >= 2) && (cmdText[0] == L'"') && (cmdText[cmdLen - 1] == L'"'))
+               {
+                  cmdText++;
+                  cmdLen -= 2;
+               }
+            }
+            String command(cmdText, cmdLen);
+
+            actions->add(new AgentActionDefinition(name.cstr(), _T(""), isExternal, command.cstr()));
+         }
+         delete list;
+         *actionList = actions;
+         debugPrintf(6, _T("AgentConnection::getActionList(): %d actions received via Agent.ActionList fallback"), actions->size());
+      }
+   }
+
+   return rcc;
+}
+
+/**
  * Setup encryption
  */
 uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)

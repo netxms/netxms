@@ -680,6 +680,10 @@ void CommSession::processCommand(NXCPMessage *request)
             response.setField(VID_RCC, ERR_SUCCESS);
             GetParameterList(&response);
             break;
+         case CMD_GET_ACTION_LIST:
+            response.setField(VID_RCC, ERR_SUCCESS);
+            GetActionList(&response);
+            break;
          case CMD_READ_AGENT_CONFIG_FILE:
             getConfig(&response);
             break;

@@ -932,6 +932,36 @@ public:
 };
 
 /**
+ * Agent action definition
+ */
+class LIBNXSRV_EXPORTABLE AgentActionDefinition
+{
+private:
+   String m_name;
+   String m_description;
+   String m_command;
+   bool m_isExternal;
+
+public:
+   AgentActionDefinition(const NXCPMessage& msg, uint32_t baseId) :
+      m_name(msg.getFieldAsString(baseId, MAX_PARAM_NAME)), m_description(msg.getFieldAsString(baseId + 1, 512)),
+      m_command(msg.getFieldAsString(baseId + 3, 1024))
+   {
+      m_isExternal = msg.getFieldAsBoolean(baseId + 2);
+   }
+   AgentActionDefinition(const wchar_t *name, const wchar_t *description, bool isExternal, const wchar_t *command) :
+      m_name(name), m_description(description), m_command(command)
+   {
+      m_isExternal = isExternal;
+   }
+
+   const wchar_t *getName() const { return m_name.cstr(); }
+   const wchar_t *getDescription() const { return m_description.cstr(); }
+   const wchar_t *getCommand() const { return m_command.cstr(); }
+   bool isExternal() const { return m_isExternal; }
+};
+
+/**
  * Remote file information
  */
 class LIBNXSRV_EXPORTABLE RemoteFileInfo
@@ -1279,6 +1309,7 @@ public:
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
    uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList);
+   uint32_t getActionList(ObjectArray<AgentActionDefinition> **actionList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
    uint32_t getPolicyInventory(AgentPolicyInfo **info);
