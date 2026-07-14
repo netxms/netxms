@@ -1533,6 +1533,7 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Wno-unused-result)
 	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
 	AC_CPP_CHECK_OPTION(-Wunused-but-set-variable)
+	AC_CPP_CHECK_OPTION(-Wunused-function)
 	AC_CPP_CHECK_OPTION(-Wunused-variable)
 	AC_CPP_CHECK_OPTION(-Wunused-value)
 	AC_CPP_CHECK_OPTION(-Werror=return-type)

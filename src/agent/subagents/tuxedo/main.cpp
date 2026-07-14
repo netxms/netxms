@@ -86,6 +86,8 @@ UINT32 g_tuxedoQueryLocalData = LOCAL_DATA_MACHINES | LOCAL_DATA_QUEUES | LOCAL_
  */
 bool g_tuxedoLocalMachineFilter = true;
 
+#ifndef NDRX_VERSION
+
 /**
  * Handler for Tuxedo.IsMasterMachine parameter
  */
@@ -118,6 +120,8 @@ static LONG H_IsMasterMachine(const TCHAR *param, const TCHAR *arg, TCHAR *value
 #endif
    return SYSINFO_RC_SUCCESS;
 }
+
+#endif
 
 /**
  * Poller thread

@@ -551,25 +551,6 @@ static bool EppParseAlarmSeverity(const char *s, int *out)
 }
 
 /**
- * Reverse of EppParseAlarmSeverity.
- */
-static const char *EppAlarmSeverityName(int severity)
-{
-   switch(severity)
-   {
-      case SEVERITY_NORMAL:       return "normal";
-      case SEVERITY_WARNING:      return "warning";
-      case SEVERITY_MINOR:        return "minor";
-      case SEVERITY_MAJOR:        return "major";
-      case SEVERITY_CRITICAL:     return "critical";
-      case SEVERITY_FROM_EVENT:   return "same as event";
-      case SEVERITY_TERMINATE:    return "terminate";
-      case SEVERITY_RESOLVE:      return "resolve";
-      default:                    return "unknown";
-   }
-}
-
-/**
  * Convert a match_severities array to the RF_SEVERITY_* bitmask.
  * Empty array maps to all five bits set (matches every severity).
  */
@@ -623,20 +604,6 @@ static bool EppParseIncidentDepth(const char *s, int *out)
    if (!stricmp(s, "standard")) { *out = 1; return true; }
    if (!stricmp(s, "thorough")) { *out = 2; return true; }
    return false;
-}
-
-/**
- * Reverse of EppParseIncidentDepth.
- */
-static const char *EppIncidentDepthName(int depth)
-{
-   switch(depth)
-   {
-      case 0:  return "quick";
-      case 1:  return "standard";
-      case 2:  return "thorough";
-      default: return "unknown";
-   }
 }
 
 /**
@@ -833,18 +800,6 @@ static std::string EppReadModifyWrite(
       return std::string("Database error during event processing policy save");
    }
    return std::string("Unexpected control flow in EPP retry loop");
-}
-
-/**
- * Standard "not yet implemented" payload used by stubs during phased rollout.
- * Returns a structured JSON so the LLM can distinguish from access-denied / not-found errors.
- */
-static std::string EppNotImplementedResponse(const char *toolName)
-{
-   json_t *output = json_object();
-   json_object_set_new(output, "error", json_string("not implemented"));
-   json_object_set_new(output, "tool", json_string(toolName));
-   return JsonToString(output);
 }
 
 /**
