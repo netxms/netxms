@@ -41,7 +41,7 @@ const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
 
 extern LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend);
 
-static CURLcode __nx_SSL_CTX_setup_cb(CURL *curl, void *sslctx, void *context)
+static inline CURLcode __nx_SSL_CTX_setup_cb(CURL *curl, void *sslctx, void *context)
 {
    SSL_CTX_set_options(static_cast<SSL_CTX*>(sslctx), SSL_OP_IGNORE_UNEXPECTED_EOF);
    return CURLE_OK;
