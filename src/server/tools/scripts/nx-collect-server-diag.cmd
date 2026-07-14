@@ -84,11 +84,9 @@ if %ERRORLEVEL% EQU 5 (
    EXIT /B 5
 )
 if %ERRORLEVEL% NEQ 0 (
-   echo ERROR: cannot connect to server ^(nxadm exit code %ERRORLEVEL%^)
-   DEL /F /Q /S "%logdir%" >NUL:
-   RMDIR "%logdir%" >NUL:
-   PAUSE
-   EXIT /B %ERRORLEVEL%
+   echo WARNING: cannot connect to server ^(nxadm exit code %ERRORLEVEL%^), server statistics will not be collected. Server may be down or shutting down.
+   echo cannot connect to server ^(nxadm exit code %ERRORLEVEL%^) >> %nxadmlog%
+   GOTO skip_nxadm
 )
 REM show dbcp
 CALL :print_header "show dbcp:"  
@@ -153,6 +151,8 @@ CALL :print_header "show users:"
 REM show watchdog
 CALL :print_header "show watchdog:" 
 %execdir%nxadm %nxadm_opts% -c "show watchdog"  >> %nxadmlog%
+
+:skip_nxadm
 
 REM netxmsd, nxagentd log files
 For /f "tokens=1* delims=^" %%a in ('%execdir%netxmsd -l') do (set netxmslog=%%a)
