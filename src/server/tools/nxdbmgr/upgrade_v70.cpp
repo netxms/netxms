@@ -28,7 +28,7 @@
  */
 static bool H_UpgradeFromV8()
 {
-   if (GetSchemaLevelForMajorVersion(62) < 33)
+   if (GetSchemaLevelForMajorVersion(62) < 34)
    {
       CHK_EXEC(SQLQuery(L"ALTER TABLE package_deployment_jobs ADD retry_count integer"));
       CHK_EXEC(SQLQuery(L"UPDATE package_deployment_jobs SET retry_count=0"));
