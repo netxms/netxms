@@ -622,6 +622,7 @@ void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId);
 bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr,
    uint32_t validFor = 0, time_t *expiresAt = nullptr, time_t *maxExpiresAt = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId);
 
 unique_ptr<StringList> NXCORE_EXPORTABLE GetUserConfigured2FAMethods(uint32_t userId);
 json_t NXCORE_EXPORTABLE *GetUser2FABindingsAsJson(uint32_t userId);

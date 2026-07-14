@@ -4909,6 +4909,7 @@ private:
 public:
    RackPassiveElement(DB_RESULT hResult, int row);
    RackPassiveElement(const NXCPMessage& request, uint32_t base);
+   RackPassiveElement(json_t *json);
    ~RackPassiveElement()
    {
       MemFree(m_name);
@@ -4918,6 +4919,7 @@ public:
 
    bool saveToDatabase(DB_HANDLE hdb, uint32_t parentId) const;
    void fillMessage(NXCPMessage *pMsg, uint32_t base) const;
+   void updateFromJson(json_t *json);
    json_t *toJson() const;
 
    uint32_t getId() const { return m_id; }
@@ -4962,6 +4964,10 @@ public:
    String getRackPasiveElementDescription(uint32_t id);
 
    json_t *getRackLayout(uint32_t userId);
+
+   uint32_t createPassiveElementFromJson(json_t *json, json_t **element);
+   uint32_t updatePassiveElementFromJson(uint32_t elementId, json_t *json, json_t **element);
+   uint32_t deletePassiveElement(uint32_t elementId);
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
 };

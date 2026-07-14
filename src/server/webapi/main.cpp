@@ -171,6 +171,9 @@ int H_ObjectQuery(Context *context);
 int H_ObjectRemoteControl(Context *context);
 int H_ChassisLayout(Context *context);
 int H_RackLayout(Context *context);
+int H_RackPassiveElementCreate(Context *context);
+int H_RackPassiveElementUpdate(Context *context);
+int H_RackPassiveElementDelete(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
@@ -248,6 +251,9 @@ int H_UserCreate(Context *context);
 int H_UserUpdate(Context *context);
 int H_UserDelete(Context *context);
 int H_UserSetPassword(Context *context);
+int H_UserTokens(Context *context);
+int H_UserTokenCreate(Context *context);
+int H_UserTokenDelete(Context *context);
 int H_UserGroups(Context *context);
 int H_UserGroupDetails(Context *context);
 int H_UserGroupCreate(Context *context);
@@ -546,6 +552,13 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/rack-layout")
       .GET(H_RackLayout)
       .build();
+   RouteBuilder("v1/objects/:object-id/rack-layout/passive-elements")
+      .POST(H_RackPassiveElementCreate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/rack-layout/passive-elements/:element-id")
+      .PATCH(H_RackPassiveElementUpdate)
+      .DELETE(H_RackPassiveElementDelete)
+      .build();
    RouteBuilder("v1/objects/:object-id/chassis-layout")
       .GET(H_ChassisLayout)
       .build();
@@ -758,6 +771,13 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/users/:user-id/password")
       .POST(H_UserSetPassword)
+      .build();
+   RouteBuilder("v1/users/:user-id/tokens")
+      .GET(H_UserTokens)
+      .POST(H_UserTokenCreate)
+      .build();
+   RouteBuilder("v1/users/:user-id/tokens/:token-id")
+      .DELETE(H_UserTokenDelete)
       .build();
    RouteBuilder("v1/users/:user-id/2fa-bindings")
       .GET(H_User2FABindings)

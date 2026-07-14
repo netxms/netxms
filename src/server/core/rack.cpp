@@ -293,6 +293,117 @@ json_t *Rack::getRackLayout(uint32_t userId)
 }
 
 /**
+ * Validate common passive rack element fields present in a JSON document.
+ * Returns true if all present fields hold acceptable values.
+ */
+static bool ValidatePassiveElementJson(json_t *json)
+{
+   json_t *type = json_object_get(json, "type");
+   if ((type != nullptr) && (!json_is_integer(type) || (json_integer_value(type) < 0) || (json_integer_value(type) > static_cast<json_int_t>(RackElementType::PDU))))
+      return false;
+
+   json_t *orientation = json_object_get(json, "orientation");
+   if ((orientation != nullptr) && (!json_is_integer(orientation) || (json_integer_value(orientation) < FILL) || (json_integer_value(orientation) > REAR)))
+      return false;
+
+   return true;
+}
+
+/**
+ * Create a new passive element from JSON document. On success returns
+ * RCC_SUCCESS and stores the JSON representation of the created element (with
+ * its server-assigned identifier) in *element. Returns RCC_INVALID_ARGUMENT if
+ * the document contains invalid field values.
+ */
+uint32_t Rack::createPassiveElementFromJson(json_t *json, json_t **element)
+{
+   if (!ValidatePassiveElementJson(json))
+      return RCC_INVALID_ARGUMENT;
+
+   RackPassiveElement *e = new RackPassiveElement(json);
+
+   lockProperties();
+   m_passiveElements.add(e);
+   *element = e->toJson();
+   setModified(MODIFY_OTHER);
+   unlockProperties();
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Update an existing passive element from JSON document using merge-patch
+ * semantics. On success returns RCC_SUCCESS and stores the updated JSON
+ * representation in *element. Returns RCC_INVALID_OBJECT_ID if no element with
+ * the given identifier exists, or RCC_INVALID_ARGUMENT for invalid field values.
+ */
+uint32_t Rack::updatePassiveElementFromJson(uint32_t elementId, json_t *json, json_t **element)
+{
+   if (!ValidatePassiveElementJson(json))
+      return RCC_INVALID_ARGUMENT;
+
+   lockProperties();
+
+   RackPassiveElement *e = nullptr;
+   for(int i = 0; i < m_passiveElements.size(); i++)
+   {
+      if (m_passiveElements.get(i)->getId() == elementId)
+      {
+         e = m_passiveElements.get(i);
+         break;
+      }
+   }
+   if (e == nullptr)
+   {
+      unlockProperties();
+      return RCC_INVALID_OBJECT_ID;
+   }
+
+   e->updateFromJson(json);
+   *element = e->toJson();
+   setModified(MODIFY_OTHER);
+   unlockProperties();
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Delete passive element by identifier. Returns RCC_SUCCESS if the element was
+ * removed or RCC_INVALID_OBJECT_ID if no element with the given identifier
+ * exists. Removing a patch panel also drops its physical link inventory.
+ */
+uint32_t Rack::deletePassiveElement(uint32_t elementId)
+{
+   lockProperties();
+
+   int index = -1;
+   RackElementType type = RackElementType::FILLER_PANEL;
+   for(int i = 0; i < m_passiveElements.size(); i++)
+   {
+      if (m_passiveElements.get(i)->getId() == elementId)
+      {
+         index = i;
+         type = m_passiveElements.get(i)->getType();
+         break;
+      }
+   }
+   if (index == -1)
+   {
+      unlockProperties();
+      return RCC_INVALID_OBJECT_ID;
+   }
+
+   m_passiveElements.remove(index);
+   setModified(MODIFY_OTHER);
+   unlockProperties();
+
+   if (type == RackElementType::PATCH_PANEL)
+      DeletePatchPanelFromPhysicalLinks(m_id, elementId);
+
+   return RCC_SUCCESS;
+}
+
+/**
  * Get description for passive element
  */
 String Rack::getRackPasiveElementDescription(uint32_t id)
@@ -355,6 +466,49 @@ RackPassiveElement::RackPassiveElement(const NXCPMessage& request, uint32_t base
    m_portCount = request.getFieldAsInt32(base++);
    m_imageFront = request.getFieldAsGUID(base++);
    m_imageRear = request.getFieldAsGUID(base++);
+}
+
+/**
+ * Create passive rack element from JSON document. A new unique identifier is
+ * always assigned; any "id" field in the document is ignored.
+ */
+RackPassiveElement::RackPassiveElement(json_t *json)
+{
+   m_id = CreateUniqueId(IDG_RACK_ELEMENT);
+   m_name = json_object_get_string_t(json, "name", L"");
+   m_type = static_cast<RackElementType>(json_object_get_int32(json, "type", static_cast<int32_t>(RackElementType::FILLER_PANEL)));
+   m_position = static_cast<uint16_t>(json_object_get_int32(json, "position", 0));
+   m_height = static_cast<uint16_t>(json_object_get_int32(json, "height", 1));
+   m_orientation = static_cast<RackOrientation>(json_object_get_int32(json, "orientation", FILL));
+   m_portCount = json_object_get_int32(json, "portCount", 0);
+   m_imageFront = json_object_get_uuid(json, "imageFront");
+   m_imageRear = json_object_get_uuid(json, "imageRear");
+}
+
+/**
+ * Update mutable fields of a passive rack element from a JSON document using
+ * merge-patch semantics: only fields present in the document are changed. The
+ * element identifier and its type are immutable and never changed here.
+ */
+void RackPassiveElement::updateFromJson(json_t *json)
+{
+   if (json_object_get(json, "name") != nullptr)
+   {
+      MemFree(m_name);
+      m_name = json_object_get_string_t(json, "name", L"");
+   }
+   if (json_object_get(json, "position") != nullptr)
+      m_position = static_cast<uint16_t>(json_object_get_int32(json, "position", m_position));
+   if (json_object_get(json, "height") != nullptr)
+      m_height = static_cast<uint16_t>(json_object_get_int32(json, "height", m_height));
+   if (json_object_get(json, "orientation") != nullptr)
+      m_orientation = static_cast<RackOrientation>(json_object_get_int32(json, "orientation", m_orientation));
+   if (json_object_get(json, "portCount") != nullptr)
+      m_portCount = json_object_get_int32(json, "portCount", m_portCount);
+   if (json_object_get(json, "imageFront") != nullptr)
+      m_imageFront = json_object_get_uuid(json, "imageFront");
+   if (json_object_get(json, "imageRear") != nullptr)
+      m_imageRear = json_object_get_uuid(json, "imageRear");
 }
 
 /**

@@ -368,6 +368,22 @@ void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg)
 }
 
 /**
+ * Build JSON array with all authentication tokens for given user
+ */
+json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId)
+{
+   json_t *array = json_array();
+   s_tokens.forEach(
+      [userId, array] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
+      {
+         if (descriptor->userId == userId)
+            json_array_append_new(array, descriptor->toJson());
+         return _CONTINUE;
+      });
+   return array;
+}
+
+/**
  * Print authentication tokens
  */
 void ShowAuthenticationTokens(ServerConsole *console)
