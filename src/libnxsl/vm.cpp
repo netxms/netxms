@@ -1048,6 +1048,11 @@ void NXSL_VM::execute()
          {
             if (doConcatAssign(pVar))
             {
+               // stackItems == 0 means value of the whole "v ..= x" expression is needed
+               // (statement-context instructions are merged with the discarding POP by the
+               // optimizer and have stackItems == 1)
+               if (cp->m_stackItems == 0)
+                  m_dataStack.push(createValueRef(pVar->getValue()));
                // Convert to direct variable access without name lookup
                if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
                {
@@ -1062,7 +1067,8 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_CONCAT_VARPTR:
-         doConcatAssign(cp->m_operand.m_variable);
+         if (doConcatAssign(cp->m_operand.m_variable) && (cp->m_stackItems == 0))
+            m_dataStack.push(createValueRef(cp->m_operand.m_variable->getValue()));
          break;
 		case OPCODE_ARRAY:
 			// Check if variable already exist
