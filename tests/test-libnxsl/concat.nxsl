@@ -203,6 +203,72 @@ assert(s.startsWith("chunk0|"));
 assert(s.endsWith("chunk99|"));
 assert(s.indexOf("|chunk50|") >= 0);
 
+/* --- ..= inside foreach loop --- */
+
+/* foreach keeps the iterator on the data stack; ..= in statement context must
+   not disturb it (historically the stray POP after CONCAT_VAR destroyed the
+   iterator, causing data stack underflow) */
+s = "";
+for(w : ["a", "b", "c"]) {
+   s ..= w;
+}
+assert(s == "abc");
+
+/* Same with concat expression on RHS and conditional append */
+function cleanup_name(input) {
+   local output = "";
+   for(e : input.split(" ")) {
+      e = e.trim();
+      if (e.length > 0) {
+         output ..= e .. " ";
+      }
+   }
+   return output.trim();
+}
+assert(cleanup_name("test") == "test");
+assert(cleanup_name("  a   b  c ") == "a b c");
+
+/* Nested foreach */
+s = "";
+for(x : ["1", "2"]) {
+   for(y : ["a", "b"]) {
+      s ..= x .. y;
+   }
+}
+assert(s == "1a1b2a2b");
+
+/* return with ..= as return expression inside foreach */
+function first_tagged(items) {
+   local r = "tag:";
+   for(it : items) {
+      return r ..= it;
+   }
+   return null;
+}
+assert(first_tagged(["x", "y"]) == "tag:x");
+
+/* --- ..= as expression (value must be left on stack) --- */
+
+s = "a";
+r = (s ..= "b");
+assert(s == "ab");
+assert(r == "ab");
+
+/* Expression value used in enclosing concat */
+a = "x";
+b = "y";
+a = (b ..= "!") .. a;
+assert(a == "y!x");
+assert(b == "y!");
+
+/* Expression usage makes the value shared; subsequent in-place appends must
+   not mutate the previously returned reference */
+s = "a";
+r = (s ..= "b");
+s ..= "c";
+assert(s == "abc");
+assert(r == "ab");
+
 /* --- Mixing .. and ..= --- */
 
 s = "foo";

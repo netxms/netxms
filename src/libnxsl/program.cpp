@@ -191,6 +191,10 @@ void NXSL_ProgramBuilder::addPushVariableInstruction(const NXSL_Identifier& name
  * in place when it's not shared, avoiding the full-string clone that would
  * otherwise happen every iteration of an accumulator loop. For expression
  * variables the classic CONCAT + SET sequence is preserved.
+ *
+ * Like OPCODE_SET, OPCODE_CONCAT_VAR leaves the value of the whole assignment
+ * expression on the stack (stackItems == 0); in statement context the optimizer
+ * merges it with the following POP into a non-pushing variant (stackItems == 1).
  */
 void NXSL_ProgramBuilder::addConcatAssignInstructions(const NXSL_Identifier& name, int line)
 {
@@ -396,7 +400,6 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
       case OPCODE_PUSH_PROPERTY:
       case OPCODE_BIND:
       case OPCODE_ARRAY:
-      case OPCODE_CONCAT_VAR:
       case OPCODE_GLOBAL_ARRAY:
       case OPCODE_INC:
       case OPCODE_DEC:
@@ -412,6 +415,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          _ftprintf(fp, _T("%hs\n"), instruction.m_operand.m_identifier->value);
          break;
       case OPCODE_SET:
+      case OPCODE_CONCAT_VAR:
          _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
          break;
       case OPCODE_SET_EXPRVAR:
@@ -424,10 +428,10 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          _ftprintf(fp, _T("(%hs), %04X\n"), instruction.m_operand.m_identifier->value, instruction.m_addr2);
          break;
       case OPCODE_PUSH_VARPTR:
-      case OPCODE_CONCAT_VARPTR:
          _ftprintf(fp, _T("%hs\n"), instruction.m_operand.m_variable->getName().value);
          break;
       case OPCODE_SET_VARPTR:
+      case OPCODE_CONCAT_VARPTR:
          _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_variable->getName().value, instruction.m_stackItems);
          break;
       case OPCODE_PUSH_CONSTANT:
@@ -671,11 +675,12 @@ void NXSL_ProgramBuilder::optimize()
 		}
 	}
 
-   // Convert SET/ESET followed by POP 1 to SET/ESET with POP
+   // Convert SET/ESET/CONCAT_VAR followed by POP 1 to variant with POP
+   // (for CONCAT_VAR stackItems == 1 means "do not push result value")
    for(i = 0; (m_instructionSet.size() > 1) && (i < m_instructionSet.size() - 1); i++)
    {
       NXSL_Instruction *instr = m_instructionSet.get(i);
-      if (((instr->m_opCode == OPCODE_SET) || (instr->m_opCode == OPCODE_SET_ELEMENT)) &&
+      if (((instr->m_opCode == OPCODE_SET) || (instr->m_opCode == OPCODE_SET_ELEMENT) || (instr->m_opCode == OPCODE_CONCAT_VAR)) &&
           (instr->m_stackItems == 0) &&
           (m_instructionSet.get(i + 1)->m_opCode == OPCODE_POP) &&
           (m_instructionSet.get(i + 1)->m_stackItems == 1))
@@ -748,11 +753,14 @@ void NXSL_ProgramBuilder::optimize()
          continue;
 
       // Rewrite each CONCAT in the chain to CONCAT_VAR. The last one steals
-      // the identifier from SET; the others get cloned copies.
+      // the identifier from SET; the others get cloned copies. The pattern only
+      // matches statement context (SET with pop), so mark each CONCAT_VAR with
+      // stackItems = 1 ("do not push result value").
       for (int k = 0; k < chainLen; k++)
       {
          NXSL_Instruction *concat = m_instructionSet.get(i + 2 + k * 2);
          concat->m_opCode = OPCODE_CONCAT_VAR;
+         concat->m_stackItems = 1;
          if (k == chainLen - 1)
          {
             concat->m_operand.m_identifier = setInstr->m_operand.m_identifier;
