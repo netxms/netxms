@@ -163,7 +163,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 /**
  * Set debug level for tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level, bool replace)
 {
    if ((tag == nullptr) || !_tcscmp(tag, _T("*")))
    {
@@ -177,9 +177,9 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
    s_mutexDebugTagTreeWrite.lock();
    if (level >= 0)
    {
-      s_tagTree.secondary->add(tag, level);
+      s_tagTree.secondary->add(tag, level, replace);
       SwapAndWait();
-      s_tagTree.secondary->add(tag, level);
+      s_tagTree.secondary->add(tag, level, replace);
    }
    else
    {

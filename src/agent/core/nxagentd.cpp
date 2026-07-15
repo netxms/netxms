@@ -1100,7 +1100,7 @@ BOOL Initialize()
                *level = 0;
                level++;
                Trim(tagList[i]);
-               nxlog_set_debug_level_tag(tagList[i], _tcstol(level, nullptr, 0));
+               nxlog_set_debug_level_tag(tagList[i], _tcstol(level, nullptr, 0), false);
             }
             MemFree(tagList[i]);
          }
