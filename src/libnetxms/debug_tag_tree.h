@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -48,7 +48,7 @@ public:
    const TCHAR *getValue() const { return m_value; }
    void getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo> *tags) const;
 
-   void add(const TCHAR *tag, int level);
+   void add(const TCHAR *tag, int level, bool replace);
    bool remove(const TCHAR *tag);
    void setWildcardDebugLevel(int level) { m_wildcardLevel = level; }
 };
@@ -72,7 +72,7 @@ public:
    int getRootDebugLevel() { return m_root->getWildcardDebugLevel(); }
    ObjectArray<DebugTagInfo> *getAllTags();
 
-   void add(const TCHAR *tag, int level) { m_root->add(tag, level); }
+   void add(const TCHAR *tag, int level, bool replace) { m_root->add(tag, level, replace); }
    void remove(const TCHAR *tag) { m_root->remove(tag); }
    void setRootDebugLevel(int level) { m_root->setWildcardDebugLevel(level); }
    void clear() { delete m_root; m_root = new DebugTagTreeNode(); }

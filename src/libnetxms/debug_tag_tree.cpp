@@ -57,7 +57,7 @@ DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value, size_t len)
  */
 int DebugTagTreeNode::getDebugLevel(const TCHAR *tag) const
 {
-   if (tag == NULL)
+   if (tag == nullptr)
    {
       if (m_direct)
          return m_directLevel;
@@ -83,36 +83,46 @@ int DebugTagTreeNode::getDebugLevel(const TCHAR *tag) const
 /**
  * Add new tree node to its children and grand children etc... (recursive)
  */
-void DebugTagTreeNode::add(const TCHAR *tag, int level)
+void DebugTagTreeNode::add(const TCHAR *tag, int level, bool replace)
 {
-   if ((tag != NULL) && !_tcscmp(tag, _T("*")))
+   if ((tag != nullptr) && !_tcscmp(tag, _T("*")))
    {
       if (!m_wildcard)
+      {
          m_wildcard = true;
-      m_wildcardLevel = level;
+         m_wildcardLevel = level;
+      }
+      else if (replace)
+      {
+         m_wildcardLevel = level;
+      }
       return;
    }
 
-   const TCHAR *ptr = (tag == NULL) ? NULL : _tcschr(tag, _T('.'));
+   const TCHAR *ptr = (tag == nullptr) ? nullptr : _tcschr(tag, _T('.'));
 
-   if (tag == NULL)
+   if (tag == nullptr)
    {
       if (!m_direct)
+      {
          m_direct = true;
-      m_directLevel = level;
+         m_directLevel = level;
+      }
+      else if (replace)
+      {
+         m_directLevel = level;
+      }
       return;
    }
 
-   size_t len = (ptr == NULL) ? _tcslen(tag) : (ptr - tag);
+   size_t len = (ptr == nullptr) ? _tcslen(tag) : (ptr - tag);
    DebugTagTreeNode *child = m_children->get(tag, len);
-   if (child != NULL)
-      child->add((ptr != NULL) ? ptr + 1 : NULL, level);
-   else
+   if (child == nullptr)
    {
       child = new DebugTagTreeNode(tag, len);
       m_children->set(child->getValue(), child);
-      child->add((ptr != NULL) ? ptr + 1 : NULL, level);
    }
+   child->add((ptr != nullptr) ? ptr + 1 : nullptr, level, replace);
 }
 
 /**
@@ -120,7 +130,7 @@ void DebugTagTreeNode::add(const TCHAR *tag, int level)
  */
 bool DebugTagTreeNode::remove(const TCHAR *tag)
 {
-   if (tag != NULL)
+   if (tag != nullptr)
    {
       if (!_tcscmp(tag, _T("*")))
       {
@@ -130,10 +140,10 @@ bool DebugTagTreeNode::remove(const TCHAR *tag)
       else
       {
          const TCHAR *ptr = _tcschr(tag, _T('.'));
-         size_t len = (ptr == NULL) ? _tcslen(tag) : (ptr - tag);
+         size_t len = (ptr == nullptr) ? _tcslen(tag) : (ptr - tag);
 
          DebugTagTreeNode *child = m_children->get(tag, len);
-         if (child != NULL && child->remove((ptr != NULL) ? ptr + 1 : NULL))
+         if ((child != nullptr) && child->remove((ptr != nullptr) ? ptr + 1 : nullptr))
          {
             m_children->remove(child->getValue());
          }
@@ -185,7 +195,7 @@ void DebugTagTreeNode::getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo>
 int DebugTagTree::getDebugLevel(const TCHAR *tags)
 {
    int result;
-   if (tags == NULL)
+   if (tags == nullptr)
    {
       result = m_root->getWildcardDebugLevel();
    }

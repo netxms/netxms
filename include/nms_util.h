@@ -5834,7 +5834,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object2(const TCHAR *tag, UINT32 objec
 bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 maxLogSize, int historySize, const TCHAR *dailySuffix);
 bool LIBNETXMS_EXPORTABLE nxlog_rotate();
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
-void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level);
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level, bool replace = true);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const char *definition);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
