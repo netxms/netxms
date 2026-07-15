@@ -2544,6 +2544,65 @@ void NetObj::dropUserAccess(uint32_t userId)
 }
 
 /**
+ * Serialize object's access control list as JSON:
+ *   { "inheritAccessRights": bool, "accessList": [ { "userId": n, "access": n }, ... ] }
+ */
+json_t *NetObj::accessListToJson()
+{
+   lockProperties();
+   json_t *root = json_object();
+   json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
+   json_object_set_new(root, "accessList", m_accessList.toJson());
+   unlockProperties();
+   return root;
+}
+
+/**
+ * Update object's access control list from JSON document. Mirrors the VID_ACL_SIZE
+ * block of modifyFromMessageInternal for the WebAPI JSON path. Expects:
+ *   { "inheritAccessRights": bool, "accessList": [ { "userId": n, "access": n }, ... ] }
+ * Both members are optional; an absent member leaves the current value unchanged.
+ */
+uint32_t NetObj::updateAccessListFromJson(json_t *json)
+{
+   if (!json_is_object(json))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *inherit = json_object_get(json, "inheritAccessRights");
+   if ((inherit != nullptr) && !json_is_boolean(inherit))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *accessList = json_object_get(json, "accessList");
+   if (accessList != nullptr)
+   {
+      if (!json_is_array(accessList))
+         return RCC_INVALID_ARGUMENT;
+
+      size_t i;
+      json_t *e;
+      json_array_foreach(accessList, i, e)
+      {
+         if (!json_is_object(e) ||
+             !json_is_integer(json_object_get(e, "userId")) ||
+             !json_is_integer(json_object_get(e, "access")))
+            return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   lockProperties();
+   if (inherit != nullptr)
+      m_inheritAccessRights = json_is_true(inherit);
+   if (accessList != nullptr)
+      m_accessList.updateFromJson(accessList);
+   clearInheritedAccessCache();
+   notifyClientsOnAccessChange();
+   unlockProperties();
+
+   markAsModified(MODIFY_ACCESS_LIST);
+   return RCC_SUCCESS;
+}
+
+/**
  * Clear inherited access rights cache for this object and all descendants
  */
 void NetObj::clearInheritedAccessCache()

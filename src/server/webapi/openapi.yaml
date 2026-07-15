@@ -3160,6 +3160,77 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/access-rights:
+    get:
+      operationId: getObjectAccessRights
+      summary: Get object access control list
+      description: |
+        Return the object's directly assigned access control list and the flag controlling
+        whether access rights are inherited from parent objects. Requires read access to the
+        object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Object access rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectAccessRights'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    put:
+      operationId: updateObjectAccessRights
+      summary: Replace object access control list
+      description: |
+        Replace the object's directly assigned access control list and set the inherited-rights
+        flag. This is a full replacement: any user or group not present in `accessList` loses its
+        directly assigned rights on the object. Both members are optional; an omitted member
+        leaves the current value unchanged. Requires both modify and access-control rights on the
+        object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectAccessRights'
+      responses:
+        '200':
+          description: Access rights updated; the resulting access control list is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectAccessRights'
+        '400':
+          description: Malformed request body or invalid access list
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify and access-control rights on the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/polling:
     get:
       operationId: getObjectPolling
@@ -11185,6 +11256,25 @@ components:
           type: string
           format: uuid
           description: Rear image UUID from the image library.
+    ObjectAccessRights:
+      type: object
+      description: Object access control list and the flag controlling inheritance of access rights from parent objects.
+      properties:
+        inheritAccessRights:
+          type: boolean
+          description: When true, effective rights include those inherited from parent objects in addition to the directly assigned rights below.
+        accessList:
+          type: array
+          description: Directly assigned access control entries. On update this is a full replacement of the object's own access list.
+          items:
+            type: object
+            properties:
+              userId:
+                type: integer
+                description: User or group ID. Group IDs have the high bit (0x80000000) set.
+              access:
+                type: integer
+                description: Bit mask of access rights granted to the user or group on this object.
     CustomAttribute:
       type: object
       description: A single custom attribute as embedded in an object document and returned by the custom-attributes sub-resource.

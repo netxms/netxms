@@ -1257,6 +1257,7 @@ public:
    AccessList() : m_mutex(MutexType::FAST) {}
 
    void updateFromMessage(const NXCPMessage& msg);
+   void updateFromJson(json_t *json);
    bool addElement(uint32_t userId, uint32_t accessRights, bool cache);
    bool deleteElement(uint32_t userId);
 
@@ -1634,6 +1635,9 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t userId, bool full = true);
    uint32_t modifyFromMessage(const NXCPMessage& msg, ClientSession *session);
    uint32_t modifyFromJSON(json_t *json, GenericClientSession *session);
+
+   json_t *accessListToJson();
+   uint32_t updateAccessListFromJson(json_t *json);
 
    virtual void postModify();
 

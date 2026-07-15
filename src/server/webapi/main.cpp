@@ -145,6 +145,8 @@ int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectCreate(Context *context);
+int H_ObjectAccessRights(Context *context);
+int H_ObjectAccessRightsUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
@@ -609,6 +611,10 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/status-calculation")
       .PATCH(H_ObjectStatusCalculationUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/access-rights")
+      .GET(H_ObjectAccessRights)
+      .PUT(H_ObjectAccessRightsUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/polling")
