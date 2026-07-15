@@ -4,6 +4,6 @@
 #
 
 DRIVER = hpe
-SOURCES = aruba-sw.cpp h3c.cpp hpe.cpp hpsw.cpp ilo.cpp procurve.cpp
+SOURCES = aruba-sw.cpp comware.cpp h3c.cpp hpe.cpp hpsw.cpp ilo.cpp procurve.cpp
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk

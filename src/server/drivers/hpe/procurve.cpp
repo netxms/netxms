@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for HP ProCurve switches
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -127,4 +127,100 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 	}
 
 	return ifList;
+}
+
+/**
+ * Get SSH driver hints for interactive CLI sessions
+ */
+void ProCurveDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // ProVision / ArubaOS-S prompt patterns:
+   // - Operator mode: hostname>
+   // - Manager mode: hostname#
+   // - Config mode: hostname(config)#, hostname(vlan-10)#, etc.
+   hints->promptPattern = "^[\\w.-]+(\\([\\w-]+\\))?[>#]\\s*$";
+   hints->enabledPromptPattern = "^[\\w.-]+(\\([\\w-]+\\))?#\\s*$";
+
+   // Enable command for switching from operator to manager mode
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "no page";
+   hints->paginationPrompt = "-- MORE --|--More--";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = "show system";
+   hints->testCommandPattern = "System";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
+
+/**
+ * Check if config backup is supported
+ */
+bool ProCurveDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Strip diagnostic preamble from ProCurve configuration output.
+ * Removes lines like "Running configuration:" that appear before the actual config
+ * which always starts with a comment line (;)
+ */
+static void StripProCurveConfigPreamble(ByteStream *output)
+{
+   const char *data = reinterpret_cast<const char*>(output->buffer());
+   size_t len = output->size();
+
+   // Find first line starting with ';' which marks the beginning of actual configuration
+   size_t pos = 0;
+   while (pos < len)
+   {
+      if (data[pos] == ';')
+         break;
+      // Skip to next line
+      while (pos < len && data[pos] != '\n')
+         pos++;
+      if (pos < len)
+         pos++;
+   }
+
+   if (pos > 0 && pos < len)
+      output->truncateLeft(pos);
+}
+
+/**
+ * Get running configuration via interactive SSH
+ */
+bool ProCurveDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   if (!ssh->executeCommand("show running-config", output))
+      return false;
+   StripProCurveConfigPreamble(output);
+   return true;
+}
+
+/**
+ * Get startup configuration via interactive SSH
+ */
+bool ProCurveDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   if (!ssh->executeCommand("show config", output))
+      return false;
+   StripProCurveConfigPreamble(output);
+   return true;
 }

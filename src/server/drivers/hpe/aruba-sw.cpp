@@ -370,3 +370,57 @@ ObjectArray<WirelessStationInfo> *ArubaSwitchDriver::getWirelessStations(SNMP_Tr
    }
    return wsList;
 }
+
+/**
+ * Get SSH driver hints for interactive CLI sessions
+ */
+void ArubaSwitchDriver::getSSHDriverHints(SSHDriverHints *hints) const
+{
+   // ArubaOS prompt patterns:
+   // - User mode: (hostname) >
+   // - Privileged mode: (hostname) #
+   // - ArubaOS 8.x includes node path: (hostname) [mynode] #
+   hints->promptPattern = "^\\([\\w.-]+\\)\\s*(\\[[\\w/.-]+\\]\\s*)?[>#]\\s*$";
+   hints->enabledPromptPattern = "^\\([\\w.-]+\\)\\s*(\\[[\\w/.-]+\\]\\s*)?#\\s*$";
+
+   // Enable command and password prompt
+   hints->enableCommand = "enable";
+   hints->enablePromptPattern = "[Pp]assword:\\s*$";
+
+   // Pagination control
+   hints->paginationDisableCmd = "no paging";
+   hints->paginationPrompt = "--More--";
+   hints->paginationContinue = " ";
+
+   // Exit command
+   hints->exitCommand = "exit";
+
+   // Test command for verifying command mode support
+   hints->testCommand = "show version";
+   hints->testCommandPattern = "Aruba";
+
+   // Timeouts
+   hints->commandTimeout = 30000;
+   hints->connectTimeout = 15000;
+}
+
+/**
+ * Check if config backup is supported
+ */
+bool ArubaSwitchDriver::isConfigBackupSupported()
+{
+   return true;
+}
+
+/**
+ * Get running configuration via interactive SSH. Startup configuration is not
+ * retrieved because saved configuration semantics differ between ArubaOS 6.x
+ * and the 8.x committed configuration model.
+ */
+bool ArubaSwitchDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show running-config", output);
+}
