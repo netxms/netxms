@@ -4019,6 +4019,78 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/map:
+    get:
+      operationId: getObjectNetworkMap
+      summary: Get network map content
+      description: |
+        Return the content of a network map object: layout settings, link defaults, background,
+        and the element and link layout. Requires read access. Applies only to objects of class
+        `NetworkMap`.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Network map content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkMapContent'
+        '400':
+          description: Object is not a network map
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    put:
+      operationId: updateObjectNetworkMap
+      summary: Replace network map content
+      description: |
+        Replace the content of a network map object. The `elements` and `links` arrays, when
+        present, fully replace the map layout. Only network map content fields are applied —
+        other object properties are left untouched. Requires modify access and applies only to
+        objects of class `NetworkMap`.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkMapContent'
+      responses:
+        '200':
+          description: Network map content updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Object is not a network map, or the request body is malformed
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/dashboards:
     put:
       operationId: updateObjectDashboards
@@ -11367,6 +11439,153 @@ components:
           description: Dashboard elements. On update this is a full replacement of the element layout.
           items:
             $ref: '#/components/schemas/DashboardElement'
+    NetworkMapElement:
+      type: object
+      description: A single network map element (object reference, decoration, DCI container/image, or text box). Element type-specific fields are carried alongside the common ones.
+      properties:
+        id:
+          type: integer
+          description: Element ID (unique within the map).
+        type:
+          type: integer
+          description: Element type code (e.g. object, decoration, DCI container, DCI image, text box).
+        posX:
+          type: integer
+          description: X position.
+        posY:
+          type: integer
+          description: Y position.
+        flags:
+          type: integer
+          description: Element flags.
+      required:
+        - type
+    NetworkMapLink:
+      type: object
+      description: A single network map link between two elements. Link IDs are assigned by the server on save.
+      properties:
+        element1:
+          type: integer
+          description: ID of the first linked element.
+        element2:
+          type: integer
+          description: ID of the second linked element.
+        interface1:
+          type: integer
+          description: Object ID of the interface at the first endpoint (0 if none).
+        interface2:
+          type: integer
+          description: Object ID of the interface at the second endpoint (0 if none).
+        type:
+          type: integer
+          description: Link type code.
+        name:
+          type: string
+          description: Link label.
+        connectorName1:
+          type: string
+          description: Connector label at the first endpoint.
+        connectorName2:
+          type: string
+          description: Connector label at the second endpoint.
+        flags:
+          type: integer
+          description: Link flags.
+        colorSource:
+          type: integer
+          description: Link color source.
+        color:
+          type: integer
+          description: Fixed link color (used when color source is "custom color").
+        colorProvider:
+          type: string
+          description: Name of the script providing the link color (used when color source is "script").
+        config:
+          type: string
+          description: Serialized JSON link configuration (e.g. referenced DCI list).
+    NetworkMapContent:
+      type: object
+      description: Content of a network map object - layout settings, link defaults, background, and element/link layout.
+      properties:
+        mapType:
+          type: integer
+          description: Map type (custom, layer-2 topology, IP topology, etc.).
+        layout:
+          type: integer
+          description: Automatic layout algorithm.
+        seedObjects:
+          type: array
+          description: Seed object IDs for topology maps.
+          items:
+            type: integer
+        discoveryRadius:
+          type: integer
+          description: Topology discovery radius (hops from seed).
+        defaultLinkColor:
+          type: integer
+          description: Default link color.
+        defaultLinkColorSource:
+          type: integer
+          description: Default link color source.
+        defaultLinkRouting:
+          type: integer
+          description: Default link routing algorithm.
+        defaultLinkWidht:
+          type: integer
+          description: Default link width. (Key spelling matches the object representation.)
+        defaultLinkStyle:
+          type: integer
+          description: Default link style.
+        objectDisplayMode:
+          type: integer
+          description: Object element display mode.
+        backgroundColor:
+          type: integer
+          description: Map background color.
+        background:
+          type: string
+          format: uuid
+          description: Background image UUID (or a special value for map/none). When set, the background geo-positioning fields below apply.
+        backgroundLatitude:
+          type: number
+          description: Background map center latitude.
+        backgroundLongitude:
+          type: number
+          description: Background map center longitude.
+        backgroundZoom:
+          type: integer
+          description: Background map zoom level.
+        filter:
+          type: string
+          description: NXSL object filter script source.
+        linkScript:
+          type: string
+          description: NXSL link styling script source.
+        width:
+          type: integer
+          description: Map canvas width.
+        height:
+          type: integer
+          description: Map canvas height.
+        canvasType:
+          type: integer
+          description: Map canvas type.
+        initialViewMode:
+          type: integer
+          description: Initial view mode when the map is opened.
+        displayPriority:
+          type: integer
+          description: Display ordering priority.
+        elements:
+          type: array
+          description: Map elements. On update this fully replaces the element layout.
+          items:
+            $ref: '#/components/schemas/NetworkMapElement'
+        links:
+          type: array
+          description: Map links. On update this fully replaces the link layout.
+          items:
+            $ref: '#/components/schemas/NetworkMapLink'
     ObjectAccessRights:
       type: object
       description: Object access control list and the flag controlling inheritance of access rights from parent objects.

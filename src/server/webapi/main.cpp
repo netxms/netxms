@@ -150,6 +150,8 @@ int H_ObjectAccessRightsUpdate(Context *context);
 int H_ObjectDashboard(Context *context);
 int H_ObjectDashboardUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
+int H_ObjectNetworkMap(Context *context);
+int H_ObjectNetworkMapUpdate(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
 int H_ObjectPollingGet(Context *context);
@@ -621,6 +623,10 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/dashboard")
       .GET(H_ObjectDashboard)
       .PUT(H_ObjectDashboardUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/map")
+      .GET(H_ObjectNetworkMap)
+      .PUT(H_ObjectNetworkMapUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/polling")

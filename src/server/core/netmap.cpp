@@ -753,6 +753,79 @@ void NetworkMap::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Reconcile a freshly parsed element list against the current map content:
+ * carry internal fields forward for elements that still exist, un-delete object
+ * elements that reappeared, and record positions of object elements that were
+ * removed so they can be restored if the object comes back later. Shared by the
+ * NXCP and JSON modify paths.
+ */
+void NetworkMap::reconcileElementChanges(const ObjectArray<NetworkMapElement>& newElements)
+{
+   for(int i = 0; i < newElements.size(); i++)
+   {
+      NetworkMapElement *newElement = newElements.get(i);
+
+      bool found = false;
+      for(int j = 0; j < m_mapContent.m_elements.size(); j++)
+      {
+         NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
+         if (newElement->getId() == oldElement->getId() && newElement->getType() == oldElement->getType())
+         {
+            newElement->updateInternalFields(oldElement);
+            found = true;
+            break;
+         }
+      }
+
+      if (newElement->getType() != MAP_ELEMENT_OBJECT)
+         continue;
+
+      if (!found)
+      {
+         for (int i = 0; i < m_deletedObjects.size(); i++)
+         {
+            NetworkMapObjectLocation *l = m_deletedObjects.get(i);
+            if (l->objectId == static_cast<NetworkMapObject*>(newElement)->getObjectId())
+            {
+               m_deletedObjects.remove(i);
+               break;
+            }
+         }
+      }
+   }
+
+   for(int j = 0; j < m_mapContent.m_elements.size(); j++)
+   {
+      NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
+      if (oldElement->getType() != MAP_ELEMENT_OBJECT)
+         continue;
+
+      bool found = false;
+      for(int i = 0; i < newElements.size(); i++)
+      {
+         if (newElements.get(i)->getId() == oldElement->getId() )
+         {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+      {
+         NetworkMapObjectLocation loc;
+         loc.objectId = static_cast<NetworkMapObject*>(oldElement)->getObjectId();
+         loc.posX = oldElement->getPosX();
+         loc.posY = oldElement->getPosY();
+         if (m_deletedObjects.find([loc] (const NetworkMapObjectLocation *l) { return l->objectId == loc.objectId; }) == nullptr)
+         {
+            m_deletedObjects.insert(0, &loc);
+            if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
+               m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
+         }
+      }
+   }
+}
+
+/**
  * Update network map object from NXCP message
  */
 uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
@@ -876,68 +949,7 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
 					m_nextElementId = e->getId() + 1;
 			}
 		}
-		for(int i = 0; i < newElements.size(); i++)
-		{
-		   NetworkMapElement *newElement = newElements.get(i);
-
-		   bool found = false;
-		   for(int j = 0; j < m_mapContent.m_elements.size(); j++)
-		   {
-	         NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
-		      if (newElement->getId() == oldElement->getId() && newElement->getType() == oldElement->getType())
-		      {
-		         newElement->updateInternalFields(oldElement);
-		         found = true;
-		         break;
-		      }
-		   }
-
-         if (newElement->getType() != MAP_ELEMENT_OBJECT)
-            continue;
-
-		   if (!found)
-		   {
-	         for (int i = 0; i < m_deletedObjects.size(); i++)
-	         {
-	            NetworkMapObjectLocation *l = m_deletedObjects.get(i);
-	            if (l->objectId == static_cast<NetworkMapObject*>(newElement)->getObjectId())
-	            {
-	               m_deletedObjects.remove(i);
-	               break;
-	            }
-	         }
-		   }
-		}
-
-		for(int j = 0; j < m_mapContent.m_elements.size(); j++)
-      {
-         NetworkMapElement *oldElement = m_mapContent.m_elements.get(j);
-         if (oldElement->getType() != MAP_ELEMENT_OBJECT)
-            continue;
-
-         bool found = false;
-		   for(int i = 0; i < newElements.size(); i++)
-         {
-		      if (newElements.get(i)->getId() == oldElement->getId() )
-            {
-               found = true;
-               break;
-            }
-         }
-         if (!found)
-         {
-            NetworkMapObjectLocation loc;
-            loc.objectId = static_cast<NetworkMapObject*>(oldElement)->getObjectId();
-            loc.posX = oldElement->getPosX();
-            loc.posY = oldElement->getPosY();
-            if (m_deletedObjects.find([loc] (const NetworkMapObjectLocation *l) { return l->objectId == loc.objectId; }) == nullptr)
-            {
-               m_deletedObjects.insert(0, &loc);
-               if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
-                  m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
-            }
-         }
-      }
+		reconcileElementChanges(newElements);
 		m_mapContent.m_elements.clear();
 		m_mapContent.m_elements.addAll(newElements);
 
@@ -963,6 +975,219 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
 	}
 
 	return super::modifyFromMessageInternal(msg, session);
+}
+
+/**
+ * Update network map object from JSON document - stage 1 (called under property lock).
+ * Mirrors modifyFromMessageInternal for the WebAPI JSON path. The "elements" array,
+ * when present, fully replaces the map content (elements + links). Element and link
+ * JSON shapes match those emitted by NetworkMap::toJson (element/link toJson).
+ */
+uint32_t NetworkMap::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   if (!json_object_update_integer(json, "displayPriority", &m_displayPriority))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "mapType", &m_mapType))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "layout", &m_layout))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "discoveryRadius", &m_discoveryRadius))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "defaultLinkColor", &m_defaultLinkColor))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "defaultLinkColorSource", &m_defaultLinkColorSource))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "defaultLinkRouting", &m_defaultLinkRouting))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "defaultLinkWidht", &m_defaultLinkWidth))   // key spelling matches toJson
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "defaultLinkStyle", &m_defaultLinkStyle))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "objectDisplayMode", &m_objectDisplayMode))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "backgroundColor", &m_backgroundColor))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "width", &m_width))
+      return RCC_INVALID_ARGUMENT;
+   if (!json_object_update_integer(json, "height", &m_height))
+      return RCC_INVALID_ARGUMENT;
+
+   json_t *value = json_object_get(json, "seedObjects");
+   if (value != nullptr)
+   {
+      if (!json_is_array(value))
+         return RCC_INVALID_ARGUMENT;
+      m_seedObjects.clear();
+      size_t i;
+      json_t *seed;
+      json_array_foreach(value, i, seed)
+         m_seedObjects.add(static_cast<uint32_t>(json_integer_value(seed)));
+      m_seedObjects.deduplicate();
+   }
+
+   value = json_object_get(json, "canvasType");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_canvasType = static_cast<MapCanvasType>(json_integer_value(value));
+   }
+
+   value = json_object_get(json, "initialViewMode");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_initialViewMode = static_cast<MapInitialViewMode>(json_integer_value(value));
+   }
+
+   // Background image and its geo positioning are updated as a unit
+   value = json_object_get(json, "background");
+   if (value != nullptr)
+   {
+      m_background = json_object_get_uuid(json, "background");
+      json_t *lat = json_object_get(json, "backgroundLatitude");
+      if (lat != nullptr)
+      {
+         if (!json_is_number(lat))
+            return RCC_INVALID_ARGUMENT;
+         m_backgroundLatitude = json_number_value(lat);
+      }
+      json_t *lon = json_object_get(json, "backgroundLongitude");
+      if (lon != nullptr)
+      {
+         if (!json_is_number(lon))
+            return RCC_INVALID_ARGUMENT;
+         m_backgroundLongitude = json_number_value(lon);
+      }
+      if (!json_object_update_integer(json, "backgroundZoom", &m_backgroundZoom))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   value = json_object_get(json, "filter");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      wchar_t *filter = Trim(json_object_get_string_t(json, "filter", L""));
+      setFilter(filter);
+      MemFree(filter);
+   }
+
+   value = json_object_get(json, "linkScript");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      wchar_t *script = Trim(json_object_get_string_t(json, "linkScript", L""));
+      setLinkStylingScript(script);
+      MemFree(script);
+   }
+
+   // Map content - elements and links (full replacement)
+   json_t *elements = json_object_get(json, "elements");
+   if (elements != nullptr)
+   {
+      if (!json_is_array(elements))
+         return RCC_INVALID_ARGUMENT;
+
+      json_t *links = json_object_get(json, "links");
+      if ((links != nullptr) && !json_is_array(links))
+         return RCC_INVALID_ARGUMENT;
+
+      // Validate all element/link entries before mutating any state
+      size_t i;
+      json_t *entry;
+      json_array_foreach(elements, i, entry)
+         if (!json_is_object(entry))
+            return RCC_INVALID_ARGUMENT;
+      if (links != nullptr)
+      {
+         json_array_foreach(links, i, entry)
+            if (!json_is_object(entry))
+               return RCC_INVALID_ARGUMENT;
+      }
+
+      ObjectArray<NetworkMapElement> newElements(0, 128, Ownership::False);
+      m_dciSet.clear();
+      m_objectSet.clear();
+
+      json_array_foreach(elements, i, entry)
+      {
+         uint32_t id = json_object_get_uint32(entry, "id", 0);
+         uint32_t flags = json_object_get_uint32(entry, "flags", 0);
+         int type = json_object_get_int32(entry, "type", MAP_ELEMENT_GENERIC);
+         NetworkMapElement *e;
+         switch(type)
+         {
+            case MAP_ELEMENT_OBJECT:
+               e = new NetworkMapObject(id, entry, flags);
+               m_objectSet.put(static_cast<NetworkMapObject*>(e)->getObjectId());
+               break;
+            case MAP_ELEMENT_DECORATION:
+               e = new NetworkMapDecoration(id, entry, flags);
+               break;
+            case MAP_ELEMENT_DCI_CONTAINER:
+               e = new NetworkMapDCIContainer(id, entry, flags);
+               static_cast<NetworkMapDCIContainer*>(e)->updateDciList(&m_dciSet, true);
+               break;
+            case MAP_ELEMENT_DCI_IMAGE:
+               e = new NetworkMapDCIImage(id, entry, flags);
+               static_cast<NetworkMapDCIImage*>(e)->updateDciList(&m_dciSet, true);
+               break;
+            case MAP_ELEMENT_TEXT_BOX:
+               e = new NetworkMapTextBox(id, entry, flags);
+               break;
+            default:
+               e = new NetworkMapElement(id, entry, flags);
+               break;
+         }
+         newElements.add(e);
+         if (m_nextElementId <= e->getId())
+            m_nextElementId = e->getId() + 1;
+      }
+
+      reconcileElementChanges(newElements);
+      m_mapContent.m_elements.clear();
+      m_mapContent.m_elements.addAll(newElements);
+
+      m_mapContent.m_links.clear();
+      if (links != nullptr)
+      {
+         json_array_foreach(links, i, entry)
+         {
+            NetworkMapLink *l = new NetworkMapLink(m_nextLinkId++,
+               json_object_get_uint32(entry, "element1", 0), json_object_get_uint32(entry, "interface1", 0),
+               json_object_get_uint32(entry, "element2", 0), json_object_get_uint32(entry, "interface2", 0),
+               json_object_get_int32(entry, "type", 0));
+
+            wchar_t *s = json_object_get_string_t(entry, "name", L"");
+            l->setName(s);
+            MemFree(s);
+            s = json_object_get_string_t(entry, "connectorName1", L"");
+            l->setConnector1Name(s);
+            MemFree(s);
+            s = json_object_get_string_t(entry, "connectorName2", L"");
+            l->setConnector2Name(s);
+            MemFree(s);
+            s = json_object_get_string_t(entry, "colorProvider", L"");
+            l->setColorProvider(s);
+            MemFree(s);
+            l->setConfig(MemCopyStringA(json_object_get_string_utf8(entry, "config", "")));
+            l->setFlags(json_object_get_uint32(entry, "flags", 0));
+            l->setColorSource(static_cast<MapLinkColorSource>(json_object_get_int32(entry, "colorSource", 0)));
+            l->setColor(json_object_get_uint32(entry, "color", 0));
+
+            m_objectSet.put(l->getInterface1());
+            m_objectSet.put(l->getInterface2());
+            l->updateColorSourceObjectList(m_objectSet, true);
+            l->updateDciList(m_dciSet, true);
+            m_mapContent.m_links.add(l);
+         }
+      }
+   }
+
+   return super::modifyFromJSONInternal(json, session);
 }
 
 /**
