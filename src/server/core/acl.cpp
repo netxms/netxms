@@ -74,6 +74,30 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Update from JSON array of { userId, access } elements. Replaces the entire
+ * directly assigned access list; the inherited-rights cache is dropped.
+ */
+void AccessList::updateFromJson(json_t *json)
+{
+   LockGuard lockGuard(m_mutex);
+
+   m_elements.clear();
+   m_cache.clear();
+
+   if (json_is_array(json))
+   {
+      size_t i;
+      json_t *e;
+      json_array_foreach(json, i, e)
+      {
+         ACL_ELEMENT *element = m_elements.addPlaceholder();
+         element->userId = json_object_get_uint32(e, "userId", 0);
+         element->accessRights = json_object_get_uint32(e, "access", 0);
+      }
+   }
+}
+
+/**
  * Add element to list
  */
 bool AccessList::addElement(uint32_t userId, uint32_t accessRights, bool cached)
