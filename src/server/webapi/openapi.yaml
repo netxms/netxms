@@ -3945,6 +3945,80 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/dashboard:
+    get:
+      operationId: getObjectDashboard
+      summary: Get dashboard content
+      description: |
+        Return the content of a dashboard or dashboard template object: the column count,
+        display priority, and the element (widget) layout. Requires read access. Applies only
+        to objects of class `Dashboard` or `DashboardTemplate`.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dashboard content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardContent'
+        '400':
+          description: Object is not a dashboard or dashboard template
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    put:
+      operationId: updateObjectDashboard
+      summary: Replace dashboard content
+      description: |
+        Replace the content of a dashboard or dashboard template object. The `elements` array,
+        when present, fully replaces the element (widget) layout; an element without a `guid`
+        is assigned a new one. Only dashboard content fields are applied — other object
+        properties are left untouched. `displayPriority` and `forcedContextObjectId` apply to
+        plain dashboards only and are ignored for dashboard templates. Requires modify access
+        and applies only to objects of class `Dashboard` or `DashboardTemplate`.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardContent'
+      responses:
+        '200':
+          description: Dashboard content updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Object is not a dashboard, or the request body is malformed
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/dashboards:
     put:
       operationId: updateObjectDashboards
@@ -11256,6 +11330,43 @@ components:
           type: string
           format: uuid
           description: Rear image UUID from the image library.
+    DashboardElement:
+      type: object
+      description: A single dashboard element (widget). Element type-specific configuration lives in the free-form `data` object; positioning lives in `layout`.
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Element GUID. Assigned by the server when omitted on input.
+        type:
+          type: integer
+          description: Element type code.
+        data:
+          type: object
+          description: Element configuration (type-specific free-form object).
+        layout:
+          type: object
+          description: Element layout / placement (free-form object).
+      required:
+        - type
+    DashboardContent:
+      type: object
+      description: Content of a dashboard or dashboard template object - column count, display priority, and element layout.
+      properties:
+        numColumns:
+          type: integer
+          description: Number of layout columns.
+        displayPriority:
+          type: integer
+          description: Display ordering priority (plain dashboards only; ignored for templates).
+        forcedContextObjectId:
+          type: integer
+          description: Forced context object ID for dashboards created from a template (plain dashboards only; ignored for templates).
+        elements:
+          type: array
+          description: Dashboard elements. On update this is a full replacement of the element layout.
+          items:
+            $ref: '#/components/schemas/DashboardElement'
     ObjectAccessRights:
       type: object
       description: Object access control list and the flag controlling inheritance of access rights from parent objects.

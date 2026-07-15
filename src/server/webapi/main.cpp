@@ -147,6 +147,8 @@ int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectCreate(Context *context);
 int H_ObjectAccessRights(Context *context);
 int H_ObjectAccessRightsUpdate(Context *context);
+int H_ObjectDashboard(Context *context);
+int H_ObjectDashboardUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectLocationUpdate(Context *context);
@@ -615,6 +617,10 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/access-rights")
       .GET(H_ObjectAccessRights)
       .PUT(H_ObjectAccessRightsUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/dashboard")
+      .GET(H_ObjectDashboard)
+      .PUT(H_ObjectDashboardUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/polling")

@@ -243,6 +243,54 @@ uint32_t DashboardBase::modifyFromMessageInternal(const NXCPMessage& msg, Client
 }
 
 /**
+ * Modify object from JSON document - stage 1 (called under property lock).
+ * Mirrors modifyFromMessageInternal for the WebAPI JSON path. The "elements"
+ * array, when present, fully replaces the dashboard element list.
+ */
+uint32_t DashboardBase::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   // Number of columns
+   if (!json_object_update_integer(json, "numColumns", &m_numColumns))
+      return RCC_INVALID_ARGUMENT;
+
+   // Dashboard elements (full replacement)
+   json_t *elements = json_object_get(json, "elements");
+   if (elements != nullptr)
+   {
+      if (!json_is_array(elements))
+         return RCC_INVALID_ARGUMENT;
+
+      // Validate all elements before mutating state
+      size_t i;
+      json_t *e;
+      json_array_foreach(elements, i, e)
+      {
+         if (!json_is_object(e) || !json_is_integer(json_object_get(e, "type")))
+            return RCC_INVALID_ARGUMENT;
+      }
+
+      m_elements.clear();
+      m_objectSet.clear();
+      m_dciSet.clear();
+
+      json_array_foreach(elements, i, e)
+      {
+         DashboardElement *element = new DashboardElement;
+         element->m_type = static_cast<int>(json_integer_value(json_object_get(e, "type")));
+         element->m_data = json_deep_copy(json_object_get(e, "data"));
+         element->m_layout = json_deep_copy(json_object_get(e, "layout"));
+         uuid guid = json_object_get_uuid(e, "guid");
+         if (!guid.isNull())
+            element->m_guid = guid;   // keep generated GUID if client did not provide one
+         m_elements.add(element);
+         updateObjectAndDciList(element);
+      }
+   }
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
  * Scan element data for object and DCI IDs and update corresponding lists
  */
 void DashboardBase::updateObjectAndDciList(DashboardElement *e)
@@ -657,6 +705,21 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg, ClientSess
       m_forcedContextObjectId = msg.getFieldAsUInt32(VID_FORCED_CONTEXT_OBJECT);
 
 	return super::modifyFromMessageInternal(msg, session);
+}
+
+/**
+ * Modify object from JSON document - stage 1 (called under property lock).
+ * Mirrors modifyFromMessageInternal for the WebAPI JSON path.
+ */
+uint32_t Dashboard::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   if (!json_object_update_integer(json, "displayPriority", &m_displayPriority))
+      return RCC_INVALID_ARGUMENT;
+
+   if (!json_object_update_integer(json, "forcedContextObjectId", &m_forcedContextObjectId))
+      return RCC_INVALID_ARGUMENT;
+
+   return super::modifyFromJSONInternal(json, session);
 }
 
 /**

@@ -5693,6 +5693,7 @@ protected:
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    void updateObjectAndDciList(DashboardElement *e);
 
@@ -5739,6 +5740,7 @@ protected:
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
