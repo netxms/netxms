@@ -35,7 +35,7 @@
 /**
  * Check if package with specific parameters already installed
  */
-bool IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform)
+bool NXCORE_EXPORTABLE IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform)
 {
    bool result = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -60,7 +60,7 @@ bool IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar
 /**
  * Check if given package ID is valid
  */
-bool IsValidPackageId(uint32_t packageId)
+bool NXCORE_EXPORTABLE IsValidPackageId(uint32_t packageId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool result = IsDatabaseRecordExist(hdb, L"agent_pkg", L"pkg_id", packageId);
@@ -71,7 +71,7 @@ bool IsValidPackageId(uint32_t packageId)
 /**
  * Check if package file with given name already used by another package
  */
-bool IsDuplicatePackageFileName(const wchar_t *fileName)
+bool NXCORE_EXPORTABLE IsDuplicatePackageFileName(const wchar_t *fileName)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool result = IsDatabaseRecordExist(hdb, L"agent_pkg", L"pkg_file", fileName);
@@ -82,7 +82,7 @@ bool IsDuplicatePackageFileName(const wchar_t *fileName)
 /**
  * Get package details from database
  */
-uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details)
+uint32_t NXCORE_EXPORTABLE GetPackageDetails(uint32_t packageId, PackageDetails *details)
 {
    uint32_t rcc;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -131,7 +131,7 @@ uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details)
 /**
  * Get all deployment packages (for NXSL)
  */
-ObjectArray<PackageDetails> *GetAllPackages(const TCHAR *platformFilter, const TCHAR *typeFilter)
+ObjectArray<PackageDetails> NXCORE_EXPORTABLE *GetAllPackages(const TCHAR *platformFilter, const TCHAR *typeFilter)
 {
    ObjectArray<PackageDetails> *packages = new ObjectArray<PackageDetails>(16, 16, Ownership::True);
 
@@ -231,7 +231,7 @@ static Condition s_wakeupCondition(true);
 /**
  * Uninstall (remove) package from server
  */
-uint32_t UninstallPackage(uint32_t packageId)
+uint32_t NXCORE_EXPORTABLE UninstallPackage(uint32_t packageId)
 {
    uint32_t rcc;
 
@@ -474,6 +474,66 @@ void PackageDeploymentJob::markAsFailed(const wchar_t *errorMessage, bool resche
 /**
  * Fill NXCP message
  */
+/**
+ * Convert package deployment status to text
+ */
+static const char *PackageJobStatusToText(PackageDeploymentStatus status)
+{
+   switch(status)
+   {
+      case PKG_JOB_SCHEDULED:
+         return "scheduled";
+      case PKG_JOB_PENDING:
+         return "pending";
+      case PKG_JOB_INITIALIZING:
+         return "initializing";
+      case PKG_JOB_FILE_TRANSFER_RUNNING:
+         return "file-transfer";
+      case PKG_JOB_INSTALLATION_RUNNING:
+         return "installing";
+      case PKG_JOB_WAITING_FOR_AGENT:
+         return "waiting-for-agent";
+      case PKG_JOB_COMPLETED:
+         return "completed";
+      case PKG_JOB_FAILED:
+         return "failed";
+      case PKG_JOB_CANCELLED:
+         return "cancelled";
+      default:
+         return "unknown";
+   }
+}
+
+/**
+ * Serialize deployment job to JSON
+ */
+json_t *PackageDeploymentJob::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "packageId", json_integer(m_packageId));
+   json_object_set_new(root, "packageName", json_string_t(m_packageName));
+   json_object_set_new(root, "packageType", json_string_t(m_packageType));
+   json_object_set_new(root, "version", json_string_t(m_version));
+   json_object_set_new(root, "platform", json_string_t(m_platform));
+   json_object_set_new(root, "packageFile", json_string_t(m_packageFile.cstr()));
+   json_object_set_new(root, "nodeId", json_integer(m_nodeId));
+   shared_ptr<NetObj> node = FindObjectById(m_nodeId);
+   if (node != nullptr)
+      json_object_set_new(root, "nodeName", json_string_t(node->getName()));
+   json_object_set_new(root, "userId", json_integer(m_userId));
+   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "statusText", json_string(PackageJobStatusToText(m_status)));
+   json_object_set_new(root, "retryCount", json_integer(m_retryCount));
+   json_object_set_new(root, "creationTime", json_integer(m_creationTime));
+   json_object_set_new(root, "executionTime", json_integer(m_executionTime));
+   if (m_completionTime != 0)
+      json_object_set_new(root, "completionTime", json_integer(m_completionTime));
+   if (m_errorMessage[0] != 0)
+      json_object_set_new(root, "errorMessage", json_string_t(m_errorMessage));
+   return root;
+}
+
 void PackageDeploymentJob::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    uint32_t fieldId = baseId;
@@ -966,28 +1026,23 @@ static StringBuffer BuildJobHistoryQuery(int limit)
 }
 
 /**
- * Get package deployment jobs. Active jobs (and jobs completed during current server session) are served from the in-memory
- * index; older terminal jobs are read from the database on demand, limited by PackageDeployment.JobHistorySize.
+ * Enumerate package deployment jobs readable by given user, invoking callback for each. Active jobs (and jobs completed during
+ * current server session) are served from the in-memory index; older terminal jobs are read from the database on demand,
+ * limited by PackageDeployment.JobHistorySize.
  */
-void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId)
+static void EnumeratePackageDeploymentJobs(uint32_t userId, const std::function<void (const PackageDeploymentJob&)>& callback)
 {
-   uint32_t count = 0;
-   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    HashSet<uint32_t> residentJobs;
 
    // Jobs currently held in memory (active jobs and jobs completed during current server session)
    {
       LockGuard lockGuard(s_jobLock);
       s_jobs.forEach(
-         [&count, &fieldId, &residentJobs, msg, userId] (PackageDeploymentJob *job) -> EnumerationCallbackResult
+         [&residentJobs, &callback, userId] (PackageDeploymentJob *job) -> EnumerationCallbackResult
          {
             residentJobs.put(job->getId());
             if (CheckJobReadAccess(*job, userId))
-            {
-               job->fillMessage(msg, fieldId);
-               count++;
-               fieldId += 50;
-            }
+               callback(*job);
             return _CONTINUE;
          });
    }
@@ -1008,24 +1063,49 @@ void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId)
                continue;
             PackageDeploymentJob job(hResult, i);
             if (CheckJobReadAccess(job, userId))
-            {
-               job.fillMessage(msg, fieldId);
-               count++;
-               fieldId += 50;
-            }
+               callback(job);
          }
          DBFreeResult(hResult);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
+}
 
+/**
+ * Get package deployment jobs into NXCP message
+ */
+void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId)
+{
+   uint32_t count = 0;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   EnumeratePackageDeploymentJobs(userId,
+      [msg, &count, &fieldId] (const PackageDeploymentJob& job)
+      {
+         job.fillMessage(msg, fieldId);
+         count++;
+         fieldId += 50;
+      });
    msg->setField(VID_NUM_ELEMENTS, count);
+}
+
+/**
+ * Get package deployment jobs as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetPackageDeploymentJobsAsJson(uint32_t userId)
+{
+   json_t *array = json_array();
+   EnumeratePackageDeploymentJobs(userId,
+      [array] (const PackageDeploymentJob& job)
+      {
+         json_array_append_new(array, job.toJson());
+      });
+   return array;
 }
 
 /**
  * Cancel package deployment job. Returns client RCC.
  */
-uint32_t CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *nodeId)
+uint32_t NXCORE_EXPORTABLE CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *nodeId)
 {
    LockGuard lockGuard(s_jobLock);
 

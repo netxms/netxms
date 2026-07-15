@@ -134,6 +134,7 @@ public:
    bool createDatabaseRecord();
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
    void notifyClients() const;
 };
 
@@ -142,16 +143,17 @@ public:
  */
 void NXCORE_EXPORTABLE RegisterPackageDeploymentJob(const shared_ptr<PackageDeploymentJob>& job);
 void GetPackageDeploymentJobs(NXCPMessage *msg, uint32_t userId);
-uint32_t CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *nodeId);
+json_t NXCORE_EXPORTABLE *GetPackageDeploymentJobsAsJson(uint32_t userId);
+uint32_t NXCORE_EXPORTABLE CancelPackageDeploymentJob(uint32_t jobId, uint32_t userId, uint32_t *nodeId);
 
 /**
  * Package functions
  */
-bool IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform);
-bool IsDuplicatePackageFileName(const wchar_t *fileName);
-bool IsValidPackageId(uint32_t packageId);
-uint32_t GetPackageDetails(uint32_t packageId, PackageDetails *details);
-uint32_t UninstallPackage(uint32_t packageId);
-ObjectArray<PackageDetails> *GetAllPackages(const TCHAR *platformFilter = nullptr, const TCHAR *typeFilter = nullptr);
+bool NXCORE_EXPORTABLE IsPackageInstalled(const wchar_t *name, const wchar_t *version, const wchar_t *platform);
+bool NXCORE_EXPORTABLE IsDuplicatePackageFileName(const wchar_t *fileName);
+bool NXCORE_EXPORTABLE IsValidPackageId(uint32_t packageId);
+uint32_t NXCORE_EXPORTABLE GetPackageDetails(uint32_t packageId, PackageDetails *details);
+uint32_t NXCORE_EXPORTABLE UninstallPackage(uint32_t packageId);
+ObjectArray<PackageDetails> NXCORE_EXPORTABLE *GetAllPackages(const TCHAR *platformFilter = nullptr, const TCHAR *typeFilter = nullptr);
 
 #endif   /* _nms_pkg_h_ */
