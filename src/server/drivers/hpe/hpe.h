@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for HPE (Hewlett Packard Enterprise) devices
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,12 +44,27 @@ public:
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
          uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+};
+
+/**
+ * Base class for drivers for Comware-based devices (H3C, HP A-series)
+ */
+class ComwareDeviceDriver : public NetworkDeviceDriver
+{
+public:
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
 };
 
 /**
  * Driver for H3C (now HP A-series) switches
  */
-class H3CDriver : public NetworkDeviceDriver
+class H3CDriver : public ComwareDeviceDriver
 {
 public:
 	virtual const TCHAR *getName() override;
@@ -67,7 +82,7 @@ public:
 /**
  * Driver for HP switches with HH3C MIB support
  */
-class HPSwitchDriver : public NetworkDeviceDriver
+class HPSwitchDriver : public ComwareDeviceDriver
 {
 public:
    virtual const TCHAR *getName() override;
@@ -108,6 +123,10 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
 };
 
 #endif

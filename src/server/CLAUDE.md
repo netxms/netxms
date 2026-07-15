@@ -192,6 +192,9 @@ void MyVendorDriver::getSSHDriverHints(SSHDriverHints *hints) const
 | Huawei VRP | `HuaweiSWDriver` | `<host>`/`[host]`, `super`, `screen-length 0 temporary` |
 | Hirschmann HiOS | `HirschmannHiOSDriver` | IOS-like, `terminal datadump` |
 | Extreme EXOS | `ExtremeDriver` | `host.slot #`, no enable, `disable clipaging` |
+| HP ProCurve / ArubaOS-S | `ProCurveDriver` | IOS-like, `enable`, `no page` |
+| HPE Comware (H3C/HH3C) | `ComwareDeviceDriver` | `<host>`/`[host]`, no enable, `screen-length disable`, exit is `quit` |
+| Aruba ArubaOS (controllers) | `ArubaSwitchDriver` | `(host) #`, `enable`, `no paging` |
 
 ### Device Detection Priority
 

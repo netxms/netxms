@@ -18,6 +18,9 @@
     <ClCompile Include="aruba-sw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="comware.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="h3c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
