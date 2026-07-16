@@ -97,6 +97,7 @@ SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& 
    m_enabledPromptRegex = nullptr;
    m_enabledPromptRegexW = nullptr;
    m_paginationRegex = nullptr;
+   m_errorRegex = nullptr;
    m_connected = true;
    m_privileged = false;
    m_lastError = ERR_SUCCESS;
@@ -152,6 +153,18 @@ SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& 
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SSHInteractiveChannel: failed to compile pagination pattern: %hs"), errptr);
       }
    }
+
+   // Compile error response regex
+   if (hints.errorPattern != nullptr)
+   {
+      const char *errptr;
+      int erroffset;
+      m_errorRegex = pcre_compile(hints.errorPattern, PCRE_COMMON_FLAGS_A | PCRE_MULTILINE, &errptr, &erroffset, nullptr);
+      if (m_errorRegex == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SSHInteractiveChannel: failed to compile error pattern: %hs"), errptr);
+      }
+   }
 }
 
 /**
@@ -171,6 +184,8 @@ SSHInteractiveChannel::~SSHInteractiveChannel()
       _pcre_free_w(static_cast<PCREW*>(m_enabledPromptRegexW));
    if (m_paginationRegex != nullptr)
       pcre_free(static_cast<pcre*>(m_paginationRegex));
+   if (m_errorRegex != nullptr)
+      pcre_free(static_cast<pcre*>(m_errorRegex));
 }
 
 /**
@@ -292,29 +307,20 @@ bool SSHInteractiveChannel::checkPromptMatch()
 
    int rc = -1;
 
-   // If already privileged, check enabled prompt first
-   if (m_privileged && m_enabledPromptRegex != nullptr)
-   {
-      rc = pcre_exec(static_cast<pcre*>(m_enabledPromptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
-      if (rc >= 0)
-      {
-         m_bufferLock.unlock();
-         return true;
-      }
-   }
-
-   // Check normal prompt pattern
-   if (m_promptRegex != nullptr)
-   {
-      rc = pcre_exec(static_cast<pcre*>(m_promptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
-   }
-
-   // If normal prompt didn't match, try enabled prompt (handles initial privileged connection)
-   if (rc < 0 && m_enabledPromptRegex != nullptr)
+   // Check enabled prompt first: normal prompt pattern may also match privileged prompt
+   // (e.g. Cisco's [>#]), which would mask privileged mode detection for sessions that
+   // are already in privileged mode right after login
+   if (m_enabledPromptRegex != nullptr)
    {
       rc = pcre_exec(static_cast<pcre*>(m_enabledPromptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
       if (rc >= 0)
          m_privileged = true;
+   }
+
+   // Check normal prompt pattern
+   if ((rc < 0) && (m_promptRegex != nullptr))
+   {
+      rc = pcre_exec(static_cast<pcre*>(m_promptRegex), nullptr, lastLine, static_cast<int>(lastLineLen), 0, 0, nullptr, 0);
    }
 
    m_bufferLock.unlock();
@@ -836,6 +842,71 @@ bool SSHInteractiveChannel::escalatePrivilege(const TCHAR *enablePassword)
    m_lastError = ERR_REQUEST_TIMEOUT;
    m_lastErrorMessage = _T("Timeout during privilege escalation");
    return false;
+}
+
+/**
+ * Scan response to given command for device error message. Returns true if error was detected,
+ * in which case the full line containing the error message is stored in errorText.
+ */
+bool SSHInteractiveChannel::scanForDeviceError(const char *sentCommand, MutableString *errorText)
+{
+   if (m_errorRegex == nullptr)
+      return false;
+
+   ByteStream response;
+   parseOutput(sentCommand, &response);
+   if (response.size() == 0)
+      return false;
+
+   const char *data = reinterpret_cast<const char*>(response.buffer());
+   int len = static_cast<int>(response.size());
+   int ovector[30];
+   if (pcre_exec(static_cast<pcre*>(m_errorRegex), nullptr, data, len, 0, 0, ovector, 30) < 0)
+      return false;
+
+   // Extract full line containing the match
+   int start = ovector[0];
+   while((start > 0) && (data[start - 1] != '\n'))
+      start--;
+   int end = ovector[0];
+   while((end < len) && (data[end] != '\n') && (data[end] != '\r'))
+      end++;
+   *errorText = String(data + start, end - start, "UTF-8");
+   return true;
+}
+
+/**
+ * Feed configuration command units to device one by one. Each unit (which may contain embedded
+ * newlines for multi-line constructs such as banners) is sent as a whole, then the channel waits
+ * for the next prompt and scans the device response against the error pattern from driver hints.
+ */
+bool SSHInteractiveChannel::feedConfigurationLines(const StringList& commands, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback, uint32_t perLineTimeout)
+{
+   int total = commands.size();
+   for(int i = 0; i < total; i++)
+   {
+      const wchar_t *command = commands.get(i);
+      size_t len = wcslen(command);
+      Buffer<char, 1024> utf8cmd(len * 4 + 1);
+      wchar_to_utf8(command, -1, utf8cmd, len * 4 + 1);
+      if (!execute(utf8cmd, perLineTimeout))
+      {
+         errorLog->appendFormattedString(L"Line %d (\"%s\"): %s", i + 1, command, m_lastErrorMessage.cstr());
+         return false;
+      }
+      MutableString errorText;
+      if (scanForDeviceError(utf8cmd, &errorText))
+      {
+         errorLog->appendFormattedString(L"Line %d (\"%s\") rejected by device: %s", i + 1, command, errorText.cstr());
+         m_lastError = ERR_EXEC_FAILED;
+         m_lastErrorMessage = errorText;
+         return false;
+      }
+      if (progressCallback)
+         progressCallback(i + 1, total);
+   }
+   return true;
 }
 
 /**

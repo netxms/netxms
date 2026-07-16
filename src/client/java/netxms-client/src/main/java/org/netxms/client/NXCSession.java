@@ -30,6 +30,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -9150,6 +9151,52 @@ public class NXCSession
    }
 
    /**
+    * Restore device configuration from stored backup (possibly taken from a different node) onto target node.
+    * Restore runs as background task on the server; returned task ID can be used to poll for completion with
+    * <code>getBackgroundTaskState()</code>.
+    *
+    * @param targetNodeId target node object identifier
+    * @param sourceNodeId object identifier of node the backup belongs to
+    * @param backupId backup identifier
+    * @param useStartupConfig true to restore startup configuration instead of running configuration
+    * @param force apply configuration even if source and target node device drivers differ
+    * @return server-side background task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long restoreDeviceConfig(long targetNodeId, long sourceNodeId, long backupId, boolean useStartupConfig, boolean force)
+         throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESTORE_DEVICE_CONFIG);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, targetNodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, sourceNodeId);
+      msg.setFieldInt64(NXCPCodes.VID_BACKUP_ID, backupId);
+      msg.setField(NXCPCodes.VID_USE_STARTUP_CONFIG, useStartupConfig);
+      msg.setField(NXCPCodes.VID_FORCE_APPLY, force);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_TASK_ID);
+   }
+
+   /**
+    * Restore client-supplied device configuration onto target node. Restore runs as background task on the server;
+    * returned task ID can be used to poll for completion with <code>getBackgroundTaskState()</code>.
+    *
+    * @param targetNodeId target node object identifier
+    * @param configText configuration text to apply
+    * @return server-side background task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long restoreDeviceConfig(long targetNodeId, String configText) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESTORE_DEVICE_CONFIG);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, targetNodeId);
+      msg.setField(NXCPCodes.VID_CONFIG_FILE_DATA, configText.getBytes(StandardCharsets.UTF_8));
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_TASK_ID);
+   }
+
+   /**
     * Get list of user sessions on given node as reported by agent.
     *
     * @param nodeId node object identifier
@@ -9216,6 +9263,23 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return BackgroundTaskState.getByValue(response.getFieldAsInt32(NXCPCodes.VID_STATE));
+   }
+
+   /**
+    * Get detailed state information of background task.
+    *
+    * @param taskId Task ID
+    * @return detailed state of background task
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public BackgroundTaskInfo getBackgroundTaskInfo(long taskId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BACKGROUND_TASK_STATE);
+      msg.setFieldInt64(NXCPCodes.VID_TASK_ID, taskId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new BackgroundTaskInfo(response);
    }
 
    /**

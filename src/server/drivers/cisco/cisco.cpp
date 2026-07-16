@@ -402,6 +402,9 @@ void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = "show version | include Cisco";
    hints->testCommandPattern = "Cisco";
 
+   // Error response detection (used by configuration restore)
+   hints->errorPattern = "^%\\s*(Invalid input|Incomplete command|Ambiguous command|Unrecognized command|Error|Access denied|Bad )";
+
    // Timeouts (Cisco devices are generally responsive)
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
@@ -440,6 +443,137 @@ bool CiscoDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *o
    if (!ssh->executeCommand("show startup-config", output))
       return false;
    StripCiscoConfigPreamble(output);
+   return true;
+}
+
+/**
+ * Check if config restore is supported
+ */
+bool CiscoDeviceDriver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Check if given configuration line opens a multi-line banner block. On match extracts banner
+ * delimiter (single character, or two-character "^X" representation of a control character)
+ * into provided buffer (at least 3 characters long).
+ */
+static bool IsBannerBlockStart(const wchar_t *line, wchar_t *delimiter)
+{
+   if (wcsncmp(line, L"banner ", 7) != 0)
+      return false;
+
+   // Skip banner type (motd, login, exec, etc.) and following spaces
+   const wchar_t *p = line + 7;
+   while(*p == L' ')
+      p++;
+   while((*p != 0) && (*p != L' '))
+      p++;
+   while(*p == L' ')
+      p++;
+   if (*p == 0)
+      return false;
+
+   size_t delimLen = ((*p == L'^') && (*(p + 1) != 0) && (*(p + 1) != L' ')) ? 2 : 1;
+   memcpy(delimiter, p, delimLen * sizeof(wchar_t));
+   delimiter[delimLen] = 0;
+
+   // If the delimiter occurs again on the same line, the banner is single-line
+   return wcsstr(p + delimLen, delimiter) == nullptr;
+}
+
+/**
+ * Convert configuration text into list of command units for line-by-line replay. Drops empty
+ * lines, comment lines, and "show running-config" preamble remnants. Multi-line banner
+ * definitions are grouped into single units (device does not print prompts for banner content).
+ */
+static void PrepareCiscoConfigCommands(const ByteStream& config, StringList *commands)
+{
+   StringBuffer text(reinterpret_cast<const char*>(config.buffer()), static_cast<ssize_t>(config.size()), "UTF-8");
+   text.replace(L"\r", L"");
+   StringList lines = text.split(L"\n", false);
+   for(int i = 0; i < lines.size(); i++)
+   {
+      StringBuffer line(lines.get(i));
+      line.trim();
+
+      if (line.isEmpty() || (line.charAt(0) == L'!'))
+         continue;
+
+      if (!wcsncmp(line.cstr(), L"Building configuration", 22) || !wcsncmp(line.cstr(), L"Current configuration", 21))
+         continue;
+
+      wchar_t delimiter[3];
+      if (IsBannerBlockStart(line.cstr(), delimiter))
+      {
+         // Accumulate banner content verbatim until closing delimiter
+         StringBuffer unit(line);
+         while(++i < lines.size())
+         {
+            const wchar_t *contentLine = lines.get(i);
+            unit.append(L'\n');
+            unit.append(contentLine);
+            if (wcsstr(contentLine, delimiter) != nullptr)
+               break;
+         }
+         commands->add(unit.cstr());
+         continue;
+      }
+
+      commands->add(line.cstr());
+   }
+}
+
+/**
+ * Restore configuration via interactive SSH (merge semantics)
+ */
+bool CiscoDeviceDriver::restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+   {
+      errorLog->append(L"Cannot open interactive SSH channel");
+      return false;
+   }
+   if (!ssh->isPrivileged())
+   {
+      errorLog->append(L"Privileged mode is required for configuration restore");
+      return false;
+   }
+
+   StringList commands;
+   PrepareCiscoConfigCommands(config, &commands);
+   if (commands.isEmpty())
+   {
+      errorLog->append(L"Configuration is empty");
+      return false;
+   }
+
+   StringList *output = ssh->executeCommand("configure terminal");
+   if (output == nullptr)
+   {
+      errorLog->appendFormattedString(L"Cannot enter configuration mode: %s", ssh->getLastErrorMessage());
+      return false;
+   }
+   delete output;
+
+   bool success = ssh->feedConfigurationLines(commands, errorLog, progressCallback);
+
+   // Always leave configuration mode, even after failure
+   delete ssh->executeCommand("end");
+
+   if (!success)
+      return false;   // never save partially applied configuration
+
+   output = ssh->executeCommand("write memory", 60000);
+   if (output == nullptr)
+   {
+      errorLog->appendFormattedString(L"Failed to save configuration: %s", ssh->getLastErrorMessage());
+      return false;
+   }
+   delete output;
    return true;
 }
 

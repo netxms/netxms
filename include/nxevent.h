@@ -227,6 +227,9 @@
 #define EVENT_HA_NODE_ACTIVATED                     172
 #define EVENT_AI_OPERATOR_OBSERVATION               173
 #define EVENT_AI_OPERATOR_FAILURE                   174
+#define EVENT_DEVICE_CONFIG_RESTORE_STARTED         175
+#define EVENT_DEVICE_CONFIG_RESTORE_COMPLETED       176
+#define EVENT_DEVICE_CONFIG_RESTORE_FAILED          177
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

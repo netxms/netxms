@@ -736,6 +736,7 @@ __PACK_END__
 #define CMD_DELETE_AI_OPERATOR            0x0218
 #define CMD_RESET_AI_OPERATOR             0x0219
 #define CMD_SET_AI_OBSERVATION_STATE      0x021A
+#define CMD_RESTORE_DEVICE_CONFIG         0x021B
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1757,6 +1758,8 @@ __PACK_END__
 #define VID_MAX_INTERVAL            ((uint32_t)1004)
 #define VID_AI_MODEL_SLOT           ((uint32_t)1005)
 #define VID_AI_TOKEN_BUDGET         ((uint32_t)1006)
+#define VID_FAILURE_REASON          ((uint32_t)1007)
+#define VID_USE_STARTUP_CONFIG      ((uint32_t)1008)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

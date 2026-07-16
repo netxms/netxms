@@ -846,6 +846,7 @@ private:
    void getLastDeviceConfigBackup(const NXCPMessage& request);
    void getDeviceConfigBackups(const NXCPMessage& request);
    void getDeviceConfigBackup(const NXCPMessage& request);
+   void restoreDeviceConfig(const NXCPMessage& request);
 	void getWinPerfObjects(const NXCPMessage& request);
 	void getUserSessions(const NXCPMessage& request);
 	void listMappingTables(const NXCPMessage& request);

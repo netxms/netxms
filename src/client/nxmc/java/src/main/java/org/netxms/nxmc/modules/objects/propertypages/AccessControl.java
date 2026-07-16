@@ -229,6 +229,7 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Access control"), UserAccessRights.OBJECT_ACCESS_ACL);
       createAccessCheck(rights, i18n.tr("Download files"), UserAccessRights.OBJECT_ACCESS_DOWNLOAD);
       createAccessCheck(rights, i18n.tr("Upload files"), UserAccessRights.OBJECT_ACCESS_UPLOAD);
+      createAccessCheck(rights, i18n.tr("Upload device configuration"), UserAccessRights.OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG);
       createAccessCheck(rights, i18n.tr("Manage files"), UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
       createAccessCheck(rights, i18n.tr("Configure agent"), UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT);
       createAccessCheck(rights, i18n.tr("Take screenshot"), UserAccessRights.OBJECT_ACCESS_SCREENSHOT);

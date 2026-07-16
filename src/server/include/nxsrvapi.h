@@ -1490,6 +1490,7 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
    const char *testCommand;             // Command for testing command/exec mode
    const char *testCommandPattern;      // Expected pattern in test command output
    const char *terminalType;            // Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
+   const char *errorPattern;            // Regex matching device error responses (nullptr = no error detection)
    bool charByCharEcho;                 // Device echoes each character on a separate line (e.g., MikroTik)
    uint32_t commandTimeout;             // Default timeout (ms)
    uint32_t connectTimeout;             // Connection timeout (ms)
@@ -1507,6 +1508,7 @@ struct LIBNXSRV_EXPORTABLE SSHDriverHints
       testCommand = "echo netxms_test_12345";
       testCommandPattern = "netxms_test_12345";
       terminalType = "vt100";
+      errorPattern = nullptr;
       charByCharEcho = false;
       commandTimeout = 30000;
       connectTimeout = 10000;
@@ -1531,6 +1533,7 @@ private:
    void *m_enabledPromptRegex;
    void *m_enabledPromptRegexW;
    void *m_paginationRegex;
+   void *m_errorRegex;
 
    // State
    bool m_connected;
@@ -1555,6 +1558,7 @@ private:
    StringList *parseOutput(const char *sentCommand);
    void parseOutput(const char *sentCommand, ByteStream *output);
    bool isCommandEcho(const wchar_t *line, const char *command);
+   bool scanForDeviceError(const char *sentCommand, MutableString *errorText);
 
 public:
    SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, uint32_t channelId, const SSHDriverHints& hints);
@@ -1600,6 +1604,17 @@ public:
       parseOutput(command, output);
       return true;
    }
+
+   /**
+    * Feed configuration command units to device one by one. Each unit (which may contain embedded
+    * newlines for multi-line constructs such as banners) is sent as a whole, then the channel waits
+    * for the next prompt and scans the device response against the error pattern from driver hints.
+    * On failure appends 1-based unit number, command text, and failure details to error log.
+    * Returns false on first device error, timeout, or connection loss.
+    */
+   bool feedConfigurationLines(const StringList& commands, StringBuffer *errorLog,
+         const std::function<void (int, int)>& progressCallback = std::function<void (int, int)>(),
+         uint32_t perLineTimeout = 0);
 
    /**
     * Escalate to privileged mode

@@ -128,6 +128,7 @@ public class EffectiveRightsDialog extends Dialog
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_ACL, i18n.tr("Access control")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_DOWNLOAD, i18n.tr("Download files")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_UPLOAD, i18n.tr("Upload files")));
+      rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG, i18n.tr("Upload device configuration")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_MANAGE_FILES, i18n.tr("Manage files")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT, i18n.tr("Configure agent")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_SCREENSHOT, i18n.tr("Take screenshot")));

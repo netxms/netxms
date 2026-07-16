@@ -1765,3 +1765,30 @@ bool NetworkDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream 
 {
    return false;
 }
+
+/**
+ * Check if device configuration restore is supported by this driver.
+ * Default implementation returns false. Drivers that support config restore should override this.
+ *
+ * @return true if config restore is supported
+ */
+bool NetworkDeviceDriver::isConfigRestoreSupported()
+{
+   return false;
+}
+
+/**
+ * Restore (push) configuration to device with merge semantics.
+ *
+ * @param ctx backup context providing connection methods
+ * @param config configuration data to push
+ * @param errorLog buffer to receive error details on failure
+ * @param progressCallback called after each successfully applied command unit as (done, total)
+ * @return true on success
+ */
+bool NetworkDeviceDriver::restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   errorLog->append(L"Configuration restore is not supported by device driver");
+   return false;
+}

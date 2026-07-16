@@ -69,6 +69,9 @@ public:
    virtual bool isConfigBackupSupported() override;
    virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool isConfigRestoreSupported() override;
+   virtual bool restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+         const std::function<void (int, int)>& progressCallback) override;
 };
 
 /**

@@ -798,6 +798,7 @@ enum SessionState
 #define RCC_UNTRUSTED_PACKAGE             ((uint32_t)191)
 #define RCC_DOWNGRADE_NOT_ALLOWED         ((uint32_t)192)
 #define RCC_SERVER_IS_STANDBY             ((uint32_t)193)
+#define RCC_DEVICE_DRIVER_MISMATCH        ((uint32_t)194)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -951,6 +952,7 @@ enum SessionState
 #define OBJECT_ACCESS_MANAGE_INCIDENTS 0x02000000
 #define OBJECT_ACCESS_READ_CREDENTIALS 0x04000000
 #define OBJECT_ACCESS_QUERY_WEBSVC     0x08000000
+#define OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG 0x10000000
 
 /**
  * Object sync flags

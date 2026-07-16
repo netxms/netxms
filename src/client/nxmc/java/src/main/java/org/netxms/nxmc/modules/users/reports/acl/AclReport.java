@@ -847,6 +847,10 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Manage Incidents");
 
+      cell = headerRow.createCell(PermissionsSheetCells.UPLOAD_DEVICE_CONFIG.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Upload Device Configuration");
+
       sheet.setColumnWidth(PermissionsSheetCells.OBJECT_NAME.ordinal(), 20480);
       sheet.setColumnWidth(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal(), 4096);
 
@@ -884,6 +888,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, PermissionsSheetCells.PUSH_DATA, UserAccessRights.OBJECT_ACCESS_PUSH_DATA, element);
          createPermissionCell(row, PermissionsSheetCells.MANAGE_POLICIES, UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES, element);
          createPermissionCell(row, PermissionsSheetCells.MANAGE_INCIDENTS, UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, element);
+         createPermissionCell(row, PermissionsSheetCells.UPLOAD_DEVICE_CONFIG, UserAccessRights.OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG, element);
       }
    }
 }

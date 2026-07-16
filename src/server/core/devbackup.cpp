@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nddrv.h>
 #include <device-backup.h>
+#include <nxtask.h>
 
 #define DEBUG_TAG _T("backup")
 
@@ -221,7 +222,9 @@ SSHInteractiveChannel *NodeBackupContext::getInteractiveSSH()
    m_node->getDriver()->getSSHDriverHints(&hints);
    if (hints.enableCommand != nullptr)
    {
-      m_sshChannel->escalatePrivilege(m_node->getSshPassword());
+      if (!m_sshChannel->escalatePrivilege(m_node->getSshPassword()))
+         nxlog_debug_tag(DEBUG_TAG, 5, L"NodeBackupContext: privilege escalation on %s [%u] failed (%s)",
+               m_node->getName(), m_node->getId(), m_sshChannel->getLastErrorMessage());
    }
 
    m_sshChannel->disablePagination();
@@ -270,4 +273,95 @@ SNMP_Transport *NodeBackupContext::getSNMPTransport()
 
    m_snmpTransport = m_node->createSnmpTransport();
    return m_snmpTransport;
+}
+
+/**
+ * Restore device configuration by feeding it to device via driver's restore hook.
+ * Intended to be executed as background task body.
+ */
+bool RestoreDeviceConfig(const shared_ptr<Node>& node, const BYTE *config, size_t size, uint32_t sourceNodeId,
+      const wchar_t *sourceNodeName, int64_t backupId, const wchar_t *userName, BackgroundTask *task)
+{
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(config, size, hash);
+   wchar_t hashText[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStrW(hash, SHA256_DIGEST_SIZE, hashText);
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"RestoreDeviceConfig(%s [%u]): starting device configuration restore (%u bytes, source node ID %u, backup ID " INT64_FMT ")",
+         node->getName(), node->getId(), static_cast<uint32_t>(size), sourceNodeId, backupId);
+
+   EventBuilder(EVENT_DEVICE_CONFIG_RESTORE_STARTED, *node)
+      .param(L"sourceNodeId", sourceNodeId)
+      .param(L"sourceNodeName", sourceNodeName)
+      .param(L"backupId", backupId)
+      .param(L"configHash", hashText)
+      .param(L"userName", userName)
+      .post();
+
+   StringBuffer errorLog;
+   bool success;
+   wchar_t newHashText[SHA256_DIGEST_SIZE * 2 + 1];
+   newHashText[0] = 0;
+
+   {
+      NodeBackupContext ctx(node);
+      ByteStream configStream(size);
+      configStream.write(config, size);
+      success = node->getDriver()->restoreConfig(&ctx, configStream, &errorLog,
+         [task] (int done, int total)
+         {
+            task->markProgress(done * 80 / total);
+         });
+
+      if (success)
+      {
+         // Post-restore verification - re-read running config on the same session
+         task->markProgress(85);
+         ByteStream verification;
+         if (node->getDriver()->getRunningConfig(&ctx, &verification))
+         {
+            BYTE newHash[SHA256_DIGEST_SIZE];
+            CalculateSHA256Hash(verification.buffer(), verification.size(), newHash);
+            BinToStrW(newHash, SHA256_DIGEST_SIZE, newHashText);
+         }
+         else
+         {
+            errorLog = L"Configuration was pushed and saved, but post-restore verification failed";
+            success = false;
+         }
+      }
+   }  // close SSH session before starting post-restore backup job
+
+   if (!success)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"RestoreDeviceConfig(%s [%u]): restore failed (%s)", node->getName(), node->getId(), errorLog.cstr());
+      EventBuilder(EVENT_DEVICE_CONFIG_RESTORE_FAILED, *node)
+         .param(L"sourceNodeId", sourceNodeId)
+         .param(L"sourceNodeName", sourceNodeName)
+         .param(L"backupId", backupId)
+         .param(L"configHash", hashText)
+         .param(L"userName", userName)
+         .param(L"errorMessage", errorLog.cstr())
+         .post();
+      return task->failure(L"%s", errorLog.cstr());
+   }
+
+   // Persist result of the restore as a fresh backup (best effort; will not succeed
+   // if target node is not yet registered with the backup provider)
+   DeviceBackupApiStatus status = DevBackupStartJob(*node);
+   if (status != DeviceBackupApiStatus::SUCCESS)
+      nxlog_debug_tag(DEBUG_TAG, 4, L"RestoreDeviceConfig(%s [%u]): cannot start post-restore backup job (%s)",
+            node->getName(), node->getId(), GetDeviceBackupApiErrorMessage(status));
+
+   task->markProgress(100);
+   EventBuilder(EVENT_DEVICE_CONFIG_RESTORE_COMPLETED, *node)
+      .param(L"sourceNodeId", sourceNodeId)
+      .param(L"sourceNodeName", sourceNodeName)
+      .param(L"backupId", backupId)
+      .param(L"configHash", hashText)
+      .param(L"userName", userName)
+      .param(L"newConfigHash", newHashText)
+      .post();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"RestoreDeviceConfig(%s [%u]): device configuration restore completed", node->getName(), node->getId());
+   return true;
 }

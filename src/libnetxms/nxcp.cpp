@@ -581,7 +581,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_MODIFY_AI_OPERATOR"),
       _T("CMD_DELETE_AI_OPERATOR"),
       _T("CMD_RESET_AI_OPERATOR"),
-      _T("CMD_SET_AI_OBSERVATION_STATE")
+      _T("CMD_SET_AI_OBSERVATION_STATE"),
+      _T("CMD_RESTORE_DEVICE_CONFIG")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -597,7 +598,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_SET_AI_OBSERVATION_STATE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_RESTORE_DEVICE_CONFIG))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

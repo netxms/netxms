@@ -554,6 +554,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_AI_OPERATOR = 0x0218;
    public static final int CMD_RESET_AI_OPERATOR = 0x0219;
    public static final int CMD_SET_AI_OBSERVATION_STATE = 0x021A;
+   public static final int CMD_RESTORE_DEVICE_CONFIG = 0x021B;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1567,6 +1568,8 @@ public class NXCPCodes
    public static final long VID_MAX_INTERVAL = 1004;
    public static final long VID_AI_MODEL_SLOT = 1005;
    public static final long VID_AI_TOKEN_BUDGET = 1006;
+   public static final long VID_FAILURE_REASON = 1007;
+   public static final long VID_USE_STARTUP_CONFIG = 1008;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

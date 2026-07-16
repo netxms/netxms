@@ -260,4 +260,13 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> NXCORE_EXPORTABLE DevB
  */
 std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetBackupById(const Node& node, int64_t id);
 
+class BackgroundTask;
+
+/**
+ * Restore device configuration by feeding it to device via driver's restore hook.
+ * Intended to be executed as background task body.
+ */
+bool NXCORE_EXPORTABLE RestoreDeviceConfig(const shared_ptr<Node>& node, const BYTE *config, size_t size,
+      uint32_t sourceNodeId, const wchar_t *sourceNodeName, int64_t backupId, const wchar_t *userName, BackgroundTask *task);
+
 #endif   /* _device_backup_h_ */

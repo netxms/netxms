@@ -582,6 +582,10 @@ public:
    virtual bool isConfigBackupSupported();
    virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output);
    virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output);
+
+   virtual bool isConfigRestoreSupported();
+   virtual bool restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+         const std::function<void (int, int)>& progressCallback);
 };
 
 /**

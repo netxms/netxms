@@ -1792,6 +1792,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DEVICE_CONFIG_BACKUP:
          getDeviceConfigBackup(*request);
          break;
+      case CMD_RESTORE_DEVICE_CONFIG:
+         restoreDeviceConfig(*request);
+         break;
       case CMD_GET_FOLDER_CONTENT:
       case CMD_GET_FOLDER_SIZE:
       case CMD_FILEMGR_COPY_FILE:
@@ -13276,6 +13279,9 @@ void ClientSession::getBackgroundTaskState(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_SUCCESS);
       response.setField(VID_STATE, static_cast<int16_t>(task->getState()));
+      response.setField(VID_PROGRESS, static_cast<int16_t>(task->getProgress()));
+      response.setField(VID_DESCRIPTION, task->getDescription());
+      response.setField(VID_FAILURE_REASON, task->getFailureReson());
    }
    else
    {
@@ -20938,6 +20944,157 @@ void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Restore device configuration
+ */
+void ClientSession::restoreDeviceConfig(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
+   if (node == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      sendMessage(response);
+      return;
+   }
+
+   if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG))
+   {
+      writeAuditLog(AUDIT_OBJECTS, false, node->getId(), L"Access denied on device configuration restore");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
+      return;
+   }
+
+   if (!node->getDriver()->isConfigRestoreSupported())
+   {
+      response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
+      sendMessage(response);
+      return;
+   }
+
+   if (!(node->getCapabilities() & NC_SSH_INTERACTIVE_CHANNEL))
+   {
+      response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      sendMessage(response);
+      return;
+   }
+
+   BYTE *configCopy = nullptr;
+   size_t configSize = 0;
+   uint32_t sourceNodeId = 0;
+   MutableString sourceNodeName;
+   int64_t backupId = 0;
+   bool forceApply = request.getFieldAsBoolean(VID_FORCE_APPLY);
+
+   if (request.isFieldExist(VID_SOURCE_OBJECT_ID))
+   {
+      // Restore from stored backup, possibly taken from a different node
+      shared_ptr<Node> sourceNode = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_SOURCE_OBJECT_ID), OBJECT_NODE));
+      if (sourceNode == nullptr)
+      {
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         sendMessage(response);
+         return;
+      }
+
+      if (!sourceNode->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, sourceNode->getId(), L"Access denied on reading device configuration backup for restore");
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         sendMessage(response);
+         return;
+      }
+
+      if (wcscmp(sourceNode->getDriverName(), node->getDriverName()) && !forceApply)
+      {
+         response.setField(VID_RCC, RCC_DEVICE_DRIVER_MISMATCH);
+         sendMessage(response);
+         return;
+      }
+
+      backupId = request.getFieldAsInt64(VID_BACKUP_ID);
+      auto result = DevBackupGetBackupById(*sourceNode, backupId);
+      if (result.first != DeviceBackupApiStatus::SUCCESS)
+      {
+         response.setField(VID_RCC, DeviceBackupApiStatusToRCC(result.first));
+         sendMessage(response);
+         return;
+      }
+
+      if (result.second.isBinary)
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         sendMessage(response);
+         return;
+      }
+
+      const BYTE *config;
+      if (request.getFieldAsBoolean(VID_USE_STARTUP_CONFIG))
+      {
+         config = result.second.startupConfig;
+         configSize = result.second.startupConfigSize;
+      }
+      else
+      {
+         config = result.second.runningConfig;
+         configSize = result.second.runningConfigSize;
+      }
+      if ((config == nullptr) || (configSize == 0))
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+         sendMessage(response);
+         return;
+      }
+
+      configCopy = MemCopyBlock(config, configSize);
+      sourceNodeId = sourceNode->getId();
+      sourceNodeName = sourceNode->getName();
+   }
+   else
+   {
+      // Restore from client-supplied configuration text
+      size_t size;
+      const BYTE *config = request.getBinaryFieldPtr(VID_CONFIG_FILE_DATA, &size);
+      if ((config == nullptr) || (size == 0))
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+         sendMessage(response);
+         return;
+      }
+      configCopy = MemCopyBlock(config, size);
+      configSize = size;
+   }
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(configCopy, configSize, hash);
+   wchar_t hashText[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStrW(hash, SHA256_DIGEST_SIZE, hashText);
+   if (sourceNodeId != 0)
+      writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Device configuration restore initiated (source node \"%s\" [%u], backup ID " INT64_FMT L", config SHA-256 %s%s)",
+            sourceNodeName.cstr(), sourceNodeId, backupId, hashText, forceApply ? L", driver mismatch override" : L"");
+   else
+      writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Device configuration restore initiated (client-supplied configuration, config SHA-256 %s)", hashText);
+
+   wchar_t key[64];
+   nx_swprintf(key, 64, L"restore-config-%u", node->getId());
+   wchar_t description[256];
+   nx_swprintf(description, 256, L"Restore device configuration on %s", node->getName());
+   String userName(m_loginName);
+   shared_ptr<BackgroundTask> task = CreateSerializedBackgroundTask(g_mainThreadPool, key,
+      [node, configCopy, configSize, sourceNodeId, sourceNodeName, backupId, userName] (BackgroundTask *task) -> bool
+      {
+         bool success = RestoreDeviceConfig(node, configCopy, configSize, sourceNodeId, sourceNodeName.cstr(), backupId, userName.cstr(), task);
+         MemFree(configCopy);
+         return success;
+      }, description);
+
+   response.setField(VID_TASK_ID, task->getId());
+   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 

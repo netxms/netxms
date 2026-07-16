@@ -24,6 +24,50 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.9 to 70.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_DEVICE_CONFIG_RESTORE_STARTED, L"SYS_DEVICE_CONFIG_RESTORE_STARTED",
+      EVENT_SEVERITY_NORMAL, EF_LOG, L"7a90ba9a-71dd-4eb6-808f-ec4ae272a10c",
+      L"Device configuration restore initiated by user %5",
+      L"Generated when device configuration restore is started.\r\n"
+      L"Parameters:\r\n"
+      L"   1) sourceNodeId - Source node ID (0 for client-supplied configuration)\r\n"
+      L"   2) sourceNodeName - Source node name\r\n"
+      L"   3) backupId - Source backup ID\r\n"
+      L"   4) configHash - SHA-256 hash of configuration being applied\r\n"
+      L"   5) userName - Name of user who initiated the restore"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_DEVICE_CONFIG_RESTORE_COMPLETED, L"SYS_DEVICE_CONFIG_RESTORE_COMPLETED",
+      EVENT_SEVERITY_NORMAL, EF_LOG, L"44a8f8d3-2b0c-4462-b54e-4898a7d608d2",
+      L"Device configuration restore completed successfully",
+      L"Generated when device configuration restore is successfully completed.\r\n"
+      L"Parameters:\r\n"
+      L"   1) sourceNodeId - Source node ID (0 for client-supplied configuration)\r\n"
+      L"   2) sourceNodeName - Source node name\r\n"
+      L"   3) backupId - Source backup ID\r\n"
+      L"   4) configHash - SHA-256 hash of applied configuration\r\n"
+      L"   5) userName - Name of user who initiated the restore\r\n"
+      L"   6) newConfigHash - SHA-256 hash of device running configuration after restore"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_DEVICE_CONFIG_RESTORE_FAILED, L"SYS_DEVICE_CONFIG_RESTORE_FAILED",
+      EVENT_SEVERITY_MAJOR, EF_LOG, L"3040d920-a920-46af-adb0-825b9acb99b4",
+      L"Device configuration restore failed (%6)",
+      L"Generated when device configuration restore fails.\r\n"
+      L"Parameters:\r\n"
+      L"   1) sourceNodeId - Source node ID (0 for client-supplied configuration)\r\n"
+      L"   2) sourceNodeName - Source node name\r\n"
+      L"   3) backupId - Source backup ID\r\n"
+      L"   4) configHash - SHA-256 hash of configuration being applied\r\n"
+      L"   5) userName - Name of user who initiated the restore\r\n"
+      L"   6) errorMessage - Error message"));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 70.8 to 70.9
  */
 static bool H_UpgradeFromV8()
@@ -358,6 +402,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9, 70, 10, H_UpgradeFromV9 },
    { 8, 70, 9, H_UpgradeFromV8 },
    { 7, 70, 8, H_UpgradeFromV7 },
    { 6, 70, 7, H_UpgradeFromV6 },

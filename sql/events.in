@@ -2166,6 +2166,47 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) failureCount - Number of consecutive failures' CONCAT CRLF CONCAT
 		'   4) lastError - Last error message'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DEVICE_CONFIG_RESTORE_STARTED, 'SYS_DEVICE_CONFIG_RESTORE_STARTED', '7a90ba9a-71dd-4eb6-808f-ec4ae272a10c',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Device configuration restore initiated by user %5',
+		'Generated when device configuration restore is started.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) sourceNodeId - Source node ID (0 for client-supplied configuration)' CONCAT CRLF CONCAT
+		'   2) sourceNodeName - Source node name' CONCAT CRLF CONCAT
+		'   3) backupId - Source backup ID' CONCAT CRLF CONCAT
+		'   4) configHash - SHA-256 hash of configuration being applied' CONCAT CRLF CONCAT
+		'   5) userName - Name of user who initiated the restore'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DEVICE_CONFIG_RESTORE_COMPLETED, 'SYS_DEVICE_CONFIG_RESTORE_COMPLETED', '44a8f8d3-2b0c-4462-b54e-4898a7d608d2',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Device configuration restore completed successfully',
+		'Generated when device configuration restore is successfully completed.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) sourceNodeId - Source node ID (0 for client-supplied configuration)' CONCAT CRLF CONCAT
+		'   2) sourceNodeName - Source node name' CONCAT CRLF CONCAT
+		'   3) backupId - Source backup ID' CONCAT CRLF CONCAT
+		'   4) configHash - SHA-256 hash of applied configuration' CONCAT CRLF CONCAT
+		'   5) userName - Name of user who initiated the restore' CONCAT CRLF CONCAT
+		'   6) newConfigHash - SHA-256 hash of device running configuration after restore'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DEVICE_CONFIG_RESTORE_FAILED, 'SYS_DEVICE_CONFIG_RESTORE_FAILED', '3040d920-a920-46af-adb0-825b9acb99b4',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Device configuration restore failed (%6)',
+		'Generated when device configuration restore fails.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) sourceNodeId - Source node ID (0 for client-supplied configuration)' CONCAT CRLF CONCAT
+		'   2) sourceNodeName - Source node name' CONCAT CRLF CONCAT
+		'   3) backupId - Source backup ID' CONCAT CRLF CONCAT
+		'   4) configHash - SHA-256 hash of configuration being applied' CONCAT CRLF CONCAT
+		'   5) userName - Name of user who initiated the restore' CONCAT CRLF CONCAT
+		'   6) errorMessage - Error message'
+	);
 
 /*
 ** SNMP traps

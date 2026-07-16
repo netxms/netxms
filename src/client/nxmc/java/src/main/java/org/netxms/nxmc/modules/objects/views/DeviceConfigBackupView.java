@@ -37,6 +37,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -51,7 +52,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.DiffMatchPatch;
 import org.netxms.base.DiffMatchPatch.Diff;
+import org.netxms.client.BackgroundTaskInfo;
 import org.netxms.client.DeviceConfigBackup;
+import org.netxms.client.NXCException;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -61,12 +65,15 @@ import org.netxms.nxmc.base.widgets.DiffViewer;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.helpers.DeviceConfigBackupComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.DeviceConfigBackupFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.DeviceConfigBackupLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -102,6 +109,8 @@ public class DeviceConfigBackupView extends ObjectView
    private Action actionExportRunning;
    private Action actionExportStartup;
    private Action actionCopyToClipboard;
+   private Action actionRestoreRunning;
+   private Action actionRestoreStartup;
 
    /**
     * Default constructor
@@ -255,6 +264,22 @@ public class DeviceConfigBackupView extends ObjectView
             copyToClipboard();
          }
       };
+
+      actionRestoreRunning = new Action(i18n.tr("Restore Running Config on &Node...")) {
+         @Override
+         public void run()
+         {
+            restoreConfig(false);
+         }
+      };
+
+      actionRestoreStartup = new Action(i18n.tr("Restore Startup Config on N&ode...")) {
+         @Override
+         public void run()
+         {
+            restoreConfig(true);
+         }
+      };
    }
 
    /**
@@ -283,6 +308,15 @@ public class DeviceConfigBackupView extends ObjectView
          manager.add(actionExportStartup);
          manager.add(new Separator());
          manager.add(actionCopyToClipboard);
+         if (selection.size() == 1)
+         {
+            DeviceConfigBackup backup = (DeviceConfigBackup)selection.getFirstElement();
+            manager.add(new Separator());
+            actionRestoreRunning.setEnabled(backup.getRunningConfigSize() > 0);
+            actionRestoreStartup.setEnabled(backup.getStartupConfigSize() > 0);
+            manager.add(actionRestoreRunning);
+            manager.add(actionRestoreStartup);
+         }
       }
    }
 
@@ -537,6 +571,98 @@ public class DeviceConfigBackupView extends ObjectView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot start device configuration backup");
+         }
+      }.start();
+   }
+
+   /**
+    * Restore selected backup on user-selected target node.
+    *
+    * @param useStartupConfig true to restore startup configuration instead of running configuration
+    */
+   private void restoreConfig(final boolean useStartupConfig)
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final DeviceConfigBackup backup = (DeviceConfigBackup)selection.getFirstElement();
+      final long sourceNodeId = getObjectId();
+      final String sourceNodeName = getObjectName();
+
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+      if (dlg.open() != Window.OK)
+         return;
+
+      List<AbstractObject> selectedObjects = dlg.getSelectedObjects();
+      if (selectedObjects.isEmpty() || !(selectedObjects.get(0) instanceof AbstractNode))
+         return;
+
+      final AbstractNode targetNode = (AbstractNode)selectedObjects.get(0);
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Restore Device Configuration"),
+            i18n.tr("The {0} configuration from backup of node \"{1}\" taken {2} will be merged line by line into the configuration of device \"{3}\" and saved to its startup configuration. " +
+                  "This will modify the device configuration and may disrupt network connectivity. This operation cannot be undone. Are you sure?",
+                  useStartupConfig ? i18n.tr("startup") : i18n.tr("running"), sourceNodeName,
+                  DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()), targetNode.getObjectName())))
+         return;
+
+      new Job(i18n.tr("Restoring device configuration"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            long taskId;
+            try
+            {
+               taskId = session.restoreDeviceConfig(targetNode.getObjectId(), sourceNodeId, backup.getId(), useStartupConfig, false);
+            }
+            catch(NXCException e)
+            {
+               if (e.getErrorCode() != RCC.DEVICE_DRIVER_MISMATCH)
+                  throw e;
+
+               final boolean[] confirmed = new boolean[1];
+               getDisplay().syncExec(() -> {
+                  confirmed[0] = MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Device Driver Mismatch"),
+                        i18n.tr("Device driver of target node \"{0}\" differs from device driver of source node \"{1}\". The configuration may be incompatible with the target device. Apply anyway?",
+                              targetNode.getObjectName(), sourceNodeName));
+               });
+               if (!confirmed[0])
+                  return;
+
+               taskId = session.restoreDeviceConfig(targetNode.getObjectId(), sourceNodeId, backup.getId(), useStartupConfig, true);
+            }
+
+            monitor.beginTask(i18n.tr("Restoring device configuration on {0}", targetNode.getObjectName()), 100);
+            int reportedProgress = 0;
+            while(true)
+            {
+               BackgroundTaskInfo taskInfo = session.getBackgroundTaskInfo(taskId);
+               if (taskInfo.getProgress() > reportedProgress)
+               {
+                  monitor.worked(taskInfo.getProgress() - reportedProgress);
+                  reportedProgress = taskInfo.getProgress();
+               }
+               if (taskInfo.isFinished())
+               {
+                  if (taskInfo.isFailed())
+                     throw new Exception(taskInfo.getFailureReason());
+                  break;
+               }
+               Thread.sleep(2000);
+            }
+            monitor.done();
+
+            runInUIThread(() -> {
+               addMessage(MessageArea.INFORMATION, i18n.tr("Device configuration successfully restored on node \"{0}\"", targetNode.getObjectName()));
+               if (targetNode.getObjectId() == getObjectId())
+                  refresh();
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot restore device configuration on node \"{0}\"", targetNode.getObjectName());
          }
       }.start();
    }
