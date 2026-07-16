@@ -5896,6 +5896,7 @@ bool Node::confPollAgent()
       setAgentProxy(pAgentConn.get());
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
+   pAgentConn->setConnectionTimeout(g_agentConnectionTimeout);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
@@ -8152,6 +8153,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
    if (proxyNodeId != nullptr)
       *proxyNodeId = m_agentConnection->getProxyNodeId();
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
+   m_agentConnection->setConnectionTimeout(g_agentConnectionTimeout);
    nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_serverKey, error, socketError, g_serverId);
    if (success)
@@ -11426,6 +11428,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       }
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
+   conn->setConnectionTimeout(g_agentConnectionTimeout);
    uint32_t errorCode, socketErrorCode;
    if (!conn->connect(g_serverKey, &errorCode, &socketErrorCode, sendServerId ? g_serverId : 0))
    {

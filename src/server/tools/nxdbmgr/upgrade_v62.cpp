@@ -25,11 +25,26 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.34 to 70.0
+ * Upgrade from 62.35 to 70.0
+ */
+static bool H_UpgradeFromV35()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.34 to 62.35
  */
 static bool H_UpgradeFromV34()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateConfigParam(L"Agent.ConnectionTimeout", L"5000",
+      L"Timeout in milliseconds for establishing connection with agent. If connection cannot be established within given time, agent considered as unreachable.",
+      L"milliseconds", 'I', true, false, false, false));
+
+   CHK_EXEC(SQLQuery(L"UPDATE config SET need_server_restart=0 WHERE var_name='Agent.CommandTimeout'"));
+
+   CHK_EXEC(SetMinorSchemaVersion(35));
    return true;
 }
 
@@ -1226,7 +1241,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 34, 70,  0, H_UpgradeFromV34 },
+   { 35, 70,  0, H_UpgradeFromV35 },
+   { 34, 62, 35, H_UpgradeFromV34 },
    { 33, 62, 34, H_UpgradeFromV33 },
    { 32, 62, 33, H_UpgradeFromV32 },
    { 31, 62, 32, H_UpgradeFromV31 },

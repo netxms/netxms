@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.11 to 70.12
+ */
+static bool H_UpgradeFromV11()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 35)
+   {
+      CHK_EXEC(CreateConfigParam(L"Agent.ConnectionTimeout", L"5000",
+         L"Timeout in milliseconds for establishing connection with agent. If connection cannot be established within given time, agent considered as unreachable.",
+         L"milliseconds", 'I', true, false, false, false));
+
+      CHK_EXEC(SQLQuery(L"UPDATE config SET need_server_restart=0 WHERE var_name='Agent.CommandTimeout'"));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 35));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 70.10 to 70.11
  */
 static bool H_UpgradeFromV10()
@@ -490,6 +509,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 70, 12, H_UpgradeFromV11 },
    { 10, 70, 11, H_UpgradeFromV10 },
    { 9,  70, 10, H_UpgradeFromV9  },
    { 8,  70, 9,  H_UpgradeFromV8  },
