@@ -383,6 +383,7 @@ static bool ExecuteRemoteAction(const TCHAR *target, const TCHAR *action)
          // Target node is not in our database, try default communication settings
          conn = make_shared<AgentConnection>(addr, AGENT_LISTEN_PORT, nullptr);
          conn->setCommandTimeout(g_agentCommandTimeout);
+         conn->setConnectionTimeout(g_agentConnectionTimeout);
          if (!conn->connect(g_serverKey))
             return false;
       }

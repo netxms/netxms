@@ -683,6 +683,14 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       InitializeOtelLogParser();
    }
+   else if (!wcscmp(name, L"Agent.CommandTimeout"))
+   {
+      g_agentCommandTimeout = ConvertToUint32(value, 0);
+   }
+   else if (!wcscmp(name, L"Agent.ConnectionTimeout"))
+   {
+      g_agentConnectionTimeout = ConvertToUint32(value, 0);
+   }
    else if (!wcscmp(name, L"Agent.RestartWaitTime"))
    {
       g_agentRestartWaitTime = ConvertToUint32(value, 0);
