@@ -39,11 +39,13 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.ObjectDetailsConfig;
@@ -81,6 +83,7 @@ public class ObjectQuery extends ElementWidget
    private Action actionCopyAllToClipboard;
    private Action actionExportToCSV;
    private Action actionExportAllToCSV;
+   private Action actionGoToObject;
 
    /**
     * @param parent
@@ -153,6 +156,17 @@ public class ObjectQuery extends ElementWidget
       actionExportAllToCSV = new ExportToCsvAction(view, viewer, false);
 
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
+
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = objectSelectionProvider.getStructuredSelection();
+            if (selection.size() == 1)
+               MainWindow.switchToObject(((AbstractObject)selection.getFirstElement()).getObjectId(), 0);
+         }
+      };
+
       createContextMenu();
 
       doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(view);
@@ -234,6 +248,11 @@ public class ObjectQuery extends ElementWidget
          protected void fillContextMenu()
          {
             super.fillContextMenu();
+            if (objectSelectionProvider.getStructuredSelection().size() == 1)
+            {
+               add(new Separator());
+               add(actionGoToObject);
+            }
             add(new Separator());
             add(actionCopyToClipboard);
             add(actionCopyAllToClipboard);
