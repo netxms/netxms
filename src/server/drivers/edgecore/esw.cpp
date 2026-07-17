@@ -52,11 +52,12 @@ int EdgecoreEnterpriseSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    static uint32_t subid[] = { 1, 1, 5, 1, 0 };
    SNMP_ObjectId queryOID = oid;
    queryOID.truncate(queryOID.length() - 10);
@@ -72,12 +73,12 @@ bool EdgecoreEnterpriseSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, con
  * It is driver's responsibility to destroy existing object if it is to be replaced. One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void EdgecoreEnterpriseSwitchDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void EdgecoreEnterpriseSwitchDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
    {
@@ -88,14 +89,15 @@ void EdgecoreEnterpriseSwitchDriver::analyzeDevice(SNMP_Transport *snmp, const S
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool EdgecoreEnterpriseSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool EdgecoreEnterpriseSwitchDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (driverData == nullptr)
       return false;
 
@@ -151,14 +153,14 @@ bool EdgecoreEnterpriseSwitchDriver::getHardwareInformation(SNMP_Transport *snmp
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *EdgecoreEnterpriseSwitchDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *EdgecoreEnterpriseSwitchDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 	   return nullptr;
 

@@ -53,11 +53,12 @@ int UbiquitiAirMaxDriver::isPotentialDevice(const SNMP_ObjectId &oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId &oid)
+bool UbiquitiAirMaxDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId &oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR tmp[256];
    if ((SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 6, 3, 3, 0 }, tmp, sizeof(tmp), SG_STRING_RESULT) == SNMP_ERR_SUCCESS) && (tmp[0] != 0))
       return true;
@@ -69,12 +70,12 @@ bool UbiquitiAirMaxDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Ob
 /**
  * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a standalone wireless access point
  */
-bool UbiquitiAirMaxDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool UbiquitiAirMaxDriver::isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -154,13 +155,14 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
 /**
  * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of radio interfaces for standalone access point
  */
-StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *UbiquitiAirMaxDriver::getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto radios = new StructArray<RadioInterfaceInfo>(0, 4);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 1, 1, 1 }, HandlerRadioInterfaceList, radios) != SNMP_ERR_SUCCESS) // ubntRadioIndex
    {
@@ -237,12 +239,13 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 /**
  * Get registered wireless stations (clients)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 41112, 1, 4, 7, 1, 1 }, HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
@@ -255,14 +258,15 @@ ObjectArray<WirelessStationInfo> *UbiquitiAirMaxDriver::getWirelessStations(SNMP
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool UbiquitiAirMaxDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *, DriverData *, DeviceHardwareInfo *hwInfo)
+bool UbiquitiAirMaxDriver::getHardwareInformation(DeviceContext *context, NObject *, DriverData *, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
    // Product name / model

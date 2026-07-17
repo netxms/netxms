@@ -51,10 +51,10 @@ int ProCurveDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool ProCurveDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -64,10 +64,10 @@ bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void ProCurveDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 	uint32_t model = oid.getElement(11);
 
@@ -83,13 +83,13 @@ void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oi
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *ProCurveDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 
@@ -200,7 +200,7 @@ static void StripProCurveConfigPreamble(ByteStream *output)
 /**
  * Get running configuration via interactive SSH
  */
-bool ProCurveDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool ProCurveDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -214,7 +214,7 @@ bool ProCurveDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *outp
 /**
  * Get startup configuration via interactive SSH
  */
-bool ProCurveDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool ProCurveDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

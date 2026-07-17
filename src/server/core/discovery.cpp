@@ -572,8 +572,9 @@ static bool AcceptNewNodeStage1(DiscoveredAddress *address)
    }
    if ((data->ifList == nullptr) && (data->flags & NNF_IS_SNMP))
    {
-      data->driver->analyzeDevice(address->snmpTransport, data->snmpObjectId, data, &data->driverData);
-      data->ifList = data->driver->getInterfaces(address->snmpTransport, data, data->driverData, ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
+      SnmpDeviceContext context(address->snmpTransport);
+      data->driver->analyzeDevice(&context, data->snmpObjectId, data, &data->driverData);
+      data->ifList = data->driver->getInterfaces(&context, data, data->driverData, ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 
    // Check if node is a router

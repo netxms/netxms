@@ -52,10 +52,10 @@ int MikrotikDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool MikrotikDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
     return true;
 }
@@ -67,13 +67,14 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId
  * It is driver's responsibility to destroy existing object if it is to be replaced . One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void MikrotikDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (*driverData == nullptr)
    {
       *driverData = new MikrotikDriverData();
@@ -97,14 +98,15 @@ bool MikrotikDriver::isFdbUsingIfIndex(const NObject *node, DriverData *driverDa
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool MikrotikDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    wcscpy(hwInfo->vendor, L"MikroTik");
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -157,13 +159,13 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *MikrotikDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
     // Get interface list from standard MIB
-    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
     if (ifList == nullptr)
         return nullptr;
 
@@ -184,14 +186,14 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 /**
  * Translate LLDP port name (port ID subtype 5) to local interface id.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param lldpName port name received from LLDP MIB
  * @param id interface ID structure to be filled at success
  * @return true if interface identification provided
  */
-bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+bool MikrotikDriver::lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
 {
    // bridged interfaces can be reported by Mikrotik device as bridge/interface or bridge/bonding/interface
    const TCHAR *s = _tcsrchr(lldpName, _T('/'));
@@ -207,12 +209,13 @@ bool MikrotikDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, 
 /**
  * Check switch for wireless capabilities
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool MikrotikDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool MikrotikDriver::isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    int count = 0;
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
       [&count] (SNMP_Variable *var) -> uint32_t
@@ -284,13 +287,14 @@ static uint32_t HandlerRadioList(SNMP_Variable *var, SNMP_Transport *snmp, Struc
 /**
  * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of radio interfaces for standalone access point
  */
-StructArray<RadioInterfaceInfo> *MikrotikDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *MikrotikDriver::getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto rifList = new StructArray<RadioInterfaceInfo>(0, 4);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), HandlerRadioList, rifList) != SNMP_ERR_SUCCESS)
    {
@@ -332,12 +336,13 @@ static void AddWirelessStation(SNMP_Variable *var, SNMP_Transport *snmp, ObjectA
 /**
  * Get registered wireless stations (clients)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 14988, 1, 1, 1, 2, 1, 3 }, // mtxrWlRtabStrength
       [wsList, snmp] (SNMP_Variable *v) -> uint32_t
@@ -355,13 +360,13 @@ ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Trans
 /**
  * Get list of metrics supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
 
-ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    registerHostMibMetrics(metrics);
@@ -372,7 +377,7 @@ ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(SNMP_
 /**
  * Get value of given metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
@@ -380,8 +385,9 @@ ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(SNMP_
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError MikrotikDriver::getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (driverData == nullptr)
       return DCE_COLLECTION_ERROR;
 
@@ -455,7 +461,7 @@ bool MikrotikDriver::isConfigBackupSupported()
 /**
  * Get running configuration. Prefers SSH command channel, falls back to interactive.
  */
-bool MikrotikDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool MikrotikDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    if (ctx->isSSHCommandChannelAvailable())
       return ctx->executeSSHCommand("/export", output);

@@ -51,11 +51,12 @@ int NtwsDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool NtwsDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR buffer[1024];
    return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.2.1.1.0"), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS;
 }
@@ -65,21 +66,21 @@ bool NtwsDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oi
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void NtwsDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void NtwsDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 }
 
 /**
  * Get cluster mode for device (standalone / active / standby)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int NtwsDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int NtwsDriver::getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return CLUSTER_MODE_UNKNOWN;
 }
@@ -87,11 +88,11 @@ int NtwsDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *
 /*
  * Check switch for wireless capabilities
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool NtwsDriver::isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -214,12 +215,13 @@ static uint32_t HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, 
 /*
  * Get access points
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    // Adopted
@@ -321,12 +323,13 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
 
 /*
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.12.3.1.1"), // wsCcRfMuMac

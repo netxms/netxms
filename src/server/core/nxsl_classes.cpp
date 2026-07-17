@@ -2677,7 +2677,7 @@ NXSL_METHOD_DEFINITION(Node, getRunningConfig)
       return 0;
    }
 
-   NodeBackupContext ctx(node);
+   NodeDeviceContext ctx(node);
    ByteStream output;
    if (!driver->getRunningConfig(&ctx, &output))
    {
@@ -2709,7 +2709,7 @@ NXSL_METHOD_DEFINITION(Node, getStartupConfig)
       return 0;
    }
 
-   NodeBackupContext ctx(node);
+   NodeDeviceContext ctx(node);
    ByteStream output;
    if (!driver->getStartupConfig(&ctx, &output))
    {

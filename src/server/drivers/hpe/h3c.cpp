@@ -54,10 +54,10 @@ int H3CDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool H3CDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,11 +67,12 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void H3CDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR sysDescr[256];
    if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return;
@@ -142,13 +143,14 @@ static uint32_t IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, Interf
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *H3CDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 
@@ -235,16 +237,17 @@ static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *trans
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *H3CDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *H3CDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // Use default implementation if fix is not needed
    if (!node->getCustomAttributeAsBoolean(_T(".ndd.h3c.vlanFix"), false))
-      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+      return NetworkDeviceDriver::getVlans(context, node, driverData);
 
    VlanList *list = new VlanList();
 
@@ -266,25 +269,25 @@ failure:
 /**
  * Get orientation of the modules in the device
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int H3CDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int H3CDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
 
 /**
  * Get port layout of given module
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void H3CDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void H3CDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_DU_LR;
    layout->rows = 2;

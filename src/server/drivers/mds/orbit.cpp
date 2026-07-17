@@ -53,10 +53,10 @@ int MdsOrbitDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool MdsOrbitDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool MdsOrbitDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -64,14 +64,15 @@ bool MdsOrbitDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool MdsOrbitDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool MdsOrbitDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("GE MDS"));
    _tcscpy(hwInfo->productName, _T("Orbit"));
 
@@ -124,13 +125,14 @@ bool MdsOrbitDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
 /**
  * Get device geographical location.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @return device geographical location or "UNSET" type location object
  */
-GeoLocation MdsOrbitDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+GeoLocation MdsOrbitDriver::getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.3.12.1.2.3.0")));  // mGpsStatusLatitude
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.3.12.1.2.4.0")));  // mGpsStatusLongitude
@@ -170,13 +172,14 @@ GeoLocation MdsOrbitDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, 
 /**
  * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a standalone wireless access point
  */
-bool MdsOrbitDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool MdsOrbitDriver::isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    bool isAP = false;
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 4130, 10, 2, 5, 1, 2, 1, 1, 3 },
       [&isAP] (SNMP_Variable *v) -> uint32_t
@@ -273,13 +276,14 @@ static void AddWiFiRadioInterface(StructArray<RadioInterfaceInfo> *rifList, SNMP
 /**
  * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of radio interfaces for standalone access point
  */
-StructArray<RadioInterfaceInfo> *MdsOrbitDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *MdsOrbitDriver::getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto rifList = new StructArray<RadioInterfaceInfo>(0, 4);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 4130, 10, 2, 5, 1, 2, 1, 1, 3 }, // mIfLnCurrentDeviceMode
       [rifList, snmp] (SNMP_Variable *v) -> uint32_t
@@ -362,13 +366,14 @@ static void AddWiFiRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArr
 /**
  * Get list of associated wireless stations. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of associated wireless stations
  */
-ObjectArray<WirelessStationInfo> *MdsOrbitDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *MdsOrbitDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 4130, 10, 2, 5, 1, 2, 2, 1, 6 }, // mIfLnStatusConnRemRssi

@@ -52,10 +52,10 @@ int PowerConnectDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool PowerConnectDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -65,10 +65,10 @@ bool PowerConnectDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obje
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void PowerConnectDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    node->setCustomAttribute(_T(".powerConnect.slotSize"), _T("52"), StateChange::IGNORE);
 }
@@ -76,13 +76,13 @@ void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool PowerConnectDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool PowerConnectDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    // Only set vendor here, rest will be retrieved from ENTITY MIB
    _tcscpy(hwInfo->vendor, _T("Dell"));
@@ -92,13 +92,13 @@ bool PowerConnectDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *PowerConnectDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 
@@ -157,7 +157,7 @@ bool PowerConnectDriver::isConfigBackupSupported()
 /**
  * Get running configuration via interactive SSH
  */
-bool PowerConnectDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool PowerConnectDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

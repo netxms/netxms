@@ -59,10 +59,10 @@ int Cat2900Driver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool Cat2900Driver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -86,15 +86,16 @@ static uint32_t HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, I
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *Cat2900Driver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 	

@@ -126,7 +126,7 @@ public:
    virtual const TCHAR *getName() override;
    virtual const TCHAR *getVersion() override;
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    // ... other overrides
 };
 
@@ -148,7 +148,7 @@ DECLARE_NDD_MODULE_ENTRY_POINT
 | `getName()` | Return driver name (e.g., "CISCO-NEXUS") |
 | `getVersion()` | Return driver version (use `NETXMS_VERSION_STRING`) |
 | `isPotentialDevice(oid)` | Return priority (0-255) based on sysObjectID match |
-| `isDeviceSupported(snmp, oid)` | Confirm device support via SNMP queries |
+| `isDeviceSupported(context, oid)` | Confirm device support via SNMP queries |
 | `getHardwareInformation(...)` | Fill vendor, model, serial number |
 | `getInterfaces(...)` | Get interface list with physical port locations |
 | `getVlans(...)` | Get VLAN configuration |

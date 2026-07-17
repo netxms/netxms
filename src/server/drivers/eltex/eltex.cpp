@@ -69,10 +69,10 @@ int EltexDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool EltexDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -80,14 +80,14 @@ bool EltexDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& o
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *EltexDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
 
@@ -146,14 +146,15 @@ InterfaceList *EltexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool EltexDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool EltexDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Eltex Ltd."));
 
    TCHAR buffer[256];
@@ -202,25 +203,25 @@ bool EltexDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, Dr
 /**
  * Get orientation of the modules in the device
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int EltexDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int EltexDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
 
 /**
  * Get port layout of given module
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void EltexDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_LR_UD;
    layout->rows = 2;
@@ -229,7 +230,7 @@ void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverDat
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
@@ -237,9 +238,9 @@ void EltexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverDat
  * ELTEX switches, MES23XX for example, exclude VLAN 1 from VLAN list names returned
  * from OID .1.3.6.1.2.1.17.7.1.4.3.1.1, so we need to MANUALLY ADD this VLAN into VLAN list.
  */
-VlanList *EltexDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *EltexDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
-   VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   VlanList *list = NetworkDeviceDriver::getVlans(context, node, driverData);
    if (list == nullptr)
       return nullptr;
 

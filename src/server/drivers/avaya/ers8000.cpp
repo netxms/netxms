@@ -43,10 +43,10 @@ int PassportDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool PassportDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -56,10 +56,10 @@ bool PassportDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void PassportDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 	uint32_t model = oid.getElement(7);
 	if ((model == 43) || (model == 44) || (model == 45))	// Passport 1600 series
@@ -80,15 +80,16 @@ void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oi
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *PassportDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = AvayaERSDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 

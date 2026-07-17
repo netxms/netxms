@@ -1730,7 +1730,8 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
       if (transport != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading ARP cache for node %s [%u] via SNMP"), m_name, m_id);
-         arpCache = m_driver->getArpCache(transport, m_driverData);
+         NodeDeviceContext context(self(), transport);
+         arpCache = m_driver->getArpCache(&context, m_driverData);
          delete transport;
       }
    }
@@ -1788,7 +1789,8 @@ InterfaceList *Node::getInterfaceList()
 
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, L"Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)",
                   m_name, m_id, BooleanToString(useIfXTable));
-         ifList = m_driver->getInterfaces(snmpTransport, this, m_driverData, useIfXTable);
+         NodeDeviceContext context(self(), snmpTransport);
+         ifList = m_driver->getInterfaces(&context, this, m_driverData, useIfXTable);
          if (ifList != nullptr)
          {
             if (ConfigReadBoolean(L"Objects.Interfaces.IgnoreIfNotPresent", false))
@@ -1816,7 +1818,7 @@ InterfaceList *Node::getInterfaceList()
             if (m_capabilities & NC_IS_BRIDGE)
             {
                // Map port numbers from dot1dBasePortTable to interface indexes
-               StructArray<BridgePort> *bridgePorts = m_driver->getBridgePorts(snmpTransport, this, m_driverData);
+               StructArray<BridgePort> *bridgePorts = m_driver->getBridgePorts(&context, this, m_driverData);
                if (bridgePorts != nullptr)
                {
                   for(int i = 0; i < bridgePorts->size(); i++)
@@ -3654,7 +3656,8 @@ restart_status_poll:
          SNMP_Transport *transport = createSnmpTransport();
          if (transport != nullptr)
          {
-            GeoLocation location = m_driver->getGeoLocation(transport, this, m_driverData);
+            NodeDeviceContext context(self(), transport);
+            GeoLocation location = m_driver->getGeoLocation(&context, this, m_driverData);
             if (location.getType() != GL_UNSET)
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from SNMP device driver"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
@@ -4639,7 +4642,8 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != nullptr)
       {
-         success = m_driver->getHardwareInformation(snmp, this, m_driverData, &hwInfo);
+         NodeDeviceContext context(self(), snmp);
+         success = m_driver->getHardwareInformation(&context, this, m_driverData, &hwInfo);
          delete snmp;
       }
       if ((!success || (hwInfo.vendor[0] == 0) || (hwInfo.productName[0] == 0) || (hwInfo.productVersion[0] == 0) || (hwInfo.serialNumber[0] == 0)) && (m_capabilities & NC_HAS_ENTITY_MIB))
@@ -5799,7 +5803,8 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
       if (snmp != nullptr)
       {
          VirtualizationType vt;
-         vtypeReportedByDevice = m_driver->getVirtualizationType(snmp, this, m_driverData, &vt);
+         NodeDeviceContext context(self(), snmp);
+         vtypeReportedByDevice = m_driver->getVirtualizationType(&context, this, m_driverData, &vt);
          delete snmp;
          if (vtypeReportedByDevice)
          {
@@ -6702,15 +6707,17 @@ bool Node::confPollSnmp()
    }
    unlockProperties();
 
+   NodeDeviceContext deviceContext(self(), pTransport);
+
    // Allow driver to gather additional info
-   m_driver->analyzeDevice(pTransport, m_snmpObjectId, this, &m_driverData);
+   m_driver->analyzeDevice(&deviceContext, m_snmpObjectId, this, &m_driverData);
    if (m_driverData != nullptr)
    {
       m_driverData->attachToNode(m_id, m_guid, m_name);
    }
 
    NDD_MODULE_LAYOUT layout;
-   m_driver->getModuleLayout(pTransport, this, m_driverData, 1, &layout); // TODO module set to 1
+   m_driver->getModuleLayout(&deviceContext, this, m_driverData, 1, &layout); // TODO module set to 1
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
@@ -6721,7 +6728,7 @@ bool Node::confPollSnmp()
 
    if (m_driver->hasMetrics())
    {
-      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, this, m_driverData);
+      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(&deviceContext, this, m_driverData);
       if (metrics != nullptr)
       {
          sendPollerMsg(_T("   %d metrics provided by network device driver\r\n"), metrics->size());
@@ -6773,7 +6780,7 @@ bool Node::confPollSnmp()
    }
    else
    {
-      bool emulationSupported = m_driver->isEntityMibEmulationSupported(pTransport, this, m_driverData);
+      bool emulationSupported = m_driver->isEntityMibEmulationSupported(&deviceContext, this, m_driverData);
       lockProperties();
       m_capabilities &= ~NC_HAS_ENTITY_MIB;
       if (emulationSupported)
@@ -6792,9 +6799,9 @@ bool Node::confPollSnmp()
    }
    else if (m_capabilities & NC_EMULATED_ENTITY_MIB)
    {
-      components = m_driver->buildComponentTree(pTransport, this, m_driverData);
+      components = m_driver->buildComponentTree(&deviceContext, this, m_driverData);
    }
-   shared_ptr<DeviceView> deviceView = m_driver->buildDeviceView(pTransport, this, m_driverData, (components != nullptr) ? components->getRoot() : nullptr);
+   shared_ptr<DeviceView> deviceView = m_driver->buildDeviceView(&deviceContext, this, m_driverData, (components != nullptr) ? components->getRoot() : nullptr);
 
    lockProperties();
 
@@ -6937,7 +6944,7 @@ bool Node::confPollSnmp()
    }
 
    // Check for 802.1x support
-   if (m_driver->is8021xSupported(pTransport, this, m_driverData))
+   if (m_driver->is8021xSupported(&deviceContext, this, m_driverData))
    {
       lockProperties();
       m_capabilities |= NC_IS_8021X;
@@ -6969,7 +6976,7 @@ bool Node::confPollSnmp()
    }
 
    // Get wireless controller data
-   if (m_driver->isWirelessController(pTransport, this, m_driverData))
+   if (m_driver->isWirelessController(&deviceContext, this, m_driverData))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless controller"), m_name);
       sendPollerMsg(_T("   This device is a wireless controller\r\n"));
@@ -6985,7 +6992,7 @@ bool Node::confPollSnmp()
    }
 
    // Get wireless access point data
-   if (m_driver->isWirelessAccessPoint(pTransport, this, m_driverData))
+   if (m_driver->isWirelessAccessPoint(&deviceContext, this, m_driverData))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless access point"), m_name);
       sendPollerMsg(_T("   This device is a wireless access point\r\n"));
@@ -6994,7 +7001,7 @@ bool Node::confPollSnmp()
       m_capabilities |= NC_IS_WIFI_AP;
       unlockProperties();
 
-      StructArray<RadioInterfaceInfo> *radioInterfaces = m_driver->getRadioInterfaces(pTransport, this, m_driverData);
+      StructArray<RadioInterfaceInfo> *radioInterfaces = m_driver->getRadioInterfaces(&deviceContext, this, m_driverData);
       if (radioInterfaces != nullptr)
       {
          sendPollerMsg(POLLER_INFO _T("   %d radio interfaces found\r\n"), radioInterfaces->size());
@@ -7366,7 +7373,8 @@ void Node::checkBridgeMib(SNMP_Transport *snmp)
       // Some devices (e.g. running MC-LAG / V-STP) use an additional shared/virtual bridge ID in STP
       // that differs from dot1dBaseBridgeAddress. Read it via driver so STP topology can recognize
       // the node's own designated ports and avoid false inter-switch links toward the MC-LAG peer.
-      MacAddress stpBridgeId = m_driver->getStpBridgeId(snmp, this, m_driverData);
+      NodeDeviceContext context(self(), snmp);
+      MacAddress stpBridgeId = m_driver->getStpBridgeId(&context, this, m_driverData);
 
       lockProperties();
       m_capabilities |= NC_IS_BRIDGE;
@@ -9129,7 +9137,8 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *
    SNMP_Transport *transport = createSnmpTransport();
    if (transport == nullptr)
       return DCE_COMM_ERROR;
-   DataCollectionError rc = driver->getMetric(transport, this, m_driverData, metric, buffer, size);
+   NodeDeviceContext context(self(), transport);
+   DataCollectionError rc = driver->getMetric(&context, this, m_driverData, metric, buffer, size);
    delete transport;
    return rc;
 }
@@ -12841,7 +12850,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       SNMP_Transport *snmp = createSnmpTransportForPoller();
       if (snmp != nullptr)
       {
-         VlanList *vlanList = m_driver->getVlans(snmp, this, m_driverData);
+         NodeDeviceContext context(self(), snmp);
+         VlanList *vlanList = m_driver->getVlans(&context, this, m_driverData);
          delete snmp;
 
          m_topologyMutex.lock();
@@ -12883,12 +12893,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != nullptr)
       {
-         StructArray<ForwardingDatabaseEntry> *fdbEntries = m_driver->getForwardingDatabase(snmp, this, m_driverData);
+         NodeDeviceContext context(self(), snmp);
+         StructArray<ForwardingDatabaseEntry> *fdbEntries = m_driver->getForwardingDatabase(&context, this, m_driverData);
          if (fdbEntries != nullptr)
          {
             StructArray<BridgePort> *bridgePorts = nullptr;
             if (!m_driver->isFdbUsingIfIndex(this, m_driverData))
-               bridgePorts = m_driver->getBridgePorts(snmp, this, m_driverData);
+               bridgePorts = m_driver->getBridgePorts(&context, this, m_driverData);
             fdb = make_shared<ForwardingDatabase>(m_id, *fdbEntries, bridgePorts);
             delete bridgePorts;
             delete fdbEntries;
@@ -13068,7 +13079,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != nullptr)
       {
-         ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(snmp, this, m_driverData);
+         NodeDeviceContext context(self(), snmp);
+         ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(&context, this, m_driverData);
          delete snmp;
          if (stations != nullptr)
          {
@@ -14428,6 +14440,25 @@ NXSL_Value *Node::getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId) const
 }
 
 /**
+ * Get state of interface from SNMP-capable device via network device driver
+ */
+void Node::getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
+{
+   NodeDeviceContext context(self(), pTransport);
+   m_driver->getInterfaceState(&context, this, m_driverData, iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
+      iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
+}
+
+/**
+ * Get state of given access point via network device driver
+ */
+AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
+{
+   NodeDeviceContext context(self(), snmpTransport);
+   return m_driver->getAccessPointState(&context, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
+}
+
+/**
  * Get access points from wireless controller
  */
 ObjectArray<AccessPointInfo> *Node::getAccessPoints()
@@ -14435,7 +14466,8 @@ ObjectArray<AccessPointInfo> *Node::getAccessPoints()
    SNMP_Transport *snmp = createSnmpTransport();
    if (snmp == nullptr)
       return nullptr;
-   ObjectArray<AccessPointInfo> *accessPoints = m_driver->getAccessPoints(snmp, this, m_driverData);
+   NodeDeviceContext context(self(), snmp);
+   ObjectArray<AccessPointInfo> *accessPoints = m_driver->getAccessPoints(&context, this, m_driverData);
    if (accessPoints != nullptr)
    {
       for(AccessPointInfo *ap : *accessPoints)

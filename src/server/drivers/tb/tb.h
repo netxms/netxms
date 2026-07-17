@@ -36,8 +36,8 @@ public:
 	virtual const TCHAR *getVersion();
 
 	virtual int isPotentialDevice(const SNMP_ObjectId& oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+	virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid);
+	virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
 };
 
 #endif

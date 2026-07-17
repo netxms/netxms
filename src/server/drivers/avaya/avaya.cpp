@@ -108,8 +108,9 @@ static uint32_t HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport,
 /**
  * Get VLANs 
  */
-VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *AvayaERSDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	VlanList *list = new VlanList();
 	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, false) != SNMP_ERR_SUCCESS)
 	{

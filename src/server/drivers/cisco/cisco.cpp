@@ -73,15 +73,15 @@ static uint64_t MaxSpeedFromInterfaceName(const TCHAR *ifName)
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *CiscoDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *CiscoDeviceDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    // Get interface list from standard MIB
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 
@@ -240,8 +240,9 @@ static uint32_t HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport
 /**
  * Get VLANs 
  */
-VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *CiscoDeviceDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	auto vlanList = new VlanList();
 
 	// Vlan list
@@ -316,19 +317,20 @@ static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, uint16_t vl
 /**
  * Get switch forwarding database.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return switch forwarding database or NULL on failure
  */
-StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData)
 {
-   StructArray<ForwardingDatabaseEntry> *fdb = NetworkDeviceDriver::getForwardingDatabase(snmp, node, driverData);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   StructArray<ForwardingDatabaseEntry> *fdb = NetworkDeviceDriver::getForwardingDatabase(context, node, driverData);
    if (fdb == nullptr)
       return nullptr;
 
    int size = fdb->size();
-   VlanList *vlans = getVlans(snmp, node, driverData);
+   VlanList *vlans = getVlans(context, node, driverData);
    if (vlans != nullptr)
    {
       SNMP_SecurityContext *savedSecurityContext = new SNMP_SecurityContext(snmp->getSecurityContext());
@@ -421,7 +423,7 @@ bool CiscoDeviceDriver::isConfigBackupSupported()
 /**
  * Get running configuration via interactive SSH
  */
-bool CiscoDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool CiscoDeviceDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -435,7 +437,7 @@ bool CiscoDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *o
 /**
  * Get startup configuration via interactive SSH
  */
-bool CiscoDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool CiscoDeviceDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -528,7 +530,7 @@ static void PrepareCiscoConfigCommands(const ByteStream& config, StringList *com
 /**
  * Restore configuration via interactive SSH (merge semantics)
  */
-bool CiscoDeviceDriver::restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+bool CiscoDeviceDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
       const std::function<void (int, int)>& progressCallback)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();

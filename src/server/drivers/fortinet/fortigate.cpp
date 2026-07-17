@@ -52,10 +52,10 @@ int FortiGateDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool FortiGateDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool FortiGateDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -63,14 +63,15 @@ bool FortiGateDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool FortiGateDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool FortiGateDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.47.1.1.1.1.13.1")));  // first entry in entPhysicalModelName
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.12356.100.1.1.1.0")));  // fnSysSerial
@@ -106,14 +107,15 @@ bool FortiGateDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
 /**
  * Get device virtualization type.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param vtype pointer to virtualization type enum to fill
  * @return true if virtualization type is known
  */
-bool FortiGateDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
+bool FortiGateDriver::getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 13, 1 }));  // first entry in entPhysicalModelName
 
@@ -139,7 +141,7 @@ bool FortiGateDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node,
 /**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -151,10 +153,11 @@ bool FortiGateDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node,
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void FortiGateDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+void FortiGateDriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
-   NetworkDeviceDriver::getInterfaceState(snmp, node, driverData, ifIndex, ifName, ifType, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   NetworkDeviceDriver::getInterfaceState(context, node, driverData, ifIndex, ifName, ifType, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
    if ((ifType == IFTYPE_TUNNEL) && (*adminState == IF_ADMIN_STATE_UP))
    {
       // Find tunnel index by name

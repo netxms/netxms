@@ -52,10 +52,10 @@ int NetscreenDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool NetscreenDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -114,13 +114,14 @@ static uint32_t HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport,
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *NetscreenDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, false);
+	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(context, node, driverData, false);
 	if (stdIfList == nullptr)
 		return nullptr;
 

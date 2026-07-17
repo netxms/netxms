@@ -65,10 +65,10 @@ int TPLinkDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool TPLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool TPLinkDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -76,12 +76,12 @@ bool TPLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& 
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList* TPLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList* TPLinkDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, false);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, false);
    if (ifList == nullptr)
       return nullptr;
 
@@ -119,14 +119,15 @@ InterfaceList* TPLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, 
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool TPLinkDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool TPLinkDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("TP-Link"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -260,13 +261,14 @@ static uint32_t HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, V
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList* TPLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList* TPLinkDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto list = new VlanList();
 
    nxlog_debug_tag(DEBUG_TAG_TPLINK, 5, _T("TPLinkDriver::getVlans: Processing VLANs for nodeId %u"), node->getId());

@@ -64,10 +64,10 @@ int TelcoBridgesDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool TelcoBridgesDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool TelcoBridgesDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -142,11 +142,12 @@ static uint32_t HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, I
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *TelcoBridgesDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *TelcoBridgesDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    bool success = false;
    InterfaceList *ifList = new InterfaceList(1024);
 

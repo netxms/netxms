@@ -54,10 +54,10 @@ int WesterstrandDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool WesterstrandDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool WesterstrandDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -65,14 +65,15 @@ bool WesterstrandDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obje
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool WesterstrandDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Westerstrand"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -130,13 +131,14 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
 /**
  * Get device geographical location.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @return device geographical location or "UNSET" type location object
  */
-GeoLocation WesterstrandDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+GeoLocation WesterstrandDriver::getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.8.5.0")));  // Latitude
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.8.6.0")));  // Longitude

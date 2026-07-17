@@ -54,11 +54,12 @@ int ArubaSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool ArubaSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool ArubaSwitchDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR model[256];
    if (SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 2, 1, 3, 0 }, model, sizeof(model), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
       return false;
@@ -69,14 +70,15 @@ bool ArubaSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Objec
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool ArubaSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool ArubaSwitchDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("HPE Aruba Networking"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -114,12 +116,13 @@ bool ArubaSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 /*
  * Check switch for wireless capabilities
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool ArubaSwitchDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool ArubaSwitchDriver::isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    BYTE buffer[256];
    return SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 1, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
@@ -270,12 +273,13 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 /**
  * Get access points
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.3"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS) // wlanAPName
@@ -290,7 +294,7 @@ ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(SNMP_Transport 
 /**
  * Get access point state
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
@@ -299,9 +303,10 @@ ObjectArray<AccessPointInfo> *ArubaSwitchDriver::getAccessPoints(SNMP_Transport 
  * @param radioInterfaces radio interfaces of this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState ArubaSwitchDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+AccessPointState ArubaSwitchDriver::getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress &macAddr, const InetAddress &ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    uint32_t oid[] = { 1, 3, 6, 1, 4, 1, 14823, 2, 2, 1, 5, 2, 1, 4, 1, 19, 0, 0, 0, 0, 0, 0 }; // wlanAPStatus
    for(int i = 0; i < MAC_ADDR_LENGTH; i++)
       oid[i + 16] = macAddr.value()[i];
@@ -355,12 +360,13 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 /**
  * Get registered wireless stations (clients)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *ArubaSwitchDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *ArubaSwitchDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14823.2.2.1.4.1.2.1.26"),// nUserPhyType
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
@@ -417,7 +423,7 @@ bool ArubaSwitchDriver::isConfigBackupSupported()
  * retrieved because saved configuration semantics differ between ArubaOS 6.x
  * and the 8.x committed configuration model.
  */
-bool ArubaSwitchDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool ArubaSwitchDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

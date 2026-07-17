@@ -4668,11 +4668,7 @@ public:
    shared_ptr<Interface> findInterfaceByLocation(const InterfacePhysicalLocation& location) const;
    shared_ptr<Interface> findBridgePort(uint32_t bridgePortNumber) const;
    bool isMyIP(const InetAddress& addr) const;
-   void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
-   {
-      m_driver->getInterfaceState(pTransport, this, m_driverData, iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
-         iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
-   }
+   void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    void getInterfaceStateFromAgent(uint32_t ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    shared_ptr<RoutingTable> readRoutingTable();
    shared_ptr<RoutingTable> getRoutingTable();
@@ -4688,10 +4684,7 @@ public:
    ObjectArray<AccessPointInfo> *getAccessPoints();
    uint32_t getAccessPointCount() const;
    uint32_t getAccessPointCount(AccessPointState state) const;
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
-   {
-      return m_driver->getAccessPointState(snmpTransport, this, m_driverData, ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
-   }
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces);
 
    ObjectArray<WirelessStationInfo> *getWirelessStations(uint32_t apId = 0) const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId = 0) const;
@@ -4855,6 +4848,33 @@ public:
    bool checkTrapShouldBeProcessed();
 
    static const TCHAR *typeName(NodeType type);
+};
+
+/**
+ * Concrete DeviceContext implementation backed by a Node object. Provides SNMP and SSH
+ * access using the node's configured credentials. SNMP transport can be supplied by the
+ * caller (not owned by the context) or created lazily on first use; SSH channels are
+ * always opened lazily.
+ */
+class NXCORE_EXPORTABLE NodeDeviceContext : public DeviceContext
+{
+private:
+   shared_ptr<Node> m_node;
+   shared_ptr<SSHInteractiveChannel> m_sshChannel;
+   SNMP_Transport *m_snmpTransport;
+   bool m_ownSnmpTransport;
+
+public:
+   NodeDeviceContext(const shared_ptr<Node>& node, SNMP_Transport *snmpTransport = nullptr);
+   ~NodeDeviceContext();
+
+   bool isSSHCommandChannelAvailable() override;
+   bool isSSHInteractiveChannelAvailable() override;
+   bool isSNMPAvailable() override;
+
+   SSHInteractiveChannel *getInteractiveSSH() override;
+   bool executeSSHCommand(const char *command, ByteStream *output) override;
+   SNMP_Transport *getSNMPTransport() override;
 };
 
 /**

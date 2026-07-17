@@ -51,10 +51,10 @@ int HirschmannClassicDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool HirschmannClassicDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool HirschmannClassicDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -62,14 +62,15 @@ bool HirschmannClassicDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool HirschmannClassicDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool HirschmannClassicDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Hirschmann"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -107,12 +108,12 @@ bool HirschmannClassicDriver::getHardwareInformation(SNMP_Transport *snmp, NObje
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *HirschmannClassicDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *HirschmannClassicDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 	   return nullptr;
 
@@ -192,7 +193,7 @@ bool HirschmannClassicDriver::isConfigBackupSupported()
 /**
  * Get running configuration
  */
-bool HirschmannClassicDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool HirschmannClassicDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -203,7 +204,7 @@ bool HirschmannClassicDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStr
 /**
  * Get startup configuration
  */
-bool HirschmannClassicDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool HirschmannClassicDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

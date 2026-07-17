@@ -62,10 +62,10 @@ int IgniteNetDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool IgniteNetDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -73,7 +73,7 @@ bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
 /**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -85,9 +85,10 @@ bool IgniteNetDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+void IgniteNetDriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    uint32_t state = 0;
    TCHAR oid[256], suffix[128];
    if (ifTableSuffixLen > 0)

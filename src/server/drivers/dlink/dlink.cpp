@@ -54,10 +54,10 @@ int DLinkDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool DLinkDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,11 +67,12 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& o
  * Driver can set device's custom attributes from within
  * this function.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void DLinkDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	node->setCustomAttribute(_T(".dlink.slotSize"), 48);
 
 	// Check if device returns incorrect values for ifHighSpeed
@@ -104,15 +105,16 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, 
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *DLinkDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 
@@ -224,13 +226,14 @@ static uint32_t HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *trans
 /**
  * Get VLANs 
  */
-VlanList *DLinkDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *DLinkDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // Most DLINK devices stores VLAN information in common place dot1qBridge SNMP SubTree .iso.org.dod.internet.mgmt.mib-2.dot1dBridge.qBridgeMIB.qBridgeMIBObjects.dot1qVlan
    // Standard function can get this information
    nxlog_debug_tag(DEBUG_TAG, 6, _T("DLinkDriver::getVlans(%s [%u]): Processing VLANs"), node->getName(), node->getId());
 
-   VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   VlanList *list = NetworkDeviceDriver::getVlans(context, node, driverData);
    if ((list != nullptr) && (list->size() > 0))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::getVlans(%s [%u]): standard VLAN reading method successful (%d entries)"), node->getName(), node->getId(), list->size());

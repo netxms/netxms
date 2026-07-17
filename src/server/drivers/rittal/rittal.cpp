@@ -52,10 +52,10 @@ int RittalDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool RittalDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -67,13 +67,14 @@ bool RittalDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& 
  * It is driver's responsibility to destroy existing object if it is to be replaced . One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void RittalDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (*driverData == nullptr)
       *driverData = new RittalDriverData();
    static_cast<RittalDriverData*>(*driverData)->updateStorageCache(snmp);
@@ -91,7 +92,7 @@ bool RittalDriver::hasMetrics()
 /**
  * Get value of given metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
@@ -99,8 +100,9 @@ bool RittalDriver::hasMetrics()
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError RittalDriver::getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (driverData == nullptr)
       return DCE_COLLECTION_ERROR;
 
@@ -124,12 +126,12 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node,
 /**
  * Get list of metrics supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    registerHostMibMetrics(metrics);
