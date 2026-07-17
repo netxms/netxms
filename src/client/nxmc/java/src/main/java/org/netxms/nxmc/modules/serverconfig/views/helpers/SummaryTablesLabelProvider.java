@@ -57,7 +57,7 @@ public class SummaryTablesLabelProvider extends LabelProvider implements ITableL
    @Override
    public String getText(Object element)
    {
-      return ((DciSummaryTableDescriptor)element).getTitle() + " (" + ((DciSummaryTableDescriptor)element).getMenuPath() + ")";
+      return ((DciSummaryTableDescriptor)element).getDisplayName();
    }
 
    /* (non-Javadoc)

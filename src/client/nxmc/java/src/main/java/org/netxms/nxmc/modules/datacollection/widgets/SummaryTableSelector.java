@@ -58,7 +58,7 @@ public class SummaryTableSelector extends AbstractSelector
       {
          table = dlg.getTable();
          if (table != null)
-            setText(table.getTitle());
+            setText(table.getDisplayName());
          else
             setText(i18n.tr("<none>"));
       }
@@ -91,7 +91,7 @@ public class SummaryTableSelector extends AbstractSelector
          }
       }
       if (table != null)
-         setText(table.getTitle());
+         setText(table.getDisplayName());
       else
          setText(i18n.tr("<none>"));
    }

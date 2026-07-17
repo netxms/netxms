@@ -81,15 +81,15 @@ public class SummaryTableSelectionDialog extends Dialog
          @Override
          public String getText(Object element)
          {
-            return ((DciSummaryTableDescriptor)element).getTitle() + " (" + ((DciSummaryTableDescriptor)element).getMenuPath().replace("&", "") + ")";
+            return ((DciSummaryTableDescriptor)element).getDisplayName();
          }
       });
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            String n1 = ((DciSummaryTableDescriptor)e1).getTitle() + " (" + ((DciSummaryTableDescriptor)e1).getMenuPath().replace("&", "") + ")";
-            String n2 = ((DciSummaryTableDescriptor)e2).getTitle() + " (" + ((DciSummaryTableDescriptor)e2).getMenuPath().replace("&", "") + ")";
+            String n1 = ((DciSummaryTableDescriptor)e1).getDisplayName();
+            String n2 = ((DciSummaryTableDescriptor)e2).getDisplayName();
             return n1.compareToIgnoreCase(n2);
          }
       });
